@@ -1,0 +1,6 @@
+framework module ForYouAndMe {
+  umbrella header "ForYouAndMe-umbrella.h"
+
+  export *
+  module * { export * }
+}
