@@ -8,14 +8,13 @@
 
 Pod::Spec.new do |s|
   s.name             = 'ForYouAndMe'
-  s.version          = '0.1.0'
+  s.version          = '0.2.0'
   s.summary          = 'Framework for research studies apps'
   s.description      = <<-DESC
                        ForYouAndMe is a framework aimed to easily develop a an app for research study
   DESC
 
   s.homepage         = 'https://github.com/balzo-tech/4youandmeiOS'
-  # s.screenshots     = 'www.example.com/screenshots_1', 'www.example.com/screenshots_2'
   s.license          = { :type => 'MIT', :file => 'LICENSE' }
   s.author           = { 'LeonardoPasseri' => 'leonardo@balzo.eu' }
   s.source           = { :git => 'https://github.com/balzo-tech/4youandmeiOS.git', :tag => s.version.to_s }
@@ -28,13 +27,10 @@ Pod::Spec.new do |s|
 
   s.source_files = 'ForYouAndMe/Classes/**/*'
   
-#  s.resources = "ForYouAndMe/Assets/*.xcassets"
-  #s.resource_bundles = { 'Resources' => ['MyProject/**/*.xcassets']}
-   s.resource_bundles = {
-     'ForYouAndMe' => ['ForYouAndMe/Assets/*.xcassets']
-   }
-
-  # s.public_header_files = 'Pod/Classes/**/*.h'
+  s.resource_bundles = {
+      'ForYouAndMe' => ['ForYouAndMe/Assets/*.xcassets']
+  }
+   
   s.frameworks = 'UIKit'
   
   s.dependency 'Moya/RxSwift', '~> 14.0.0'
