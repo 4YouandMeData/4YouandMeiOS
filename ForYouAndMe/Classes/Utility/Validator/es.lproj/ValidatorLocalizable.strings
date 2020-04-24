@@ -1,0 +1,12 @@
+/* ValidatorLocalizable.strings
+  HumanCompany
+
+  Created by Leonardo Passeri on 08/05/2018.
+  Copyright © 2018 Balzo. All rights reserved. */
+"VALIDATOR_GENERIC_ERROR" = "Error";
+"VALIDATOR_MINIMUM_PREFIX" = "Mínimo";
+"VALIDATOR_MAXIMUM_PREFIX" = "Máximo";
+"VALIDATOR_CHARACTERS" = "caracteres";
+"VALIDATOR_IS_MANDATORY" = "es obligatorio";
+"VALIDATOR_WRONG_FORMAT" = "formato incorrecto";
+"VALIDATOR_MISMATCH" = "no coinciden";

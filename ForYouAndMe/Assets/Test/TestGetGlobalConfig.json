@@ -1,0 +1,10 @@
+{
+    "color_palette": {
+        "background": "FFFFFFFF",
+        "primary": "FF0000FF"
+    },
+    "strings": {
+        "HOME_TITLE": "Welcome to BUMP",
+        "HOME_BODY": "Body for Bump"
+    }
+}
