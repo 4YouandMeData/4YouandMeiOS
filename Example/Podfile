@@ -5,7 +5,7 @@ use_frameworks!
 inhibit_all_warnings!
 
 target 'ForYouAndMe_Example' do
-  pod 'ForYouAndMe', :path => '../'
+  pod 'ForYouAndMe', :path => '../', :inhibit_warnings => false
 
   target 'ForYouAndMe_Tests' do
     inherit! :search_paths

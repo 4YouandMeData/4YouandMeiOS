@@ -1,9 +1,9 @@
 {
   "name": "ForYouAndMe",
-  "version": "0.1.0",
+  "version": "0.4.0",
   "summary": "Framework for research studies apps",
-  "description": "ForYouAndMe is a framework aimed to easily develop a an app for research study",
-  "homepage": "https://github.com/balzo-tech/4youandmeiOS",
+  "description": "ForYouAndMe is a framework aimed to easily develop an app for research study",
+  "homepage": "http://balzo.eu",
   "license": {
     "type": "MIT",
     "file": "LICENSE"
@@ -13,7 +13,7 @@
   },
   "source": {
     "git": "https://github.com/balzo-tech/4youandmeiOS.git",
-    "tag": "0.1.0"
+    "tag": "0.4.0"
   },
   "cocoapods_version": ">= 1.6.0",
   "platforms": {

@@ -1,4 +1,3 @@
-
 //
 //  ViewController.swift
 //  ForYouAndMe
@@ -19,12 +18,24 @@ public class TestViewController: UIViewController {
         
         let imageView = UIImageView()
         let bundle = Bundle(url: Bundle(for: Self.self).url(forResource: "ForYouAndMe", withExtension: "bundle")!)!
-        print("TestViewController - Bundle Identifier: \(bundle.bundleIdentifier)")
+        if let bundleIdentifier = bundle.bundleIdentifier {
+            print("TestViewController - Bundle Identifier: \(bundleIdentifier)")
+        }
         let image = UIImage(named: "checkmark_dark", in: bundle, with: nil)
         if let image = image {
             imageView.image = image
             self.view.addSubview(imageView)
             imageView.autoCenterInSuperview()
         }
+        
+        let button = UIButton(type: .roundedRect)
+        button.frame = CGRect(x: 20, y: 50, width: 100, height: 30)
+        button.setTitle("Crash", for: [])
+        button.addTarget(self, action: #selector(self.crashButtonTapped(_:)), for: .touchUpInside)
+        self.view.addSubview(button)
+    }
+    
+    @IBAction func crashButtonTapped(_ sender: AnyObject) {
+        fatalError()
     }
 }
