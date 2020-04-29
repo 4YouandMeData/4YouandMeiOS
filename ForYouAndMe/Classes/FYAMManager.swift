@@ -10,12 +10,25 @@ import Foundation
 import FirebaseCore
 
 public class FYAMManager {
-    public static func startup(withAppId appId: String) -> UIWindow {
+    
+    public static func startup(withAppId appId: String,
+                               fontTypeMap: FontTypeMap,
+                               checkResourcesAvailability: Bool = false) -> UIWindow {
         let window = UIWindow(frame: UIScreen.main.bounds)
         window.makeKeyAndVisible()
         
         // Firebase Setup
         FirebaseApp.configure()
+        
+        // Prepare Specific app elements
+        FontPalette.initialize(withFontTypeMap: fontTypeMap)
+        
+        #if DEBUG
+        if checkResourcesAvailability {
+            ImagePalette.checkImageAvailabilityOnMainBundle()
+            FontPalette.checkImageAvailabilityOnMainBundle()
+        }
+        #endif
         
         // Prepare Logic
         Services.shared.setup(withWindow: window)

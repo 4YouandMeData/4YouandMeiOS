@@ -593,6 +593,9 @@
 		8915119F4B59FF8B06370AF9C4BB9328 /* MoyaProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD6EEEC7B1DCF135E21DC30E6C0A0F7F /* MoyaProvider.swift */; };
 		892F567BF4D68BB3C3AE4687AE25BE8C /* FIRCLSDownloadAndSaveSettingsOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = E6623DC29CCD4A9D8787F44EE771ED36 /* FIRCLSDownloadAndSaveSettingsOperation.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
 		8934598D1072283D63DA128DF4DD381B /* NSError+OAuthSwift.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8BA352029C9C56DF18CE83FC79AF0540 /* NSError+OAuthSwift.swift */; };
+		8940B7562459AB450045CD95 /* ImagePalette.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8940B7552459AB450045CD95 /* ImagePalette.swift */; };
+		8940B7582459AC5C0045CD95 /* PodUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8940B7572459AC5C0045CD95 /* PodUtils.swift */; };
+		8940B75A2459B1E40045CD95 /* FontPalette.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8940B7592459B1E40045CD95 /* FontPalette.swift */; };
 		8965E908B0B04B1F54EE0B6C66385D15 /* CompactMap.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA5F49424BFAB12B766FB044832375A7 /* CompactMap.swift */; };
 		89A7557E8B2D3B52C52A27089BF111A7 /* FBLPromise.m in Sources */ = {isa = PBXBuildFile; fileRef = 15F8FF4A6D257DDFCF2EF2D695367847 /* FBLPromise.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
 		89C1D72EB90DB0DC7A2064BA6817ACE9 /* Services.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88DEA9EAA46D24EC609C2AB99F663297 /* Services.swift */; };
@@ -2282,6 +2285,9 @@
 		88C71699E67C75E3CF4E1A5D9CBDFF50 /* FIRInstallationsStoredItem.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = FIRInstallationsStoredItem.m; path = FirebaseInstallations/Source/Library/InstallationsStore/FIRInstallationsStoredItem.m; sourceTree = "<group>"; };
 		88DEA9EAA46D24EC609C2AB99F663297 /* Services.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Services.swift; sourceTree = "<group>"; };
 		88E57B09E8DEB33E70B5A39206E5882F /* Skip.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = Skip.swift; path = RxSwift/Observables/Skip.swift; sourceTree = "<group>"; };
+		8940B7552459AB450045CD95 /* ImagePalette.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImagePalette.swift; sourceTree = "<group>"; };
+		8940B7572459AC5C0045CD95 /* PodUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PodUtils.swift; sourceTree = "<group>"; };
+		8940B7592459B1E40045CD95 /* FontPalette.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FontPalette.swift; sourceTree = "<group>"; };
 		895932CA01195153DB06619B43F9D0DC /* FIRCoreDiagnosticsInterop.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = FIRCoreDiagnosticsInterop.h; path = Interop/CoreDiagnostics/Public/FIRCoreDiagnosticsInterop.h; sourceTree = "<group>"; };
 		898A43A462E347C676D78CA605737641 /* nanopb.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = nanopb.debug.xcconfig; sourceTree = "<group>"; };
 		89A4E1EDC7D8212D032CBD0C748C994D /* FIRCLSURLBuilder.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = FIRCLSURLBuilder.h; path = Crashlytics/Shared/FIRCLSNetworking/FIRCLSURLBuilder.h; sourceTree = "<group>"; };
@@ -3268,6 +3274,7 @@
 		0AE8184BA3BCC64F473ED05AA7350882 /* UI */ = {
 			isa = PBXGroup;
 			children = (
+				8940B7542459AA9B0045CD95 /* Style */,
 				2E43103829F9E00DA892C9EFA656D879 /* Navigator */,
 				E7BB257798A32D654744332238ABE17D /* ViewControllers */,
 			);
@@ -3929,6 +3936,15 @@
 				B7D915C222AEE3797821424B94938CD7 /* GULReachabilityMessageCode.h */,
 			);
 			name = Reachability;
+			sourceTree = "<group>";
+		};
+		8940B7542459AA9B0045CD95 /* Style */ = {
+			isa = PBXGroup;
+			children = (
+				8940B7552459AB450045CD95 /* ImagePalette.swift */,
+				8940B7592459B1E40045CD95 /* FontPalette.swift */,
+			);
+			path = Style;
 			sourceTree = "<group>";
 		};
 		8B309DB164210B34DED823BC52421833 /* Frameworks */ = {
@@ -4733,6 +4749,7 @@
 		D2CDB57BDD8B44CD5EE93B862313C853 /* Utility */ = {
 			isa = PBXGroup;
 			children = (
+				8940B7572459AC5C0045CD95 /* PodUtils.swift */,
 				14C033058714FDF0BF3DC33FB7DF71E8 /* Bundle+Extensions.swift */,
 				3655BA3D33A7C6E0FC2C8562F243ABDD /* Date+Extensions.swift */,
 				BB51DB0E9FAC253CCF0AD1513A41B67A /* String+Localization.swift */,
@@ -6693,6 +6710,7 @@
 			files = (
 				E54B09BF19F3E441E5005D029F4B1792 /* ApiGateway.swift in Sources */,
 				3A2A2B7F1A3AEE6E82FC2A2EDB1D6B11 /* AppNavigator.swift in Sources */,
+				8940B75A2459B1E40045CD95 /* FontPalette.swift in Sources */,
 				BDF06E1AEE155C579CD882521F1DA03F /* Bundle+Extensions.swift in Sources */,
 				2BAD470B5E148BD6F6AA5DADD7C9FCA7 /* CacheManager.swift in Sources */,
 				F8665E6EF0B27C660956E9DC194AD3B1 /* Constants.swift in Sources */,
@@ -6717,6 +6735,7 @@
 				D02573F1E25578503192AEAFD9367DE0 /* UITextView+Validator.swift in Sources */,
 				9E97917AA566EAF28AF4C41138B5A693 /* UIView+BorderLine.swift in Sources */,
 				605B5F3FA23758F89ACED5B20884F8D6 /* UIView+Constraints.swift in Sources */,
+				8940B7582459AC5C0045CD95 /* PodUtils.swift in Sources */,
 				9C1E75312E4330B523C5E664E25CBB7B /* UIView+Round.swift in Sources */,
 				D61FF371CABB018278531EF976104784 /* UIView+Shadow.swift in Sources */,
 				B048E9F0D16F1902CF3A483409ECA924 /* UIViewController+Alert.swift in Sources */,
@@ -6726,6 +6745,7 @@
 				A35DFA0A0378AB41E4C522ACDD9694F3 /* ValidatorLocalizable.strings in Sources */,
 				ED753118C254C168DAAB0D542657EDDC /* ValidatorLocalizable.strings in Sources */,
 				FB260E621DA5FC69C629A6CACCF88395 /* WelcomeViewController.swift in Sources */,
+				8940B7562459AB450045CD95 /* ImagePalette.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
