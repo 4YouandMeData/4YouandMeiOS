@@ -23,7 +23,7 @@ public class WelcomeViewController: UIViewController {
         imageView.autoCenterInSuperview()
         
         let label = UILabel()
-        label.text = "Test"
+        label.text = StringsProvider.string(forKey: .welcomeStartButton)
         label.font = FontPalette.font(withSize: 14.0)
         self.view.addSubview(label)
         label.autoAlignAxis(toSuperviewAxis: .vertical)

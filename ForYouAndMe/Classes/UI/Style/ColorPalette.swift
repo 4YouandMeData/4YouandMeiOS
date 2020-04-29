@@ -43,7 +43,7 @@ enum ColorType: CaseIterable {
     }
 }
 
-public class ColorPalette {
+class ColorPalette {
     
     private static var colorMap: ColorMap = [:]
     
