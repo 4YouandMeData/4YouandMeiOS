@@ -30,8 +30,14 @@ class RepositoryImpl {
     // MARK: - Private Methods
     
     private func fetchGlobalConfig() -> Single<()> {
-        // TODO: Fetch Global Config
-        return Single.just(())
+        return self.api.send(request: ApiRequest(serviceRequest: .getGlobalConfig))
+            .do(onSuccess: { (globalCongig: GlobalConfig) in
+                ColorPalette.initialize(withColorMap: globalCongig.colorMap)
+                StringsProvider.initialize(withStringMap: globalCongig.stringMap)
+            })
+            .map { _ in () }
+//        .do(onSuccess: { self.storage.globalConfig = $0 })
+        .handleError()
     }
 }
 

@@ -9,20 +9,20 @@ import UIKit
 
 typealias ColorMap = [ColorType: UIColor]
 
-enum ColorType: CaseIterable {
-    case primary
-    case secondary
-    case tertiary
-    case primaryText
-    case secondaryText
-    case tertiaryText
-    case fourthText
-    case primaryMenu
-    case secondaryMenu
-    case enabled
-    case disabled
-    case gradientPrimaryEnd
-    case gradientSecondaryEnd
+enum ColorType: String, CaseIterable {
+    case primary = "primary_color_start"
+    case secondary = "secondary_color"
+    case tertiary = "tertiary_color_start"
+    case primaryText = "primary_text_color"
+    case secondaryText = "secondary_text_color"
+    case tertiaryText = "tertiary_text_color"
+    case fourthText = "fourth_text_color"
+    case primaryMenu = "primary_menu_color"
+    case secondaryMenu = "secondary_menu_color"
+    case enabled = "active_color"
+    case disabled = "deactive_color"
+    case gradientPrimaryEnd = "primary_color_end"
+    case gradientTertiaryEnd = "tertiary_color_end"
     
     var defaultColor: UIColor {
         switch self {
@@ -38,7 +38,7 @@ enum ColorType: CaseIterable {
         case .enabled: return UIColor(hexRGB: 0x54C788)
         case .disabled: return UIColor(hexRGB: 0xDFDFDF)
         case .gradientPrimaryEnd: return UIColor(hexRGB: 0x0B99AE)
-        case .gradientSecondaryEnd: return UIColor(hexRGB: 0x25B8C9)
+        case .gradientTertiaryEnd: return UIColor(hexRGB: 0x25B8C9)
         }
     }
 }

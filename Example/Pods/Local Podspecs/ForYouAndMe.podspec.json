@@ -23,7 +23,7 @@
   "source_files": "ForYouAndMe/Classes/**/*",
   "resource_bundles": {
     "ForYouAndMe": [
-      "ForYouAndMe/Assets/*.{json,xcassets}"
+      "ForYouAndMe/Assets/**/*.{json,xcassets}"
     ]
   },
   "frameworks": "UIKit",

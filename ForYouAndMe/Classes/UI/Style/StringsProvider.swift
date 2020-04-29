@@ -9,8 +9,8 @@ import UIKit
 
 typealias StringMap = [StringKey: String]
 
-enum StringKey: CaseIterable {
-    case welcomeStartButton
+enum StringKey: String, CaseIterable {
+    case welcomeStartButton = "WELCOME_START_BUTTON"
 }
 
 class StringsProvider {

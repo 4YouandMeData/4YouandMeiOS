@@ -1,10 +1,20 @@
 {
     "color_palette": {
-        "background": "FFFFFFFF",
-        "primary": "FF0000FF"
+        "primary_color_start": "25AEC2",
+        "secondary_color": "FFFFFF",
+        "tertiary_color_start": "34CBD9FF",
+        "primary_text_color": "#303740",
+        "secondary_text_color": "0xFFFFFF",
+        "tertiary_text_color": "25AEC2",
+        "fourth_text_color": "828B93",
+        "primary_menu_color": "140F26",
+        "secondary_menu_color": "C4C4C4",
+        "active_color": "54C788",
+        "deactive_color": "DFDFDF",
+        "primary_color_end": "0B99AE",
+        "tertiary_color_end": "25B8C9"
     },
     "strings": {
-        "HOME_TITLE": "Welcome to BUMP",
-        "HOME_BODY": "Body for Bump"
+        "WELCOME_START_BUTTON": "Get Started"
     }
 }

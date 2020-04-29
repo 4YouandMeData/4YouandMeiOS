@@ -111,7 +111,6 @@
 		607FACD21AFB9204008FA782 /* ForYouAndMeExample */ = {
 			isa = PBXGroup;
 			children = (
-				8940B75D2459B7F60045CD95 /* Resources */,
 				607FACD51AFB9204008FA782 /* AppDelegate.swift */,
 				607FACDC1AFB9204008FA782 /* Images.xcassets */,
 				607FACDE1AFB9204008FA782 /* LaunchScreen.xib */,
@@ -155,21 +154,6 @@
 				03978827A254ED1A837CCBA2 /* LICENSE */,
 			);
 			name = "Podspec Metadata";
-			sourceTree = "<group>";
-		};
-		8940B75D2459B7F60045CD95 /* Resources */ = {
-			isa = PBXGroup;
-			children = (
-				8940B75E2459B8000045CD95 /* Fonts */,
-			);
-			name = Resources;
-			sourceTree = "<group>";
-		};
-		8940B75E2459B8000045CD95 /* Fonts */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			name = Fonts;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */

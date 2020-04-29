@@ -28,7 +28,7 @@ Pod::Spec.new do |s|
   s.source_files = 'ForYouAndMe/Classes/**/*'
   
   s.resource_bundles = {
-      'ForYouAndMe' => ['ForYouAndMe/Assets/*.{json,xcassets}']
+      'ForYouAndMe' => ['ForYouAndMe/Assets/**/*.{json,xcassets}']
   }
    
   s.frameworks = 'UIKit'
