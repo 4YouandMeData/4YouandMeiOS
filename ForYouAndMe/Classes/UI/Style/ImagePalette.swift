@@ -5,7 +5,7 @@
 //  Created by Leonardo Passeri on 29/04/2020.
 //
 
-import Foundation
+import UIKit
 
 enum ImageName: String, CaseIterable {
     case testImage = "test_image"

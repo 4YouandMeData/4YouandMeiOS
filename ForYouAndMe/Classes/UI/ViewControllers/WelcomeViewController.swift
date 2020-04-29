@@ -15,7 +15,7 @@ public class WelcomeViewController: UIViewController {
         super.viewDidLoad()
         
         // TODO: Add Content to Welcome screen
-        self.view.backgroundColor = UIColor.green
+        self.view.backgroundColor = ColorPalette.color(withType: .primary)
         
         let imageView = UIImageView()
         imageView.image = ImagePalette.image(withName: .testImage)

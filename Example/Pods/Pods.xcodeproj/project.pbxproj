@@ -596,6 +596,7 @@
 		8940B7562459AB450045CD95 /* ImagePalette.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8940B7552459AB450045CD95 /* ImagePalette.swift */; };
 		8940B7582459AC5C0045CD95 /* PodUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8940B7572459AC5C0045CD95 /* PodUtils.swift */; };
 		8940B75A2459B1E40045CD95 /* FontPalette.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8940B7592459B1E40045CD95 /* FontPalette.swift */; };
+		8940B7602459C3620045CD95 /* ColorPalette.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8940B75F2459C3620045CD95 /* ColorPalette.swift */; };
 		8965E908B0B04B1F54EE0B6C66385D15 /* CompactMap.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA5F49424BFAB12B766FB044832375A7 /* CompactMap.swift */; };
 		89A7557E8B2D3B52C52A27089BF111A7 /* FBLPromise.m in Sources */ = {isa = PBXBuildFile; fileRef = 15F8FF4A6D257DDFCF2EF2D695367847 /* FBLPromise.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
 		89C1D72EB90DB0DC7A2064BA6817ACE9 /* Services.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88DEA9EAA46D24EC609C2AB99F663297 /* Services.swift */; };
@@ -2288,6 +2289,7 @@
 		8940B7552459AB450045CD95 /* ImagePalette.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImagePalette.swift; sourceTree = "<group>"; };
 		8940B7572459AC5C0045CD95 /* PodUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PodUtils.swift; sourceTree = "<group>"; };
 		8940B7592459B1E40045CD95 /* FontPalette.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FontPalette.swift; sourceTree = "<group>"; };
+		8940B75F2459C3620045CD95 /* ColorPalette.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorPalette.swift; sourceTree = "<group>"; };
 		895932CA01195153DB06619B43F9D0DC /* FIRCoreDiagnosticsInterop.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = FIRCoreDiagnosticsInterop.h; path = Interop/CoreDiagnostics/Public/FIRCoreDiagnosticsInterop.h; sourceTree = "<group>"; };
 		898A43A462E347C676D78CA605737641 /* nanopb.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = nanopb.debug.xcconfig; sourceTree = "<group>"; };
 		89A4E1EDC7D8212D032CBD0C748C994D /* FIRCLSURLBuilder.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = FIRCLSURLBuilder.h; path = Crashlytics/Shared/FIRCLSNetworking/FIRCLSURLBuilder.h; sourceTree = "<group>"; };
@@ -3943,6 +3945,7 @@
 			children = (
 				8940B7552459AB450045CD95 /* ImagePalette.swift */,
 				8940B7592459B1E40045CD95 /* FontPalette.swift */,
+				8940B75F2459C3620045CD95 /* ColorPalette.swift */,
 			);
 			path = Style;
 			sourceTree = "<group>";
@@ -6743,6 +6746,7 @@
 				C761DC1378D2A46A91D0AFE51CA6E4B0 /* Validator+Extensions.swift in Sources */,
 				45A16326A1C8AF1C4D6F1E858DD8B4A4 /* ValidatorLocalizable.strings in Sources */,
 				A35DFA0A0378AB41E4C522ACDD9694F3 /* ValidatorLocalizable.strings in Sources */,
+				8940B7602459C3620045CD95 /* ColorPalette.swift in Sources */,
 				ED753118C254C168DAAB0D542657EDDC /* ValidatorLocalizable.strings in Sources */,
 				FB260E621DA5FC69C629A6CACCF88395 /* WelcomeViewController.swift in Sources */,
 				8940B7562459AB450045CD95 /* ImagePalette.swift in Sources */,
