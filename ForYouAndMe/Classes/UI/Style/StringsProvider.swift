@@ -9,7 +9,7 @@ import UIKit
 
 typealias StringMap = [StringKey: String]
 
-enum StringKey: String, CaseIterable {
+enum StringKey: String, CaseIterable, CodingKey {
     case welcomeStartButton = "WELCOME_START_BUTTON"
 }
 

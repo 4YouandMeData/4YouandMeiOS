@@ -10,7 +10,7 @@ import UIKit
 import RxSwift
 
 protocol RepositoryStorage {
-//    var globalConfig: GlobalConfig? { get set }
+    var globalConfig: GlobalConfig? { get set }
 }
 
 class RepositoryImpl {
@@ -30,14 +30,25 @@ class RepositoryImpl {
     // MARK: - Private Methods
     
     private func fetchGlobalConfig() -> Single<()> {
-        return self.api.send(request: ApiRequest(serviceRequest: .getGlobalConfig))
+        var cacheGlobalConfig = true
+        #if DEBUG
+        cacheGlobalConfig = false == Constants.Test.NoCacheGlobalConfig
+        #endif
+        let request: Single<GlobalConfig> = {
+            if let storedItem = self.storage.globalConfig, cacheGlobalConfig {
+                return Single.just(storedItem)
+            } else {
+                return self.api.send(request: ApiRequest(serviceRequest: .getGlobalConfig))
+                    .do(onSuccess: { self.storage.globalConfig = $0 })
+                    .handleError()
+            }
+        }()
+        return request
             .do(onSuccess: { (globalCongig: GlobalConfig) in
                 ColorPalette.initialize(withColorMap: globalCongig.colorMap)
                 StringsProvider.initialize(withStringMap: globalCongig.stringMap)
             })
             .map { _ in () }
-//        .do(onSuccess: { self.storage.globalConfig = $0 })
-        .handleError()
     }
 }
 

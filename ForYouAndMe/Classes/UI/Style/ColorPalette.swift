@@ -9,7 +9,7 @@ import UIKit
 
 typealias ColorMap = [ColorType: UIColor]
 
-enum ColorType: String, CaseIterable {
+enum ColorType: String, CaseIterable, CodingKey {
     case primary = "primary_color_start"
     case secondary = "secondary_color"
     case tertiary = "tertiary_color_start"

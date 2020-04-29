@@ -585,6 +585,8 @@
 		88D795191B71868DC81D5D3F45D7338F /* Quick-dummy.m in Sources */ = {isa = PBXBuildFile; fileRef = 799B7A822B2E17AFB3DF897DE3FDBDE2 /* Quick-dummy.m */; };
 		891477AACD5653CCC7E0C3BBE7C250AC /* Amb.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4E1D066AD3A46780329884E7F7882F4 /* Amb.swift */; };
 		892F567BF4D68BB3C3AE4687AE25BE8C /* FIRCLSDownloadAndSaveSettingsOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = E6623DC29CCD4A9D8787F44EE771ED36 /* FIRCLSDownloadAndSaveSettingsOperation.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
+		8940B7722459EB9E0045CD95 /* CodableColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8940B7712459EB9E0045CD95 /* CodableColor.swift */; };
+		8940B7742459EBBB0045CD95 /* CodableDictionary.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8940B7732459EBBB0045CD95 /* CodableDictionary.swift */; };
 		89A7557E8B2D3B52C52A27089BF111A7 /* FBLPromise.m in Sources */ = {isa = PBXBuildFile; fileRef = 15F8FF4A6D257DDFCF2EF2D695367847 /* FBLPromise.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
 		8A5AFADCD3AE078964DBFBF1ADE791F9 /* GDTCORPlatform.h in Headers */ = {isa = PBXBuildFile; fileRef = EC6C5ACBD98D4CE470AB04645A49EAC4 /* GDTCORPlatform.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		8A795447A743F92CAB74FED15A85E2AD /* MoyaError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10C962596FAA731D2D1FCCFB19CCC08C /* MoyaError.swift */; };
@@ -2288,6 +2290,8 @@
 		88C71699E67C75E3CF4E1A5D9CBDFF50 /* FIRInstallationsStoredItem.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = FIRInstallationsStoredItem.m; path = FirebaseInstallations/Source/Library/InstallationsStore/FIRInstallationsStoredItem.m; sourceTree = "<group>"; };
 		88E05D4FE9D273AED3FE352204F0FE3F /* ColorPalette.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ColorPalette.swift; sourceTree = "<group>"; };
 		88E57B09E8DEB33E70B5A39206E5882F /* Skip.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = Skip.swift; path = RxSwift/Observables/Skip.swift; sourceTree = "<group>"; };
+		8940B7712459EB9E0045CD95 /* CodableColor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodableColor.swift; sourceTree = "<group>"; };
+		8940B7732459EBBB0045CD95 /* CodableDictionary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodableDictionary.swift; sourceTree = "<group>"; };
 		895932CA01195153DB06619B43F9D0DC /* FIRCoreDiagnosticsInterop.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = FIRCoreDiagnosticsInterop.h; path = Interop/CoreDiagnostics/Public/FIRCoreDiagnosticsInterop.h; sourceTree = "<group>"; };
 		898A43A462E347C676D78CA605737641 /* nanopb.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = nanopb.debug.xcconfig; sourceTree = "<group>"; };
 		89A4E1EDC7D8212D032CBD0C748C994D /* FIRCLSURLBuilder.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = FIRCLSURLBuilder.h; path = Crashlytics/Shared/FIRCLSNetworking/FIRCLSURLBuilder.h; sourceTree = "<group>"; };
@@ -4794,6 +4798,8 @@
 				B2E125318BA8684DB1D3DF843048B04B /* UIView+Round.swift */,
 				065472045BE78EF5BDCE78AFE85CA9E9 /* UIView+Shadow.swift */,
 				9D6E61FE310769670BB69E4091A68425 /* UIViewController+Alert.swift */,
+				8940B7712459EB9E0045CD95 /* CodableColor.swift */,
+				8940B7732459EBBB0045CD95 /* CodableDictionary.swift */,
 				1A0EA164D7DD6DA09361DEEA19FBF0D6 /* Validator */,
 				A83A81AF114AFFA11CB35E654ADFBBB1 /* ValitationRenderer */,
 			);
@@ -6608,6 +6614,7 @@
 			files = (
 				14D756CC597D64F13EE8A2CDBA628E80 /* ApiGateway.swift in Sources */,
 				51689B4053F8527707DC4283E6FC4804 /* AppNavigator.swift in Sources */,
+				8940B7722459EB9E0045CD95 /* CodableColor.swift in Sources */,
 				92F4B74C0835055F80A41498A3585141 /* Bundle+Extensions.swift in Sources */,
 				EE177A347189492FAECA4D4AD926456E /* CacheManager.swift in Sources */,
 				F660450DB34701C4F784EB282D62D2B7 /* ColorPalette.swift in Sources */,
@@ -6640,6 +6647,7 @@
 				F282C388F8E2412CB9627DB08BC97DE5 /* UITextView+Validator.swift in Sources */,
 				407B40CA78538767FA8A021EBDBF18B3 /* UIView+BorderLine.swift in Sources */,
 				A53C6D10B96A23A052539652FD77E75B /* UIView+Constraints.swift in Sources */,
+				8940B7742459EBBB0045CD95 /* CodableDictionary.swift in Sources */,
 				06E6F2BEB442829D782CB236C0622194 /* UIView+Round.swift in Sources */,
 				1D5F6D0AB7E690772D1F43D2C9B89435 /* UIView+Shadow.swift in Sources */,
 				749A45427EE78D164161E0A6CAA2AF96 /* UIViewController+Alert.swift in Sources */,

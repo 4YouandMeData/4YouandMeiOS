@@ -44,16 +44,16 @@ class CacheManager {
 
 extension CacheManager: RepositoryStorage {
     
-//    var globalConfig: GlobalConfig? {
-//        get {
-//            return self.load(forKey: CacheManagerKey.globalConfig.rawValue)
-//        }
-//        set {
-//            if let value = newValue {
-//                self.save(encodable: value, forKey: CacheManagerKey.globalConfig.rawValue)
-//            } else {
-//                self.reset(forKey: CacheManagerKey.globalConfig.rawValue)
-//            }
-//        }
-//    }
+    var globalConfig: GlobalConfig? {
+        get {
+            return self.load(forKey: CacheManagerKey.globalConfig.rawValue)
+        }
+        set {
+            if let value = newValue {
+                self.save(encodable: value, forKey: CacheManagerKey.globalConfig.rawValue)
+            } else {
+                self.reset(forKey: CacheManagerKey.globalConfig.rawValue)
+            }
+        }
+    }
 }

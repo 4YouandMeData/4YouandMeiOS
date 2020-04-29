@@ -13,6 +13,8 @@ struct Constants {
         static let NetworkStubsEnabled = true
         static let NetworkStubsDelay = 0.3
         static let NetworkLogVerbose = false
+        
+        static let NoCacheGlobalConfig = true
     }
     struct Network {
         static let ApiBaseUrlStr = "https://to.be.defined.base.url" // TODO: Replace with final endpoint
