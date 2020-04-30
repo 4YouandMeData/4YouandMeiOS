@@ -11,12 +11,49 @@ import PureLayout
 
 public class WelcomeViewController: UIViewController {
     
+    private let navigator: AppNavigator
+    
+    private lazy var continueButton: UIButton = {
+        let button = UIButton()
+        button.apply(style: ButtonStyles.lightStyle)
+        button.setTitle(StringsProvider.string(forKey: .welcomeStartButton), for: .normal)
+        button.addTarget(self, action: #selector(self.showIntro), for: .touchUpInside)
+        return button
+    }()
+    
+    init() {
+        self.navigator = Services.shared.navigator
+        super.init(nibName: nil, bundle: nil)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
     public override func viewDidLoad() {
         super.viewDidLoad()
         
         self.view.addGradientView(GradientView(type: .defaultBackground))
         
+        let stackView = UIStackView()
+        stackView.axis = .vertical
+        self.view.addSubview(stackView)
+        stackView.autoPinEdgesToSuperviewSafeArea(with: UIEdgeInsets(top: 100.0,
+                                                                     left: Constants.Style.DefaultHorizontalMargins,
+                                                                     bottom: 100.0,
+                                                                     right: Constants.Style.DefaultHorizontalMargins))
         
-        // TODO: Add Content to Welcome screen
+        stackView.addHeaderImage(image: ImagePalette.image(withName: .fyamLogo))
+        stackView.addBlankSpace(space: 64.0)
+        stackView.addHeaderImage(image: ImagePalette.image(withName: .mainLogo))
+        stackView.addArrangedSubview(UIView())
+        stackView.addArrangedSubview(self.continueButton)
+    }
+    
+    // MARK: Actions
+    
+    @objc private func showIntro() {
+        // TODO: Navigate to intro scene
+        print("TODO: Navigate to intro scene")
     }
 }

@@ -24,14 +24,9 @@ public class SetupViewController: UIViewController {
     }()
     
     private lazy var retryButton: UIButton = {
-        let buttonHeight: CGFloat = 52.0
         let button = UIButton()
-        button.autoSetDimension(.height, toSize: buttonHeight)
-        button.layer.cornerRadius = buttonHeight / 2.0
-        button.backgroundColor = ColorPalette.color(withType: .secondaryText)
+        button.apply(style: ButtonStyles.lightStyle)
         button.setTitle(StringsProvider.string(forKey: .errorButtonRetry), for: .normal)
-        button.setTitleColor(ColorPalette.color(withType: .primary), for: .normal)
-        button.titleLabel?.font = FontPalette.font(withSize: 20.0)
         button.addTarget(self, action: #selector(self.initialize), for: .touchUpInside)
         return button
     }()

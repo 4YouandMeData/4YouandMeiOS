@@ -10,6 +10,8 @@ import UIKit
 
 enum ImageName: String, CaseIterable {
     case failure
+    case fyamLogo
+    case mainLogo
 }
 
 public class ImagePalette {
