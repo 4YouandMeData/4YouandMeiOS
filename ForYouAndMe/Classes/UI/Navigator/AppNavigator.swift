@@ -108,10 +108,14 @@ class AppNavigator {
 
 fileprivate extension UIViewController {
     func showAlert(forError error: Error, completion: @escaping (() -> Void) = {}) {
-        self.showAlert(withTitle: "GENERIC_ERROR_TITLE".localized, message: error.localizedDescription, completion: completion)
+        self.showAlert(withTitle: StringsProvider.string(forKey: .errorTitleDefault),
+                       message: error.localizedDescription,
+                       completion: completion)
     }
     
     func showGenericErrorAlert() {
-        self.showAlert(withTitle: "GENERIC_ERROR_TITLE".localized, message: "GENERIC_ERROR_DEFAULT".localized, completion: {})
+        self.showAlert(withTitle: StringsProvider.string(forKey: .errorTitleDefault),
+                       message: StringsProvider.string(forKey: .errorMessageDefault),
+                       completion: {})
     }
 }

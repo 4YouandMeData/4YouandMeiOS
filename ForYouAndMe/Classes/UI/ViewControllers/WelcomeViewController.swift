@@ -14,19 +14,8 @@ public class WelcomeViewController: UIViewController {
     public override func viewDidLoad() {
         super.viewDidLoad()
         
-        // TODO: Add Content to Welcome screen
         self.view.backgroundColor = ColorPalette.color(withType: .primary)
         
-        let imageView = UIImageView()
-        imageView.image = ImagePalette.image(withName: .testImage)
-        self.view.addSubview(imageView)
-        imageView.autoCenterInSuperview()
-        
-        let label = UILabel()
-        label.text = StringsProvider.string(forKey: .welcomeStartButton)
-        label.font = FontPalette.font(withSize: 14.0)
-        self.view.addSubview(label)
-        label.autoAlignAxis(toSuperviewAxis: .vertical)
-        label.autoPinEdge(toSuperviewSafeArea: .top)
+        // TODO: Add Content to Welcome screen
     }
 }

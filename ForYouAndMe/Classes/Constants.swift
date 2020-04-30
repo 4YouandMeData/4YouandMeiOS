@@ -20,6 +20,6 @@ struct Constants {
         static let ApiBaseUrlStr = "https://to.be.defined.base.url" // TODO: Replace with final endpoint
     }
     struct Style {
-        static let DefaultHorizontalMargins: CGFloat = 16.0
+        static let DefaultHorizontalMargins: CGFloat = 24.0
     }
 }

@@ -15,6 +15,14 @@
         "tertiary_color_end": "25B8C9"
     },
     "strings": {
-        "WELCOME_START_BUTTON": "Get Started"
+        "WELCOME_START_BUTTON": "Get Started",
+        "SETUP_ERROR_TITLE": "Uh, oh!",
+        "GENERIC_INFO_TITLE": "Info",
+        "ERROR_TITLE_TITLE": "Error",
+        "ERROR_BUTTON_CANCEL": "Cancel",
+        "ERROR_BUTTON_RETRY": "Try again",
+        "ERROR_MESSAGE_DEFAULT": "Something went wrong,\nplease try again",
+        "ERROR_MESSAGE_REMOTE_SERVER": "Something went wrong,\nplease try again",
+        "ERROR_MESSAGE_CONNECTIVITY": "You seem to be offline.\nPlease check your internet connection and try again.",
     }
 }

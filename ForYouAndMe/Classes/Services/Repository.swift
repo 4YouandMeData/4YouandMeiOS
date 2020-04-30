@@ -23,14 +23,14 @@ enum RepositoryError: LocalizedError {
     var errorDescription: String? {
         switch self {
         // Authentication
-        case .userNotLoggedIn: return "USER_AUTHENTICATION_ERROR_USER_NOT_LOGGED_IN".localized
+        case .userNotLoggedIn: return "User not logged In"
             
         // Server
-        case .remoteServerError: return "GENERIC_ERROR_REMOTE_SERVER".localized
+        case .remoteServerError: return StringsProvider.string(forKey: .errorMessageRemoteServer)
             
         // Shared
-        case .connectivityError: return "GENERIC_ERROR_CONNECTIVITY_MESSAGE".localized
-        case .genericError: return "GENERIC_ERROR_DEFAULT".localized
+        case .connectivityError: return StringsProvider.string(forKey: .errorMessageConnectivity)
+        case .genericError: return StringsProvider.string(forKey: .errorMessageDefault)
         }
     }
 }

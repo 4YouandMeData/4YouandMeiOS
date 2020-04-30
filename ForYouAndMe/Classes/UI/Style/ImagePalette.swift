@@ -8,7 +8,7 @@
 import UIKit
 
 enum ImageName: String, CaseIterable {
-    case testImage = "test_image"
+    case failure
 }
 
 public class ImagePalette {

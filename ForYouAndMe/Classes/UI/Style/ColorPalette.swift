@@ -51,7 +51,7 @@ class ColorPalette {
         self.colorMap = colorMap
     }
     
-    static func color(withType type: ColorType) -> UIColor? {
+    static func color(withType type: ColorType) -> UIColor {
         return self.colorMap[type] ?? type.defaultColor
     }
 }
