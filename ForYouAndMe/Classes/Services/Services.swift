@@ -25,7 +25,7 @@ class Services {
     
     private var window: UIWindow?
     
-    private let disposeBag = DisposeBag()
+    // MARK: - Public Methods
     
     func setup(withWindow window: UIWindow) {
         self.window = window
@@ -57,25 +57,8 @@ class Services {
         self.repository = repository
         self.navigator = navigator
         
-        self.initialize()
-    }
-    
-    func initialize() {
-        // Initialize services
-        // TODO: Improve UI and responabilities
         self.navigator.showSetupScreen()
-        self.initializeServices()
-            .delaySubscription(.seconds(2), scheduler: MainScheduler.instance)
-            .subscribe(onNext: { progress in
-            self.navigator.showSetupProgress(progress: progress)
-        }, onError: { error in
-            self.navigator.showSetupError(error: error)
-        }, onCompleted: {
-            self.navigator.showSetupCompleted()
-        }).disposed(by: self.disposeBag)
     }
-    
-    // MARK: - Private Methods
     
     func initializeServices() -> Observable<Float> {
         // Create an observable sequence that return the progress percentage

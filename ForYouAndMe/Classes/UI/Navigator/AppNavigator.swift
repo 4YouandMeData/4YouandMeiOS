@@ -8,7 +8,6 @@
 
 import UIKit
 import SVProgressHUD
-import RxSwift
 
 class AppNavigator {
     
@@ -16,7 +15,6 @@ class AppNavigator {
     
     private let repository: Repository
     private let window: UIWindow
-    private let disposeBag = DisposeBag()
     
     init(withRepository repository: Repository, window: UIWindow) {
         self.repository = repository
@@ -30,28 +28,15 @@ class AppNavigator {
     
     func showSetupScreen() {
         self.window.rootViewController = SetupViewController()
-        SVProgressHUD.showProgress(0)
-    }
-    
-    func showSetupProgress(progress: Float) {
-        SVProgressHUD.showProgress(progress)
-    }
-    
-    func showSetupError(error: Error) {
-        if let presenter = self.window.rootViewController {
-            self.handleError(error: error, presenter: presenter)
-        }
     }
     
     func showSetupCompleted() {
-        SVProgressHUD.dismiss()
         self.onStartup()
     }
     
     // MARK: - Top level
     
     func onStartup() {
-        
         if self.repository.isLoggedIn {
             // TODO: Show user step (screening questions, consent, home)
             assertionFailure("Log in behaviour not implemented")
