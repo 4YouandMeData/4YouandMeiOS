@@ -12,4 +12,52 @@ class NavigationBarStyles {
     static let hiddenStyle = Style<UINavigationBar> { bar in
         bar.isHidden = true
     }
+    
+    static let darkStyle = Style<UINavigationBar> { bar in
+        bar.isTranslucent = false
+        bar.addGradient(type: .defaultBackground)
+        bar.tintColor = ColorPalette.color(withType: .secondary)
+        bar.prefersLargeTitles = false
+        bar.shadowImage = UIImage() // Remove Separator line
+        bar.titleTextAttributes = [.foregroundColor: ColorPalette.color(withType: .secondaryText),
+                                   .font: FontPalette.font(withSize: 16.0)]
+    }
+    
+    static let lightStyle = Style<UINavigationBar> { bar in
+        bar.isTranslucent = false
+        bar.barTintColor = ColorPalette.color(withType: .secondary)
+        bar.tintColor = ColorPalette.color(withType: .primaryText)
+        bar.prefersLargeTitles = false
+        bar.shadowImage = UIImage() // Remove Separator line
+        bar.titleTextAttributes = [.foregroundColor: ColorPalette.color(withType: .primaryText),
+                                   .font: FontPalette.font(withSize: 16.0)]
+    }
+}
+
+fileprivate extension UINavigationBar {
+    func addGradient(type: GradientViewType) {
+        let gradient = CAGradientLayer()
+        var bounds = self.bounds
+        bounds.size.height += UIApplication.shared.windows.first?.windowScene?.statusBarManager?.statusBarFrame.height ?? 0
+        gradient.frame = bounds
+        gradient.colors = type.colors.map { $0.cgColor }
+        gradient.startPoint = type.startPoint
+        gradient.endPoint = type.endPoint
+
+        if let image = self.getImageFrom(gradientLayer: gradient) {
+            self.setBackgroundImage(image, for: UIBarMetrics.default)
+        }
+    }
+    
+    private func getImageFrom(gradientLayer: CAGradientLayer) -> UIImage? {
+        var gradientImage: UIImage?
+        UIGraphicsBeginImageContext(gradientLayer.frame.size)
+        if let context = UIGraphicsGetCurrentContext() {
+            gradientLayer.render(in: context)
+            gradientImage = UIGraphicsGetImageFromCurrentImageContext()?
+                .resizableImage(withCapInsets: UIEdgeInsets.zero, resizingMode: .stretch)
+        }
+        UIGraphicsEndImageContext()
+        return gradientImage
+    }
 }

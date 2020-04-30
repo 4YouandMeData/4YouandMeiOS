@@ -15,6 +15,11 @@ enum StringKey: String, CaseIterable, CodingKey {
     case setupErrorTitle = "SETUP_ERROR_TITLE"
     // Welcome
     case welcomeStartButton = "WELCOME_START_BUTTON"
+    // Intro
+    case introTitle = "INTRO_TITLE"
+    case introBody = "INTRO_BODY"
+    case introLogin = "INTRO_LOGIN"
+    case introBack = "INTRO_BACK"
     
     // Generic
     case genericInfoTitle = "GENERIC_INFO_TITLE"

@@ -50,10 +50,15 @@ public class WelcomeViewController: UIViewController {
         stackView.addArrangedSubview(self.continueButton)
     }
     
+    public override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        
+        self.navigationController?.navigationBar.apply(style: NavigationBarStyles.darkStyle)
+    }
+    
     // MARK: Actions
     
     @objc private func showIntro() {
-        // TODO: Navigate to intro scene
-        print("TODO: Navigate to intro scene")
+        self.navigator.showIntro(presenter: self)
     }
 }

@@ -48,7 +48,19 @@ class AppNavigator {
     // MARK: - Welcome
     
     public func goToWelcome() {
-        self.window.rootViewController = WelcomeViewController()
+        let navigationViewController = UINavigationController(rootViewController: WelcomeViewController())
+        self.window.rootViewController = navigationViewController
+    }
+    
+    public func showIntro(presenter: UIViewController) {
+        presenter.navigationController?.pushViewController(IntroViewController(), animated: true)
+    }
+    
+    // MARK: - Login
+    
+    public func showLogin(presenter: UIViewController) {
+        // TODO: Implement Login
+        print("TODO: Implement Login")
     }
     
     // MARK: Progress HUD

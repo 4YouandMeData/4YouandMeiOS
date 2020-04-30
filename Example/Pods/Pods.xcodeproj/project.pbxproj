@@ -595,6 +595,7 @@
 		894F3447245B1BDD00A3D345 /* Style.swift in Sources */ = {isa = PBXBuildFile; fileRef = 894F3444245B1BDC00A3D345 /* Style.swift */; };
 		894F3448245B1BDD00A3D345 /* ButtonStyles.swift in Sources */ = {isa = PBXBuildFile; fileRef = 894F3445245B1BDC00A3D345 /* ButtonStyles.swift */; };
 		894F344A245B1C7800A3D345 /* GenericButtonStyles.swift in Sources */ = {isa = PBXBuildFile; fileRef = 894F3449245B1C7800A3D345 /* GenericButtonStyles.swift */; };
+		894F344C245B25EB00A3D345 /* IntroViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 894F344B245B25EB00A3D345 /* IntroViewController.swift */; };
 		8975E04F245B1B100080718F /* GenericButtonView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8975E04E245B1B100080718F /* GenericButtonView.swift */; };
 		89A7557E8B2D3B52C52A27089BF111A7 /* FBLPromise.m in Sources */ = {isa = PBXBuildFile; fileRef = 15F8FF4A6D257DDFCF2EF2D695367847 /* FBLPromise.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
 		89B6BBAE245AFD6B0052F026 /* Gradient+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89B6BBAD245AFD6B0052F026 /* Gradient+Extension.swift */; };
@@ -2310,6 +2311,7 @@
 		894F3444245B1BDC00A3D345 /* Style.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Style.swift; sourceTree = "<group>"; };
 		894F3445245B1BDC00A3D345 /* ButtonStyles.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ButtonStyles.swift; sourceTree = "<group>"; };
 		894F3449245B1C7800A3D345 /* GenericButtonStyles.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GenericButtonStyles.swift; sourceTree = "<group>"; };
+		894F344B245B25EB00A3D345 /* IntroViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntroViewController.swift; sourceTree = "<group>"; };
 		895932CA01195153DB06619B43F9D0DC /* FIRCoreDiagnosticsInterop.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = FIRCoreDiagnosticsInterop.h; path = Interop/CoreDiagnostics/Public/FIRCoreDiagnosticsInterop.h; sourceTree = "<group>"; };
 		8975E04E245B1B100080718F /* GenericButtonView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GenericButtonView.swift; sourceTree = "<group>"; };
 		898A43A462E347C676D78CA605737641 /* nanopb.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = nanopb.debug.xcconfig; sourceTree = "<group>"; };
@@ -3107,6 +3109,7 @@
 			children = (
 				C3AF018507DDCCC3FF989F45C1F5B151 /* SetupViewController.swift */,
 				E6A406AEF67022C1B333C1A0A82142CD /* WelcomeViewController.swift */,
+				894F344B245B25EB00A3D345 /* IntroViewController.swift */,
 			);
 			path = ViewControllers;
 			sourceTree = "<group>";
@@ -6674,6 +6677,7 @@
 				A0ECB38714157A825D7921EB44ECA9B3 /* PodUtils.swift in Sources */,
 				9EE7CB40F4EFF588F4B49714437FF8C3 /* ReachabilityManager.swift in Sources */,
 				3A1E6446FFD3E8165B067B95C7D1275C /* ReachabilityService.swift in Sources */,
+				894F344C245B25EB00A3D345 /* IntroViewController.swift in Sources */,
 				D16DA92D809F956E0D82EFCBAC78FD08 /* Repository.swift in Sources */,
 				8792837BCCDF7146948C7034209EFF3A /* RepositoryImpl.swift in Sources */,
 				095DB793AC5D66F7B24A02D0C9CA215B /* ServerErrors.swift in Sources */,

@@ -11,25 +11,25 @@ import UIKit
 enum GradientViewType {
     case defaultBackground
     
-    fileprivate var colors: [UIColor] {
+    var colors: [UIColor] {
         switch self {
         case .defaultBackground: return [ColorPalette.color(withType: .primary), ColorPalette.color(withType: .gradientPrimaryEnd)]
         }
     }
     
-    fileprivate var locations: [Double] {
+    var locations: [Double] {
         switch self {
         case .defaultBackground: return [0.0, 1.0]
         }
     }
     
-    fileprivate var startPoint: CGPoint {
+    var startPoint: CGPoint {
         switch self {
         case .defaultBackground: return CGPoint(x: 0.0, y: 0.5)
         }
     }
     
-    fileprivate var endPoint: CGPoint {
+    var endPoint: CGPoint {
         switch self {
         case .defaultBackground: return CGPoint(x: 1.0, y: 0.5)
         }

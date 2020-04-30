@@ -15,14 +15,18 @@
         "tertiary_color_end": "25B8C9"
     },
     "strings": {
-        "WELCOME_START_BUTTON": "Get Started",
-        "SETUP_ERROR_TITLE": "Uh, oh!",
-        "GENERIC_INFO_TITLE": "Info",
-        "ERROR_TITLE_DEFAULT": "Error",
-        "ERROR_BUTTON_CANCEL": "Cancel",
-        "ERROR_BUTTON_RETRY": "Try again",
-        "ERROR_MESSAGE_DEFAULT": "Something went wrong,\nplease try again",
-        "ERROR_MESSAGE_REMOTE_SERVER": "Something went wrong,\nplease try again",
-        "ERROR_MESSAGE_CONNECTIVITY": "You seem to be offline.\nPlease check your internet connection and try again.",
+      "INTRO_BACK": "I will set up my app later",
+      "INTRO_BODY": "You have completed the first step to begin this journey together: downloading the app. Next, we will go through the initial setup of the app.\n\nThis process will take approximately 30 minutes and will require an internet connection. Please ensure you have plenty of time before we start this process. Otherwise, feel free to start it when you have sufficient time.",
+      "INTRO_LOGIN": "Let’s start - I have sufficient time now",
+      "INTRO_TITLE": "Thank you for your interest in the study BUMP by 4YouandMe",
+      "SETUP_ERROR_TITLE": "Uh, oh!",
+      "ERROR_BUTTON_RETRY": "Try again",
+      "GENERIC_INFO_TITLE": "Info",
+      "ERROR_BUTTON_CANCEL": "Cancel",
+      "ERROR_TITLE_DEFAULT": "Error",
+      "WELCOME_START_BUTTON": "Get Started",
+      "ERROR_MESSAGE_DEFAULT": "Something went wrong,\nplease try again",
+      "ERROR_MESSAGE_CONNECTIVITY": "You seem to be offline.\nPlease check your internet connection and try again.",
+      "ERROR_MESSAGE_REMOTE_SERVER": "Something went wrong,\nplease try again"
     }
 }

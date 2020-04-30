@@ -45,6 +45,7 @@ public extension UIStackView {
                   textColor: UIColor,
                   textAlignment: NSTextAlignment = .center,
                   numberOfLines: Int = 0,
+                  lineSpacing: CGFloat = 0.0,
                   underlined: Bool = false,
                   horizontalInset: CGFloat = 0) {
         let label = self.getLabel(text: text,
@@ -52,6 +53,7 @@ public extension UIStackView {
                                   textColor: textColor,
                                   textAlignment: textAlignment,
                                   numberOfLines: numberOfLines,
+                                  lineSpacing: lineSpacing,
                                   underlined: underlined)
         self.addArrangedSubview(label, horizontalInset: horizontalInset)
     }
@@ -133,17 +135,25 @@ public extension UIStackView {
                           textColor: UIColor,
                           textAlignment: NSTextAlignment = .center,
                           numberOfLines: Int = 0,
+                          lineSpacing: CGFloat = 0.0,
                           underlined: Bool = false) -> UILabel {
         let label = UILabel()
-        if underlined {
+        if underlined || lineSpacing != 0.0 {
+            let attributedText = NSMutableAttributedString(string: text)
+            
+            attributedText.addAttribute(.font, value: font, range: NSMakeRange(0, attributedText.length))
+            
+            attributedText.addAttribute(.foregroundColor, value: textColor, range: NSMakeRange(0, attributedText.length))
+            
             let paragraphStyle = NSMutableParagraphStyle()
             paragraphStyle.alignment = textAlignment
-            let attributedText = NSAttributedString(string: text, attributes: [
-                .font: font,
-                .foregroundColor: textColor,
-                .paragraphStyle: paragraphStyle,
-                .underlineStyle: NSUnderlineStyle.single.rawValue
-            ])
+            paragraphStyle.lineSpacing = lineSpacing
+            attributedText.addAttribute(.paragraphStyle, value: paragraphStyle, range: NSMakeRange(0, attributedText.length))
+            
+            if underlined {
+                attributedText.addAttribute(.underlineStyle, value: NSUnderlineStyle.single.rawValue, range: NSMakeRange(0, attributedText.length))
+            }
+            
             label.attributedText = attributedText
             label.numberOfLines = numberOfLines
         } else {

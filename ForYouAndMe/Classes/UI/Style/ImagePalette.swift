@@ -12,6 +12,8 @@ enum ImageName: String, CaseIterable {
     case failure
     case fyamLogo
     case mainLogo
+    case nextButtonLight
+    case backButton
 }
 
 public class ImagePalette {
