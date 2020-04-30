@@ -20,7 +20,7 @@ enum StringKey: String, CaseIterable, CodingKey {
     case genericInfoTitle = "GENERIC_INFO_TITLE"
     
     // Errors
-    case errorTitleDefault = "ERROR_TITLE_TITLE"
+    case errorTitleDefault = "ERROR_TITLE_DEFAULT"
     case errorButtonCancel = "ERROR_BUTTON_CANCEL"
     case errorButtonRetry = "ERROR_BUTTON_RETRY"
     case errorMessageDefault = "ERROR_MESSAGE_DEFAULT"

@@ -11,7 +11,7 @@ import FirebaseCore
 
 public class FYAMManager {
     
-    public static func startup(withAppId appId: String,
+    public static func startup(withStudyId studyId: String,
                                fontTypeMap: FontTypeMap,
                                checkResourcesAvailability: Bool = false) -> UIWindow {
         let window = UIWindow(frame: UIScreen.main.bounds)
@@ -31,7 +31,7 @@ public class FYAMManager {
         #endif
         
         // Prepare Logic
-        Services.shared.setup(withWindow: window)
+        Services.shared.setup(withWindow: window, studyId: studyId)
         
         return window
     }

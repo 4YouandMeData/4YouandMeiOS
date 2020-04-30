@@ -10,14 +10,14 @@ import Foundation
 
 struct Constants {
     struct Test {
-        static let NetworkStubsEnabled = true
+        static let NetworkStubsEnabled = false
         static let NetworkStubsDelay = 0.3
-        static let NetworkLogVerbose = false
+        static let NetworkLogVerbose = true
         
         static let NoCacheGlobalConfig = true
     }
     struct Network {
-        static let ApiBaseUrlStr = "https://to.be.defined.base.url" // TODO: Replace with final endpoint
+        static let ApiBaseUrlStr = "https://api-4youandme-staging.balzo.eu/api"
     }
     struct Style {
         static let DefaultHorizontalMargins: CGFloat = 24.0

@@ -18,7 +18,7 @@
         "WELCOME_START_BUTTON": "Get Started",
         "SETUP_ERROR_TITLE": "Uh, oh!",
         "GENERIC_INFO_TITLE": "Info",
-        "ERROR_TITLE_TITLE": "Error",
+        "ERROR_TITLE_DEFAULT": "Error",
         "ERROR_BUTTON_CANCEL": "Cancel",
         "ERROR_BUTTON_RETRY": "Try again",
         "ERROR_MESSAGE_DEFAULT": "Something went wrong,\nplease try again",

@@ -27,7 +27,7 @@ class Services {
     
     // MARK: - Public Methods
     
-    func setup(withWindow window: UIWindow) {
+    func setup(withWindow window: UIWindow, studyId: String) {
         self.window = window
         
         let storage = CacheManager()
@@ -39,10 +39,10 @@ class Services {
         #if DEBUG
         let networkApiGateway =
             Constants.Test.NetworkStubsEnabled
-                ? TestNetworkApiGateway(reachability: reachabilityService)
-                : NetworkApiGateway(reachability: reachabilityService)
+                ? TestNetworkApiGateway(studyId: studyId, reachability: reachabilityService)
+                : NetworkApiGateway(studyId: studyId, reachability: reachabilityService)
         #else
-        let networkApiGateway = NetworkApiGateway(reachability: reachabilityService)
+        let networkApiGateway = NetworkApiGateway(studyId: studyId, reachability: reachabilityService)
         #endif
         self.services.append(networkApiGateway)
         

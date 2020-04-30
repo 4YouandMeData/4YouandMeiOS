@@ -18,7 +18,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                      didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         
         let fontTypeMap: FontTypeMap = [.regular: "Helvetica"]
-        self.window = FYAMManager.startup(withAppId: "TestAppId",
+        self.window = FYAMManager.startup(withStudyId: "bump",
                                           fontTypeMap: fontTypeMap,
                                           checkResourcesAvailability: true)
         

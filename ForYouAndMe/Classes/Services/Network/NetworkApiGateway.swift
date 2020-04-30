@@ -20,6 +20,7 @@ struct UnhandledError: Mappable {
 class NetworkApiGateway: ApiGateway {
     
     let reachability: ReachabilityService
+    let studyId: String
     
     var defaultProvider: MoyaProvider<DefaultService>!
     
@@ -35,13 +36,30 @@ class NetworkApiGateway: ApiGateway {
     
     // MARK: - Service Protocol Implementation
     
-    public init(reachability: ReachabilityService) {
+    public init(studyId: String, reachability: ReachabilityService) {
+        self.studyId = studyId
         self.reachability = reachability
         self.setupDefaultProvider()
     }
     
     func setupDefaultProvider() {
-        self.defaultProvider = MoyaProvider(plugins: [self.loggerPlugin])
+        self.defaultProvider = MoyaProvider(endpointClosure: self.endpointMapping, plugins: [self.loggerPlugin])
+    }
+    
+    func endpointMapping(forTarget target: DefaultService) -> Endpoint {
+            let targetPath = target.getPath(forStudyId: self.studyId)
+            let url: URL = {
+                if targetPath.isEmpty {
+                    return target.baseURL
+                } else {
+                    return target.baseURL.appendingPathComponent(targetPath)
+                }
+            }()
+            return Endpoint(url: url.absoluteString,
+                            sampleResponseClosure: {.networkResponse(200, target.sampleData)},
+                            method: target.method,
+                            task: target.task,
+                            httpHeaderFields: target.headers)
     }
     
     // MARK: - ApiGateway Protocol Implementation
@@ -177,13 +195,18 @@ fileprivate extension PrimitiveSequence where Trait == SingleTrait, Element == R
 extension DefaultService: TargetType {
     
     var baseURL: URL { return URL(string: Constants.Network.ApiBaseUrlStr)! }
-    var path: String {
+    
+    func getPath(forStudyId studyId: String) -> String {
         switch self {
         // Misc
         case .getGlobalConfig:
-            return "/1/global_config.json" // TODO: Update with correct value
+            return "/v1/studies/\(studyId)/configuration"
         }
     }
+    
+    // Need this to conform to TargetType protocol. getPath(forStudyId) is used instead
+    var path: String { "" }
+    
     var method: Moya.Method {
         switch self {
         case .getGlobalConfig:
