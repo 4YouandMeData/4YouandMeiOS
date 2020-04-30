@@ -68,7 +68,7 @@ public class SetupViewController: UIViewController {
     public override func viewDidLoad() {
         super.viewDidLoad()
         
-        self.view.backgroundColor = ColorPalette.color(withType: .primary)
+        self.view.addGradientView(GradientView(type: .defaultBackground))
         
         self.view.addSubview(self.errorView)
         self.errorView.autoPinEdgesToSuperviewSafeArea()

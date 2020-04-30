@@ -14,7 +14,8 @@ public class WelcomeViewController: UIViewController {
     public override func viewDidLoad() {
         super.viewDidLoad()
         
-        self.view.backgroundColor = ColorPalette.color(withType: .primary)
+        self.view.addGradientView(GradientView(type: .defaultBackground))
+        
         
         // TODO: Add Content to Welcome screen
     }

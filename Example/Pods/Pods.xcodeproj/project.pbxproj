@@ -585,9 +585,14 @@
 		88D795191B71868DC81D5D3F45D7338F /* Quick-dummy.m in Sources */ = {isa = PBXBuildFile; fileRef = 799B7A822B2E17AFB3DF897DE3FDBDE2 /* Quick-dummy.m */; };
 		891477AACD5653CCC7E0C3BBE7C250AC /* Amb.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4E1D066AD3A46780329884E7F7882F4 /* Amb.swift */; };
 		892F567BF4D68BB3C3AE4687AE25BE8C /* FIRCLSDownloadAndSaveSettingsOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = E6623DC29CCD4A9D8787F44EE771ED36 /* FIRCLSDownloadAndSaveSettingsOperation.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
+		89398F5C245AFACE00C8A880 /* GradientView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89398F58245AFACD00C8A880 /* GradientView.swift */; };
+		89398F5D245AFACE00C8A880 /* ReusableIdentifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89398F59245AFACE00C8A880 /* ReusableIdentifier.swift */; };
+		89398F5E245AFACE00C8A880 /* PrioritizedRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89398F5A245AFACE00C8A880 /* PrioritizedRequest.swift */; };
+		89398F5F245AFACE00C8A880 /* TypeAliases.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89398F5B245AFACE00C8A880 /* TypeAliases.swift */; };
 		8940B7722459EB9E0045CD95 /* CodableColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8940B7712459EB9E0045CD95 /* CodableColor.swift */; };
 		8940B7742459EBBB0045CD95 /* CodableDictionary.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8940B7732459EBBB0045CD95 /* CodableDictionary.swift */; };
 		89A7557E8B2D3B52C52A27089BF111A7 /* FBLPromise.m in Sources */ = {isa = PBXBuildFile; fileRef = 15F8FF4A6D257DDFCF2EF2D695367847 /* FBLPromise.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
+		89B6BBAE245AFD6B0052F026 /* Gradient+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89B6BBAD245AFD6B0052F026 /* Gradient+Extension.swift */; };
 		8A5AFADCD3AE078964DBFBF1ADE791F9 /* GDTCORPlatform.h in Headers */ = {isa = PBXBuildFile; fileRef = EC6C5ACBD98D4CE470AB04645A49EAC4 /* GDTCORPlatform.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		8A795447A743F92CAB74FED15A85E2AD /* MoyaError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10C962596FAA731D2D1FCCFB19CCC08C /* MoyaError.swift */; };
 		8A7C673555AB759393E35C5388ADC756 /* UIStackView+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26FB58929002B31722F84D4E269E049C /* UIStackView+Extension.swift */; };
@@ -2290,11 +2295,16 @@
 		88C71699E67C75E3CF4E1A5D9CBDFF50 /* FIRInstallationsStoredItem.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = FIRInstallationsStoredItem.m; path = FirebaseInstallations/Source/Library/InstallationsStore/FIRInstallationsStoredItem.m; sourceTree = "<group>"; };
 		88E05D4FE9D273AED3FE352204F0FE3F /* ColorPalette.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ColorPalette.swift; sourceTree = "<group>"; };
 		88E57B09E8DEB33E70B5A39206E5882F /* Skip.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = Skip.swift; path = RxSwift/Observables/Skip.swift; sourceTree = "<group>"; };
+		89398F58245AFACD00C8A880 /* GradientView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GradientView.swift; sourceTree = "<group>"; };
+		89398F59245AFACE00C8A880 /* ReusableIdentifier.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ReusableIdentifier.swift; sourceTree = "<group>"; };
+		89398F5A245AFACE00C8A880 /* PrioritizedRequest.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PrioritizedRequest.swift; sourceTree = "<group>"; };
+		89398F5B245AFACE00C8A880 /* TypeAliases.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TypeAliases.swift; sourceTree = "<group>"; };
 		8940B7712459EB9E0045CD95 /* CodableColor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodableColor.swift; sourceTree = "<group>"; };
 		8940B7732459EBBB0045CD95 /* CodableDictionary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodableDictionary.swift; sourceTree = "<group>"; };
 		895932CA01195153DB06619B43F9D0DC /* FIRCoreDiagnosticsInterop.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = FIRCoreDiagnosticsInterop.h; path = Interop/CoreDiagnostics/Public/FIRCoreDiagnosticsInterop.h; sourceTree = "<group>"; };
 		898A43A462E347C676D78CA605737641 /* nanopb.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = nanopb.debug.xcconfig; sourceTree = "<group>"; };
 		89A4E1EDC7D8212D032CBD0C748C994D /* FIRCLSURLBuilder.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = FIRCLSURLBuilder.h; path = Crashlytics/Shared/FIRCLSNetworking/FIRCLSURLBuilder.h; sourceTree = "<group>"; };
+		89B6BBAD245AFD6B0052F026 /* Gradient+Extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Gradient+Extension.swift"; sourceTree = "<group>"; };
 		8A073CED34AA47B2FE2D3BE924B82D12 /* FIRInstallationsIIDStore.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = FIRInstallationsIIDStore.h; path = FirebaseInstallations/Source/Library/IIDMigration/FIRInstallationsIIDStore.h; sourceTree = "<group>"; };
 		8A8D2AFFB9D262FEB383C57EB282F5AC /* BeLessThan.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = BeLessThan.swift; path = Sources/Nimble/Matchers/BeLessThan.swift; sourceTree = "<group>"; };
 		8A9B9E5D0DD305F3CC9A026E49852A5A /* Pods-ForYouAndMe_Example-acknowledgements.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = "Pods-ForYouAndMe_Example-acknowledgements.plist"; sourceTree = "<group>"; };
@@ -3930,6 +3940,7 @@
 				22443C98A2C57704DB04DB1B2FE58A90 /* FontPalette.swift */,
 				0A1D09E93078BAF661DF1237E90C71EC /* ImagePalette.swift */,
 				619FBFB39A5B1F777F0A501B02669315 /* StringsProvider.swift */,
+				89B6BBAD245AFD6B0052F026 /* Gradient+Extension.swift */,
 			);
 			path = Style;
 			sourceTree = "<group>";
@@ -4800,6 +4811,10 @@
 				9D6E61FE310769670BB69E4091A68425 /* UIViewController+Alert.swift */,
 				8940B7712459EB9E0045CD95 /* CodableColor.swift */,
 				8940B7732459EBBB0045CD95 /* CodableDictionary.swift */,
+				89398F58245AFACD00C8A880 /* GradientView.swift */,
+				89398F5A245AFACE00C8A880 /* PrioritizedRequest.swift */,
+				89398F59245AFACE00C8A880 /* ReusableIdentifier.swift */,
+				89398F5B245AFACE00C8A880 /* TypeAliases.swift */,
 				1A0EA164D7DD6DA09361DEEA19FBF0D6 /* Validator */,
 				A83A81AF114AFFA11CB35E654ADFBBB1 /* ValitationRenderer */,
 			);
@@ -6164,6 +6179,7 @@
 			attributes = {
 				LastSwiftUpdateCheck = 1100;
 				LastUpgradeCheck = 1100;
+				ORGANIZATIONNAME = "Balzo srl";
 			};
 			buildConfigurationList = 4821239608C13582E20E6DA73FD5F1F9 /* Build configuration list for PBXProject "Pods" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -6612,6 +6628,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				89398F5D245AFACE00C8A880 /* ReusableIdentifier.swift in Sources */,
 				14D756CC597D64F13EE8A2CDBA628E80 /* ApiGateway.swift in Sources */,
 				51689B4053F8527707DC4283E6FC4804 /* AppNavigator.swift in Sources */,
 				8940B7722459EB9E0045CD95 /* CodableColor.swift in Sources */,
@@ -6636,6 +6653,7 @@
 				8792837BCCDF7146948C7034209EFF3A /* RepositoryImpl.swift in Sources */,
 				095DB793AC5D66F7B24A02D0C9CA215B /* ServerErrors.swift in Sources */,
 				DC55142DE54190E93AFC21BECCC30A1E /* Services.swift in Sources */,
+				89398F5C245AFACE00C8A880 /* GradientView.swift in Sources */,
 				669270420EB89B13647FB7DD77EF12BE /* SetupViewController.swift in Sources */,
 				A8C8FECDBBAF7A64FFA957266844E5C6 /* String+Localization.swift in Sources */,
 				AF3BDC9E5ACFB2F2BB955AD5E47B96A5 /* StringsProvider.swift in Sources */,
@@ -6643,12 +6661,15 @@
 				77BF4E23BDCD23BEB51EFB08D412B721 /* TPKeyboardAvoiding+Extensions.swift in Sources */,
 				B76ED72B71AB51610D47DAD74FB24827 /* UIColor+Extension.swift in Sources */,
 				8A7C673555AB759393E35C5388ADC756 /* UIStackView+Extension.swift in Sources */,
+				89398F5E245AFACE00C8A880 /* PrioritizedRequest.swift in Sources */,
 				362147F9A72C694C89FAEFFDE42E6EFB /* UITextField+Validator.swift in Sources */,
 				F282C388F8E2412CB9627DB08BC97DE5 /* UITextView+Validator.swift in Sources */,
 				407B40CA78538767FA8A021EBDBF18B3 /* UIView+BorderLine.swift in Sources */,
+				89B6BBAE245AFD6B0052F026 /* Gradient+Extension.swift in Sources */,
 				A53C6D10B96A23A052539652FD77E75B /* UIView+Constraints.swift in Sources */,
 				8940B7742459EBBB0045CD95 /* CodableDictionary.swift in Sources */,
 				06E6F2BEB442829D782CB236C0622194 /* UIView+Round.swift in Sources */,
+				89398F5F245AFACE00C8A880 /* TypeAliases.swift in Sources */,
 				1D5F6D0AB7E690772D1F43D2C9B89435 /* UIView+Shadow.swift in Sources */,
 				749A45427EE78D164161E0A6CAA2AF96 /* UIViewController+Alert.swift in Sources */,
 				A63F2D839A3415C44D924FEADED8E014 /* UIViewController+ValidationRenderer.swift in Sources */,
