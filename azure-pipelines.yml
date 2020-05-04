@@ -30,6 +30,8 @@ steps:
     xcWorkspacePath: '$(Build.SourcesDirectory)/ForYouAndMe/Example/ForYouAndMe.xcworkspace'
     scheme: 'ForYouAndMe-Example'
     packageApp: true
+    signingOption: 'auto'
+    teamId: 'G6RAKRKZPR'
 - task: CopyFiles@2
   inputs:
     Contents: '**/*.ipa'
