@@ -21,7 +21,7 @@ steps:
   inputs:
     SourceFolder: '$(Agent.TempDirectory)'
     Contents: 'GoogleService-Info.plist'
-    TargetFolder: '$(system.defaultWorkingDirectory)/ForYouAndMe'
+    TargetFolder: '$(system.defaultWorkingDirectory)/ForYouAndMe/Example/ForYouAndMe'
 - task: Xcode@5
   inputs:
     actions: 'build'
