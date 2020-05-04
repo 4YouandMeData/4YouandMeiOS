@@ -19,5 +19,5 @@ steps:
     actions: 'build'
     configuration: 'Release'
     sdk: 'iphoneos'
-    xcWorkspacePath: '$(Build.SourcesDirectory)/4YouAndMe/Example/ForYouAndMe.xcworkspace'
+    xcWorkspacePath: '$(Build.SourcesDirectory)/ForYouAndMe/Example/ForYouAndMe.xcworkspace'
     packageApp: false
