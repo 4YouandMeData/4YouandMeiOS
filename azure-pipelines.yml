@@ -12,7 +12,6 @@ pool:
 steps:
 - task: CocoaPods@0
   inputs:
-    workingDirectory: '$(Build.SourcesDirectory)/Example/Pods'
     forceRepoUpdate: false
 - task: Xcode@5
   inputs:
