@@ -13,6 +13,7 @@ steps:
 - task: CocoaPods@0
   inputs:
     forceRepoUpdate: false
+    projectDirectory: '$(Build.SourcesDirectory)/Example'
 - task: Xcode@5
   inputs:
     actions: 'build'
