@@ -14,6 +14,14 @@ steps:
   inputs:
     forceRepoUpdate: false
     projectDirectory: '$(Build.SourcesDirectory)/ForYouAndMe/Example'
+- task: DownloadSecureFile@1
+  inputs:
+    secureFile: 'GoogleService-Info.plist'
+- task: CopyFiles@2
+  inputs:
+    SourceFolder: '$(Agent.TempDirectory)'
+    Contents: 'GoogleService-Info.plist'
+    TargetFolder: '$(system.defaultWorkingDirectory)/ForYouAndMe'
 - task: Xcode@5
   inputs:
     actions: 'build'
