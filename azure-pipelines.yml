@@ -46,7 +46,10 @@ steps:
     xcWorkspacePath: '$(Build.SourcesDirectory)/Example/ForYouAndMe.xcworkspace'
     scheme: 'ForYouAndMe-Example'
     packageApp: true
-    signingOption: 'default'
+    signingOption: 'manual'
+    signingIdentity: '$(APPLE_CERTIFICATE_SIGNING_IDENTITY)'
+    provisioningProfileUuid: '$(APPLE_PROV_PROFILE_UUID)'
+    provisioningProfileName: '4youandme_dev'
 - task: CopyFiles@2
   inputs:
     Contents: '**/*.ipa'
