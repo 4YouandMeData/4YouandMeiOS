@@ -37,13 +37,13 @@ steps:
   inputs:
     SourceFolder: '$(Agent.TempDirectory)'
     Contents: 'GoogleService-Info.plist'
-    TargetFolder: '$(system.defaultWorkingDirectory)/ForYouAndMe/Example/ForYouAndMe'
+    TargetFolder: '$(system.defaultWorkingDirectory)/Example/ForYouAndMe'
 - task: Xcode@5
   inputs:
     actions: 'build'
     configuration: 'Release'
     sdk: 'iphoneos'
-    xcWorkspacePath: '$(Build.SourcesDirectory)/ForYouAndMe/Example/ForYouAndMe.xcworkspace'
+    xcWorkspacePath: '$(Build.SourcesDirectory)/Example/ForYouAndMe.xcworkspace'
     scheme: 'ForYouAndMe-Example'
     packageApp: true
     signingOption: 'manual'
