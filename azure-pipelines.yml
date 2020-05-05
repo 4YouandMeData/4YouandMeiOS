@@ -1,0 +1,57 @@
+# Xcode
+# Build, test, and archive an Xcode workspace on macOS.
+# Add steps that install certificates, test, sign, and distribute an app, save build artifacts, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/languages/xcode
+
+trigger:
+- CI_CD
+
+pool:
+  vmImage: 'macos-latest'
+
+steps:
+- task: InstallAppleCertificate@2
+  inputs:
+    certSecureFile: 'Mobile_Dev.p12'
+    keychain: 'temp'
+- task: InstallAppleCertificate@2
+  inputs:
+    certSecureFile: 'Mobile_Distribution.p12'
+    keychain: 'temp'
+- task: InstallAppleProvisioningProfile@1
+  inputs:
+    provisioningProfileLocation: 'secureFiles'
+    provProfileSecureFile: '4youandme_dev.mobileprovision'
+- task: InstallAppleProvisioningProfile@1
+  inputs:
+    provisioningProfileLocation: 'secureFiles'
+    provProfileSecureFile: '4youandme_distribution.mobileprovision'
+- task: CocoaPods@0
+  inputs:
+    forceRepoUpdate: false
+    projectDirectory: '$(Build.SourcesDirectory)/ForYouAndMe/Example'
+- task: DownloadSecureFile@1
+  inputs:
+    secureFile: 'GoogleService-Info.plist'
+- task: CopyFiles@2
+  inputs:
+    SourceFolder: '$(Agent.TempDirectory)'
+    Contents: 'GoogleService-Info.plist'
+    TargetFolder: '$(system.defaultWorkingDirectory)/ForYouAndMe/Example/ForYouAndMe'
+- task: Xcode@5
+  inputs:
+    actions: 'build'
+    configuration: 'Release'
+    sdk: 'iphoneos'
+    xcWorkspacePath: '$(Build.SourcesDirectory)/ForYouAndMe/Example/ForYouAndMe.xcworkspace'
+    scheme: 'ForYouAndMe-Example'
+    packageApp: true
+    signingOption: 'manual'
+    signingIdentity: '$(APPLE_CERTIFICATE_SIGNING_IDENTITY)'
+    provisioningProfileUuid: '$(APPLE_PROV_PROFILE_UUID)'
+    provisioningProfileName: '4youandme_distribution.mobileprovision'
+- task: CopyFiles@2
+  inputs:
+    Contents: '**/*.ipa'
+    TargetFolder: '$(build.artifactStagingDirectory)'
+- task: PublishBuildArtifacts@1
