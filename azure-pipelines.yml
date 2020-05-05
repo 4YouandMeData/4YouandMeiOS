@@ -29,7 +29,7 @@ steps:
 - task: CocoaPods@0
   inputs:
     forceRepoUpdate: false
-    projectDirectory: '$(Build.SourcesDirectory)/ForYouAndMe/Example'
+    projectDirectory: '$(Build.SourcesDirectory)/Example'
 - task: DownloadSecureFile@1
   inputs:
     secureFile: 'GoogleService-Info.plist'
