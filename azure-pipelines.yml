@@ -49,7 +49,7 @@ steps:
     signingOption: 'manual'
     signingIdentity: '$(APPLE_CERTIFICATE_SIGNING_IDENTITY)'
     provisioningProfileUuid: '$(APPLE_PROV_PROFILE_UUID)'
-    provisioningProfileName: '4youandme_distribution'
+    provisioningProfileName: '4youandme_dev'
 - task: CopyFiles@2
   inputs:
     Contents: '**/*.ipa'
