@@ -44,7 +44,7 @@ steps:
     configuration: 'Release'
     sdk: 'iphoneos'
     xcWorkspacePath: '$(Build.SourcesDirectory)/Example/ForYouAndMe.xcworkspace'
-    scheme: 'ForYouAndMe_Example'
+    scheme: 'ForYouAndMe-Example'
     packageApp: true
     signingOption: 'manual'
     signingIdentity: '$(APPLE_CERTIFICATE_SIGNING_IDENTITY)'
