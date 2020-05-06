@@ -40,7 +40,7 @@ steps:
     TargetFolder: '$(system.defaultWorkingDirectory)/Example/ForYouAndMe'
 - task: Xcode@5
   inputs:
-    actions: 'build'
+    actions: 'test'
     configuration: 'Release'
     sdk: 'iphoneos'
     xcWorkspacePath: '$(Build.SourcesDirectory)/Example/ForYouAndMe.xcworkspace'
