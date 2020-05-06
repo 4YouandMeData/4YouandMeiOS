@@ -47,7 +47,6 @@ steps:
     scheme: 'ForYouAndMe-Example'
     packageApp: false
     destinationPlatformOption: 'iOS'
-    destinationSimulators: 'iPhone X'
 - task: CopyFiles@2
   inputs:
     Contents: '**/*.ipa'
