@@ -45,7 +45,7 @@ steps:
     sdk: 'iphoneos'
     xcWorkspacePath: '$(Build.SourcesDirectory)/Example/ForYouAndMe.xcworkspace'
     scheme: 'ForYouAndMe-Example'
-    packageApp: true
+    packageApp: false
 - task: CopyFiles@2
   inputs:
     Contents: '**/*.ipa'
