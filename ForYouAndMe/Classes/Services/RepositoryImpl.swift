@@ -61,6 +61,17 @@ extension RepositoryImpl: Repository {
         // TODO: Implement login check
         return false
     }
+    
+    func submitPhoneNumber(phoneNumber: String) -> Single<()> {
+        return self.api.send(request: ApiRequest(serviceRequest: .submitPhoneNumber(phoneNumber: phoneNumber)))
+        .handleError()
+    }
+    
+    func varifyPhoneNumber(phoneNumber: String, secureCode: String) -> Single<()> {
+        return self.api.send(request: ApiRequest(serviceRequest: .verifyPhoneNumber(phoneNumber: phoneNumber,
+                                                                                    secureCode: secureCode)))
+        .handleError()
+    }
 }
 
 // MARK: - Extension(PrimitiveSequence)

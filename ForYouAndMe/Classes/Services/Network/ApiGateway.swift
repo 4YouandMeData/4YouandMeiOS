@@ -13,6 +13,10 @@ import Mapper
 enum DefaultService {
     // Misc
     case getGlobalConfig
+    // Login
+    case submitPhoneNumber(phoneNumber: String)
+    case verifyPhoneNumber(phoneNumber: String, secureCode: String)
+    
 }
 
 struct ApiRequest {

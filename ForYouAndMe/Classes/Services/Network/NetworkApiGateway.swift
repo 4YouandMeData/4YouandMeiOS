@@ -201,6 +201,10 @@ extension DefaultService: TargetType {
         // Misc
         case .getGlobalConfig:
             return "/v1/studies/\(studyId)/configuration"
+        case .submitPhoneNumber:
+            return "/v1/studies/\(studyId)/submitPhoneNumer" // TODO: Replace with correct path
+        case .verifyPhoneNumber:
+            return "/v1/studies/\(studyId)/verifyPhoneNumber"  // TODO: Replace with correct path
         }
     }
     
@@ -211,6 +215,8 @@ extension DefaultService: TargetType {
         switch self {
         case .getGlobalConfig:
             return .get
+        case .submitPhoneNumber, .verifyPhoneNumber:
+            return .post
         }
     }
     
@@ -218,6 +224,8 @@ extension DefaultService: TargetType {
         switch self {
         // Misc
         case .getGlobalConfig: return Bundle.getTestData(from: "TestGetGlobalConfig")
+        case .submitPhoneNumber: return "{}".utf8Encoded // TODO: Replace with test cases
+        case .verifyPhoneNumber: return "{}".utf8Encoded // TODO: Replace with test cases
         }
     }
     
@@ -225,6 +233,15 @@ extension DefaultService: TargetType {
         switch self {
         case .getGlobalConfig:
             return .requestPlain
+        case .submitPhoneNumber(let phoneNumber):
+            // TODO: Check with correct API docs
+            return .requestParameters(parameters: ["phone_number": phoneNumber], encoding: JSONEncoding.default)
+        case .verifyPhoneNumber(let phoneNumber, let secureCode):
+            var params: [String: Any] = [:]
+            // TODO: Check with correct API docs
+            params["phone_number"] = phoneNumber
+            params["secure_code"] = secureCode
+            return .requestParameters(parameters: params, encoding: JSONEncoding.default)
         }
     }
     
