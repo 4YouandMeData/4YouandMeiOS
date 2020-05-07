@@ -17,8 +17,8 @@ class GenericButtonView: UIView {
     init(withStyle style: Style<GenericButtonView>,
          fillWidth: Bool = true,
          horizontalInset: CGFloat = Constants.Style.DefaultHorizontalMargins,
-         topInset: CGFloat = 8.0,
-         bottomInset: CGFloat = 60.0) {
+         topInset: CGFloat = 32.0,
+         bottomInset: CGFloat = 32.0) {
         super.init(frame: .zero)
         
         self.addSubview(self.button)

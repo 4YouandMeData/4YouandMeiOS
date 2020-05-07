@@ -10,13 +10,13 @@ import Foundation
 import PureLayout
 
 public class GenericButtonStyles {
-    static let darkStyle = Style<GenericButtonView> { buttonView in
+    static let darkBackgroundStyle = Style<GenericButtonView> { buttonView in
         buttonView.backgroundColor = ColorPalette.color(withType: .primary)
         buttonView.button.apply(style: ButtonStyles.lightStyle)
         buttonView.addShadowLinear(goingDown: false)
     }
     
-    static let lightStyle = Style<GenericButtonView> { buttonView in
+    static let lightBackgroundStyle = Style<GenericButtonView> { buttonView in
         buttonView.backgroundColor = ColorPalette.color(withType: .secondary)
         buttonView.button.apply(style: ButtonStyles.darkStyle)
         buttonView.addShadowLinear(goingDown: false)

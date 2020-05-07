@@ -13,10 +13,10 @@ public class IntroViewController: UIViewController {
     
     private let navigator: AppNavigator
     
-    private lazy var backButton: UIButton = {
+    private lazy var setupLaterButton: UIButton = {
         let button = UIButton()
         button.setImage(ImagePalette.image(withName: .nextButtonLight), for: .normal)
-        button.addTarget(self, action: #selector(self.backButtonPressed), for: .touchUpInside)
+        button.addTarget(self, action: #selector(self.setupLaterPressed), for: .touchUpInside)
         return button
     }()
     
@@ -56,7 +56,7 @@ public class IntroViewController: UIViewController {
                                                                   right: Constants.Style.DefaultHorizontalMargins))
         stackView.autoAlignAxis(toSuperviewAxis: .vertical)
         
-        stackView.addHeaderImage(image: ImagePalette.image(withName: .fyamLogo))
+        stackView.addHeaderImage(image: ImagePalette.image(withName: .fyamLogoGeneric))
         stackView.addBlankSpace(space: 50.0)
         stackView.addLabel(text: StringsProvider.string(forKey: .introTitle),
                            font: FontPalette.font(withSize: 23.0),
@@ -73,9 +73,10 @@ public class IntroViewController: UIViewController {
         bottomStackView.axis = .vertical
         bottomStackView.spacing = 16.0
         bottomStackView.addOption(button: self.loginButton, text: StringsProvider.string(forKey: .introLogin))
-        bottomStackView.addOption(button: self.backButton, text: StringsProvider.string(forKey: .introBack))
+        bottomStackView.addOption(button: self.setupLaterButton, text: StringsProvider.string(forKey: .introSetupLater))
         
         let bottomView = UIView()
+        bottomView.addShadowLinear(goingDown: false)
         bottomView.addGradientView(.init(type: .defaultBackground))
         bottomView.addSubview(bottomStackView)
         bottomStackView.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets(top: 16.0,
@@ -104,7 +105,11 @@ public class IntroViewController: UIViewController {
     }
     
     @objc private func backButtonPressed() {
-        self.navigationController?.popViewController(animated: true)
+        self.navigator.goBackToWelcome(presenter: self)
+    }
+    
+    @objc private func setupLaterPressed() {
+        self.navigator.showSetupLater(presenter: self)
     }
 }
 

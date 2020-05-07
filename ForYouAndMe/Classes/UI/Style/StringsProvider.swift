@@ -19,7 +19,10 @@ enum StringKey: String, CaseIterable, CodingKey {
     case introTitle = "INTRO_TITLE"
     case introBody = "INTRO_BODY"
     case introLogin = "INTRO_LOGIN"
-    case introBack = "INTRO_BACK"
+    case introSetupLater = "INTRO_BACK"
+    // Setup Later
+    case setupLaterBody = "SETUP_LATER_BODY"
+    case setupLaterConfirmButton = "SETUP_LATER_CONFIRM_BUTTON"
     
     // Generic
     case genericInfoTitle = "GENERIC_INFO_TITLE"

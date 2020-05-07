@@ -49,11 +49,36 @@ class AppNavigator {
     
     public func goToWelcome() {
         let navigationViewController = UINavigationController(rootViewController: WelcomeViewController())
+        navigationViewController.preventPopWithSwipe()
         self.window.rootViewController = navigationViewController
     }
     
     public func showIntro(presenter: UIViewController) {
-        presenter.navigationController?.pushViewController(IntroViewController(), animated: true)
+        guard let navigationController = presenter.navigationController else {
+            assertionFailure("Missing UINavigationController")
+            return
+        }
+        navigationController.pushViewController(IntroViewController(), animated: true)
+    }
+    
+    public func showSetupLater(presenter: UIViewController) {
+        guard let navigationController = presenter.navigationController else {
+            assertionFailure("Missing UINavigationController")
+            return
+        }
+        navigationController.pushViewController(SetupLaterViewController(), animated: true)
+    }
+    
+    public func goBackToWelcome(presenter: UIViewController) {
+        guard let navigationController = presenter.navigationController else {
+            assertionFailure("Missing UINavigationController")
+            return
+        }
+        guard let welcomeViewController = navigationController.viewControllers.first(where: { $0 is WelcomeViewController }) else {
+            assertionFailure("Missing WelcomeViewController in navigation stack")
+            return
+        }
+        navigationController.popToViewController(welcomeViewController, animated: true)
     }
     
     // MARK: - Login
@@ -129,5 +154,15 @@ fileprivate extension UIViewController {
         self.showAlert(withTitle: StringsProvider.string(forKey: .errorTitleDefault),
                        message: StringsProvider.string(forKey: .errorMessageDefault),
                        completion: {})
+    }
+}
+
+// MARK: - Extension(UINavigationController)
+
+fileprivate extension UINavigationController {
+    func preventPopWithSwipe() {
+        if self.responds(to: #selector(getter: UINavigationController.interactivePopGestureRecognizer)) {
+            self.interactivePopGestureRecognizer?.isEnabled = false
+        }
     }
 }

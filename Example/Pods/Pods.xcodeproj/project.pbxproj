@@ -589,6 +589,8 @@
 		89398F5D245AFACE00C8A880 /* ReusableIdentifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89398F59245AFACE00C8A880 /* ReusableIdentifier.swift */; };
 		89398F5E245AFACE00C8A880 /* PrioritizedRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89398F5A245AFACE00C8A880 /* PrioritizedRequest.swift */; };
 		89398F5F245AFACE00C8A880 /* TypeAliases.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89398F5B245AFACE00C8A880 /* TypeAliases.swift */; };
+		893F7942246439E600AD99F1 /* SetupLaterViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893F7941246439E600AD99F1 /* SetupLaterViewController.swift */; };
+		893F79442464407900AD99F1 /* ScrollStackView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893F79432464407900AD99F1 /* ScrollStackView.swift */; };
 		8940B7722459EB9E0045CD95 /* CodableColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8940B7712459EB9E0045CD95 /* CodableColor.swift */; };
 		8940B7742459EBBB0045CD95 /* CodableDictionary.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8940B7732459EBBB0045CD95 /* CodableDictionary.swift */; };
 		894F3446245B1BDD00A3D345 /* NavigationBarStyles.swift in Sources */ = {isa = PBXBuildFile; fileRef = 894F3443245B1BDC00A3D345 /* NavigationBarStyles.swift */; };
@@ -2305,6 +2307,8 @@
 		89398F59245AFACE00C8A880 /* ReusableIdentifier.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ReusableIdentifier.swift; sourceTree = "<group>"; };
 		89398F5A245AFACE00C8A880 /* PrioritizedRequest.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PrioritizedRequest.swift; sourceTree = "<group>"; };
 		89398F5B245AFACE00C8A880 /* TypeAliases.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TypeAliases.swift; sourceTree = "<group>"; };
+		893F7941246439E600AD99F1 /* SetupLaterViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetupLaterViewController.swift; sourceTree = "<group>"; };
+		893F79432464407900AD99F1 /* ScrollStackView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScrollStackView.swift; sourceTree = "<group>"; };
 		8940B7712459EB9E0045CD95 /* CodableColor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodableColor.swift; sourceTree = "<group>"; };
 		8940B7732459EBBB0045CD95 /* CodableDictionary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodableDictionary.swift; sourceTree = "<group>"; };
 		894F3443245B1BDC00A3D345 /* NavigationBarStyles.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NavigationBarStyles.swift; sourceTree = "<group>"; };
@@ -3110,6 +3114,7 @@
 				C3AF018507DDCCC3FF989F45C1F5B151 /* SetupViewController.swift */,
 				E6A406AEF67022C1B333C1A0A82142CD /* WelcomeViewController.swift */,
 				894F344B245B25EB00A3D345 /* IntroViewController.swift */,
+				893F7941246439E600AD99F1 /* SetupLaterViewController.swift */,
 			);
 			path = ViewControllers;
 			sourceTree = "<group>";
@@ -4840,6 +4845,7 @@
 				89398F5A245AFACE00C8A880 /* PrioritizedRequest.swift */,
 				89398F59245AFACE00C8A880 /* ReusableIdentifier.swift */,
 				89398F5B245AFACE00C8A880 /* TypeAliases.swift */,
+				893F79432464407900AD99F1 /* ScrollStackView.swift */,
 				1A0EA164D7DD6DA09361DEEA19FBF0D6 /* Validator */,
 				A83A81AF114AFFA11CB35E654ADFBBB1 /* ValitationRenderer */,
 			);
@@ -6672,6 +6678,7 @@
 				7BD42353BCBBF55B9B9DE7263FCA21C1 /* GlobalConfig.swift in Sources */,
 				6CB38D4DEF1FC543A7DDC84A66CE57CC /* ImagePalette.swift in Sources */,
 				DA126C8491681005300FC6F0E551EAD1 /* Mapper+Extensions.swift in Sources */,
+				893F79442464407900AD99F1 /* ScrollStackView.swift in Sources */,
 				A08C22D69DB32BC3DADF16E3F80296E8 /* NetworkApiGateway.swift in Sources */,
 				BF05ED76466BEAFD4B1ED57E5888D394 /* NetworkUtility.swift in Sources */,
 				A0ECB38714157A825D7921EB44ECA9B3 /* PodUtils.swift in Sources */,
@@ -6689,6 +6696,7 @@
 				55AF2B56D96C324745A3BC122C41FF4D /* TestNetworkApiGateway.swift in Sources */,
 				77BF4E23BDCD23BEB51EFB08D412B721 /* TPKeyboardAvoiding+Extensions.swift in Sources */,
 				B76ED72B71AB51610D47DAD74FB24827 /* UIColor+Extension.swift in Sources */,
+				893F7942246439E600AD99F1 /* SetupLaterViewController.swift in Sources */,
 				8A7C673555AB759393E35C5388ADC756 /* UIStackView+Extension.swift in Sources */,
 				89398F5E245AFACE00C8A880 /* PrioritizedRequest.swift in Sources */,
 				8975E04F245B1B100080718F /* GenericButtonView.swift in Sources */,

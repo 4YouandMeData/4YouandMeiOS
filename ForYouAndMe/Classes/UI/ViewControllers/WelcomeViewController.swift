@@ -43,7 +43,7 @@ public class WelcomeViewController: UIViewController {
                                                                      bottom: 100.0,
                                                                      right: Constants.Style.DefaultHorizontalMargins))
         
-        stackView.addHeaderImage(image: ImagePalette.image(withName: .fyamLogo))
+        stackView.addHeaderImage(image: ImagePalette.image(withName: .fyamLogoSpecific))
         stackView.addBlankSpace(space: 64.0)
         stackView.addHeaderImage(image: ImagePalette.image(withName: .mainLogo))
         stackView.addArrangedSubview(UIView())

@@ -10,7 +10,8 @@ import UIKit
 
 enum ImageName: String, CaseIterable {
     case failure
-    case fyamLogo
+    case fyamLogoSpecific
+    case fyamLogoGeneric
     case mainLogo
     case nextButtonLight
     case backButton

@@ -55,4 +55,7 @@ class ColorPalette {
     static func color(withType type: ColorType) -> UIColor {
         return self.colorMap[type] ?? type.defaultColor
     }
+    
+    // Fixed colors
+    static var shadowColor = UIColor(hexRGB: 0x30374029)
 }
