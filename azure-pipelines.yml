@@ -58,6 +58,8 @@ steps:
     xcWorkspacePath: '$(Build.SourcesDirectory)/Example/ForYouAndMe.xcworkspace'
     scheme: 'ForYouAndMe-Example'
     packageApp: false
+    destinationPlatformOption: 'iOS'
+    destinationSimulators: 'iPhone 11'
 - task: CopyFiles@2
   inputs:
     Contents: '**/*.ipa'
