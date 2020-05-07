@@ -31,7 +31,6 @@ public class ScrollStackView: UIView {
         case .vertical: self.stackView.autoMatch(.width, to: .width, of: self.scrollView)
         @unknown default:
             assertionFailure("Unexpected axis")
-            break
         }
     }
     

@@ -141,17 +141,23 @@ public extension UIStackView {
         if underlined || lineSpacing != 0.0 {
             let attributedText = NSMutableAttributedString(string: text)
             
-            attributedText.addAttribute(.font, value: font, range: NSMakeRange(0, attributedText.length))
+            attributedText.addAttribute(.font,
+                                        value: font,
+                                        range: NSRange(location: 0, length: attributedText.length))
             
-            attributedText.addAttribute(.foregroundColor, value: textColor, range: NSMakeRange(0, attributedText.length))
+            attributedText.addAttribute(.foregroundColor,
+                                        value: textColor,
+                                        range: NSRange(location: 0, length: attributedText.length))
             
             let paragraphStyle = NSMutableParagraphStyle()
             paragraphStyle.alignment = textAlignment
             paragraphStyle.lineSpacing = lineSpacing
-            attributedText.addAttribute(.paragraphStyle, value: paragraphStyle, range: NSMakeRange(0, attributedText.length))
+            attributedText.addAttribute(.paragraphStyle, value: paragraphStyle, range: NSRange(location: 0, length: attributedText.length))
             
             if underlined {
-                attributedText.addAttribute(.underlineStyle, value: NSUnderlineStyle.single.rawValue, range: NSMakeRange(0, attributedText.length))
+                attributedText.addAttribute(.underlineStyle,
+                                            value: NSUnderlineStyle.single.rawValue,
+                                            range: NSRange(location: 0, length: attributedText.length))
             }
             
             label.attributedText = attributedText
