@@ -38,7 +38,7 @@ public class GradientView: UIView {
 
 public extension UIView {
     func addGradientView(_ gradientView: GradientView) {
-        self.addSubview(gradientView)
+        self.insertSubview(gradientView, at: 0)
         gradientView.autoPinEdgesToSuperviewEdges()
     }
 }

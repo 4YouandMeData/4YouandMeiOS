@@ -12,6 +12,7 @@ import PureLayout
 public class GenericButtonStyles {
     static let darkBackgroundStyle = Style<GenericButtonView> { buttonView in
         buttonView.backgroundColor = ColorPalette.color(withType: .primary)
+        buttonView.addGradientView(.init(type: .defaultBackground))
         buttonView.button.apply(style: ButtonStyles.lightStyle)
         buttonView.addShadowLinear(goingDown: false)
     }
