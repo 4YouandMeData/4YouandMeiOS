@@ -40,6 +40,16 @@ steps:
     TargetFolder: '$(system.defaultWorkingDirectory)/Example/ForYouAndMe'
 - task: Xcode@5
   inputs:
+    actions: 'test'
+    configuration: 'Release'
+    sdk: 'iphoneos'
+    xcWorkspacePath: '$(Build.SourcesDirectory)/Example/ForYouAndMe.xcworkspace'
+    scheme: 'ForYouAndMe-Example'
+    packageApp: false
+    destinationPlatformOption: 'iOS'
+    destinationSimulators: 'iPhone 8'
+- task: Xcode@5
+  inputs:
     actions: 'build'
     configuration: 'Release'
     sdk: 'iphoneos'
@@ -50,16 +60,6 @@ steps:
     signingIdentity: '$(APPLE_CERTIFICATE_SIGNING_IDENTITY)'
     provisioningProfileUuid: '$(APPLE_PROV_PROFILE_UUID)'
     provisioningProfileName: '4youandme_distribution'
-- task: Xcode@5
-  inputs:
-    actions: 'test'
-    configuration: 'Release'
-    sdk: 'iphoneos'
-    xcWorkspacePath: '$(Build.SourcesDirectory)/Example/ForYouAndMe.xcworkspace'
-    scheme: 'ForYouAndMe-Example'
-    packageApp: false
-    destinationPlatformOption: 'iOS'
-    destinationSimulators: 'iPhone 11'
 - task: CopyFiles@2
   inputs:
     Contents: '**/*.ipa'
