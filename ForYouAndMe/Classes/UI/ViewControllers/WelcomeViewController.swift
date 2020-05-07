@@ -54,6 +54,12 @@ public class WelcomeViewController: UIViewController {
         super.viewWillAppear(animated)
         
         self.navigationController?.navigationBar.apply(style: NavigationBarStyles.darkStyle)
+        
+        self.continueButton.alpha = 0
+        UIView.animate(withDuration: 0.8, delay: 0.0, options: .curveEaseInOut, animations: { [weak self] in
+            guard let self = self else { return }
+            self.continueButton.alpha = 1
+        }, completion: nil)
     }
     
     // MARK: Actions
