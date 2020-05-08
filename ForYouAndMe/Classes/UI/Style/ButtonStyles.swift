@@ -20,6 +20,7 @@ public class ButtonStyles {
         button.backgroundColor = ColorPalette.color(withType: .primary)
         button.setTitleColor(ColorPalette.color(withType: .secondaryText), for: .normal)
         button.titleLabel?.font = FontPalette.font(withSize: 20.0)
+        button.addShadowButton()
     }
     
     static let lightStyle = Style<UIButton> { button in
@@ -28,5 +29,6 @@ public class ButtonStyles {
         button.backgroundColor = ColorPalette.color(withType: .secondary)
         button.setTitleColor(ColorPalette.color(withType: .tertiaryText), for: .normal)
         button.titleLabel?.font = FontPalette.font(withSize: 20.0)
+        button.addShadowButton()
     }
 }

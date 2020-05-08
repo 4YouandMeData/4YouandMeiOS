@@ -16,6 +16,13 @@ public extension UIView {
                        shadowRadius: 1.0)
     }
     
+    func addShadowButton() {
+        self.addShadow(shadowColor: ColorPalette.shadowColor,
+                       shadowOffset: CGSize(width: 0.0, height: 4.0),
+                       shadowOpacity: 0.1,
+                       shadowRadius: 1.0)
+    }
+    
     func addShadow(shadowColor: UIColor, shadowOffset: CGSize, shadowOpacity: Float, shadowRadius: CGFloat) {
         self.layer.shadowColor = shadowColor.cgColor
         self.layer.shadowOffset = shadowOffset
