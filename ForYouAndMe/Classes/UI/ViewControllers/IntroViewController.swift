@@ -15,20 +15,6 @@ public class IntroViewController: UIViewController {
     
     private let navigator: AppNavigator
     
-    private lazy var setupLaterButton: UIButton = {
-        let button = UIButton()
-        button.setImage(ImagePalette.image(withName: .nextButtonLight), for: .normal)
-        button.addTarget(self, action: #selector(self.setupLaterPressed), for: .touchUpInside)
-        return button
-    }()
-    
-    private lazy var loginButton: UIButton = {
-        let button = UIButton()
-        button.setImage(ImagePalette.image(withName: .nextButtonLight), for: .normal)
-        button.addTarget(self, action: #selector(self.showLogin), for: .touchUpInside)
-        return button
-    }()
-    
     init() {
         self.navigator = Services.shared.navigator
         super.init(nibName: nil, bundle: nil)
@@ -74,8 +60,14 @@ public class IntroViewController: UIViewController {
         let bottomStackView = UIStackView()
         bottomStackView.axis = .vertical
         bottomStackView.distribution = .fillEqually
-        bottomStackView.addOption(button: self.loginButton, text: StringsProvider.string(forKey: .introLogin))
-        bottomStackView.addOption(button: self.setupLaterButton, text: StringsProvider.string(forKey: .introSetupLater))
+        bottomStackView.addOption(image: ImagePalette.image(withName: .nextButtonLight),
+                                  text: StringsProvider.string(forKey: .introLogin),
+                                  target: self,
+                                  selector: #selector(self.showLogin))
+        bottomStackView.addOption(image: ImagePalette.image(withName: .nextButtonLight),
+                                  text: StringsProvider.string(forKey: .introSetupLater),
+                                  target: self,
+                                  selector: #selector(self.setupLaterPressed))
         
         let bottomView = UIView()
         bottomView.autoSetDimension(.height, toSize: Self.bottomViewHeight)
@@ -117,14 +109,16 @@ public class IntroViewController: UIViewController {
 }
 
 fileprivate extension UIStackView {
-    func addOption(button: UIButton, text: String) {
+    func addOption(image: UIImage?, text: String, target: Any, selector: Selector) {
         let containerView = UIView()
         let stackView = UIStackView()
         stackView.axis = .horizontal
         stackView.spacing = 16.0
-        stackView.addArrangedSubview(button)
-        button.setContentHuggingPriority(UILayoutPriority(1000), for: .horizontal)
-        button.setContentCompressionResistancePriority(UILayoutPriority(1000), for: .horizontal)
+        
+        let imageView = UIImageView(image: image)
+        stackView.addArrangedSubview(imageView)
+        imageView.setContentHuggingPriority(UILayoutPriority(1000), for: .horizontal)
+        imageView.setContentCompressionResistancePriority(UILayoutPriority(1000), for: .horizontal)
         stackView.addLabel(text: text,
                            font: FontPalette.font(withSize: 15.0),
                            textColor: ColorPalette.color(withType: .secondaryText),
@@ -137,6 +131,16 @@ fileprivate extension UIStackView {
         stackView.autoPinEdge(toSuperviewEdge: .top, withInset: 0.0, relation: .greaterThanOrEqual)
         stackView.autoPinEdge(toSuperviewEdge: .bottom, withInset: 0.0, relation: .greaterThanOrEqual)
         stackView.autoAlignAxis(toSuperviewAxis: .horizontal)
+        
+        let button = UIButton()
+        button.backgroundColor = UIColor.clear
+        button.addTarget(target, action: selector, for: .touchUpInside)
+        containerView.addSubview(button)
+        button.autoPinEdge(.top, to: .top, of: stackView)
+        button.autoPinEdge(.leading, to: .leading, of: stackView)
+        button.autoPinEdge(.trailing, to: .trailing, of: stackView)
+        button.autoPinEdge(.bottom, to: .bottom, of: stackView)
+        
         self.addArrangedSubview(containerView)
     }
 }
