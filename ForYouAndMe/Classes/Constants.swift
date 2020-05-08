@@ -21,5 +21,6 @@ struct Constants {
     }
     struct Style {
         static let DefaultHorizontalMargins: CGFloat = 24.0
+        static let DefaultBodyLineSpacing: CGFloat = 10.0
     }
 }

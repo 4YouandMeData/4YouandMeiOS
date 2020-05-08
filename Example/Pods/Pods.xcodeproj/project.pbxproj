@@ -603,6 +603,9 @@
 		88B7F4E9AC2AC10B8C7DEDB9FE1EA79C /* FIRCLSLogger.m in Sources */ = {isa = PBXBuildFile; fileRef = 39990A95F4B33925F1FAD688CC26A576 /* FIRCLSLogger.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
 		88D795191B71868DC81D5D3F45D7338F /* Quick-dummy.m in Sources */ = {isa = PBXBuildFile; fileRef = 799B7A822B2E17AFB3DF897DE3FDBDE2 /* Quick-dummy.m */; };
 		892F567BF4D68BB3C3AE4687AE25BE8C /* FIRCLSDownloadAndSaveSettingsOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = E6623DC29CCD4A9D8787F44EE771ED36 /* FIRCLSDownloadAndSaveSettingsOperation.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
+		893A2A712465890400BF7052 /* PhoneVerificationViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893A2A702465890400BF7052 /* PhoneVerificationViewController.swift */; };
+		893A2A752465954A00BF7052 /* KeyboardNotificationProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893A2A742465954A00BF7052 /* KeyboardNotificationProvider.swift */; };
+		893A2A772465A68700BF7052 /* UIViewController+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893A2A762465A68700BF7052 /* UIViewController+Extensions.swift */; };
 		899B61F1F65D5E954C3CB8362FD533E5 /* OAuthSwift.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51DA131E28FC1D0E6C32D9A6F57B83DB /* OAuthSwift.swift */; };
 		89A7557E8B2D3B52C52A27089BF111A7 /* FBLPromise.m in Sources */ = {isa = PBXBuildFile; fileRef = 15F8FF4A6D257DDFCF2EF2D695367847 /* FBLPromise.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
 		8A5AFADCD3AE078964DBFBF1ADE791F9 /* GDTCORPlatform.h in Headers */ = {isa = PBXBuildFile; fileRef = EC6C5ACBD98D4CE470AB04645A49EAC4 /* GDTCORPlatform.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -2317,6 +2320,9 @@
 		889684E66DDE1D787F58304A6C686A34 /* ReachabilitySwift.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = ReachabilitySwift.debug.xcconfig; sourceTree = "<group>"; };
 		88C71699E67C75E3CF4E1A5D9CBDFF50 /* FIRInstallationsStoredItem.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = FIRInstallationsStoredItem.m; path = FirebaseInstallations/Source/Library/InstallationsStore/FIRInstallationsStoredItem.m; sourceTree = "<group>"; };
 		88E57B09E8DEB33E70B5A39206E5882F /* Skip.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = Skip.swift; path = RxSwift/Observables/Skip.swift; sourceTree = "<group>"; };
+		893A2A702465890400BF7052 /* PhoneVerificationViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneVerificationViewController.swift; sourceTree = "<group>"; };
+		893A2A742465954A00BF7052 /* KeyboardNotificationProvider.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = KeyboardNotificationProvider.swift; sourceTree = "<group>"; };
+		893A2A762465A68700BF7052 /* UIViewController+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIViewController+Extensions.swift"; sourceTree = "<group>"; };
 		895932CA01195153DB06619B43F9D0DC /* FIRCoreDiagnosticsInterop.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = FIRCoreDiagnosticsInterop.h; path = Interop/CoreDiagnostics/Public/FIRCoreDiagnosticsInterop.h; sourceTree = "<group>"; };
 		898A43A462E347C676D78CA605737641 /* nanopb.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = nanopb.debug.xcconfig; sourceTree = "<group>"; };
 		89A4E1EDC7D8212D032CBD0C748C994D /* FIRCLSURLBuilder.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = FIRCLSURLBuilder.h; path = Crashlytics/Shared/FIRCLSNetworking/FIRCLSURLBuilder.h; sourceTree = "<group>"; };
@@ -3305,6 +3311,7 @@
 				C2BA15155D8E95D11518A7B70B72080A /* WelcomeViewController.swift */,
 				6FB661D9991016A193D67A3E5B12CA01 /* IntroViewController.swift */,
 				F4500B438D29900DF8492955AE527C81 /* SetupLaterViewController.swift */,
+				893A2A702465890400BF7052 /* PhoneVerificationViewController.swift */,
 			);
 			path = ViewControllers;
 			sourceTree = "<group>";
@@ -5076,6 +5083,8 @@
 				35659F12566B8943D62C8981A02E0FD5 /* UIView+Round.swift */,
 				83DD827BA35125340C2C070E9F7C29C5 /* UIView+Shadow.swift */,
 				884E5209CEA3B6E756D7382454B740FC /* UIViewController+Alert.swift */,
+				893A2A762465A68700BF7052 /* UIViewController+Extensions.swift */,
+				893A2A742465954A00BF7052 /* KeyboardNotificationProvider.swift */,
 				C1EAC398A79C4C4FA751A17E996D2E34 /* Validator */,
 				A66C64763329CA4F11C15D72A7584160 /* ValitationRenderer */,
 			);
@@ -6211,6 +6220,7 @@
 			attributes = {
 				LastSwiftUpdateCheck = 1100;
 				LastUpgradeCheck = 1100;
+				ORGANIZATIONNAME = "Balzo srl";
 			};
 			buildConfigurationList = 4821239608C13582E20E6DA73FD5F1F9 /* Build configuration list for PBXProject "Pods" */;
 			compatibilityVersion = "Xcode 9.3";
@@ -7224,13 +7234,16 @@
 				4D87CD25549DE55FCA73530E1CDF4F05 /* PodUtils.swift in Sources */,
 				1D690FF2AC2B5E8AAC0C3B0FE10EC91C /* PrioritizedRequest.swift in Sources */,
 				91D52057AB7D6B2F512F9C5ED13FEE92 /* ReachabilityManager.swift in Sources */,
+				893A2A752465954A00BF7052 /* KeyboardNotificationProvider.swift in Sources */,
 				CE178DFD418D5E344CAF62BDFB6B0301 /* ReachabilityService.swift in Sources */,
 				A3A64D943D89B4CF82B996436156DCDA /* Repository.swift in Sources */,
 				29B9282D939D1411360735170BE5F9CB /* RepositoryImpl.swift in Sources */,
 				CC3E54CA66FE61AA7C280E94BFAA1A70 /* ReusableIdentifier.swift in Sources */,
 				C0D6ED127AF9B5DB258E504001E772A9 /* ScrollStackView.swift in Sources */,
 				42A90DC0DEDC6E90E9C18AF7449785A1 /* ServerErrors.swift in Sources */,
+				893A2A712465890400BF7052 /* PhoneVerificationViewController.swift in Sources */,
 				8D144622B3CA3F79A7223F18D2FC8996 /* Services.swift in Sources */,
+				893A2A772465A68700BF7052 /* UIViewController+Extensions.swift in Sources */,
 				142F89AD3D44C0260F8ED9F319B80B8E /* SetupLaterViewController.swift in Sources */,
 				968843EDF0215CA6EBB999A47BE3ED9E /* SetupViewController.swift in Sources */,
 				F00D0366EA79B4A20C0A81F10A60FD43 /* String+Localization.swift in Sources */,

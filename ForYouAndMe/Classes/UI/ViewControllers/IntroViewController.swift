@@ -55,7 +55,7 @@ public class IntroViewController: UIViewController {
                            font: FontPalette.font(withSize: 16.0),
                            textColor: ColorPalette.color(withType: .secondaryText),
                            textAlignment: .left,
-                           lineSpacing: 10.0)
+                           lineSpacing: Constants.Style.DefaultBodyLineSpacing)
         
         let bottomStackView = UIStackView()
         bottomStackView.axis = .vertical
@@ -88,19 +88,13 @@ public class IntroViewController: UIViewController {
         super.viewWillAppear(animated)
         
         self.navigationController?.navigationBar.apply(style: NavigationBarStyles.darkStyle)
-        self.navigationItem.leftBarButtonItem = UIBarButtonItem(image: ImagePalette.image(withName: .backButton),
-                                                                style: .plain, target: self,
-                                                                action: #selector(self.backButtonPressed))
+        self.addCustomBackButton(withImage: ImagePalette.image(withName: .backButton))
     }
     
     // MARK: Actions
     
     @objc private func showLogin() {
         self.navigator.showLogin(presenter: self)
-    }
-    
-    @objc private func backButtonPressed() {
-        self.navigator.goBackToWelcome(presenter: self)
     }
     
     @objc private func setupLaterPressed() {

@@ -84,8 +84,11 @@ class AppNavigator {
     // MARK: - Login
     
     public func showLogin(presenter: UIViewController) {
-        // TODO: Implement Login
-        print("TODO: Implement Login")
+        guard let navigationController = presenter.navigationController else {
+            assertionFailure("Missing UINavigationController")
+            return
+        }
+        navigationController.pushViewController(PhoneVerificationViewController(), animated: true)
     }
     
     // MARK: Progress HUD
@@ -109,8 +112,7 @@ class AppNavigator {
     // MARK: - Misc
     
     public func logOut() {
-        // TODO: Implement logout
-        assertionFailure("Log out not implemented")
+        self.goToWelcome()
     }
     
     public func openOnExternalBrowser(url: URL) {

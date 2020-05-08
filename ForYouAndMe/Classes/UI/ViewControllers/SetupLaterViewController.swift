@@ -50,7 +50,7 @@ public class SetupLaterViewController: UIViewController {
                            font: FontPalette.font(withSize: 16.0),
                            textColor: ColorPalette.color(withType: .secondaryText),
                            textAlignment: .left,
-                           lineSpacing: 10.0)
+                           lineSpacing: Constants.Style.DefaultBodyLineSpacing)
         
         self.view.addSubview(self.confirmButtonView)
         self.confirmButtonView.autoPinEdgesToSuperviewSafeArea(with: UIEdgeInsets.zero, excludingEdge: .top)
@@ -62,7 +62,7 @@ public class SetupLaterViewController: UIViewController {
         super.viewWillAppear(animated)
         
         self.navigationController?.navigationBar.apply(style: NavigationBarStyles.darkStyle)
-        self.navigationItem.setHidesBackButton(true, animated: true)
+        self.addCustomBackButton(withImage: ImagePalette.image(withName: .backButton))
     }
     
     // MARK: Actions

@@ -23,6 +23,18 @@ enum StringKey: String, CaseIterable, CodingKey {
     // Setup Later
     case setupLaterBody = "SETUP_LATER_BODY"
     case setupLaterConfirmButton = "SETUP_LATER_CONFIRM_BUTTON"
+    // Phone Verification
+    case phoneVerificationTitle = "PHONE_VERIFICATION_TITLE"
+    case phoneVerificationBody = "PHONE_VERIFICATION_BODY"
+    case phoneVerificationNumberDescription = "PHONE_VERIFICATION_NUMBER_DESCRIPTION"
+    case phoneVerificationLegal = "PHONE_VERIFICATION_LEGAL"
+    case phoneVerificationLegalTermsOfService = "PHONE_VERIFICATION_LEGAL_TERMS_OF_SERVICE"
+    case phoneVerificationLegalPrivacyPolicy = "PHONE_VERIFICATION_LEGAL_PRIVACY_POLICY"
+    case phoneVerificationWrongNumber = "PHONE_VERIFICATION_WRONG_NUMBER"
+    case phoneVerificationCodeDescription = "PHONE_VERIFICATION_CODE_DESCRIPTION"
+    case phoneVerificationResendCode = "PHONE_VERIFICATION_RESEND_CODE"
+    case phoneVerificationErrorWrongCode = "PHONE_VERIFICATION_ERROR_WRONG_CODE"
+    case phoneVerificationErrorMissingNumber = "PHONE_VERIFICATION_ERROR_MISSING_NUMBER"
     
     // Generic
     case genericInfoTitle = "GENERIC_INFO_TITLE"
