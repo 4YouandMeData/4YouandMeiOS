@@ -11,6 +11,8 @@ import PureLayout
 
 public class IntroViewController: UIViewController {
     
+    public static let bottomViewHeight: CGFloat = 180
+    
     private let navigator: AppNavigator
     
     private lazy var setupLaterButton: UIButton = {
@@ -71,17 +73,18 @@ public class IntroViewController: UIViewController {
         
         let bottomStackView = UIStackView()
         bottomStackView.axis = .vertical
-        bottomStackView.spacing = 16.0
+        bottomStackView.distribution = .fillEqually
         bottomStackView.addOption(button: self.loginButton, text: StringsProvider.string(forKey: .introLogin))
         bottomStackView.addOption(button: self.setupLaterButton, text: StringsProvider.string(forKey: .introSetupLater))
         
         let bottomView = UIView()
+        bottomView.autoSetDimension(.height, toSize: Self.bottomViewHeight)
         bottomView.addShadowLinear(goingDown: false)
         bottomView.addGradientView(.init(type: .defaultBackground))
         bottomView.addSubview(bottomStackView)
-        bottomStackView.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets(top: 16.0,
+        bottomStackView.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets(top: 20.0,
                                                                         left: Constants.Style.DefaultHorizontalMargins,
-                                                                        bottom: 16.0,
+                                                                        bottom: 20.0,
                                                                         right: Constants.Style.DefaultHorizontalMargins))
         self.view.addSubview(bottomView)
         bottomView.autoPinEdgesToSuperviewSafeArea(with: UIEdgeInsets.zero, excludingEdge: .top)
@@ -115,6 +118,7 @@ public class IntroViewController: UIViewController {
 
 fileprivate extension UIStackView {
     func addOption(button: UIButton, text: String) {
+        let containerView = UIView()
         let stackView = UIStackView()
         stackView.axis = .horizontal
         stackView.spacing = 16.0
@@ -124,7 +128,15 @@ fileprivate extension UIStackView {
         stackView.addLabel(text: text,
                            font: FontPalette.font(withSize: 15.0),
                            textColor: ColorPalette.color(withType: .secondaryText),
-                           textAlignment: .left)
-        self.addArrangedSubview(stackView)
+                           textAlignment: .left,
+                           numberOfLines: 2,
+                           lineSpacing: 7.0)
+        containerView.addSubview(stackView)
+        stackView.autoPinEdge(toSuperviewEdge: .leading)
+        stackView.autoPinEdge(toSuperviewEdge: .trailing)
+        stackView.autoPinEdge(toSuperviewEdge: .top, withInset: 0.0, relation: .greaterThanOrEqual)
+        stackView.autoPinEdge(toSuperviewEdge: .bottom, withInset: 0.0, relation: .greaterThanOrEqual)
+        stackView.autoAlignAxis(toSuperviewAxis: .horizontal)
+        self.addArrangedSubview(containerView)
     }
 }

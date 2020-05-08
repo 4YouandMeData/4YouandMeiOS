@@ -29,6 +29,39 @@ class GenericButtonView: UIView {
         self.button.autoAlignAxis(toSuperviewAxis: .vertical)
         self.apply(style: style)
         
+        self.sharedSetup()
+    }
+    
+    init(withStyle style: Style<GenericButtonView>,
+         fillWidth: Bool = true,
+         horizontalInset: CGFloat = Constants.Style.DefaultHorizontalMargins,
+         height: CGFloat = 116.0) {
+        super.init(frame: .zero)
+        
+        self.addSubview(self.button)
+        if let buttonHeight = self.button.heightConstraint, buttonHeight > height {
+            self.autoSetDimension(.height, toSize: buttonHeight)
+        } else {
+            self.autoSetDimension(.height, toSize: height)
+        }
+        self.autoSetDimension(.height, toSize: height)
+        self.button.autoPinEdge(toSuperviewEdge: .top, withInset: 0.0, relation: .greaterThanOrEqual)
+        self.button.autoPinEdge(toSuperviewEdge: .bottom, withInset: 0.0, relation: .greaterThanOrEqual)
+        self.button.autoPinEdge(toSuperviewEdge: .leading, withInset: horizontalInset, relation: fillWidth ? .equal : .greaterThanOrEqual)
+        self.button.autoPinEdge(toSuperviewEdge: .trailing, withInset: horizontalInset, relation: fillWidth ? .equal : .greaterThanOrEqual)
+        self.button.autoCenterInSuperview()
+        self.apply(style: style)
+        
+        self.sharedSetup()
+    }
+    
+    required init?(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    // MARK: - Private Methods
+    
+    private func sharedSetup() {
         self.buttonEnabledObserver = self.button.observe(\UIButton.isEnabled, changeHandler: { button, _ in
             if button.isEnabled {
                 self.button.backgroundColor = self.button.backgroundColor?.applyAlpha(1.0)
@@ -36,9 +69,5 @@ class GenericButtonView: UIView {
                 self.button.backgroundColor = self.button.backgroundColor?.applyAlpha(0.5)
             }
         })
-    }
-    
-    required init?(coder aDecoder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
     }
 }

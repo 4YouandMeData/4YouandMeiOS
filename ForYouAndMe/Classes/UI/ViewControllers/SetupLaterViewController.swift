@@ -14,7 +14,7 @@ public class SetupLaterViewController: UIViewController {
     private let navigator: AppNavigator
     
     private lazy var confirmButtonView: GenericButtonView = {
-        let view = GenericButtonView(withStyle: GenericButtonStyles.darkBackgroundStyle)
+        let view = GenericButtonView(withStyle: GenericButtonStyles.darkBackgroundStyle, height: IntroViewController.bottomViewHeight)
         view.button.setTitle(StringsProvider.string(forKey: .setupLaterConfirmButton), for: .normal)
         view.button.addTarget(self, action: #selector(self.confirmButtonPressed), for: .touchUpInside)
         return view
