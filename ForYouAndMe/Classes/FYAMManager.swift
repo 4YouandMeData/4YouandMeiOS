@@ -25,8 +25,8 @@ public class FYAMManager {
         
         #if DEBUG
         if checkResourcesAvailability {
-            ImagePalette.checkImageAvailabilityOnMainBundle()
-            FontPalette.checkImageAvailabilityOnMainBundle()
+            ImagePalette.checkImageAvailability()
+            FontPalette.checkFontAvailability()
         }
         #endif
         

@@ -9,6 +9,7 @@
 import UIKit
 
 enum ImageName: String, CaseIterable {
+    case setupFailure
     case failure
     case fyamLogoSpecific
     case fyamLogoGeneric
@@ -23,9 +24,9 @@ public class ImagePalette {
         return UIImage(named: name.rawValue) ?? UIImage(named: name.rawValue, in: PodUtils.podDefaultResourceBundle, with: nil)
     }
     
-    static func checkImageAvailabilityOnMainBundle() {
+    static func checkImageAvailability() {
         ImageName.allCases.forEach { imageName in
-            assert(UIImage(named: imageName.rawValue) != nil, "missing image: \(imageName.rawValue) in current main bundle")
+            assert(ImagePalette.image(withName: imageName) != nil, "missing image: \(imageName.rawValue)")
         }
     }
 }

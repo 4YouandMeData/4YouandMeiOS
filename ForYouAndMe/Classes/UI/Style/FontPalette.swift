@@ -32,9 +32,9 @@ public class FontPalette {
         return UIFont(name: self.fontTypeMap[type] ?? "", size: size) ?? UIFont.systemFont(ofSize: size, weight: type.defaultWeight)
     }
     
-    static func checkImageAvailabilityOnMainBundle() {
-        ImageName.allCases.forEach { imageName in
-            assert(UIImage(named: imageName.rawValue) != nil, "missing image: \(imageName.rawValue) in current main bundle")
+    static func checkFontAvailability() {
+        FontType.allCases.forEach { type in
+            assert(UIFont(name: self.fontTypeMap[type] ?? "", size: 10.0) != nil, "missing font: \(type.rawValue)")
         }
     }
 }

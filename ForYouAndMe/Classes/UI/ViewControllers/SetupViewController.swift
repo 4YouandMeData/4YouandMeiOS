@@ -16,7 +16,7 @@ public class SetupViewController: UIViewController {
     
     private lazy var errorLabel: UILabel = {
         let label = UILabel()
-        label.textColor = ColorPalette.color(withType: .secondaryText)
+        label.textColor = ColorPalette.color(withType: .primaryText)
         label.numberOfLines = 0
         label.textAlignment = .center
         label.font = FontPalette.font(withSize: 20.0)
@@ -25,7 +25,7 @@ public class SetupViewController: UIViewController {
     
     private lazy var retryButton: UIButton = {
         let button = UIButton()
-        button.apply(style: ButtonStyles.lightStyle)
+        button.apply(style: ButtonStyles.darkStyle)
         button.setTitle(StringsProvider.string(forKey: .errorButtonRetry), for: .normal)
         button.addTarget(self, action: #selector(self.initialize), for: .touchUpInside)
         return button
@@ -35,11 +35,11 @@ public class SetupViewController: UIViewController {
         let view = UIView()
         let stackView = UIStackView()
         stackView.axis = .vertical
-        stackView.addHeaderImage(image: ImagePalette.image(withName: .failure))
+        stackView.addHeaderImage(image: ImagePalette.image(withName: .setupFailure))
         stackView.addBlankSpace(space: 44.0)
         stackView.addLabel(text: StringsProvider.string(forKey: .setupErrorTitle),
                            font: FontPalette.font(withSize: 24.0),
-                           textColor: ColorPalette.color(withType: .secondaryText))
+                           textColor: ColorPalette.color(withType: .primaryText))
         stackView.addBlankSpace(space: 44.0)
         stackView.addArrangedSubview(errorLabel)
         stackView.addBlankSpace(space: 160.0)
@@ -63,7 +63,7 @@ public class SetupViewController: UIViewController {
     public override func viewDidLoad() {
         super.viewDidLoad()
         
-        self.view.addGradientView(GradientView(type: .defaultBackground))
+        self.view.backgroundColor = ColorPalette.color(withType: .secondary)
         
         self.view.addSubview(self.errorView)
         self.errorView.autoPinEdgesToSuperviewSafeArea()

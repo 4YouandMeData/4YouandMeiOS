@@ -28,7 +28,7 @@ enum ColorType: String, CaseIterable, CodingKey {
     
     var defaultColor: UIColor {
         switch self {
-        case .primary: return UIColor(hexRGB: 0x25AEC2)
+        case .primary: return UIColor(hexRGB: 0x140F26)
         case .secondary: return UIColor(hexRGB: 0xFFFFFF)
         case .tertiary: return UIColor(hexRGB: 0x34CBD9)
         case .primaryText: return UIColor(hexRGB: 0x303740)

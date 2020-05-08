@@ -1,17 +1,17 @@
 {
   "images" : [
     {
-      "filename" : "checkmark_dark.png",
+      "filename" : "setupFailure.png",
       "idiom" : "universal",
       "scale" : "1x"
     },
     {
-      "filename" : "checkmark_dark@2x.png",
+      "filename" : "setupFailure@2x.png",
       "idiom" : "universal",
       "scale" : "2x"
     },
     {
-      "filename" : "checkmark_dark@3x.png",
+      "filename" : "setupFailure@3x.png",
       "idiom" : "universal",
       "scale" : "3x"
     }
