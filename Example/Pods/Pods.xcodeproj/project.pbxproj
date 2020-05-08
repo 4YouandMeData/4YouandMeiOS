@@ -3301,10 +3301,10 @@
 		07E131A533A290E550689A611617EA4B /* ViewControllers */ = {
 			isa = PBXGroup;
 			children = (
-				6FB661D9991016A193D67A3E5B12CA01 /* IntroViewController.swift */,
-				F4500B438D29900DF8492955AE527C81 /* SetupLaterViewController.swift */,
 				3F65F1FB1BEF3071F35C7E40D3B2EAE3 /* SetupViewController.swift */,
 				C2BA15155D8E95D11518A7B70B72080A /* WelcomeViewController.swift */,
+				6FB661D9991016A193D67A3E5B12CA01 /* IntroViewController.swift */,
+				F4500B438D29900DF8492955AE527C81 /* SetupLaterViewController.swift */,
 			);
 			path = ViewControllers;
 			sourceTree = "<group>";

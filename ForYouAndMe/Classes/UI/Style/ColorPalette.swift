@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import SVProgressHUD
 
 typealias ColorMap = [ColorType: UIColor]
 
@@ -50,6 +51,7 @@ class ColorPalette {
     
     static func initialize(withColorMap colorMap: ColorMap) {
         self.colorMap = colorMap
+        SVProgressHUD.setForegroundColor(ColorPalette.color(withType: .primary))
     }
     
     static func color(withType type: ColorType) -> UIColor {
