@@ -12,10 +12,12 @@ public typealias FontTypeMap = [FontType: String]
 
 public enum FontType: String, CaseIterable {
     case regular
+    case bold
     
     fileprivate var defaultWeight: UIFont.Weight {
         switch self {
         case .regular: return .regular
+        case .bold: return .bold
         }
     }
 }

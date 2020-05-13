@@ -606,6 +606,8 @@
 		893A2A712465890400BF7052 /* PhoneVerificationViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893A2A702465890400BF7052 /* PhoneVerificationViewController.swift */; };
 		893A2A752465954A00BF7052 /* KeyboardNotificationProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893A2A742465954A00BF7052 /* KeyboardNotificationProvider.swift */; };
 		893A2A772465A68700BF7052 /* UIViewController+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893A2A762465A68700BF7052 /* UIViewController+Extensions.swift */; };
+		89417373246C3A6500538AC4 /* GenericCheckboxView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89417372246C3A6500538AC4 /* GenericCheckboxView.swift */; };
+		89417377246C418A00538AC4 /* UILabelInteractionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89417376246C418A00538AC4 /* UILabelInteractionManager.swift */; };
 		899B61F1F65D5E954C3CB8362FD533E5 /* OAuthSwift.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51DA131E28FC1D0E6C32D9A6F57B83DB /* OAuthSwift.swift */; };
 		89A7557E8B2D3B52C52A27089BF111A7 /* FBLPromise.m in Sources */ = {isa = PBXBuildFile; fileRef = 15F8FF4A6D257DDFCF2EF2D695367847 /* FBLPromise.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
 		8A5AFADCD3AE078964DBFBF1ADE791F9 /* GDTCORPlatform.h in Headers */ = {isa = PBXBuildFile; fileRef = EC6C5ACBD98D4CE470AB04645A49EAC4 /* GDTCORPlatform.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -2323,6 +2325,8 @@
 		893A2A702465890400BF7052 /* PhoneVerificationViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneVerificationViewController.swift; sourceTree = "<group>"; };
 		893A2A742465954A00BF7052 /* KeyboardNotificationProvider.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = KeyboardNotificationProvider.swift; sourceTree = "<group>"; };
 		893A2A762465A68700BF7052 /* UIViewController+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIViewController+Extensions.swift"; sourceTree = "<group>"; };
+		89417372246C3A6500538AC4 /* GenericCheckboxView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GenericCheckboxView.swift; sourceTree = "<group>"; };
+		89417376246C418A00538AC4 /* UILabelInteractionManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UILabelInteractionManager.swift; sourceTree = "<group>"; };
 		895932CA01195153DB06619B43F9D0DC /* FIRCoreDiagnosticsInterop.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = FIRCoreDiagnosticsInterop.h; path = Interop/CoreDiagnostics/Public/FIRCoreDiagnosticsInterop.h; sourceTree = "<group>"; };
 		898A43A462E347C676D78CA605737641 /* nanopb.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = nanopb.debug.xcconfig; sourceTree = "<group>"; };
 		89A4E1EDC7D8212D032CBD0C748C994D /* FIRCLSURLBuilder.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = FIRCLSURLBuilder.h; path = Crashlytics/Shared/FIRCLSNetworking/FIRCLSURLBuilder.h; sourceTree = "<group>"; };
@@ -3532,6 +3536,7 @@
 			isa = PBXGroup;
 			children = (
 				8B456D816D31B1E44D9BF8890153A9A6 /* GenericButtonView.swift */,
+				89417372246C3A6500538AC4 /* GenericCheckboxView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -5085,6 +5090,7 @@
 				884E5209CEA3B6E756D7382454B740FC /* UIViewController+Alert.swift */,
 				893A2A762465A68700BF7052 /* UIViewController+Extensions.swift */,
 				893A2A742465954A00BF7052 /* KeyboardNotificationProvider.swift */,
+				89417376246C418A00538AC4 /* UILabelInteractionManager.swift */,
 				C1EAC398A79C4C4FA751A17E996D2E34 /* Validator */,
 				A66C64763329CA4F11C15D72A7584160 /* ValitationRenderer */,
 			);
@@ -7213,6 +7219,7 @@
 				6D4A3502616444F1263FBB42500A27BC /* CacheManager.swift in Sources */,
 				FF9B0E1E028FC8335E26C68225878933 /* CodableColor.swift in Sources */,
 				8CA2E14E61721A2ED35F593E2D690309 /* CodableDictionary.swift in Sources */,
+				89417373246C3A6500538AC4 /* GenericCheckboxView.swift in Sources */,
 				4A4D628B7362E27FAA70A9FB2181B49F /* ColorPalette.swift in Sources */,
 				E8CD2B5CC540079BC0F42CB5A941ACA8 /* Constants.swift in Sources */,
 				178CF9F95ABFBEEC1561D01D4FC6C46A /* Date+Extensions.swift in Sources */,
@@ -7250,6 +7257,7 @@
 				14441A3173E170871E23FE423B31D3A9 /* StringsProvider.swift in Sources */,
 				22D3FFE1C8F3AD2FE40AD036DAE623ED /* Style.swift in Sources */,
 				30EDD3B14FF444DD1ECA1DEAD517EE42 /* TestNetworkApiGateway.swift in Sources */,
+				89417377246C418A00538AC4 /* UILabelInteractionManager.swift in Sources */,
 				C8D6428BADBC96B3AEA1B9D66FDAED51 /* TPKeyboardAvoiding+Extensions.swift in Sources */,
 				21CCC61C9927C3555B41C52B458C7FC5 /* TypeAliases.swift in Sources */,
 				F0DCDC4157554FC388282F1C56781655 /* UIColor+Extension.swift in Sources */,

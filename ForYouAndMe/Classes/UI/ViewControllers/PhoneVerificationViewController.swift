@@ -12,6 +12,25 @@ import RxSwift
 
 public class PhoneVerificationViewController: UIViewController {
     
+    private enum LabelInteractions: CaseIterable {
+        case privacyPolicy
+        case termsOfService
+        
+        var text: String {
+            switch self {
+            case .privacyPolicy: return StringsProvider.string(forKey: .phoneVerificationLegalPrivacyPolicy)
+            case .termsOfService: return StringsProvider.string(forKey: .phoneVerificationLegalTermsOfService)
+            }
+        }
+        
+        func handleNavigation(navigator: AppNavigator, presenter: UIViewController) {
+            switch self {
+            case .privacyPolicy: navigator.showPrivacyPolicy(presenter: presenter)
+            case .termsOfService: navigator.showTermsOfService(presenter: presenter)
+            }
+        }
+    }
+    
     static private let confirmButtonBottomInset: CGFloat = 16.0
     
     // KeyboardNotificationProvider
@@ -99,7 +118,46 @@ public class PhoneVerificationViewController: UIViewController {
         return containerView
     }()
     
+    private lazy var legalNoteView: UIView = {
+        let horizontalStackView = UIStackView()
+        horizontalStackView.axis = .horizontal
+        horizontalStackView.spacing = 8.0
+        
+        let checkboxContainerView = UIView()
+        checkboxContainerView.addSubview(self.legalNoteCheckBoxView)
+        self.legalNoteCheckBoxView.autoPinEdge(toSuperviewEdge: .leading)
+        self.legalNoteCheckBoxView.autoPinEdge(toSuperviewEdge: .trailing)
+        self.legalNoteCheckBoxView.autoPinEdge(toSuperviewEdge: .top, withInset: 0.0, relation: .greaterThanOrEqual)
+        self.legalNoteCheckBoxView.autoPinEdge(toSuperviewEdge: .bottom, withInset: 0.0, relation: .greaterThanOrEqual)
+        self.legalNoteCheckBoxView.autoAlignAxis(toSuperviewAxis: .horizontal)
+        let label = UILabel()
+        label.numberOfLines = 0
+        label.textAlignment = .left
+        label.lineBreakMode = .byWordWrapping
+        self.legalLabelInteractionManager = UILabelInteractionManager(withLabel: label,
+                                                                      text: StringsProvider.string(forKey: .phoneVerificationLegal),
+                                                                      lineSpacing: 5.0,
+                                                                      normalTextFont: FontPalette.font(withSize: 13),
+                                                                      normalTextColor: ColorPalette.color(withType: .secondaryText),
+                                                                      interactableFont: FontPalette.font(withSize: 13, type: .bold),
+                                                                      interactableColor: ColorPalette.color(withType: .secondaryText),
+                                                                      interactableUnderline: true,
+                                                                      interactionCallback: self.handleLabelInteractions,
+                                                                      interactableStrings: LabelInteractions.allCases.map { $0.text })
+        
+        horizontalStackView.addArrangedSubview(checkboxContainerView)
+        horizontalStackView.addArrangedSubview(label)
+        
+        let containerView = UIView()
+        containerView.addSubview(horizontalStackView)
+        horizontalStackView.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets(top: 0, left: 8, bottom: 0, right: 16))
+        return containerView
+    }()
+    
+    private let legalNoteCheckBoxView: GenericCheckboxView = GenericCheckboxView(isDefaultChecked: false)
+    
     private var confirmButtonBottomConstraint: NSLayoutConstraint?
+    private var legalLabelInteractionManager: UILabelInteractionManager?
     
     init() {
         self.navigator = Services.shared.navigator
@@ -148,6 +206,8 @@ public class PhoneVerificationViewController: UIViewController {
                            textAlignment: .left)
         stackView.addBlankSpace(space: 24.0)
         stackView.addArrangedSubview(self.textFieldView)
+        stackView.addBlankSpace(space: 40.0)
+        stackView.addArrangedSubview(self.legalNoteView)
         
         // Confirm button
         self.view.addSubview(self.confirmButton)
@@ -183,6 +243,11 @@ public class PhoneVerificationViewController: UIViewController {
         self.deRegisterKeyboardNotification()
     }
     
+    public override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        self.legalLabelInteractionManager?.refreshLabel()
+    }
+    
     // MARK: Actions
     
     @objc private func countryCodeButtonPressed() {
@@ -214,6 +279,14 @@ public class PhoneVerificationViewController: UIViewController {
         self.textFieldCheckmarkButton.isHidden = false == self.isPhoneNumberValid()
         self.textFieldEditButton.isHidden = self.isPhoneNumberValid()
         self.confirmButton.isEnabled = self.isPhoneNumberValid()
+    }
+    
+    private func handleLabelInteractions(_ text: String) {
+        if let interaction = LabelInteractions.allCases.first(where: { $0.text == text }) {
+            interaction.handleNavigation(navigator: self.navigator, presenter: self)
+        } else {
+            assertionFailure("Unhandled legal interaction")
+        }
     }
 }
 

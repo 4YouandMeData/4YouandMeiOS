@@ -18,6 +18,8 @@ enum ImageName: String, CaseIterable {
     case backButton
     case checkmark
     case edit
+    case checkboxOutline
+    case checkboxFilled
 }
 
 public class ImagePalette {

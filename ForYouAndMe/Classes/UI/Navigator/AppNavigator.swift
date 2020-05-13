@@ -91,6 +91,16 @@ class AppNavigator {
         navigationController.pushViewController(PhoneVerificationViewController(), animated: true)
     }
     
+    public func showPrivacyPolicy(presenter: UIViewController) {
+        // TODO: Show Privacy Policy
+        print("TODO: Show Privacy Policy")
+    }
+    
+    public func showTermsOfService(presenter: UIViewController) {
+        // TODO: Show Terms of Service
+        print("TODO: Show Terms of Service")
+    }
+    
     // MARK: Progress HUD
     
     public func pushProgressHUD() {
