@@ -70,7 +70,6 @@ public class PhoneVerificationViewController: UIViewController {
         textField.tintColor = ColorPalette.color(withType: .secondaryText)
         textField.keyboardType = .phonePad
         textField.font = FontPalette.font(withSize: 20.0)
-        textField.delegate = self
         textField.addTarget(self, action: #selector(self.textFieldDidChange(_:)), for: .editingChanged)
         return textField
     }()
@@ -184,7 +183,7 @@ public class PhoneVerificationViewController: UIViewController {
         self.scrollView.addSubview(stackView)
         stackView.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets(top: 0.0,
                                                                   left: Constants.Style.DefaultHorizontalMargins,
-                                                                  bottom: 0.0,
+                                                                  bottom: Self.confirmButtonBottomInset,
                                                                   right: Constants.Style.DefaultHorizontalMargins))
         stackView.autoAlignAxis(toSuperviewAxis: .vertical)
         
@@ -278,7 +277,7 @@ public class PhoneVerificationViewController: UIViewController {
     private func updateUI() {
         self.textFieldCheckmarkButton.isHidden = false == self.isPhoneNumberValid()
         self.textFieldEditButton.isHidden = self.isPhoneNumberValid()
-        self.confirmButton.isEnabled = self.isPhoneNumberValid()
+        self.confirmButton.isEnabled = self.isPhoneNumberValid() && self.legalNoteCheckBoxView.isChecked
     }
     
     private func handleLabelInteractions(_ text: String) {
@@ -294,41 +293,25 @@ public class PhoneVerificationViewController: UIViewController {
 
 extension PhoneVerificationViewController: KeyboardNotificationProvider {
     func keyboardWillShow(height: CGFloat, duration: TimeInterval, options: UIView.AnimationOptions) {
+        let newBottomInset = self.confirmButton.frame.height + height + Self.confirmButtonBottomInset
+        self.scrollView.contentInset = UIEdgeInsets(top: 0.0, left: 0.0, bottom: newBottomInset, right: 0.0)
+        self.scrollView.scrollIndicatorInsets = self.scrollView.contentInset
         UIView.animate(withDuration: duration, delay: 0.0, options: .curveEaseIn, animations: { [weak self] in
             guard let self = self else { return }
             self.confirmButtonBottomConstraint?.constant = -Self.confirmButtonBottomInset - height
             self.textFieldEditButton.alpha = 0.0
-            self.scrollView.contentInset = UIEdgeInsets(top: 0.0, left: 0.0, bottom: self.confirmButton.frame.height + height, right: 0.0)
-            self.scrollView.scrollIndicatorInsets = self.scrollView.contentInset
             self.view.layoutIfNeeded()
-        })
+            })
     }
     
     func keyboardWillHide(duration: TimeInterval, options: UIView.AnimationOptions) {
+        self.scrollView.contentInset = UIEdgeInsets.zero
+        self.scrollView.scrollIndicatorInsets = self.scrollView.contentInset
         UIView.animate(withDuration: duration, delay: 0.0, options: .curveEaseIn, animations: { [weak self] in
             guard let self = self else { return }
             self.confirmButtonBottomConstraint?.constant = -Self.confirmButtonBottomInset
             self.textFieldEditButton.alpha = 1.0
-            self.scrollView.contentInset = UIEdgeInsets.zero
-            self.scrollView.scrollIndicatorInsets = self.scrollView.contentInset
             self.view.layoutIfNeeded()
             })
-    }
-}
-
-// MARK: - UITextViewDelegate
-
-extension PhoneVerificationViewController: UITextFieldDelegate {
-    
-    public func textFieldDidBeginEditing(_ textField: UITextField) {
-        self.scrollToBottom()
-    }
-    
-    private func scrollToBottom() {
-        let scrollPoint = CGPoint(x: 0,
-                                  y: self.scrollView.contentSize.height
-                                    - self.scrollView.bounds.size.height
-                                    + self.scrollView.contentInset.bottom)
-        self.scrollView.setContentOffset(scrollPoint, animated: true)
     }
 }
