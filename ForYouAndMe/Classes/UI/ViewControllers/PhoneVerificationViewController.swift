@@ -8,7 +8,6 @@
 
 import Foundation
 import PureLayout
-import TPKeyboardAvoiding
 import RxSwift
 
 public class PhoneVerificationViewController: UIViewController {
@@ -23,7 +22,7 @@ public class PhoneVerificationViewController: UIViewController {
     private let repository: Repository
     
     private lazy var scrollView: UIScrollView = {
-        let scrollView = TPKeyboardAvoidingScrollView()
+        let scrollView = UIScrollView()
         scrollView.keyboardDismissMode = .interactive
         return scrollView
     }()
@@ -52,6 +51,7 @@ public class PhoneVerificationViewController: UIViewController {
         textField.tintColor = ColorPalette.color(withType: .secondaryText)
         textField.keyboardType = .phonePad
         textField.font = FontPalette.font(withSize: 20.0)
+        textField.delegate = self
         textField.addTarget(self, action: #selector(self.textFieldDidChange(_:)), for: .editingChanged)
         return textField
     }()
@@ -165,7 +165,7 @@ public class PhoneVerificationViewController: UIViewController {
         self.confirmButton.isEnabled = false
         self.textFieldEditButton.setImage(ImagePalette.image(withName: .edit), for: .normal)
         self.countryCodeButton.setTitle("+1", for: .normal)
-        self.updateCheckVisibility()
+        self.updateUI()
     }
     
     public override func viewWillAppear(_ animated: Bool) {
@@ -200,7 +200,7 @@ public class PhoneVerificationViewController: UIViewController {
     }
     
     @objc private func textFieldDidChange(_ textField: UITextField) {
-        self.updateCheckVisibility()
+        self.updateUI()
     }
     
     // MARK: Private Methods
@@ -210,9 +210,10 @@ public class PhoneVerificationViewController: UIViewController {
         return self.phoneNumberTextField.text?.count ?? 0 >= 5
     }
     
-    private func updateCheckVisibility() {
+    private func updateUI() {
         self.textFieldCheckmarkButton.isHidden = false == self.isPhoneNumberValid()
         self.textFieldEditButton.isHidden = self.isPhoneNumberValid()
+        self.confirmButton.isEnabled = self.isPhoneNumberValid()
     }
 }
 
@@ -224,6 +225,8 @@ extension PhoneVerificationViewController: KeyboardNotificationProvider {
             guard let self = self else { return }
             self.confirmButtonBottomConstraint?.constant = -Self.confirmButtonBottomInset - height
             self.textFieldEditButton.alpha = 0.0
+            self.scrollView.contentInset = UIEdgeInsets(top: 0.0, left: 0.0, bottom: self.confirmButton.frame.height + height, right: 0.0)
+            self.scrollView.scrollIndicatorInsets = self.scrollView.contentInset
             self.view.layoutIfNeeded()
         })
     }
@@ -233,7 +236,26 @@ extension PhoneVerificationViewController: KeyboardNotificationProvider {
             guard let self = self else { return }
             self.confirmButtonBottomConstraint?.constant = -Self.confirmButtonBottomInset
             self.textFieldEditButton.alpha = 1.0
+            self.scrollView.contentInset = UIEdgeInsets.zero
+            self.scrollView.scrollIndicatorInsets = self.scrollView.contentInset
             self.view.layoutIfNeeded()
-        })
+            })
+    }
+}
+
+// MARK: - UITextViewDelegate
+
+extension PhoneVerificationViewController: UITextFieldDelegate {
+    
+    public func textFieldDidBeginEditing(_ textField: UITextField) {
+        self.scrollToBottom()
+    }
+    
+    private func scrollToBottom() {
+        let scrollPoint = CGPoint(x: 0,
+                                  y: self.scrollView.contentSize.height
+                                    - self.scrollView.bounds.size.height
+                                    + self.scrollView.contentInset.bottom)
+        self.scrollView.setContentOffset(scrollPoint, animated: true)
     }
 }
