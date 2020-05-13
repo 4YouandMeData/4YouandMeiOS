@@ -9,6 +9,7 @@
 import Foundation
 import PureLayout
 import TPKeyboardAvoiding
+import RxSwift
 
 public class PhoneVerificationViewController: UIViewController {
     
@@ -21,7 +22,7 @@ public class PhoneVerificationViewController: UIViewController {
     private let navigator: AppNavigator
     private let repository: Repository
     
-    private lazy var scrollView: TPKeyboardAvoidingScrollView = {
+    private lazy var scrollView: UIScrollView = {
         let scrollView = TPKeyboardAvoidingScrollView()
         scrollView.keyboardDismissMode = .interactive
         return scrollView
@@ -51,12 +52,22 @@ public class PhoneVerificationViewController: UIViewController {
         textField.tintColor = ColorPalette.color(withType: .secondaryText)
         textField.keyboardType = .phonePad
         textField.font = FontPalette.font(withSize: 20.0)
+        textField.addTarget(self, action: #selector(self.textFieldDidChange(_:)), for: .editingChanged)
         return textField
     }()
     
     private lazy var textFieldEditButton: UIButton = {
         let button = UIButton()
-        button.isUserInteractionEnabled = false
+        button.imageView?.contentMode = .scaleAspectFit
+        button.setImage(ImagePalette.image(withName: .edit), for: .normal)
+        button.addTarget(self, action: #selector(self.textFieldEditButtonPressed), for: .touchUpInside)
+        return button
+    }()
+    
+    private lazy var textFieldCheckmarkButton: UIButton = {
+        let button = UIButton()
+        button.imageView?.contentMode = .scaleAspectFit
+        button.setImage(ImagePalette.image(withName: .checkmark), for: .normal)
         button.addTarget(self, action: #selector(self.textFieldEditButtonPressed), for: .touchUpInside)
         return button
     }()
@@ -74,9 +85,13 @@ public class PhoneVerificationViewController: UIViewController {
         stackView.spacing = 8.0
         stackView.addArrangedSubview(self.countryCodeButton)
         stackView.addArrangedSubview(self.phoneNumberTextField)
-        stackView.addArrangedSubview(self.textFieldEditButton)
-        
-        self.textFieldEditButton.autoSetDimension(.width, toSize: 32.0)
+        let iconContainerView = UIView()
+        iconContainerView.addSubview(self.textFieldEditButton)
+        self.textFieldEditButton.autoPinEdgesToSuperviewEdges()
+        iconContainerView.addSubview(self.textFieldCheckmarkButton)
+        self.textFieldCheckmarkButton.autoPinEdgesToSuperviewEdges()
+        iconContainerView.autoSetDimension(.width, toSize: 40.0)
+        stackView.addArrangedSubview(iconContainerView)
         
         containerView.addSubview(stackView)
         stackView.autoPinEdgesToSuperviewEdges()
@@ -103,17 +118,17 @@ public class PhoneVerificationViewController: UIViewController {
         
         // ScrollView
         self.view.addSubview(self.scrollView)
-        self.scrollView.autoPinEdgesToSuperviewSafeArea(with: UIEdgeInsets(top: 0.0,
-                                                                      left: Constants.Style.DefaultHorizontalMargins,
-                                                                      bottom: 0.0,
-                                                                      right: Constants.Style.DefaultHorizontalMargins))
+        self.scrollView.autoPinEdgesToSuperviewSafeArea()
         
         // StackView
         let stackView = UIStackView()
         stackView.axis = .vertical
         self.scrollView.addSubview(stackView)
-        stackView.autoPinEdgesToSuperviewEdges()
-        stackView.autoMatch(.width, to: .width, of: self.scrollView)
+        stackView.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets(top: 0.0,
+                                                                  left: Constants.Style.DefaultHorizontalMargins,
+                                                                  bottom: 0.0,
+                                                                  right: Constants.Style.DefaultHorizontalMargins))
+        stackView.autoAlignAxis(toSuperviewAxis: .vertical)
         
         stackView.addBlankSpace(space: 16.0)
         stackView.addLabel(text: StringsProvider.string(forKey: .phoneVerificationTitle),
@@ -150,6 +165,7 @@ public class PhoneVerificationViewController: UIViewController {
         self.confirmButton.isEnabled = false
         self.textFieldEditButton.setImage(ImagePalette.image(withName: .edit), for: .normal)
         self.countryCodeButton.setTitle("+1", for: .normal)
+        self.updateCheckVisibility()
     }
     
     public override func viewWillAppear(_ animated: Bool) {
@@ -157,6 +173,14 @@ public class PhoneVerificationViewController: UIViewController {
         
         self.navigationController?.navigationBar.apply(style: NavigationBarStyles.darkStyle)
         self.addCustomBackButton(withImage: ImagePalette.image(withName: .backButton))
+
+        self.registerKeyboardNotification()
+    }
+    
+    public override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        
+        self.deRegisterKeyboardNotification()
     }
     
     // MARK: Actions
@@ -174,6 +198,22 @@ public class PhoneVerificationViewController: UIViewController {
         // TODO: Implement confirm button behaviour
         print("TODO: Implement confirm button behaviour")
     }
+    
+    @objc private func textFieldDidChange(_ textField: UITextField) {
+        self.updateCheckVisibility()
+    }
+    
+    // MARK: Private Methods
+    
+    private func isPhoneNumberValid() -> Bool {
+        // TODO: Apply correct rule
+        return self.phoneNumberTextField.text?.count ?? 0 >= 5
+    }
+    
+    private func updateCheckVisibility() {
+        self.textFieldCheckmarkButton.isHidden = false == self.isPhoneNumberValid()
+        self.textFieldEditButton.isHidden = self.isPhoneNumberValid()
+    }
 }
 
 // MARK: - KeyboardNotificationProvider
@@ -183,6 +223,7 @@ extension PhoneVerificationViewController: KeyboardNotificationProvider {
         UIView.animate(withDuration: duration, delay: 0.0, options: .curveEaseIn, animations: { [weak self] in
             guard let self = self else { return }
             self.confirmButtonBottomConstraint?.constant = -Self.confirmButtonBottomInset - height
+            self.textFieldEditButton.alpha = 0.0
             self.view.layoutIfNeeded()
         })
     }
@@ -191,6 +232,7 @@ extension PhoneVerificationViewController: KeyboardNotificationProvider {
         UIView.animate(withDuration: duration, delay: 0.0, options: .curveEaseIn, animations: { [weak self] in
             guard let self = self else { return }
             self.confirmButtonBottomConstraint?.constant = -Self.confirmButtonBottomInset
+            self.textFieldEditButton.alpha = 1.0
             self.view.layoutIfNeeded()
         })
     }
