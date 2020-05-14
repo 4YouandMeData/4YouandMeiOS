@@ -54,7 +54,7 @@ public class PhoneVerificationViewController: UIViewController {
         button.addTarget(self, action: #selector(self.confirmButtonPressed), for: .touchUpInside)
         return button
     }()
-    private lazy var phoneNumberView: PhoneNumberView = PhoneNumberView()
+    private lazy var phoneNumberView: PhoneNumberView = PhoneNumberView(presenter: self)
     
     private lazy var legalNoteView: UIView = {
         let horizontalStackView = UIStackView()
@@ -196,19 +196,16 @@ public class PhoneVerificationViewController: UIViewController {
     
     // MARK: Actions
     
-    @objc private func countryCodeButtonPressed() {
-        // TODO: Country Code button behaviour
-        print("TODO: Country Code button behaviour")
-    }
-    
     @objc private func confirmButtonPressed() {
         self.navigator.pushProgressHUD()
-        self.repository.submitPhoneNumber(phoneNumber: self.phoneNumberView.text)
+        self.repository.submitPhoneNumber(phoneNumber: self.phoneNumberView.fullNumber)
             .subscribe(onSuccess: { [weak self] in
                 guard let self = self else { return }
                 self.navigator.popProgressHUD()
                 self.view.endEditing(true)
-                self.navigator.showCodeValidation(presenter: self)
+                self.navigator.showCodeValidation(countryCode: self.phoneNumberView.countryCode,
+                                                  phoneNumber: self.phoneNumberView.text,
+                                                  presenter: self)
             }, onError: { [weak self] error in
                 guard let self = self else { return }
                 self.navigator.popProgressHUD()

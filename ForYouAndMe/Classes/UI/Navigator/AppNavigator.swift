@@ -91,12 +91,13 @@ class AppNavigator {
         navigationController.pushViewController(PhoneVerificationViewController(), animated: true)
     }
     
-    public func showCodeValidation(presenter: UIViewController) {
+    public func showCodeValidation(countryCode: String, phoneNumber: String, presenter: UIViewController) {
         guard let navigationController = presenter.navigationController else {
             assertionFailure("Missing UINavigationController")
             return
         }
-        navigationController.pushViewController(CodeValidationViewController(), animated: true)
+        let codeValidationViewController = CodeValidationViewController(countryCode: countryCode, phoneNumber: phoneNumber)
+        navigationController.pushViewController(codeValidationViewController, animated: true)
     }
     
     public func showPrivacyPolicy(presenter: UIViewController) {

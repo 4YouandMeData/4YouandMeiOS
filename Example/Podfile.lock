@@ -55,6 +55,7 @@ PODS:
     - Moya-ModelMapper/RxSwift (~> 10.0.0)
     - Moya/RxSwift (~> 14.0.0)
     - OAuthSwift (~> 2.1.0)
+    - PhoneNumberKit (~> 3.2.0)
     - PureLayout (~> 3.1.5)
     - ReachabilitySwift (~> 5.0.0)
     - SVProgressHUD (~> 2.2.5)
@@ -117,6 +118,12 @@ PODS:
     - FBSnapshotTestCase (~> 2.0)
     - Nimble (~> 7.0)
   - OAuthSwift (2.1.0)
+  - PhoneNumberKit (3.2.0):
+    - PhoneNumberKit/PhoneNumberKitCore (= 3.2.0)
+    - PhoneNumberKit/UIKit (= 3.2.0)
+  - PhoneNumberKit/PhoneNumberKitCore (3.2.0)
+  - PhoneNumberKit/UIKit (3.2.0):
+    - PhoneNumberKit/PhoneNumberKitCore
   - PromisesObjC (1.2.8)
   - PureLayout (3.1.5)
   - Quick (1.2.0)
@@ -158,6 +165,7 @@ SPEC REPOS:
     - Nimble
     - Nimble-Snapshots
     - OAuthSwift
+    - PhoneNumberKit
     - PromisesObjC
     - PureLayout
     - Quick
@@ -183,7 +191,7 @@ SPEC CHECKSUMS:
   FirebaseCoreDiagnosticsInterop: 296e2c5f5314500a850ad0b83e9e7c10b011a850
   FirebaseCrashlytics: b9e729da8b80d9c45f234f791a73b5fe647d4c31
   FirebaseInstallations: acb3216eb9784d3b1d2d2d635ff74fa892cc0c44
-  ForYouAndMe: ad786da8cd09e489f084990568a7f41f188f52ee
+  ForYouAndMe: 76e653e29e6ce4572c57a0f42373d86ce0a43c82
   GoogleAppMeasurement: 6e68a94d0eaeb1d73ef6b0ed4f7334e29d63ae29
   GoogleDataTransport: b29a21d813e906014ca16c00897827e40e4a24ab
   GoogleDataTransportCCTSupport: 6f15a89b0ca35d6fa523e1f752ef818588885988
@@ -195,6 +203,7 @@ SPEC CHECKSUMS:
   Nimble: 051e3d8912d40138fa5591c78594f95fb172af37
   Nimble-Snapshots: f5459b5b091678dc942d03ec4741cacb58ba4a52
   OAuthSwift: ab1675598273e04355e0282459c328e65c9ddacd
+  PhoneNumberKit: df411d46177d1492da84e10b6c093846dd861452
   PromisesObjC: c119f3cd559f50b7ae681fa59dc1acd19173b7e6
   PureLayout: 9b4ad47b2f0388c84ff534af23d96e720c1b875a
   Quick: 58d203b1c5e27fff7229c4c1ae445ad7069a7a08

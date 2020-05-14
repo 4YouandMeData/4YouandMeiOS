@@ -43,6 +43,7 @@ Pod::Spec.new do |s|
   s.dependency 'Validator', '~> 3.2.1'
   s.dependency 'Firebase/Analytics', '~> 6.21.0'
   s.dependency 'Firebase/Crashlytics', '~> 6.21.0'
+  s.dependency 'PhoneNumberKit', '~> 3.2.0'
   
   s.static_framework = true
   

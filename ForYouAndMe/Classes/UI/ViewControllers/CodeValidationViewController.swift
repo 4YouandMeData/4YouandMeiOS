@@ -36,7 +36,7 @@ public class CodeValidationViewController: UIViewController {
     }()
     
     private lazy var phoneNumberView: PhoneNumberView = {
-        let phoneNumberView = PhoneNumberView()
+        let phoneNumberView = PhoneNumberView(presenter: self)
         let button = UIButton()
         phoneNumberView.addSubview(button)
         button.autoPinEdgesToSuperviewEdges()
@@ -45,7 +45,9 @@ public class CodeValidationViewController: UIViewController {
     }()
     
     private lazy var codeTextFieldView: GenericTextFieldView = {
-        let view = GenericTextFieldView(keyboardType: .asciiCapable) { text -> Bool in
+        let view = GenericTextFieldView(keyboardType: .asciiCapable)
+        view.textField.textContentType = .oneTimeCode
+        view.validationCallback = { text -> Bool in
             // TODO: Decide if validation code has format rule
             return text.count >= 4
         }
@@ -54,11 +56,12 @@ public class CodeValidationViewController: UIViewController {
     
     private var confirmButtonBottomConstraint: NSLayoutConstraint?
     
-    init() {
+    init(countryCode: String, phoneNumber: String) {
         self.navigator = Services.shared.navigator
         self.repository = Services.shared.repository
         super.init(nibName: nil, bundle: nil)
-        // TODO: Init phone number
+        self.phoneNumberView.countryCode = countryCode
+        self.phoneNumberView.text = phoneNumber
     }
     
     required init?(coder: NSCoder) {
@@ -151,7 +154,7 @@ public class CodeValidationViewController: UIViewController {
     
     @objc private func confirmButtonPressed() {
         self.navigator.pushProgressHUD()
-        self.repository.verifyPhoneNumber(phoneNumber: self.phoneNumberView.text, secureCode: self.codeTextFieldView.text)
+        self.repository.verifyPhoneNumber(phoneNumber: self.phoneNumberView.fullNumber, secureCode: self.codeTextFieldView.text)
         .subscribe(onSuccess: { [weak self] in
             guard let self = self else { return }
             self.navigator.popProgressHUD()

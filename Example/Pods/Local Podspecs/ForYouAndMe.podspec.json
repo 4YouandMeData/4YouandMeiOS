@@ -57,6 +57,9 @@
     ],
     "Firebase/Crashlytics": [
       "~> 6.21.0"
+    ],
+    "PhoneNumberKit": [
+      "~> 3.2.0"
     ]
   },
   "static_framework": true,

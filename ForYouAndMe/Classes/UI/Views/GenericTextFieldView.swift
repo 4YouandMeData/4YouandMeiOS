@@ -16,8 +16,16 @@ class GenericTextFieldView: UIView {
     static var normalTextColor: UIColor { ColorPalette.color(withType: .secondaryText) }
     static var errorColor: UIColor { ColorPalette.color(withType: .primaryText) }
     
+    public var validationCallback: GenericTextFieldViewValidation?
+    
     public var isValid: BehaviorSubject<Bool> = BehaviorSubject<Bool>(value: false)
-    public var text: String { self.textField.text ?? "" }
+    public var text: String {
+        get { self.textField.text ?? "" }
+        set {
+            self.textField.text = newValue
+            self.checkValidation()
+        }
+    }
     
     public lazy var horizontalStackView: UIStackView = {
         let stackView = UIStackView()
@@ -27,7 +35,7 @@ class GenericTextFieldView: UIView {
         return stackView
     }()
     
-    private lazy var textField: UITextField = {
+    public lazy var textField: UITextField = {
         let textField = UITextField()
         textField.textColor = Self.normalTextColor
         textField.tintColor = Self.normalTextColor
@@ -64,11 +72,9 @@ class GenericTextFieldView: UIView {
         return label
     }()
     
-    private let validationCallback: GenericTextFieldViewValidation
     private let disposeBag = DisposeBag()
     
-    init(keyboardType: UIKeyboardType, validationCallback: @escaping GenericTextFieldViewValidation) {
-        self.validationCallback = validationCallback
+    init(keyboardType: UIKeyboardType) {
         super.init(frame: .zero)
         
         let iconContainerView = UIView()
@@ -113,23 +119,23 @@ class GenericTextFieldView: UIView {
     
     // MARK: Public Methods
     
-    public func setText(_ text: String) {
-        self.textField.text = text
-        self.checkValidation()
-    }
-    
     public func setError(errorText: String) {
         self.errorLabel.text = errorText
         self.textField.textColor = Self.errorColor
         self.textField.tintColor = Self.errorColor
     }
     
-    func clearError(clearErrorText: Bool) {
+    public func clearError(clearErrorText: Bool) {
         if clearErrorText {
             self.errorLabel.text = ""
         }
         self.textField.textColor = Self.normalTextColor
         self.textField.tintColor = Self.normalTextColor
+    }
+    
+    public func checkValidation() {
+        let isValid = self.validationCallback?(self.textField.text ?? "") ?? false
+        self.isValid.onNext(isValid)
     }
     
     // MARK: Actions
@@ -148,11 +154,6 @@ class GenericTextFieldView: UIView {
     private func updateUI(phoneValid: Bool) {
         self.textFieldCheckmarkButton.isHidden = false == phoneValid
         self.textFieldEditButton.isHidden = phoneValid
-    }
-    
-    private func checkValidation() {
-        let isValid = self.validationCallback(self.textField.text ?? "")
-        self.isValid.onNext(isValid)
     }
 }
 
