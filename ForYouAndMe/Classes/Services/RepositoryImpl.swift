@@ -67,7 +67,7 @@ extension RepositoryImpl: Repository {
         .handleError()
     }
     
-    func varifyPhoneNumber(phoneNumber: String, secureCode: String) -> Single<()> {
+    func verifyPhoneNumber(phoneNumber: String, secureCode: String) -> Single<()> {
         return self.api.send(request: ApiRequest(serviceRequest: .verifyPhoneNumber(phoneNumber: phoneNumber,
                                                                                     secureCode: secureCode)))
         .handleError()

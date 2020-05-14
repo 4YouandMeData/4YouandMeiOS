@@ -39,5 +39,5 @@ protocol Repository: class {
     // Authentication
     var isLoggedIn: Bool { get }
     func submitPhoneNumber(phoneNumber: String) -> Single<()>
-    func varifyPhoneNumber(phoneNumber: String, secureCode: String) -> Single<()>
+    func verifyPhoneNumber(phoneNumber: String, secureCode: String) -> Single<()>
 }

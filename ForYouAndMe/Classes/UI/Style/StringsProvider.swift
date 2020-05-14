@@ -31,8 +31,10 @@ enum StringKey: String, CaseIterable, CodingKey {
     case phoneVerificationLegalTermsOfService = "PHONE_VERIFICATION_LEGAL_TERMS_OF_SERVICE"
     case phoneVerificationLegalPrivacyPolicy = "PHONE_VERIFICATION_LEGAL_PRIVACY_POLICY"
     case phoneVerificationWrongNumber = "PHONE_VERIFICATION_WRONG_NUMBER"
+    case phoneVerificationCodeTitle = "PHONE_VERIFICATION_CODE_TITLE"
+    case phoneVerificationCodeBody = "PHONE_VERIFICATION_CODE_BODY"
     case phoneVerificationCodeDescription = "PHONE_VERIFICATION_CODE_DESCRIPTION"
-    case phoneVerificationResendCode = "PHONE_VERIFICATION_RESEND_CODE"
+    case phoneVerificationCodeResend = "PHONE_VERIFICATION_CODE_RESEND"
     case phoneVerificationErrorWrongCode = "PHONE_VERIFICATION_ERROR_WRONG_CODE"
     case phoneVerificationErrorMissingNumber = "PHONE_VERIFICATION_ERROR_MISSING_NUMBER"
     

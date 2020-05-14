@@ -91,6 +91,14 @@ class AppNavigator {
         navigationController.pushViewController(PhoneVerificationViewController(), animated: true)
     }
     
+    public func showCodeValidation(presenter: UIViewController) {
+        guard let navigationController = presenter.navigationController else {
+            assertionFailure("Missing UINavigationController")
+            return
+        }
+        navigationController.pushViewController(CodeValidationViewController(), animated: true)
+    }
+    
     public func showPrivacyPolicy(presenter: UIViewController) {
         guard let url = URL(string: StringsProvider.string(forKey: .urlPrivacyPolicy)) else {
             assertionFailure("Invalid Url for privacy policy")
@@ -105,6 +113,17 @@ class AppNavigator {
             return
         }
         self.openWebView(withTitle: "", url: url, presenter: presenter)
+    }
+    
+    // MARK: Intro Video
+    
+    public func showIntroVideo(presenter: UIViewController) {
+//        guard let navigationController = presenter.navigationController else {
+//            assertionFailure("Missing UINavigationController")
+//            return
+//        }
+        // TODO: Show intro video
+        print("TODO: Show intro video")
     }
     
     // MARK: Progress HUD

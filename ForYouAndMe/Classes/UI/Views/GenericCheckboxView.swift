@@ -16,6 +16,8 @@ class GenericCheckboxView: UIView {
         return (try? self.isCheckedSubject.value()) ?? false
     }
     
+    public var isCheckedSubject: BehaviorSubject<Bool>
+    
     private lazy var checkboxImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.contentMode = .scaleAspectFit
@@ -24,15 +26,13 @@ class GenericCheckboxView: UIView {
         return imageView
     }()
     
-    private var isCheckedSubject: BehaviorSubject<Bool>
-    
     private final let disposeBag = DisposeBag()
     
     init(isDefaultChecked: Bool) {
         self.isCheckedSubject = BehaviorSubject(value: isDefaultChecked)
         super.init(frame: .zero)
         
-        let tap = UITapGestureRecognizer(target: self, action: #selector(onTap))
+        let tap = UITapGestureRecognizer(target: self, action: #selector(self.onTap))
         self.addGestureRecognizer(tap)
         
         self.addSubview(self.checkboxImageView)

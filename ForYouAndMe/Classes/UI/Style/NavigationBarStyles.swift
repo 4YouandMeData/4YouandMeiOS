@@ -25,11 +25,23 @@ class NavigationBarStyles {
     
     static let lightStyle = Style<UINavigationBar> { bar in
         bar.isTranslucent = false
+        bar.setBackgroundImage(UIImage(), for: UIBarMetrics.default)
         bar.barTintColor = ColorPalette.color(withType: .secondary)
         bar.tintColor = ColorPalette.color(withType: .primaryText)
         bar.prefersLargeTitles = false
         bar.shadowImage = UIImage() // Remove Separator line
         bar.titleTextAttributes = [.foregroundColor: ColorPalette.color(withType: .primaryText),
+                                   .font: FontPalette.font(withSize: 16.0)]
+    }
+    
+    static let activeStyle = Style<UINavigationBar> { bar in
+        bar.isTranslucent = false
+        bar.setBackgroundImage(UIImage(), for: UIBarMetrics.default)
+        bar.barTintColor = ColorPalette.color(withType: .active)
+        bar.tintColor = ColorPalette.color(withType: .secondary)
+        bar.prefersLargeTitles = false
+        bar.shadowImage = UIImage() // Remove Separator line
+        bar.titleTextAttributes = [.foregroundColor: ColorPalette.color(withType: .secondaryText),
                                    .font: FontPalette.font(withSize: 16.0)]
     }
 }

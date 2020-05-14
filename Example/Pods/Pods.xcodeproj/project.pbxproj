@@ -602,6 +602,8 @@
 		880F95A0173BE80FBBC7286E3AECA871 /* FBLPromise+Await.h in Copy . Public Headers */ = {isa = PBXBuildFile; fileRef = DDDA930BF403C89BD5A88EA87D1FF18F /* FBLPromise+Await.h */; };
 		88B7F4E9AC2AC10B8C7DEDB9FE1EA79C /* FIRCLSLogger.m in Sources */ = {isa = PBXBuildFile; fileRef = 39990A95F4B33925F1FAD688CC26A576 /* FIRCLSLogger.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
 		88D795191B71868DC81D5D3F45D7338F /* Quick-dummy.m in Sources */ = {isa = PBXBuildFile; fileRef = 799B7A822B2E17AFB3DF897DE3FDBDE2 /* Quick-dummy.m */; };
+		8909E260246D4B1B00110A59 /* CodeValidationViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8909E25F246D4B1B00110A59 /* CodeValidationViewController.swift */; };
+		8915FAF4246D51F90085E84A /* PhoneNumberView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8915FAF3246D51F90085E84A /* PhoneNumberView.swift */; };
 		892F567BF4D68BB3C3AE4687AE25BE8C /* FIRCLSDownloadAndSaveSettingsOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = E6623DC29CCD4A9D8787F44EE771ED36 /* FIRCLSDownloadAndSaveSettingsOperation.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
 		893A2A712465890400BF7052 /* PhoneVerificationViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893A2A702465890400BF7052 /* PhoneVerificationViewController.swift */; };
 		893A2A752465954A00BF7052 /* KeyboardNotificationProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893A2A742465954A00BF7052 /* KeyboardNotificationProvider.swift */; };
@@ -2323,6 +2325,8 @@
 		889684E66DDE1D787F58304A6C686A34 /* ReachabilitySwift.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = ReachabilitySwift.debug.xcconfig; sourceTree = "<group>"; };
 		88C71699E67C75E3CF4E1A5D9CBDFF50 /* FIRInstallationsStoredItem.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = FIRInstallationsStoredItem.m; path = FirebaseInstallations/Source/Library/InstallationsStore/FIRInstallationsStoredItem.m; sourceTree = "<group>"; };
 		88E57B09E8DEB33E70B5A39206E5882F /* Skip.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = Skip.swift; path = RxSwift/Observables/Skip.swift; sourceTree = "<group>"; };
+		8909E25F246D4B1B00110A59 /* CodeValidationViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodeValidationViewController.swift; sourceTree = "<group>"; };
+		8915FAF3246D51F90085E84A /* PhoneNumberView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneNumberView.swift; sourceTree = "<group>"; };
 		893A2A702465890400BF7052 /* PhoneVerificationViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneVerificationViewController.swift; sourceTree = "<group>"; };
 		893A2A742465954A00BF7052 /* KeyboardNotificationProvider.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = KeyboardNotificationProvider.swift; sourceTree = "<group>"; };
 		893A2A762465A68700BF7052 /* UIViewController+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIViewController+Extensions.swift"; sourceTree = "<group>"; };
@@ -3318,6 +3322,7 @@
 				6FB661D9991016A193D67A3E5B12CA01 /* IntroViewController.swift */,
 				F4500B438D29900DF8492955AE527C81 /* SetupLaterViewController.swift */,
 				893A2A702465890400BF7052 /* PhoneVerificationViewController.swift */,
+				8909E25F246D4B1B00110A59 /* CodeValidationViewController.swift */,
 				893B6F11246D387F004656CF /* WebViewViewController.swift */,
 			);
 			path = ViewControllers;
@@ -3540,6 +3545,7 @@
 			children = (
 				8B456D816D31B1E44D9BF8890153A9A6 /* GenericButtonView.swift */,
 				89417372246C3A6500538AC4 /* GenericCheckboxView.swift */,
+				8915FAF3246D51F90085E84A /* PhoneNumberView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -7239,6 +7245,7 @@
 				472EC282EF14CDB0C728FAEEF6C2B393 /* IntroViewController.swift in Sources */,
 				ABB22532EE5CBFC6D67BFB9F4026E06D /* Mapper+Extensions.swift in Sources */,
 				11E1FE949F97C6B3D8F49F7AF3CDDB9A /* NavigationBarStyles.swift in Sources */,
+				8909E260246D4B1B00110A59 /* CodeValidationViewController.swift in Sources */,
 				501B0A4F9453BD2ACA64A2CF2D62A87F /* NetworkApiGateway.swift in Sources */,
 				3A9B84CAEEE20767918CC6E3B76470B9 /* NetworkUtility.swift in Sources */,
 				4D87CD25549DE55FCA73530E1CDF4F05 /* PodUtils.swift in Sources */,
@@ -7250,6 +7257,7 @@
 				29B9282D939D1411360735170BE5F9CB /* RepositoryImpl.swift in Sources */,
 				CC3E54CA66FE61AA7C280E94BFAA1A70 /* ReusableIdentifier.swift in Sources */,
 				C0D6ED127AF9B5DB258E504001E772A9 /* ScrollStackView.swift in Sources */,
+				8915FAF4246D51F90085E84A /* PhoneNumberView.swift in Sources */,
 				42A90DC0DEDC6E90E9C18AF7449785A1 /* ServerErrors.swift in Sources */,
 				893A2A712465890400BF7052 /* PhoneVerificationViewController.swift in Sources */,
 				893B6F12246D387F004656CF /* WebViewViewController.swift in Sources */,
