@@ -611,6 +611,7 @@
 		893B6F12246D387F004656CF /* WebViewViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893B6F11246D387F004656CF /* WebViewViewController.swift */; };
 		89417373246C3A6500538AC4 /* GenericCheckboxView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89417372246C3A6500538AC4 /* GenericCheckboxView.swift */; };
 		89417377246C418A00538AC4 /* UILabelInteractionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89417376246C418A00538AC4 /* UILabelInteractionManager.swift */; };
+		89696603246D8EC600A4273C /* GenericTextFieldView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89696602246D8EC600A4273C /* GenericTextFieldView.swift */; };
 		899B61F1F65D5E954C3CB8362FD533E5 /* OAuthSwift.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51DA131E28FC1D0E6C32D9A6F57B83DB /* OAuthSwift.swift */; };
 		89A7557E8B2D3B52C52A27089BF111A7 /* FBLPromise.m in Sources */ = {isa = PBXBuildFile; fileRef = 15F8FF4A6D257DDFCF2EF2D695367847 /* FBLPromise.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
 		8A5AFADCD3AE078964DBFBF1ADE791F9 /* GDTCORPlatform.h in Headers */ = {isa = PBXBuildFile; fileRef = EC6C5ACBD98D4CE470AB04645A49EAC4 /* GDTCORPlatform.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -2334,6 +2335,7 @@
 		89417372246C3A6500538AC4 /* GenericCheckboxView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GenericCheckboxView.swift; sourceTree = "<group>"; };
 		89417376246C418A00538AC4 /* UILabelInteractionManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UILabelInteractionManager.swift; sourceTree = "<group>"; };
 		895932CA01195153DB06619B43F9D0DC /* FIRCoreDiagnosticsInterop.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = FIRCoreDiagnosticsInterop.h; path = Interop/CoreDiagnostics/Public/FIRCoreDiagnosticsInterop.h; sourceTree = "<group>"; };
+		89696602246D8EC600A4273C /* GenericTextFieldView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GenericTextFieldView.swift; sourceTree = "<group>"; };
 		898A43A462E347C676D78CA605737641 /* nanopb.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = nanopb.debug.xcconfig; sourceTree = "<group>"; };
 		89A4E1EDC7D8212D032CBD0C748C994D /* FIRCLSURLBuilder.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = FIRCLSURLBuilder.h; path = Crashlytics/Shared/FIRCLSNetworking/FIRCLSURLBuilder.h; sourceTree = "<group>"; };
 		8A073CED34AA47B2FE2D3BE924B82D12 /* FIRInstallationsIIDStore.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = FIRInstallationsIIDStore.h; path = FirebaseInstallations/Source/Library/IIDMigration/FIRInstallationsIIDStore.h; sourceTree = "<group>"; };
@@ -3546,6 +3548,7 @@
 				8B456D816D31B1E44D9BF8890153A9A6 /* GenericButtonView.swift */,
 				89417372246C3A6500538AC4 /* GenericCheckboxView.swift */,
 				8915FAF3246D51F90085E84A /* PhoneNumberView.swift */,
+				89696602246D8EC600A4273C /* GenericTextFieldView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -7253,6 +7256,7 @@
 				91D52057AB7D6B2F512F9C5ED13FEE92 /* ReachabilityManager.swift in Sources */,
 				893A2A752465954A00BF7052 /* KeyboardNotificationProvider.swift in Sources */,
 				CE178DFD418D5E344CAF62BDFB6B0301 /* ReachabilityService.swift in Sources */,
+				89696603246D8EC600A4273C /* GenericTextFieldView.swift in Sources */,
 				A3A64D943D89B4CF82B996436156DCDA /* Repository.swift in Sources */,
 				29B9282D939D1411360735170BE5F9CB /* RepositoryImpl.swift in Sources */,
 				CC3E54CA66FE61AA7C280E94BFAA1A70 /* ReusableIdentifier.swift in Sources */,

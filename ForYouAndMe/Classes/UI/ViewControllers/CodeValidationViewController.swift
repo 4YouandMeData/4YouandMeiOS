@@ -35,58 +35,6 @@ public class CodeValidationViewController: UIViewController {
         return button
     }()
     
-    private lazy var codeTextField: UITextField = {
-        let textField = UITextField()
-        textField.textColor = ColorPalette.color(withType: .secondaryText)
-        textField.tintColor = ColorPalette.color(withType: .secondaryText)
-        textField.keyboardType = .phonePad
-        textField.font = FontPalette.font(withSize: 20.0)
-        textField.addTarget(self, action: #selector(self.textFieldDidChange(_:)), for: .editingChanged)
-        return textField
-    }()
-    
-    private lazy var textFieldEditButton: UIButton = {
-        let button = UIButton()
-        button.imageView?.contentMode = .scaleAspectFit
-        button.setImage(ImagePalette.image(withName: .edit), for: .normal)
-        button.addTarget(self, action: #selector(self.textFieldEditButtonPressed), for: .touchUpInside)
-        return button
-    }()
-    
-    private lazy var textFieldCheckmarkButton: UIButton = {
-        let button = UIButton()
-        button.imageView?.contentMode = .scaleAspectFit
-        button.setImage(ImagePalette.image(withName: .checkmark), for: .normal)
-        button.addTarget(self, action: #selector(self.textFieldEditButtonPressed), for: .touchUpInside)
-        return button
-    }()
-    
-    private lazy var textFieldView: UIView = {
-        let containerView = UIView()
-        containerView.autoSetDimension(.height, toSize: 48.0)
-        containerView.addHorizontalBorderLine(position: .bottom,
-                                              leftMargin: 0,
-                                              rightMargin: 0,
-                                              color: ColorPalette.color(withType: .secondary).applyAlpha(0.2))
-        
-        let stackView = UIStackView()
-        stackView.axis = .horizontal
-        stackView.spacing = 8.0
-        stackView.addArrangedSubview(self.codeTextField)
-        let iconContainerView = UIView()
-        iconContainerView.addSubview(self.textFieldEditButton)
-        self.textFieldEditButton.autoPinEdgesToSuperviewEdges()
-        iconContainerView.addSubview(self.textFieldCheckmarkButton)
-        self.textFieldCheckmarkButton.autoPinEdgesToSuperviewEdges()
-        iconContainerView.autoSetDimension(.width, toSize: 40.0)
-        stackView.addArrangedSubview(iconContainerView)
-        
-        containerView.addSubview(stackView)
-        stackView.autoPinEdgesToSuperviewEdges()
-        
-        return containerView
-    }()
-    
     private lazy var phoneNumberView: PhoneNumberView = {
         let phoneNumberView = PhoneNumberView()
         let button = UIButton()
@@ -94,6 +42,14 @@ public class CodeValidationViewController: UIViewController {
         button.autoPinEdgesToSuperviewEdges()
         button.addTarget(self, action: #selector(self.phoneNumberPressed), for: .touchUpInside)
         return phoneNumberView
+    }()
+    
+    private lazy var codeTextFieldView: GenericTextFieldView = {
+        let view = GenericTextFieldView(keyboardType: .asciiCapable) { text -> Bool in
+            // TODO: Decide if validation code has format rule
+            return text.count >= 4
+        }
+        return view
     }()
     
     private var confirmButtonBottomConstraint: NSLayoutConstraint?
@@ -146,13 +102,12 @@ public class CodeValidationViewController: UIViewController {
                            textAlignment: .left)
         stackView.addBlankSpace(space: 24.0)
         stackView.addArrangedSubview(self.phoneNumberView)
-        stackView.addBlankSpace(space: 40.0)
         stackView.addLabel(text: StringsProvider.string(forKey: .phoneVerificationCodeDescription),
                            font: FontPalette.font(withSize: 16.0),
                            textColor: ColorPalette.color(withType: .secondaryText),
                            textAlignment: .left)
         stackView.addBlankSpace(space: 24.0)
-        stackView.addArrangedSubview(self.textFieldView)
+        stackView.addArrangedSubview(self.codeTextFieldView)
         
         // Confirm button
         self.view.addSubview(self.confirmButton)
@@ -165,6 +120,10 @@ public class CodeValidationViewController: UIViewController {
             self.confirmButtonBottomConstraint = self.confirmButton.autoPinEdge(toSuperviewEdge: .bottom,
                                                                                 withInset: Self.confirmButtonBottomInset)
         }
+        
+        self.codeTextFieldView.isValid
+            .subscribe(onNext: { [weak self] _ in self?.updateUI() })
+            .disposed(by: self.disposeBag)
         
         // Initialization
         self.updateUI()
@@ -190,25 +149,19 @@ public class CodeValidationViewController: UIViewController {
     
     // MARK: Actions
     
-    @objc private func textFieldEditButtonPressed() {
-        self.codeTextField.becomeFirstResponder()
-    }
-    
     @objc private func confirmButtonPressed() {
-        self.repository.verifyPhoneNumber(phoneNumber: self.phoneNumberView.text, secureCode: self.codeTextField.text ?? "")
+        self.navigator.pushProgressHUD()
+        self.repository.verifyPhoneNumber(phoneNumber: self.phoneNumberView.text, secureCode: self.codeTextFieldView.text)
         .subscribe(onSuccess: { [weak self] in
             guard let self = self else { return }
+            self.navigator.popProgressHUD()
             self.view.endEditing(true)
             self.navigator.showIntroVideo(presenter: self)
         }, onError: { [weak self] error in
             guard let self = self else { return }
-            // TODO: Handle error in UI
-            self.navigator.handleError(error: error, presenter: self)
+            self.navigator.popProgressHUD()
+            self.codeTextFieldView.setError(errorText: error.localizedDescription)
         }).disposed(by: self.disposeBag)
-    }
-    
-    @objc private func textFieldDidChange(_ textField: UITextField) {
-        self.updateUI()
     }
     
     @objc private func phoneNumberPressed() {
@@ -217,13 +170,12 @@ public class CodeValidationViewController: UIViewController {
     
     // MARK: Private Methods
     
-    private func isCodeValid() -> Bool {
-        // TODO: Apply correct rule
-        return self.codeTextField.text?.count ?? 0 >= 5
-    }
-    
     private func updateUI() {
-        self.confirmButton.isEnabled = self.isCodeValid()
+        guard let codeValid = try? self.codeTextFieldView.isValid.value() else {
+            assertionFailure("Unexpected throw")
+            return
+        }
+        self.confirmButton.isEnabled = codeValid
     }
 }
 
@@ -237,7 +189,6 @@ extension CodeValidationViewController: KeyboardNotificationProvider {
         UIView.animate(withDuration: duration, delay: 0.0, options: .curveEaseIn, animations: { [weak self] in
             guard let self = self else { return }
             self.confirmButtonBottomConstraint?.constant = -Self.confirmButtonBottomInset - height
-            self.textFieldEditButton.alpha = 0.0
             self.view.layoutIfNeeded()
             })
     }
@@ -248,7 +199,6 @@ extension CodeValidationViewController: KeyboardNotificationProvider {
         UIView.animate(withDuration: duration, delay: 0.0, options: .curveEaseIn, animations: { [weak self] in
             guard let self = self else { return }
             self.confirmButtonBottomConstraint?.constant = -Self.confirmButtonBottomInset
-            self.textFieldEditButton.alpha = 1.0
             self.view.layoutIfNeeded()
             })
     }

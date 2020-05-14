@@ -144,7 +144,7 @@ public class PhoneVerificationViewController: UIViewController {
                            textAlignment: .left)
         stackView.addBlankSpace(space: 24.0)
         stackView.addArrangedSubview(self.phoneNumberView)
-        stackView.addBlankSpace(space: 40.0)
+        stackView.addBlankSpace(space: 16.0)
         stackView.addArrangedSubview(self.legalNoteView)
         
         // Confirm button
@@ -202,15 +202,17 @@ public class PhoneVerificationViewController: UIViewController {
     }
     
     @objc private func confirmButtonPressed() {
+        self.navigator.pushProgressHUD()
         self.repository.submitPhoneNumber(phoneNumber: self.phoneNumberView.text)
             .subscribe(onSuccess: { [weak self] in
                 guard let self = self else { return }
+                self.navigator.popProgressHUD()
                 self.view.endEditing(true)
                 self.navigator.showCodeValidation(presenter: self)
             }, onError: { [weak self] error in
                 guard let self = self else { return }
-                // TODO: Handle error in UI
-                self.navigator.handleError(error: error, presenter: self)
+                self.navigator.popProgressHUD()
+                self.phoneNumberView.setError(errorText: error.localizedDescription)
             }).disposed(by: self.disposeBag)
     }
     
