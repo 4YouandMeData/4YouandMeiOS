@@ -18,7 +18,20 @@ extension UIViewController {
         }
     }
     
+    func addCustomCloseButton(withImage image: UIImage?) {
+        assert(self.navigationController != nil, "Missing UINavigationController")
+        if let image = image {
+            self.navigationItem.leftBarButtonItem = UIBarButtonItem(image: image,
+            style: .plain, target: self,
+            action: #selector(self.customCloseButtonPressed))
+        }
+    }
+    
     @objc private func customBackButtonPressed() {
         self.navigationController?.popViewController(animated: true)
+    }
+    
+    @objc private func customCloseButtonPressed() {
+        self.navigationController?.dismiss(animated: true)
     }
 }

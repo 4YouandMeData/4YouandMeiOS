@@ -47,6 +47,10 @@ enum StringKey: String, CaseIterable, CodingKey {
     case errorMessageRemoteServer = "ERROR_MESSAGE_REMOTE_SERVER"
     case errorMessageConnectivity = "ERROR_MESSAGE_CONNECTIVITY"
     
+    // Urls
+    case urlPrivacyPolicy = "URL_PRIVACY_POLICY"
+    case urlTermsOfService = "URL_TERMS_OF_SERVICE"
+    
     var defaultValue: String {
         switch self {
         case .setupErrorTitle: return "Uh, oh!"

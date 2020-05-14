@@ -92,13 +92,19 @@ class AppNavigator {
     }
     
     public func showPrivacyPolicy(presenter: UIViewController) {
-        // TODO: Show Privacy Policy
-        print("TODO: Show Privacy Policy")
+        guard let url = URL(string: StringsProvider.string(forKey: .urlPrivacyPolicy)) else {
+            assertionFailure("Invalid Url for privacy policy")
+            return
+        }
+        self.openWebView(withTitle: "", url: url, presenter: presenter)
     }
     
     public func showTermsOfService(presenter: UIViewController) {
-        // TODO: Show Terms of Service
-        print("TODO: Show Terms of Service")
+        guard let url = URL(string: StringsProvider.string(forKey: .urlTermsOfService)) else {
+            assertionFailure("Invalid Url for terms of service")
+            return
+        }
+        self.openWebView(withTitle: "", url: url, presenter: presenter)
     }
     
     // MARK: Progress HUD
@@ -150,6 +156,15 @@ class AppNavigator {
         } else {
             presenter.showAlert(forError: error)
         }
+    }
+    
+    // MARK: - Private Methods
+    
+    private func openWebView(withTitle title: String, url: URL, presenter: UIViewController) {
+        let wevViewViewController = WebViewViewController(withTitle: title, allowNavigation: true, url: url)
+        let navigationViewController = UINavigationController(rootViewController: wevViewViewController)
+        navigationViewController.preventPopWithSwipe()
+        presenter.present(navigationViewController, animated: true)
     }
 }
 

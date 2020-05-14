@@ -606,6 +606,7 @@
 		893A2A712465890400BF7052 /* PhoneVerificationViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893A2A702465890400BF7052 /* PhoneVerificationViewController.swift */; };
 		893A2A752465954A00BF7052 /* KeyboardNotificationProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893A2A742465954A00BF7052 /* KeyboardNotificationProvider.swift */; };
 		893A2A772465A68700BF7052 /* UIViewController+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893A2A762465A68700BF7052 /* UIViewController+Extensions.swift */; };
+		893B6F12246D387F004656CF /* WebViewViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893B6F11246D387F004656CF /* WebViewViewController.swift */; };
 		89417373246C3A6500538AC4 /* GenericCheckboxView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89417372246C3A6500538AC4 /* GenericCheckboxView.swift */; };
 		89417377246C418A00538AC4 /* UILabelInteractionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89417376246C418A00538AC4 /* UILabelInteractionManager.swift */; };
 		899B61F1F65D5E954C3CB8362FD533E5 /* OAuthSwift.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51DA131E28FC1D0E6C32D9A6F57B83DB /* OAuthSwift.swift */; };
@@ -2325,6 +2326,7 @@
 		893A2A702465890400BF7052 /* PhoneVerificationViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneVerificationViewController.swift; sourceTree = "<group>"; };
 		893A2A742465954A00BF7052 /* KeyboardNotificationProvider.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = KeyboardNotificationProvider.swift; sourceTree = "<group>"; };
 		893A2A762465A68700BF7052 /* UIViewController+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIViewController+Extensions.swift"; sourceTree = "<group>"; };
+		893B6F11246D387F004656CF /* WebViewViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebViewViewController.swift; sourceTree = "<group>"; };
 		89417372246C3A6500538AC4 /* GenericCheckboxView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GenericCheckboxView.swift; sourceTree = "<group>"; };
 		89417376246C418A00538AC4 /* UILabelInteractionManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UILabelInteractionManager.swift; sourceTree = "<group>"; };
 		895932CA01195153DB06619B43F9D0DC /* FIRCoreDiagnosticsInterop.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = FIRCoreDiagnosticsInterop.h; path = Interop/CoreDiagnostics/Public/FIRCoreDiagnosticsInterop.h; sourceTree = "<group>"; };
@@ -3316,6 +3318,7 @@
 				6FB661D9991016A193D67A3E5B12CA01 /* IntroViewController.swift */,
 				F4500B438D29900DF8492955AE527C81 /* SetupLaterViewController.swift */,
 				893A2A702465890400BF7052 /* PhoneVerificationViewController.swift */,
+				893B6F11246D387F004656CF /* WebViewViewController.swift */,
 			);
 			path = ViewControllers;
 			sourceTree = "<group>";
@@ -7249,6 +7252,7 @@
 				C0D6ED127AF9B5DB258E504001E772A9 /* ScrollStackView.swift in Sources */,
 				42A90DC0DEDC6E90E9C18AF7449785A1 /* ServerErrors.swift in Sources */,
 				893A2A712465890400BF7052 /* PhoneVerificationViewController.swift in Sources */,
+				893B6F12246D387F004656CF /* WebViewViewController.swift in Sources */,
 				8D144622B3CA3F79A7223F18D2FC8996 /* Services.swift in Sources */,
 				893A2A772465A68700BF7052 /* UIViewController+Extensions.swift in Sources */,
 				142F89AD3D44C0260F8ED9F319B80B8E /* SetupLaterViewController.swift in Sources */,
