@@ -65,23 +65,23 @@ class NetworkApiGateway: ApiGateway {
     // MARK: - ApiGateway Protocol Implementation
     
     func send(request: ApiRequest) -> Single<Void> {
-        return self.send(request: request, errorType: UnhandledError.self)
+        return self.send(request: request, errorType: ResponseError.self)
     }
     
     func send<T: Mappable>(request: ApiRequest) -> Single<T> {
-        return self.send(request: request, errorType: UnhandledError.self)
+        return self.send(request: request, errorType: ResponseError.self)
     }
        
     func send<T: Mappable>(request: ApiRequest) -> Single<T?> {
-        return self.send(request: request, errorType: UnhandledError.self)
+        return self.send(request: request, errorType: ResponseError.self)
     }
        
     func send<T: Mappable>(request: ApiRequest) -> Single<[T]> {
-        return self.send(request: request, errorType: UnhandledError.self)
+        return self.send(request: request, errorType: ResponseError.self)
     }
        
     func sendExcludeInvalid<T: Mappable>(request: ApiRequest) -> Single<[T]> {
-        return self.sendExcludeInvalid(request: request, errorType: UnhandledError.self)
+        return self.sendExcludeInvalid(request: request, errorType: ResponseError.self)
     }
     
     func send<E: Mappable>(request: ApiRequest, errorType: E.Type) -> Single<()> {
@@ -202,9 +202,9 @@ extension DefaultService: TargetType {
         case .getGlobalConfig:
             return "/v1/studies/\(studyId)/configuration"
         case .submitPhoneNumber:
-            return "/v1/studies/\(studyId)/submitPhoneNumer" // TODO: Replace with correct path
+            return "/v1/studies/\(studyId)/auth/verify_phone_number"
         case .verifyPhoneNumber:
-            return "/v1/studies/\(studyId)/verifyPhoneNumber"  // TODO: Replace with correct path
+            return "/v1/studies/\(studyId)/auth/login"
         }
     }
     
@@ -234,14 +234,14 @@ extension DefaultService: TargetType {
         case .getGlobalConfig:
             return .requestPlain
         case .submitPhoneNumber(let phoneNumber):
-            // TODO: Check with correct API docs
-            return .requestParameters(parameters: ["phone_number": phoneNumber], encoding: JSONEncoding.default)
+            var params: [String: Any] = [:]
+            params["phone_number"] = phoneNumber
+            return .requestParameters(parameters: ["user": params], encoding: JSONEncoding.default)
         case .verifyPhoneNumber(let phoneNumber, let secureCode):
             var params: [String: Any] = [:]
-            // TODO: Check with correct API docs
             params["phone_number"] = phoneNumber
-            params["secure_code"] = secureCode
-            return .requestParameters(parameters: params, encoding: JSONEncoding.default)
+            params["verification_code"] = secureCode
+            return .requestParameters(parameters: ["user": params], encoding: JSONEncoding.default)
         }
     }
     

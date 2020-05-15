@@ -125,6 +125,10 @@ class AppNavigator {
 //        }
         // TODO: Show intro video
         print("TODO: Show intro video")
+        
+        presenter.showAlert(withTitle: "Great!",
+                            message: "Your phone number has been verified",
+                            completion: {})
     }
     
     // MARK: Progress HUD

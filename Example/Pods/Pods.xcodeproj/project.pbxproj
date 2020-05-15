@@ -626,6 +626,8 @@
 		892F567BF4D68BB3C3AE4687AE25BE8C /* FIRCLSDownloadAndSaveSettingsOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 8B83A55EA8A2FF8566D0CF7632C70B32 /* FIRCLSDownloadAndSaveSettingsOperation.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
 		899F8FF4A52472EC26ABCBF5E27D646B /* CredentialsPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA5D05756532D4AEE4F269EE348E2250 /* CredentialsPlugin.swift */; };
 		89A7557E8B2D3B52C52A27089BF111A7 /* FBLPromise.m in Sources */ = {isa = PBXBuildFile; fileRef = E9BB70C6D428EB8F1CF0C58D78B1846D /* FBLPromise.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
+		89EE3529246ECD9E0031532E /* ResponseError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89EE3528246ECD9E0031532E /* ResponseError.swift */; };
+		89EE352B246ECE680031532E /* ResponseError+Mappable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89EE352A246ECE680031532E /* ResponseError+Mappable.swift */; };
 		8A5AFADCD3AE078964DBFBF1ADE791F9 /* GDTCORPlatform.h in Headers */ = {isa = PBXBuildFile; fileRef = 137FD0508B89277BD2A1CACD222AB6A3 /* GDTCORPlatform.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		8A6018305754F1F0856BC876530DDBCA /* Completable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DAD96D04BB8817AFA2D780303BB7C95 /* Completable.swift */; };
 		8A790DD3C63C38B94AF872C081DCBC4A /* SchedulerServices+Emulation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E9CB0A909F95EA55AB5F33B0F8E84D7 /* SchedulerServices+Emulation.swift */; };
@@ -2421,6 +2423,8 @@
 		893D1FA2B47673BF0BF1D146D00A196F /* ElementAt.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ElementAt.swift; path = RxSwift/Observables/ElementAt.swift; sourceTree = "<group>"; };
 		895539EF91BCE1AAC84F908B65E6267B /* FBLPromise+Any.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = "FBLPromise+Any.m"; path = "Sources/FBLPromises/FBLPromise+Any.m"; sourceTree = "<group>"; };
 		897EB04999608D43DDA1C4DE5A4921D2 /* FIRInstallationsHTTPError.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = FIRInstallationsHTTPError.h; path = FirebaseInstallations/Source/Library/Errors/FIRInstallationsHTTPError.h; sourceTree = "<group>"; };
+		89EE3528246ECD9E0031532E /* ResponseError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResponseError.swift; sourceTree = "<group>"; };
+		89EE352A246ECE680031532E /* ResponseError+Mappable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ResponseError+Mappable.swift"; sourceTree = "<group>"; };
 		8A1FC7D952B6F173DB3999ABF0499AED /* FBLPromise+Any.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = "FBLPromise+Any.h"; path = "Sources/FBLPromises/include/FBLPromise+Any.h"; sourceTree = "<group>"; };
 		8A9B9E5D0DD305F3CC9A026E49852A5A /* Pods-ForYouAndMe_Example-acknowledgements.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = "Pods-ForYouAndMe_Example-acknowledgements.plist"; sourceTree = "<group>"; };
 		8AC87E1A71A4D925B6818C24CD950F39 /* dwarf.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = dwarf.h; path = Crashlytics/third_party/libunwind/dwarf.h; sourceTree = "<group>"; };
@@ -4019,6 +4023,7 @@
 				D1744EA99F013F0622612B32AFE83648 /* NetworkUtility.swift */,
 				51789EF73D7D67B5CC51738549FF5132 /* ServerErrors.swift */,
 				1775DD5DCC0CF83E78B5C9E994B06E20 /* TestNetworkApiGateway.swift */,
+				89EE3528246ECD9E0031532E /* ResponseError.swift */,
 				8ACA5B2DEF5F4E7C1D45A8254E17D074 /* Mapping */,
 			);
 			path = Network;
@@ -4583,6 +4588,7 @@
 			children = (
 				AA7468E294D5A17A5FD4DD9050C2D5DA /* GlobalConfig+Mappable.swift */,
 				509EC12272D8B26069BF51F120B43A3D /* Mapper+Extensions.swift */,
+				89EE352A246ECE680031532E /* ResponseError+Mappable.swift */,
 			);
 			path = Mapping;
 			sourceTree = "<group>";
@@ -6983,6 +6989,7 @@
 				295EC9BAFCF5FCA9014913A0CDD38EF9 /* ApiGateway.swift in Sources */,
 				E870997F280FC69D92DCE7F5464C7F85 /* AppNavigator.swift in Sources */,
 				9AEECC322715F11FEFB18C718572F38B /* Bundle+Extensions.swift in Sources */,
+				89EE3529246ECD9E0031532E /* ResponseError.swift in Sources */,
 				B8DECDB44CB75FC37FE449FEDA8D7AF9 /* ButtonStyles.swift in Sources */,
 				164B21BD75C1CFF7BCAA5A63A1DF3661 /* CacheManager.swift in Sources */,
 				58F9DA22AA4B97E81C5E48AFA372AF39 /* CodableColor.swift in Sources */,
@@ -7009,6 +7016,7 @@
 				7C1F9EFEF9CD866DD95E6F07DB914C7C /* NavigationBarStyles.swift in Sources */,
 				8FFE690DC0AAABB5DBC1E9C4DB981932 /* NetworkApiGateway.swift in Sources */,
 				3A33593DCE48750BD69876E53C89C47C /* NetworkUtility.swift in Sources */,
+				89EE352B246ECE680031532E /* ResponseError+Mappable.swift in Sources */,
 				E02DAE146B311F7E358112A960BD137F /* PhoneNumberView.swift in Sources */,
 				2459D5F859DF41BE1BE370D0EFA17F34 /* PhoneVerificationViewController.swift in Sources */,
 				4105BBF6A1BBE8147C4AC0AE2293429E /* PodUtils.swift in Sources */,

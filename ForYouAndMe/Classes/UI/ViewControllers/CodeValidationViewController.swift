@@ -169,12 +169,17 @@ public class CodeValidationViewController: UIViewController {
         .subscribe(onSuccess: { [weak self] in
             guard let self = self else { return }
             self.navigator.popProgressHUD()
+            self.codeTextFieldView.clearError(clearErrorText: true)
             self.view.endEditing(true)
             self.navigator.showIntroVideo(presenter: self)
         }, onError: { [weak self] error in
             guard let self = self else { return }
             self.navigator.popProgressHUD()
-            self.codeTextFieldView.setError(errorText: error.localizedDescription)
+            if let error = error as? RepositoryError, case .wrongValidationCode = error {
+                self.codeTextFieldView.setError(errorText: error.localizedDescription)
+            } else {
+                self.navigator.handleError(error: error, presenter: self)
+            }
         }).disposed(by: self.disposeBag)
     }
     

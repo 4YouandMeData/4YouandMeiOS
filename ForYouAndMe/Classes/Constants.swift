@@ -10,7 +10,7 @@ import Foundation
 
 struct Constants {
     struct Test {
-        static let NetworkStubsEnabled = true
+        static let NetworkStubsEnabled = false
         static let NetworkStubsDelay = 0.3
         static let NetworkLogVerbose = true
         

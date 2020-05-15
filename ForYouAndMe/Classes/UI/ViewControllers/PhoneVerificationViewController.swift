@@ -182,6 +182,7 @@ public class PhoneVerificationViewController: UIViewController {
             .subscribe(onSuccess: { [weak self] in
                 guard let self = self else { return }
                 self.navigator.popProgressHUD()
+                self.phoneNumberView.clearError(clearErrorText: true)
                 self.view.endEditing(true)
                 self.navigator.showCodeValidation(countryCode: self.phoneNumberView.countryCode,
                                                   phoneNumber: self.phoneNumberView.text,
@@ -189,7 +190,11 @@ public class PhoneVerificationViewController: UIViewController {
             }, onError: { [weak self] error in
                 guard let self = self else { return }
                 self.navigator.popProgressHUD()
-                self.phoneNumberView.setError(errorText: error.localizedDescription)
+                if let error = error as? RepositoryError, case .missingPhoneNumber = error {
+                    self.phoneNumberView.setError(errorText: error.localizedDescription)
+                } else {
+                    self.navigator.handleError(error: error, presenter: self)
+                }
             }).disposed(by: self.disposeBag)
     }
     

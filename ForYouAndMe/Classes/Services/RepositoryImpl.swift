@@ -65,12 +65,34 @@ extension RepositoryImpl: Repository {
     func submitPhoneNumber(phoneNumber: String) -> Single<()> {
         return self.api.send(request: ApiRequest(serviceRequest: .submitPhoneNumber(phoneNumber: phoneNumber)))
         .handleError()
+        .catchError({ error -> Single<()> in
+            enum ErrorCode: Int, CaseIterable { case missingPhoneNumber = 404 }
+            if let errorCodeNumber = error.getFirstServerError(forExpectedStatusCodes: ErrorCode.allCases.map{ $0.rawValue }),
+                let errorCode = ErrorCode(rawValue: errorCodeNumber) {
+                switch errorCode {
+                case .missingPhoneNumber: return Single.error(RepositoryError.missingPhoneNumber)
+                }
+            } else {
+                return Single.error(error)
+            }
+        })
     }
     
     func verifyPhoneNumber(phoneNumber: String, secureCode: String) -> Single<()> {
         return self.api.send(request: ApiRequest(serviceRequest: .verifyPhoneNumber(phoneNumber: phoneNumber,
                                                                                     secureCode: secureCode)))
         .handleError()
+        .catchError({ error -> Single<()> in
+            enum ErrorCode: Int, CaseIterable { case wrongValidationCode = 403 }
+            if let errorCodeNumber = error.getFirstServerError(forExpectedStatusCodes: ErrorCode.allCases.map{ $0.rawValue }),
+                let errorCode = ErrorCode(rawValue: errorCodeNumber) {
+                switch errorCode {
+                case .wrongValidationCode: return Single.error(RepositoryError.wrongValidationCode)
+                }
+            } else {
+                return Single.error(error)
+            }
+        })
     }
 }
 
@@ -90,7 +112,7 @@ fileprivate extension PrimitiveSequence where Trait == SingleTrait {
                 case .network: return Single.error(RepositoryError.remoteServerError)
                 case .connectivity: return Single.error(RepositoryError.connectivityError)
                 case .errorCode: return Single.error(RepositoryError.remoteServerError)
-                case .error: return Single.error(RepositoryError.remoteServerError)
+                case let .error(_, error): return Single.error(RepositoryError.serverErrorSpecific(error: error))
                 case .userUnauthorized: return Single.error(RepositoryError.userNotLoggedIn)
                 }
             }
@@ -105,5 +127,22 @@ extension RepositoryImpl: InitializableService {
     func initialize() -> Single<()> {
         return self.fetchGlobalConfig()
             .do(onSuccess: { self.isInitialized = true })
+    }
+}
+
+// MARK: - Extension (Error)
+
+fileprivate extension Error {
+    func getFirstServerError(forExpectedStatusCodes statusCodes: [Int]) -> Int? {
+        if let repositoryError = self as? RepositoryError {
+            switch repositoryError {
+            case let .serverErrorSpecific(error):
+                if let error = error as? ResponseError {
+                    return error.getFirstErrorMatching(errorCodes: statusCodes)
+                }
+            default: return nil
+            }
+        }
+        return nil
     }
 }

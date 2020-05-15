@@ -15,6 +15,11 @@ enum RepositoryError: LocalizedError {
     
     // Server
     case remoteServerError
+    case serverErrorSpecific(error: Any)
+    
+    // Login
+    case missingPhoneNumber
+    case wrongValidationCode
     
     // Shared
     case connectivityError
@@ -27,6 +32,11 @@ enum RepositoryError: LocalizedError {
             
         // Server
         case .remoteServerError: return StringsProvider.string(forKey: .errorMessageRemoteServer)
+        case .serverErrorSpecific: return StringsProvider.string(forKey: .errorMessageRemoteServer)
+            
+        // Login
+        case .missingPhoneNumber: return StringsProvider.string(forKey: .phoneVerificationErrorMissingNumber)
+        case .wrongValidationCode: return StringsProvider.string(forKey: .phoneVerificationErrorWrongCode)
             
         // Shared
         case .connectivityError: return StringsProvider.string(forKey: .errorMessageConnectivity)
