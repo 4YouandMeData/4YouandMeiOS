@@ -22,6 +22,8 @@ class WebViewViewController: UIViewController {
     private let url: URL?
     private let htmlString: String?
     
+    private let navigator: AppNavigator
+    
     private var progressObserver: NSKeyValueObservation?
     
     convenience init(withTitle title: String, allowNavigation: Bool, url: URL) {
@@ -49,6 +51,7 @@ class WebViewViewController: UIViewController {
         self.allowNavigation = allowNavigation
         self.url = url
         self.htmlString = htmlString
+        self.navigator = Services.shared.navigator
         super.init(nibName: nil, bundle: nil)
         self.title = title
     }
@@ -126,6 +129,15 @@ class WebViewViewController: UIViewController {
             self.progressView.alpha = 0
         }, completion: nil)
     }
+    
+    private func handleNavigationError(error: Error) {
+        self.hideProgressView()
+        let error = error as NSError
+        switch error.code {
+        case -1009: self.navigator.handleError(error: RepositoryError.connectivityError, presenter: self)
+        default: self.navigator.handleError(error: nil, presenter: self)
+        }
+    }
 }
 
 extension WebViewViewController: WKNavigationDelegate {
@@ -138,7 +150,13 @@ extension WebViewViewController: WKNavigationDelegate {
     }
     
     func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
-        self.hideProgressView()
+        print("WebViewViewController - Navigation did fail with error: \(error.localizedDescription)")
+        self.handleNavigationError(error: error)
+    }
+    
+    func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
+        print("WebViewViewController - Navigation did fail provisional navigation with error: \(error.localizedDescription)")
+        self.handleNavigationError(error: error)
     }
     
     func webView(_ webView: WKWebView,
