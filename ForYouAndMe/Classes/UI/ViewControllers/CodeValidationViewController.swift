@@ -45,12 +45,12 @@ public class CodeValidationViewController: UIViewController {
     }()
     
     private lazy var codeTextFieldView: GenericTextFieldView = {
-        let view = GenericTextFieldView(keyboardType: .asciiCapable)
+        let view = GenericTextFieldView(keyboardType: .numberPad)
         view.textField.textContentType = .oneTimeCode
         view.validationCallback = { text -> Bool in
-            // TODO: Decide if validation code has format rule
-            return text.count >= 4
+            return text.count == Constants.Misc.ValidationCodeDigitCount
         }
+        view.maxCharacters = Constants.Misc.ValidationCodeDigitCount
         return view
     }()
     

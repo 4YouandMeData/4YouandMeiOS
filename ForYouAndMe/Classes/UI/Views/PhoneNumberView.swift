@@ -53,6 +53,7 @@ class PhoneNumberView: GenericTextFieldView {
                                                           withRegion: self.countryCode,
                                                           ignoreType: false)
         }
+        self.maxCharacters = Self.maxDigits
         self.horizontalStackView.insertArrangedSubview(self.countryCodeButton, at: 0)
         
         self.updateCountryCode()
@@ -83,19 +84,19 @@ class PhoneNumberView: GenericTextFieldView {
         presenter.present(nav, animated: true)
     }
     
-    func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
-        
-        guard let currentString: NSString = textField.text as NSString?,
-            let validationRule = self.validationCallback,
-            string.rangeOfCharacter(from: CharacterSet.letters) == nil else { return false }
-        let newString: NSString = currentString.replacingCharacters(in: range, with: string) as NSString
-        
-        if newString.length > currentString.length, newString.length >= Self.maxDigits {
-            // Prevent adding characters over maximum digits
+    // MARK: Overridden Methods
+    
+    override func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
+        guard super.textField(textField, shouldChangeCharactersIn: range, replacementString: string) else {
             return false
-        } else if validationRule(currentString as String) == true,
-            validationRule(newString as String) == false,
-            newString.length > currentString.length {
+        }
+        let currentString = textField.text ?? ""
+        let newString = textField.getNewString(forRange: range, replacementString: string)
+        
+        if let validationRule = self.validationCallback,
+            validationRule(currentString) == true,
+            validationRule(newString) == false,
+            newString.count > currentString.count {
             // Prevent adding characters on an already valid phone number if the new one is not valid
             return false
         } else {

@@ -17,6 +17,7 @@ class GenericTextFieldView: UIView {
     static var errorColor: UIColor { ColorPalette.color(withType: .primaryText) }
     
     public var validationCallback: GenericTextFieldViewValidation?
+    public var maxCharacters: Int?
     
     public var isValid: BehaviorSubject<Bool> = BehaviorSubject<Bool>(value: false)
     public var text: String {
@@ -169,5 +170,20 @@ extension GenericTextFieldView: UITextFieldDelegate {
         guard let self = self else { return }
         self.textFieldEditButton.alpha = 1.0
         })
+    }
+    func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
+        let newString = textField.getNewString(forRange: range, replacementString: string)
+        if let maxCharacters = self.maxCharacters, newString.count > maxCharacters {
+            return false
+        } else {
+            return true
+        }
+    }
+}
+
+extension UITextField {
+    func getNewString(forRange range: NSRange, replacementString string: String) -> String {
+        let currentString = self.text as NSString?
+        return currentString?.replacingCharacters(in: range, with: string) ?? ""
     }
 }
