@@ -48,9 +48,8 @@ public class CodeValidationViewController: UIViewController {
     }()
     
     private lazy var phoneNumberView: PhoneNumberView = {
-        // TODO: Initialized country code based of server data
         let phoneNumberView = PhoneNumberView(presenter: self,
-                                              allowedCountryCodes: ["IT", "US", "GB"])
+                                              allowedCountryCodes: CountryCodeProvider.countryCodes)
         let button = UIButton()
         phoneNumberView.addSubview(button)
         button.autoPinEdgesToSuperviewEdges()

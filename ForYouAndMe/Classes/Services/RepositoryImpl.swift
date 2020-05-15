@@ -18,7 +18,6 @@ class RepositoryImpl {
     var isInitialized: Bool = false
     
     private var storage: RepositoryStorage
-    
     private let api: ApiGateway
     
     init(api: ApiGateway,
@@ -47,6 +46,7 @@ class RepositoryImpl {
             .do(onSuccess: { (globalCongig: GlobalConfig) in
                 ColorPalette.initialize(withColorMap: globalCongig.colorMap)
                 StringsProvider.initialize(withStringMap: globalCongig.stringMap)
+                CountryCodeProvider.initialize(withcountryCodes: globalCongig.countryCodes)
             })
             .map { _ in () }
     }
@@ -67,7 +67,7 @@ extension RepositoryImpl: Repository {
         .handleError()
         .catchError({ error -> Single<()> in
             enum ErrorCode: Int, CaseIterable { case missingPhoneNumber = 404 }
-            if let errorCodeNumber = error.getFirstServerError(forExpectedStatusCodes: ErrorCode.allCases.map{ $0.rawValue }),
+            if let errorCodeNumber = error.getFirstServerError(forExpectedStatusCodes: ErrorCode.allCases.map { $0.rawValue }),
                 let errorCode = ErrorCode(rawValue: errorCodeNumber) {
                 switch errorCode {
                 case .missingPhoneNumber: return Single.error(RepositoryError.missingPhoneNumber)
@@ -84,7 +84,7 @@ extension RepositoryImpl: Repository {
         .handleError()
         .catchError({ error -> Single<()> in
             enum ErrorCode: Int, CaseIterable { case wrongValidationCode = 403 }
-            if let errorCodeNumber = error.getFirstServerError(forExpectedStatusCodes: ErrorCode.allCases.map{ $0.rawValue }),
+            if let errorCodeNumber = error.getFirstServerError(forExpectedStatusCodes: ErrorCode.allCases.map { $0.rawValue }),
                 let errorCode = ErrorCode(rawValue: errorCodeNumber) {
                 switch errorCode {
                 case .wrongValidationCode: return Single.error(RepositoryError.wrongValidationCode)

@@ -13,6 +13,8 @@ extension GlobalConfig: Mappable {
     init(map: Mapper) throws {
         try self.colorMap = map.from("color_palette")
         try self.stringMap = map.from("strings")
+        // TODO: parse data from server data when availables
+        self.countryCodes = ["IT", "US", "GB"]
     }
 }
 

@@ -224,7 +224,7 @@ extension DefaultService: TargetType {
         switch self {
         // Misc
         case .getGlobalConfig: return Bundle.getTestData(from: "TestGetGlobalConfig")
-        case .submitPhoneNumber: return "{}".utf8Encoded // TODO: Replace with test cases
+        case .submitPhoneNumber: return "{}".utf8Encoded
         case .verifyPhoneNumber: return "{}".utf8Encoded // TODO: Replace with test cases
         }
     }
