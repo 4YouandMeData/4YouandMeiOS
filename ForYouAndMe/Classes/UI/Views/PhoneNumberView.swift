@@ -58,9 +58,7 @@ class PhoneNumberView: GenericTextFieldView {
         super.init(keyboardType: .phonePad)
         self.validationCallback = { [weak self] text -> Bool in
             guard let self = self else { return false }
-            return self.phoneNumberKit.isValidPhoneNumber(self.getCountryCodeNumber() + text,
-                                                          withRegion: self.countryCode,
-                                                          ignoreType: false)
+            return self.validateText(text, ignoreType: false)
         }
         self.maxCharacters = Self.maxDigits
         self.horizontalStackView.insertArrangedSubview(self.countryCodeButton, at: 0)
@@ -100,9 +98,8 @@ class PhoneNumberView: GenericTextFieldView {
         let currentString = textField.text ?? ""
         let newString = textField.getNewString(forRange: range, replacementString: string)
         
-        if let validationRule = self.validationCallback,
-            validationRule(currentString) == true,
-            validationRule(newString) == false,
+        if self.validateText(currentString, ignoreType: true) == true,
+            self.validateText(newString, ignoreType: true) == false,
             newString.count > currentString.count {
             // Prevent adding characters on an already valid phone number if the new one is not valid
             return false
@@ -141,13 +138,21 @@ class PhoneNumberView: GenericTextFieldView {
                                                 defaultRegion: self.countryCode,
                                                 withPrefix: false,
                                                 maxDigits: Self.maxDigits)
-        self.text = partialFormatter.formatPartial(self.text)
+        let previousText = self.text.filter("0123456789".contains)
+        let nextText = partialFormatter.formatPartial(previousText)
+        self.text = nextText
     }
     
     private func updateUI() {
         self.updateCountryCode()
         self.updateTextFormat()
         self.checkValidation()
+    }
+    
+    private func validateText(_ text: String, ignoreType: Bool) -> Bool {
+        return self.phoneNumberKit.isValidPhoneNumber(self.getCountryCodeNumber() + text,
+                                                             withRegion: self.countryCode,
+                                                             ignoreType: ignoreType)
     }
 }
 
