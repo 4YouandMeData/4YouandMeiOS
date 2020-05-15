@@ -44,6 +44,7 @@ Pod::Spec.new do |s|
   s.dependency 'Firebase/Analytics', '~> 6.21.0'
   s.dependency 'Firebase/Crashlytics', '~> 6.21.0'
   s.dependency 'PhoneNumberKit', '~> 3.2.0'
+  s.dependency 'CountryPickerView', '~> 3.1.2'
   
   s.static_framework = true
   

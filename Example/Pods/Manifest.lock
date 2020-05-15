@@ -1,5 +1,6 @@
 PODS:
   - Alamofire (5.1.0)
+  - CountryPickerView (3.1.2)
   - FBSnapshotTestCase (2.1.4):
     - FBSnapshotTestCase/SwiftSupport (= 2.1.4)
   - FBSnapshotTestCase/Core (2.1.4)
@@ -50,6 +51,7 @@ PODS:
     - GoogleUtilities/UserDefaults (~> 6.5)
     - PromisesObjC (~> 1.2)
   - ForYouAndMe (0.4.0):
+    - CountryPickerView (~> 3.1.2)
     - Firebase/Analytics (~> 6.21.0)
     - Firebase/Crashlytics (~> 6.21.0)
     - Moya-ModelMapper/RxSwift (~> 10.0.0)
@@ -145,6 +147,7 @@ DEPENDENCIES:
 SPEC REPOS:
   trunk:
     - Alamofire
+    - CountryPickerView
     - FBSnapshotTestCase
     - Firebase
     - FirebaseAnalytics
@@ -182,6 +185,7 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   Alamofire: 9d5c5f602928e512395b30950c5984eca840093c
+  CountryPickerView: 08ff5f391143aa79e2ae21b0eaa5c15395a80d22
   FBSnapshotTestCase: 094f9f314decbabe373b87cc339bea235a63e07a
   Firebase: f378c80340dd41c0ad0914af740c021eb282a04b
   FirebaseAnalytics: a1a0b3327ceb5cd5b4bacffdb293f6c909aa087d
@@ -191,7 +195,7 @@ SPEC CHECKSUMS:
   FirebaseCoreDiagnosticsInterop: 296e2c5f5314500a850ad0b83e9e7c10b011a850
   FirebaseCrashlytics: b9e729da8b80d9c45f234f791a73b5fe647d4c31
   FirebaseInstallations: acb3216eb9784d3b1d2d2d635ff74fa892cc0c44
-  ForYouAndMe: 76e653e29e6ce4572c57a0f42373d86ce0a43c82
+  ForYouAndMe: caf9b35127ba495df71ea846d82e0b526a76e92e
   GoogleAppMeasurement: 6e68a94d0eaeb1d73ef6b0ed4f7334e29d63ae29
   GoogleDataTransport: b29a21d813e906014ca16c00897827e40e4a24ab
   GoogleDataTransportCCTSupport: 6f15a89b0ca35d6fa523e1f752ef818588885988

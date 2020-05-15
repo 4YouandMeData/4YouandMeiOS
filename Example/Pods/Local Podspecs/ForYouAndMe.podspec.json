@@ -60,6 +60,9 @@
     ],
     "PhoneNumberKit": [
       "~> 3.2.0"
+    ],
+    "CountryPickerView": [
+      "~> 3.1.2"
     ]
   },
   "static_framework": true,

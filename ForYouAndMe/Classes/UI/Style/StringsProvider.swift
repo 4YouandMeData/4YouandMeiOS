@@ -27,6 +27,7 @@ enum StringKey: String, CaseIterable, CodingKey {
     case phoneVerificationTitle = "PHONE_VERIFICATION_TITLE"
     case phoneVerificationBody = "PHONE_VERIFICATION_BODY"
     case phoneVerificationNumberDescription = "PHONE_VERIFICATION_NUMBER_DESCRIPTION"
+    case phoneVerificationCountryPickerTitle = "PHONE_VERIFICATION_COUNTRY_PICKER_TITLE"
     case phoneVerificationLegal = "PHONE_VERIFICATION_LEGAL"
     case phoneVerificationLegalTermsOfService = "PHONE_VERIFICATION_LEGAL_TERMS_OF_SERVICE"
     case phoneVerificationLegalPrivacyPolicy = "PHONE_VERIFICATION_LEGAL_PRIVACY_POLICY"

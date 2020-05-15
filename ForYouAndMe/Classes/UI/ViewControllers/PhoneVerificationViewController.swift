@@ -49,7 +49,9 @@ public class PhoneVerificationViewController: UIViewController {
         button.addTarget(self, action: #selector(self.confirmButtonPressed), for: .touchUpInside)
         return button
     }()
-    private lazy var phoneNumberView: PhoneNumberView = PhoneNumberView(presenter: self)
+    // TODO: Initialized country code based of server data
+    private lazy var phoneNumberView: PhoneNumberView = PhoneNumberView(presenter: self,
+                                                                        allowedCountryCodes: ["IT", "US", "GB"])
     
     private lazy var legalNoteView: UIView = {
         let horizontalStackView = UIStackView()
