@@ -8,22 +8,17 @@
 
 import Foundation
 import PureLayout
+import TPKeyboardAvoiding
 import RxSwift
 
 public class CodeValidationViewController: UIViewController {
-    
-    static private let confirmButtonBottomInset: CGFloat = 16.0
-    
-    // KeyboardNotificationProvider
-    var showNotification: NSObjectProtocol?
-    var hideNotification: NSObjectProtocol?
     
     private let navigator: AppNavigator
     private let repository: Repository
     private let disposeBag = DisposeBag()
     
     private lazy var scrollView: UIScrollView = {
-        let scrollView = UIScrollView()
+        let scrollView = TPKeyboardAvoidingScrollView()
         scrollView.keyboardDismissMode = .interactive
         return scrollView
     }()
@@ -32,6 +27,23 @@ public class CodeValidationViewController: UIViewController {
         let button = UIButton()
         button.setImage(ImagePalette.image(withName: .nextButtonLight), for: .normal)
         button.addTarget(self, action: #selector(self.confirmButtonPressed), for: .touchUpInside)
+        return button
+    }()
+    
+    private lazy var resendCodeButton: UIButton = {
+        let button = UIButton()
+        button.addTarget(self, action: #selector(self.resendCodeButtonPressed), for: .touchUpInside)
+        let paragraphStyle = NSMutableParagraphStyle()
+        paragraphStyle.alignment = .left
+        let text = NSAttributedString(string: StringsProvider.string(forKey: .phoneVerificationCodeResend),
+                                      attributes: [
+                                        .font: FontPalette.font(withSize: 16.0),
+                                        .foregroundColor: ColorPalette.color(withType: .secondaryText),
+                                        .underlineStyle: NSUnderlineStyle.single.rawValue,
+                                        .paragraphStyle: paragraphStyle
+                                        
+        ])
+        button.setAttributedTitle(text, for: .normal)
         return button
     }()
     
@@ -53,8 +65,6 @@ public class CodeValidationViewController: UIViewController {
         view.maxCharacters = Constants.Misc.ValidationCodeDigitCount
         return view
     }()
-    
-    private var confirmButtonBottomConstraint: NSLayoutConstraint?
     
     init(countryCode: String, phoneNumber: String) {
         self.navigator = Services.shared.navigator
@@ -81,13 +91,12 @@ public class CodeValidationViewController: UIViewController {
         let stackView = UIStackView()
         stackView.axis = .vertical
         self.scrollView.addSubview(stackView)
-        stackView.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets(top: 0.0,
+        stackView.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets(top: 16.0,
                                                                   left: Constants.Style.DefaultHorizontalMargins,
-                                                                  bottom: Self.confirmButtonBottomInset,
+                                                                  bottom: 16.0,
                                                                   right: Constants.Style.DefaultHorizontalMargins))
         stackView.autoAlignAxis(toSuperviewAxis: .vertical)
         
-        stackView.addBlankSpace(space: 16.0)
         stackView.addLabel(text: StringsProvider.string(forKey: .phoneVerificationCodeTitle),
                            font: FontPalette.font(withSize: 30.0),
                            textColor: ColorPalette.color(withType: .secondaryText),
@@ -112,23 +121,21 @@ public class CodeValidationViewController: UIViewController {
         stackView.addBlankSpace(space: 24.0)
         stackView.addArrangedSubview(self.codeTextFieldView)
         
-        // Confirm button
-        self.view.addSubview(self.confirmButton)
-        self.confirmButton.autoPinEdge(toSuperviewEdge: .trailing, withInset: Constants.Style.DefaultHorizontalMargins)
-        self.confirmButton.autoPinEdge(toSuperviewSafeArea: .bottom,
-                                       withInset: Self.confirmButtonBottomInset,
-                                       relation: .greaterThanOrEqual)
-        NSLayoutConstraint.autoSetPriority(UILayoutPriority(rawValue: 999)) { [weak self] in
-            guard let self = self else { return }
-            self.confirmButtonBottomConstraint = self.confirmButton.autoPinEdge(toSuperviewEdge: .bottom,
-                                                                                withInset: Self.confirmButtonBottomInset)
-        }
+        // Bottom View
+        let bottomView = UIView()
+        bottomView.addSubview(self.confirmButton)
         
+        self.confirmButton.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets(top: 16.0, left: 0.0, bottom: 16.0, right: 0),
+                                                        excludingEdge: .leading)
+        bottomView.addSubview(self.resendCodeButton)
+        self.resendCodeButton.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets(top: 16.0, left: 0.0, bottom: 16.0, right: 0),
+                                                        excludingEdge: .trailing)
+        stackView.addArrangedSubview(bottomView)
+        
+        // Initialization
         self.codeTextFieldView.isValid
             .subscribe(onNext: { [weak self] _ in self?.updateUI() })
             .disposed(by: self.disposeBag)
-        
-        // Initialization
         self.updateUI()
     }
     
@@ -139,18 +146,20 @@ public class CodeValidationViewController: UIViewController {
         self.addCustomBackButton(withImage: ImagePalette.image(withName: .backButton))
     }
     
-    public override func viewDidAppear(_ animated: Bool) {
-        
-        self.registerKeyboardNotification()
-    }
-    
-    public override func viewWillDisappear(_ animated: Bool) {
-        super.viewWillDisappear(animated)
-        
-        self.deRegisterKeyboardNotification()
-    }
-    
     // MARK: Actions
+    
+    @objc private func resendCodeButtonPressed() {
+        self.navigator.pushProgressHUD()
+        self.repository.submitPhoneNumber(phoneNumber: self.phoneNumberView.fullNumber)
+            .subscribe(onSuccess: { [weak self] in
+                guard let self = self else { return }
+                self.navigator.popProgressHUD()
+            }, onError: { [weak self] error in
+                guard let self = self else { return }
+                self.navigator.popProgressHUD()
+                self.navigator.handleError(error: error, presenter: self)
+            }).disposed(by: self.disposeBag)
+    }
     
     @objc private func confirmButtonPressed() {
         self.navigator.pushProgressHUD()
@@ -179,30 +188,5 @@ public class CodeValidationViewController: UIViewController {
             return
         }
         self.confirmButton.isEnabled = codeValid
-    }
-}
-
-// MARK: - KeyboardNotificationProvider
-
-extension CodeValidationViewController: KeyboardNotificationProvider {
-    func keyboardWillShow(height: CGFloat, duration: TimeInterval, options: UIView.AnimationOptions) {
-        let newBottomInset = self.confirmButton.frame.height + height + Self.confirmButtonBottomInset
-        self.scrollView.contentInset = UIEdgeInsets(top: 0.0, left: 0.0, bottom: newBottomInset, right: 0.0)
-        self.scrollView.scrollIndicatorInsets = self.scrollView.contentInset
-        UIView.animate(withDuration: duration, delay: 0.0, options: .curveEaseIn, animations: { [weak self] in
-            guard let self = self else { return }
-            self.confirmButtonBottomConstraint?.constant = -Self.confirmButtonBottomInset - height
-            self.view.layoutIfNeeded()
-            })
-    }
-    
-    func keyboardWillHide(duration: TimeInterval, options: UIView.AnimationOptions) {
-        self.scrollView.contentInset = UIEdgeInsets.zero
-        self.scrollView.scrollIndicatorInsets = self.scrollView.contentInset
-        UIView.animate(withDuration: duration, delay: 0.0, options: .curveEaseIn, animations: { [weak self] in
-            guard let self = self else { return }
-            self.confirmButtonBottomConstraint?.constant = -Self.confirmButtonBottomInset
-            self.view.layoutIfNeeded()
-            })
     }
 }
