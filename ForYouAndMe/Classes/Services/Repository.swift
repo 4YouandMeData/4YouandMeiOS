@@ -48,6 +48,7 @@ enum RepositoryError: LocalizedError {
 protocol Repository: class {
     // Authentication
     var isLoggedIn: Bool { get }
+    func logOut()
     func submitPhoneNumber(phoneNumber: String) -> Single<()>
     func verifyPhoneNumber(phoneNumber: String, secureCode: String) -> Single<()>
 }

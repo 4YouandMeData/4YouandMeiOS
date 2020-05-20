@@ -12,16 +12,21 @@ class CacheManager {
     
     enum CacheManagerKey: String {
         case globalConfig
+        case accessToken
     }
     
     private let mainUserDefaults = UserDefaults.standard
     
     // MARK: - Private methods
     
-    private func save<T>(encodable: T, forKey key: String) where T: Encodable {
-        let encoder = JSONEncoder()
-        if let encoded = try? encoder.encode(encodable) {
-            self.mainUserDefaults.set(encoded, forKey: key)
+    private func save<T>(encodable: T?, forKey key: String) where T: Encodable {
+        if let encodable = encodable {
+            let encoder = JSONEncoder()
+            if let encoded = try? encoder.encode(encodable) {
+                self.mainUserDefaults.set(encoded, forKey: key)
+            }
+        } else {
+            self.reset(forKey: key)
         }
     }
     
@@ -35,6 +40,18 @@ class CacheManager {
         return nil
     }
     
+    private func saveString(_ value: String?, forKey key: String) {
+        if let value = value {
+            self.mainUserDefaults.set(value, forKey: key)
+        } else {
+            self.reset(forKey: key)
+        }
+    }
+    
+    private func getString(forKey key: String) -> String? {
+        return self.mainUserDefaults.string(forKey: key)
+    }
+    
     private func reset(forKey key: String) {
         self.mainUserDefaults.removeObject(forKey: key)
     }
@@ -45,15 +62,17 @@ class CacheManager {
 extension CacheManager: RepositoryStorage {
     
     var globalConfig: GlobalConfig? {
-        get {
-            return self.load(forKey: CacheManagerKey.globalConfig.rawValue)
-        }
-        set {
-            if let value = newValue {
-                self.save(encodable: value, forKey: CacheManagerKey.globalConfig.rawValue)
-            } else {
-                self.reset(forKey: CacheManagerKey.globalConfig.rawValue)
-            }
-        }
+        get { self.load(forKey: CacheManagerKey.globalConfig.rawValue) }
+        set { self.save(encodable: newValue, forKey: CacheManagerKey.globalConfig.rawValue) }
+    }
+}
+
+// MARK: - NetworkStorage
+
+extension CacheManager: NetworkStorage {
+    
+    var accessToken: String? {
+        get { self.getString(forKey: CacheManagerKey.accessToken.rawValue) }
+        set { self.saveString(newValue, forKey: CacheManagerKey.accessToken.rawValue) }
     }
 }

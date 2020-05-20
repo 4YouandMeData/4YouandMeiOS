@@ -58,8 +58,11 @@ extension RepositoryImpl: Repository {
     // MARK: - Authentication
     
     var isLoggedIn: Bool {
-        // TODO: Implement login check
-        return false
+        return self.api.isLoggedIn()
+    }
+    
+    func logOut() {
+        self.api.logOut()
     }
     
     func submitPhoneNumber(phoneNumber: String) -> Single<()> {

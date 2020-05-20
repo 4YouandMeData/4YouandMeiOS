@@ -39,8 +39,8 @@ class Services {
         #if DEBUG
         let networkApiGateway =
             Constants.Test.NetworkStubsEnabled
-                ? TestNetworkApiGateway(studyId: studyId, reachability: reachabilityService)
-                : NetworkApiGateway(studyId: studyId, reachability: reachabilityService)
+                ? TestNetworkApiGateway(studyId: studyId, reachability: reachabilityService, storage: storage)
+                : NetworkApiGateway(studyId: studyId, reachability: reachabilityService, storage: storage)
         #else
         let networkApiGateway = NetworkApiGateway(studyId: studyId, reachability: reachabilityService)
         #endif

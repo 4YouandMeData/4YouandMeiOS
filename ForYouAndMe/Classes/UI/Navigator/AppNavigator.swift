@@ -38,8 +38,16 @@ class AppNavigator {
     
     func onStartup() {
         if self.repository.isLoggedIn {
-            // TODO: Show user step (screening questions, consent, home)
-            assertionFailure("Log in behaviour not implemented")
+            // TODO: Check if onboarding is completed
+            print("TODO: Check if onboarding is completed")
+            let onboardingCompleted = false
+            if onboardingCompleted {
+                // TODO: Implement Home
+                print("TODO: Implement Home")
+            } else {
+                // If onboarding is not completed, restart from the very beginning
+                self.goToWelcome()
+            }
         } else {
             self.goToWelcome()
         }
@@ -152,6 +160,7 @@ class AppNavigator {
     // MARK: - Misc
     
     public func logOut() {
+        self.repository.logOut()
         self.goToWelcome()
     }
     

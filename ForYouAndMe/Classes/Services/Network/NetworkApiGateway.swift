@@ -13,14 +13,20 @@ import RxSwift
 import Mapper
 import Reachability
 
+enum NetworkAuthHandlerError: Error {
+    case userNotLoggedIn
+    case genericError
+}
+
+protocol NetworkStorage: class {
+    var accessToken: String? { set get }
+}
+
 struct UnhandledError: Mappable {
     init(map: Mapper) throws { throw MapperError.customError(field: nil, message: "Trying to map unhandled error") }
 }
 
 class NetworkApiGateway: ApiGateway {
-    
-    let reachability: ReachabilityService
-    let studyId: String
     
     var defaultProvider: MoyaProvider<DefaultService>!
     
@@ -34,16 +40,35 @@ class NetworkApiGateway: ApiGateway {
         return NetworkLoggerPlugin(configuration: config)
     }()
     
+    lazy var accessTokenPlugin: PluginType = {
+        let tokenClosure: (AuthorizationType) -> String = { authorizationType in
+            switch authorizationType {
+            case .basic: return ""
+            case .bearer: return self.storage.accessToken ?? ""
+            case .custom: return ""
+            }
+        }
+        let accessTokenPlugin = AccessTokenPlugin(tokenClosure: tokenClosure)
+        
+        return accessTokenPlugin
+    }()
+    
+    fileprivate let storage: NetworkStorage
+    fileprivate let reachability: ReachabilityService
+    
+    private let studyId: String
+    
     // MARK: - Service Protocol Implementation
     
-    public init(studyId: String, reachability: ReachabilityService) {
+    public init(studyId: String, reachability: ReachabilityService, storage: NetworkStorage) {
         self.studyId = studyId
         self.reachability = reachability
+        self.storage = storage
         self.setupDefaultProvider()
     }
     
     func setupDefaultProvider() {
-        self.defaultProvider = MoyaProvider(endpointClosure: self.endpointMapping, plugins: [self.loggerPlugin])
+        self.defaultProvider = MoyaProvider(endpointClosure: self.endpointMapping, plugins: [self.loggerPlugin, self.accessTokenPlugin])
     }
     
     func endpointMapping(forTarget target: DefaultService) -> Endpoint {
@@ -128,7 +153,15 @@ class NetworkApiGateway: ApiGateway {
     
     func sendShared<E: Mappable>(request: ApiRequest, errorType: E.Type) -> Single<Response> {
         return self.defaultProvider.rx.request(request.serviceRequest)
-        .filterSuccess(api: self, request: request, errorType: errorType)
+            .filterSuccess(api: self, request: request, errorType: errorType)
+    }
+    
+    func isLoggedIn() -> Bool {
+        return self.storage.accessToken != nil
+    }
+    
+    func logOut() {
+        self.storage.accessToken = nil
     }
 }
 
@@ -156,7 +189,7 @@ fileprivate extension PrimitiveSequence where Trait == SingleTrait, Element == R
             .do(onError: {
                 print("Network Error: \($0.localizedDescription)")
             })
-            .catchError({ (error) -> Single<Element> in
+            .catchError({ (error) -> Single<Response> in
                 // Handle network availability
                 if api.reachability.isCurrentlyReachable {
                     return Single.error(ApiError.network)
@@ -164,10 +197,11 @@ fileprivate extension PrimitiveSequence where Trait == SingleTrait, Element == R
                     return Single.error(ApiError.connectivity)
                 }
             })
-            .flatMap { (response) -> Single<Element> in
+            .flatMap { response -> Single<Element> in
                 if 200 ... 299 ~= response.statusCode {
                     // Uncomment this to print the whole response data
                     //                print("Network Body: \(String(data: response.data, encoding: .utf8) ?? "")")
+                    self.handleAccessToken(response: response, storage: api.storage)
                     return Single.just(response)
                 } else {
                     if response.statusCode >= 500 {
@@ -189,10 +223,17 @@ fileprivate extension PrimitiveSequence where Trait == SingleTrait, Element == R
                 return Single.error(ApiError.network)
         }
     }
+    
+    private func handleAccessToken(response: Response, storage: NetworkStorage) {
+        if var accessToken = response.response?.allHeaderFields["Authorization"] as? String {
+            accessToken = accessToken.replacingOccurrences(of: "Bearer ", with: "")
+            storage.accessToken = accessToken
+        }
+    }
 }
 
 // MARK: - TargetType Protocol Implementation
-extension DefaultService: TargetType {
+extension DefaultService: TargetType, AccessTokenAuthorizable {
     
     var baseURL: URL { return URL(string: Constants.Network.ApiBaseUrlStr)! }
     
@@ -225,7 +266,7 @@ extension DefaultService: TargetType {
         // Misc
         case .getGlobalConfig: return Bundle.getTestData(from: "TestGetGlobalConfig")
         case .submitPhoneNumber: return "{}".utf8Encoded
-        case .verifyPhoneNumber: return "{}".utf8Encoded // TODO: Replace with test cases
+        case .verifyPhoneNumber: return "{}".utf8Encoded
         }
     }
     
@@ -247,5 +288,12 @@ extension DefaultService: TargetType {
     
     var headers: [String: String]? {
         return ["Content-type": "application/json"]
+    }
+    
+    var authorizationType: AuthorizationType? {
+        switch self {
+        case .getGlobalConfig, .submitPhoneNumber, .verifyPhoneNumber:
+            return .none
+        }
     }
 }
