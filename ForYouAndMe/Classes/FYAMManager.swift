@@ -12,7 +12,7 @@ import FirebaseCore
 public class FYAMManager {
     
     public static func startup(withStudyId studyId: String,
-                               fontTypeMap: FontTypeMap,
+                               fontStyleMap: FontStyleMap,
                                checkResourcesAvailability: Bool = false) -> UIWindow {
         let window = UIWindow(frame: UIScreen.main.bounds)
         window.makeKeyAndVisible()
@@ -21,7 +21,7 @@ public class FYAMManager {
         FirebaseApp.configure()
         
         // Prepare Specific app elements
-        FontPalette.initialize(withFontTypeMap: fontTypeMap)
+        FontPalette.initialize(withFontStyleMap: fontStyleMap)
         
         #if DEBUG
         if checkResourcesAvailability {

@@ -69,12 +69,13 @@ public class PhoneVerificationViewController: UIViewController {
         label.numberOfLines = 0
         label.textAlignment = .left
         label.lineBreakMode = .byWordWrapping
+        let fontStyleData = FontPalette.fontStyleData(forStyle: .header3)
         self.legalLabelInteractionManager = UILabelInteractionManager(withLabel: label,
                                                                       text: StringsProvider.string(forKey: .phoneVerificationLegal),
-                                                                      lineSpacing: 5.0,
-                                                                      normalTextFont: FontPalette.font(withSize: 13),
+                                                                      lineSpacing: fontStyleData.lineSpacing,
+                                                                      normalTextFont: fontStyleData.font,
                                                                       normalTextColor: ColorPalette.color(withType: .secondaryText),
-                                                                      interactableFont: FontPalette.font(withSize: 13, type: .bold),
+                                                                      interactableFont: fontStyleData.font,
                                                                       interactableColor: ColorPalette.color(withType: .secondaryText),
                                                                       interactableUnderline: true,
                                                                       interactionCallback: self.handleLabelInteractions,
@@ -122,24 +123,23 @@ public class PhoneVerificationViewController: UIViewController {
                                                                   right: Constants.Style.DefaultHorizontalMargins))
         stackView.autoAlignAxis(toSuperviewAxis: .vertical)
         
-        stackView.addLabel(text: StringsProvider.string(forKey: .phoneVerificationTitle),
-                           font: FontPalette.font(withSize: 30.0),
-                           textColor: ColorPalette.color(withType: .secondaryText),
+        stackView.addLabel(withText: StringsProvider.string(forKey: .phoneVerificationTitle),
+                           fontStyle: .title,
+                           colorType: .secondaryText,
                            textAlignment: .left)
-        stackView.addBlankSpace(space: 60.0)
-        stackView.addLabel(text: StringsProvider.string(forKey: .phoneVerificationBody),
-                           font: FontPalette.font(withSize: 16.0),
-                           textColor: ColorPalette.color(withType: .secondaryText),
-                           textAlignment: .left,
-                           lineSpacing: Constants.Style.DefaultBodyLineSpacing)
+        stackView.addBlankSpace(space: 30.0)
+        stackView.addLabel(withText: StringsProvider.string(forKey: .phoneVerificationBody),
+                           fontStyle: .paragraph,
+                           colorType: .secondaryText,
+                           textAlignment: .left)
         stackView.addBlankSpace(space: 48.0)
-        stackView.addLabel(text: StringsProvider.string(forKey: .phoneVerificationNumberDescription),
-                           font: FontPalette.font(withSize: 16.0),
-                           textColor: ColorPalette.color(withType: .secondaryText),
+        stackView.addLabel(withText: StringsProvider.string(forKey: .phoneVerificationNumberDescription),
+                           fontStyle: .paragraph,
+                           colorType: .secondaryText,
                            textAlignment: .left)
         stackView.addBlankSpace(space: 24.0)
         stackView.addArrangedSubview(self.phoneNumberView)
-        stackView.addBlankSpace(space: 16.0)
+        stackView.addBlankSpace(space: 8.0)
         stackView.addArrangedSubview(self.legalNoteView)
         stackView.addBlankSpace(space: 16.0)
         

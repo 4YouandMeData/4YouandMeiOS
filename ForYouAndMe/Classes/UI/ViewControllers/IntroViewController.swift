@@ -45,18 +45,16 @@ public class IntroViewController: UIViewController {
         stackView.autoAlignAxis(toSuperviewAxis: .vertical)
         
         stackView.addHeaderImage(image: ImagePalette.image(withName: .fyamLogoGeneric))
-        stackView.addBlankSpace(space: 50.0)
-        stackView.addLabel(text: StringsProvider.string(forKey: .introTitle),
-                           font: FontPalette.font(withSize: 23.0),
-                           textColor: ColorPalette.color(withType: .secondaryText),
-                           textAlignment: .left)
         stackView.addBlankSpace(space: 40.0)
-        stackView.addLabel(text: StringsProvider.string(forKey: .introBody),
-                           font: FontPalette.font(withSize: 16.0),
-                           textColor: ColorPalette.color(withType: .secondaryText),
-                           textAlignment: .left,
-                           lineSpacing: Constants.Style.DefaultBodyLineSpacing)
-        
+        stackView.addLabel(withText: StringsProvider.string(forKey: .introTitle),
+                           fontStyle: .title,
+                           colorType: .secondaryText,
+                           textAlignment: .left)
+        stackView.addBlankSpace(space: 30.0)
+        stackView.addLabel(withText: StringsProvider.string(forKey: .introBody),
+                           fontStyle: .paragraph,
+                           colorType: .secondaryText,
+                           textAlignment: .left)
         let bottomStackView = UIStackView()
         bottomStackView.axis = .vertical
         bottomStackView.distribution = .fillEqually
@@ -113,12 +111,11 @@ fileprivate extension UIStackView {
         stackView.addArrangedSubview(imageView)
         imageView.setContentHuggingPriority(UILayoutPriority(1000), for: .horizontal)
         imageView.setContentCompressionResistancePriority(UILayoutPriority(1000), for: .horizontal)
-        stackView.addLabel(text: text,
-                           font: FontPalette.font(withSize: 15.0),
-                           textColor: ColorPalette.color(withType: .secondaryText),
+        stackView.addLabel(withText: text,
+                           fontStyle: .header3,
+                           colorType: .secondaryText,
                            textAlignment: .left,
-                           numberOfLines: 2,
-                           lineSpacing: 7.0)
+                           numberOfLines: 2)
         containerView.addSubview(stackView)
         stackView.autoPinEdge(toSuperviewEdge: .leading)
         stackView.autoPinEdge(toSuperviewEdge: .trailing)

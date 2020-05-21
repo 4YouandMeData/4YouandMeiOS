@@ -58,6 +58,11 @@ public extension UIStackView {
         self.addArrangedSubview(label, horizontalInset: horizontalInset)
     }
     
+    func addLabel(attributedString: NSAttributedString, numberOfLines: Int = 0, horizontalInset: CGFloat = 0) {
+        let label = self.getLabel(attributedString: attributedString, numberOfLines: numberOfLines)
+        self.addArrangedSubview(label, horizontalInset: horizontalInset)
+    }
+    
     func addHeaderImage(image: UIImage?, height: CGFloat? = nil, horizontalInset: CGFloat = 0) {
         let imageContainerView = UIView()
         imageContainerView.backgroundColor = UIColor.clear
@@ -169,6 +174,13 @@ public extension UIStackView {
             label.textAlignment = textAlignment
             label.numberOfLines = numberOfLines
         }
+        return label
+    }
+    
+    private func getLabel(attributedString: NSAttributedString, numberOfLines: Int = 0) -> UILabel {
+        let label = UILabel()
+        label.attributedText = attributedString
+        label.numberOfLines = numberOfLines
         return label
     }
 }

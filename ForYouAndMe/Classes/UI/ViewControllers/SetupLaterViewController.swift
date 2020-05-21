@@ -45,13 +45,11 @@ public class SetupLaterViewController: UIViewController {
         scrollStackView.stackView.addBlankSpace(space: 16.0)
         
         scrollStackView.stackView.addHeaderImage(image: ImagePalette.image(withName: .fyamLogoGeneric))
-        scrollStackView.stackView.addBlankSpace(space: 50.0)
-        scrollStackView.stackView.addLabel(text: StringsProvider.string(forKey: .setupLaterBody),
-                           font: FontPalette.font(withSize: 16.0),
-                           textColor: ColorPalette.color(withType: .secondaryText),
-                           textAlignment: .left,
-                           lineSpacing: Constants.Style.DefaultBodyLineSpacing)
-        
+        scrollStackView.stackView.addBlankSpace(space: 40.0)
+        scrollStackView.stackView.addLabel(withText: StringsProvider.string(forKey: .setupLaterBody),
+                                           fontStyle: .paragraph,
+                                           colorType: .secondaryText,
+                                           textAlignment: .left)
         self.view.addSubview(self.confirmButtonView)
         self.confirmButtonView.autoPinEdgesToSuperviewSafeArea(with: UIEdgeInsets.zero, excludingEdge: .top)
         

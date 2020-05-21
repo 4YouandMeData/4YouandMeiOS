@@ -624,6 +624,9 @@
 		88D795191B71868DC81D5D3F45D7338F /* Quick-dummy.m in Sources */ = {isa = PBXBuildFile; fileRef = 852DB8B467EEE5F607A89EAF1B8E97F6 /* Quick-dummy.m */; };
 		88E15A40294DD2E5EB3B78F6C2BF94AB /* InvocableScheduledItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = D34188E282CC535508708DB8DC0AF728 /* InvocableScheduledItem.swift */; };
 		892F567BF4D68BB3C3AE4687AE25BE8C /* FIRCLSDownloadAndSaveSettingsOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 8B83A55EA8A2FF8566D0CF7632C70B32 /* FIRCLSDownloadAndSaveSettingsOperation.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
+		893B1A4C2476C267001C19A2 /* NSAttributedString+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893B1A4B2476C267001C19A2 /* NSAttributedString+Extensions.swift */; };
+		893B1A4E2476C2BB001C19A2 /* NSAttributedString+Palette.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893B1A4D2476C2BB001C19A2 /* NSAttributedString+Palette.swift */; };
+		893B1A502476E65D001C19A2 /* UIStackView+Palette.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893B1A4F2476E65D001C19A2 /* UIStackView+Palette.swift */; };
 		899F8FF4A52472EC26ABCBF5E27D646B /* CredentialsPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA5D05756532D4AEE4F269EE348E2250 /* CredentialsPlugin.swift */; };
 		89A7557E8B2D3B52C52A27089BF111A7 /* FBLPromise.m in Sources */ = {isa = PBXBuildFile; fileRef = E9BB70C6D428EB8F1CF0C58D78B1846D /* FBLPromise.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
 		89EE3529246ECD9E0031532E /* ResponseError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89EE3528246ECD9E0031532E /* ResponseError.swift */; };
@@ -2421,6 +2424,9 @@
 		889495D5C835FD0AD7A9EDB47D20483F /* FIRAEvent.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = FIRAEvent.h; path = Crashlytics/Crashlytics/Helpers/FIRAEvent.h; sourceTree = "<group>"; };
 		88995813F20967F402A4DBFA986C3509 /* Dictionary+OAuthSwift.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = "Dictionary+OAuthSwift.swift"; path = "Sources/Dictionary+OAuthSwift.swift"; sourceTree = "<group>"; };
 		8918004E02F1F50E89BC690F2E261BB7 /* CombineLatest.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = CombineLatest.swift; path = RxSwift/Observables/CombineLatest.swift; sourceTree = "<group>"; };
+		893B1A4B2476C267001C19A2 /* NSAttributedString+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NSAttributedString+Extensions.swift"; sourceTree = "<group>"; };
+		893B1A4D2476C2BB001C19A2 /* NSAttributedString+Palette.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NSAttributedString+Palette.swift"; sourceTree = "<group>"; };
+		893B1A4F2476E65D001C19A2 /* UIStackView+Palette.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIStackView+Palette.swift"; sourceTree = "<group>"; };
 		893D1FA2B47673BF0BF1D146D00A196F /* ElementAt.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ElementAt.swift; path = RxSwift/Observables/ElementAt.swift; sourceTree = "<group>"; };
 		895539EF91BCE1AAC84F908B65E6267B /* FBLPromise+Any.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = "FBLPromise+Any.m"; path = "Sources/FBLPromises/FBLPromise+Any.m"; sourceTree = "<group>"; };
 		897EB04999608D43DDA1C4DE5A4921D2 /* FIRInstallationsHTTPError.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = FIRInstallationsHTTPError.h; path = FirebaseInstallations/Source/Library/Errors/FIRInstallationsHTTPError.h; sourceTree = "<group>"; };
@@ -3927,6 +3933,8 @@
 				5B10DB08F2EBFCBE84AFB583940DC782 /* StringsProvider.swift */,
 				89EE352C246EF7DC0031532E /* CountryCodeProvider.swift */,
 				9698A73A73553DE1DCD3624D245953BE /* Style.swift */,
+				893B1A4D2476C2BB001C19A2 /* NSAttributedString+Palette.swift */,
+				893B1A4F2476E65D001C19A2 /* UIStackView+Palette.swift */,
 			);
 			path = Style;
 			sourceTree = "<group>";
@@ -4263,6 +4271,7 @@
 				DEFDE29EA2249575752DD468A4E9849F /* UIView+Shadow.swift */,
 				92A71DAF8279694EEAE97065C0B06C71 /* UIViewController+Alert.swift */,
 				0453A11A32C386CF1BDE72D396FD3EC5 /* UIViewController+Extensions.swift */,
+				893B1A4B2476C267001C19A2 /* NSAttributedString+Extensions.swift */,
 				7E3F7FE44CB9F7B0522FE09805341A9E /* Validator */,
 				DB45175787D9256249AEE8CB09B720F3 /* ValitationRenderer */,
 			);
@@ -6991,6 +7000,7 @@
 			files = (
 				295EC9BAFCF5FCA9014913A0CDD38EF9 /* ApiGateway.swift in Sources */,
 				E870997F280FC69D92DCE7F5464C7F85 /* AppNavigator.swift in Sources */,
+				893B1A4E2476C2BB001C19A2 /* NSAttributedString+Palette.swift in Sources */,
 				9AEECC322715F11FEFB18C718572F38B /* Bundle+Extensions.swift in Sources */,
 				89EE3529246ECD9E0031532E /* ResponseError.swift in Sources */,
 				B8DECDB44CB75FC37FE449FEDA8D7AF9 /* ButtonStyles.swift in Sources */,
@@ -7006,6 +7016,7 @@
 				EB824E0E770CEB0C5B752BE7F0B58258 /* FYAMManager.swift in Sources */,
 				2D855A7BCA1672E5B907806D820A82B8 /* GenericButtonStyles.swift in Sources */,
 				E8E6C725F92E355FB1D43C7975BCC743 /* GenericButtonView.swift in Sources */,
+				893B1A502476E65D001C19A2 /* UIStackView+Palette.swift in Sources */,
 				58A8131A0A091BB4DCA3C3FD7C4A8EF9 /* GenericCheckboxView.swift in Sources */,
 				5FC3ED0A0C762BBF32A4C633FA3D1A1F /* GenericTextFieldView.swift in Sources */,
 				D15F757B780785EE266F71368EDC98CA /* GlobalConfig+Mappable.swift in Sources */,
@@ -7054,6 +7065,7 @@
 				320B46ECA9BFD42C04931F9A049BADDF /* UIViewController+Extensions.swift in Sources */,
 				F74B55F2415DD993DE5C0AD7731F7B7A /* UIViewController+ValidationRenderer.swift in Sources */,
 				CAEA56C43F9C595D786EA5F894A59101 /* Validator+Extensions.swift in Sources */,
+				893B1A4C2476C267001C19A2 /* NSAttributedString+Extensions.swift in Sources */,
 				55F74727AEBC1FE21F0AA44001FBB628 /* ValidatorLocalizable.strings in Sources */,
 				5191FD7D6626A951E49A8E361D7B2BAC /* ValidatorLocalizable.strings in Sources */,
 				0AF1215A8BD0A536F7F6664D6E042630 /* ValidatorLocalizable.strings in Sources */,

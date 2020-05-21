@@ -32,7 +32,7 @@ class PhoneNumberView: GenericTextFieldView {
     private lazy var countryCodeButton: UIButton = {
         let button = UIButton()
         button.setTitleColor(Self.normalTextColor, for: .normal)
-        button.titleLabel?.font = FontPalette.font(withSize: 20.0)
+        button.titleLabel?.font = FontPalette.fontStyleData(forStyle: .paragraph).font
         button.contentEdgeInsets = UIEdgeInsets.zero
         button.addTarget(self, action: #selector(self.countryCodeButtonPressed), for: .touchUpInside)
         button.setContentHuggingPriority(UILayoutPriority(1000), for: .horizontal)
@@ -184,13 +184,13 @@ extension PhoneNumberView: CountryPickerViewDataSource {
     /// The desired font for the section title labels on the list. Can be used to configure the text size.
     /// Default value is UIFont.boldSystemFont(ofSize: 17)
     func sectionTitleLabelFont(in countryPickerView: CountryPickerView) -> UIFont {
-        return FontPalette.font(withSize: 20.0)
+        return FontPalette.fontStyleData(forStyle: .header2).font
     }
     
     /// The desired font for the cell labels on the list. Can be used to configure the text size.
     /// Default value is UIFont.systemFont(ofSize: 17)
     func cellLabelFont(in countryPickerView: CountryPickerView) -> UIFont {
-        return FontPalette.font(withSize: 16.0)
+        return FontPalette.fontStyleData(forStyle: .paragraph).font
     }
     
     /// The navigation item title when the internal view controller is pushed/presented.

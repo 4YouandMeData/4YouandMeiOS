@@ -8,35 +8,53 @@
 
 import UIKit
 
-public typealias FontTypeMap = [FontType: String]
-
-public enum FontType: String, CaseIterable {
-    case regular
-    case bold
+public struct FontStyleData {
+    let font: UIFont
+    let lineSpacing: CGFloat
+    let uppercase: Bool
     
-    fileprivate var defaultWeight: UIFont.Weight {
+    public init(font: UIFont, lineSpacing: CGFloat, uppercase: Bool) {
+        self.font = font
+        self.lineSpacing = lineSpacing
+        self.uppercase = uppercase
+    }
+}
+
+public typealias FontStyleMap = [FontStyle: FontStyleData]
+
+public enum FontStyle: String, CaseIterable {
+    case title
+    case header2
+    case header3
+    case paragraph
+    case menu
+    
+    fileprivate var defaultData: FontStyleData {
         switch self {
-        case .regular: return .regular
-        case .bold: return .bold
+        case .title: return FontStyleData(font: UIFont.systemFont(ofSize: 24.0, weight: .regular), lineSpacing: 6.0, uppercase: false)
+        case .header2: return FontStyleData(font: UIFont.systemFont(ofSize: 20.0, weight: .regular), lineSpacing: 6.0, uppercase: false)
+        case .paragraph: return FontStyleData(font: UIFont.systemFont(ofSize: 16.0, weight: .regular), lineSpacing: 5.0, uppercase: false)
+        case .header3: return FontStyleData(font: UIFont.systemFont(ofSize: 13.0, weight: .regular), lineSpacing: 3.0, uppercase: false)
+        case .menu: return FontStyleData(font: UIFont.systemFont(ofSize: 13.0, weight: .regular), lineSpacing: 3.0, uppercase: true)
         }
     }
 }
 
 public class FontPalette {
     
-    private static var fontTypeMap: FontTypeMap = [:]
+    private static var fontStyleMap: FontStyleMap = [:]
     
-    public static func initialize(withFontTypeMap fontTypeMap: FontTypeMap) {
-        self.fontTypeMap = fontTypeMap
+    public static func initialize(withFontStyleMap fontStyleMap: FontStyleMap) {
+        self.fontStyleMap = fontStyleMap
     }
     
-    static func font(withSize size: CGFloat, type: FontType = .regular) -> UIFont {
-        return UIFont(name: self.fontTypeMap[type] ?? "", size: size) ?? UIFont.systemFont(ofSize: size, weight: type.defaultWeight)
+    static func fontStyleData(forStyle style: FontStyle) -> FontStyleData {
+        return self.fontStyleMap[style] ?? style.defaultData
     }
     
     static func checkFontAvailability() {
-        FontType.allCases.forEach { type in
-            assert(UIFont(name: self.fontTypeMap[type] ?? "", size: 10.0) != nil, "missing font: \(type.rawValue)")
+        FontStyle.allCases.forEach { style in
+            assert(self.fontStyleMap[style] != nil, "Missing font style data for style '\(style.rawValue)'")
         }
     }
 }

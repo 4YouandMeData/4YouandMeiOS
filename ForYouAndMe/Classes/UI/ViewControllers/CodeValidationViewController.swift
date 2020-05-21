@@ -33,17 +33,12 @@ public class CodeValidationViewController: UIViewController {
     private lazy var resendCodeButton: UIButton = {
         let button = UIButton()
         button.addTarget(self, action: #selector(self.resendCodeButtonPressed), for: .touchUpInside)
-        let paragraphStyle = NSMutableParagraphStyle()
-        paragraphStyle.alignment = .left
-        let text = NSAttributedString(string: StringsProvider.string(forKey: .phoneVerificationCodeResend),
-                                      attributes: [
-                                        .font: FontPalette.font(withSize: 16.0),
-                                        .foregroundColor: ColorPalette.color(withType: .secondaryText),
-                                        .underlineStyle: NSUnderlineStyle.single.rawValue,
-                                        .paragraphStyle: paragraphStyle
-                                        
-        ])
-        button.setAttributedTitle(text, for: .normal)
+        let attributedText = NSAttributedString.create(withText: StringsProvider.string(forKey: .phoneVerificationCodeResend),
+                                                       fontStyle: .header3,
+                                                       colorType: .secondaryText,
+                                                       textAlignment: .left,
+                                                       underlined: true)
+        button.setAttributedTitle(attributedText, for: .normal)
         return button
     }()
     
@@ -98,26 +93,25 @@ public class CodeValidationViewController: UIViewController {
                                                                   right: Constants.Style.DefaultHorizontalMargins))
         stackView.autoAlignAxis(toSuperviewAxis: .vertical)
         
-        stackView.addLabel(text: StringsProvider.string(forKey: .phoneVerificationCodeTitle),
-                           font: FontPalette.font(withSize: 30.0),
-                           textColor: ColorPalette.color(withType: .secondaryText),
+        stackView.addLabel(withText: StringsProvider.string(forKey: .phoneVerificationCodeTitle),
+                           fontStyle: .title,
+                           colorType: .secondaryText,
                            textAlignment: .left)
-        stackView.addBlankSpace(space: 60.0)
-        stackView.addLabel(text: StringsProvider.string(forKey: .phoneVerificationCodeBody),
-                           font: FontPalette.font(withSize: 16.0),
-                           textColor: ColorPalette.color(withType: .secondaryText),
-                           textAlignment: .left,
-                           lineSpacing: Constants.Style.DefaultBodyLineSpacing)
+        stackView.addBlankSpace(space: 30.0)
+        stackView.addLabel(withText: StringsProvider.string(forKey: .phoneVerificationCodeBody),
+                           fontStyle: .paragraph,
+                           colorType: .secondaryText,
+                           textAlignment: .left)
         stackView.addBlankSpace(space: 48.0)
-        stackView.addLabel(text: StringsProvider.string(forKey: .phoneVerificationWrongNumber),
-                           font: FontPalette.font(withSize: 16.0),
-                           textColor: ColorPalette.color(withType: .secondaryText).applyAlpha(0.5),
+        stackView.addLabel(withText: StringsProvider.string(forKey: .phoneVerificationWrongNumber),
+                           fontStyle: .paragraph,
+                           color: ColorPalette.color(withType: .secondaryText).applyAlpha(0.5),
                            textAlignment: .left)
         stackView.addBlankSpace(space: 24.0)
         stackView.addArrangedSubview(self.phoneNumberView)
-        stackView.addLabel(text: StringsProvider.string(forKey: .phoneVerificationCodeDescription),
-                           font: FontPalette.font(withSize: 16.0),
-                           textColor: ColorPalette.color(withType: .secondaryText),
+        stackView.addLabel(withText: StringsProvider.string(forKey: .phoneVerificationCodeDescription),
+                           fontStyle: .paragraph,
+                           colorType: .secondaryText,
                            textAlignment: .left)
         stackView.addBlankSpace(space: 24.0)
         stackView.addArrangedSubview(self.codeTextFieldView)

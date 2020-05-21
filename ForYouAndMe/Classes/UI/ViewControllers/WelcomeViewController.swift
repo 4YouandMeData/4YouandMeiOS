@@ -34,7 +34,7 @@ public class WelcomeViewController: UIViewController {
         super.viewDidLoad()
         
         self.view.addGradientView(GradientView(type: .defaultBackground))
-        
+
         let stackView = UIStackView()
         stackView.axis = .vertical
         self.view.addSubview(stackView)
@@ -42,7 +42,7 @@ public class WelcomeViewController: UIViewController {
                                                                      left: Constants.Style.DefaultHorizontalMargins,
                                                                      bottom: 100.0,
                                                                      right: Constants.Style.DefaultHorizontalMargins))
-        
+
         stackView.addHeaderImage(image: ImagePalette.image(withName: .fyamLogoSpecific))
         stackView.addBlankSpace(space: 64.0)
         stackView.addHeaderImage(image: ImagePalette.image(withName: .mainLogo))
@@ -54,7 +54,7 @@ public class WelcomeViewController: UIViewController {
         super.viewWillAppear(animated)
         
         self.navigationController?.navigationBar.apply(style: NavigationBarStyles.darkStyle)
-        
+
         self.continueButton.alpha = 0
         UIView.animate(withDuration: 0.8, delay: 0.0, options: .curveEaseInOut, animations: { [weak self] in
             guard let self = self else { return }

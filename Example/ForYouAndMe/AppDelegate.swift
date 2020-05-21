@@ -17,10 +17,24 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     func application(_ application: UIApplication,
                      didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         
-        let fontTypeMap: FontTypeMap = [.regular: "Helvetica",
-                                        .bold: "Helvetica-Bold"]
+        var fontStyleMap: FontStyleMap = [:]
+        if let font = UIFont(name: "Helvetica", size: 24.0) {
+            fontStyleMap[.title] = FontStyleData(font: font, lineSpacing: 6.0, uppercase: false)
+        }
+        if let font = UIFont(name: "Helvetica", size: 20.0) {
+            fontStyleMap[.header2] = FontStyleData(font: font, lineSpacing: 6.0, uppercase: false)
+        }
+        if let font = UIFont(name: "Helvetica", size: 16.0) {
+            fontStyleMap[.paragraph] = FontStyleData(font: font, lineSpacing: 5.0, uppercase: false)
+        }
+        if let font = UIFont(name: "Helvetica", size: 13.0) {
+            fontStyleMap[.header3] = FontStyleData(font: font, lineSpacing: 3.0, uppercase: false)
+        }
+        if let font = UIFont(name: "Helvetica", size: 13.0) {
+            fontStyleMap[.menu] = FontStyleData(font: font, lineSpacing: 3.0, uppercase: true)
+        }
         self.window = FYAMManager.startup(withStudyId: "bump",
-                                          fontTypeMap: fontTypeMap,
+                                          fontStyleMap: fontStyleMap,
                                           checkResourcesAvailability: true)
         
         return true

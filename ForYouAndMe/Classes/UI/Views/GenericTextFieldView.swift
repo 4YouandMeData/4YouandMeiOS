@@ -41,7 +41,7 @@ class GenericTextFieldView: UIView {
         textField.textColor = Self.normalTextColor
         textField.tintColor = Self.normalTextColor
         textField.keyboardType = .phonePad
-        textField.font = FontPalette.font(withSize: 20.0)
+        textField.font = FontPalette.fontStyleData(forStyle: .paragraph).font
         textField.delegate = self
         textField.addTarget(self, action: #selector(self.textFieldDidChange(_:)), for: .editingChanged)
         return textField
@@ -65,9 +65,6 @@ class GenericTextFieldView: UIView {
     
     private lazy var errorLabel: UILabel = {
         let label = UILabel()
-        label.font = FontPalette.font(withSize: 13)
-        label.textColor = Self.errorColor
-        label.textAlignment = .left
         label.numberOfLines = 0
         label.autoSetDimension(.height, toSize: 36, relation: .greaterThanOrEqual)
         return label
@@ -121,7 +118,10 @@ class GenericTextFieldView: UIView {
     // MARK: Public Methods
     
     public func setError(errorText: String) {
-        self.errorLabel.text = errorText
+        self.errorLabel.attributedText = NSAttributedString.create(withText: errorText,
+                                                                   fontStyle: .header3,
+                                                                   color: Self.errorColor,
+                                                                   textAlignment: .left)
         self.textField.textColor = Self.errorColor
         self.textField.tintColor = Self.errorColor
     }

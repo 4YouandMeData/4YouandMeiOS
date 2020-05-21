@@ -16,10 +16,7 @@ public class SetupViewController: UIViewController {
     
     private lazy var errorLabel: UILabel = {
         let label = UILabel()
-        label.textColor = ColorPalette.color(withType: .primaryText)
         label.numberOfLines = 0
-        label.textAlignment = .center
-        label.font = FontPalette.font(withSize: 20.0)
         return label
     }()
     
@@ -37,11 +34,11 @@ public class SetupViewController: UIViewController {
         stackView.axis = .vertical
         stackView.addHeaderImage(image: ImagePalette.image(withName: .setupFailure))
         stackView.addBlankSpace(space: 44.0)
-        stackView.addLabel(text: StringsProvider.string(forKey: .setupErrorTitle),
-                           font: FontPalette.font(withSize: 24.0),
-                           textColor: ColorPalette.color(withType: .primaryText))
+        stackView.addLabel(withText: StringsProvider.string(forKey: .setupErrorTitle),
+                           fontStyle: .title,
+                           colorType: .primaryText)
         stackView.addBlankSpace(space: 44.0)
-        stackView.addArrangedSubview(errorLabel)
+        stackView.addArrangedSubview(self.errorLabel)
         stackView.addBlankSpace(space: 160.0)
         stackView.addArrangedSubview(self.retryButton)
         view.addSubview(stackView)
@@ -90,7 +87,9 @@ public class SetupViewController: UIViewController {
     
     private func showError(error: Error) {
         let repositoryError: RepositoryError = (error as? RepositoryError) ?? .genericError
-        self.errorLabel.text = repositoryError.localizedDescription
+        self.errorLabel.attributedText = NSAttributedString.create(withText: repositoryError.localizedDescription,
+                                                                   fontStyle: .paragraph,
+                                                                   colorType: .primaryText)
         self.errorView.isHidden = false
     }
     

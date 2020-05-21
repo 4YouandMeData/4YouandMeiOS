@@ -20,7 +20,7 @@ class NavigationBarStyles {
         bar.prefersLargeTitles = false
         bar.shadowImage = UIImage() // Remove Separator line
         bar.titleTextAttributes = [.foregroundColor: ColorPalette.color(withType: .secondaryText),
-                                   .font: FontPalette.font(withSize: 16.0)]
+                                   .font: FontPalette.fontStyleData(forStyle: .paragraph).font]
     }
     
     static let lightStyle = Style<UINavigationBar> { bar in
@@ -31,7 +31,7 @@ class NavigationBarStyles {
         bar.prefersLargeTitles = false
         bar.shadowImage = UIImage() // Remove Separator line
         bar.titleTextAttributes = [.foregroundColor: ColorPalette.color(withType: .primaryText),
-                                   .font: FontPalette.font(withSize: 16.0)]
+                                   .font: FontPalette.fontStyleData(forStyle: .paragraph).font]
     }
     
     static let activeStyle = Style<UINavigationBar> { bar in
@@ -42,7 +42,7 @@ class NavigationBarStyles {
         bar.prefersLargeTitles = false
         bar.shadowImage = UIImage() // Remove Separator line
         bar.titleTextAttributes = [.foregroundColor: ColorPalette.color(withType: .secondaryText),
-                                   .font: FontPalette.font(withSize: 16.0)]
+                                   .font: FontPalette.fontStyleData(forStyle: .paragraph).font]
     }
 }
 

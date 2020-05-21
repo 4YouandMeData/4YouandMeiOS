@@ -19,7 +19,7 @@ public class ButtonStyles {
         button.layer.cornerRadius = defaultCornerRadius
         button.backgroundColor = ColorPalette.color(withType: .primary)
         button.setTitleColor(ColorPalette.color(withType: .secondaryText), for: .normal)
-        button.titleLabel?.font = FontPalette.font(withSize: 20.0)
+        button.titleLabel?.font = FontPalette.fontStyleData(forStyle: .header2).font
         button.addShadowButton()
     }
     
@@ -28,7 +28,7 @@ public class ButtonStyles {
         button.layer.cornerRadius = defaultCornerRadius
         button.backgroundColor = ColorPalette.color(withType: .secondary)
         button.setTitleColor(ColorPalette.color(withType: .tertiaryText), for: .normal)
-        button.titleLabel?.font = FontPalette.font(withSize: 20.0)
+        button.titleLabel?.font = FontPalette.fontStyleData(forStyle: .header2).font
         button.addShadowButton()
     }
 }
