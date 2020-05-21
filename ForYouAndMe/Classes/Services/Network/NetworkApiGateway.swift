@@ -13,13 +13,8 @@ import RxSwift
 import Mapper
 import Reachability
 
-enum NetworkAuthHandlerError: Error {
-    case userNotLoggedIn
-    case genericError
-}
-
 protocol NetworkStorage: class {
-    var accessToken: String? { set get }
+    var accessToken: String? { get set }
 }
 
 struct UnhandledError: Mappable {
@@ -72,19 +67,19 @@ class NetworkApiGateway: ApiGateway {
     }
     
     func endpointMapping(forTarget target: DefaultService) -> Endpoint {
-            let targetPath = target.getPath(forStudyId: self.studyId)
-            let url: URL = {
-                if targetPath.isEmpty {
-                    return target.baseURL
-                } else {
-                    return target.baseURL.appendingPathComponent(targetPath)
-                }
-            }()
-            return Endpoint(url: url.absoluteString,
-                            sampleResponseClosure: {.networkResponse(200, target.sampleData)},
-                            method: target.method,
-                            task: target.task,
-                            httpHeaderFields: target.headers)
+        let targetPath = target.getPath(forStudyId: self.studyId)
+        let url: URL = {
+            if targetPath.isEmpty {
+                return target.baseURL
+            } else {
+                return target.baseURL.appendingPathComponent(targetPath)
+            }
+        }()
+        return Endpoint(url: url.absoluteString,
+                        sampleResponseClosure: {.networkResponse(200, target.sampleData)},
+                        method: target.method,
+                        task: target.task,
+                        httpHeaderFields: target.headers)
     }
     
     // MARK: - ApiGateway Protocol Implementation

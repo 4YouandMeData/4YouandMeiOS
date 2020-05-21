@@ -42,7 +42,7 @@ class Services {
                 ? TestNetworkApiGateway(studyId: studyId, reachability: reachabilityService, storage: storage)
                 : NetworkApiGateway(studyId: studyId, reachability: reachabilityService, storage: storage)
         #else
-        let networkApiGateway = NetworkApiGateway(studyId: studyId, reachability: reachabilityService)
+        let networkApiGateway = NetworkApiGateway(studyId: studyId, reachability: reachabilityService, storage: storage)
         #endif
         self.services.append(networkApiGateway)
         

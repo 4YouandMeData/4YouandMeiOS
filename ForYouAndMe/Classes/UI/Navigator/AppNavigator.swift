@@ -168,26 +168,23 @@ class AppNavigator {
         UIApplication.shared.open(url)
     }
     
-    public func handleError(error: Error?, presenter: UIViewController, handleLogout: Bool = true) {
+    public func handleError(error: Error?, presenter: UIViewController) {
         SVProgressHUD.dismiss() // Safety dismiss
         guard let error = error else {
             presenter.showGenericErrorAlert()
             return
         }
+        guard let repositoryError = error as? RepositoryError else {
+            assertionFailure("Unexpected error type")
+            presenter.showGenericErrorAlert()
+            return
+        }
         
-        if let repositoryError = error as? RepositoryError {
-            switch repositoryError {
-            case .userNotLoggedIn:
-                if handleLogout {
-                    self.logOut()
-                } else {
-                    presenter.showAlert(forError: RepositoryError.genericError)
-                }
-            default:
-                presenter.showAlert(forError: error)
-            }
-        } else {
-            presenter.showAlert(forError: error)
+        switch repositoryError {
+        case .userNotLoggedIn:
+            self.logOut()
+        default:
+            presenter.showAlert(forError: repositoryError)
         }
     }
     
