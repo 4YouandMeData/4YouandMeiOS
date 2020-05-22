@@ -43,7 +43,8 @@ public class ScreeningQuestionsViewController: UIViewController {
         super.viewWillAppear(animated)
         
         self.navigationController?.navigationBar.apply(style: NavigationBarStyles.secondaryStyle)
-        self.addCustomBackButton(withImage: ImagePalette.image(withName: .backButton))
+        self.addCustomBackButton()
+        self.addOnboardingAbortButton(withColor: ColorPalette.color(withType: .primary))
     }
     
     // MARK: Actions

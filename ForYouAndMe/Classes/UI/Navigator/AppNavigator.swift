@@ -53,6 +53,17 @@ class AppNavigator {
         }
     }
     
+    public func abortOnboarding(presenter: UIViewController) {
+        presenter.showAlert(withTitle: StringsProvider.string(forKey: .onboardingAbortTitle),
+                            message: StringsProvider.string(forKey: .onboardingAbortMessage),
+                            cancelText: StringsProvider.string(forKey: .onboardingAbortCancel),
+                            confirmText: StringsProvider.string(forKey: .onboardingAbortConfirm),
+                            tintColor: ColorPalette.color(withType: .primary),
+                            confirm: { [weak self] in
+                                self?.goToWelcome()
+        })
+    }
+    
     // MARK: - Welcome
     
     public func goToWelcome() {
@@ -213,12 +224,14 @@ fileprivate extension UIViewController {
     func showAlert(forError error: Error, completion: @escaping (() -> Void) = {}) {
         self.showAlert(withTitle: StringsProvider.string(forKey: .errorTitleDefault),
                        message: error.localizedDescription,
+                       tintColor: ColorPalette.color(withType: .primary),
                        completion: completion)
     }
     
     func showGenericErrorAlert() {
         self.showAlert(withTitle: StringsProvider.string(forKey: .errorTitleDefault),
                        message: StringsProvider.string(forKey: .errorMessageDefault),
+                       tintColor: ColorPalette.color(withType: .primary),
                        completion: {})
     }
 }

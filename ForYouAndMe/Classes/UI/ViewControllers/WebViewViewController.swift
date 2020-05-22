@@ -101,7 +101,7 @@ class WebViewViewController: UIViewController {
         super.viewWillAppear(animated)
         
         self.navigationController?.navigationBar.apply(style: NavigationBarStyles.secondaryStyle)
-        self.addCustomCloseButton(withImage: ImagePalette.image(withName: .closeButton))
+        self.addCustomCloseButton()
     }
     
     // MARK: - Actions

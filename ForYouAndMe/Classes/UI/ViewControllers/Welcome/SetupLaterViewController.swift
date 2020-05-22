@@ -60,7 +60,7 @@ public class SetupLaterViewController: UIViewController {
         super.viewWillAppear(animated)
         
         self.navigationController?.navigationBar.apply(style: NavigationBarStyles.primaryStyle)
-        self.addCustomBackButton(withImage: ImagePalette.image(withName: .backButton))
+        self.addCustomBackButton()
     }
     
     // MARK: Actions

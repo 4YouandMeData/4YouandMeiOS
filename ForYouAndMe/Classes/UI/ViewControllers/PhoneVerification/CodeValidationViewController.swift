@@ -138,7 +138,7 @@ public class CodeValidationViewController: UIViewController {
         super.viewWillAppear(animated)
         
         self.navigationController?.navigationBar.apply(style: NavigationBarStyles.activeStyle)
-        self.addCustomBackButton(withImage: ImagePalette.image(withName: .backButton))
+        self.addCustomBackButton()
     }
     
     // MARK: Actions

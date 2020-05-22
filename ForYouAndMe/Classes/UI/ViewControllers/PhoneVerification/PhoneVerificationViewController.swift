@@ -166,7 +166,7 @@ public class PhoneVerificationViewController: UIViewController {
         super.viewWillAppear(animated)
         
         self.navigationController?.navigationBar.apply(style: NavigationBarStyles.primaryStyle)
-        self.addCustomBackButton(withImage: ImagePalette.image(withName: .backButton))
+        self.addCustomBackButton()
     }
     
     public override func viewDidLayoutSubviews() {

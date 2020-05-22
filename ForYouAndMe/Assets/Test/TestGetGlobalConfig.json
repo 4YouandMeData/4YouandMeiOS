@@ -16,7 +16,7 @@
     },
     "strings": {
       "INTRO_BACK": "I will set up my app later",
-      "INTRO_BODY": "You have completed the first step to begin this journey together: downloading the app. Next, we will go through the initial setup of the app.\n\nThis process will take approximately 30 minutes and will require an internet connection. Please ensure you have plenty of time before we start this process. Otherwise, feel free to start it when you have sufficient time.",
+      "INTRO_BODY": "You have completed the first step to begin this journey together: downloading the app.\n\nNext, we will go through the initial setup of the app. This process will take approximately 30 minutes and will require an internet connection. Please ensure you have plenty of time before we start this process. Otherwise, feel free to start it when you have sufficient time.",
       "INTRO_LOGIN": "Let’s start - I have sufficient time now",
       "INTRO_TITLE": "Thank you for your interest in the study BUMP by 4YouandMe",
       "SETUP_LATER_BODY": "Ok - We can setup your app later. Please come back when you are able to spend 30 minutes with the initial app setup. This is a necessary step to partecipate in the study.\n\nWhen you are ready, simply open the app again.",
@@ -29,12 +29,17 @@
       "URL_TERMS_OF_SERVICE": "https://www.google.com/",
       "WELCOME_START_BUTTON": "Get Started",
       "ERROR_MESSAGE_DEFAULT": "Something went wrong,\nplease try again",
+      "ONBOARDING_ABORT_TITLE": "Are you sure?",
+      "ONBOARDING_ABORT_BUTTON": "Cancel",
+      "ONBOARDING_ABORT_CANCEL": "No",
       "PHONE_VERIFICATION_BODY": "This app was created for participants in the study BUMP by 4YouandMe. To verify you have been recruited for this study, please enter your phone number below.\n\nWe will text you a validation code.\n\nPlease use the same phone number that you shared with the research team.",
+      "ONBOARDING_ABORT_CONFIRM": "Yes",
+      "ONBOARDING_ABORT_MESSAGE": "If you click cancel you will return to the beginning of the app and lose all progress",
       "PHONE_VERIFICATION_LEGAL": "By checking this box, I hereby agree to the Terms of service and Privacy Policy",
       "PHONE_VERIFICATION_TITLE": "Welcome to the BUMP study app",
       "ERROR_MESSAGE_CONNECTIVITY": "You seem to be offline.\nPlease check your internet connection and try again.",
-      "ERROR_MESSAGE_REMOTE_SERVER": "Something went wrong,\nplease try again",
       "SETUP_LATER_CONFIRM_BUTTON": "Ok",
+      "ERROR_MESSAGE_REMOTE_SERVER": "Something went wrong,\nplease try again",
       "PHONE_VERIFICATION_CODE_BODY": "We sent a text message containing a validation code to the phone number below.",
       "PHONE_VERIFICATION_CODE_TITLE": "Please enter your validation code",
       "PHONE_VERIFICATION_CODE_RESEND": "Re-send code",
@@ -42,9 +47,9 @@
       "PHONE_VERIFICATION_CODE_DESCRIPTION": "Enter Validation Code",
       "PHONE_VERIFICATION_ERROR_WRONG_CODE": "The validation code is incorrect. Try with an other code.",
       "PHONE_VERIFICATION_NUMBER_DESCRIPTION": "Phone Number",
+      "PHONE_VERIFICATION_COUNTRY_PICKER_TITLE": "Select your country",
       "PHONE_VERIFICATION_ERROR_MISSING_NUMBER": "This number was not recruited for the study. Try with an other number.",
       "PHONE_VERIFICATION_LEGAL_PRIVACY_POLICY": "Privacy Policy",
-      "PHONE_VERIFICATION_LEGAL_TERMS_OF_SERVICE": "Terms of service",
-      "PHONE_VERIFICATION_COUNTRY_PICKER_TITLE": "Select your country"
+      "PHONE_VERIFICATION_LEGAL_TERMS_OF_SERVICE": "Terms of service"
     }
 }

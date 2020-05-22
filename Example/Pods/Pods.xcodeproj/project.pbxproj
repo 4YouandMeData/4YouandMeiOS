@@ -629,6 +629,7 @@
 		893B1A502476E65D001C19A2 /* UIStackView+Palette.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893B1A4F2476E65D001C19A2 /* UIStackView+Palette.swift */; };
 		893B74C12477D1200080132F /* ScreeningQuestionsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893B74C02477D1200080132F /* ScreeningQuestionsViewController.swift */; };
 		893B74C52477FCD40080132F /* UIView+ShadowPalette.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893B74C42477FCD40080132F /* UIView+ShadowPalette.swift */; };
+		893B74C72478000D0080132F /* UIViewController+Internal.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893B74C62478000D0080132F /* UIViewController+Internal.swift */; };
 		899F8FF4A52472EC26ABCBF5E27D646B /* CredentialsPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA5D05756532D4AEE4F269EE348E2250 /* CredentialsPlugin.swift */; };
 		89A7557E8B2D3B52C52A27089BF111A7 /* FBLPromise.m in Sources */ = {isa = PBXBuildFile; fileRef = E9BB70C6D428EB8F1CF0C58D78B1846D /* FBLPromise.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
 		89EE3529246ECD9E0031532E /* ResponseError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89EE3528246ECD9E0031532E /* ResponseError.swift */; };
@@ -2431,6 +2432,7 @@
 		893B1A4F2476E65D001C19A2 /* UIStackView+Palette.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIStackView+Palette.swift"; sourceTree = "<group>"; };
 		893B74C02477D1200080132F /* ScreeningQuestionsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreeningQuestionsViewController.swift; sourceTree = "<group>"; };
 		893B74C42477FCD40080132F /* UIView+ShadowPalette.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIView+ShadowPalette.swift"; sourceTree = "<group>"; };
+		893B74C62478000D0080132F /* UIViewController+Internal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIViewController+Internal.swift"; sourceTree = "<group>"; };
 		893D1FA2B47673BF0BF1D146D00A196F /* ElementAt.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ElementAt.swift; path = RxSwift/Observables/ElementAt.swift; sourceTree = "<group>"; };
 		895539EF91BCE1AAC84F908B65E6267B /* FBLPromise+Any.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = "FBLPromise+Any.m"; path = "Sources/FBLPromises/FBLPromise+Any.m"; sourceTree = "<group>"; };
 		897EB04999608D43DDA1C4DE5A4921D2 /* FIRInstallationsHTTPError.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = FIRInstallationsHTTPError.h; path = FirebaseInstallations/Source/Library/Errors/FIRInstallationsHTTPError.h; sourceTree = "<group>"; };
@@ -4637,6 +4639,7 @@
 			isa = PBXGroup;
 			children = (
 				89EE352C246EF7DC0031532E /* CountryCodeProvider.swift */,
+				893B74C62478000D0080132F /* UIViewController+Internal.swift */,
 			);
 			name = UtilityInternal;
 			path = ForYouAndMe/Classes/UtilityInternal;
@@ -7075,6 +7078,7 @@
 				893B1A502476E65D001C19A2 /* UIStackView+Palette.swift in Sources */,
 				58A8131A0A091BB4DCA3C3FD7C4A8EF9 /* GenericCheckboxView.swift in Sources */,
 				5FC3ED0A0C762BBF32A4C633FA3D1A1F /* GenericTextFieldView.swift in Sources */,
+				893B74C72478000D0080132F /* UIViewController+Internal.swift in Sources */,
 				D15F757B780785EE266F71368EDC98CA /* GlobalConfig+Mappable.swift in Sources */,
 				FDCABD937BCF814DC70D95885DAE3B78 /* GlobalConfig.swift in Sources */,
 				85D0C40C67021A15C438487BBB722EEE /* Gradient+Extension.swift in Sources */,
