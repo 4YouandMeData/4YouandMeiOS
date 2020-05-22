@@ -23,7 +23,10 @@ extension UIViewController {
                                          style: .plain,
                                          target: self,
                                          action: #selector(self.onboardingAbortPressed))
-        buttonItem.tintColor = color
+        buttonItem.setTitleTextAttributes([
+            .foregroundColor: color,
+            .font: FontPalette.fontStyleData(forStyle: .header3).font
+            ], for: .normal)
         self.navigationItem.rightBarButtonItem =  buttonItem
     }
     
