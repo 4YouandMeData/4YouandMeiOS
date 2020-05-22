@@ -623,6 +623,7 @@
 		88B7F4E9AC2AC10B8C7DEDB9FE1EA79C /* FIRCLSLogger.m in Sources */ = {isa = PBXBuildFile; fileRef = DA32912AA50B05CB46EB212817FCE418 /* FIRCLSLogger.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
 		88D795191B71868DC81D5D3F45D7338F /* Quick-dummy.m in Sources */ = {isa = PBXBuildFile; fileRef = 852DB8B467EEE5F607A89EAF1B8E97F6 /* Quick-dummy.m */; };
 		88E15A40294DD2E5EB3B78F6C2BF94AB /* InvocableScheduledItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = D34188E282CC535508708DB8DC0AF728 /* InvocableScheduledItem.swift */; };
+		8912AE6A24780CDF00684C1B /* QuestionBinaryTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8912AE6924780CDF00684C1B /* QuestionBinaryTableViewCell.swift */; };
 		892F567BF4D68BB3C3AE4687AE25BE8C /* FIRCLSDownloadAndSaveSettingsOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 8B83A55EA8A2FF8566D0CF7632C70B32 /* FIRCLSDownloadAndSaveSettingsOperation.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
 		893B1A4C2476C267001C19A2 /* NSAttributedString+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893B1A4B2476C267001C19A2 /* NSAttributedString+Extensions.swift */; };
 		893B1A4E2476C2BB001C19A2 /* NSAttributedString+Palette.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893B1A4D2476C2BB001C19A2 /* NSAttributedString+Palette.swift */; };
@@ -2426,6 +2427,7 @@
 		88637B61B44B8D7F74F7A1750898EF0D /* Sink.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = Sink.swift; path = RxSwift/Observables/Sink.swift; sourceTree = "<group>"; };
 		889495D5C835FD0AD7A9EDB47D20483F /* FIRAEvent.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = FIRAEvent.h; path = Crashlytics/Crashlytics/Helpers/FIRAEvent.h; sourceTree = "<group>"; };
 		88995813F20967F402A4DBFA986C3509 /* Dictionary+OAuthSwift.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = "Dictionary+OAuthSwift.swift"; path = "Sources/Dictionary+OAuthSwift.swift"; sourceTree = "<group>"; };
+		8912AE6924780CDF00684C1B /* QuestionBinaryTableViewCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = QuestionBinaryTableViewCell.swift; sourceTree = "<group>"; };
 		8918004E02F1F50E89BC690F2E261BB7 /* CombineLatest.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = CombineLatest.swift; path = RxSwift/Observables/CombineLatest.swift; sourceTree = "<group>"; };
 		893B1A4B2476C267001C19A2 /* NSAttributedString+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NSAttributedString+Extensions.swift"; sourceTree = "<group>"; };
 		893B1A4D2476C2BB001C19A2 /* NSAttributedString+Palette.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NSAttributedString+Palette.swift"; sourceTree = "<group>"; };
@@ -4623,6 +4625,7 @@
 		893B74BE2477D0E90080132F /* ScreeningQuestions */ = {
 			isa = PBXGroup;
 			children = (
+				8912AE6924780CDF00684C1B /* QuestionBinaryTableViewCell.swift */,
 			);
 			path = ScreeningQuestions;
 			sourceTree = "<group>";
@@ -7107,6 +7110,7 @@
 				F1C6F1A4ECAB94945A0D67AA260233A8 /* Services.swift in Sources */,
 				7618800FC5059335C3CF07393486E7F2 /* SetupLaterViewController.swift in Sources */,
 				893B74C12477D1200080132F /* ScreeningQuestionsViewController.swift in Sources */,
+				8912AE6A24780CDF00684C1B /* QuestionBinaryTableViewCell.swift in Sources */,
 				8B6DD40D1ED3035319B310F16605D8B1 /* SetupViewController.swift in Sources */,
 				96F20579525DADFEA0BE186559B697F9 /* String+Localization.swift in Sources */,
 				1C38B5F9C60D2C101040C109722BBC67 /* StringsProvider.swift in Sources */,

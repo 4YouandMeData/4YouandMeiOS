@@ -38,6 +38,23 @@ class AppNavigator {
     
     func onStartup() {
         if self.repository.isLoggedIn {
+            
+            // Convenient entry point to test each app module atomically,
+            // without going through all the official flow
+            #if DEBUG
+            if let testNavigationStep = Constants.Test.NavigationStep {
+                let viewController: UIViewController = {
+                    switch testNavigationStep {
+                    case .screeningQuestions: return ScreeningQuestionsViewController()
+                    }
+                }()
+                let navigationViewController = UINavigationController(rootViewController: viewController)
+                navigationViewController.preventPopWithSwipe()
+                self.window.rootViewController = navigationViewController
+                return
+            }
+            #endif
+            
             // TODO: Check if onboarding is completed
             print("TODO: Check if onboarding is completed")
             let onboardingCompleted = false

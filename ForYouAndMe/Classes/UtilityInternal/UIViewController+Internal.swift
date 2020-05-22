@@ -27,7 +27,7 @@ extension UIViewController {
             .foregroundColor: color,
             .font: FontPalette.fontStyleData(forStyle: .header3).font
             ], for: .normal)
-        self.navigationItem.rightBarButtonItem =  buttonItem
+        self.navigationItem.rightBarButtonItem = buttonItem
     }
     
     @objc private func onboardingAbortPressed() {

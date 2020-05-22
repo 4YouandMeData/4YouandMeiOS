@@ -22,6 +22,8 @@ enum ImageName: String, CaseIterable {
     case edit
     case checkboxOutline
     case checkboxFilled
+    case radioButtonFilled
+    case radioButtonOutline
 }
 
 public class ImagePalette {
