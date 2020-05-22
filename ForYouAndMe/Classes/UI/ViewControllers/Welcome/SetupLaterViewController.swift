@@ -14,7 +14,7 @@ public class SetupLaterViewController: UIViewController {
     private let navigator: AppNavigator
     
     private lazy var confirmButtonView: GenericButtonView = {
-        let view = GenericButtonView(withStyle: GenericButtonStyles.darkBackgroundStyle, height: IntroViewController.bottomViewHeight)
+        let view = GenericButtonView(withTextStyleCategory: .primaryBackground, height: IntroViewController.bottomViewHeight)
         view.button.setTitle(StringsProvider.string(forKey: .setupLaterConfirmButton), for: .normal)
         view.button.addTarget(self, action: #selector(self.confirmButtonPressed), for: .touchUpInside)
         return view
@@ -32,7 +32,7 @@ public class SetupLaterViewController: UIViewController {
     public override func viewDidLoad() {
         super.viewDidLoad()
         
-        self.view.addGradientView(GradientView(type: .defaultBackground))
+        self.view.addGradientView(GradientView(type: .primaryBackground))
         
         // ScrollView
         let scrollStackView = ScrollStackView(axis: .vertical)
@@ -59,7 +59,7 @@ public class SetupLaterViewController: UIViewController {
     public override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         
-        self.navigationController?.navigationBar.apply(style: NavigationBarStyles.darkStyle)
+        self.navigationController?.navigationBar.apply(style: NavigationBarStyles.primaryStyle)
         self.addCustomBackButton(withImage: ImagePalette.image(withName: .backButton))
     }
     

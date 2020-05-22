@@ -9,17 +9,49 @@
 import Foundation
 import PureLayout
 
-public class GenericButtonStyles {
-    static let darkBackgroundStyle = Style<GenericButtonView> { buttonView in
-        buttonView.backgroundColor = ColorPalette.color(withType: .primary)
-        buttonView.addGradientView(.init(type: .defaultBackground))
-        buttonView.button.apply(style: ButtonStyles.lightStyle)
-        buttonView.addShadowLinear(goingDown: false)
-    }
+protocol StyleCategory {
+    associatedtype View
+    var style: Style<View> { get }
+}
+
+enum GenericButtonTextStyleCategory: StyleCategory {
+    case primaryBackground
+    case secondaryBackground
     
-    static let lightBackgroundStyle = Style<GenericButtonView> { buttonView in
-        buttonView.backgroundColor = ColorPalette.color(withType: .secondary)
-        buttonView.button.apply(style: ButtonStyles.darkStyle)
-        buttonView.addShadowLinear(goingDown: false)
+    var style: Style<GenericButtonView> {
+        switch self {
+        case .primaryBackground: return Style<GenericButtonView> { buttonView in
+            buttonView.backgroundColor = ColorPalette.color(withType: .primary)
+            buttonView.addGradientView(.init(type: .primaryBackground))
+            buttonView.button.apply(style: ButtonStyles.secondaryStyle)
+            buttonView.addShadowLinear(goingDown: false)
+            }
+        case .secondaryBackground: return Style<GenericButtonView> { buttonView in
+            buttonView.backgroundColor = ColorPalette.color(withType: .secondary)
+            buttonView.button.apply(style: ButtonStyles.primaryStyle)
+            buttonView.addShadowLinear(goingDown: false)
+            }
+        }
+    }
+}
+
+enum GenericButtonImageStyleCategory: StyleCategory {
+    case primaryBackground
+    case secondaryBackground
+    
+    var style: Style<GenericButtonView> {
+        switch self {
+        case .primaryBackground: return Style<GenericButtonView> { buttonView in
+            buttonView.backgroundColor = ColorPalette.color(withType: .primary)
+            buttonView.addGradientView(.init(type: .primaryBackground))
+            buttonView.button.setImage(ImagePalette.image(withName: .nextButtonSecondary), for: .normal)
+            buttonView.addShadowLinear(goingDown: false)
+            }
+        case .secondaryBackground: return Style<GenericButtonView> { buttonView in
+            buttonView.backgroundColor = ColorPalette.color(withType: .secondary)
+            buttonView.button.setImage(ImagePalette.image(withName: .nextButtonPrimary), for: .normal)
+            buttonView.addShadowLinear(goingDown: false)
+            }
+        }
     }
 }

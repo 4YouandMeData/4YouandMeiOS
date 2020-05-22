@@ -14,7 +14,7 @@ public class ButtonStyles {
     private static let defaultHeight: CGFloat = 52.0
     private static let defaultCornerRadius: CGFloat = defaultHeight / 2.0
     
-    static let darkStyle = Style<UIButton> { button in
+    static let primaryStyle = Style<UIButton> { button in
         button.autoSetDimension(.height, toSize: defaultHeight)
         button.layer.cornerRadius = defaultCornerRadius
         button.backgroundColor = ColorPalette.color(withType: .primary)
@@ -23,7 +23,7 @@ public class ButtonStyles {
         button.addShadowButton()
     }
     
-    static let lightStyle = Style<UIButton> { button in
+    static let secondaryStyle = Style<UIButton> { button in
         button.autoSetDimension(.height, toSize: defaultHeight)
         button.layer.cornerRadius = defaultCornerRadius
         button.backgroundColor = ColorPalette.color(withType: .secondary)

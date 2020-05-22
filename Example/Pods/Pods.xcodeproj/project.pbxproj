@@ -627,6 +627,7 @@
 		893B1A4C2476C267001C19A2 /* NSAttributedString+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893B1A4B2476C267001C19A2 /* NSAttributedString+Extensions.swift */; };
 		893B1A4E2476C2BB001C19A2 /* NSAttributedString+Palette.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893B1A4D2476C2BB001C19A2 /* NSAttributedString+Palette.swift */; };
 		893B1A502476E65D001C19A2 /* UIStackView+Palette.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893B1A4F2476E65D001C19A2 /* UIStackView+Palette.swift */; };
+		893B74C12477D1200080132F /* ScreeningQuestionsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893B74C02477D1200080132F /* ScreeningQuestionsViewController.swift */; };
 		899F8FF4A52472EC26ABCBF5E27D646B /* CredentialsPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA5D05756532D4AEE4F269EE348E2250 /* CredentialsPlugin.swift */; };
 		89A7557E8B2D3B52C52A27089BF111A7 /* FBLPromise.m in Sources */ = {isa = PBXBuildFile; fileRef = E9BB70C6D428EB8F1CF0C58D78B1846D /* FBLPromise.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
 		89EE3529246ECD9E0031532E /* ResponseError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89EE3528246ECD9E0031532E /* ResponseError.swift */; };
@@ -2427,6 +2428,7 @@
 		893B1A4B2476C267001C19A2 /* NSAttributedString+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NSAttributedString+Extensions.swift"; sourceTree = "<group>"; };
 		893B1A4D2476C2BB001C19A2 /* NSAttributedString+Palette.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NSAttributedString+Palette.swift"; sourceTree = "<group>"; };
 		893B1A4F2476E65D001C19A2 /* UIStackView+Palette.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIStackView+Palette.swift"; sourceTree = "<group>"; };
+		893B74C02477D1200080132F /* ScreeningQuestionsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreeningQuestionsViewController.swift; sourceTree = "<group>"; };
 		893D1FA2B47673BF0BF1D146D00A196F /* ElementAt.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ElementAt.swift; path = RxSwift/Observables/ElementAt.swift; sourceTree = "<group>"; };
 		895539EF91BCE1AAC84F908B65E6267B /* FBLPromise+Any.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = "FBLPromise+Any.m"; path = "Sources/FBLPromises/FBLPromise+Any.m"; sourceTree = "<group>"; };
 		897EB04999608D43DDA1C4DE5A4921D2 /* FIRInstallationsHTTPError.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = FIRInstallationsHTTPError.h; path = FirebaseInstallations/Source/Library/Errors/FIRInstallationsHTTPError.h; sourceTree = "<group>"; };
@@ -3629,10 +3631,11 @@
 		3CFFB35E9EFA7A6E05FDE4848A48BC63 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				893B74BF2477D1010080132F /* PhoneVerification */,
+				893B74BE2477D0E90080132F /* ScreeningQuestions */,
 				F7F1872F5510F2218AB54990841B4B84 /* GenericButtonView.swift */,
 				CB8164372735DF9F6DC68E61F48D661F /* GenericCheckboxView.swift */,
 				0AFF8B57046DC1DD7B58EBA5F7845890 /* GenericTextFieldView.swift */,
-				FC260C8F2D15A4BD2C4315AD13036732 /* PhoneNumberView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -4585,6 +4588,48 @@
 			name = Resources;
 			sourceTree = "<group>";
 		};
+		893B74B42477C1B10080132F /* Welcome */ = {
+			isa = PBXGroup;
+			children = (
+				35616B9CCF618C7D6EC3472B70059AAF /* IntroViewController.swift */,
+				949557F5CDE0CC57150ADDBC3CF59E79 /* SetupLaterViewController.swift */,
+				79FBD07FD8F1C8D806B3D4E0D0A15D6D /* WelcomeViewController.swift */,
+			);
+			path = Welcome;
+			sourceTree = "<group>";
+		};
+		893B74B52477C1F80080132F /* PhoneVerification */ = {
+			isa = PBXGroup;
+			children = (
+				E49CF79BE98FBF238792D8CDA54979D5 /* CodeValidationViewController.swift */,
+				9148B40F08C4E16551FCA59EDAD70A6F /* PhoneVerificationViewController.swift */,
+			);
+			path = PhoneVerification;
+			sourceTree = "<group>";
+		};
+		893B74BD2477D08A0080132F /* ScreeningQuestions */ = {
+			isa = PBXGroup;
+			children = (
+				893B74C02477D1200080132F /* ScreeningQuestionsViewController.swift */,
+			);
+			path = ScreeningQuestions;
+			sourceTree = "<group>";
+		};
+		893B74BE2477D0E90080132F /* ScreeningQuestions */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = ScreeningQuestions;
+			sourceTree = "<group>";
+		};
+		893B74BF2477D1010080132F /* PhoneVerification */ = {
+			isa = PBXGroup;
+			children = (
+				FC260C8F2D15A4BD2C4315AD13036732 /* PhoneNumberView.swift */,
+			);
+			path = PhoneVerification;
+			sourceTree = "<group>";
+		};
 		8A2BEAEC15B02F6DB92AA5BFF41699AE /* Logger */ = {
 			isa = PBXGroup;
 			children = (
@@ -5190,13 +5235,11 @@
 		E0D17F9453F23A785F9FAAE18E6B0069 /* ViewControllers */ = {
 			isa = PBXGroup;
 			children = (
-				E49CF79BE98FBF238792D8CDA54979D5 /* CodeValidationViewController.swift */,
-				35616B9CCF618C7D6EC3472B70059AAF /* IntroViewController.swift */,
-				9148B40F08C4E16551FCA59EDAD70A6F /* PhoneVerificationViewController.swift */,
-				949557F5CDE0CC57150ADDBC3CF59E79 /* SetupLaterViewController.swift */,
+				893B74BD2477D08A0080132F /* ScreeningQuestions */,
+				893B74B52477C1F80080132F /* PhoneVerification */,
+				893B74B42477C1B10080132F /* Welcome */,
 				01DAAE86B3D0CFB078E8A484445EB841 /* SetupViewController.swift */,
 				0044618B47BC305171B86DFCBB456FCA /* WebViewViewController.swift */,
-				79FBD07FD8F1C8D806B3D4E0D0A15D6D /* WelcomeViewController.swift */,
 			);
 			path = ViewControllers;
 			sourceTree = "<group>";
@@ -6571,6 +6614,7 @@
 			attributes = {
 				LastSwiftUpdateCheck = 1100;
 				LastUpgradeCheck = 1100;
+				ORGANIZATIONNAME = "Balzo srl";
 			};
 			buildConfigurationList = 4821239608C13582E20E6DA73FD5F1F9 /* Build configuration list for PBXProject "Pods" */;
 			compatibilityVersion = "Xcode 9.3";
@@ -7045,6 +7089,7 @@
 				89EE352D246EF7DC0031532E /* CountryCodeProvider.swift in Sources */,
 				F1C6F1A4ECAB94945A0D67AA260233A8 /* Services.swift in Sources */,
 				7618800FC5059335C3CF07393486E7F2 /* SetupLaterViewController.swift in Sources */,
+				893B74C12477D1200080132F /* ScreeningQuestionsViewController.swift in Sources */,
 				8B6DD40D1ED3035319B310F16605D8B1 /* SetupViewController.swift in Sources */,
 				96F20579525DADFEA0BE186559B697F9 /* String+Localization.swift in Sources */,
 				1C38B5F9C60D2C101040C109722BBC67 /* StringsProvider.swift in Sources */,

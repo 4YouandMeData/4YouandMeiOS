@@ -15,7 +15,7 @@ public class WelcomeViewController: UIViewController {
     
     private lazy var continueButton: UIButton = {
         let button = UIButton()
-        button.apply(style: ButtonStyles.lightStyle)
+        button.apply(style: ButtonStyles.secondaryStyle)
         button.setTitle(StringsProvider.string(forKey: .welcomeStartButton), for: .normal)
         button.addTarget(self, action: #selector(self.showIntro), for: .touchUpInside)
         return button
@@ -33,7 +33,7 @@ public class WelcomeViewController: UIViewController {
     public override func viewDidLoad() {
         super.viewDidLoad()
         
-        self.view.addGradientView(GradientView(type: .defaultBackground))
+        self.view.addGradientView(GradientView(type: .primaryBackground))
 
         let stackView = UIStackView()
         stackView.axis = .vertical
@@ -53,7 +53,7 @@ public class WelcomeViewController: UIViewController {
     public override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         
-        self.navigationController?.navigationBar.apply(style: NavigationBarStyles.darkStyle)
+        self.navigationController?.navigationBar.apply(style: NavigationBarStyles.primaryStyle)
 
         self.continueButton.alpha = 0
         UIView.animate(withDuration: 0.8, delay: 0.0, options: .curveEaseInOut, animations: { [weak self] in

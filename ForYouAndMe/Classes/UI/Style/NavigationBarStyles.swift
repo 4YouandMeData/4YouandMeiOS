@@ -13,9 +13,9 @@ class NavigationBarStyles {
         bar.isHidden = true
     }
     
-    static let darkStyle = Style<UINavigationBar> { bar in
+    static let primaryStyle = Style<UINavigationBar> { bar in
         bar.isTranslucent = false
-        bar.addGradient(type: .defaultBackground)
+        bar.addGradient(type: .primaryBackground)
         bar.tintColor = ColorPalette.color(withType: .secondary)
         bar.prefersLargeTitles = false
         bar.shadowImage = UIImage() // Remove Separator line
@@ -23,7 +23,7 @@ class NavigationBarStyles {
                                    .font: FontPalette.fontStyleData(forStyle: .paragraph).font]
     }
     
-    static let lightStyle = Style<UINavigationBar> { bar in
+    static let secondaryStyle = Style<UINavigationBar> { bar in
         bar.isTranslucent = false
         bar.setBackgroundImage(UIImage(), for: UIBarMetrics.default)
         bar.barTintColor = ColorPalette.color(withType: .secondary)

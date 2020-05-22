@@ -14,7 +14,7 @@ class GenericButtonView: UIView {
     
     private var buttonEnabledObserver: NSKeyValueObservation?
     
-    init(withStyle style: Style<GenericButtonView>,
+    init(withTextStyleCategory textStyleCategory: GenericButtonTextStyleCategory,
          fillWidth: Bool = true,
          horizontalInset: CGFloat = Constants.Style.DefaultHorizontalMargins,
          topInset: CGFloat = 32.0,
@@ -27,15 +27,27 @@ class GenericButtonView: UIView {
         self.button.autoPinEdge(toSuperviewEdge: .leading, withInset: horizontalInset, relation: fillWidth ? .equal : .greaterThanOrEqual)
         self.button.autoPinEdge(toSuperviewEdge: .trailing, withInset: horizontalInset, relation: fillWidth ? .equal : .greaterThanOrEqual)
         self.button.autoAlignAxis(toSuperviewAxis: .vertical)
-        self.apply(style: style)
+        self.apply(style: textStyleCategory.style)
         
         self.sharedSetup()
     }
     
-    init(withStyle style: Style<GenericButtonView>,
-         fillWidth: Bool = true,
-         horizontalInset: CGFloat = Constants.Style.DefaultHorizontalMargins,
-         height: CGFloat = 116.0) {
+    convenience init(withTextStyleCategory textStyleCategory: GenericButtonTextStyleCategory,
+                     fillWidth: Bool = true,
+                     horizontalInset: CGFloat = Constants.Style.DefaultHorizontalMargins,
+                     height: CGFloat = Constants.Style.DefaultFooterButtonHeight) {
+        self.init(withStyle: textStyleCategory.style, fillWidth: fillWidth, horizontalInset: horizontalInset, height: height)
+    }
+    
+    convenience init(withImageStyleCategory imageStyleCategory: GenericButtonImageStyleCategory,
+                     height: CGFloat = Constants.Style.DefaultFooterButtonHeight) {
+        self.init(withStyle: imageStyleCategory.style, fillWidth: false, height: height)
+    }
+    
+    private init(withStyle style: Style<GenericButtonView>,
+                 fillWidth: Bool = true,
+                 horizontalInset: CGFloat = Constants.Style.DefaultHorizontalMargins,
+                 height: CGFloat) {
         super.init(frame: .zero)
         
         self.addSubview(self.button)
@@ -44,7 +56,6 @@ class GenericButtonView: UIView {
         } else {
             self.autoSetDimension(.height, toSize: height)
         }
-        self.autoSetDimension(.height, toSize: height)
         self.button.autoPinEdge(toSuperviewEdge: .top, withInset: 0.0, relation: .greaterThanOrEqual)
         self.button.autoPinEdge(toSuperviewEdge: .bottom, withInset: 0.0, relation: .greaterThanOrEqual)
         self.button.autoPinEdge(toSuperviewEdge: .leading, withInset: horizontalInset, relation: fillWidth ? .equal : .greaterThanOrEqual)

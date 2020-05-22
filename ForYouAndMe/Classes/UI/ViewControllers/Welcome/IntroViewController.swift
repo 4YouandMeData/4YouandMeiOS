@@ -27,7 +27,7 @@ public class IntroViewController: UIViewController {
     public override func viewDidLoad() {
         super.viewDidLoad()
         
-        self.view.addGradientView(GradientView(type: .defaultBackground))
+        self.view.addGradientView(GradientView(type: .primaryBackground))
         
         // ScrollView
         let scrollView = UIScrollView()
@@ -58,11 +58,11 @@ public class IntroViewController: UIViewController {
         let bottomStackView = UIStackView()
         bottomStackView.axis = .vertical
         bottomStackView.distribution = .fillEqually
-        bottomStackView.addOption(image: ImagePalette.image(withName: .nextButtonLight),
+        bottomStackView.addOption(image: ImagePalette.image(withName: .nextButtonSecondary),
                                   text: StringsProvider.string(forKey: .introLogin),
                                   target: self,
                                   selector: #selector(self.showLogin))
-        bottomStackView.addOption(image: ImagePalette.image(withName: .nextButtonLight),
+        bottomStackView.addOption(image: ImagePalette.image(withName: .nextButtonSecondary),
                                   text: StringsProvider.string(forKey: .introSetupLater),
                                   target: self,
                                   selector: #selector(self.setupLaterPressed))
@@ -70,7 +70,7 @@ public class IntroViewController: UIViewController {
         let bottomView = UIView()
         bottomView.autoSetDimension(.height, toSize: Self.bottomViewHeight)
         bottomView.addShadowLinear(goingDown: false)
-        bottomView.addGradientView(.init(type: .defaultBackground))
+        bottomView.addGradientView(.init(type: .primaryBackground))
         bottomView.addSubview(bottomStackView)
         bottomStackView.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets(top: 20.0,
                                                                         left: Constants.Style.DefaultHorizontalMargins,
@@ -85,7 +85,7 @@ public class IntroViewController: UIViewController {
     public override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         
-        self.navigationController?.navigationBar.apply(style: NavigationBarStyles.darkStyle)
+        self.navigationController?.navigationBar.apply(style: NavigationBarStyles.primaryStyle)
         self.addCustomBackButton(withImage: ImagePalette.image(withName: .backButton))
     }
     

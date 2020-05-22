@@ -25,7 +25,7 @@ public class CodeValidationViewController: UIViewController {
     
     private lazy var confirmButton: UIButton = {
         let button = UIButton()
-        button.setImage(ImagePalette.image(withName: .nextButtonLight), for: .normal)
+        button.setImage(ImagePalette.image(withName: .nextButtonSecondary), for: .normal)
         button.addTarget(self, action: #selector(self.confirmButtonPressed), for: .touchUpInside)
         return button
     }()

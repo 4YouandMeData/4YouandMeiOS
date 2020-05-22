@@ -45,7 +45,7 @@ public class PhoneVerificationViewController: UIViewController {
     
     private lazy var confirmButton: UIButton = {
         let button = UIButton()
-        button.setImage(ImagePalette.image(withName: .nextButtonLight), for: .normal)
+        button.setImage(ImagePalette.image(withName: .nextButtonSecondary), for: .normal)
         button.addTarget(self, action: #selector(self.confirmButtonPressed), for: .touchUpInside)
         return button
     }()
@@ -107,7 +107,7 @@ public class PhoneVerificationViewController: UIViewController {
     public override func viewDidLoad() {
         super.viewDidLoad()
         
-        self.view.addGradientView(GradientView(type: .defaultBackground))
+        self.view.addGradientView(GradientView(type: .primaryBackground))
         
         // ScrollView
         self.view.addSubview(self.scrollView)
@@ -165,7 +165,7 @@ public class PhoneVerificationViewController: UIViewController {
     public override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         
-        self.navigationController?.navigationBar.apply(style: NavigationBarStyles.darkStyle)
+        self.navigationController?.navigationBar.apply(style: NavigationBarStyles.primaryStyle)
         self.addCustomBackButton(withImage: ImagePalette.image(withName: .backButton))
     }
     

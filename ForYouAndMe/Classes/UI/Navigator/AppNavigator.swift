@@ -45,8 +45,8 @@ class AppNavigator {
                 // TODO: Implement Home
                 print("TODO: Implement Home")
             } else {
-                // If onboarding is not completed, restart from the very beginning
-                self.goToWelcome()
+                // If onboarding is not completed, log out (restart from the very beginning)
+                self.logOut()
             }
         } else {
             self.goToWelcome()
@@ -134,9 +134,18 @@ class AppNavigator {
         // TODO: Show intro video
         print("TODO: Show intro video")
         
-        presenter.showAlert(withTitle: "Great!",
-                            message: "Your phone number has been verified",
-                            completion: {})
+        self.startScreeningQuestionFlow(presenter: presenter)
+    }
+    
+    // MARK: Screening Questions
+    
+    public func startScreeningQuestionFlow(presenter: UIViewController) {
+        guard let navigationController = presenter.navigationController else {
+            assertionFailure("Missing UINavigationController")
+            return
+        }
+        let viewController = ScreeningQuestionsViewController()
+        navigationController.pushViewController(viewController, animated: true)
     }
     
     // MARK: Progress HUD

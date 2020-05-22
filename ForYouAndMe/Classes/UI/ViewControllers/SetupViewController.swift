@@ -22,7 +22,7 @@ public class SetupViewController: UIViewController {
     
     private lazy var retryButton: UIButton = {
         let button = UIButton()
-        button.apply(style: ButtonStyles.darkStyle)
+        button.apply(style: ButtonStyles.primaryStyle)
         button.setTitle(StringsProvider.string(forKey: .errorButtonRetry), for: .normal)
         button.addTarget(self, action: #selector(self.initialize), for: .touchUpInside)
         return button
