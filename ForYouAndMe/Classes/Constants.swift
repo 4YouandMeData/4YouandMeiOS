@@ -23,6 +23,9 @@ struct Constants {
         static let DefaultHorizontalMargins: CGFloat = 24.0
         static let DefaultFooterButtonHeight: CGFloat = 116.0
     }
+    struct Resources {
+        static let DefaultBundleName: String = "ForYouAndMe"
+    }
     struct Misc {
         static let ValidationCodeDigitCount: Int = 6
     }

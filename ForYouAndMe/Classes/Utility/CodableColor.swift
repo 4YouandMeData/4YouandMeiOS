@@ -15,10 +15,10 @@ struct CodableColor: Codable {
     var alpha: CGFloat = 0.0
 
     var uiColor: UIColor {
-        return UIColor(red: red, green: green, blue: blue, alpha: alpha)
+        return UIColor(red: self.red, green: self.green, blue: self.blue, alpha: self.alpha)
     }
 
     init(uiColor: UIColor) {
-        uiColor.getRed(&red, green: &green, blue: &blue, alpha: &alpha)
+        uiColor.getRed(&self.red, green: &self.green, blue: &self.blue, alpha: &self.alpha)
     }
 }

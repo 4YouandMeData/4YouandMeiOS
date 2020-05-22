@@ -20,7 +20,7 @@ struct CodableDictionary<Key: Hashable, Value: Codable>: Codable where Key: Codi
 
         let container = try decoder.container(keyedBy: Key.self)
 
-        decoded = Dictionary(uniqueKeysWithValues:
+        self.decoded = Dictionary(uniqueKeysWithValues:
             try container.allKeys.lazy.map {
                 (key: $0, value: try container.decode(Value.self, forKey: $0))
             }
@@ -31,7 +31,7 @@ struct CodableDictionary<Key: Hashable, Value: Codable>: Codable where Key: Codi
 
         var container = encoder.container(keyedBy: Key.self)
 
-        for (key, value) in decoded {
+        for (key, value) in self.decoded {
             try container.encode(value, forKey: key)
         }
     }

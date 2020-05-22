@@ -31,7 +31,8 @@ public extension Int {
 
 public extension Bundle {
     static func getTestData(from fileName: String) -> Data {
-        guard let url = PodUtils.podDefaultResourceBundle.url(forResource: fileName, withExtension: "json"),
+        guard let podBundle = PodUtils.getPodResourceBundle(withName: Constants.Resources.DefaultBundleName),
+            let url = podBundle.url(forResource: fileName, withExtension: "json"),
             let data = try? Data(contentsOf: url) else {
                 return Data()
         }

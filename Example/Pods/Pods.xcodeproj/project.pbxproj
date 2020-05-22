@@ -628,6 +628,7 @@
 		893B1A4E2476C2BB001C19A2 /* NSAttributedString+Palette.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893B1A4D2476C2BB001C19A2 /* NSAttributedString+Palette.swift */; };
 		893B1A502476E65D001C19A2 /* UIStackView+Palette.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893B1A4F2476E65D001C19A2 /* UIStackView+Palette.swift */; };
 		893B74C12477D1200080132F /* ScreeningQuestionsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893B74C02477D1200080132F /* ScreeningQuestionsViewController.swift */; };
+		893B74C52477FCD40080132F /* UIView+ShadowPalette.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893B74C42477FCD40080132F /* UIView+ShadowPalette.swift */; };
 		899F8FF4A52472EC26ABCBF5E27D646B /* CredentialsPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA5D05756532D4AEE4F269EE348E2250 /* CredentialsPlugin.swift */; };
 		89A7557E8B2D3B52C52A27089BF111A7 /* FBLPromise.m in Sources */ = {isa = PBXBuildFile; fileRef = E9BB70C6D428EB8F1CF0C58D78B1846D /* FBLPromise.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
 		89EE3529246ECD9E0031532E /* ResponseError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89EE3528246ECD9E0031532E /* ResponseError.swift */; };
@@ -2429,6 +2430,7 @@
 		893B1A4D2476C2BB001C19A2 /* NSAttributedString+Palette.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NSAttributedString+Palette.swift"; sourceTree = "<group>"; };
 		893B1A4F2476E65D001C19A2 /* UIStackView+Palette.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIStackView+Palette.swift"; sourceTree = "<group>"; };
 		893B74C02477D1200080132F /* ScreeningQuestionsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreeningQuestionsViewController.swift; sourceTree = "<group>"; };
+		893B74C42477FCD40080132F /* UIView+ShadowPalette.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIView+ShadowPalette.swift"; sourceTree = "<group>"; };
 		893D1FA2B47673BF0BF1D146D00A196F /* ElementAt.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ElementAt.swift; path = RxSwift/Observables/ElementAt.swift; sourceTree = "<group>"; };
 		895539EF91BCE1AAC84F908B65E6267B /* FBLPromise+Any.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = "FBLPromise+Any.m"; path = "Sources/FBLPromises/FBLPromise+Any.m"; sourceTree = "<group>"; };
 		897EB04999608D43DDA1C4DE5A4921D2 /* FIRInstallationsHTTPError.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = FIRInstallationsHTTPError.h; path = FirebaseInstallations/Source/Library/Errors/FIRInstallationsHTTPError.h; sourceTree = "<group>"; };
@@ -3934,10 +3936,10 @@
 				1BCA0327DE4C04AD8A022835B61794C3 /* ImagePalette.swift */,
 				096A93A420249F7201487218E1559936 /* NavigationBarStyles.swift */,
 				5B10DB08F2EBFCBE84AFB583940DC782 /* StringsProvider.swift */,
-				89EE352C246EF7DC0031532E /* CountryCodeProvider.swift */,
 				9698A73A73553DE1DCD3624D245953BE /* Style.swift */,
 				893B1A4D2476C2BB001C19A2 /* NSAttributedString+Palette.swift */,
 				893B1A4F2476E65D001C19A2 /* UIStackView+Palette.swift */,
+				893B74C42477FCD40080132F /* UIView+ShadowPalette.swift */,
 			);
 			path = Style;
 			sourceTree = "<group>";
@@ -4397,6 +4399,7 @@
 		6BB3CE4AB6F6366DEA4AFCFEF6C674BA /* ForYouAndMe */ = {
 			isa = PBXGroup;
 			children = (
+				893B74C32477E8C80080132F /* UtilityInternal */,
 				D1C51A35E653B59F32E7EC44C0BB5639 /* Constants.swift */,
 				562ECE4761D37B77CA7472D9F22D2D8F /* FYAMManager.swift */,
 				4D70E8F57A30E2E84ED827238518D959 /* Entities */,
@@ -4628,6 +4631,15 @@
 				FC260C8F2D15A4BD2C4315AD13036732 /* PhoneNumberView.swift */,
 			);
 			path = PhoneVerification;
+			sourceTree = "<group>";
+		};
+		893B74C32477E8C80080132F /* UtilityInternal */ = {
+			isa = PBXGroup;
+			children = (
+				89EE352C246EF7DC0031532E /* CountryCodeProvider.swift */,
+			);
+			name = UtilityInternal;
+			path = ForYouAndMe/Classes/UtilityInternal;
 			sourceTree = "<group>";
 		};
 		8A2BEAEC15B02F6DB92AA5BFF41699AE /* Logger */ = {
@@ -7078,6 +7090,7 @@
 				E02DAE146B311F7E358112A960BD137F /* PhoneNumberView.swift in Sources */,
 				2459D5F859DF41BE1BE370D0EFA17F34 /* PhoneVerificationViewController.swift in Sources */,
 				4105BBF6A1BBE8147C4AC0AE2293429E /* PodUtils.swift in Sources */,
+				893B74C52477FCD40080132F /* UIView+ShadowPalette.swift in Sources */,
 				ED3929D76448D76F6D1CF365C8D46A19 /* PrioritizedRequest.swift in Sources */,
 				90C3C839845D086CEE47A7C98EE73937 /* ReachabilityManager.swift in Sources */,
 				AD29C7EB1CFE7C456CFC75A26BB05912 /* ReachabilityService.swift in Sources */,

@@ -27,7 +27,13 @@ enum ImageName: String, CaseIterable {
 public class ImagePalette {
     
     static func image(withName name: ImageName) -> UIImage? {
-        return UIImage(named: name.rawValue) ?? UIImage(named: name.rawValue, in: PodUtils.podDefaultResourceBundle, with: nil)
+        if let image = UIImage(named: name.rawValue) {
+            return image
+        } else if let podBundle = PodUtils.getPodResourceBundle(withName: Constants.Resources.DefaultBundleName) {
+            return UIImage(named: name.rawValue, in: podBundle, with: nil)
+        } else {
+            return nil
+        }
     }
     
     static func checkImageAvailability() {

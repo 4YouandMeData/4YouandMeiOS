@@ -9,6 +9,15 @@
 import Foundation
 
 class PodUtils {
-    static let podDefaultResourceBundle: Bundle = Bundle(url: Bundle(for: PodUtils.self)
-        .url(forResource: "ForYouAndMe", withExtension: "bundle")!)!
+    static func getPodResourceBundle(withName name: String) -> Bundle? {
+        guard let podResourceBundleUrl = Bundle(for: PodUtils.self).url(forResource: name, withExtension: "bundle") else {
+            assertionFailure("Missing Pod Resource Bundle URL")
+            return nil
+        }
+        guard let podResourceBundle = Bundle(url: podResourceBundleUrl) else {
+            assertionFailure("Missing Pod Resource Bundle")
+            return nil
+        }
+        return podResourceBundle
+    }
 }
