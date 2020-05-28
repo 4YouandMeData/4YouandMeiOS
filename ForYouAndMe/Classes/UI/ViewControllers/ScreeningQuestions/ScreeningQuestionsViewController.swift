@@ -14,6 +14,9 @@ public class ScreeningQuestionsViewController: UIViewController {
     
     private let navigator: AppNavigator
     private let repository: Repository
+    private let questions: [Question]
+    private let successCallback: ViewControllerCallback
+    private let failureCallback: ViewControllerCallback
     
     lazy private var tableView: UITableView = {
         let tableView = UITableView()
@@ -35,7 +38,12 @@ public class ScreeningQuestionsViewController: UIViewController {
     
     private let disposeBag = DisposeBag()
     
-    init() {
+    init(withQuestions questions: [Question],
+         successCallback: @escaping ViewControllerCallback,
+         failureCallback: @escaping ViewControllerCallback) {
+        self.questions = questions
+        self.successCallback = successCallback
+        self.failureCallback = failureCallback
         self.navigator = Services.shared.navigator
         self.repository = Services.shared.repository
         super.init(nibName: nil, bundle: nil)
@@ -50,16 +58,6 @@ public class ScreeningQuestionsViewController: UIViewController {
         
         self.view.backgroundColor = ColorPalette.color(withType: .secondary)
         
-        self.navigator.pushProgressHUD()
-        self.repository.getScreeningSection().subscribe(onSuccess: { screeningSection in
-            self.navigator.popProgressHUD()
-            self.items = screeningSection.questions.compactMap{ $0.questionBinaryData }
-            self.tableView.reloadData()
-        }, onError: { error in
-            self.navigator.popProgressHUD()
-            self.navigator.handleError(error: error, presenter: self)
-        }).disposed(by: self.disposeBag)
-        
         let stackView = UIStackView()
         stackView.axis = .vertical
         self.view.addSubview(stackView)
@@ -67,6 +65,8 @@ public class ScreeningQuestionsViewController: UIViewController {
         
         stackView.addArrangedSubview(self.tableView)
         stackView.addArrangedSubview(self.confirmButtonView)
+        
+        self.items = self.questions.compactMap { $0.questionBinaryData }
         
         self.tableView.reloadData()
         self.updateConfirmButton()
@@ -84,11 +84,9 @@ public class ScreeningQuestionsViewController: UIViewController {
     
     @objc private func confirmButtonPressed() {
         if self.validateAnswers() {
-            // TODO: Navigate to success view
-            print("TODO: Navigate to success view")
+            self.successCallback(self)
         } else {
-            // TODO: Navigate to failure view
-            print("TODO: Navigate to failure view")
+            self.failureCallback(self)
         }
     }
     

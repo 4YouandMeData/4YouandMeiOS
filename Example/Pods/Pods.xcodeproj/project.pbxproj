@@ -638,6 +638,8 @@
 		89151A5CAACB498894192374F7405666 /* GenericButtonStyles.swift in Sources */ = {isa = PBXBuildFile; fileRef = 098E391B4A6D63029667126AE0C6C3EA /* GenericButtonStyles.swift */; };
 		892F567BF4D68BB3C3AE4687AE25BE8C /* FIRCLSDownloadAndSaveSettingsOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = ED21D885C391BFC649BCD9A0E8AD0301 /* FIRCLSDownloadAndSaveSettingsOperation.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
 		893C7C9D247FD1C50086F30E /* PropertyWrappers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893C7C9C247FD1C50086F30E /* PropertyWrappers.swift */; };
+		893C7CA524800CD80086F30E /* ScreeningCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893C7CA424800CD80086F30E /* ScreeningCoordinator.swift */; };
+		893C7CA724800E3A0086F30E /* InfoPageViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893C7CA624800E3A0086F30E /* InfoPageViewController.swift */; };
 		89A7557E8B2D3B52C52A27089BF111A7 /* FBLPromise.m in Sources */ = {isa = PBXBuildFile; fileRef = 669434F12538D82DD9A5602763550E49 /* FBLPromise.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
 		8A111FEEC95C30BB125F46B60AE444F5 /* Response.swift in Sources */ = {isa = PBXBuildFile; fileRef = C58865F4E32C52D9F66075952FA51C47 /* Response.swift */; };
 		8A1CD550FB0AD04BF42A3375941330DA /* CoreTelephony.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AD79264DAE099771971830C04A91A3F7 /* CoreTelephony.framework */; };
@@ -2483,6 +2485,8 @@
 		884C462D301217139FCB091560863F84 /* FIRCLSRecordBase.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = FIRCLSRecordBase.h; path = Crashlytics/Crashlytics/Models/Record/FIRCLSRecordBase.h; sourceTree = "<group>"; };
 		888F27BD14651B995FE15D5C74DE8FF9 /* GDTCORTransformer.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = GDTCORTransformer.m; path = GoogleDataTransport/GDTCORLibrary/GDTCORTransformer.m; sourceTree = "<group>"; };
 		893C7C9C247FD1C50086F30E /* PropertyWrappers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PropertyWrappers.swift; sourceTree = "<group>"; };
+		893C7CA424800CD80086F30E /* ScreeningCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreeningCoordinator.swift; sourceTree = "<group>"; };
+		893C7CA624800E3A0086F30E /* InfoPageViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InfoPageViewController.swift; sourceTree = "<group>"; };
 		89BC292A206F780ED8179E37845BA95C /* GDTCCTNanopbHelpers.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = GDTCCTNanopbHelpers.h; path = GoogleDataTransportCCTSupport/GDTCCTLibrary/Private/GDTCCTNanopbHelpers.h; sourceTree = "<group>"; };
 		8A4B2085467186EE4E4D0E460D879640 /* FIRCLSApplicationIdentifierModel.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = FIRCLSApplicationIdentifierModel.h; path = Crashlytics/Crashlytics/Settings/Models/FIRCLSApplicationIdentifierModel.h; sourceTree = "<group>"; };
 		8A9B9E5D0DD305F3CC9A026E49852A5A /* Pods-ForYouAndMe_Example-acknowledgements.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = "Pods-ForYouAndMe_Example-acknowledgements.plist"; sourceTree = "<group>"; };
@@ -3726,6 +3730,7 @@
 			children = (
 				C0A30404BD78480E648ACF6E1FC6B434 /* SetupViewController.swift */,
 				8079BBA9AAFF4CF17C1C0C8E288B29CC /* WebViewViewController.swift */,
+				893C7CA624800E3A0086F30E /* InfoPageViewController.swift */,
 				C9154DAF593A8F7F6C021CF8FEB0E42F /* PhoneVerification */,
 				DFC4C1542962F032EDECB5F644155E29 /* ScreeningQuestions */,
 				8579B0110550520B733CFF7B14B5076E /* Welcome */,
@@ -4569,6 +4574,7 @@
 			isa = PBXGroup;
 			children = (
 				6882BD07A21F2864FACC910E3CB6899F /* AppNavigator.swift */,
+				893C7CA424800CD80086F30E /* ScreeningCoordinator.swift */,
 			);
 			path = Navigator;
 			sourceTree = "<group>";
@@ -7584,6 +7590,7 @@
 				EA5FA32815D2042FA1BCADF92BFCC4D2 /* CountryCodeProvider.swift in Sources */,
 				893C7C9D247FD1C50086F30E /* PropertyWrappers.swift in Sources */,
 				E7F8876EA6E5B74156A0DDAB3ED31F81 /* Date+Extensions.swift in Sources */,
+				893C7CA724800E3A0086F30E /* InfoPageViewController.swift in Sources */,
 				E9BD45A64BC2C1B5F5E7ACFD0A06E396 /* FontPalette.swift in Sources */,
 				1230D1940BF25F619A34B0A622162738 /* ForYouAndMe-dummy.m in Sources */,
 				DC56CAD91C0F253B5B48245E9C0FCD4D /* FYAMManager.swift in Sources */,
@@ -7642,6 +7649,7 @@
 				1BF555A8475D781EE3B64ADFBF8AE60D /* UIView+BorderLine.swift in Sources */,
 				C65E14FBBA376400F1D136965FB4FBA5 /* UIView+Constraints.swift in Sources */,
 				8FCB3A23B391E650D6C0915EC6058703 /* UIView+Round.swift in Sources */,
+				893C7CA524800CD80086F30E /* ScreeningCoordinator.swift in Sources */,
 				81EB6C95B21F09ACC481195D6B58BA68 /* UIView+Shadow.swift in Sources */,
 				14EF1BA5CBCE424F3F32424971A0EFD3 /* UIView+ShadowPalette.swift in Sources */,
 				E43E49A959342C3D7E822071B537CC64 /* UIViewController+Alert.swift in Sources */,

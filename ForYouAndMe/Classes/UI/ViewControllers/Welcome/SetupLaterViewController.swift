@@ -35,13 +35,9 @@ public class SetupLaterViewController: UIViewController {
         self.view.addGradientView(GradientView(type: .primaryBackground))
         
         // ScrollView
-        let scrollStackView = ScrollStackView(axis: .vertical)
+        let scrollStackView = ScrollStackView(axis: .vertical, horizontalInset: Constants.Style.DefaultHorizontalMargins)
         self.view.addSubview(scrollStackView)
-        scrollStackView.autoPinEdgesToSuperviewSafeArea(with: UIEdgeInsets(top: 0.0,
-                                                                      left: Constants.Style.DefaultHorizontalMargins,
-                                                                      bottom: 0.0,
-                                                                      right: Constants.Style.DefaultHorizontalMargins),
-                                                        excludingEdge: .bottom)
+        scrollStackView.autoPinEdgesToSuperviewSafeArea(with: .zero, excludingEdge: .bottom)
         scrollStackView.stackView.addBlankSpace(space: 16.0)
         
         scrollStackView.stackView.addHeaderImage(image: ImagePalette.image(withName: .fyamLogoGeneric))

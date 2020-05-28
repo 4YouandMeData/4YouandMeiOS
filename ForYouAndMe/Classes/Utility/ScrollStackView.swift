@@ -16,7 +16,7 @@ public class ScrollStackView: UIView {
     
     // MARK: - Initialization
     
-    public init(axis: NSLayoutConstraint.Axis) {
+    public init(axis: NSLayoutConstraint.Axis, horizontalInset: CGFloat) {
         super.init(frame: .zero)
         
         self.addSubview(self.scrollView)
@@ -24,11 +24,14 @@ public class ScrollStackView: UIView {
         self.stackView.axis = axis
         
         self.scrollView.autoPinEdgesToSuperviewEdges()
-        self.stackView.autoPinEdgesToSuperviewEdges()
+        self.stackView.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets(top: 0.0,
+                                                                       left: horizontalInset,
+                                                                       bottom: 0.0,
+                                                                       right: horizontalInset))
         
         switch axis {
-        case .horizontal: self.stackView.autoMatch(.height, to: .height, of: self.scrollView)
-        case .vertical: self.stackView.autoMatch(.width, to: .width, of: self.scrollView)
+        case .horizontal: self.stackView.autoAlignAxis(toSuperviewAxis: .horizontal)
+        case .vertical: self.stackView.autoAlignAxis(toSuperviewAxis: .vertical)
         @unknown default:
             assertionFailure("Unexpected axis")
         }

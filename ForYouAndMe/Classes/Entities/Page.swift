@@ -16,7 +16,7 @@ struct Page {
     let externalLinkLabel: String?
     @FailableDecodable
     var externalLinkUrl: URL?
-    let image: Data
+    let imageData: Data
 }
 
 extension Page: JSONAPIMappable {
@@ -27,6 +27,10 @@ extension Page: JSONAPIMappable {
         case body
         case externalLinkLabel = "external_link_label"
         case externalLinkUrl = "external_link_url"
-        case image
+        case imageData = "image"
     }
+}
+
+extension Page {
+    var image: UIImage? { return UIImage(data: self.imageData) }
 }

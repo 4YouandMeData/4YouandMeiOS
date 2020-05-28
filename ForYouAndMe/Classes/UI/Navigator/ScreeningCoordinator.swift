@@ -1,0 +1,77 @@
+//
+//  ScreeningCoordinator.swift
+//  ForYouAndMe
+//
+//  Created by Leonardo Passeri on 28/05/2020.
+//
+
+import Foundation
+
+class ScreeningCoordinator {
+    
+    private let sectionData: ScreeningSection
+    private let completionCallback: ViewControllerCallback
+    
+    init(withSectionData sectionData: ScreeningSection, completionCallback: @escaping ViewControllerCallback) {
+        self.sectionData = sectionData
+        self.completionCallback = completionCallback
+    }
+    
+    // MARK: - Public Methods
+    
+    public func startSection(presenter: UIViewController) {
+        guard let navigationController = presenter.navigationController else {
+            assertionFailure("Missing UINavigationController")
+            return
+        }
+        let viewController = InfoPageViewController(withPage: self.sectionData.welcomePage,
+                                                    addAbortOnboardingButton: false,
+                                                    confirmButtonCallback: { [weak self] presenter in
+                                                        self?.showQuestions(presenter: presenter)
+        })
+        navigationController.pushViewController(viewController, animated: true)
+    }
+    
+    // MARK: - Private Methods
+    
+    private func showQuestions(presenter: UIViewController) {
+        guard let navigationController = presenter.navigationController else {
+            assertionFailure("Missing UINavigationController")
+            return
+        }
+        let viewController = ScreeningQuestionsViewController(withQuestions: self.sectionData.questions,
+                                                              successCallback: { [weak self] presenter  in
+                                                                self?.showSuccess(presenter: presenter)
+            },
+                                                              failureCallback: { [weak self] presenter  in
+                                                                self?.showFailure(presenter: presenter)
+        })
+        navigationController.pushViewController(viewController, animated: true)
+    }
+    
+    private func showSuccess(presenter: UIViewController) {
+        guard let navigationController = presenter.navigationController else {
+            assertionFailure("Missing UINavigationController")
+            return
+        }
+        let viewController = InfoPageViewController(withPage: self.sectionData.successPage,
+                                                    addAbortOnboardingButton: false,
+                                                    confirmButtonCallback: { [weak self] presenter in
+                                                        self?.completionCallback(presenter)
+        })
+        navigationController.pushViewController(viewController, animated: true)
+    }
+    
+    private func showFailure(presenter: UIViewController) {
+        guard let navigationController = presenter.navigationController else {
+            assertionFailure("Missing UINavigationController")
+            return
+        }
+        let viewController = InfoPageViewController(withPage: self.sectionData.failurePage,
+                                                    addAbortOnboardingButton: false,
+                                                    confirmButtonCallback: { _ in
+                                                        navigationController.popViewController(animated: true)
+        })
+        navigationController.pushViewController(viewController, animated: true)
+    }
+}

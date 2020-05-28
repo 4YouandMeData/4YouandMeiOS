@@ -8,6 +8,7 @@
 
 import UIKit
 import SVProgressHUD
+import RxSwift
 
 class AppNavigator {
     
@@ -15,6 +16,11 @@ class AppNavigator {
     
     private let repository: Repository
     private let window: UIWindow
+    
+    private let disposeBag = DisposeBag()
+    
+    // TODO: Remove it from here!!! Figure out a decent ownership/life-cycle for this poor instance
+    private var screeningCoordinator: ScreeningCoordinator?
     
     init(withRepository repository: Repository, window: UIWindow) {
         self.repository = repository
@@ -43,14 +49,14 @@ class AppNavigator {
             // without going through all the official flow
             #if DEBUG
             if let testNavigationStep = Constants.Test.NavigationStep {
-                let viewController: UIViewController = {
-                    switch testNavigationStep {
-                    case .screeningQuestions: return ScreeningQuestionsViewController()
-                    }
-                }()
-                let navigationViewController = UINavigationController(rootViewController: viewController)
+                let testStartingViewController = UIViewController()
+                let navigationViewController = UINavigationController(rootViewController: testStartingViewController)
                 navigationViewController.preventPopWithSwipe()
                 self.window.rootViewController = navigationViewController
+                
+                switch testNavigationStep {
+                case .screeningQuestions: self.startScreeningQuestionFlow(presenter: testStartingViewController)
+                }
                 return
             }
             #endif
@@ -168,12 +174,25 @@ class AppNavigator {
     // MARK: Screening Questions
     
     public func startScreeningQuestionFlow(presenter: UIViewController) {
-        guard let navigationController = presenter.navigationController else {
-            assertionFailure("Missing UINavigationController")
-            return
-        }
-        let viewController = ScreeningQuestionsViewController()
-        navigationController.pushViewController(viewController, animated: true)
+        self.pushProgressHUD()
+        self.repository.getScreeningSection().subscribe(onSuccess: { screeningSection in
+            self.popProgressHUD()
+            let screeningCoordinator = ScreeningCoordinator(withSectionData: screeningSection,
+                                                            completionCallback: { [weak self] presenter in
+                                                                self?.startInformedConsentFlow(presenter: presenter) })
+            screeningCoordinator.startSection(presenter: presenter)
+            self.screeningCoordinator = screeningCoordinator
+        }, onError: { error in
+            self.popProgressHUD()
+            self.handleError(error: error, presenter: presenter)
+        }).disposed(by: self.disposeBag)
+    }
+    
+    // MARK: Informed Consent
+    
+    public func startInformedConsentFlow(presenter: UIViewController) {
+        // TODO: Start Informed Consent
+        presenter.showAlert(withTitle: "Work in progress", message: "Informed consent coming soon", completion: {})
     }
     
     // MARK: Progress HUD
