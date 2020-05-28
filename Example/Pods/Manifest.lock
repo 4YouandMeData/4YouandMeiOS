@@ -54,6 +54,7 @@ PODS:
     - CountryPickerView (~> 3.1.2)
     - Firebase/Analytics (~> 6.21.0)
     - Firebase/Crashlytics (~> 6.21.0)
+    - Japx/RxCodableMoya (~> 3.0.0)
     - Moya-ModelMapper/RxSwift (~> 10.0.0)
     - Moya/RxSwift (~> 14.0.0)
     - OAuthSwift (~> 2.1.0)
@@ -91,6 +92,23 @@ PODS:
     - GoogleUtilities/Logger
   - GoogleUtilities/UserDefaults (6.5.2):
     - GoogleUtilities/Logger
+  - Japx/Codable (3.0.0):
+    - Japx/Core
+  - Japx/CodableMoya (3.0.0):
+    - Japx/Codable
+    - Japx/Core
+    - Japx/Moya
+  - Japx/Core (3.0.0)
+  - Japx/Moya (3.0.0):
+    - Japx/Core
+    - Moya/Core (~> 14.0)
+  - Japx/RxCodableMoya (3.0.0):
+    - Japx/CodableMoya
+    - Japx/Core
+    - Japx/RxMoya
+  - Japx/RxMoya (3.0.0):
+    - Japx/Moya
+    - Moya/RxSwift (~> 14.0)
   - ModelMapper (10.0.0):
     - ModelMapper/Core (= 10.0.0)
   - ModelMapper/Core (10.0.0)
@@ -161,6 +179,7 @@ SPEC REPOS:
     - GoogleDataTransport
     - GoogleDataTransportCCTSupport
     - GoogleUtilities
+    - Japx
     - ModelMapper
     - Moya
     - Moya-ModelMapper
@@ -195,11 +214,12 @@ SPEC CHECKSUMS:
   FirebaseCoreDiagnosticsInterop: 296e2c5f5314500a850ad0b83e9e7c10b011a850
   FirebaseCrashlytics: b9e729da8b80d9c45f234f791a73b5fe647d4c31
   FirebaseInstallations: acb3216eb9784d3b1d2d2d635ff74fa892cc0c44
-  ForYouAndMe: caf9b35127ba495df71ea846d82e0b526a76e92e
+  ForYouAndMe: 8dfb5b98b75ad92ebaf6c8935e0601204e81119c
   GoogleAppMeasurement: 6e68a94d0eaeb1d73ef6b0ed4f7334e29d63ae29
   GoogleDataTransport: b29a21d813e906014ca16c00897827e40e4a24ab
   GoogleDataTransportCCTSupport: 6f15a89b0ca35d6fa523e1f752ef818588885988
   GoogleUtilities: ad0f3b691c67909d03a3327cc205222ab8f42e0e
+  Japx: d1f7f3e4b94f2013538102e96cf96fd417005f76
   ModelMapper: a8dbf2a2003bf626627b9fe7c9a22b3405a30404
   Moya: 5b45dacb75adb009f97fde91c204c1e565d31916
   Moya-ModelMapper: e3a478500921e7299804dc1ac550f1ebf3228ade
@@ -220,4 +240,4 @@ SPEC CHECKSUMS:
 
 PODFILE CHECKSUM: e181920184f7e7ee94f597d10e49241c00169fde
 
-COCOAPODS: 1.9.1
+COCOAPODS: 1.9.2

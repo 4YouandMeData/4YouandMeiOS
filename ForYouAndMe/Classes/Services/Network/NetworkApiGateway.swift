@@ -11,6 +11,7 @@ import Moya
 import Moya_ModelMapper
 import RxSwift
 import Mapper
+import Japx
 import Reachability
 
 protocol NetworkStorage: class {
@@ -84,24 +85,12 @@ class NetworkApiGateway: ApiGateway {
     
     // MARK: - ApiGateway Protocol Implementation
     
-    func send(request: ApiRequest) -> Single<Void> {
-        return self.send(request: request, errorType: ResponseError.self)
+    func isLoggedIn() -> Bool {
+        return self.storage.accessToken != nil
     }
     
-    func send<T: Mappable>(request: ApiRequest) -> Single<T> {
-        return self.send(request: request, errorType: ResponseError.self)
-    }
-       
-    func send<T: Mappable>(request: ApiRequest) -> Single<T?> {
-        return self.send(request: request, errorType: ResponseError.self)
-    }
-       
-    func send<T: Mappable>(request: ApiRequest) -> Single<[T]> {
-        return self.send(request: request, errorType: ResponseError.self)
-    }
-       
-    func sendExcludeInvalid<T: Mappable>(request: ApiRequest) -> Single<[T]> {
-        return self.sendExcludeInvalid(request: request, errorType: ResponseError.self)
+    func logOut() {
+        self.storage.accessToken = nil
     }
     
     func send<E: Mappable>(request: ApiRequest, errorType: E.Type) -> Single<()> {
@@ -146,21 +135,42 @@ class NetworkApiGateway: ApiGateway {
             .compactMap(to: [T].self)
     }
     
-    func sendShared<E: Mappable>(request: ApiRequest, errorType: E.Type) -> Single<Response> {
+    func send<T: JSONAPIMappable, E: Mappable>(request: ApiRequest, errorType: E.Type) -> Single<T> {
+        self.sendShared(request: request, errorType: errorType)
+        .mapCodableJSONAPI(includeList: T.includeList, keyPath: T.keyPath)
+        .handleMapError()
+    }
+    
+    func send<T: JSONAPIMappable, E: Mappable>(request: ApiRequest, errorType: E.Type) -> Single<T?> {
+        self.sendShared(request: request, errorType: errorType)
+            .mapCodableJSONAPI(includeList: T.includeList, keyPath: T.keyPath)
+            .handleMapError()
+            .catchError { error in
+                if case ApiError.cannotParseData = error {
+                    return Single.just(nil)
+                } else {
+                    return Single.error(error)
+                }
+        }
+    }
+    
+    func send<T: JSONAPIMappable, E: Mappable>(request: ApiRequest, errorType: E.Type) -> Single<[T]> {
+        self.sendShared(request: request, errorType: errorType)
+            .mapCodableJSONAPI(includeList: T.includeList, keyPath: T.keyPath)
+            .handleMapError()
+    }
+    
+    // MARK: - Private Methods
+    
+    private func sendShared<E: Mappable>(request: ApiRequest, errorType: E.Type) -> Single<Response> {
         return self.defaultProvider.rx.request(request.serviceRequest)
             .filterSuccess(api: self, request: request, errorType: errorType)
     }
-    
-    func isLoggedIn() -> Bool {
-        return self.storage.accessToken != nil
-    }
-    
-    func logOut() {
-        self.storage.accessToken = nil
-    }
 }
 
-fileprivate extension PrimitiveSequence where Trait == SingleTrait, Element: Mappable {
+// MARK: - Extension (Single<T>)
+
+fileprivate extension PrimitiveSequence where Trait == SingleTrait {
 
     func handleMapError() -> Single<Element> {
         return catchError({ (error) -> Single<Element> in
@@ -174,6 +184,8 @@ fileprivate extension PrimitiveSequence where Trait == SingleTrait, Element: Map
         })
     }
 }
+
+// MARK: - Extension (Single<Response>)
 
 fileprivate extension PrimitiveSequence where Trait == SingleTrait, Element == Response {
     
@@ -237,10 +249,14 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         // Misc
         case .getGlobalConfig:
             return "/v1/studies/\(studyId)/configuration"
+        // Login
         case .submitPhoneNumber:
             return "/v1/studies/\(studyId)/auth/verify_phone_number"
         case .verifyPhoneNumber:
             return "/v1/studies/\(studyId)/auth/login"
+        // Screening
+        case .getScreeningQuestions:
+            return "/v1/studies/\(studyId)/screening"
         }
     }
     
@@ -249,7 +265,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
     
     var method: Moya.Method {
         switch self {
-        case .getGlobalConfig:
+        case .getGlobalConfig, .getScreeningQuestions:
             return .get
         case .submitPhoneNumber, .verifyPhoneNumber:
             return .post
@@ -262,12 +278,13 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         case .getGlobalConfig: return Bundle.getTestData(from: "TestGetGlobalConfig")
         case .submitPhoneNumber: return "{}".utf8Encoded
         case .verifyPhoneNumber: return "{}".utf8Encoded
+        case .getScreeningQuestions: return Bundle.getTestData(from: "TestGetScreeningSection")
         }
     }
     
     var task: Task {
         switch self {
-        case .getGlobalConfig:
+        case .getGlobalConfig, .getScreeningQuestions:
             return .requestPlain
         case .submitPhoneNumber(let phoneNumber):
             var params: [String: Any] = [:]
@@ -289,6 +306,8 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         switch self {
         case .getGlobalConfig, .submitPhoneNumber, .verifyPhoneNumber:
             return .none
+        case .getScreeningQuestions:
+            return .bearer
         }
     }
 }

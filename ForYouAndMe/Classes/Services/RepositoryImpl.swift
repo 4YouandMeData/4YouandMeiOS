@@ -97,6 +97,13 @@ extension RepositoryImpl: Repository {
             }
         })
     }
+    
+    // MARK: - Screening
+    
+    func getScreeningSection() -> Single<ScreeningSection> {
+        return self.api.send(request: ApiRequest(serviceRequest: .getScreeningQuestions))
+            .handleError()
+    }
 }
 
 // MARK: - Extension(PrimitiveSequence)

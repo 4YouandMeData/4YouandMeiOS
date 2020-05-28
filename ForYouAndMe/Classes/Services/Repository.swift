@@ -51,4 +51,6 @@ protocol Repository: class {
     func logOut()
     func submitPhoneNumber(phoneNumber: String) -> Single<()>
     func verifyPhoneNumber(phoneNumber: String, secureCode: String) -> Single<()>
+    // Screening Section
+    func getScreeningSection() -> Single<ScreeningSection>
 }

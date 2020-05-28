@@ -63,6 +63,9 @@
     ],
     "CountryPickerView": [
       "~> 3.1.2"
+    ],
+    "Japx/RxCodableMoya": [
+      "~> 3.0.0"
     ]
   },
   "static_framework": true,

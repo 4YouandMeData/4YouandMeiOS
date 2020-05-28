@@ -1,0 +1,510 @@
+{
+  "data": {
+    "id": "1",
+    "type": "screening",
+    "attributes": {
+      "created_at": "2020-05-22T16:17:33.161Z",
+      "updated_at": "2020-05-22T17:00:44.188Z"
+    },
+    "relationships": {
+      "screening_questions": {
+        "data": [
+          {
+            "id": "7",
+            "type": "question"
+          },
+          {
+            "id": "6",
+            "type": "question"
+          },
+          {
+            "id": "5",
+            "type": "question"
+          },
+          {
+            "id": "4",
+            "type": "question"
+          },
+          {
+            "id": "3",
+            "type": "question"
+          },
+          {
+            "id": "2",
+            "type": "question"
+          },
+          {
+            "id": "1",
+            "type": "question"
+          }
+        ]
+      },
+      "pages": {
+        "data": [
+          {
+            "id": "3",
+            "type": "page"
+          },
+          {
+            "id": "2",
+            "type": "page"
+          },
+          {
+            "id": "1",
+            "type": "page"
+          }
+        ]
+      },
+      "welcome_page": {
+        "data": {
+          "id": "1",
+          "type": "page"
+        }
+      },
+      "success_page": {
+        "data": {
+          "id": "2",
+          "type": "page"
+        }
+      },
+      "failure_page": {
+        "data": {
+          "id": "3",
+          "type": "page"
+        }
+      }
+    }
+  },
+  "included": [
+    {
+      "id": "3",
+      "type": "page",
+      "attributes": {
+        "title": "Uh, oh!",
+        "body": "You did not answer correctly, it seems that this study is not suitable for you. Please try again, if you are eligible we will confirm the eligibility requirements.",
+        "link_1_label": "",
+        "link_2_label": "",
+        "external_link_label": "",
+        "external_link_url": "",
+        "created_at": "2020-05-22T17:00:34.523Z",
+        "updated_at": "2020-05-22T17:00:34.534Z",
+        "image": "PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDQiIGhlaWdodD0iMzYuNSIgdmlld0JveD0iMCAwIDEwNCAzNi41Ij48ZGVmcz48c3R5bGU+LmF7ZmlsbDpub25lO3N0cm9rZTojMjAxZTFmO30uYSwuY3tzdHJva2UtbWl0ZXJsaW1pdDoxMDtzdHJva2Utd2lkdGg6M3B4O30uYntmaWxsOiMzMGM3ZDU7b3BhY2l0eTowLjE4O30uY3tmaWxsOnJnYmEoMCwwLDAsMCk7c3Ryb2tlOiMyYTI1MjY7fTwvc3R5bGU+PC9kZWZzPjxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDAgMS41KSI+PHBhdGggY2xhc3M9ImEiIGQ9Ik01MDAwLjMsMTA2ODguMTQ4YTEyLjE0OSwxMi4xNDksMCwwLDAtMjQuMywwIiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgtNDkzNi44MjQgLTEwNjUzLjE0OCkiLz48ZWxsaXBzZSBjbGFzcz0iYiIgY3g9IjExLjUiIGN5PSI2IiByeD0iMTEuNSIgcnk9IjYiIHRyYW5zZm9ybT0idHJhbnNsYXRlKDgxIDE2LjYwNCkiLz48ZWxsaXBzZSBjbGFzcz0iYiIgY3g9IjExLjUiIGN5PSI2IiByeD0iMTEuNSIgcnk9IjYiIHRyYW5zZm9ybT0idHJhbnNsYXRlKDAgMTYuNjA0KSIvPjxwYXRoIGNsYXNzPSJjIiBkPSJNLjAxOS42NjhoMFEwLC4zMzcsMCwwSDI0QTEyLDEyLDAsMCwxLDEyLDEyLDEyLDEyLDAsMCwxLC4wMTkuNjY4WiIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoNjkuMDAxKSIvPjxwYXRoIGNsYXNzPSJjIiBkPSJNLjAxOS42NjhoMFEwLC4zMzcsMCwwSDI0QTEyLDEyLDAsMCwxLDEyLDEyLDEyLDEyLDAsMCwxLC4wMTkuNjY4WiIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoOC4wMDEpIi8+PC9nPjwvc3ZnPg=="
+      },
+      "relationships": {
+        "section": {
+          "data": {
+            "id": "1",
+            "type": "screening"
+          }
+        },
+        "link_1": {
+          "data": null
+        },
+        "link_2": {
+          "data": null
+        }
+      }
+    },
+    {
+      "id": "2",
+      "type": "page",
+      "attributes": {
+        "title": "You're eligible!",
+        "body": "Note that at your first clinic visit, there's a small chance that you will be revoked from the study. On the next few screens, we will explain the research study and the impact it may have on your life. Then you'll have the option to consent to partecipate.",
+        "link_1_label": "",
+        "link_2_label": "",
+        "external_link_label": "",
+        "external_link_url": "",
+        "created_at": "2020-05-22T16:54:15.323Z",
+        "updated_at": "2020-05-22T16:54:15.330Z",
+        "image": "PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI5MSIgaGVpZ2h0PSI0MyIgdmlld0JveD0iMCAwIDkxIDQzIj48ZGVmcz48c3R5bGU+LmF7ZmlsbDpub25lO3N0cm9rZTojMmEyNTI2O3N0cm9rZS1taXRlcmxpbWl0OjEwO3N0cm9rZS13aWR0aDozcHg7fS5ie2ZpbGw6I2NmZjFmNDt9PC9zdHlsZT48L2RlZnM+PGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMCAxLjUpIj48Y2lyY2xlIGNsYXNzPSJhIiBjeD0iMTIiIGN5PSIxMiIgcj0iMTIiIHRyYW5zZm9ybT0idHJhbnNsYXRlKDYpIi8+PGNpcmNsZSBjbGFzcz0iYSIgY3g9IjEyIiBjeT0iMTIiIHI9IjEyIiB0cmFuc2Zvcm09InRyYW5zbGF0ZSg1OSkiLz48cGF0aCBjbGFzcz0iYSIgZD0iTTQyMTAsOTEwMmE5LjM3Miw5LjM3MiwwLDAsMCwxOC43NDQsMCIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoLTQxNzQuNzExIC05MDcxLjM3MikiLz48ZWxsaXBzZSBjbGFzcz0iYiIgY3g9IjguNSIgY3k9IjUiIHJ4PSI4LjUiIHJ5PSI1IiB0cmFuc2Zvcm09InRyYW5zbGF0ZSg3NCAyMi45MzcpIi8+PGVsbGlwc2UgY2xhc3M9ImIiIGN4PSI4LjUiIGN5PSI0LjUiIHJ4PSI4LjUiIHJ5PSI0LjUiIHRyYW5zZm9ybT0idHJhbnNsYXRlKDAgMjMuOTM2KSIvPjwvZz48L3N2Zz4="
+      },
+      "relationships": {
+        "section": {
+          "data": {
+            "id": "1",
+            "type": "screening"
+          }
+        },
+        "link_1": {
+          "data": null
+        },
+        "link_2": {
+          "data": null
+        }
+      }
+    },
+    {
+      "id": "1",
+      "type": "page",
+      "attributes": {
+        "title": "Screening Questions",
+        "body": "The following questions will help us ensure this study is right for you. We will confirm the eligibility requirements when you come in for your first study visit.",
+        "link_1_label": "",
+        "link_2_label": "",
+        "external_link_label": "",
+        "external_link_url": "",
+        "created_at": "2020-05-22T16:27:43.154Z",
+        "updated_at": "2020-05-22T16:43:26.724Z",
+        "image": "PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI1NC41IiBoZWlnaHQ9IjU0LjUiIHZpZXdCb3g9IjAgMCA1NC41IDU0LjUiPjxkZWZzPjxzdHlsZT4uYXtmaWxsOiMzYjQ1NTA7fS5ie2ZpbGw6IzI1YWVjMjtzdHJva2U6cmdiYSgwLDAsMCwwKTtzdHJva2UtbWl0ZXJsaW1pdDoxMDt9PC9zdHlsZT48L2RlZnM+PGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMCAwLjUpIj48cGF0aCBjbGFzcz0iYSIgZD0iTTE4LjM5NCwzNS45NzhsLTQuNDItNC40MTFINy41MzNBNy41MzIsNy41MzIsMCwwLDEsMCwyNC4wNTNWNy41MTZBNy41MzMsNy41MzMsMCwwLDEsNy41MzMsMEgxOC40YTEuMDczLDEuMDczLDAsMSwxLDAsMi4xNDdINy41MzNhNS4zOCw1LjM4LDAsMCwwLTUuMzgsNS4zNjlWMjQuMDUzYTUuMzgxLDUuMzgxLDAsMCwwLDUuMzgsNS4zNjhoNi45OTJhMS4wNzYsMS4wNzYsMCwwLDEsLjk4Ny42NDRsMi41NjgsMi41NjMsMC0yLjEzNWExLjA3NSwxLjA3NSwwLDAsMSwxLjA3Ni0xLjA3M0gzMC43NzZhNS4zODEsNS4zODEsMCwwLDAsNS4zOC01LjM2OFYxNi42NDRhMS4wNzYsMS4wNzYsMCwwLDEsMi4xNTMsMHY3LjQwOWE3LjUzMiw3LjUzMiwwLDAsMS03LjUzMyw3LjUxNUgyMC4yMzRsMCwzLjY1MmExLjA3NiwxLjA3NiwwLDAsMS0xLjgzNy43NTlaTTI4LjI5MSwyM2ExLjAwNiwxLjAwNiwwLDEsMSwuNzEzLjNBMS4wMSwxLjAxLDAsMCwxLDI4LjI5MSwyM1pNNy4xLDIzLjNhMS4wMDksMS4wMDksMCwxLDEsMC0yLjAxN0gyNS4xNTlhMS4wMDksMS4wMDksMCwxLDEsMCwyLjAxN1ptMC02YTEuMDA5LDEuMDA5LDAsMSwxLDAtMi4wMTdIMjkuMmExLjAwOSwxLjAwOSwwLDEsMSwwLDIuMDE3Wm0tLjAxNS02YTEuMDA5LDEuMDA5LDAsMSwxLDAtMi4wMTdIMjIuMTU1YTEuMDA5LDEuMDA5LDAsMSwxLDAsMi4wMTdaIiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgwIDE3LjcwNykiLz48cGF0aCBjbGFzcz0iYiIgZD0iTTI1Ljc4NiwzMy45NywyMS44NSwzMC4wNDRhMTUuMzQxLDE1LjM0MSwwLDAsMS0zLjg4My41SDE1LjNBMTUuMjcsMTUuMjcsMCwxLDEsMTUuMywwaDIuNjY1YTE1LjMsMTUuMywwLDAsMSwxNS4zLDE1LjI3LDE1LjA4OCwxNS4wODgsMCwwLDEtMS42NjMsNi45MywxNS40MjMsMTUuNDIzLDAsMCwxLTQuMDIyLDQuOTQ4djYuMDc4YTEuMDQ4LDEuMDQ4LDAsMCwxLS42NS45NywxLjAzNCwxLjAzNCwwLDAsMS0uNC4wODFBMS4wNTEsMS4wNTEsMCwwLDEsMjUuNzg2LDMzLjk3Wk0yMi45LDI4LjEyMWwyLjU3NiwyLjU3VjI2LjYzNUExLjA1LDEuMDUsMCwwLDEsMjUuOSwyNS44LDEzLjA2MiwxMy4wNjIsMCwwLDAsMzEuMTYzLDE1LjI3LDEzLjIsMTMuMiwwLDAsMCwxNy45NjcsMi4xSDE1LjNhMTMuMTY5LDEzLjE2OSwwLDEsMCwwLDI2LjMzOWgyLjY2NWExMy4xOTIsMTMuMTkyLDAsMCwwLDMuODgxLS41ODEsMS4wNjQsMS4wNjQsMCwwLDEsMS4wNTQuMjYyWk0xNi41NSwyMy43MTRhMS4wMDYsMS4wMDYsMCwxLDEsLjcxMy4zQTEuMDEzLDEuMDEzLDAsMCwxLDE2LjU1LDIzLjcxNFptLS44NzItNS41OTRWMTUuNjI5YTEuOTc4LDEuOTc4LDAsMCwxLDEuNi0xLjkyMiwyLjMxOCwyLjMxOCwwLDAsMCwxLjg2Mi0yLjQyNiwyLjM1OCwyLjM1OCwwLDAsMC0yLjIxNi0yLjE0NCwyLjQyNiwyLjQyNiwwLDAsMC0xLjgwNS42MTcsMi4yNiwyLjI2LDAsMCwwLS43NiwxLjY5MywxLjA3MiwxLjA3MiwwLDAsMS0yLjE0MywwLDQuMzM1LDQuMzM1LDAsMCwxLDEuNDQyLTMuMjA4LDQuNiw0LjYsMCwwLDEsMy40MTQtMS4xNyw0LjQ3Niw0LjQ3NiwwLDAsMSw0LjIwNyw0LjA2OSw0LjM4OCw0LjM4OCwwLDAsMS0zLjQ1NCw0LjU3NnYyLjQwOGExLjA3MiwxLjA3MiwwLDAsMS0yLjE0MywwWiIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMjAuNzMyKSIvPjwvZz48L3N2Zz4="
+      },
+      "relationships": {
+        "section": {
+          "data": {
+            "id": "1",
+            "type": "screening"
+          }
+        },
+        "link_1": {
+          "data": null
+        },
+        "link_2": {
+          "data": null
+        }
+      }
+    },
+    {
+      "id": "7",
+      "type": "question",
+      "attributes": {
+        "text": "Do any of these apply to you? - in prison - No permanent address - Planning to terminate",
+        "created_at": "2020-05-22T16:49:52.857Z",
+        "updated_at": "2020-05-22T16:51:11.203Z"
+      },
+      "relationships": {
+        "questionable": {
+          "data": {
+            "id": "1",
+            "type": "screening"
+          }
+        },
+        "possible_answers": {
+          "data": [
+            {
+              "id": "13",
+              "type": "possible_answer"
+            },
+            {
+              "id": "14",
+              "type": "possible_answer"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "6",
+      "type": "question",
+      "attributes": {
+        "text": "Do you read and write in English?",
+        "created_at": "2020-05-22T16:49:23.858Z",
+        "updated_at": "2020-05-22T16:49:23.858Z"
+      },
+      "relationships": {
+        "questionable": {
+          "data": {
+            "id": "1",
+            "type": "screening"
+          }
+        },
+        "possible_answers": {
+          "data": [
+            {
+              "id": "11",
+              "type": "possible_answer"
+            },
+            {
+              "id": "12",
+              "type": "possible_answer"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "5",
+      "type": "question",
+      "attributes": {
+        "text": "Are you comfortable using this smartphone?",
+        "created_at": "2020-05-22T16:48:44.872Z",
+        "updated_at": "2020-05-22T16:48:44.872Z"
+      },
+      "relationships": {
+        "questionable": {
+          "data": {
+            "id": "1",
+            "type": "screening"
+          }
+        },
+        "possible_answers": {
+          "data": [
+            {
+              "id": "9",
+              "type": "possible_answer"
+            },
+            {
+              "id": "10",
+              "type": "possible_answer"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "4",
+      "type": "question",
+      "attributes": {
+        "text": "Are you over 18 years old?",
+        "created_at": "2020-05-22T16:47:34.494Z",
+        "updated_at": "2020-05-22T16:47:34.494Z"
+      },
+      "relationships": {
+        "questionable": {
+          "data": {
+            "id": "1",
+            "type": "screening"
+          }
+        },
+        "possible_answers": {
+          "data": [
+            {
+              "id": "7",
+              "type": "possible_answer"
+            },
+            {
+              "id": "8",
+              "type": "possible_answer"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "3",
+      "type": "question",
+      "attributes": {
+        "text": "Are you currently or are you planning to be a patient of the Mount Sinai Health System?",
+        "created_at": "2020-05-22T16:47:01.412Z",
+        "updated_at": "2020-05-22T16:47:01.412Z"
+      },
+      "relationships": {
+        "questionable": {
+          "data": {
+            "id": "1",
+            "type": "screening"
+          }
+        },
+        "possible_answers": {
+          "data": [
+            {
+              "id": "5",
+              "type": "possible_answer"
+            },
+            {
+              "id": "6",
+              "type": "possible_answer"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "2",
+      "type": "question",
+      "attributes": {
+        "text": "Are you in your first trimester (less than 14 weeks)?",
+        "created_at": "2020-05-22T16:45:40.272Z",
+        "updated_at": "2020-05-22T16:45:40.272Z"
+      },
+      "relationships": {
+        "questionable": {
+          "data": {
+            "id": "1",
+            "type": "screening"
+          }
+        },
+        "possible_answers": {
+          "data": [
+            {
+              "id": "3",
+              "type": "possible_answer"
+            },
+            {
+              "id": "4",
+              "type": "possible_answer"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "1",
+      "type": "question",
+      "attributes": {
+        "text": "Are you pregnant?",
+        "created_at": "2020-05-22T16:28:30.293Z",
+        "updated_at": "2020-05-22T16:28:30.293Z"
+      },
+      "relationships": {
+        "questionable": {
+          "data": {
+            "id": "1",
+            "type": "screening"
+          }
+        },
+        "possible_answers": {
+          "data": [
+            {
+              "id": "1",
+              "type": "possible_answer"
+            },
+            {
+              "id": "2",
+              "type": "possible_answer"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "13",
+      "type": "possible_answer",
+      "attributes": {
+        "text": "Yes",
+        "correct": false,
+        "created_at": "2020-05-22T16:49:52.859Z",
+        "updated_at": "2020-05-22T16:51:11.205Z"
+      }
+    },
+    {
+      "id": "14",
+      "type": "possible_answer",
+      "attributes": {
+        "text": "No",
+        "correct": true,
+        "created_at": "2020-05-22T16:49:52.860Z",
+        "updated_at": "2020-05-22T16:51:11.206Z"
+      }
+    },
+    {
+      "id": "11",
+      "type": "possible_answer",
+      "attributes": {
+        "text": "Yes",
+        "correct": true,
+        "created_at": "2020-05-22T16:49:23.861Z",
+        "updated_at": "2020-05-22T16:49:28.567Z"
+      }
+    },
+    {
+      "id": "12",
+      "type": "possible_answer",
+      "attributes": {
+        "text": "No",
+        "correct": false,
+        "created_at": "2020-05-22T16:49:23.862Z",
+        "updated_at": "2020-05-22T16:49:28.571Z"
+      }
+    },
+    {
+      "id": "9",
+      "type": "possible_answer",
+      "attributes": {
+        "text": "Yes",
+        "correct": true,
+        "created_at": "2020-05-22T16:48:44.874Z",
+        "updated_at": "2020-05-22T16:48:54.043Z"
+      }
+    },
+    {
+      "id": "10",
+      "type": "possible_answer",
+      "attributes": {
+        "text": "No",
+        "correct": false,
+        "created_at": "2020-05-22T16:48:44.876Z",
+        "updated_at": "2020-05-22T16:48:54.044Z"
+      }
+    },
+    {
+      "id": "7",
+      "type": "possible_answer",
+      "attributes": {
+        "text": "Yes",
+        "correct": true,
+        "created_at": "2020-05-22T16:47:34.496Z",
+        "updated_at": "2020-05-22T16:47:43.089Z"
+      }
+    },
+    {
+      "id": "8",
+      "type": "possible_answer",
+      "attributes": {
+        "text": "No",
+        "correct": false,
+        "created_at": "2020-05-22T16:47:34.498Z",
+        "updated_at": "2020-05-22T16:47:43.090Z"
+      }
+    },
+    {
+      "id": "5",
+      "type": "possible_answer",
+      "attributes": {
+        "text": "Yes",
+        "correct": true,
+        "created_at": "2020-05-22T16:47:01.415Z",
+        "updated_at": "2020-05-22T16:47:06.930Z"
+      }
+    },
+    {
+      "id": "6",
+      "type": "possible_answer",
+      "attributes": {
+        "text": "No",
+        "correct": false,
+        "created_at": "2020-05-22T16:47:01.418Z",
+        "updated_at": "2020-05-22T16:47:06.932Z"
+      }
+    },
+    {
+      "id": "3",
+      "type": "possible_answer",
+      "attributes": {
+        "text": "Yes",
+        "correct": true,
+        "created_at": "2020-05-22T16:45:40.281Z",
+        "updated_at": "2020-05-22T16:45:59.063Z"
+      }
+    },
+    {
+      "id": "4",
+      "type": "possible_answer",
+      "attributes": {
+        "text": "No",
+        "correct": false,
+        "created_at": "2020-05-22T16:45:40.283Z",
+        "updated_at": "2020-05-22T16:45:59.066Z"
+      }
+    },
+    {
+      "id": "1",
+      "type": "possible_answer",
+      "attributes": {
+        "text": "Yes",
+        "correct": true,
+        "created_at": "2020-05-22T16:28:30.302Z",
+        "updated_at": "2020-05-22T16:29:00.441Z"
+      }
+    },
+    {
+      "id": "2",
+      "type": "possible_answer",
+      "attributes": {
+        "text": "No",
+        "correct": false,
+        "created_at": "2020-05-22T16:28:30.305Z",
+        "updated_at": "2020-05-22T16:29:00.443Z"
+      }
+    }
+  ]
+}

@@ -9,6 +9,7 @@
 import Foundation
 import RxSwift
 import Mapper
+import Japx
 
 enum DefaultService {
     // Misc
@@ -16,7 +17,8 @@ enum DefaultService {
     // Login
     case submitPhoneNumber(phoneNumber: String)
     case verifyPhoneNumber(phoneNumber: String, secureCode: String)
-    
+    // Screening
+    case getScreeningQuestions
 }
 
 struct ApiRequest {
@@ -40,18 +42,56 @@ enum ApiError: Error {
 }
 
 protocol ApiGateway {
-    func send(request: ApiRequest) -> Single<Void>
-    func send<T: Mappable>(request: ApiRequest) -> Single<T>
-    func send<T: Mappable>(request: ApiRequest) -> Single<T?>
-    func send<T: Mappable>(request: ApiRequest) -> Single<[T]>
-    func sendExcludeInvalid<T: Mappable>(request: ApiRequest) -> Single<[T]>
     
     func send<E: Mappable>(request: ApiRequest, errorType: E.Type) -> Single<()>
+    
+    // Mappable entities (Model Mapper)
     func send<T: Mappable, E: Mappable>(request: ApiRequest, errorType: E.Type) -> Single<T>
     func send<T: Mappable, E: Mappable>(request: ApiRequest, errorType: E.Type) -> Single<T?>
     func send<T: Mappable, E: Mappable>(request: ApiRequest, errorType: E.Type) -> Single<[T]>
     func sendExcludeInvalid<T: Mappable, E: Mappable>(request: ApiRequest, errorType: E.Type) -> Single<[T]>
     
+    // JSONAPIMappable entities (Japx)
+    func send<T: JSONAPIMappable, E: Mappable>(request: ApiRequest, errorType: E.Type) -> Single<T>
+    func send<T: JSONAPIMappable, E: Mappable>(request: ApiRequest, errorType: E.Type) -> Single<T?>
+    func send<T: JSONAPIMappable, E: Mappable>(request: ApiRequest, errorType: E.Type) -> Single<[T]>
+    
     func isLoggedIn() -> Bool
     func logOut()
+}
+
+extension ApiGateway {
+    func send(request: ApiRequest) -> Single<()> {
+        return self.send(request: request, errorType: ResponseError.self)
+    }
+    
+    // Mappable entities (Model Mapper)
+    func send<T: Mappable>(request: ApiRequest) -> Single<T> {
+        return self.send(request: request, errorType: ResponseError.self)
+    }
+
+    func send<T: Mappable>(request: ApiRequest) -> Single<T?> {
+        return self.send(request: request, errorType: ResponseError.self)
+    }
+
+    func send<T: Mappable>(request: ApiRequest) -> Single<[T]> {
+        return self.send(request: request, errorType: ResponseError.self)
+    }
+
+    func sendExcludeInvalid<T: Mappable>(request: ApiRequest) -> Single<[T]> {
+        return self.sendExcludeInvalid(request: request, errorType: ResponseError.self)
+    }
+    
+    // JSONAPIMappable entities (Japx)
+    func send<T: JSONAPIMappable>(request: ApiRequest) -> Single<T> {
+        return self.send(request: request, errorType: ResponseError.self)
+    }
+    
+    func send<T: JSONAPIMappable>(request: ApiRequest) -> Single<T?> {
+        return self.send(request: request, errorType: ResponseError.self)
+    }
+    
+    func send<T: JSONAPIMappable>(request: ApiRequest) -> Single<[T]> {
+        return self.send(request: request, errorType: ResponseError.self)
+    }
 }

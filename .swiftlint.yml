@@ -4,3 +4,7 @@ disabled_rules: # rule identifiers to exclude from running
   - file_length
 
 line_length: 140
+
+variable_name:
+  min_length:
+    warning: 2

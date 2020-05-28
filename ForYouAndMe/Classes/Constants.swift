@@ -19,7 +19,7 @@ struct Constants {
         static let NetworkLogVerbose = true
         
         static let NoCacheGlobalConfig = true
-        static let NavigationStep: TestNavigationStep? = nil//.screeningQuestions
+        static let NavigationStep: TestNavigationStep? = .screeningQuestions
     }
     struct Network {
         static let ApiBaseUrlStr = "https://api-4youandme-staging.balzo.eu/api"
