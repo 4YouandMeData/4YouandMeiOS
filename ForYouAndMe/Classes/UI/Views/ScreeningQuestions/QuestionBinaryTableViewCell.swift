@@ -8,13 +8,13 @@
 
 import UIKit
 
-struct QuestionBinary {
+struct QuestionBinaryDisplayData {
     let identifier: String
     let question: String
     let answerA: String
     let answerB: String
-    let answerAisActive: Bool?
     let correctAnswerA: Bool?
+    var answerAisActive: Bool?
 }
 
 class QuestionBinaryTableViewCell: UITableViewCell {
@@ -84,22 +84,22 @@ class QuestionBinaryTableViewCell: UITableViewCell {
     
     // MARK: - Public Methods
     
-    public func display(questionBinary: QuestionBinary, answerPressedCallback: @escaping QuestionBinaryAnswerCallback) {
-        self.questionIdentifier = questionBinary.identifier
+    public func display(data: QuestionBinaryDisplayData, answerPressedCallback: @escaping QuestionBinaryAnswerCallback) {
+        self.questionIdentifier = data.identifier
         self.answerPressedCallback = answerPressedCallback
-        self.questionLabel.attributedText = NSAttributedString.create(withText: questionBinary.question,
+        self.questionLabel.attributedText = NSAttributedString.create(withText: data.question,
                                                                       fontStyle: .paragraph,
                                                                       colorType: .primaryText,
                                                                       textAlignment: .left)
-        self.answerALabel.attributedText = NSAttributedString.create(withText: questionBinary.answerA,
+        self.answerALabel.attributedText = NSAttributedString.create(withText: data.answerA,
                                                                      fontStyle: .paragraph,
                                                                      colorType: .fourthText)
-        self.answerBLabel.attributedText = NSAttributedString.create(withText: questionBinary.answerB,
+        self.answerBLabel.attributedText = NSAttributedString.create(withText: data.answerB,
                                                                      fontStyle: .paragraph,
                                                                      colorType: .fourthText)
         self.answerAButton.setImage(ImagePalette.image(withName: .radioButtonOutline), for: .normal)
         self.answerBButton.setImage(ImagePalette.image(withName: .radioButtonOutline), for: .normal)
-        if let answerAisActive = questionBinary.answerAisActive {
+        if let answerAisActive = data.answerAisActive {
             if answerAisActive {
                 self.answerAButton.setImage(ImagePalette.image(withName: .radioButtonFilled), for: .normal)
             } else {

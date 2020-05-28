@@ -8,10 +8,12 @@
 
 import Foundation
 import PureLayout
+import RxSwift
 
 public class ScreeningQuestionsViewController: UIViewController {
     
     private let navigator: AppNavigator
+    private let repository: Repository
     
     lazy private var tableView: UITableView = {
         let tableView = UITableView()
@@ -29,10 +31,13 @@ public class ScreeningQuestionsViewController: UIViewController {
         return view
     }()
     
-    private var items: [QuestionBinary] = []
+    private var items: [QuestionBinaryDisplayData] = []
+    
+    private let disposeBag = DisposeBag()
     
     init() {
         self.navigator = Services.shared.navigator
+        self.repository = Services.shared.repository
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -45,49 +50,15 @@ public class ScreeningQuestionsViewController: UIViewController {
         
         self.view.backgroundColor = ColorPalette.color(withType: .secondary)
         
-        // TODO: Add screening questions
-        self.items.append(QuestionBinary(identifier: "1",
-                                             question: "Are you pregnant",
-                                             answerA: "Yes",
-                                             answerB: "No",
-                                             answerAisActive: nil,
-                                             correctAnswerA: true))
-        self.items.append(QuestionBinary(identifier: "2",
-                                             question: "Are you in your first trimester\n(less than 14 weeks)?",
-                                             answerA: "Yes",
-                                             answerB: "No",
-                                             answerAisActive: nil,
-                                             correctAnswerA: true))
-        self.items.append(QuestionBinary(identifier: "3",
-                                         question: "Are you currently or are you planning to be a patient of the Mount Sinai Health System?",
-                                         answerA: "Yes",
-                                         answerB: "No",
-                                         answerAisActive: nil,
-                                         correctAnswerA: false))
-        self.items.append(QuestionBinary(identifier: "4",
-                                         question: "Are you over 18 years old?",
-                                         answerA: "Yes",
-                                         answerB: "No",
-                                         answerAisActive: nil,
-                                         correctAnswerA: true))
-        self.items.append(QuestionBinary(identifier: "5",
-                                         question: "Have you ever climbed Mount Doom, riding a Gallimimus, using a lightsaber to defend yourself against Chaos Space Marines' volley fire? Of course, returning home without the help of the Great Eagles... the correct answer for this question is 'Yes'. Sorry :)",
-                                         answerA: "Yes",
-                                         answerB: "No",
-                                         answerAisActive: nil,
-                                         correctAnswerA: true))
-        self.items.append(QuestionBinary(identifier: "6",
-                                         question: "Do you read and write in English?",
-                                         answerA: "Yes",
-                                         answerB: "No",
-                                         answerAisActive: nil,
-                                         correctAnswerA: true))
-        self.items.append(QuestionBinary(identifier: "7",
-                                         question: "Do any of these apply to you?\n - in prison\n - No permanent address\n - Planning to terminate pregnancy",
-                                         answerA: "Yes",
-                                         answerB: "No",
-                                         answerAisActive: nil,
-                                         correctAnswerA: false))
+        self.navigator.pushProgressHUD()
+        self.repository.getScreeningSection().subscribe(onSuccess: { screeningSection in
+            self.navigator.popProgressHUD()
+            self.items = screeningSection.questions.compactMap{ $0.questionBinaryData }
+            self.tableView.reloadData()
+        }, onError: { error in
+            self.navigator.popProgressHUD()
+            self.navigator.handleError(error: error, presenter: self)
+        }).disposed(by: self.disposeBag)
         
         let stackView = UIStackView()
         stackView.axis = .vertical
@@ -128,14 +99,9 @@ public class ScreeningQuestionsViewController: UIViewController {
             assertionFailure("Cannot find item with id: '\(identifier)'")
             return
         }
-        let item = self.items[itemIndex]
-        let updatedItem = QuestionBinary(identifier: item.identifier,
-                                         question: item.question,
-                                         answerA: item.answerA,
-                                         answerB: item.answerB,
-                                         answerAisActive: answerA,
-                                         correctAnswerA: item.correctAnswerA)
-        self.items[itemIndex] = updatedItem
+        var item = self.items[itemIndex]
+        item.answerAisActive = answerA
+        self.items[itemIndex] = item
         self.tableView.reloadData()
         self.updateConfirmButton()
     }
@@ -171,11 +137,27 @@ extension ScreeningQuestionsViewController: UITableViewDataSource {
             return UITableViewCell()
         }
         let item = self.items[indexPath.row]
-        cell.display(questionBinary: item,
+        cell.display(data: item,
                      answerPressedCallback: { [weak self] answerA in
                         self?.updateItem(identifier: item.identifier,
                                          answerA: answerA)
         })
         return cell
+    }
+}
+
+fileprivate extension Question {
+    var questionBinaryData: QuestionBinaryDisplayData? {
+        guard self.possibleAnswers.count >= 2 else {
+            return nil
+        }
+        let answerA = self.possibleAnswers[0]
+        let answerB = self.possibleAnswers[1]
+        return QuestionBinaryDisplayData(identifier: self.id,
+                                         question: self.text,
+                                         answerA: answerA.text,
+                                         answerB: answerB.text,
+                                         correctAnswerA: answerA.correct,
+                                         answerAisActive: nil)
     }
 }
