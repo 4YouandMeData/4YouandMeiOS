@@ -8,7 +8,6 @@
 
 import UIKit
 import SVProgressHUD
-import RxSwift
 
 class AppNavigator {
     
@@ -16,8 +15,6 @@ class AppNavigator {
     
     private let repository: Repository
     private let window: UIWindow
-    
-    private let disposeBag = DisposeBag()
     
     // TODO: Remove it from here!!! Figure out a decent ownership/life-cycle for this poor instance
     private var screeningCoordinator: ScreeningCoordinator?
@@ -33,7 +30,7 @@ class AppNavigator {
     // MARK: - Initialization
     
     func showSetupScreen() {
-        self.window.rootViewController = SetupViewController()
+        self.window.rootViewController = LoadingViewController<()>(loadingMode: .initialSetup)
     }
     
     func showSetupCompleted() {
@@ -174,18 +171,13 @@ class AppNavigator {
     // MARK: Screening Questions
     
     public func startScreeningQuestionFlow(presenter: UIViewController) {
-        self.pushProgressHUD()
-        self.repository.getScreeningSection().subscribe(onSuccess: { screeningSection in
-            self.popProgressHUD()
-            let screeningCoordinator = ScreeningCoordinator(withSectionData: screeningSection,
+        presenter.loadView(requestSingle: self.repository.getScreeningSection()) { section -> UIViewController in
+            let screeningCoordinator = ScreeningCoordinator(withSectionData: section,
                                                             completionCallback: { [weak self] presenter in
                                                                 self?.startInformedConsentFlow(presenter: presenter) })
-            screeningCoordinator.startSection(presenter: presenter)
             self.screeningCoordinator = screeningCoordinator
-        }, onError: { error in
-            self.popProgressHUD()
-            self.handleError(error: error, presenter: presenter)
-        }).disposed(by: self.disposeBag)
+            return screeningCoordinator.getStartingPage()
+        }
     }
     
     // MARK: Informed Consent

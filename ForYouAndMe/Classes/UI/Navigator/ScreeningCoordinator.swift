@@ -19,18 +19,14 @@ class ScreeningCoordinator {
     
     // MARK: - Public Methods
     
-    public func startSection(presenter: UIViewController) {
-        guard let navigationController = presenter.navigationController else {
-            assertionFailure("Missing UINavigationController")
-            return
-        }
+    public func getStartingPage() -> UIViewController {
         let infoPageData = InfoPageData(page: self.sectionData.welcomePage,
                                         addAbortOnboardingButton: false,
                                         confirmButtonText: nil,
                                         customConfirmButtonCallback: { [weak self] presenter in
                                             self?.showQuestions(presenter: presenter)
         })
-        navigationController.pushViewController(InfoPageViewController(withPageData: infoPageData), animated: true)
+        return InfoPageViewController(withPageData: infoPageData)
     }
     
     // MARK: - Private Methods

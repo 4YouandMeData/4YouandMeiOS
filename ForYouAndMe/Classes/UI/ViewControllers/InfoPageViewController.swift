@@ -40,7 +40,6 @@ public class InfoPageViewController: UIViewController {
         self.view.addSubview(scrollStackView)
         scrollStackView.autoPinEdgesToSuperviewSafeArea(with: .zero, excludingEdge: .bottom)
         
-        
         scrollStackView.stackView.addBlankSpace(space: 132.0)
         // Image
         scrollStackView.stackView.addHeaderImage(image: self.pageData.page.image, height: 54.0)

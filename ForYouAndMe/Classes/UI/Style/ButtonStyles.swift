@@ -31,4 +31,13 @@ public class ButtonStyles {
         button.titleLabel?.font = FontPalette.fontStyleData(forStyle: .header2).font
         button.addShadowButton()
     }
+    
+    static let loadingErrorStyle = Style<UIButton> { button in
+        button.autoSetDimension(.height, toSize: defaultHeight)
+        button.layer.cornerRadius = defaultCornerRadius
+        button.backgroundColor = ColorPalette.loadingErrorPrimaryColor
+        button.setTitleColor(ColorPalette.loadingErrorSecondaryColor, for: .normal)
+        button.titleLabel?.font = FontPalette.fontStyleData(forStyle: .header2).font
+        button.addShadowButton()
+    }
 }

@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import RxSwift
 
 extension UIViewController {
     func addCustomBackButton() {
@@ -32,5 +33,23 @@ extension UIViewController {
     
     @objc private func onboardingAbortPressed() {
         Services.shared.navigator.abortOnboarding(presenter: self)
+    }
+    
+    func loadView<T>(requestSingle: Single<T>, viewForData: @escaping ((T) -> UIViewController)) {
+        guard let navigationController = self.navigationController else {
+            assertionFailure("Missing UINavigationController")
+            return
+        }
+        let loadingInfo = LoadingInfo(requestSingle: requestSingle,
+                                      completionCallback: { loadedData in
+                                        let viewController = viewForData(loadedData)
+                                        navigationController.pushViewController(viewController,
+                                                                                animated: false,
+                                                                                completion: {
+                                                                                    navigationController.clearLoadingViewController()
+                                        })
+        })
+        let loadingViewController = LoadingViewController(loadingMode: .genericLoad(loadingInfo: loadingInfo))
+        navigationController.pushViewController(loadingViewController, animated: true)
     }
 }
