@@ -101,7 +101,7 @@ extension RepositoryImpl: Repository {
     // MARK: - Screening
     
     func getScreeningSection() -> Single<ScreeningSection> {
-        return self.api.send(request: ApiRequest(serviceRequest: .getScreeningQuestions))
+        return self.api.send(request: ApiRequest(serviceRequest: .getScreeningSection))
             .handleError()
     }
 }

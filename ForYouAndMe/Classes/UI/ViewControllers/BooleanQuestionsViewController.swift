@@ -1,5 +1,5 @@
 //
-//  ScreeningQuestionsViewController.swift
+//  BooleanQuestionsViewController.swift
 //  ForYouAndMe
 //
 //  Created by Leonardo Passeri on 22/05/2020.
@@ -15,7 +15,7 @@ protocol BooleanQuestionsCoordinator {
     func onBooleanQuestionsFailure()
 }
 
-public class ScreeningQuestionsViewController: UIViewController {
+public class BooleanQuestionsViewController: UIViewController {
     
     private let navigator: AppNavigator
     private let repository: Repository
@@ -25,7 +25,7 @@ public class ScreeningQuestionsViewController: UIViewController {
     lazy private var tableView: UITableView = {
         let tableView = UITableView()
         tableView.dataSource = self
-        tableView.registerCellsWithClass(QuestionBinaryTableViewCell.self)
+        tableView.registerCellsWithClass(QuestionBooleanTableViewCell.self)
         tableView.tableFooterView = UIView()
         tableView.contentInsetAdjustmentBehavior = .never
         tableView.estimatedRowHeight = 130.0
@@ -38,7 +38,7 @@ public class ScreeningQuestionsViewController: UIViewController {
         return view
     }()
     
-    private var items: [QuestionBinaryDisplayData] = []
+    private var items: [QuestionBooleanDisplayData] = []
     
     private let disposeBag = DisposeBag()
     
@@ -67,7 +67,7 @@ public class ScreeningQuestionsViewController: UIViewController {
         stackView.addArrangedSubview(self.tableView)
         stackView.addArrangedSubview(self.confirmButtonView)
         
-        self.items = self.questions.compactMap { $0.questionBinaryData }
+        self.items = self.questions.compactMap { $0.questionBooleanData }
         
         self.tableView.reloadData()
         self.updateConfirmButton()
@@ -121,13 +121,13 @@ public class ScreeningQuestionsViewController: UIViewController {
     }
 }
 
-extension ScreeningQuestionsViewController: UITableViewDataSource {
+extension BooleanQuestionsViewController: UITableViewDataSource {
     public func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return self.items.count
     }
     
     public func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        guard let cell = tableView.dequeueReusableCellOfType(type: QuestionBinaryTableViewCell.self, forIndexPath: indexPath) else {
+        guard let cell = tableView.dequeueReusableCellOfType(type: QuestionBooleanTableViewCell.self, forIndexPath: indexPath) else {
             assertionFailure("Missing expected cell")
             return UITableViewCell()
         }
@@ -146,13 +146,13 @@ extension ScreeningQuestionsViewController: UITableViewDataSource {
 }
 
 fileprivate extension Question {
-    var questionBinaryData: QuestionBinaryDisplayData? {
+    var questionBooleanData: QuestionBooleanDisplayData? {
         guard self.possibleAnswers.count >= 2 else {
             return nil
         }
         let answerA = self.possibleAnswers[0]
         let answerB = self.possibleAnswers[1]
-        return QuestionBinaryDisplayData(identifier: self.id,
+        return QuestionBooleanDisplayData(identifier: self.id,
                                          question: self.text,
                                          answerA: answerA.text,
                                          answerB: answerB.text,

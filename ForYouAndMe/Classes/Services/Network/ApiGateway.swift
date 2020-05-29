@@ -17,8 +17,8 @@ enum DefaultService {
     // Login
     case submitPhoneNumber(phoneNumber: String)
     case verifyPhoneNumber(phoneNumber: String, secureCode: String)
-    // Screening
-    case getScreeningQuestions
+    // Screening Section
+    case getScreeningSection
 }
 
 struct ApiRequest {

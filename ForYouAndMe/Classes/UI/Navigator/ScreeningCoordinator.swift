@@ -35,7 +35,7 @@ class ScreeningCoordinator {
     // MARK: - Private Methods
     
     private func showQuestions() {
-        let viewController = ScreeningQuestionsViewController(withQuestions: self.sectionData.questions, coordinator: self)
+        let viewController = BooleanQuestionsViewController(withQuestions: self.sectionData.questions, coordinator: self)
         self.navigationController.pushViewController(viewController, animated: true)
     }
     
@@ -57,13 +57,13 @@ class ScreeningCoordinator {
         self.navigationController.pushViewController(viewController, animated: true)
     }
     
-    private func popBackToScreeningQuestions() {
-        guard let screeningQuestionsViewController = self.navigationController.viewControllers
-            .first(where: {$0 is ScreeningQuestionsViewController }) else {
-                assertionFailure("Missing Boolean questions in navigation stack")
+    private func popBackToQuestions() {
+        guard let questionsViewController = self.navigationController.viewControllers
+            .first(where: {$0 is BooleanQuestionsViewController }) else {
+                assertionFailure("Missing view controller in navigation stack")
             return
         }
-        self.navigationController.popToViewController(screeningQuestionsViewController, animated: true)
+        self.navigationController.popToViewController(questionsViewController, animated: true)
     }
 }
 
@@ -75,7 +75,7 @@ extension ScreeningCoordinator: InfoPageCoordinator {
         case self.sectionData.successPage.id:
             self.completionCallback(self.navigationController)
         case self.sectionData.failurePage.id:
-            self.popBackToScreeningQuestions()
+            self.popBackToQuestions()
         default:
             assertionFailure("Unexptected page")
         }

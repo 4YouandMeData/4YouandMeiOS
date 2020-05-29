@@ -1,5 +1,5 @@
 //
-//  QuestionBinaryTableViewCell.swift
+//  QuestionBooleanTableViewCell.swift
 //  ForYouAndMe
 //
 //  Created by Leonardo Passeri on 22/05/2020.
@@ -8,7 +8,7 @@
 
 import UIKit
 
-struct QuestionBinaryDisplayData {
+struct QuestionBooleanDisplayData {
     let identifier: String
     let question: String
     let answerA: String
@@ -17,9 +17,9 @@ struct QuestionBinaryDisplayData {
     var answerAisActive: Bool?
 }
 
-class QuestionBinaryTableViewCell: UITableViewCell {
+class QuestionBooleanTableViewCell: UITableViewCell {
     
-    typealias QuestionBinaryAnswerCallback = ((Bool) -> Void)
+    typealias QuestionBooleanAnswerCallback = ((Bool) -> Void)
     
     fileprivate static let optionWidth: CGFloat = 50.0
     
@@ -44,7 +44,7 @@ class QuestionBinaryTableViewCell: UITableViewCell {
     }()
     
     private var questionIdentifier: String = ""
-    private var answerPressedCallback: QuestionBinaryAnswerCallback?
+    private var answerPressedCallback: QuestionBooleanAnswerCallback?
     
     private let answerALabel: UILabel = UILabel()
     private let answerBLabel: UILabel = UILabel()
@@ -84,7 +84,7 @@ class QuestionBinaryTableViewCell: UITableViewCell {
     
     // MARK: - Public Methods
     
-    public func display(data: QuestionBinaryDisplayData, answerPressedCallback: @escaping QuestionBinaryAnswerCallback) {
+    public func display(data: QuestionBooleanDisplayData, answerPressedCallback: @escaping QuestionBooleanAnswerCallback) {
         self.questionIdentifier = data.identifier
         self.answerPressedCallback = answerPressedCallback
         self.questionLabel.attributedText = NSAttributedString.create(withText: data.question,
@@ -124,7 +124,7 @@ class QuestionBinaryTableViewCell: UITableViewCell {
 fileprivate extension UIStackView {
     func addOption(button: UIButton, label: UILabel) {
         let containerView = UIView()
-        containerView.autoSetDimension(.width, toSize: QuestionBinaryTableViewCell.optionWidth)
+        containerView.autoSetDimension(.width, toSize: QuestionBooleanTableViewCell.optionWidth)
         
         let verticalStackView = UIStackView()
         verticalStackView.axis = .vertical
@@ -137,8 +137,8 @@ fileprivate extension UIStackView {
         verticalStackView.autoPinEdge(toSuperviewEdge: .bottom, withInset: 0, relation: .greaterThanOrEqual)
         
         let buttonContainerButton = UIView()
-        buttonContainerButton.autoSetDimensions(to: CGSize(width: QuestionBinaryTableViewCell.optionWidth,
-                                                           height: QuestionBinaryTableViewCell.optionWidth))
+        buttonContainerButton.autoSetDimensions(to: CGSize(width: QuestionBooleanTableViewCell.optionWidth,
+                                                           height: QuestionBooleanTableViewCell.optionWidth))
         buttonContainerButton.addSubview(button)
         button.autoCenterInSuperview()
         

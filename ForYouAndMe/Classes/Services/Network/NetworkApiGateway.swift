@@ -254,8 +254,8 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             return "/v1/studies/\(studyId)/auth/verify_phone_number"
         case .verifyPhoneNumber:
             return "/v1/studies/\(studyId)/auth/login"
-        // Screening
-        case .getScreeningQuestions:
+        // Screening Section
+        case .getScreeningSection:
             return "/v1/studies/\(studyId)/screening"
         }
     }
@@ -265,7 +265,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
     
     var method: Moya.Method {
         switch self {
-        case .getGlobalConfig, .getScreeningQuestions:
+        case .getGlobalConfig, .getScreeningSection:
             return .get
         case .submitPhoneNumber, .verifyPhoneNumber:
             return .post
@@ -278,13 +278,13 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         case .getGlobalConfig: return Bundle.getTestData(from: "TestGetGlobalConfig")
         case .submitPhoneNumber: return "{}".utf8Encoded
         case .verifyPhoneNumber: return "{}".utf8Encoded
-        case .getScreeningQuestions: return Bundle.getTestData(from: "TestGetScreeningSection")
+        case .getScreeningSection: return Bundle.getTestData(from: "TestGetScreeningSection")
         }
     }
     
     var task: Task {
         switch self {
-        case .getGlobalConfig, .getScreeningQuestions:
+        case .getGlobalConfig, .getScreeningSection:
             return .requestPlain
         case .submitPhoneNumber(let phoneNumber):
             var params: [String: Any] = [:]
@@ -306,7 +306,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         switch self {
         case .getGlobalConfig, .submitPhoneNumber, .verifyPhoneNumber:
             return .none
-        case .getScreeningQuestions:
+        case .getScreeningSection:
             return .bearer
         }
     }

@@ -13,7 +13,7 @@ protocol InfoPageCoordinator {
 }
 
 struct InfoPageData {
-    let page: Page
+    let page: InfoPage
     let addAbortOnboardingButton: Bool
     let confirmButtonText: String?
     let usePageNavigation: Bool

@@ -12,9 +12,9 @@ struct ScreeningSection {
     let type: String
 
     let questions: [Question]
-    let welcomePage: Page
-    let successPage: Page
-    let failurePage: Page
+    let welcomePage: InfoPage
+    let successPage: InfoPage
+    let failurePage: InfoPage
 }
 
 extension ScreeningSection: JSONAPIMappable {

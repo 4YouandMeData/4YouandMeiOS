@@ -42,14 +42,14 @@ class AppNavigator {
             // Convenient entry point to test each app module atomically,
             // without going through all the official flow
             #if DEBUG
-            if let testNavigationStep = Constants.Test.NavigationStep {
+            if let testSection = Constants.Test.Section {
                 let testStartingViewController = UIViewController()
                 let navigationViewController = UINavigationController(rootViewController: testStartingViewController)
                 navigationViewController.preventPopWithSwipe()
                 self.window.rootViewController = navigationViewController
                 
-                switch testNavigationStep {
-                case .screeningQuestions: self.startScreeningQuestionFlow(presenter: testStartingViewController)
+                switch testSection {
+                case .screeningSection: self.startScreeningSection(presenter: testStartingViewController)
                 }
                 return
             }
@@ -155,26 +155,21 @@ class AppNavigator {
     // MARK: Intro Video
     
     public func showIntroVideo(presenter: UIViewController) {
-//        guard let navigationController = presenter.navigationController else {
-//            assertionFailure("Missing UINavigationController")
-//            return
-//        }
         // TODO: Show intro video
         print("TODO: Show intro video")
-        
-        self.startScreeningQuestionFlow(presenter: presenter)
+        self.startScreeningSection(presenter: presenter)
     }
     
     // MARK: Screening Questions
     
-    public func startScreeningQuestionFlow(presenter: UIViewController) {
+    public func startScreeningSection(presenter: UIViewController) {
         guard let navigationController = presenter.navigationController else {
             assertionFailure("Missing UINavigationController")
             return
         }
         presenter.loadView(requestSingle: self.repository.getScreeningSection()) { section -> UIViewController in
             let completionCallback: NavigationControllerCallback = { [weak self] navigationController in
-                self?.startInformedConsentFlow(navigationController: navigationController)
+                self?.startInformedConsentSection(navigationController: navigationController)
             }
             let screeningCoordinator = ScreeningCoordinator(withSectionData: section,
                                                             navigationController: navigationController,
@@ -185,9 +180,9 @@ class AppNavigator {
     
     // MARK: Informed Consent
     
-    public func startInformedConsentFlow(navigationController: UINavigationController) {
+    public func startInformedConsentSection(navigationController: UINavigationController) {
         // TODO: Start Informed Consent
-        navigationController.showAlert(withTitle: "Work in progress", message: "Informed consent coming soon", completion: {})
+        navigationController.showAlert(withTitle: "Work in progress", message: "Informed consent coming soon")
     }
     
     // MARK: Progress HUD
@@ -262,6 +257,13 @@ fileprivate extension UIViewController {
     func showGenericErrorAlert() {
         self.showAlert(withTitle: StringsProvider.string(forKey: .errorTitleDefault),
                        message: StringsProvider.string(forKey: .errorMessageDefault),
+                       tintColor: ColorPalette.color(withType: .primary),
+                       completion: {})
+    }
+    
+    func showAlert(withTitle title: String, message: String) {
+        self.showAlert(withTitle: title,
+                       message: message,
                        tintColor: ColorPalette.color(withType: .primary),
                        completion: {})
     }

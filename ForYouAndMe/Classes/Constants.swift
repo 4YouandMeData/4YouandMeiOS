@@ -8,18 +8,18 @@
 
 import Foundation
 
-enum TestNavigationStep {
-    case screeningQuestions
+enum TestSection {
+    case screeningSection
 }
 
 struct Constants {
     struct Test {
-        static let NetworkStubsEnabled = true
-        static let NetworkStubsDelay = 1.3
-        static let NetworkLogVerbose = false
+        static let NetworkStubsEnabled = false
+        static let NetworkStubsDelay = 0.3
+        static let NetworkLogVerbose = true
         
         static let NoCacheGlobalConfig = true
-        static let NavigationStep: TestNavigationStep? = nil//.screeningQuestions
+        static let Section: TestSection? = nil//.screeningSection
     }
     struct Network {
         static let ApiBaseUrlStr = "https://api-4youandme-staging.balzo.eu/api"

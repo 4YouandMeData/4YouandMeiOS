@@ -1,5 +1,5 @@
 //
-//  Page.swift
+//  InfoPage.swift
 //  ForYouAndMe
 //
 //  Created by Leonardo Passeri on 28/05/2020.
@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct Page {
+struct InfoPage {
     let id: String
     let type: String
 
@@ -19,7 +19,7 @@ struct Page {
     let imageData: Data
 }
 
-extension Page: JSONAPIMappable {
+extension InfoPage: JSONAPIMappable {
     enum CodingKeys: String, CodingKey {
         case id
         case type
@@ -31,6 +31,6 @@ extension Page: JSONAPIMappable {
     }
 }
 
-extension Page {
+extension InfoPage {
     var image: UIImage? { return UIImage(data: self.imageData) }
 }
