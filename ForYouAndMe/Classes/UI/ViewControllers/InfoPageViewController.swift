@@ -8,24 +8,20 @@
 import Foundation
 import PureLayout
 
+struct InfoPageData {
+    let page: Page
+    let addAbortOnboardingButton: Bool
+    let confirmButtonText: String?
+    let customConfirmButtonCallback: ViewControllerCallback?
+}
+
 public class InfoPageViewController: UIViewController {
     
     private let navigator: AppNavigator
-    private let page: Page
-    private let addAbortOnboardingButton: Bool
+    private let pageData: InfoPageData
     
-    var confirmButtonCallback: ViewControllerCallback?
-    
-    private lazy var confirmButtonView: GenericButtonView = {
-        let view = GenericButtonView(withImageStyleCategory: .secondaryBackground)
-        view.button.addTarget(self, action: #selector(self.confirmButtonPressed), for: .touchUpInside)
-        return view
-    }()
-    
-    init(withPage page: Page, addAbortOnboardingButton: Bool = false, confirmButtonCallback: ViewControllerCallback? = nil) {
-        self.page = page
-        self.addAbortOnboardingButton = addAbortOnboardingButton
-        self.confirmButtonCallback = confirmButtonCallback
+    init(withPageData pageData: InfoPageData) {
+        self.pageData = pageData
         self.navigator = Services.shared.navigator
         super.init(nibName: nil, bundle: nil)
     }
@@ -39,25 +35,40 @@ public class InfoPageViewController: UIViewController {
         
         self.view.backgroundColor = ColorPalette.color(withType: .secondary)
         
-        // ScrollView
+        // ScrollStackView
         let scrollStackView = ScrollStackView(axis: .vertical, horizontalInset: Constants.Style.DefaultHorizontalMargins)
         self.view.addSubview(scrollStackView)
         scrollStackView.autoPinEdgesToSuperviewSafeArea(with: .zero, excludingEdge: .bottom)
+        
+        
         scrollStackView.stackView.addBlankSpace(space: 132.0)
-        scrollStackView.stackView.addHeaderImage(image: self.page.image, height: 54.0)
+        // Image
+        scrollStackView.stackView.addHeaderImage(image: self.pageData.page.image, height: 54.0)
         scrollStackView.stackView.addBlankSpace(space: 40.0)
-        scrollStackView.stackView.addLabel(withText: self.page.title,
+        // Title
+        scrollStackView.stackView.addLabel(withText: self.pageData.page.title,
                                            fontStyle: .title,
                                            colorType: .primaryText)
         scrollStackView.stackView.addBlankSpace(space: 40.0)
-        scrollStackView.stackView.addLabel(withText: self.page.body,
+        // Body
+        scrollStackView.stackView.addLabel(withText: self.pageData.page.body,
                                            fontStyle: .paragraph,
                                            colorType: .primaryText,
                                            textAlignment: .left)
-        self.view.addSubview(self.confirmButtonView)
-        self.confirmButtonView.autoPinEdgesToSuperviewSafeArea(with: UIEdgeInsets.zero, excludingEdge: .top)
-        
-        scrollStackView.scrollView.autoPinEdge(.bottom, to: .top, of: self.confirmButtonView)
+        // Confirm Button
+        let confirmButtonView: GenericButtonView = {
+            if let confirmButtonText = self.pageData.confirmButtonText {
+                let view = GenericButtonView(withTextStyleCategory: .secondaryBackground)
+                view.button.setTitle(confirmButtonText, for: .normal)
+                return view
+            } else {
+                return GenericButtonView(withImageStyleCategory: .secondaryBackground)
+            }
+        }()
+        confirmButtonView.button.addTarget(self, action: #selector(self.confirmButtonPressed), for: .touchUpInside)
+        self.view.addSubview(confirmButtonView)
+        confirmButtonView.autoPinEdgesToSuperviewSafeArea(with: UIEdgeInsets.zero, excludingEdge: .top)
+        scrollStackView.scrollView.autoPinEdge(.bottom, to: .top, of: confirmButtonView)
     }
     
     public override func viewWillAppear(_ animated: Bool) {
@@ -65,7 +76,7 @@ public class InfoPageViewController: UIViewController {
         
         self.navigationController?.navigationBar.apply(style: NavigationBarStyles.secondaryStyle)
         self.addCustomBackButton()
-        if self.addAbortOnboardingButton {
+        if self.pageData.addAbortOnboardingButton {
             self.addOnboardingAbortButton(withColor: ColorPalette.color(withType: .primary))
         }
     }
@@ -73,10 +84,11 @@ public class InfoPageViewController: UIViewController {
     // MARK: Actions
     
     @objc private func confirmButtonPressed() {
-        if let confirmButtonCallback = self.confirmButtonCallback {
-            confirmButtonCallback(self)
+        if let customConfirmButtonCallback = self.pageData.customConfirmButtonCallback {
+            customConfirmButtonCallback(self)
         } else {
             // TODO: Navigate according to Page navigation data
+            assertionFailure("Missing link to next page in Page data")
         }
     }
 }
