@@ -17,6 +17,8 @@ struct InfoPageData {
     let addAbortOnboardingButton: Bool
     let confirmButtonText: String?
     let usePageNavigation: Bool
+    // TODO: Replace if with info from InfoPage
+    let bodyTextAlignment: NSTextAlignment
 }
 
 public class InfoPageViewController: UIViewController {
@@ -59,7 +61,7 @@ public class InfoPageViewController: UIViewController {
         scrollStackView.stackView.addLabel(withText: self.pageData.page.body,
                                            fontStyle: .paragraph,
                                            colorType: .primaryText,
-                                           textAlignment: .left)
+                                           textAlignment: self.pageData.bodyTextAlignment)
         // Confirm Button
         let confirmButtonView: GenericButtonView = {
             if let confirmButtonText = self.pageData.confirmButtonText {

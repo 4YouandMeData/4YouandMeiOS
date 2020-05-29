@@ -28,7 +28,8 @@ class ScreeningCoordinator {
         let infoPageData = InfoPageData(page: self.sectionData.welcomePage,
                                         addAbortOnboardingButton: false,
                                         confirmButtonText: nil,
-                                        usePageNavigation: false)
+                                        usePageNavigation: false,
+                                        bodyTextAlignment: .left)
         return InfoPageViewController(withPageData: infoPageData, coordinator: self)
     }
     
@@ -43,7 +44,8 @@ class ScreeningCoordinator {
         let infoPageData = InfoPageData(page: self.sectionData.successPage,
                                         addAbortOnboardingButton: false,
                                         confirmButtonText: nil,
-                                        usePageNavigation: false)
+                                        usePageNavigation: false,
+                                        bodyTextAlignment: .center)
         let viewController = InfoPageViewController(withPageData: infoPageData, coordinator: self)
         self.navigationController.pushViewController(viewController, animated: true)
     }
@@ -52,7 +54,8 @@ class ScreeningCoordinator {
         let infoPageData = InfoPageData(page: self.sectionData.failurePage,
                                         addAbortOnboardingButton: false,
                                         confirmButtonText: StringsProvider.string(forKey: .screeningFailureRetryButton),
-                                        usePageNavigation: false)
+                                        usePageNavigation: false,
+                                        bodyTextAlignment: .center)
         let viewController = InfoPageViewController(withPageData: infoPageData, coordinator: self)
         self.navigationController.pushViewController(viewController, animated: true)
     }
