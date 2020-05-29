@@ -9,11 +9,16 @@ import Foundation
 
 class ScreeningCoordinator {
     
-    private let sectionData: ScreeningSection
-    private let completionCallback: ViewControllerCallback
+    public unowned var navigationController: UINavigationController
     
-    init(withSectionData sectionData: ScreeningSection, completionCallback: @escaping ViewControllerCallback) {
+    private let sectionData: ScreeningSection
+    private let completionCallback: NavigationControllerCallback
+    
+    init(withSectionData sectionData: ScreeningSection,
+         navigationController: UINavigationController,
+         completionCallback: @escaping NavigationControllerCallback) {
         self.sectionData = sectionData
+        self.navigationController = navigationController
         self.completionCallback = completionCallback
     }
     
@@ -23,54 +28,66 @@ class ScreeningCoordinator {
         let infoPageData = InfoPageData(page: self.sectionData.welcomePage,
                                         addAbortOnboardingButton: false,
                                         confirmButtonText: nil,
-                                        customConfirmButtonCallback: { [weak self] presenter in
-                                            self?.showQuestions(presenter: presenter)
-        })
-        return InfoPageViewController(withPageData: infoPageData)
+                                        usePageNavigation: false)
+        return InfoPageViewController(withPageData: infoPageData, coordinator: self)
     }
     
     // MARK: - Private Methods
     
-    private func showQuestions(presenter: UIViewController) {
-        guard let navigationController = presenter.navigationController else {
-            assertionFailure("Missing UINavigationController")
-            return
-        }
-        let viewController = ScreeningQuestionsViewController(withQuestions: self.sectionData.questions,
-                                                              successCallback: { [weak self] presenter  in
-                                                                self?.showSuccess(presenter: presenter)
-            },
-                                                              failureCallback: { [weak self] presenter  in
-                                                                self?.showFailure(presenter: presenter)
-        })
-        navigationController.pushViewController(viewController, animated: true)
+    private func showQuestions() {
+        let viewController = ScreeningQuestionsViewController(withQuestions: self.sectionData.questions, coordinator: self)
+        self.navigationController.pushViewController(viewController, animated: true)
     }
     
-    private func showSuccess(presenter: UIViewController) {
-        guard let navigationController = presenter.navigationController else {
-            assertionFailure("Missing UINavigationController")
-            return
-        }
+    private func showSuccess() {
         let infoPageData = InfoPageData(page: self.sectionData.successPage,
                                         addAbortOnboardingButton: false,
                                         confirmButtonText: nil,
-                                        customConfirmButtonCallback: { [weak self] presenter in
-                                            self?.completionCallback(presenter)
-        })
-        navigationController.pushViewController(InfoPageViewController(withPageData: infoPageData), animated: true)
+                                        usePageNavigation: false)
+        let viewController = InfoPageViewController(withPageData: infoPageData, coordinator: self)
+        self.navigationController.pushViewController(viewController, animated: true)
     }
     
-    private func showFailure(presenter: UIViewController) {
-        guard let navigationController = presenter.navigationController else {
-            assertionFailure("Missing UINavigationController")
-            return
-        }
+    private func showFailure() {
         let infoPageData = InfoPageData(page: self.sectionData.failurePage,
                                         addAbortOnboardingButton: false,
                                         confirmButtonText: StringsProvider.string(forKey: .screeningFailureRetryButton),
-                                        customConfirmButtonCallback: { _ in
-                                            navigationController.popViewController(animated: true)
-        })
-        navigationController.pushViewController(InfoPageViewController(withPageData: infoPageData), animated: true)
+                                        usePageNavigation: false)
+        let viewController = InfoPageViewController(withPageData: infoPageData, coordinator: self)
+        self.navigationController.pushViewController(viewController, animated: true)
+    }
+    
+    private func popBackToScreeningQuestions() {
+        guard let screeningQuestionsViewController = self.navigationController.viewControllers
+            .first(where: {$0 is ScreeningQuestionsViewController }) else {
+                assertionFailure("Missing Boolean questions in navigation stack")
+            return
+        }
+        self.navigationController.popToViewController(screeningQuestionsViewController, animated: true)
+    }
+}
+
+extension ScreeningCoordinator: InfoPageCoordinator {
+    func onInfoPageConfirm(pageData: InfoPageData) {
+        switch pageData.page.id {
+        case self.sectionData.welcomePage.id:
+            self.showQuestions()
+        case self.sectionData.successPage.id:
+            self.completionCallback(self.navigationController)
+        case self.sectionData.failurePage.id:
+            self.popBackToScreeningQuestions()
+        default:
+            assertionFailure("Unexptected page")
+        }
+    }
+}
+
+extension ScreeningCoordinator: BooleanQuestionsCoordinator {
+    func onBooleanQuestionsSuccess() {
+        self.showSuccess()
+    }
+    
+    func onBooleanQuestionsFailure() {
+        self.showFailure()
     }
 }

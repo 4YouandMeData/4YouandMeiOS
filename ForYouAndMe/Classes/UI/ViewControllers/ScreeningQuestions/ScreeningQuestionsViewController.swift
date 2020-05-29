@@ -10,13 +10,17 @@ import Foundation
 import PureLayout
 import RxSwift
 
+protocol BooleanQuestionsCoordinator {
+    func onBooleanQuestionsSuccess()
+    func onBooleanQuestionsFailure()
+}
+
 public class ScreeningQuestionsViewController: UIViewController {
     
     private let navigator: AppNavigator
     private let repository: Repository
     private let questions: [Question]
-    private let successCallback: ViewControllerCallback
-    private let failureCallback: ViewControllerCallback
+    private let coordinator: BooleanQuestionsCoordinator
     
     lazy private var tableView: UITableView = {
         let tableView = UITableView()
@@ -38,12 +42,9 @@ public class ScreeningQuestionsViewController: UIViewController {
     
     private let disposeBag = DisposeBag()
     
-    init(withQuestions questions: [Question],
-         successCallback: @escaping ViewControllerCallback,
-         failureCallback: @escaping ViewControllerCallback) {
+    init(withQuestions questions: [Question], coordinator: BooleanQuestionsCoordinator) {
         self.questions = questions
-        self.successCallback = successCallback
-        self.failureCallback = failureCallback
+        self.coordinator = coordinator
         self.navigator = Services.shared.navigator
         self.repository = Services.shared.repository
         super.init(nibName: nil, bundle: nil)
@@ -84,9 +85,9 @@ public class ScreeningQuestionsViewController: UIViewController {
     
     @objc private func confirmButtonPressed() {
         if self.validateAnswers() {
-            self.successCallback(self)
+            self.coordinator.onBooleanQuestionsSuccess()
         } else {
-            self.failureCallback(self)
+            self.coordinator.onBooleanQuestionsFailure()
         }
     }
     

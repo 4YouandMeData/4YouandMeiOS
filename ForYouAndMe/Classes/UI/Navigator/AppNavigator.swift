@@ -16,9 +16,6 @@ class AppNavigator {
     private let repository: Repository
     private let window: UIWindow
     
-    // TODO: Remove it from here!!! Figure out a decent ownership/life-cycle for this poor instance
-    private var screeningCoordinator: ScreeningCoordinator?
-    
     init(withRepository repository: Repository, window: UIWindow) {
         self.repository = repository
         self.window = window
@@ -171,20 +168,26 @@ class AppNavigator {
     // MARK: Screening Questions
     
     public func startScreeningQuestionFlow(presenter: UIViewController) {
+        guard let navigationController = presenter.navigationController else {
+            assertionFailure("Missing UINavigationController")
+            return
+        }
         presenter.loadView(requestSingle: self.repository.getScreeningSection()) { section -> UIViewController in
+            let completionCallback: NavigationControllerCallback = { [weak self] navigationController in
+                self?.startInformedConsentFlow(navigationController: navigationController)
+            }
             let screeningCoordinator = ScreeningCoordinator(withSectionData: section,
-                                                            completionCallback: { [weak self] presenter in
-                                                                self?.startInformedConsentFlow(presenter: presenter) })
-            self.screeningCoordinator = screeningCoordinator
+                                                            navigationController: navigationController,
+                                                            completionCallback: completionCallback)
             return screeningCoordinator.getStartingPage()
         }
     }
     
     // MARK: Informed Consent
     
-    public func startInformedConsentFlow(presenter: UIViewController) {
+    public func startInformedConsentFlow(navigationController: UINavigationController) {
         // TODO: Start Informed Consent
-        presenter.showAlert(withTitle: "Work in progress", message: "Informed consent coming soon", completion: {})
+        navigationController.showAlert(withTitle: "Work in progress", message: "Informed consent coming soon", completion: {})
     }
     
     // MARK: Progress HUD

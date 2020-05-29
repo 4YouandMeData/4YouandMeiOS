@@ -85,6 +85,7 @@ class LoadingViewController<T>: UIViewController, LoadingPage {
         
         if let navigationController = navigationController {
             navigationController.navigationBar.apply(style: NavigationBarStyles.secondaryStyle)
+            self.navigationItem.hidesBackButton = true
         }
     }
     

@@ -8,20 +8,26 @@
 import Foundation
 import PureLayout
 
+protocol InfoPageCoordinator {
+    func onInfoPageConfirm(pageData: InfoPageData)
+}
+
 struct InfoPageData {
     let page: Page
     let addAbortOnboardingButton: Bool
     let confirmButtonText: String?
-    let customConfirmButtonCallback: ViewControllerCallback?
+    let usePageNavigation: Bool
 }
 
 public class InfoPageViewController: UIViewController {
     
     private let navigator: AppNavigator
     private let pageData: InfoPageData
+    private let coordinator: InfoPageCoordinator
     
-    init(withPageData pageData: InfoPageData) {
+    init(withPageData pageData: InfoPageData, coordinator: InfoPageCoordinator) {
         self.pageData = pageData
+        self.coordinator = coordinator
         self.navigator = Services.shared.navigator
         super.init(nibName: nil, bundle: nil)
     }
@@ -83,11 +89,11 @@ public class InfoPageViewController: UIViewController {
     // MARK: Actions
     
     @objc private func confirmButtonPressed() {
-        if let customConfirmButtonCallback = self.pageData.customConfirmButtonCallback {
-            customConfirmButtonCallback(self)
-        } else {
+        if self.pageData.usePageNavigation {
             // TODO: Navigate according to Page navigation data
             assertionFailure("Missing link to next page in Page data")
+        } else {
+            self.coordinator.onInfoPageConfirm(pageData: self.pageData)
         }
     }
 }

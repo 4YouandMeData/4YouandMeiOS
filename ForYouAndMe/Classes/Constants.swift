@@ -14,12 +14,12 @@ enum TestNavigationStep {
 
 struct Constants {
     struct Test {
-        static let NetworkStubsEnabled = false
-        static let NetworkStubsDelay = 0.3
-        static let NetworkLogVerbose = true
+        static let NetworkStubsEnabled = true
+        static let NetworkStubsDelay = 1.3
+        static let NetworkLogVerbose = false
         
         static let NoCacheGlobalConfig = true
-        static let NavigationStep: TestNavigationStep? = .screeningQuestions
+        static let NavigationStep: TestNavigationStep? = nil//.screeningQuestions
     }
     struct Network {
         static let ApiBaseUrlStr = "https://api-4youandme-staging.balzo.eu/api"

@@ -10,4 +10,5 @@ import Foundation
 
 typealias NotificationCallback = () -> Void
 typealias ViewControllerCallback = (UIViewController) -> Void
+typealias NavigationControllerCallback = (UINavigationController) -> Void
 typealias ViewCallback = (UIView) -> Void
