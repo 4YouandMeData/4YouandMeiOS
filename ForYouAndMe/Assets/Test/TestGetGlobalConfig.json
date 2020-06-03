@@ -52,5 +52,6 @@
       "PHONE_VERIFICATION_ERROR_MISSING_NUMBER": "This number was not recruited for the study. Try with an other number.",
       "PHONE_VERIFICATION_LEGAL_PRIVACY_POLICY": "Privacy Policy",
       "PHONE_VERIFICATION_LEGAL_TERMS_OF_SERVICE": "Terms of service"
-    }
+    },
+    "country_codes": ["US", "GB", "IT"]
 }
