@@ -72,3 +72,16 @@ steps:
     Contents: '**/*.ipa'
     TargetFolder: '$(build.artifactStagingDirectory)'
 - task: PublishBuildArtifacts@1
+- task: AppStoreRelease@1
+  displayName: 'Publish to the App Store TestFlight track'
+  inputs:
+    serviceEndpoint: 'Apple AppStore'
+    appIdentifier: 'eu.balzo.ForYouAndMeExample'
+    appType: 'iOS'
+    ipaPath: '$(build.artifactstagingdirectory)/**/*.ipa'
+    releaseTrack: 'TestFlight'
+    shouldSkipWaitingForProcessing: true
+    shouldSkipSubmission: true
+    teamId: 'G6RAKRKZPR'
+    teamName: 'Balzo srl'
+    fastlaneArguments: 'increment_build_number'
