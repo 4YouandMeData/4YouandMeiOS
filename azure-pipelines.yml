@@ -30,7 +30,7 @@ steps:
   inputs:
     sourcePath: '$(Build.SourcesDirectory)/Example/ForYouAndMe/Info.plist'
     versionCodeOption: 'buildid'
-    versionCode: '$(Build.BuildId)'
+    versionCode: '$(Build.BuildNumber)'
     versionCodeOffset: '1'
     versionName: 
     printFile: true
