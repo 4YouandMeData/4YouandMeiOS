@@ -13,10 +13,15 @@ struct InfoPage {
 
     let title: String
     let body: String
-    let externalLinkLabel: String?
+    @NilIfEmptyString
+    var externalLinkLabel: String?
     @FailableDecodable
     var externalLinkUrl: URL?
     let imageData: Data
+    @NilIfEmptyString
+    var buttonFirstlabel: String?
+    @NilIfEmptyString
+    var buttonSecondlabel: String?
 }
 
 extension InfoPage: JSONAPIMappable {
@@ -27,6 +32,8 @@ extension InfoPage: JSONAPIMappable {
         case body
         case externalLinkLabel = "external_link_label"
         case externalLinkUrl = "external_link_url"
+        case buttonFirstlabel = "link_1_label"
+        case buttonSecondlabel = "link_2_label"
         case imageData = "image"
     }
 }

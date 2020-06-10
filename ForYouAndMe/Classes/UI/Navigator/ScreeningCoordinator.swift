@@ -27,7 +27,6 @@ class ScreeningCoordinator {
     public func getStartingPage() -> UIViewController {
         let infoPageData = InfoPageData(page: self.sectionData.welcomePage,
                                         addAbortOnboardingButton: false,
-                                        confirmButtonText: nil,
                                         usePageNavigation: false,
                                         allowBackwardNavigation: true,
                                         bodyTextAlignment: .left)
@@ -44,7 +43,6 @@ class ScreeningCoordinator {
     private func showSuccess() {
         let infoPageData = InfoPageData(page: self.sectionData.successPage,
                                         addAbortOnboardingButton: false,
-                                        confirmButtonText: nil,
                                         usePageNavigation: false,
                                         allowBackwardNavigation: false,
                                         bodyTextAlignment: .center)
@@ -55,7 +53,6 @@ class ScreeningCoordinator {
     private func showFailure() {
         let infoPageData = InfoPageData(page: self.sectionData.failurePage,
                                         addAbortOnboardingButton: false,
-                                        confirmButtonText: StringsProvider.string(forKey: .screeningFailureRetryButton),
                                         usePageNavigation: false,
                                         allowBackwardNavigation: false,
                                         bodyTextAlignment: .center)

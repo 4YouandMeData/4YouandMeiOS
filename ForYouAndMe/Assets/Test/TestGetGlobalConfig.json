@@ -43,7 +43,6 @@
       "PHONE_VERIFICATION_CODE_BODY": "We sent a text message containing a validation code to the phone number below.",
       "PHONE_VERIFICATION_CODE_TITLE": "Please enter your validation code",
       "PHONE_VERIFICATION_CODE_RESEND": "Re-send code",
-      "SCREENING_FAILURE_RETRY_BUTTON": "Ok, try again",
       "PHONE_VERIFICATION_WRONG_NUMBER": "Wrong number? Tap to Correct.",
       "PHONE_VERIFICATION_CODE_DESCRIPTION": "Enter Validation Code",
       "PHONE_VERIFICATION_ERROR_WRONG_CODE": "The validation code is incorrect. Try with an other code.",

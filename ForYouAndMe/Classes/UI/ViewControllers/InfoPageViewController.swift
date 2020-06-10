@@ -15,7 +15,6 @@ protocol InfoPageCoordinator {
 struct InfoPageData {
     let page: InfoPage
     let addAbortOnboardingButton: Bool
-    let confirmButtonText: String?
     let usePageNavigation: Bool
     let allowBackwardNavigation: Bool
     // TODO: Replace if with info from InfoPage
@@ -65,7 +64,7 @@ public class InfoPageViewController: UIViewController {
                                            textAlignment: self.pageData.bodyTextAlignment)
         // Confirm Button
         let confirmButtonView: GenericButtonView = {
-            if let confirmButtonText = self.pageData.confirmButtonText {
+            if let confirmButtonText = self.pageData.page.buttonFirstlabel {
                 let view = GenericButtonView(withTextStyleCategory: .secondaryBackground)
                 view.button.setTitle(confirmButtonText, for: .normal)
                 return view

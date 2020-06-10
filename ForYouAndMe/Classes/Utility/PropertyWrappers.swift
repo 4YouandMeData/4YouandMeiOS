@@ -16,3 +16,17 @@ struct FailableDecodable<Wrapped: Decodable>: Decodable {
         self.wrappedValue = try? container.decode(Wrapped.self)
     }
 }
+
+@propertyWrapper
+struct NilIfEmptyString: Decodable {
+    var wrappedValue: String?
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        if let string = try? container.decode(String.self), false == string.isEmpty {
+            self.wrappedValue = string
+        } else {
+            self.wrappedValue = nil
+        }
+    }
+}
