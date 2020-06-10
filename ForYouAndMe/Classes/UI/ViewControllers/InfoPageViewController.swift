@@ -56,12 +56,21 @@ public class InfoPageViewController: UIViewController {
         scrollStackView.stackView.addLabel(withText: self.pageData.page.title,
                                            fontStyle: .title,
                                            colorType: .primaryText)
+        
         scrollStackView.stackView.addBlankSpace(space: 40.0)
         // Body
         scrollStackView.stackView.addLabel(withText: self.pageData.page.body,
                                            fontStyle: .paragraph,
                                            colorType: .primaryText,
                                            textAlignment: self.pageData.bodyTextAlignment)
+        scrollStackView.stackView.addBlankSpace(space: 40.0)
+        // External Link
+        if nil != self.pageData.page.externalLinkUrl, let externalLinkLabel = self.pageData.page.externalLinkLabel {
+            scrollStackView.stackView.addExternalLinkButton(self,
+                                                            action: #selector(self.externalLinkButtonPressed),
+                                                            text: externalLinkLabel)
+        }
+        
         // Confirm Button
         let confirmButtonView: GenericButtonView = {
             if let confirmButtonText = self.pageData.page.buttonFirstlabel {
@@ -88,7 +97,7 @@ public class InfoPageViewController: UIViewController {
             self.navigationItem.hidesBackButton = true
         }
         if self.pageData.addAbortOnboardingButton {
-            self.addOnboardingAbortButton(withColor: ColorPalette.color(withType: .primary))
+            self.addOnboardingAbortButton(withColor: ColorPalette.color(withType: .gradientPrimaryEnd))
         }
     }
     
@@ -101,5 +110,29 @@ public class InfoPageViewController: UIViewController {
         } else {
             self.coordinator.onInfoPageConfirm(pageData: self.pageData)
         }
+    }
+    
+    @objc private func externalLinkButtonPressed() {
+        guard let url = self.pageData.page.externalLinkUrl else {
+            assertionFailure("Missing expected external link url")
+            return
+        }
+        self.navigator.openWebView(withTitle: "", url: url, presenter: self)
+    }
+}
+
+fileprivate extension UIStackView {
+    func addExternalLinkButton(_ target: Any?, action: Selector, text: String) {
+        let button = UIButton()
+        button.setTitle(text, for: .normal)
+        button.setTitleColor(ColorPalette.color(withType: .gradientPrimaryEnd), for: .normal)
+        button.titleLabel?.font = FontPalette.fontStyleData(forStyle: .paragraph).font
+        button.addTarget(target, action: action, for: .touchUpInside)
+        let buttonContainerView = UIView()
+        buttonContainerView.addSubview(button)
+        button.autoPinEdgesToSuperviewEdges(with: .zero, excludingEdge: .trailing)
+        button.autoPinEdge(toSuperviewEdge: .trailing, withInset: 0.0, relation: .greaterThanOrEqual)
+        button.autoSetDimension(.height, toSize: 44.0)
+        self.addArrangedSubview(buttonContainerView)
     }
 }

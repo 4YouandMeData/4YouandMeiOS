@@ -226,6 +226,13 @@ class AppNavigator {
         UIApplication.shared.open(url)
     }
     
+    public func openWebView(withTitle title: String, url: URL, presenter: UIViewController) {
+        let wevViewViewController = WebViewViewController(withTitle: title, allowNavigation: true, url: url)
+        let navigationViewController = UINavigationController(rootViewController: wevViewViewController)
+        navigationViewController.preventPopWithSwipe()
+        presenter.present(navigationViewController, animated: true)
+    }
+    
     public func handleError(error: Error?, presenter: UIViewController) {
         SVProgressHUD.dismiss() // Safety dismiss
         guard let error = error else {
@@ -256,15 +263,6 @@ class AppNavigator {
         } else {
             return false
         }
-    }
-    
-    // MARK: - Private Methods
-    
-    private func openWebView(withTitle title: String, url: URL, presenter: UIViewController) {
-        let wevViewViewController = WebViewViewController(withTitle: title, allowNavigation: true, url: url)
-        let navigationViewController = UINavigationController(rootViewController: wevViewViewController)
-        navigationViewController.preventPopWithSwipe()
-        presenter.present(navigationViewController, animated: true)
     }
 }
 
