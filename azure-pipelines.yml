@@ -32,6 +32,7 @@ steps:
     versionCodeOption: 'buildid'
     versionCode: '$(Build.BuildId)'
     versionCodeOffset: '1'
+    versionName: 
     printFile: true
 - task: CocoaPods@0
   inputs:
