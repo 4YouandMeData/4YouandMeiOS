@@ -130,7 +130,9 @@ class LoadingViewController<T>: UIViewController, LoadingPage {
                 }, onError: { [weak self]  error in
                     guard let self = self else { return }
                     self.navigator.popProgressHUD()
-                    self.showError(error: error)
+                    if false == self.navigator.handleUserNotLoggedError(error: error) {
+                        self.showError(error: error)
+                    }
             }).disposed(by: self.disposeBag)
         }
     }

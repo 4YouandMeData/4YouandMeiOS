@@ -226,11 +226,23 @@ class AppNavigator {
             return
         }
         
-        switch repositoryError {
-        case .userNotLoggedIn:
-            self.logOut()
-        default:
+        if false == self.handleUserNotLoggedError(error: error) {
             presenter.showAlert(forError: repositoryError)
+        }
+    }
+    
+    /// Check if the given error is a `Repository.userNotLoggedIn` error and, if so,
+    /// perform a logout procedure.
+    /// - Parameter error: the error to be checked
+    /// - Returns: `true` if logout has been performed. `false` otherwise.
+    public func handleUserNotLoggedError(error: Error?) -> Bool {
+        if let error = error, case RepositoryError.userNotLoggedIn = error {
+            print("Log out due to 'RepositoryError.userNotLoggedIn' error")
+            // TODO: Show a user friendly popup to explain the user that he must login again.
+            self.logOut()
+            return true
+        } else {
+            return false
         }
     }
     
