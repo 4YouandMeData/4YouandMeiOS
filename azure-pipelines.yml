@@ -5,6 +5,7 @@
 
 trigger:
 - develop
+- master
 
 pool:
   vmImage: 'macos-latest'
@@ -26,14 +27,6 @@ steps:
   inputs:
     provisioningProfileLocation: 'secureFiles'
     provProfileSecureFile: '4youandme_distribution.mobileprovision'
-- task: ios-bundle-version@1
-  inputs:
-    sourcePath: '$(Build.SourcesDirectory)/Example/ForYouAndMe/Info.plist'
-    versionCodeOption: 'buildid'
-    versionCode: '$(Build.BuildId)'
-    versionCodeOffset: '1'
-    versionName: 
-    printFile: true
 - task: CocoaPods@0
   inputs:
     forceRepoUpdate: false
@@ -73,16 +66,3 @@ steps:
     Contents: '**/*.ipa'
     TargetFolder: '$(build.artifactStagingDirectory)'
 - task: PublishBuildArtifacts@1
-- task: AppStoreRelease@1
-  displayName: 'Publish to the App Store TestFlight track'
-  inputs:
-    serviceEndpoint: 'Apple AppStore'
-    appIdentifier: 'eu.balzo.ForYouAndMeExample'
-    appType: 'iOS'
-    ipaPath: '$(build.artifactstagingdirectory)/**/*.ipa'
-    releaseTrack: 'TestFlight'
-    shouldSkipWaitingForProcessing: true
-    shouldSkipSubmission: true
-    teamId: 'G6RAKRKZPR'
-    teamName: 'Balzo srl'
-    fastlaneArguments: 'increment_build_number'
