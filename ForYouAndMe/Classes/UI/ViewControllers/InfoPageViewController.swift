@@ -17,6 +17,7 @@ struct InfoPageData {
     let addAbortOnboardingButton: Bool
     let confirmButtonText: String?
     let usePageNavigation: Bool
+    let allowBackwardNavigation: Bool
     // TODO: Replace if with info from InfoPage
     let bodyTextAlignment: NSTextAlignment
 }
@@ -82,7 +83,11 @@ public class InfoPageViewController: UIViewController {
         super.viewWillAppear(animated)
         
         self.navigationController?.navigationBar.apply(style: NavigationBarStyles.secondaryStyle)
-        self.addCustomBackButton()
+        if self.pageData.allowBackwardNavigation {
+            self.addCustomBackButton()
+        } else {
+            self.navigationItem.hidesBackButton = true
+        }
         if self.pageData.addAbortOnboardingButton {
             self.addOnboardingAbortButton(withColor: ColorPalette.color(withType: .primary))
         }

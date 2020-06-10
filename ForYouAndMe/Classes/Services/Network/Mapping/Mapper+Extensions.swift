@@ -118,4 +118,14 @@ extension Mapper {
         
         return array
     }
+    
+    static public func errorIfEmpty<T>(object: Any?) throws -> [T] {
+        guard let list = object as? [T] else {
+            throw MapperError.customError(field: nil, message: "Unexpected value. Expected array")
+        }
+        guard list.isEmpty == false else {
+            throw MapperError.customError(field: nil, message: "Unexpected empty array")
+        }
+        return list
+    }
 }
