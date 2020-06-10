@@ -26,6 +26,13 @@ steps:
   inputs:
     provisioningProfileLocation: 'secureFiles'
     provProfileSecureFile: '4youandme_distribution.mobileprovision'
+- task: ios-bundle-version@1
+  inputs:
+    sourcePath: '$(Build.SourcesDirectory)/Example/ForYouAndMe/Info.plist'
+    versionCodeOption: 'buildid'
+    versionCode: '$(Build.BuildId)'
+    versionCodeOffset: '1'
+    printFile: true
 - task: CocoaPods@0
   inputs:
     forceRepoUpdate: false
