@@ -43,13 +43,13 @@ class AppNavigator {
             // without going through all the official flow
             #if DEBUG
             if let testSection = Constants.Test.Section {
-                let testStartingViewController = UIViewController()
-                let navigationViewController = UINavigationController(rootViewController: testStartingViewController)
-                navigationViewController.preventPopWithSwipe()
-                self.window.rootViewController = navigationViewController
+                let testNavigationViewController = UINavigationController(rootViewController: UIViewController())
+                testNavigationViewController.preventPopWithSwipe()
+                self.window.rootViewController = testNavigationViewController
                 
                 switch testSection {
-                case .screeningSection: self.startScreeningSection(presenter: testStartingViewController)
+                case .screeningSection: self.startScreeningSection(navigationController: testNavigationViewController)
+                case .informedConsentSection: self.startInformedConsentSection(navigationController: testNavigationViewController)
                 }
                 return
             }
@@ -157,32 +157,44 @@ class AppNavigator {
     public func showIntroVideo(presenter: UIViewController) {
         // TODO: Show intro video
         print("TODO: Show intro video")
-        self.startScreeningSection(presenter: presenter)
-    }
-    
-    // MARK: Screening Questions
-    
-    public func startScreeningSection(presenter: UIViewController) {
         guard let navigationController = presenter.navigationController else {
             assertionFailure("Missing UINavigationController")
             return
         }
-        presenter.loadView(requestSingle: self.repository.getScreeningSection()) { section -> UIViewController in
+        self.startScreeningSection(navigationController: navigationController)
+    }
+    
+    // MARK: Screening Questions
+    
+    public func startScreeningSection(navigationController: UINavigationController) {
+        navigationController.loadViewForRequest(self.repository.getScreeningSection()) { section -> UIViewController in
             let completionCallback: NavigationControllerCallback = { [weak self] navigationController in
                 self?.startInformedConsentSection(navigationController: navigationController)
             }
-            let screeningCoordinator = ScreeningCoordinator(withSectionData: section,
+            let coordinator = ScreeningCoordinator(withSectionData: section,
                                                             navigationController: navigationController,
                                                             completionCallback: completionCallback)
-            return screeningCoordinator.getStartingPage()
+            return coordinator.getStartingPage()
         }
     }
     
     // MARK: Informed Consent
     
     public func startInformedConsentSection(navigationController: UINavigationController) {
-        // TODO: Start Informed Consent
-        navigationController.showAlert(withTitle: "Work in progress", message: "Informed consent coming soon")
+        navigationController.loadViewForRequest(self.repository.getInformedConsentSection()) { section -> UIViewController in
+            let completionCallback: NavigationControllerCallback = { [weak self] navigationController in
+                self?.startConsentSection(navigationController: navigationController)
+            }
+            let coordinator = InformedConsentCoordinator(withSectionData: section,
+                                                                  navigationController: navigationController,
+                                                                  completionCallback: completionCallback)
+            return coordinator.getStartingPage()
+        }
+    }
+    
+    public func startConsentSection(navigationController: UINavigationController) {
+        // TODO: Start Consent
+        navigationController.showAlert(withTitle: "Work in progress", message: "Consent coming soon")
     }
     
     // MARK: Progress HUD

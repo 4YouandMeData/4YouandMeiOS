@@ -10,6 +10,7 @@ import Foundation
 
 enum TestSection {
     case screeningSection
+    case informedConsentSection
 }
 
 struct Constants {
@@ -19,7 +20,7 @@ struct Constants {
         static let NetworkLogVerbose = true
         
         static let NoCacheGlobalConfig = true
-        static let Section: TestSection? = nil//.screeningSection
+        static let Section: TestSection? = nil//.informedConsentSection
     }
     struct Network {
         static let ApiBaseUrlStr = "https://api-4youandme-staging.balzo.eu/api"

@@ -257,6 +257,9 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         // Screening Section
         case .getScreeningSection:
             return "/v1/studies/\(studyId)/screening"
+        // Informed Consent Section
+        case .getInformedConsentSection:
+            return "/v1/studies/\(studyId)/informed_consent"
         }
     }
     
@@ -265,9 +268,12 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
     
     var method: Moya.Method {
         switch self {
-        case .getGlobalConfig, .getScreeningSection:
+        case .getGlobalConfig,
+             .getScreeningSection,
+             .getInformedConsentSection:
             return .get
-        case .submitPhoneNumber, .verifyPhoneNumber:
+        case .submitPhoneNumber,
+             .verifyPhoneNumber:
             return .post
         }
     }
@@ -276,15 +282,21 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         switch self {
         // Misc
         case .getGlobalConfig: return Bundle.getTestData(from: "TestGetGlobalConfig")
+        // Login
         case .submitPhoneNumber: return "{}".utf8Encoded
         case .verifyPhoneNumber: return "{}".utf8Encoded
+        // Screening Section
         case .getScreeningSection: return Bundle.getTestData(from: "TestGetScreeningSection")
+        // Informed Consent Section
+        case .getInformedConsentSection: return Bundle.getTestData(from: "TestGetInformedConsentSection")
         }
     }
     
     var task: Task {
         switch self {
-        case .getGlobalConfig, .getScreeningSection:
+        case .getGlobalConfig,
+             .getScreeningSection,
+             .getInformedConsentSection:
             return .requestPlain
         case .submitPhoneNumber(let phoneNumber):
             var params: [String: Any] = [:]
@@ -304,9 +316,12 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
     
     var authorizationType: AuthorizationType? {
         switch self {
-        case .getGlobalConfig, .submitPhoneNumber, .verifyPhoneNumber:
+        case .getGlobalConfig,
+             .submitPhoneNumber,
+             .verifyPhoneNumber:
             return .none
-        case .getScreeningSection:
+        case .getScreeningSection,
+             .getInformedConsentSection:
             return .bearer
         }
     }

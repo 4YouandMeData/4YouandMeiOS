@@ -19,6 +19,8 @@ enum DefaultService {
     case verifyPhoneNumber(phoneNumber: String, secureCode: String)
     // Screening Section
     case getScreeningSection
+    // Informed Consent Section
+    case getInformedConsentSection
 }
 
 struct ApiRequest {

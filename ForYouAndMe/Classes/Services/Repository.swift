@@ -53,4 +53,6 @@ protocol Repository: class {
     func verifyPhoneNumber(phoneNumber: String, secureCode: String) -> Single<()>
     // Screening Section
     func getScreeningSection() -> Single<ScreeningSection>
+    // Informed Consent Section
+    func getInformedConsentSection() -> Single<InformedConsentSection>
 }
