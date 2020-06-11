@@ -37,12 +37,20 @@ class InformedConsentCoordinator: PagedSectionCoordinator {
     // MARK: - Private Methods
     
     private func showQuestions() {
-        let viewController = BooleanQuestionsViewController(withQuestions: self.sectionData.questions, coordinator: self)
-        self.navigationController.pushViewController(viewController, animated: true)
+        if self.sectionData.questions.count > 0 {
+            // TODO: Add Informed Consent questions
+            self.navigationController.showAlert(withTitle: "Work in progress", message: "Informed Consent questions coming soon")
+        } else {
+            self.completionCallback(self.navigationController)
+        }
     }
     
     private func showSuccess() {
-        let infoPageData = InfoPageData(page: self.sectionData.successPage,
+        guard let successPage = self.sectionData.successPage else {
+            assertionFailure("Missing expected success page")
+            return
+        }
+        let infoPageData = InfoPageData(page: successPage,
                                         addAbortOnboardingButton: false,
                                         allowBackwardNavigation: false,
                                         bodyTextAlignment: .center)
@@ -51,7 +59,11 @@ class InformedConsentCoordinator: PagedSectionCoordinator {
     }
     
     private func showFailure() {
-        let infoPageData = InfoPageData(page: self.sectionData.failurePage,
+        guard let failurePage = self.sectionData.failurePage else {
+            assertionFailure("Missing expected failure page")
+            return
+        }
+        let infoPageData = InfoPageData(page: failurePage,
                                         addAbortOnboardingButton: false,
                                         allowBackwardNavigation: false,
                                         bodyTextAlignment: .center)
@@ -60,36 +72,22 @@ class InformedConsentCoordinator: PagedSectionCoordinator {
     }
     
     private func popBackToQuestions() {
-        guard let questionsViewController = self.navigationController.viewControllers.reversed()
-            .first(where: {$0 is BooleanQuestionsViewController }) else {
-                assertionFailure("Missing view controller in navigation stack")
-            return
-        }
-        self.navigationController.popToViewController(questionsViewController, animated: true)
+        // TODO: pop to the first questions
+        print("InformedConsentCoordinator - TODO: pop to the first questions")
     }
 }
 
 extension InformedConsentCoordinator: InfoPageCoordinator {
     func onInfoPageConfirm(pageData: InfoPageData) {
         switch pageData.page.id {
-        case self.sectionData.successPage.id:
+        case self.sectionData.successPage?.id:
             self.completionCallback(self.navigationController)
-        case self.sectionData.failurePage.id:
+        case self.sectionData.failurePage?.id:
             self.popBackToQuestions()
         default:
             if false == self.handleShowNextPage(forCurrentPage: pageData.page, isOnboarding: true) {
                 self.showQuestions()
             }
         }
-    }
-}
-
-extension InformedConsentCoordinator: BooleanQuestionsCoordinator {
-    func onBooleanQuestionsSuccess() {
-        self.showSuccess()
-    }
-    
-    func onBooleanQuestionsFailure() {
-        self.showFailure()
     }
 }

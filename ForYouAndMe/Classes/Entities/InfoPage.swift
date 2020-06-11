@@ -17,7 +17,7 @@ struct InfoPage {
     var externalLinkLabel: String?
     @FailableDecodable
     var externalLinkUrl: URL?
-    let imageData: Data
+    let imageData: Data?
     @NilIfEmptyString
     var buttonFirstlabel: String?
     var buttonFirstPage: InfoPageRef?
@@ -43,7 +43,13 @@ extension InfoPage: JSONAPIMappable {
 }
 
 extension InfoPage {
-    var image: UIImage? { return UIImage(data: self.imageData) }
+    var image: UIImage? {
+        if let data = self.imageData {
+            return UIImage(data: data)
+        } else {
+            return nil
+        }
+    }
 }
 
 extension Array where Element == InfoPage {

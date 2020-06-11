@@ -268,7 +268,7 @@ class AppNavigator {
 
 // MARK: - Extension(UIViewController)
 
-fileprivate extension UIViewController {
+extension UIViewController {
     func showAlert(forError error: Error, completion: @escaping (() -> Void) = {}) {
         self.showAlert(withTitle: StringsProvider.string(forKey: .errorTitleDefault),
                        message: error.localizedDescription,

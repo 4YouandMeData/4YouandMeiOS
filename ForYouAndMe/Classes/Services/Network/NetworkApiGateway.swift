@@ -288,7 +288,12 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         // Screening Section
         case .getScreeningSection: return Bundle.getTestData(from: "TestGetScreeningSection")
         // Informed Consent Section
-        case .getInformedConsentSection: return Bundle.getTestData(from: "TestGetInformedConsentSection")
+        case .getInformedConsentSection:
+            if Constants.Test.InformedConsentWithoutQuestions {
+                return Bundle.getTestData(from: "TestGetInformedConsentSectionNoQuestions")
+            } else {
+                return Bundle.getTestData(from: "TestGetInformedConsentSection")
+            }
         }
     }
     

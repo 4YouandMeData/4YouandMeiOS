@@ -14,8 +14,8 @@ struct ScreeningSection {
     let pages: [InfoPage]
     let questions: [Question]
     let welcomePage: InfoPage
-    let successPage: InfoPage
-    let failurePage: InfoPage
+    let successPage: InfoPage?
+    let failurePage: InfoPage?
 }
 
 extension ScreeningSection: JSONAPIMappable {

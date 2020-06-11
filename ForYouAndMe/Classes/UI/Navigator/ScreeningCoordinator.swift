@@ -37,12 +37,20 @@ class ScreeningCoordinator: PagedSectionCoordinator {
     // MARK: - Private Methods
     
     private func showQuestions() {
-        let viewController = BooleanQuestionsViewController(withQuestions: self.sectionData.questions, coordinator: self)
-        self.navigationController.pushViewController(viewController, animated: true)
+        if self.sectionData.questions.count > 0 {
+            let viewController = BooleanQuestionsViewController(withQuestions: self.sectionData.questions, coordinator: self)
+            self.navigationController.pushViewController(viewController, animated: true)
+        } else {
+            self.completionCallback(self.navigationController)
+        }
     }
     
     private func showSuccess() {
-        let infoPageData = InfoPageData(page: self.sectionData.successPage,
+        guard let successPage = self.sectionData.successPage else {
+            assertionFailure("Missing expected success page")
+            return
+        }
+        let infoPageData = InfoPageData(page: successPage,
                                         addAbortOnboardingButton: false,
                                         allowBackwardNavigation: false,
                                         bodyTextAlignment: .center)
@@ -51,7 +59,11 @@ class ScreeningCoordinator: PagedSectionCoordinator {
     }
     
     private func showFailure() {
-        let infoPageData = InfoPageData(page: self.sectionData.failurePage,
+        guard let failurePage = self.sectionData.failurePage else {
+            assertionFailure("Missing expected failure page")
+            return
+        }
+        let infoPageData = InfoPageData(page: failurePage,
                                         addAbortOnboardingButton: false,
                                         allowBackwardNavigation: false,
                                         bodyTextAlignment: .center)
@@ -72,9 +84,9 @@ class ScreeningCoordinator: PagedSectionCoordinator {
 extension ScreeningCoordinator: InfoPageCoordinator {
     func onInfoPageConfirm(pageData: InfoPageData) {
         switch pageData.page.id {
-        case self.sectionData.successPage.id:
+        case self.sectionData.successPage?.id:
             self.completionCallback(self.navigationController)
-        case self.sectionData.failurePage.id:
+        case self.sectionData.failurePage?.id:
             self.popBackToQuestions()
         default:
             if false == self.handleShowNextPage(forCurrentPage: pageData.page, isOnboarding: true) {

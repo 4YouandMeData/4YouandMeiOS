@@ -14,8 +14,8 @@ struct InformedConsentSection {
     let pages: [InfoPage]
     let questions: [Question]
     let welcomePage: InfoPage
-    let successPage: InfoPage
-    let failurePage: InfoPage
+    let successPage: InfoPage?
+    let failurePage: InfoPage?
 }
 
 extension InformedConsentSection: JSONAPIMappable {

@@ -1,0 +1,66 @@
+{
+  "data": {
+    "id": "2",
+    "type": "informed_consent",
+    "attributes": {
+      "created_at": "2020-06-11T10:26:55.241Z",
+      "updated_at": "2020-06-11T10:28:24.254Z"
+    },
+    "relationships": {
+      "questions": {
+        "data": []
+      },
+      "pages": {
+        "data": [
+          {
+            "id": "26",
+            "type": "page"
+          }
+        ]
+      },
+      "welcome_page": {
+        "data": {
+          "id": "26",
+          "type": "page"
+        }
+      },
+      "success_page": {
+        "data": null
+      },
+      "failure_page": {
+        "data": null
+      }
+    }
+  },
+  "included": [
+    {
+      "id": "26",
+      "type": "page",
+      "attributes": {
+        "title": "Intro",
+        "body": "Intro Body",
+        "link_1_label": "",
+        "link_2_label": "",
+        "external_link_label": "",
+        "external_link_url": "",
+        "created_at": "2020-06-11T10:27:50.798Z",
+        "updated_at": "2020-06-11T10:27:50.798Z",
+        "image": null
+      },
+      "relationships": {
+        "section": {
+          "data": {
+            "id": "2",
+            "type": "informed_consent"
+          }
+        },
+        "link_1": {
+          "data": null
+        },
+        "link_2": {
+          "data": null
+        }
+      }
+    }
+  ]
+}
