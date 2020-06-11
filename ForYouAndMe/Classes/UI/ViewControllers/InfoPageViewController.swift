@@ -9,7 +9,13 @@ import Foundation
 import PureLayout
 
 protocol InfoPageCoordinator {
-    func onInfoPageConfirm(pageData: InfoPageData)
+    func onInfoPagePrimaryButtonPressed(pageData: InfoPageData)
+    func onInfoPageSecondaryButtonPressed(pageData: InfoPageData)
+}
+
+enum InfoPageBottomViewStyle {
+    case horizontal
+    case vertical(backButton: Bool)
 }
 
 struct InfoPageData {
@@ -18,12 +24,38 @@ struct InfoPageData {
     let allowBackwardNavigation: Bool
     // TODO: Replace if with info from InfoPage
     let bodyTextAlignment: NSTextAlignment
+    let bottomViewStyle: InfoPageBottomViewStyle
+    
+    static func createWelcomePageData(withinfoPage infopage: InfoPage) -> InfoPageData {
+        return InfoPageData(page: infopage,
+                            addAbortOnboardingButton: false,
+                            allowBackwardNavigation: false,
+                            bodyTextAlignment: .left,
+                            bottomViewStyle: .horizontal)
+    }
+    
+    static func createInfoPageData(withinfoPage infopage: InfoPage, isOnboarding: Bool) -> InfoPageData {
+        return InfoPageData(page: infopage,
+                            addAbortOnboardingButton: isOnboarding,
+                            allowBackwardNavigation: true,
+                            bodyTextAlignment: .left,
+                            bottomViewStyle: .horizontal)
+    }
+    
+    static func createResultPageData(withinfoPage infopage: InfoPage) -> InfoPageData {
+        return InfoPageData(page: infopage,
+                            addAbortOnboardingButton: false,
+                            allowBackwardNavigation: false,
+                            bodyTextAlignment: .center,
+                            bottomViewStyle: .horizontal)
+    }
 }
 
 public class InfoPageViewController: UIViewController {
     
+    let pageData: InfoPageData
+    
     private let navigator: AppNavigator
-    private let pageData: InfoPageData
     private let coordinator: InfoPageCoordinator
     
     init(withPageData pageData: InfoPageData, coordinator: InfoPageCoordinator) {
@@ -71,20 +103,34 @@ public class InfoPageViewController: UIViewController {
         }
         scrollStackView.stackView.addBlankSpace(space: 40.0)
         
-        // Confirm Button
-        let confirmButtonView: GenericButtonView = {
-            if let confirmButtonText = self.pageData.page.buttonFirstlabel {
-                let view = GenericButtonView(withTextStyleCategory: .secondaryBackground)
-                view.button.setTitle(confirmButtonText, for: .normal)
+        // Bottom View
+        let bottomView: UIView = {
+            switch self.pageData.bottomViewStyle {
+            case .horizontal:
+                let view: GenericButtonView = {
+                    if let confirmButtonText = self.pageData.page.buttonFirstlabel {
+                        let view = GenericButtonView(withTextStyleCategory: .secondaryBackground)
+                        view.button.setTitle(confirmButtonText, for: .normal)
+                        return view
+                    } else {
+                        return GenericButtonView(withImageStyleCategory: .secondaryBackground)
+                    }
+                }()
+                view.button.addTarget(self, action: #selector(self.primaryButtonPressed), for: .touchUpInside)
                 return view
-            } else {
-                return GenericButtonView(withImageStyleCategory: .secondaryBackground)
+            case .vertical(let backButton):
+                let view = DoubleButtonVerticalView(styleCategory: .secondaryBackground(backButton: backButton))
+                view.addTargetToPrimaryButton(target: self, action: #selector(self.primaryButtonPressed))
+                if let buttonSecondlabel = self.pageData.page.buttonSecondlabel {
+                    view.addTargetToSecondaryButton(target: self, action: #selector(self.secondaryButtonPressed))
+                    view.setSecondaryButtonText(buttonSecondlabel)
+                }
+                return view
             }
         }()
-        confirmButtonView.button.addTarget(self, action: #selector(self.confirmButtonPressed), for: .touchUpInside)
-        self.view.addSubview(confirmButtonView)
-        confirmButtonView.autoPinEdgesToSuperviewSafeArea(with: UIEdgeInsets.zero, excludingEdge: .top)
-        scrollStackView.scrollView.autoPinEdge(.bottom, to: .top, of: confirmButtonView)
+        self.view.addSubview(bottomView)
+        bottomView.autoPinEdgesToSuperviewSafeArea(with: UIEdgeInsets.zero, excludingEdge: .top)
+        scrollStackView.scrollView.autoPinEdge(.bottom, to: .top, of: bottomView)
     }
     
     public override func viewWillAppear(_ animated: Bool) {
@@ -103,8 +149,12 @@ public class InfoPageViewController: UIViewController {
     
     // MARK: Actions
     
-    @objc private func confirmButtonPressed() {
-        self.coordinator.onInfoPageConfirm(pageData: self.pageData)
+    @objc private func primaryButtonPressed() {
+        self.coordinator.onInfoPagePrimaryButtonPressed(pageData: self.pageData)
+    }
+    
+    @objc private func secondaryButtonPressed() {
+        self.coordinator.onInfoPageSecondaryButtonPressed(pageData: self.pageData)
     }
     
     @objc private func externalLinkButtonPressed() {

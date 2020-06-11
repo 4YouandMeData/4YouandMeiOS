@@ -27,10 +27,7 @@ class ScreeningCoordinator: PagedSectionCoordinator {
     // MARK: - Public Methods
     
     public func getStartingPage() -> UIViewController {
-        let infoPageData = InfoPageData(page: self.sectionData.welcomePage,
-                                        addAbortOnboardingButton: false,
-                                        allowBackwardNavigation: false,
-                                        bodyTextAlignment: .left)
+        let infoPageData = InfoPageData.createWelcomePageData(withinfoPage: self.sectionData.welcomePage)
         return InfoPageViewController(withPageData: infoPageData, coordinator: self)
     }
     
@@ -50,10 +47,7 @@ class ScreeningCoordinator: PagedSectionCoordinator {
             assertionFailure("Missing expected success page")
             return
         }
-        let infoPageData = InfoPageData(page: successPage,
-                                        addAbortOnboardingButton: false,
-                                        allowBackwardNavigation: false,
-                                        bodyTextAlignment: .center)
+        let infoPageData = InfoPageData.createResultPageData(withinfoPage: successPage)
         let viewController = InfoPageViewController(withPageData: infoPageData, coordinator: self)
         self.navigationController.pushViewController(viewController, animated: true)
     }
@@ -63,10 +57,7 @@ class ScreeningCoordinator: PagedSectionCoordinator {
             assertionFailure("Missing expected failure page")
             return
         }
-        let infoPageData = InfoPageData(page: failurePage,
-                                        addAbortOnboardingButton: false,
-                                        allowBackwardNavigation: false,
-                                        bodyTextAlignment: .center)
+        let infoPageData = InfoPageData.createResultPageData(withinfoPage: failurePage)
         let viewController = InfoPageViewController(withPageData: infoPageData, coordinator: self)
         self.navigationController.pushViewController(viewController, animated: true)
     }
@@ -82,17 +73,26 @@ class ScreeningCoordinator: PagedSectionCoordinator {
 }
 
 extension ScreeningCoordinator: InfoPageCoordinator {
-    func onInfoPageConfirm(pageData: InfoPageData) {
+    func onInfoPagePrimaryButtonPressed(pageData: InfoPageData) {
         switch pageData.page.id {
         case self.sectionData.successPage?.id:
             self.completionCallback(self.navigationController)
         case self.sectionData.failurePage?.id:
             self.popBackToQuestions()
         default:
-            if false == self.handleShowNextPage(forCurrentPage: pageData.page, isOnboarding: true) {
+            if let pageRef = pageData.page.buttonFirstPage {
+                self.showLinkedPage(forPageRef: pageRef, isOnboarding: true)
+            } else {
                 self.showQuestions()
             }
         }
+    }
+    func onInfoPageSecondaryButtonPressed(pageData: InfoPageData) {
+        guard let pageRef = pageData.page.buttonSecondPage else {
+            assertionFailure("Missing action for secondary button pressed!")
+            return
+        }
+        self.showLinkedPage(forPageRef: pageRef, isOnboarding: true)
     }
 }
 

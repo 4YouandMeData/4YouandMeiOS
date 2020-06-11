@@ -9,11 +9,6 @@
 import Foundation
 import PureLayout
 
-protocol StyleCategory {
-    associatedtype View
-    var style: Style<View> { get }
-}
-
 enum GenericButtonTextStyleCategory: StyleCategory {
     case primaryBackground
     case secondaryBackground

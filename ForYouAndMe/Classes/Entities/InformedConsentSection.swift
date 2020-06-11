@@ -25,7 +25,8 @@ pages.link_2,\
 welcome_page.link_1,\
 success_page.link_2,\
 success_page,\
-failure_page,\
+failure_page.link_1,\
+failure_page.link_2,\
 questions.possible_answers
 """
     

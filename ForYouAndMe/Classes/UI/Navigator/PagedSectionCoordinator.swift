@@ -12,28 +12,33 @@ protocol PagedSectionCoordinator: InfoPageCoordinator {
     var pages: [InfoPage] { get }
     
     func showInfoPage(_ page: InfoPage, isOnboarding: Bool)
-    func handleShowNextPage(forCurrentPage page: InfoPage, isOnboarding: Bool) -> Bool
+    func showLinkedPage(forPageRef pageRef: InfoPageRef, isOnboarding: Bool)
 }
 
 extension PagedSectionCoordinator {
     func showInfoPage(_ page: InfoPage, isOnboarding: Bool) {
-        let infoPageData = InfoPageData(page: page,
-                                        addAbortOnboardingButton: isOnboarding,
-                                        allowBackwardNavigation: true,
-                                        bodyTextAlignment: .left)
+        let infoPageData = InfoPageData.createInfoPageData(withinfoPage: page, isOnboarding: isOnboarding)
         let viewController = InfoPageViewController(withPageData: infoPageData, coordinator: self)
         self.navigationController.pushViewController(viewController, animated: true)
     }
     
-    func handleShowNextPage(forCurrentPage page: InfoPage, isOnboarding: Bool) -> Bool {
-        if let nextPageRef = page.buttonFirstPage {
-            guard let nextPage = self.pages.getFirstNextPage(forPageRef: nextPageRef) else {
-                assertionFailure("Missing page for page ref")
+    func showLinkedPage(forPageRef pageRef: InfoPageRef, isOnboarding: Bool) {
+        let previousController = self.navigationController.viewControllers.reversed().first { viewController -> Bool in
+            if let infoPageViewController = viewController as? InfoPageViewController,
+                infoPageViewController.pageData.page.id == pageRef.id {
+                return true
+            } else {
                 return false
             }
-            self.showInfoPage(nextPage, isOnboarding: isOnboarding)
-            return true
         }
-        return false
+        if let previousController = previousController {
+            self.navigationController.popToViewController(previousController, animated: true)
+        } else {
+            guard let nextPage = self.pages.getFirstNextPage(forPageRef: pageRef) else {
+                assertionFailure("Missing page for page ref")
+                return
+            }
+            self.showInfoPage(nextPage, isOnboarding: isOnboarding)
+        }
     }
 }

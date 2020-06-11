@@ -8,6 +8,16 @@
 import Foundation
 
 extension NSAttributedString {
+    
+    class func create(withText text: String,
+                      attributedTextStyle: AttributedTextStyle) -> NSAttributedString {
+        return NSAttributedString.create(withText: text,
+                                         fontStyle: attributedTextStyle.fontStyle,
+                                         colorType: attributedTextStyle.colorType,
+                                         textAlignment: attributedTextStyle.textAlignment,
+                                         underlined: attributedTextStyle.underlined)
+    }
+    
     class func create(withText text: String,
                       fontStyle: FontStyle,
                       colorType: ColorType,

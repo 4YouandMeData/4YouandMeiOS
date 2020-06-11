@@ -672,6 +672,9 @@
 		88B7F4E9AC2AC10B8C7DEDB9FE1EA79C /* FIRCLSLogger.m in Sources */ = {isa = PBXBuildFile; fileRef = 35CD59EAFA96AA2BAB607DAA100E6D4D /* FIRCLSLogger.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
 		88D795191B71868DC81D5D3F45D7338F /* Quick-dummy.m in Sources */ = {isa = PBXBuildFile; fileRef = 557F7924BD4FE36DD9156293CFAEA1E1 /* Quick-dummy.m */; };
 		892F567BF4D68BB3C3AE4687AE25BE8C /* FIRCLSDownloadAndSaveSettingsOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = B3F6B394A801E13BE44868A5F1420E24 /* FIRCLSDownloadAndSaveSettingsOperation.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
+		89396D50249257FB004BE9DD /* DoubleButtonVerticalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89396D4F249257FB004BE9DD /* DoubleButtonVerticalView.swift */; };
+		89396D522492666B004BE9DD /* AttributedTextStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89396D512492666B004BE9DD /* AttributedTextStyle.swift */; };
+		89396D542492668A004BE9DD /* StyleCategory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89396D532492668A004BE9DD /* StyleCategory.swift */; };
 		895CE133386CDA2B4B271287050A9BBB /* GULKeychainStorage.h in Headers */ = {isa = PBXBuildFile; fileRef = A409819DDBDC0D5BD34F2873C170A11A /* GULKeychainStorage.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		8A37BF1D5DDE2B12595DBC17B9810A4C /* TPKeyboardAvoidingCollectionView.h in Headers */ = {isa = PBXBuildFile; fileRef = B4202ABA96104D5AE7F9B9CEBBAE35BD /* TPKeyboardAvoidingCollectionView.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		8A4CD4454D0356469A55E71E7568BEF7 /* UITextView+Validator.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6BF624C0BBC21414E37B966E72EA192 /* UITextView+Validator.swift */; };
@@ -2544,6 +2547,9 @@
 		887C655062F2E412F0E7680F2F4024E0 /* ScrollStackView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ScrollStackView.swift; sourceTree = "<group>"; };
 		888362E0FF0627D3954EE83D03FE56F1 /* FIROptions.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = FIROptions.h; path = FirebaseCore/Sources/Public/FIROptions.h; sourceTree = "<group>"; };
 		88A51ED2D56C700F3885E796B7A91491 /* FIRCLSdSYM.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = FIRCLSdSYM.h; path = Crashlytics/Shared/FIRCLSMachO/FIRCLSdSYM.h; sourceTree = "<group>"; };
+		89396D4F249257FB004BE9DD /* DoubleButtonVerticalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoubleButtonVerticalView.swift; sourceTree = "<group>"; };
+		89396D512492666B004BE9DD /* AttributedTextStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AttributedTextStyle.swift; sourceTree = "<group>"; };
+		89396D532492668A004BE9DD /* StyleCategory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StyleCategory.swift; sourceTree = "<group>"; };
 		89ACBDF12922F3A211393C4257FEF329 /* DSL.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = DSL.h; path = Sources/NimbleObjectiveC/DSL.h; sourceTree = "<group>"; };
 		89C9F42C8772094E90768003C66135AE /* Quick-Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = "Quick-Info.plist"; sourceTree = "<group>"; };
 		8A13F42C22B76612DB95B36E16C957C7 /* String+OAuthSwift.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = "String+OAuthSwift.swift"; path = "Sources/String+OAuthSwift.swift"; sourceTree = "<group>"; };
@@ -3485,6 +3491,7 @@
 				FF1C577A9AABF09204C1F0836A6E9F3B /* ButtonStyles.swift */,
 				3D2506F102E1F225A3826204D7E00575 /* ColorPalette.swift */,
 				67C5BDFECB4EED3C20727F7F8BABA59D /* FontPalette.swift */,
+				89396D512492666B004BE9DD /* AttributedTextStyle.swift */,
 				272D1DA65A5B72028778F5B477C833FA /* GenericButtonStyles.swift */,
 				28D68E71606FE9E96243448551F96441 /* Gradient+Extension.swift */,
 				508E4EF0ABF4AB455507549672A37B50 /* ImagePalette.swift */,
@@ -3492,6 +3499,7 @@
 				350062A14180DF7EE4578CDDD98D43E9 /* NSAttributedString+Palette.swift */,
 				D36ADF8CF011E45AC554DC544B66D0E5 /* StringsProvider.swift */,
 				71C032E145CE21981354308770D3AC59 /* Style.swift */,
+				89396D532492668A004BE9DD /* StyleCategory.swift */,
 				713F53E1EB75E3E831748A8B626E464A /* UIStackView+Palette.swift */,
 				EAEF61577EF2BC03E782CFFF8440D4D9 /* UIView+ShadowPalette.swift */,
 			);
@@ -3565,6 +3573,7 @@
 				5096398D7016A12D71B26F68575FBD5F /* GenericCheckboxView.swift */,
 				3718F9087A629B46E0F0894FE67E6C07 /* GenericTextFieldView.swift */,
 				C7324EDD18F2429378E406CC32813439 /* QuestionBooleanTableViewCell.swift */,
+				89396D4F249257FB004BE9DD /* DoubleButtonVerticalView.swift */,
 				928207E56F4D06423C04AC7BF425EEB9 /* PhoneVerification */,
 			);
 			path = Views;
@@ -7361,6 +7370,7 @@
 				923825C66CD9D63FC7CD5278485713F6 /* GlobalConfig+Mappable.swift in Sources */,
 				40B8432B2D515841C5FA2486CEB21E06 /* GlobalConfig.swift in Sources */,
 				7465139F189ACE854D6F93629CA14DE0 /* Gradient+Extension.swift in Sources */,
+				89396D542492668A004BE9DD /* StyleCategory.swift in Sources */,
 				02387C449479D2921263A72B33349888 /* GradientView.swift in Sources */,
 				B20799018906F795335EFC3AFCE6079C /* ImagePalette.swift in Sources */,
 				A66E135E05210CE6C0F1686E57140829 /* InfoPage.swift in Sources */,
@@ -7391,6 +7401,7 @@
 				56E25050B72BD730560C921FD9E54B3B /* ReachabilityService.swift in Sources */,
 				8E2085B4BC6682048CEC47AD96369C94 /* Repository.swift in Sources */,
 				2AF8B3D4BBA0F8E6CDCE489772BBD7F2 /* RepositoryImpl.swift in Sources */,
+				89396D50249257FB004BE9DD /* DoubleButtonVerticalView.swift in Sources */,
 				5E134DAC93C69C6C36E6E7AD62610DA0 /* ResponseError+Mappable.swift in Sources */,
 				26DCA6D09F1337995BE5684B2D486B33 /* ResponseError.swift in Sources */,
 				C987D91872285E0FA47069FE2E4BC97E /* ReusableIdentifier.swift in Sources */,
@@ -7413,6 +7424,7 @@
 				BE5748E6C562959177C9682711011B6C /* UIStackView+Extension.swift in Sources */,
 				2E46CE3F53C218ADAA75DB6E49EE14C5 /* UIStackView+Palette.swift in Sources */,
 				EE67D4B5A90963C897ECB63B27B42E5C /* UITextField+Validator.swift in Sources */,
+				89396D522492666B004BE9DD /* AttributedTextStyle.swift in Sources */,
 				8A4CD4454D0356469A55E71E7568BEF7 /* UITextView+Validator.swift in Sources */,
 				5F508CC4B438AB32B9695B8A56A8064D /* UIView+BorderLine.swift in Sources */,
 				E1F2CBEB1E20B49B7BCC173DEB184267 /* UIView+Constraints.swift in Sources */,

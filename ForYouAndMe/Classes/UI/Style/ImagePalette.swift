@@ -15,6 +15,7 @@ enum ImageName: String, CaseIterable {
     case fyamLogoGeneric
     case mainLogo
     case nextButtonPrimary
+    case backButtonPrimary
     case nextButtonSecondary
     case backButton
     case closeButton
