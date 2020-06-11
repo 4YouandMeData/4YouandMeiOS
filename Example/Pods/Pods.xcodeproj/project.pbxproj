@@ -647,6 +647,8 @@
 		88B7F4E9AC2AC10B8C7DEDB9FE1EA79C /* FIRCLSLogger.m in Sources */ = {isa = PBXBuildFile; fileRef = 35CD59EAFA96AA2BAB607DAA100E6D4D /* FIRCLSLogger.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
 		88D795191B71868DC81D5D3F45D7338F /* Quick-dummy.m in Sources */ = {isa = PBXBuildFile; fileRef = 557F7924BD4FE36DD9156293CFAEA1E1 /* Quick-dummy.m */; };
 		892F567BF4D68BB3C3AE4687AE25BE8C /* FIRCLSDownloadAndSaveSettingsOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = B3F6B394A801E13BE44868A5F1420E24 /* FIRCLSDownloadAndSaveSettingsOperation.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
+		89396D4A2492211A004BE9DD /* InfoPageRef.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89396D492492211A004BE9DD /* InfoPageRef.swift */; };
+		89396D4C2492242B004BE9DD /* PagedSectionCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89396D4B2492242B004BE9DD /* PagedSectionCoordinator.swift */; };
 		895CE133386CDA2B4B271287050A9BBB /* GULKeychainStorage.h in Headers */ = {isa = PBXBuildFile; fileRef = A409819DDBDC0D5BD34F2873C170A11A /* GULKeychainStorage.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		89B3D2441B9F8B5690C5841CEED539A3 /* ReachabilitySwift-umbrella.h in Headers */ = {isa = PBXBuildFile; fileRef = FD8FBDB7389BEC5FE7CEF39527347451 /* ReachabilitySwift-umbrella.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		8A13D9077F81C4CC6D2413382D119607 /* Debug.swift in Sources */ = {isa = PBXBuildFile; fileRef = F30A8F6B7C7B871DBA094378262FFBB5 /* Debug.swift */; };
@@ -2535,6 +2537,8 @@
 		87D2A6138B2C92B774A225C2116A5FC2 /* GDTCOREvent+NetworkConnectionInfo.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = "GDTCOREvent+NetworkConnectionInfo.h"; path = "GoogleDataTransportCCTSupport/GDTCCTLibrary/Private/GDTCOREvent+NetworkConnectionInfo.h"; sourceTree = "<group>"; };
 		888362E0FF0627D3954EE83D03FE56F1 /* FIROptions.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = FIROptions.h; path = FirebaseCore/Sources/Public/FIROptions.h; sourceTree = "<group>"; };
 		88A51ED2D56C700F3885E796B7A91491 /* FIRCLSdSYM.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = FIRCLSdSYM.h; path = Crashlytics/Shared/FIRCLSMachO/FIRCLSdSYM.h; sourceTree = "<group>"; };
+		89396D492492211A004BE9DD /* InfoPageRef.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InfoPageRef.swift; sourceTree = "<group>"; };
+		89396D4B2492242B004BE9DD /* PagedSectionCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PagedSectionCoordinator.swift; sourceTree = "<group>"; };
 		89ACBDF12922F3A211393C4257FEF329 /* DSL.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = DSL.h; path = Sources/NimbleObjectiveC/DSL.h; sourceTree = "<group>"; };
 		89C9F42C8772094E90768003C66135AE /* Quick-Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = "Quick-Info.plist"; sourceTree = "<group>"; };
 		8A13F42C22B76612DB95B36E16C957C7 /* String+OAuthSwift.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = "String+OAuthSwift.swift"; path = "Sources/String+OAuthSwift.swift"; sourceTree = "<group>"; };
@@ -3904,6 +3908,7 @@
 			children = (
 				07452057417C2E378A5088D89B95ACAB /* GlobalConfig.swift */,
 				5B5F02489F17C5CF5FA8F81989171B31 /* InfoPage.swift */,
+				89396D492492211A004BE9DD /* InfoPageRef.swift */,
 				5888A143331559E21B749F1EE58B8FDB /* InformedConsentSection.swift */,
 				286D49621D874E08A62A002332FE725D /* PossibleAnswer.swift */,
 				04F8434D0B4DF53F26D3767FD1137D5F /* Question.swift */,
@@ -4607,6 +4612,7 @@
 				580ECEFF033167AE6AE27C3FBD8327A1 /* AppNavigator.swift */,
 				847026628E29F61B8AA184B379831F2A /* InformedConsentCoordinator.swift */,
 				9FFC4921CDAEF08FA84A3FB5C430E61B /* ScreeningCoordinator.swift */,
+				89396D4B2492242B004BE9DD /* PagedSectionCoordinator.swift */,
 			);
 			path = Navigator;
 			sourceTree = "<group>";
@@ -7548,6 +7554,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				89396D4A2492211A004BE9DD /* InfoPageRef.swift in Sources */,
 				C3EEFD879F33D313DA8C8BE3D6267360 /* ApiGateway.swift in Sources */,
 				BFB5F19875F218D3A78DBF4A94AFB323 /* AppNavigator.swift in Sources */,
 				167CA6A5C9621F1E66742685BF307C27 /* BooleanQuestionsViewController.swift in Sources */,
@@ -7605,6 +7612,7 @@
 				3F8ECA1458453AEB3670A18D152E81F6 /* ScreeningCoordinator.swift in Sources */,
 				CDDA10C3DBFD4C9D6BAC08EE5A00C1EB /* ScreeningSection.swift in Sources */,
 				C2DB33F6E09F2651991078E90FB44A34 /* ScrollStackView.swift in Sources */,
+				89396D4C2492242B004BE9DD /* PagedSectionCoordinator.swift in Sources */,
 				93F6172BF3B62A6CBAD1768039E43144 /* ServerErrors.swift in Sources */,
 				79DC4716D9EE1F55C1DE86C07E8A7B59 /* Services.swift in Sources */,
 				7C308B4A2AF0FCB203D8146CCF3368B7 /* SetupLaterViewController.swift in Sources */,

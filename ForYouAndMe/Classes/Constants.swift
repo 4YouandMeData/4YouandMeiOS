@@ -20,7 +20,7 @@ struct Constants {
         static let NetworkLogVerbose = true
         
         static let NoCacheGlobalConfig = true
-        static let Section: TestSection? = nil//.informedConsentSection
+        static let Section: TestSection? = .screeningSection
     }
     struct Network {
         static let ApiBaseUrlStr = "https://api-4youandme-staging.balzo.eu/api"

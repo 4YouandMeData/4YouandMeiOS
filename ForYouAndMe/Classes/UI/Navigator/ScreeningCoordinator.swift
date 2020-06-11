@@ -7,9 +7,11 @@
 
 import Foundation
 
-class ScreeningCoordinator {
+class ScreeningCoordinator: PagedSectionCoordinator {
     
     public unowned var navigationController: UINavigationController
+    
+    var pages: [InfoPage] { self.sectionData.pages }
     
     private let sectionData: ScreeningSection
     private let completionCallback: NavigationControllerCallback
@@ -27,8 +29,7 @@ class ScreeningCoordinator {
     public func getStartingPage() -> UIViewController {
         let infoPageData = InfoPageData(page: self.sectionData.welcomePage,
                                         addAbortOnboardingButton: false,
-                                        usePageNavigation: false,
-                                        allowBackwardNavigation: true,
+                                        allowBackwardNavigation: false,
                                         bodyTextAlignment: .left)
         return InfoPageViewController(withPageData: infoPageData, coordinator: self)
     }
@@ -43,7 +44,6 @@ class ScreeningCoordinator {
     private func showSuccess() {
         let infoPageData = InfoPageData(page: self.sectionData.successPage,
                                         addAbortOnboardingButton: false,
-                                        usePageNavigation: false,
                                         allowBackwardNavigation: false,
                                         bodyTextAlignment: .center)
         let viewController = InfoPageViewController(withPageData: infoPageData, coordinator: self)
@@ -53,7 +53,6 @@ class ScreeningCoordinator {
     private func showFailure() {
         let infoPageData = InfoPageData(page: self.sectionData.failurePage,
                                         addAbortOnboardingButton: false,
-                                        usePageNavigation: false,
                                         allowBackwardNavigation: false,
                                         bodyTextAlignment: .center)
         let viewController = InfoPageViewController(withPageData: infoPageData, coordinator: self)
@@ -61,7 +60,7 @@ class ScreeningCoordinator {
     }
     
     private func popBackToQuestions() {
-        guard let questionsViewController = self.navigationController.viewControllers
+        guard let questionsViewController = self.navigationController.viewControllers.reversed()
             .first(where: {$0 is BooleanQuestionsViewController }) else {
                 assertionFailure("Missing view controller in navigation stack")
             return
@@ -73,14 +72,14 @@ class ScreeningCoordinator {
 extension ScreeningCoordinator: InfoPageCoordinator {
     func onInfoPageConfirm(pageData: InfoPageData) {
         switch pageData.page.id {
-        case self.sectionData.welcomePage.id:
-            self.showQuestions()
         case self.sectionData.successPage.id:
             self.completionCallback(self.navigationController)
         case self.sectionData.failurePage.id:
             self.popBackToQuestions()
         default:
-            assertionFailure("Unexptected page")
+            if false == self.handleShowNextPage(forCurrentPage: pageData.page, isOnboarding: true) {
+                self.showQuestions()
+            }
         }
     }
 }

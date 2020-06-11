@@ -20,8 +20,10 @@ struct InfoPage {
     let imageData: Data
     @NilIfEmptyString
     var buttonFirstlabel: String?
+    var buttonFirstPage: InfoPageRef?
     @NilIfEmptyString
     var buttonSecondlabel: String?
+    var buttonSecondPage: InfoPageRef?
 }
 
 extension InfoPage: JSONAPIMappable {
@@ -33,11 +35,19 @@ extension InfoPage: JSONAPIMappable {
         case externalLinkLabel = "external_link_label"
         case externalLinkUrl = "external_link_url"
         case buttonFirstlabel = "link_1_label"
+        case buttonFirstPage = "link_1"
         case buttonSecondlabel = "link_2_label"
+        case buttonSecondPage = "link_2"
         case imageData = "image"
     }
 }
 
 extension InfoPage {
     var image: UIImage? { return UIImage(data: self.imageData) }
+}
+
+extension Array where Element == InfoPage {
+    func getFirstNextPage(forPageRef pageRef: InfoPageRef) -> InfoPage? {
+        return self.first(where: { $0.id == pageRef.id })
+    }
 }

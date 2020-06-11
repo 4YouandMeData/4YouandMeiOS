@@ -15,7 +15,6 @@ protocol InfoPageCoordinator {
 struct InfoPageData {
     let page: InfoPage
     let addAbortOnboardingButton: Bool
-    let usePageNavigation: Bool
     let allowBackwardNavigation: Bool
     // TODO: Replace if with info from InfoPage
     let bodyTextAlignment: NSTextAlignment
@@ -63,13 +62,14 @@ public class InfoPageViewController: UIViewController {
                                            fontStyle: .paragraph,
                                            colorType: .primaryText,
                                            textAlignment: self.pageData.bodyTextAlignment)
-        scrollStackView.stackView.addBlankSpace(space: 40.0)
         // External Link
         if nil != self.pageData.page.externalLinkUrl, let externalLinkLabel = self.pageData.page.externalLinkLabel {
+            scrollStackView.stackView.addBlankSpace(space: 40.0)
             scrollStackView.stackView.addExternalLinkButton(self,
                                                             action: #selector(self.externalLinkButtonPressed),
                                                             text: externalLinkLabel)
         }
+        scrollStackView.stackView.addBlankSpace(space: 40.0)
         
         // Confirm Button
         let confirmButtonView: GenericButtonView = {
@@ -104,12 +104,7 @@ public class InfoPageViewController: UIViewController {
     // MARK: Actions
     
     @objc private func confirmButtonPressed() {
-        if self.pageData.usePageNavigation {
-            // TODO: Navigate according to Page navigation data
-            assertionFailure("Missing link to next page in Page data")
-        } else {
-            self.coordinator.onInfoPageConfirm(pageData: self.pageData)
-        }
+        self.coordinator.onInfoPageConfirm(pageData: self.pageData)
     }
     
     @objc private func externalLinkButtonPressed() {
