@@ -8,7 +8,6 @@
 
 import Foundation
 import PureLayout
-import RxSwift
 
 protocol BooleanQuestionsCoordinator {
     func onBooleanQuestionsSuccess()
@@ -17,8 +16,6 @@ protocol BooleanQuestionsCoordinator {
 
 public class BooleanQuestionsViewController: UIViewController {
     
-    private let navigator: AppNavigator
-    private let repository: Repository
     private let questions: [Question]
     private let coordinator: BooleanQuestionsCoordinator
     
@@ -29,6 +26,7 @@ public class BooleanQuestionsViewController: UIViewController {
         tableView.tableFooterView = UIView()
         tableView.contentInsetAdjustmentBehavior = .never
         tableView.estimatedRowHeight = 130.0
+        tableView.backgroundColor = .clear
         return tableView
     }()
     
@@ -40,13 +38,9 @@ public class BooleanQuestionsViewController: UIViewController {
     
     private var items: [QuestionBooleanDisplayData] = []
     
-    private let disposeBag = DisposeBag()
-    
     init(withQuestions questions: [Question], coordinator: BooleanQuestionsCoordinator) {
         self.questions = questions
         self.coordinator = coordinator
-        self.navigator = Services.shared.navigator
-        self.repository = Services.shared.repository
         super.init(nibName: nil, bundle: nil)
     }
     

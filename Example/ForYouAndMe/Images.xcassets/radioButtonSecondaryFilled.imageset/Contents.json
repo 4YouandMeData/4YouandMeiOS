@@ -1,17 +1,17 @@
 {
   "images" : [
     {
-      "filename" : "nextButtonSecondary.png",
+      "filename" : "radioButtonSecondaryFilled.png",
       "idiom" : "universal",
       "scale" : "1x"
     },
     {
-      "filename" : "nextButtonSecondary@2x.png",
+      "filename" : "radioButtonSecondaryFilled@2x.png",
       "idiom" : "universal",
       "scale" : "2x"
     },
     {
-      "filename" : "nextButtonSecondary@3x.png",
+      "filename" : "radioButtonSecondaryFilled@3x.png",
       "idiom" : "universal",
       "scale" : "3x"
     }

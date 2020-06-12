@@ -675,6 +675,9 @@
 		89396D50249257FB004BE9DD /* DoubleButtonVerticalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89396D4F249257FB004BE9DD /* DoubleButtonVerticalView.swift */; };
 		89396D522492666B004BE9DD /* AttributedTextStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89396D512492666B004BE9DD /* AttributedTextStyle.swift */; };
 		89396D542492668A004BE9DD /* StyleCategory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89396D532492668A004BE9DD /* StyleCategory.swift */; };
+		89396D5624928B5C004BE9DD /* QuestionViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89396D5524928B5C004BE9DD /* QuestionViewController.swift */; };
+		89396D5824928C87004BE9DD /* PossibleAnswerTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89396D5724928C87004BE9DD /* PossibleAnswerTableViewCell.swift */; };
+		89397C2724937F2700746BB9 /* UITableView+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89397C2624937F2700746BB9 /* UITableView+Extensions.swift */; };
 		895CE133386CDA2B4B271287050A9BBB /* GULKeychainStorage.h in Headers */ = {isa = PBXBuildFile; fileRef = A409819DDBDC0D5BD34F2873C170A11A /* GULKeychainStorage.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		8A37BF1D5DDE2B12595DBC17B9810A4C /* TPKeyboardAvoidingCollectionView.h in Headers */ = {isa = PBXBuildFile; fileRef = B4202ABA96104D5AE7F9B9CEBBAE35BD /* TPKeyboardAvoidingCollectionView.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		8A4CD4454D0356469A55E71E7568BEF7 /* UITextView+Validator.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6BF624C0BBC21414E37B966E72EA192 /* UITextView+Validator.swift */; };
@@ -2550,6 +2553,9 @@
 		89396D4F249257FB004BE9DD /* DoubleButtonVerticalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoubleButtonVerticalView.swift; sourceTree = "<group>"; };
 		89396D512492666B004BE9DD /* AttributedTextStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AttributedTextStyle.swift; sourceTree = "<group>"; };
 		89396D532492668A004BE9DD /* StyleCategory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StyleCategory.swift; sourceTree = "<group>"; };
+		89396D5524928B5C004BE9DD /* QuestionViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuestionViewController.swift; sourceTree = "<group>"; };
+		89396D5724928C87004BE9DD /* PossibleAnswerTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PossibleAnswerTableViewCell.swift; sourceTree = "<group>"; };
+		89397C2624937F2700746BB9 /* UITableView+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UITableView+Extensions.swift"; sourceTree = "<group>"; };
 		89ACBDF12922F3A211393C4257FEF329 /* DSL.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = DSL.h; path = Sources/NimbleObjectiveC/DSL.h; sourceTree = "<group>"; };
 		89C9F42C8772094E90768003C66135AE /* Quick-Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = "Quick-Info.plist"; sourceTree = "<group>"; };
 		8A13F42C22B76612DB95B36E16C957C7 /* String+OAuthSwift.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = "String+OAuthSwift.swift"; path = "Sources/String+OAuthSwift.swift"; sourceTree = "<group>"; };
@@ -3573,6 +3579,7 @@
 				5096398D7016A12D71B26F68575FBD5F /* GenericCheckboxView.swift */,
 				3718F9087A629B46E0F0894FE67E6C07 /* GenericTextFieldView.swift */,
 				C7324EDD18F2429378E406CC32813439 /* QuestionBooleanTableViewCell.swift */,
+				89396D5724928C87004BE9DD /* PossibleAnswerTableViewCell.swift */,
 				89396D4F249257FB004BE9DD /* DoubleButtonVerticalView.swift */,
 				928207E56F4D06423C04AC7BF425EEB9 /* PhoneVerification */,
 			);
@@ -4084,6 +4091,7 @@
 				26D83DD7A742F2AC37CA35E136428F26 /* UIView+Shadow.swift */,
 				CE6A78917E4D0437A23632759AFC5DF4 /* UIViewController+Alert.swift */,
 				789F3EA0C44F0A546BC4C956BC30B488 /* UIViewController+Extensions.swift */,
+				89397C2624937F2700746BB9 /* UITableView+Extensions.swift */,
 				1C80B78A312CBC68CE00BFBB25835EF5 /* Validator */,
 				3D4756C371D7D2A9988E0D33BD67F661 /* ValitationRenderer */,
 			);
@@ -5588,6 +5596,7 @@
 				D1C1C0CD41D628E21744B244BE6C8097 /* InfoPageViewController.swift */,
 				DEC259D72965C2FBCF77A888CA2E08AE /* LoadingViewController.swift */,
 				73F6E56637DAA2E020C050347C871444 /* WebViewViewController.swift */,
+				89396D5524928B5C004BE9DD /* QuestionViewController.swift */,
 				C8E307A9861AEAC8549C396CDFC36453 /* PhoneVerification */,
 				091C8E807EA09CBC50EE71705998FB3B /* Welcome */,
 			);
@@ -7363,11 +7372,13 @@
 				A1D948A313569E535802196F1CD1222E /* FontPalette.swift in Sources */,
 				4255FB82F0CB3FE08CD7FBA1FBB08DAB /* ForYouAndMe-dummy.m in Sources */,
 				CB341F3764263614F4113FF53FDE3CDB /* FYAMManager.swift in Sources */,
+				89396D5824928C87004BE9DD /* PossibleAnswerTableViewCell.swift in Sources */,
 				490B031F2FC3FF49FEBD58CC16AF4350 /* GenericButtonStyles.swift in Sources */,
 				0BD1267C1794ADDEC5D1E5C67395B9EA /* GenericButtonView.swift in Sources */,
 				12084A524E4ACA460DF81556D2646F11 /* GenericCheckboxView.swift in Sources */,
 				3B6366606B8E8899C5C0E79F0BF15F1F /* GenericTextFieldView.swift in Sources */,
 				923825C66CD9D63FC7CD5278485713F6 /* GlobalConfig+Mappable.swift in Sources */,
+				89397C2724937F2700746BB9 /* UITableView+Extensions.swift in Sources */,
 				40B8432B2D515841C5FA2486CEB21E06 /* GlobalConfig.swift in Sources */,
 				7465139F189ACE854D6F93629CA14DE0 /* Gradient+Extension.swift in Sources */,
 				89396D542492668A004BE9DD /* StyleCategory.swift in Sources */,
@@ -7423,6 +7434,7 @@
 				80EB696E004F2F79D389D9A1462513C7 /* UINavigationController+Internal.swift in Sources */,
 				BE5748E6C562959177C9682711011B6C /* UIStackView+Extension.swift in Sources */,
 				2E46CE3F53C218ADAA75DB6E49EE14C5 /* UIStackView+Palette.swift in Sources */,
+				89396D5624928B5C004BE9DD /* QuestionViewController.swift in Sources */,
 				EE67D4B5A90963C897ECB63B27B42E5C /* UITextField+Validator.swift in Sources */,
 				89396D522492666B004BE9DD /* AttributedTextStyle.swift in Sources */,
 				8A4CD4454D0356469A55E71E7568BEF7 /* UITextView+Validator.swift in Sources */,

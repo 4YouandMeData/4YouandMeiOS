@@ -57,6 +57,7 @@ class QuestionBooleanTableViewCell: UITableViewCell {
                                            bottom: 0.0,
                                            right: Constants.Style.DefaultHorizontalMargins)
         self.selectionStyle = .none
+        self.backgroundColor = .clear
         
         let horizontalStackView = UIStackView()
         horizontalStackView.axis = .horizontal
@@ -97,13 +98,13 @@ class QuestionBooleanTableViewCell: UITableViewCell {
         self.answerBLabel.attributedText = NSAttributedString.create(withText: data.answerB,
                                                                      fontStyle: .paragraph,
                                                                      colorType: .fourthText)
-        self.answerAButton.setImage(ImagePalette.image(withName: .radioButtonOutline), for: .normal)
-        self.answerBButton.setImage(ImagePalette.image(withName: .radioButtonOutline), for: .normal)
+        self.answerAButton.setImage(ImagePalette.image(withName: .radioButtonPrimaryOutline), for: .normal)
+        self.answerBButton.setImage(ImagePalette.image(withName: .radioButtonPrimaryOutline), for: .normal)
         if let answerAisActive = data.answerAisActive {
             if answerAisActive {
-                self.answerAButton.setImage(ImagePalette.image(withName: .radioButtonFilled), for: .normal)
+                self.answerAButton.setImage(ImagePalette.image(withName: .radioButtonPrimaryFilled), for: .normal)
             } else {
-                self.answerBButton.setImage(ImagePalette.image(withName: .radioButtonFilled), for: .normal)
+                self.answerBButton.setImage(ImagePalette.image(withName: .radioButtonPrimaryFilled), for: .normal)
             }
         }
     }

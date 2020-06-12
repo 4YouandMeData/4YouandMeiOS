@@ -58,11 +58,11 @@ public class IntroViewController: UIViewController {
         let bottomStackView = UIStackView()
         bottomStackView.axis = .vertical
         bottomStackView.distribution = .fillEqually
-        bottomStackView.addOption(image: ImagePalette.image(withName: .nextButtonSecondary),
+        bottomStackView.addOption(image: ImagePalette.image(withName: .nextButtonSmallSecondary),
                                   text: StringsProvider.string(forKey: .introLogin),
                                   target: self,
                                   selector: #selector(self.showLogin))
-        bottomStackView.addOption(image: ImagePalette.image(withName: .nextButtonSecondary),
+        bottomStackView.addOption(image: ImagePalette.image(withName: .nextButtonSmallSecondary),
                                   text: StringsProvider.string(forKey: .introSetupLater),
                                   target: self,
                                   selector: #selector(self.setupLaterPressed))

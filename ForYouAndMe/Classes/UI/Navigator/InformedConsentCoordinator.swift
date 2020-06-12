@@ -16,6 +16,8 @@ class InformedConsentCoordinator: PagedSectionCoordinator {
     private let sectionData: InformedConsentSection
     private let completionCallback: NavigationControllerCallback
     
+    var answers: [Question: PossibleAnswer] = [:]
+    
     init(withSectionData sectionData: InformedConsentSection,
          navigationController: UINavigationController,
          completionCallback: @escaping NavigationControllerCallback) {
@@ -32,15 +34,6 @@ class InformedConsentCoordinator: PagedSectionCoordinator {
     }
     
     // MARK: - Private Methods
-    
-    private func showQuestions() {
-        if self.sectionData.questions.count > 0 {
-            // TODO: Add Informed Consent questions
-            self.navigationController.showAlert(withTitle: "Work in progress", message: "Informed Consent questions coming soon")
-        } else {
-            self.completionCallback(self.navigationController)
-        }
-    }
     
     private func showSuccess() {
         guard let successPage = self.sectionData.successPage else {
@@ -65,6 +58,21 @@ class InformedConsentCoordinator: PagedSectionCoordinator {
         let viewController = InfoPageViewController(withPageData: infoPageData, coordinator: self)
         self.navigationController.pushViewController(viewController, animated: true)
     }
+    
+    private func showQuestion(_ question: Question) {
+        let viewController = QuestionViewController(withQuestion: question, coordinator: self)
+        self.navigationController.pushViewController(viewController, animated: true)
+    }
+    
+    private func validateAnswers() -> Bool {
+        // TODO: Implement correct answers validation
+        
+        // Current hardcoded logic: success if all answers - max 1 answer are correct
+        let minimumCorrectAnswerCount = self.answers.count - 1
+        var currentCorrectAnswerCount = 0
+        self.answers.values.forEach { currentCorrectAnswerCount += $0.correct ? 1 : 0 }
+        return currentCorrectAnswerCount >= minimumCorrectAnswerCount
+    }
 }
 
 extension InformedConsentCoordinator: InfoPageCoordinator {
@@ -76,7 +84,11 @@ extension InformedConsentCoordinator: InfoPageCoordinator {
             if let pageRef = pageData.page.buttonFirstPage {
                 self.showLinkedPage(forPageRef: pageRef, isOnboarding: true)
             } else {
-                self.showQuestions()
+                if let firstQuestion = self.sectionData.questions.first {
+                    self.showQuestion(firstQuestion)
+                } else {
+                    self.completionCallback(self.navigationController)
+                }
             }
         }
     }
@@ -87,5 +99,39 @@ extension InformedConsentCoordinator: InfoPageCoordinator {
             return
         }
         self.showLinkedPage(forPageRef: pageRef, isOnboarding: true)
+    }
+}
+
+extension InformedConsentCoordinator: QuestionViewCoordinator {
+    func onQuestionAnsweredSuccess(possibleAnswer: PossibleAnswer, forQuestion question: Question) {
+        self.answers[question] = possibleAnswer
+        
+        guard let questionIndex = self.sectionData.questions.firstIndex(of: question) else {
+            assertionFailure("Missing question in question array")
+            return
+        }
+        
+        let nextQuestionIndex = questionIndex + 1
+        if nextQuestionIndex == self.sectionData.questions.count {
+            assert(self.answers.count == self.sectionData.questions.count, "Mismatch answers count and questions count")
+            if self.validateAnswers() {
+                self.showSuccess()
+            } else {
+                self.showFailure()
+            }
+        } else {
+            let nextQuestion = self.sectionData.questions[nextQuestionIndex]
+            self.showQuestion(nextQuestion)
+        }
+    }
+}
+
+extension Question: Hashable, Equatable {
+    static func == (lhs: Question, rhs: Question) -> Bool {
+        return lhs.id == rhs.id
+    }
+    
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(self.id)
     }
 }

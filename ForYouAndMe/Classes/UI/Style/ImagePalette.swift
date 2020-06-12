@@ -17,14 +17,17 @@ enum ImageName: String, CaseIterable {
     case nextButtonPrimary
     case backButtonPrimary
     case nextButtonSecondary
+    case nextButtonSmallSecondary
     case backButton
     case closeButton
     case checkmark
     case edit
     case checkboxOutline
     case checkboxFilled
-    case radioButtonFilled
-    case radioButtonOutline
+    case radioButtonPrimaryFilled
+    case radioButtonPrimaryOutline
+    case radioButtonSecondaryFilled
+    case radioButtonSecondaryOutline
 }
 
 public class ImagePalette {
