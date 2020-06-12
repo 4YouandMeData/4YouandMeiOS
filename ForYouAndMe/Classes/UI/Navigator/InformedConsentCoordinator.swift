@@ -7,11 +7,9 @@
 
 import Foundation
 
-class InformedConsentCoordinator: PagedSectionCoordinator {
+class InformedConsentCoordinator {
     
     public unowned var navigationController: UINavigationController
-    
-    var pages: [InfoPage] { self.sectionData.pages }
     
     private let sectionData: InformedConsentSection
     private let completionCallback: NavigationControllerCallback
@@ -75,30 +73,24 @@ class InformedConsentCoordinator: PagedSectionCoordinator {
     }
 }
 
-extension InformedConsentCoordinator: InfoPageCoordinator {
-    func onInfoPagePrimaryButtonPressed(pageData: InfoPageData) {
-        switch pageData.page.id {
-        case self.sectionData.successPage?.id:
+extension InformedConsentCoordinator: PagedSectionCoordinator {
+    
+    var pages: [InfoPage] { self.sectionData.pages }
+    
+    func performCustomPrimaryButtonNavigation(page: InfoPage) -> Bool {
+        if self.sectionData.successPage?.id == page.id {
             self.completionCallback(self.navigationController)
-        default:
-            if let pageRef = pageData.page.buttonFirstPage {
-                self.showLinkedPage(forPageRef: pageRef, isOnboarding: true)
-            } else {
-                if let firstQuestion = self.sectionData.questions.first {
-                    self.showQuestion(firstQuestion)
-                } else {
-                    self.completionCallback(self.navigationController)
-                }
-            }
+            return true
         }
+        return false
     }
     
-    func onInfoPageSecondaryButtonPressed(pageData: InfoPageData) {
-        guard let pageRef = pageData.page.buttonSecondPage else {
-            assertionFailure("Missing action for secondary button pressed!")
-            return
+    func onUnhandledPrimaryButtonNavigation(page: InfoPage) {
+        if let firstQuestion = self.sectionData.questions.first {
+            self.showQuestion(firstQuestion)
+        } else {
+            self.completionCallback(self.navigationController)
         }
-        self.showLinkedPage(forPageRef: pageRef, isOnboarding: true)
     }
 }
 

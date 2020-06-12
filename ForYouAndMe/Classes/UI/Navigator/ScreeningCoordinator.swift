@@ -7,11 +7,9 @@
 
 import Foundation
 
-class ScreeningCoordinator: PagedSectionCoordinator {
+class ScreeningCoordinator {
     
     public unowned var navigationController: UINavigationController
-    
-    var pages: [InfoPage] { self.sectionData.pages }
     
     private let sectionData: ScreeningSection
     private let completionCallback: NavigationControllerCallback
@@ -34,12 +32,8 @@ class ScreeningCoordinator: PagedSectionCoordinator {
     // MARK: - Private Methods
     
     private func showQuestions() {
-        if self.sectionData.questions.count > 0 {
-            let viewController = BooleanQuestionsViewController(withQuestions: self.sectionData.questions, coordinator: self)
-            self.navigationController.pushViewController(viewController, animated: true)
-        } else {
-            self.completionCallback(self.navigationController)
-        }
+        let viewController = BooleanQuestionsViewController(withQuestions: self.sectionData.questions, coordinator: self)
+        self.navigationController.pushViewController(viewController, animated: true)
     }
     
     private func showSuccess() {
@@ -72,27 +66,27 @@ class ScreeningCoordinator: PagedSectionCoordinator {
     }
 }
 
-extension ScreeningCoordinator: InfoPageCoordinator {
-    func onInfoPagePrimaryButtonPressed(pageData: InfoPageData) {
-        switch pageData.page.id {
-        case self.sectionData.successPage?.id:
+extension ScreeningCoordinator: PagedSectionCoordinator {
+    
+    var pages: [InfoPage] { self.sectionData.pages }
+    
+    func performCustomPrimaryButtonNavigation(page: InfoPage) -> Bool {
+        if self.sectionData.successPage?.id == page.id {
             self.completionCallback(self.navigationController)
-        case self.sectionData.failurePage?.id:
+            return true
+        } else if self.sectionData.failurePage?.id == page.id {
             self.popBackToQuestions()
-        default:
-            if let pageRef = pageData.page.buttonFirstPage {
-                self.showLinkedPage(forPageRef: pageRef, isOnboarding: true)
-            } else {
-                self.showQuestions()
-            }
+            return true
         }
+        return false
     }
-    func onInfoPageSecondaryButtonPressed(pageData: InfoPageData) {
-        guard let pageRef = pageData.page.buttonSecondPage else {
-            assertionFailure("Missing action for secondary button pressed!")
-            return
+    
+    func onUnhandledPrimaryButtonNavigation(page: InfoPage) {
+        if self.sectionData.questions.count > 0 {
+            self.showQuestions()
+        } else {
+            self.completionCallback(self.navigationController)
         }
-        self.showLinkedPage(forPageRef: pageRef, isOnboarding: true)
     }
 }
 
