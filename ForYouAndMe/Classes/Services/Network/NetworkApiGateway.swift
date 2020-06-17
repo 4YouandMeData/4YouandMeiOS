@@ -217,9 +217,12 @@ fileprivate extension PrimitiveSequence where Trait == SingleTrait, Element == R
                         if let serverError = ServerErrorCode(rawValue: response.statusCode) {
                             switch serverError {
                             case .unauthorized:
-                                return Single.error(ApiError.userUnauthorized)
+                                if request.isAuthTokenRequired {
+                                    return Single.error(ApiError.userUnauthorized)
+                                }
                             }
-                        } else if let error = try? response.map(to: errorType) {
+                        }
+                        if let error = try? response.map(to: errorType) {
                             return Single.error(ApiError.error(response.statusCode, error))
                         } else {
                             return Single.error(ApiError.errorCode(response.statusCode, String(data: response.data, encoding: .utf8) ?? ""))
@@ -324,10 +327,16 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         case .getGlobalConfig,
              .submitPhoneNumber,
              .verifyPhoneNumber:
-            return .none
+            return nil
         case .getScreeningSection,
              .getInformedConsentSection:
             return .bearer
         }
+    }
+}
+
+fileprivate extension ApiRequest {
+    var isAuthTokenRequired: Bool {
+        nil != self.serviceRequest.authorizationType
     }
 }
