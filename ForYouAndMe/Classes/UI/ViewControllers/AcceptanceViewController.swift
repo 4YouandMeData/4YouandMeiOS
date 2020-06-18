@@ -35,6 +35,29 @@ public class AcceptanceViewController: UIViewController {
         super.viewDidLoad()
         
         self.view.backgroundColor = ColorPalette.color(withType: .secondary)
+        
+        // ScrollStackView
+        let scrollStackView = ScrollStackView(axis: .vertical, horizontalInset: Constants.Style.DefaultHorizontalMargins)
+        self.view.addSubview(scrollStackView)
+        scrollStackView.autoPinEdgesToSuperviewSafeArea(with: .zero, excludingEdge: .bottom)
+        
+        scrollStackView.stackView.addBlankSpace(space: 50.0)
+        
+        // TODO: Add content
+        
+        // Bottom View
+        let bottomView = DoubleButtonHorizontalView(styleCategory: .secondaryBackground(firstButtonPrimary: false,
+                                                                                        secondButtonPrimary: true))
+        
+        bottomView.setFirstButtonText(StringsProvider.string(forKey: .onboardingDisagreeButton))
+        bottomView.addTargetToFirstButton(target: self, action: #selector(self.disagreeButtonPressed))
+        
+        bottomView.setSecondButtonText(StringsProvider.string(forKey: .onboardingAgreeButton))
+        bottomView.addTargetToSecondButton(target: self, action: #selector(self.agreenButtonPressed))
+                
+        self.view.addSubview(bottomView)
+        bottomView.autoPinEdgesToSuperviewSafeArea(with: UIEdgeInsets.zero, excludingEdge: .top)
+        scrollStackView.scrollView.autoPinEdge(.bottom, to: .top, of: bottomView)
     }
     
     public override func viewWillAppear(_ animated: Bool) {

@@ -44,6 +44,9 @@ enum StringKey: String, CaseIterable, CodingKey {
     case onboardingAbortMessage = "ONBOARDING_ABORT_MESSAGE"
     case onboardingAbortConfirm = "ONBOARDING_ABORT_CONFIRM"
     case onboardingAbortCancel = "ONBOARDING_ABORT_CANCEL"
+    case onboardingAgreeButton = "ONBOARDING_AGREE_BUTTON"
+    case onboardingDisagreeButton = "ONBOARDING_DISAGREE_BUTTON"
+    
     
     // Generic
     case genericInfoTitle = "GENERIC_INFO_TITLE"

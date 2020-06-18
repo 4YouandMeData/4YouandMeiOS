@@ -12,4 +12,14 @@ struct AttributedTextStyle {
     let colorType: ColorType
     let textAlignment: NSTextAlignment
     let underlined: Bool
+    
+    init(fontStyle: FontStyle,
+         colorType: ColorType,
+         textAlignment: NSTextAlignment = .center,
+         underlined: Bool = false) {
+        self.fontStyle = fontStyle
+        self.colorType = colorType
+        self.textAlignment = textAlignment
+        self.underlined = underlined
+    }
 }

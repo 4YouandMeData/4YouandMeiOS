@@ -15,7 +15,7 @@ public class WelcomeViewController: UIViewController {
     
     private lazy var continueButton: UIButton = {
         let button = UIButton()
-        button.apply(style: ButtonStyles.secondaryStyle)
+        button.apply(style: ButtonTextStyleCategory.secondaryBackground(customHeight: nil).style)
         button.setTitle(StringsProvider.string(forKey: .welcomeStartButton), for: .normal)
         button.addTarget(self, action: #selector(self.showIntro), for: .touchUpInside)
         return button

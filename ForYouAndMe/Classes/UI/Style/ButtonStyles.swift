@@ -9,35 +9,48 @@
 import UIKit
 import PureLayout
 
-public class ButtonStyles {
+enum ButtonTextStyleCategory: StyleCategory {
+    case primaryBackground(customHeight: CGFloat?)
+    case secondaryBackground(customHeight: CGFloat?)
+    case loadingErrorStyle
     
-    private static let defaultHeight: CGFloat = 52.0
-    private static let defaultCornerRadius: CGFloat = defaultHeight / 2.0
-    
-    static let primaryStyle = Style<UIButton> { button in
-        button.autoSetDimension(.height, toSize: defaultHeight)
-        button.layer.cornerRadius = defaultCornerRadius
-        button.backgroundColor = ColorPalette.color(withType: .primary)
-        button.setTitleColor(ColorPalette.color(withType: .secondaryText), for: .normal)
-        button.titleLabel?.font = FontPalette.fontStyleData(forStyle: .header2).font
-        button.addShadowButton()
+    var style: Style<UIButton> {
+        switch self {
+        case .primaryBackground(let customHeight): return Style<UIButton> { button in
+            let buttonHeight = self.buttonHeight(fromCustomHeight: customHeight)
+            button.heightConstraintValue = buttonHeight
+            button.layer.cornerRadius = buttonHeight / 2.0
+            button.backgroundColor = ColorPalette.color(withType: .gradientPrimaryEnd)
+            button.setTitleColor(ColorPalette.color(withType: .secondaryText), for: .normal)
+            button.titleLabel?.font = FontPalette.fontStyleData(forStyle: .header2).font
+            button.addShadowButton()
+            }
+        case .secondaryBackground(let customHeight): return Style<UIButton> { button in
+            let buttonHeight = self.buttonHeight(fromCustomHeight: customHeight)
+            button.heightConstraintValue = buttonHeight
+            button.layer.cornerRadius = buttonHeight / 2.0
+            button.backgroundColor = ColorPalette.color(withType: .secondary)
+            button.setTitleColor(ColorPalette.color(withType: .tertiaryText), for: .normal)
+            button.titleLabel?.font = FontPalette.fontStyleData(forStyle: .header2).font
+            button.addShadowButton()
+            }
+        case .loadingErrorStyle: return Style<UIButton> { button in
+            let buttonHeight = Constants.Style.DefaultTextButtonHeight
+            button.heightConstraintValue = buttonHeight
+            button.layer.cornerRadius = buttonHeight / 2.0
+            button.backgroundColor = ColorPalette.loadingErrorPrimaryColor
+            button.setTitleColor(ColorPalette.loadingErrorSecondaryColor, for: .normal)
+            button.titleLabel?.font = FontPalette.fontStyleData(forStyle: .header2).font
+            button.addShadowButton()
+            }
+        }
     }
-    
-    static let secondaryStyle = Style<UIButton> { button in
-        button.autoSetDimension(.height, toSize: defaultHeight)
-        button.layer.cornerRadius = defaultCornerRadius
-        button.backgroundColor = ColorPalette.color(withType: .secondary)
-        button.setTitleColor(ColorPalette.color(withType: .tertiaryText), for: .normal)
-        button.titleLabel?.font = FontPalette.fontStyleData(forStyle: .header2).font
-        button.addShadowButton()
-    }
-    
-    static let loadingErrorStyle = Style<UIButton> { button in
-        button.autoSetDimension(.height, toSize: defaultHeight)
-        button.layer.cornerRadius = defaultCornerRadius
-        button.backgroundColor = ColorPalette.loadingErrorPrimaryColor
-        button.setTitleColor(ColorPalette.loadingErrorSecondaryColor, for: .normal)
-        button.titleLabel?.font = FontPalette.fontStyleData(forStyle: .header2).font
-        button.addShadowButton()
+        
+    private func buttonHeight(fromCustomHeight customHeight: CGFloat?) -> CGFloat {
+        if let customHeight = customHeight {
+            return customHeight
+        } else {
+            return Constants.Style.DefaultTextButtonHeight
+        }
     }
 }

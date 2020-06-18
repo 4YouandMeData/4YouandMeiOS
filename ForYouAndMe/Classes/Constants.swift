@@ -30,7 +30,8 @@ struct Constants {
     }
     struct Style {
         static let DefaultHorizontalMargins: CGFloat = 24.0
-        static let DefaultFooterButtonHeight: CGFloat = 134.0
+        static let DefaultFooterHeight: CGFloat = 134.0
+        static let DefaultTextButtonHeight: CGFloat = 52.0
     }
     struct Resources {
         static let DefaultBundleName: String = "ForYouAndMe"

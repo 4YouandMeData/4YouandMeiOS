@@ -10,7 +10,7 @@ import UIKit
 import PureLayout
 
 public extension UIView {
-    var heightConstraint: CGFloat? {
+    var heightConstraintValue: CGFloat? {
         get {
             return self.constraints.first(where: { $0.firstAttribute == .height })?.constant
         }
@@ -28,7 +28,7 @@ public extension UIView {
             }
         }
     }
-    var widthConstraint: CGFloat? {
+    var widthConstraintValue: CGFloat? {
         get {
             return self.constraints.first(where: { $0.firstAttribute == .width })?.constant
         }

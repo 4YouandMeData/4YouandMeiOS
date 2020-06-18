@@ -40,7 +40,7 @@ class DoubleButtonVerticalView: UIView {
     
     init(styleCategory: DoubleButtonVerticalStyleCategory,
          horizontalInset: CGFloat = Constants.Style.DefaultHorizontalMargins,
-         height: CGFloat = Constants.Style.DefaultFooterButtonHeight) {
+         height: CGFloat = Constants.Style.DefaultFooterHeight) {
         super.init(frame: .zero)
         
         self.autoSetDimension(.height, toSize: height)

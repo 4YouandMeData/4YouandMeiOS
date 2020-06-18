@@ -669,6 +669,7 @@
 		88EA2BDD8F4EE7C090059FBEB362E019 /* GenericCheckboxView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6ADF86B29EE9C765DFA09AE5607CA12B /* GenericCheckboxView.swift */; };
 		892F567BF4D68BB3C3AE4687AE25BE8C /* FIRCLSDownloadAndSaveSettingsOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = B3F6B394A801E13BE44868A5F1420E24 /* FIRCLSDownloadAndSaveSettingsOperation.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
 		895CE133386CDA2B4B271287050A9BBB /* GULKeychainStorage.h in Headers */ = {isa = PBXBuildFile; fileRef = A409819DDBDC0D5BD34F2873C170A11A /* GULKeychainStorage.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		8994B671249B9CFB00113A3D /* DoubleButtonHorizontalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8994B670249B9CFB00113A3D /* DoubleButtonHorizontalView.swift */; };
 		89D00A353A7AFC91C828615BC6989E5D /* Timeout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BF085DD4CF18AF6700B419923F8C9DA /* Timeout.swift */; };
 		8A2C99B3F8AF5227EF69017A5EC75B30 /* Moya.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EF92C91287E5506411F9E5F043E6CDE3 /* Moya.framework */; };
 		8AA937910F87915DE700CAB6C868689E /* Notifications.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4176531E795263E7EC72F3EAAD3C2B25 /* Notifications.swift */; };
@@ -2545,6 +2546,7 @@
 		888362E0FF0627D3954EE83D03FE56F1 /* FIROptions.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = FIROptions.h; path = FirebaseCore/Sources/Public/FIROptions.h; sourceTree = "<group>"; };
 		88A51ED2D56C700F3885E796B7A91491 /* FIRCLSdSYM.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = FIRCLSdSYM.h; path = Crashlytics/Shared/FIRCLSMachO/FIRCLSdSYM.h; sourceTree = "<group>"; };
 		89251E3E91103B1F8578C5A1EF0FFC9A /* String+Localization.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = "String+Localization.swift"; sourceTree = "<group>"; };
+		8994B670249B9CFB00113A3D /* DoubleButtonHorizontalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoubleButtonHorizontalView.swift; sourceTree = "<group>"; };
 		89ACBDF12922F3A211393C4257FEF329 /* DSL.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = DSL.h; path = Sources/NimbleObjectiveC/DSL.h; sourceTree = "<group>"; };
 		89C9F42C8772094E90768003C66135AE /* Quick-Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = "Quick-Info.plist"; sourceTree = "<group>"; };
 		8A13F42C22B76612DB95B36E16C957C7 /* String+OAuthSwift.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = "String+OAuthSwift.swift"; path = "Sources/String+OAuthSwift.swift"; sourceTree = "<group>"; };
@@ -3506,6 +3508,7 @@
 			isa = PBXGroup;
 			children = (
 				F82777582733FECE76A3991D933D447B /* DoubleButtonVerticalView.swift */,
+				8994B670249B9CFB00113A3D /* DoubleButtonHorizontalView.swift */,
 				A7237EAA8B26BDEF658255C245D7E60C /* GenericButtonView.swift */,
 				6ADF86B29EE9C765DFA09AE5607CA12B /* GenericCheckboxView.swift */,
 				D3250AB202A6114FC495A5333AA7D511 /* GenericTextFieldView.swift */,
@@ -7472,6 +7475,7 @@
 				FE1535C21E51536F51AF1B5BA4AB2780 /* Validator+Extensions.swift in Sources */,
 				2615E0A250577FC90D8204E73B2BC14C /* ValidatorLocalizable.strings in Sources */,
 				9341A5F1E541949DF6B1FB9D7EE3BE25 /* ValidatorLocalizable.strings in Sources */,
+				8994B671249B9CFB00113A3D /* DoubleButtonHorizontalView.swift in Sources */,
 				5ABAFA57917F830AD31ACF41B86A996A /* ValidatorLocalizable.strings in Sources */,
 				0ADBB47E0DDF1003F8540DFBFFC9FCAD /* WebViewViewController.swift in Sources */,
 				4417940BFBD8CC602BE6C4774AD542B7 /* WelcomeViewController.swift in Sources */,

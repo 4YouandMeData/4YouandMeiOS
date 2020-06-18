@@ -35,12 +35,12 @@ class GenericButtonView: UIView {
     convenience init(withTextStyleCategory textStyleCategory: GenericButtonTextStyleCategory,
                      fillWidth: Bool = true,
                      horizontalInset: CGFloat = Constants.Style.DefaultHorizontalMargins,
-                     height: CGFloat = Constants.Style.DefaultFooterButtonHeight) {
+                     height: CGFloat = Constants.Style.DefaultFooterHeight) {
         self.init(withStyle: textStyleCategory.style, fillWidth: fillWidth, horizontalInset: horizontalInset, height: height)
     }
     
     convenience init(withImageStyleCategory imageStyleCategory: GenericButtonImageStyleCategory,
-                     height: CGFloat = Constants.Style.DefaultFooterButtonHeight) {
+                     height: CGFloat = Constants.Style.DefaultFooterHeight) {
         self.init(withStyle: imageStyleCategory.style, fillWidth: false, height: height)
     }
     
@@ -51,7 +51,7 @@ class GenericButtonView: UIView {
         super.init(frame: .zero)
         
         self.addSubview(self.button)
-        if let buttonHeight = self.button.heightConstraint, buttonHeight > height {
+        if let buttonHeight = self.button.heightConstraintValue, buttonHeight > height {
             self.autoSetDimension(.height, toSize: buttonHeight)
         } else {
             self.autoSetDimension(.height, toSize: height)

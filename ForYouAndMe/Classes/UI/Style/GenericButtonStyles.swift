@@ -18,12 +18,12 @@ enum GenericButtonTextStyleCategory: StyleCategory {
         case .primaryBackground: return Style<GenericButtonView> { buttonView in
             buttonView.backgroundColor = ColorPalette.color(withType: .primary)
             buttonView.addGradientView(.init(type: .primaryBackground))
-            buttonView.button.apply(style: ButtonStyles.secondaryStyle)
+            buttonView.button.apply(style: ButtonTextStyleCategory.secondaryBackground(customHeight: nil).style)
             buttonView.addShadowLinear(goingDown: false)
             }
         case .secondaryBackground: return Style<GenericButtonView> { buttonView in
             buttonView.backgroundColor = ColorPalette.color(withType: .secondary)
-            buttonView.button.apply(style: ButtonStyles.primaryStyle)
+            buttonView.button.apply(style: ButtonTextStyleCategory.primaryBackground(customHeight: nil).style)
             buttonView.addShadowLinear(goingDown: false)
             }
         }

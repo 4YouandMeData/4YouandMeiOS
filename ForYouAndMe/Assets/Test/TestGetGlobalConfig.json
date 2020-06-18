@@ -35,6 +35,8 @@
       "PHONE_VERIFICATION_BODY": "This app was created for participants in the study BUMP by 4YouandMe. To verify you have been recruited for this study, please enter your phone number below.\n\nWe will text you a validation code.\n\nPlease use the same phone number that you shared with the research team.",
       "ONBOARDING_ABORT_CONFIRM": "Yes",
       "ONBOARDING_ABORT_MESSAGE": "If you click cancel you will return to the beginning of the app and lose all progress",
+      "ONBOARDING_AGREE_BUTTON": "Agree",
+      "ONBOARDING_DISAGREE_BUTTON": "Disagree",
       "PHONE_VERIFICATION_LEGAL": "By checking this box, I hereby agree to the Terms of service and Privacy Policy",
       "PHONE_VERIFICATION_TITLE": "Welcome to the BUMP study app",
       "ERROR_MESSAGE_CONNECTIVITY": "You seem to be offline.\nPlease check your internet connection and try again.",

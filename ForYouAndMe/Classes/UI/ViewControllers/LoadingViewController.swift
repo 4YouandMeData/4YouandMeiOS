@@ -38,7 +38,7 @@ class LoadingViewController<T>: UIViewController, LoadingPage {
     
     private lazy var retryButton: UIButton = {
         let button = UIButton()
-        button.apply(style: ButtonStyles.loadingErrorStyle)
+        button.apply(style: ButtonTextStyleCategory.loadingErrorStyle.style)
         button.setTitle(StringsProvider.string(forKey: .errorButtonRetry), for: .normal)
         button.addTarget(self, action: #selector(self.retryButtonPressed), for: .touchUpInside)
         return button
