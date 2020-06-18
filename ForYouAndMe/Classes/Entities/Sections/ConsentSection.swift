@@ -13,7 +13,7 @@ struct ConsentSection {
 
     let title: String
     let body: String
-    let subtitle: String
+    let subtitle: String?
     let disagreeBody: String
     let disagreeButton: String
     let pages: [InfoPage]

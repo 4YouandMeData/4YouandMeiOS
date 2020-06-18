@@ -15,7 +15,7 @@ protocol AcceptanceCoordinator {
 
 struct AcceptanceData {
     let title: String
-    let subtitle: String
+    let subtitle: String?
     let body: String
     let startingPage: InfoPage
     let pages: [InfoPage]
@@ -58,11 +58,14 @@ public class AcceptanceViewController: UIViewController {
                                            fontStyle: .paragraph,
                                            colorType: .fourthText,
                                            textAlignment: .left)
-        scrollStackView.stackView.addBlankSpace(space: 45.0)
-        scrollStackView.stackView.addLabel(withText: self.data.subtitle,
-                                           fontStyle: .title,
-                                           colorType: .primaryText,
-                                           textAlignment: .left)
+        if let subtitle = self.data.subtitle, false == subtitle.isEmpty {
+            scrollStackView.stackView.addBlankSpace(space: 45.0)
+            scrollStackView.stackView.addLabel(withText: subtitle,
+                                               fontStyle: .title,
+                                               colorType: .primaryText,
+                                               textAlignment: .left)
+        }
+        
         scrollStackView.stackView.addBlankSpace(space: 21.0)
         
         var nextPage: InfoPage? = self.data.startingPage
