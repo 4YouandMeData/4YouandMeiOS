@@ -13,3 +13,9 @@ struct InfoPageRef {
 }
 
 extension InfoPageRef: JSONAPIMappable {}
+
+extension InfoPageRef {
+    func getInfoPage(fromInfoPages infoPages: [InfoPage]) -> InfoPage? {
+        return infoPages.getInfoPage(forInfoPageRef: self)
+    }
+}

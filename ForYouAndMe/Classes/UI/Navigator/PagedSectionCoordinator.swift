@@ -41,7 +41,7 @@ extension PagedSectionCoordinator {
         if let previousController = previousController {
             self.navigationController.popToViewController(previousController, animated: true)
         } else {
-            guard let nextPage = self.pages.getFirstNextPage(forPageRef: pageRef) else {
+            guard let nextPage = self.pages.getInfoPage(forInfoPageRef: pageRef) else {
                 assertionFailure("Missing page for page ref")
                 return
             }

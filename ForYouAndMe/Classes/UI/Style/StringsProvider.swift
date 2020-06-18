@@ -47,7 +47,6 @@ enum StringKey: String, CaseIterable, CodingKey {
     case onboardingAgreeButton = "ONBOARDING_AGREE_BUTTON"
     case onboardingDisagreeButton = "ONBOARDING_DISAGREE_BUTTON"
     
-    
     // Generic
     case genericInfoTitle = "GENERIC_INFO_TITLE"
     

@@ -53,7 +53,7 @@ extension InfoPage {
 }
 
 extension Array where Element == InfoPage {
-    func getFirstNextPage(forPageRef pageRef: InfoPageRef) -> InfoPage? {
-        return self.first(where: { $0.id == pageRef.id })
+    func getInfoPage(forInfoPageRef infoPageRef: InfoPageRef) -> InfoPage? {
+        return self.first(where: { $0.id == infoPageRef.id })
     }
 }

@@ -25,7 +25,12 @@ class ConsentCoordinator {
     // MARK: - Public Methods
     
     public func getStartingPage() -> UIViewController {
-        return AcceptanceViewController(withStartingPage: self.sectionData.welcomePage, pages: self.sectionData.pages, coordinator: self)
+        let data = AcceptanceData(title: self.sectionData.title,
+                                  subtitle: self.sectionData.subtitle,
+                                  body: self.sectionData.body,
+                                  startingPage: self.sectionData.welcomePage,
+                                  pages: self.sectionData.pages)
+        return AcceptanceViewController(withData: data, coordinator: self)
     }
     
     // MARK: - Private Methods

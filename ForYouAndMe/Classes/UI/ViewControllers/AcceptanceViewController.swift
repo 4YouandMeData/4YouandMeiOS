@@ -13,16 +13,22 @@ protocol AcceptanceCoordinator {
     func onDisagreeButtonPressed()
 }
 
+struct AcceptanceData {
+    let title: String
+    let subtitle: String
+    let body: String
+    let startingPage: InfoPage
+    let pages: [InfoPage]
+}
+
 public class AcceptanceViewController: UIViewController {
     
-    private let startingPage: InfoPage
-    private let pages: [InfoPage]
+    private let data: AcceptanceData
     
     private let coordinator: AcceptanceCoordinator
     
-    init(withStartingPage startingPage: InfoPage, pages: [InfoPage], coordinator: AcceptanceCoordinator) {
-        self.startingPage = startingPage
-        self.pages = pages
+    init(withData data: AcceptanceData, coordinator: AcceptanceCoordinator) {
+        self.data = data
         self.coordinator = coordinator
         super.init(nibName: nil, bundle: nil)
     }
@@ -43,7 +49,28 @@ public class AcceptanceViewController: UIViewController {
         
         scrollStackView.stackView.addBlankSpace(space: 50.0)
         
-        // TODO: Add content
+        scrollStackView.stackView.addLabel(withText: self.data.title,
+                                           fontStyle: .title,
+                                           colorType: .primaryText,
+                                           textAlignment: .left)
+        scrollStackView.stackView.addBlankSpace(space: 21.0)
+        scrollStackView.stackView.addLabel(withText: self.data.body,
+                                           fontStyle: .paragraph,
+                                           colorType: .fourthText,
+                                           textAlignment: .left)
+        scrollStackView.stackView.addBlankSpace(space: 45.0)
+        scrollStackView.stackView.addLabel(withText: self.data.subtitle,
+                                           fontStyle: .title,
+                                           colorType: .primaryText,
+                                           textAlignment: .left)
+        scrollStackView.stackView.addBlankSpace(space: 21.0)
+        
+        var nextPage: InfoPage? = self.data.startingPage
+        while let currentPage = nextPage {
+            scrollStackView.stackView.addPage(currentPage)
+            scrollStackView.stackView.addBlankSpace(space: 40.0)
+            nextPage = currentPage.buttonFirstPage?.getInfoPage(fromInfoPages: self.data.pages)
+        }
         
         // Bottom View
         let bottomView = DoubleButtonHorizontalView(styleCategory: .secondaryBackground(firstButtonPrimary: false,
@@ -73,5 +100,31 @@ public class AcceptanceViewController: UIViewController {
     
     @objc private func disagreeButtonPressed() {
         self.coordinator.onDisagreeButtonPressed()
+    }
+}
+
+fileprivate extension UIStackView {
+    
+    func addPage(_ page: InfoPage) {
+        let view = UIView()
+        view.backgroundColor = ColorPalette.color(withType: .inactive)
+        view.round(radius: 8.0)
+        
+        let stackView = UIStackView()
+        stackView.axis = .vertical
+        view.addSubview(stackView)
+        stackView.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets(top: 40.0, left: 12.0, bottom: 40.0, right: 12.0))
+        
+        stackView.addLabel(withText: page.title,
+                           fontStyle: .header2,
+                           colorType: .primaryText,
+                           textAlignment: .left)
+        stackView.addBlankSpace(space: 21.0)
+        stackView.addLabel(withText: page.body,
+                           fontStyle: .paragraph,
+                           colorType: .primaryText,
+                           textAlignment: .left)
+        
+        self.addArrangedSubview(view)
     }
 }
