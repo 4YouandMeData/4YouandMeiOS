@@ -109,7 +109,7 @@ public class InfoPageViewController: UIViewController {
             case .horizontal:
                 let view: GenericButtonView = {
                     if let confirmButtonText = self.pageData.page.buttonFirstlabel {
-                        let view = GenericButtonView(withTextStyleCategory: .secondaryBackground)
+                        let view = GenericButtonView(withTextStyleCategory: .secondaryBackground())
                         view.button.setTitle(confirmButtonText, for: .normal)
                         return view
                     } else {

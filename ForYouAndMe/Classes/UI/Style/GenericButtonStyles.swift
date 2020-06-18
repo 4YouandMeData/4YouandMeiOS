@@ -10,21 +10,25 @@ import Foundation
 import PureLayout
 
 enum GenericButtonTextStyleCategory: StyleCategory {
-    case primaryBackground
-    case secondaryBackground
+    case primaryBackground(shadow: Bool = true)
+    case secondaryBackground(shadow: Bool = true)
     
     var style: Style<GenericButtonView> {
         switch self {
-        case .primaryBackground: return Style<GenericButtonView> { buttonView in
+        case .primaryBackground(let shadow): return Style<GenericButtonView> { buttonView in
             buttonView.backgroundColor = ColorPalette.color(withType: .primary)
             buttonView.addGradientView(.init(type: .primaryBackground))
             buttonView.button.apply(style: ButtonTextStyleCategory.secondaryBackground(customHeight: nil).style)
-            buttonView.addShadowLinear(goingDown: false)
+            if shadow {
+                buttonView.addShadowLinear(goingDown: false)
             }
-        case .secondaryBackground: return Style<GenericButtonView> { buttonView in
+            }
+        case .secondaryBackground(let shadow): return Style<GenericButtonView> { buttonView in
             buttonView.backgroundColor = ColorPalette.color(withType: .secondary)
             buttonView.button.apply(style: ButtonTextStyleCategory.primaryBackground(customHeight: nil).style)
-            buttonView.addShadowLinear(goingDown: false)
+            if shadow {
+                buttonView.addShadowLinear(goingDown: false)
+            }
             }
         }
     }

@@ -37,25 +37,25 @@ class AppNavigator {
     // MARK: - Top level
     
     func onStartup() {
-        if self.repository.isLoggedIn {
+        
+        // Convenient entry point to test each app module atomically,
+        // without going through all the official flow
+        #if DEBUG
+        if let testSection = Constants.Test.Section {
+            let testNavigationViewController = UINavigationController(rootViewController: UIViewController())
+            testNavigationViewController.preventPopWithSwipe()
+            self.window.rootViewController = testNavigationViewController
             
-            // Convenient entry point to test each app module atomically,
-            // without going through all the official flow
-            #if DEBUG
-            if let testSection = Constants.Test.Section {
-                let testNavigationViewController = UINavigationController(rootViewController: UIViewController())
-                testNavigationViewController.preventPopWithSwipe()
-                self.window.rootViewController = testNavigationViewController
-                
-                switch testSection {
-                case .screeningSection: self.startScreeningSection(navigationController: testNavigationViewController)
-                case .informedConsentSection: self.startInformedConsentSection(navigationController: testNavigationViewController)
-                case .consentSection: self.startConsentSection(navigationController: testNavigationViewController)
-                }
-                return
+            switch testSection {
+            case .screeningSection: self.startScreeningSection(navigationController: testNavigationViewController)
+            case .informedConsentSection: self.startInformedConsentSection(navigationController: testNavigationViewController)
+            case .consentSection: self.startConsentSection(navigationController: testNavigationViewController)
             }
-            #endif
-            
+            return
+        }
+        #endif
+        
+        if self.repository.isLoggedIn {
             // TODO: Check if onboarding is completed
             print("TODO: Check if onboarding is completed")
             let onboardingCompleted = false
@@ -71,15 +71,19 @@ class AppNavigator {
         }
     }
     
-    public func abortOnboarding(presenter: UIViewController) {
+    public func abortOnboardingWithWarning(presenter: UIViewController) {
         presenter.showAlert(withTitle: StringsProvider.string(forKey: .onboardingAbortTitle),
                             message: StringsProvider.string(forKey: .onboardingAbortMessage),
                             cancelText: StringsProvider.string(forKey: .onboardingAbortCancel),
                             confirmText: StringsProvider.string(forKey: .onboardingAbortConfirm),
                             tintColor: ColorPalette.color(withType: .primary),
                             confirm: { [weak self] in
-                                self?.goToWelcome()
+                                self?.abortOnboarding()
         })
+    }
+    
+    public func abortOnboarding() {
+        self.goToWelcome()
     }
     
     // MARK: - Welcome

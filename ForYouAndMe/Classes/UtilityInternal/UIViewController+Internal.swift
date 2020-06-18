@@ -32,6 +32,6 @@ extension UIViewController {
     }
     
     @objc private func onboardingAbortPressed() {
-        Services.shared.navigator.abortOnboarding(presenter: self)
+        Services.shared.navigator.abortOnboardingWithWarning(presenter: self)
     }
 }

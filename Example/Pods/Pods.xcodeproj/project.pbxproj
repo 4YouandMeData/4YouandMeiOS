@@ -670,6 +670,7 @@
 		892F567BF4D68BB3C3AE4687AE25BE8C /* FIRCLSDownloadAndSaveSettingsOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = B3F6B394A801E13BE44868A5F1420E24 /* FIRCLSDownloadAndSaveSettingsOperation.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
 		895CE133386CDA2B4B271287050A9BBB /* GULKeychainStorage.h in Headers */ = {isa = PBXBuildFile; fileRef = A409819DDBDC0D5BD34F2873C170A11A /* GULKeychainStorage.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		8994B671249B9CFB00113A3D /* DoubleButtonHorizontalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8994B670249B9CFB00113A3D /* DoubleButtonHorizontalView.swift */; };
+		8994B673249BC6C900113A3D /* PopupViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8994B672249BC6C900113A3D /* PopupViewController.swift */; };
 		89D00A353A7AFC91C828615BC6989E5D /* Timeout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BF085DD4CF18AF6700B419923F8C9DA /* Timeout.swift */; };
 		8A2C99B3F8AF5227EF69017A5EC75B30 /* Moya.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EF92C91287E5506411F9E5F043E6CDE3 /* Moya.framework */; };
 		8AA937910F87915DE700CAB6C868689E /* Notifications.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4176531E795263E7EC72F3EAAD3C2B25 /* Notifications.swift */; };
@@ -2547,6 +2548,7 @@
 		88A51ED2D56C700F3885E796B7A91491 /* FIRCLSdSYM.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = FIRCLSdSYM.h; path = Crashlytics/Shared/FIRCLSMachO/FIRCLSdSYM.h; sourceTree = "<group>"; };
 		89251E3E91103B1F8578C5A1EF0FFC9A /* String+Localization.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = "String+Localization.swift"; sourceTree = "<group>"; };
 		8994B670249B9CFB00113A3D /* DoubleButtonHorizontalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoubleButtonHorizontalView.swift; sourceTree = "<group>"; };
+		8994B672249BC6C900113A3D /* PopupViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PopupViewController.swift; sourceTree = "<group>"; };
 		89ACBDF12922F3A211393C4257FEF329 /* DSL.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = DSL.h; path = Sources/NimbleObjectiveC/DSL.h; sourceTree = "<group>"; };
 		89C9F42C8772094E90768003C66135AE /* Quick-Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = "Quick-Info.plist"; sourceTree = "<group>"; };
 		8A13F42C22B76612DB95B36E16C957C7 /* String+OAuthSwift.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = "String+OAuthSwift.swift"; path = "Sources/String+OAuthSwift.swift"; sourceTree = "<group>"; };
@@ -4876,6 +4878,7 @@
 			isa = PBXGroup;
 			children = (
 				577FB99CA8E191BAF9244A548E676960 /* AcceptanceViewController.swift */,
+				8994B672249BC6C900113A3D /* PopupViewController.swift */,
 				E3FCC169C3E1947B89A8ECCE9A115EDA /* BooleanQuestionsViewController.swift */,
 				999703F9AC863F182F3C8DD028809C2B /* InfoPageViewController.swift */,
 				5D813E34702544FD38F948B7EBABCE92 /* LoadingViewController.swift */,
@@ -7431,6 +7434,7 @@
 				4D9FD463BC3B1E59887F574477EDFFD7 /* PossibleAnswerTableViewCell.swift in Sources */,
 				F7EC018B6420D7236A4BE8BBC936C49B /* PrioritizedRequest.swift in Sources */,
 				D70C0593904EF09805748CDD59A37F07 /* PropertyWrappers.swift in Sources */,
+				8994B673249BC6C900113A3D /* PopupViewController.swift in Sources */,
 				92B0EC50D463C1139E3D565786E28EF8 /* Question.swift in Sources */,
 				D27462EFFCA3D51252BEC4367FCC3B85 /* QuestionBooleanTableViewCell.swift in Sources */,
 				4466D1E04E59015CC5C75ADC94042DAD /* QuestionViewController.swift in Sources */,

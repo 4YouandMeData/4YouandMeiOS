@@ -59,7 +59,8 @@ class ColorPalette {
     }
     
     // Fixed colors
-    static var shadowColor = UIColor(hexRGB: 0x30374029)
+    static var shadowColor = UIColor(hexRGBA: 0x30374029)
+    static var overlayColor = UIColor(hexRGBA: 0x30374080)
     
     static var loadingErrorPrimaryColor = UIColor(hexRGB: 0x303740)
     static var loadingErrorSecondaryColor = UIColor(hexRGB: 0xFFFFFF)

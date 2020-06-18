@@ -48,7 +48,22 @@ extension ConsentCoordinator: AcceptanceCoordinator {
     }
     
     func onDisagreeButtonPressed() {
-        // TODO: Show confirmation popup
-        print("TODO: Show confirmation popup")
+        let data = PopupData(body: self.sectionData.disagreeBody,
+                             buttonText: self.sectionData.disagreeButton)
+        let popupViewController = PopupViewController(withData: data, coordinator: self)
+        popupViewController.modalPresentationStyle = .overFullScreen
+        self.navigationController.present(popupViewController, animated: false, completion: nil)
+    }
+}
+
+extension ConsentCoordinator: PopupCoordinator {
+    func onConfirmButtonPressed(popupViewController: PopupViewController) {
+        popupViewController.dismiss(animated: false, completion: {
+            Services.shared.navigator.abortOnboarding()
+        })
+    }
+    
+    func onCloseButtonPressed(popupViewController: PopupViewController) {
+        popupViewController.dismiss(animated: false, completion: nil)
     }
 }

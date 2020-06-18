@@ -6,16 +6,20 @@
       "title": "Review",
       "body": "Review the consent document below, and tap Agree if you're ready to continue.",
       "subtitle": "Consent",
-      "disagree_modal_body": "Are you sure? You cannot partecipate in this study if you don't agree to the consent.\r\n\\nIf you'd like to talk about it, you can contact the research team at 212.241.8100 or help@4youandme.org.",
+      "disagree_modal_body": "Are you sure? You cannot partecipate in this study if you don't agree to the consent.\r\nIf you'd like to talk about it, you can contact the research team at 212.241.8100 or help@4youandme.org.",
       "disagree_modal_button": "I'll not partecipate in this study",
       "created_at": "2020-06-09T12:09:55.132Z",
-      "updated_at": "2020-06-09T12:42:36.869Z"
+      "updated_at": "2020-06-18T16:13:06.277Z"
     },
     "relationships": {
       "pages": {
         "data": [
           {
-            "id": "21",
+            "id": "24",
+            "type": "page"
+          },
+          {
+            "id": "25",
             "type": "page"
           },
           {
@@ -23,15 +27,11 @@
             "type": "page"
           },
           {
-            "id": "24",
-            "type": "page"
-          },
-          {
             "id": "23",
             "type": "page"
           },
           {
-            "id": "25",
+            "id": "21",
             "type": "page"
           }
         ]
@@ -52,81 +52,17 @@
   },
   "included": [
     {
-      "id": "21",
-      "type": "page",
-      "attributes": {
-        "title": "What is a research study?",
-        "body": "A research study is when scientists try to answer a question about something that we don't know enough about. \r\n\\nParticipating may not help you or others.\r\n\\n\\nPeople volunteer to be in research study.\r\n\\nThe decision about whether or not to take part is totally up to you. You can also agree to take part now and later change your mind. Whatever you decide is okay. It will not affect your ability to get medical care within the Mount Sinai Health System.\r\n\\n\\nA mobile phone application will explain this research study to you. A member of the study team will be available to answer questions you may have about the study. Feel free to ask all the questions you want before you decide to join. Any new information that develops during this research study that might make you change your mind about participating will be given to you promptly. \r\n\\n\\nBasic information about this study will appear on the website http://www.ClinicalTrials.gov. There are a few reasons for this: the National Institute of Health (NIH) encourages all researchers to post their research; some medical journals only accept articles if the research was posted on the website;\r\nand, for research studies the U.S. Food and Drug Administration (FDA) calls \"applicable clinical trials\"a description of this clinical trial will be available on http://www.ClinicalTrials.gov, as required by U.S. Law. This Web site will not include information that can identify you.  At most, the Web site will include a summary of the results. You can search this Web site at any time.",
-        "link_1_label": "",
-        "link_2_label": "",
-        "external_link_label": "",
-        "external_link_url": "",
-        "created_at": "2020-06-09T12:30:29.781Z",
-        "updated_at": "2020-06-09T12:34:40.558Z",
-        "image": null
-      },
-      "relationships": {
-        "section": {
-          "data": {
-            "id": "1",
-            "type": "consent"
-          }
-        },
-        "link_1": {
-          "data": {
-            "id": "22",
-            "type": "page"
-          }
-        },
-        "link_2": {
-          "data": null
-        }
-      }
-    },
-    {
-      "id": "22",
-      "type": "page",
-      "attributes": {
-        "title": "Purpose Of This Research Study",
-        "body": "The purpose of this study is to look at digital measures, called biomarkers, collected through digital tools like smartphones and wearables that may be helpful in finding out outcomes of pregnancy and overall pregnancy wellness. We will test the digital biomarkers using wearable devices and we will track your overall health during pregnancy with clinical assessments and through this study’s mobile application.\r\n\\n\\nYou may qualify to take part in this research study because you are pregnant and attend a clinic associated with this study as well as meet the other eligibility criteria for this study which you have attested to during the electronic consent process. Funds for conducting this research are provided by TBD.",
-        "link_1_label": "",
-        "link_2_label": "",
-        "external_link_label": "",
-        "external_link_url": "",
-        "created_at": "2020-06-09T12:34:15.654Z",
-        "updated_at": "2020-06-09T12:38:08.723Z",
-        "image": null
-      },
-      "relationships": {
-        "section": {
-          "data": {
-            "id": "1",
-            "type": "consent"
-          }
-        },
-        "link_1": {
-          "data": {
-            "id": "23",
-            "type": "page"
-          }
-        },
-        "link_2": {
-          "data": null
-        }
-      }
-    },
-    {
       "id": "24",
       "type": "page",
       "attributes": {
         "title": "Description Of What's Involved",
-        "body": "The electronic consent platform (eIC) has explained the project to you to help you make your choice on whether or not to take part. You have already read through the eIC screens, but please feel free to take the time to read this full version of the consent form carefully before making your choice. If you choose to participate in this project, you will be asked to sign the consent. Whether or not you choose to participate in this project, you will receive the same medical care as all patients being followed within Mount Sinai Health System. \r\n\\n\\nIf you agree to participate in this research study, the following information describes what may be involved. \r\n\\n\\nStudy application: Prior to consenting for the study, you will be asked to download and install the study mobile application onto your smartphone. There will be recurring activities taking place on the phone in between study visits. You will be expected to complete the study surveys and activities at the times you are prompted to, ranging from daily to weekly to monthly tasks. We expect the surveys and app activities to take no more than an hour of your time each week. The study surveys and activities will include:",
+        "body": "The electronic consent platform (eIC) has explained the project to you to help you make your choice on whether or not to take part. You have already read through the eIC screens, but please feel free to take the time to read this full version of the consent form carefully before making your choice. If you choose to participate in this project, you will be asked to sign the consent. Whether or not you choose to participate in this project, you will receive the same medical care as all patients being followed within Mount Sinai Health System.\r\n\r\nIf you agree to participate in this research study, the following information describes what may be involved.\r\n\r\nStudy application: Prior to consenting for the study, you will be asked to download and install the study mobile application onto your smartphone. There will be recurring activities taking place on the phone in between study visits. You will be expected to complete the study surveys and activities at the times you are prompted to, ranging from daily to weekly to monthly tasks. We expect the surveys and app activities to take no more than an hour of your time each week. The study surveys and activities will include:",
         "link_1_label": "",
         "link_2_label": "",
         "external_link_label": "",
         "external_link_url": "",
         "created_at": "2020-06-09T12:39:52.439Z",
-        "updated_at": "2020-06-09T12:39:52.439Z",
+        "updated_at": "2020-06-18T16:13:06.276Z",
         "image": null
       },
       "relationships": {
@@ -138,38 +74,6 @@
         },
         "link_1": {
           "data": null
-        },
-        "link_2": {
-          "data": null
-        }
-      }
-    },
-    {
-      "id": "23",
-      "type": "page",
-      "attributes": {
-        "title": "Length Of Time And Number Of People Expected To Participate",
-        "body": "Your participation in this research study is expected to last, starting from when you consent through the length of your pregnancy and six week postpartum period. This can range from 9 to 12 months depending on when you were recruited into the study. \r\n\\n\\nThe number of people expected to take part in this research study at the clinics at Mount Sinai Health System is approximately 1,200.",
-        "link_1_label": "",
-        "link_2_label": "",
-        "external_link_label": "",
-        "external_link_url": "",
-        "created_at": "2020-06-09T12:37:15.481Z",
-        "updated_at": "2020-06-09T12:40:13.578Z",
-        "image": null
-      },
-      "relationships": {
-        "section": {
-          "data": {
-            "id": "1",
-            "type": "consent"
-          }
-        },
-        "link_1": {
-          "data": {
-            "id": "24",
-            "type": "page"
-          }
         },
         "link_2": {
           "data": null
@@ -199,6 +103,102 @@
         },
         "link_1": {
           "data": null
+        },
+        "link_2": {
+          "data": null
+        }
+      }
+    },
+    {
+      "id": "22",
+      "type": "page",
+      "attributes": {
+        "title": "Purpose Of This Research Study",
+        "body": "The purpose of this study is to look at digital measures, called biomarkers, collected through digital tools like smartphones and wearables that may be helpful in finding out outcomes of pregnancy and overall pregnancy wellness. We will test the digital biomarkers using wearable devices and we will track your overall health during pregnancy with clinical assessments and through this study’s mobile application.\r\n\r\nYou may qualify to take part in this research study because you are pregnant and attend a clinic associated with this study as well as meet the other eligibility criteria for this study which you have attested to during the electronic consent process. Funds for conducting this research are provided by TBD.",
+        "link_1_label": "",
+        "link_2_label": "",
+        "external_link_label": "",
+        "external_link_url": "",
+        "created_at": "2020-06-09T12:34:15.654Z",
+        "updated_at": "2020-06-18T16:12:13.015Z",
+        "image": null
+      },
+      "relationships": {
+        "section": {
+          "data": {
+            "id": "1",
+            "type": "consent"
+          }
+        },
+        "link_1": {
+          "data": {
+            "id": "23",
+            "type": "page"
+          }
+        },
+        "link_2": {
+          "data": null
+        }
+      }
+    },
+    {
+      "id": "23",
+      "type": "page",
+      "attributes": {
+        "title": "Length Of Time And Number Of People Expected To Participate",
+        "body": "Your participation in this research study is expected to last, starting from when you consent through the length of your pregnancy and six week postpartum period. This can range from 9 to 12 months depending on when you were recruited into the study.\r\n\r\nThe number of people expected to take part in this research study at the clinics at Mount Sinai Health System is approximately 1,200.",
+        "link_1_label": "",
+        "link_2_label": "",
+        "external_link_label": "",
+        "external_link_url": "",
+        "created_at": "2020-06-09T12:37:15.481Z",
+        "updated_at": "2020-06-18T16:12:34.682Z",
+        "image": null
+      },
+      "relationships": {
+        "section": {
+          "data": {
+            "id": "1",
+            "type": "consent"
+          }
+        },
+        "link_1": {
+          "data": {
+            "id": "24",
+            "type": "page"
+          }
+        },
+        "link_2": {
+          "data": null
+        }
+      }
+    },
+    {
+      "id": "21",
+      "type": "page",
+      "attributes": {
+        "title": "What is a research study?",
+        "body": "A research study is when scientists try to answer a question about something that we don't know enough about.\r\nParticipating may not help you or others.\r\n\r\nPeople volunteer to be in research study.\r\nThe decision about whether or not to take part is totally up to you. You can also agree to take part now and later change your mind. Whatever you decide is okay. It will not affect your ability to get medical care within the Mount Sinai Health System.\r\n\r\nA mobile phone application will explain this research study to you. A member of the study team will be available to answer questions you may have about the study. Feel free to ask all the questions you want before you decide to join. Any new information that develops during this research study that might make you change your mind about participating will be given to you promptly.\r\n\r\nBasic information about this study will appear on the website http://www.ClinicalTrials.gov. There are a few reasons for this: the National Institute of Health (NIH) encourages all researchers to post their research; some medical journals only accept articles if the research was posted on the website;\r\nand, for research studies the U.S. Food and Drug Administration (FDA) calls \"applicable clinical trials\"a description of this clinical trial will be available on http://www.ClinicalTrials.gov, as required by U.S. Law. This Web site will not include information that can identify you.  At most, the Web site will include a summary of the results. You can search this Web site at any time.",
+        "link_1_label": "",
+        "link_2_label": "",
+        "external_link_label": "",
+        "external_link_url": "",
+        "created_at": "2020-06-09T12:30:29.781Z",
+        "updated_at": "2020-06-18T16:10:44.194Z",
+        "image": null
+      },
+      "relationships": {
+        "section": {
+          "data": {
+            "id": "1",
+            "type": "consent"
+          }
+        },
+        "link_1": {
+          "data": {
+            "id": "22",
+            "type": "page"
+          }
         },
         "link_2": {
           "data": null
