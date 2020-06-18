@@ -995,7 +995,6 @@
 		D3A2F2B9C053D2DDBB527B27B7026890 /* Dematerialize.swift in Sources */ = {isa = PBXBuildFile; fileRef = B54BF79D1FEB29634FED560B4A0DC942 /* Dematerialize.swift */; };
 		D3B5B353A14983694D8277C331694CAE /* Reactive.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21E33B28E477E0362F704926451F9905 /* Reactive.swift */; };
 		D3D7E8C8DE6BD152D44D4C8F4F159723 /* FIRCLSMachOBinary.h in Headers */ = {isa = PBXBuildFile; fileRef = 74D2115B92DB27E6C139BC1123355655 /* FIRCLSMachOBinary.h */; settings = {ATTRIBUTES = (Project, ); }; };
-		D490983D092980767AE1F8B476A8FAD0 /* GenericButtonStyles.swift in Sources */ = {isa = PBXBuildFile; fileRef = A56FE1109E484ADA713E177B3A6270CD /* GenericButtonStyles.swift */; };
 		D4D1744CC2DF7A423CD2FDA1548C5D7F /* FIRCLSUnwind_x86.c in Sources */ = {isa = PBXBuildFile; fileRef = 7A501111BD7EC3D09C55850577533B48 /* FIRCLSUnwind_x86.c */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
 		D54E42E89302CDDA16762494B93E41F2 /* PrettySyntax.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA57EBBB06740D90627A3767C9418D25 /* PrettySyntax.swift */; };
 		D5529FA936FECDD18321CB9A2B680598 /* GDTCORRegistrar.m in Sources */ = {isa = PBXBuildFile; fileRef = EC740319F9F5C3553E01F19005FCB815 /* GDTCORRegistrar.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
@@ -2692,7 +2691,6 @@
 		A4C07FC3E30B5048F96E141D19B8D33E /* FIRAppInternal.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = FIRAppInternal.h; path = FirebaseCore/Sources/Private/FIRAppInternal.h; sourceTree = "<group>"; };
 		A4D7234DBFE4EC787B12217AAFF6E651 /* SkipWhile.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = SkipWhile.swift; path = RxSwift/Observables/SkipWhile.swift; sourceTree = "<group>"; };
 		A4DC5B0DE3E774995E04BC4BE1C496F8 /* SVProgressHUD.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = SVProgressHUD.debug.xcconfig; sourceTree = "<group>"; };
-		A56FE1109E484ADA713E177B3A6270CD /* GenericButtonStyles.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = GenericButtonStyles.swift; sourceTree = "<group>"; };
 		A58AF756E431D5956F5A5EB234C176DA /* ValidationRule.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ValidationRule.swift; path = Validator/Sources/Rules/ValidationRule.swift; sourceTree = "<group>"; };
 		A647653059D1CFE08C609F32CA704F58 /* Japx-Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = "Japx-Info.plist"; sourceTree = "<group>"; };
 		A6C90B307689CD7504E480E86EE6018D /* AsSingle.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = AsSingle.swift; path = RxSwift/Observables/AsSingle.swift; sourceTree = "<group>"; };
@@ -5410,7 +5408,6 @@
 				410B0807A6739629134F84258401F44D /* ButtonStyles.swift */,
 				E9B854D2FF861FE221E9D839A0ECF1FE /* ColorPalette.swift */,
 				982BDF715A7C26FDA9C7FF7BE1F4C887 /* FontPalette.swift */,
-				A56FE1109E484ADA713E177B3A6270CD /* GenericButtonStyles.swift */,
 				FAE05C3843699DAA116A09DB571B6201 /* Gradient+Extension.swift */,
 				835028BCAA8857BDD9072ABBA6A1F02D /* ImagePalette.swift */,
 				7ABB3353D2AE9F5FCA442B89C28A2168 /* NavigationBarStyles.swift */,
@@ -7402,7 +7399,6 @@
 				766BF731915B48DD9778CA63E938C5DE /* FontPalette.swift in Sources */,
 				D760F0FB718CCEA9F8BDAD8A1EACAD56 /* ForYouAndMe-dummy.m in Sources */,
 				156883C7FED3C7C2B48717CBBCC6DDAB /* FYAMManager.swift in Sources */,
-				D490983D092980767AE1F8B476A8FAD0 /* GenericButtonStyles.swift in Sources */,
 				79FDCB88C9A1AFFD7692016B900B644D /* GenericButtonView.swift in Sources */,
 				88EA2BDD8F4EE7C090059FBEB362E019 /* GenericCheckboxView.swift in Sources */,
 				E570BFF6DD60334A7D1B47B02A992E8A /* GenericTextFieldView.swift in Sources */,

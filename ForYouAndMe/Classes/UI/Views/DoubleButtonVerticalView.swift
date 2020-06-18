@@ -16,14 +16,14 @@ enum DoubleButtonVerticalStyleCategory: StyleCategory {
         case .secondaryBackground(let backButton): return Style<DoubleButtonVerticalView> { buttonView in
             buttonView.backgroundColor = ColorPalette.color(withType: .secondary)
             if backButton {
-                buttonView.setPrimaryButtonImage(ImagePalette.image(withName: .backButtonPrimary))
+                buttonView.primaryButton.setImage(ImagePalette.image(withName: .backButtonPrimary), for: .normal)
             } else {
-                buttonView.setPrimaryButtonImage(ImagePalette.image(withName: .nextButtonPrimary))
+                buttonView.primaryButton.setImage(ImagePalette.image(withName: .nextButtonPrimary), for: .normal)
             }
-            buttonView.setSecondaryButtonAttributedTextStyle(AttributedTextStyle(fontStyle: .paragraph,
-                                                                                 colorType: .fourthText,
-                                                                                 textAlignment: .center,
-                                                                                 underlined: true))
+            buttonView.secondaryButtonAttributedTextStyle = AttributedTextStyle(fontStyle: .paragraph,
+                                                                                colorType: .fourthText,
+                                                                                textAlignment: .center,
+                                                                                underlined: true)
             buttonView.addShadowLinear(goingDown: false)
             }
         }
@@ -32,11 +32,11 @@ enum DoubleButtonVerticalStyleCategory: StyleCategory {
 
 class DoubleButtonVerticalView: UIView {
     
-    private var primaryButtonAttributedTextStyle: AttributedTextStyle?
-    private var secondaryButtonAttributedTextStyle: AttributedTextStyle?
+    fileprivate var primaryButtonAttributedTextStyle: AttributedTextStyle?
+    fileprivate var secondaryButtonAttributedTextStyle: AttributedTextStyle?
     
-    private let primaryButton = UIButton()
-    private let secondaryButton = UIButton()
+    fileprivate let primaryButton = UIButton()
+    fileprivate let secondaryButton = UIButton()
     
     init(styleCategory: DoubleButtonVerticalStyleCategory,
          horizontalInset: CGFloat = Constants.Style.DefaultHorizontalMargins,
@@ -83,14 +83,6 @@ class DoubleButtonVerticalView: UIView {
     
     // MARK: - Public Methods
     
-    public func setPrimaryButtonAttributedTextStyle(_ attributedTextStyle: AttributedTextStyle) {
-        self.primaryButtonAttributedTextStyle = attributedTextStyle
-    }
-    
-    public func setSecondaryButtonAttributedTextStyle(_ attributedTextStyle: AttributedTextStyle) {
-        self.secondaryButtonAttributedTextStyle = attributedTextStyle
-    }
-    
     public func addTargetToPrimaryButton(target: Any?, action: Selector) {
         self.primaryButton.addTarget(target, action: action, for: .touchUpInside)
     }
@@ -115,13 +107,5 @@ class DoubleButtonVerticalView: UIView {
         }
         let attributedText = NSAttributedString.create(withText: text, attributedTextStyle: attributedTextStyle)
         self.secondaryButton.setAttributedTitle(attributedText, for: .normal)
-    }
-    
-    public func setPrimaryButtonImage(_ image: UIImage?) {
-        self.primaryButton.setImage(image, for: .normal)
-    }
-    
-    public func setSecondaryButtonImage(_ image: UIImage?) {
-        self.secondaryButton.setImage(image, for: .normal)
     }
 }

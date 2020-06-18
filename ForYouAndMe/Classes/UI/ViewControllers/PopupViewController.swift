@@ -78,8 +78,8 @@ public class PopupViewController: UIViewController {
                                               horizontalInset: 0.0,
                                               topInset: 24.0,
                                               bottomInset: 24.0)
-        confirmButton.button.setTitle(self.data.buttonText, for: .normal)
-        confirmButton.button.addTarget(self, action: #selector(self.confirmButtonPressed), for: .touchUpInside)
+        confirmButton.setButtonText(self.data.buttonText)
+        confirmButton.addTarget(target: self, action: #selector(self.confirmButtonPressed))
         stackView.addArrangedSubview(confirmButton)
     }
     

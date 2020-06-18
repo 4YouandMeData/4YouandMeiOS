@@ -8,9 +8,59 @@
 
 import UIKit
 
+enum GenericButtonTextStyleCategory: StyleCategory {
+    case primaryBackground(shadow: Bool = true)
+    case secondaryBackground(shadow: Bool = true)
+    
+    var style: Style<GenericButtonView> {
+        switch self {
+        case .primaryBackground(let shadow): return Style<GenericButtonView> { buttonView in
+            buttonView.backgroundColor = ColorPalette.color(withType: .primary)
+            buttonView.addGradientView(.init(type: .primaryBackground))
+            buttonView.button.apply(style: ButtonTextStyleCategory.secondaryBackground(customHeight: nil).style)
+            buttonView.buttonAttributedTextStyle = AttributedTextStyle(fontStyle: .header2, colorType: .tertiaryText)
+            if shadow {
+                buttonView.addShadowLinear(goingDown: false)
+            }
+            }
+        case .secondaryBackground(let shadow): return Style<GenericButtonView> { buttonView in
+            buttonView.backgroundColor = ColorPalette.color(withType: .secondary)
+            buttonView.button.apply(style: ButtonTextStyleCategory.primaryBackground(customHeight: nil).style)
+            buttonView.buttonAttributedTextStyle = AttributedTextStyle(fontStyle: .header2, colorType: .secondaryText)
+            if shadow {
+                buttonView.addShadowLinear(goingDown: false)
+            }
+            }
+        }
+    }
+}
+
+enum GenericButtonImageStyleCategory: StyleCategory {
+    case primaryBackground
+    case secondaryBackground
+    
+    var style: Style<GenericButtonView> {
+        switch self {
+        case .primaryBackground: return Style<GenericButtonView> { buttonView in
+            buttonView.backgroundColor = ColorPalette.color(withType: .primary)
+            buttonView.addGradientView(.init(type: .primaryBackground))
+            buttonView.button.setImage(ImagePalette.image(withName: .nextButtonSecondary), for: .normal)
+            buttonView.addShadowLinear(goingDown: false)
+            }
+        case .secondaryBackground: return Style<GenericButtonView> { buttonView in
+            buttonView.backgroundColor = ColorPalette.color(withType: .secondary)
+            buttonView.button.setImage(ImagePalette.image(withName: .nextButtonPrimary), for: .normal)
+            buttonView.addShadowLinear(goingDown: false)
+            }
+        }
+    }
+}
+
 class GenericButtonView: UIView {
     
-    public let button = UIButton()
+    fileprivate var buttonAttributedTextStyle: AttributedTextStyle?
+    
+    fileprivate let button = UIButton()
     
     private var buttonEnabledObserver: NSKeyValueObservation?
     
@@ -80,5 +130,24 @@ class GenericButtonView: UIView {
                 self.button.backgroundColor = self.button.backgroundColor?.applyAlpha(0.5)
             }
         })
+    }
+    
+    // MARK: - Public Methods
+    
+    public func addTarget(target: Any?, action: Selector) {
+        self.button.addTarget(target, action: action, for: .touchUpInside)
+    }
+    
+    public func setButtonText(_ text: String) {
+        guard let attributedTextStyle = self.buttonAttributedTextStyle else {
+            assertionFailure("Setting a text without attributed text style")
+            return
+        }
+        let attributedText = NSAttributedString.create(withText: text, attributedTextStyle: attributedTextStyle)
+        self.button.setAttributedTitle(attributedText, for: .normal)
+    }
+    
+    public func setButtonEnabled(enabled: Bool) {
+        self.button.isEnabled = enabled
     }
 }

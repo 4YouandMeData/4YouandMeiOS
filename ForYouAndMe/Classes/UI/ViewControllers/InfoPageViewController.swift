@@ -110,13 +110,13 @@ public class InfoPageViewController: UIViewController {
                 let view: GenericButtonView = {
                     if let confirmButtonText = self.pageData.page.buttonFirstlabel {
                         let view = GenericButtonView(withTextStyleCategory: .secondaryBackground())
-                        view.button.setTitle(confirmButtonText, for: .normal)
+                        view.setButtonText(confirmButtonText)
                         return view
                     } else {
                         return GenericButtonView(withImageStyleCategory: .secondaryBackground)
                     }
                 }()
-                view.button.addTarget(self, action: #selector(self.primaryButtonPressed), for: .touchUpInside)
+                view.addTarget(target: self, action: #selector(self.primaryButtonPressed))
                 return view
             case .vertical(let backButton):
                 let view = DoubleButtonVerticalView(styleCategory: .secondaryBackground(backButton: backButton))

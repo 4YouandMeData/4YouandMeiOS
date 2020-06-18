@@ -32,7 +32,7 @@ public class BooleanQuestionsViewController: UIViewController {
     
     private lazy var confirmButtonView: GenericButtonView = {
         let view = GenericButtonView(withImageStyleCategory: .secondaryBackground)
-        view.button.addTarget(self, action: #selector(self.confirmButtonPressed), for: .touchUpInside)
+        view.addTarget(target: self, action: #selector(self.confirmButtonPressed))
         return view
     }()
     
@@ -101,7 +101,7 @@ public class BooleanQuestionsViewController: UIViewController {
     
     private func updateConfirmButton() {
         let buttonEnabled = self.items.allSatisfy({ $0.answerAisActive != nil })
-        self.confirmButtonView.button.isEnabled = buttonEnabled
+        self.confirmButtonView.setButtonEnabled(enabled: buttonEnabled)
     }
     
     private func validateAnswers() -> Bool {

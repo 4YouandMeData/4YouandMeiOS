@@ -31,7 +31,7 @@ class QuestionViewController: UIViewController {
     
     private lazy var confirmButtonView: GenericButtonView = {
         let view = GenericButtonView(withImageStyleCategory: .primaryBackground)
-        view.button.addTarget(self, action: #selector(self.confirmButtonPressed), for: .touchUpInside)
+        view.addTarget(target: self, action: #selector(self.confirmButtonPressed))
         return view
     }()
     
@@ -114,7 +114,7 @@ class QuestionViewController: UIViewController {
     // MARK: Private Methods
     
     private func updateConfirmButton() {
-        self.confirmButtonView.button.isEnabled = self.selectedPossibleAnswer != nil
+        self.confirmButtonView.setButtonEnabled(enabled: self.selectedPossibleAnswer != nil)
     }
 }
 
