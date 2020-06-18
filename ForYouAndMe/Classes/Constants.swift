@@ -11,6 +11,7 @@ import Foundation
 enum TestSection {
     case screeningSection
     case informedConsentSection
+    case consentSection
 }
 
 struct Constants {
@@ -20,7 +21,7 @@ struct Constants {
         static let NetworkLogVerbose = true
         
         static let NoCacheGlobalConfig = true
-        static let Section: TestSection? = nil//.informedConsentSection
+        static let Section: TestSection? = nil//.consentSection
         
         static let InformedConsentWithoutQuestions: Bool = false
     }

@@ -50,6 +50,7 @@ class AppNavigator {
                 switch testSection {
                 case .screeningSection: self.startScreeningSection(navigationController: testNavigationViewController)
                 case .informedConsentSection: self.startInformedConsentSection(navigationController: testNavigationViewController)
+                case .consentSection: self.startConsentSection(navigationController: testNavigationViewController)
                 }
                 return
             }
@@ -192,9 +193,25 @@ class AppNavigator {
         }
     }
     
+    // MARK: Consent
+    
     public func startConsentSection(navigationController: UINavigationController) {
-        // TODO: Start Consent
-        navigationController.showAlert(withTitle: "Work in progress", message: "Consent coming soon")
+        navigationController.loadViewForRequest(self.repository.getConsentSection()) { section -> UIViewController in
+            let completionCallback: NavigationControllerCallback = { [weak self] navigationController in
+                self?.startConsentSection(navigationController: navigationController)
+            }
+            let coordinator = ConsentCoordinator(withSectionData: section,
+                                                 navigationController: navigationController,
+                                                 completionCallback: completionCallback)
+            return coordinator.getStartingPage()
+        }
+    }
+    
+    // MARK: Opt-In
+    
+    public func startOptInSection(navigationController: UINavigationController) {
+        // TODO: Start Opt-in section
+        navigationController.showAlert(withTitle: "Work in progress", message: "Opt-in section coming soon")
     }
     
     // MARK: Progress HUD

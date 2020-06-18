@@ -55,4 +55,6 @@ protocol Repository: class {
     func getScreeningSection() -> Single<ScreeningSection>
     // Informed Consent Section
     func getInformedConsentSection() -> Single<InformedConsentSection>
+    // Consent Section
+    func getConsentSection() -> Single<ConsentSection>
 }

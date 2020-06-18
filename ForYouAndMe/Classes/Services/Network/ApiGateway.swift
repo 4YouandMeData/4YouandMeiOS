@@ -21,6 +21,8 @@ enum DefaultService {
     case getScreeningSection
     // Informed Consent Section
     case getInformedConsentSection
+    // Consent Section
+    case getConsentSection
 }
 
 struct ApiRequest {

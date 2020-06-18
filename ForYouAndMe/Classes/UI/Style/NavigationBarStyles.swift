@@ -14,6 +14,7 @@ class NavigationBarStyles {
     }
     
     static let primaryStyle = Style<UINavigationBar> { bar in
+        bar.isHidden = false
         bar.isTranslucent = false
         bar.addGradient(type: .primaryBackground)
         bar.tintColor = ColorPalette.color(withType: .secondary)
@@ -24,6 +25,7 @@ class NavigationBarStyles {
     }
     
     static let secondaryStyle = Style<UINavigationBar> { bar in
+        bar.isHidden = false
         bar.isTranslucent = false
         bar.setBackgroundImage(UIImage(), for: UIBarMetrics.default)
         bar.barTintColor = ColorPalette.color(withType: .secondary)
@@ -35,6 +37,7 @@ class NavigationBarStyles {
     }
     
     static let activeStyle = Style<UINavigationBar> { bar in
+        bar.isHidden = false
         bar.isTranslucent = false
         bar.setBackgroundImage(UIImage(), for: UIBarMetrics.default)
         bar.barTintColor = ColorPalette.color(withType: .active)

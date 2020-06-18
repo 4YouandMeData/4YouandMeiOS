@@ -242,6 +242,13 @@ fileprivate extension PrimitiveSequence where Trait == SingleTrait, Element == R
     }
 }
 
+
+fileprivate extension ApiRequest {
+    var isAuthTokenRequired: Bool {
+        nil != self.serviceRequest.authorizationType
+    }
+}
+
 // MARK: - TargetType Protocol Implementation
 extension DefaultService: TargetType, AccessTokenAuthorizable {
     
@@ -263,6 +270,9 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         // Informed Consent Section
         case .getInformedConsentSection:
             return "/v1/studies/\(studyId)/informed_consent"
+        // Consent Section
+        case .getConsentSection:
+            return "/v1/studies/\(studyId)/consent"
         }
     }
     
@@ -273,7 +283,8 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         switch self {
         case .getGlobalConfig,
              .getScreeningSection,
-             .getInformedConsentSection:
+             .getInformedConsentSection,
+             .getConsentSection:
             return .get
         case .submitPhoneNumber,
              .verifyPhoneNumber:
@@ -297,6 +308,9 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             } else {
                 return Bundle.getTestData(from: "TestGetInformedConsentSection")
             }
+        // Consent Section
+        case .getConsentSection:
+            return Bundle.getTestData(from: "TestGetConsentSection")
         }
     }
     
@@ -304,7 +318,8 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         switch self {
         case .getGlobalConfig,
              .getScreeningSection,
-             .getInformedConsentSection:
+             .getInformedConsentSection,
+             .getConsentSection:
             return .requestPlain
         case .submitPhoneNumber(let phoneNumber):
             var params: [String: Any] = [:]
@@ -329,14 +344,9 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
              .verifyPhoneNumber:
             return nil
         case .getScreeningSection,
-             .getInformedConsentSection:
+             .getInformedConsentSection,
+             .getConsentSection:
             return .bearer
         }
-    }
-}
-
-fileprivate extension ApiRequest {
-    var isAuthTokenRequired: Bool {
-        nil != self.serviceRequest.authorizationType
     }
 }

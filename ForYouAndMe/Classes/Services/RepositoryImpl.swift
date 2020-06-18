@@ -111,6 +111,13 @@ extension RepositoryImpl: Repository {
         return self.api.send(request: ApiRequest(serviceRequest: .getInformedConsentSection))
         .handleError()
     }
+    
+    // MARK: - Consent
+    
+    func getConsentSection() -> Single<ConsentSection> {
+        return self.api.send(request: ApiRequest(serviceRequest: .getConsentSection))
+        .handleError()
+    }
 }
 
 // MARK: - Extension(PrimitiveSequence)

@@ -1,0 +1,209 @@
+{
+  "data": {
+    "id": "1",
+    "type": "consent",
+    "attributes": {
+      "title": "Review",
+      "body": "Review the consent document below, and tap Agree if you're ready to continue.",
+      "subtitle": "Consent",
+      "disagree_modal_body": "Are you sure? You cannot partecipate in this study if you don't agree to the consent.\r\n\\nIf you'd like to talk about it, you can contact the research team at 212.241.8100 or help@4youandme.org.",
+      "disagree_modal_button": "I'll not partecipate in this study",
+      "created_at": "2020-06-09T12:09:55.132Z",
+      "updated_at": "2020-06-09T12:42:36.869Z"
+    },
+    "relationships": {
+      "pages": {
+        "data": [
+          {
+            "id": "21",
+            "type": "page"
+          },
+          {
+            "id": "22",
+            "type": "page"
+          },
+          {
+            "id": "24",
+            "type": "page"
+          },
+          {
+            "id": "23",
+            "type": "page"
+          },
+          {
+            "id": "25",
+            "type": "page"
+          }
+        ]
+      },
+      "welcome_page": {
+        "data": {
+          "id": "21",
+          "type": "page"
+        }
+      },
+      "success_page": {
+        "data": {
+          "id": "25",
+          "type": "page"
+        }
+      }
+    }
+  },
+  "included": [
+    {
+      "id": "21",
+      "type": "page",
+      "attributes": {
+        "title": "What is a research study?",
+        "body": "A research study is when scientists try to answer a question about something that we don't know enough about. \r\n\\nParticipating may not help you or others.\r\n\\n\\nPeople volunteer to be in research study.\r\n\\nThe decision about whether or not to take part is totally up to you. You can also agree to take part now and later change your mind. Whatever you decide is okay. It will not affect your ability to get medical care within the Mount Sinai Health System.\r\n\\n\\nA mobile phone application will explain this research study to you. A member of the study team will be available to answer questions you may have about the study. Feel free to ask all the questions you want before you decide to join. Any new information that develops during this research study that might make you change your mind about participating will be given to you promptly. \r\n\\n\\nBasic information about this study will appear on the website http://www.ClinicalTrials.gov. There are a few reasons for this: the National Institute of Health (NIH) encourages all researchers to post their research; some medical journals only accept articles if the research was posted on the website;\r\nand, for research studies the U.S. Food and Drug Administration (FDA) calls \"applicable clinical trials\"a description of this clinical trial will be available on http://www.ClinicalTrials.gov, as required by U.S. Law. This Web site will not include information that can identify you.  At most, the Web site will include a summary of the results. You can search this Web site at any time.",
+        "link_1_label": "",
+        "link_2_label": "",
+        "external_link_label": "",
+        "external_link_url": "",
+        "created_at": "2020-06-09T12:30:29.781Z",
+        "updated_at": "2020-06-09T12:34:40.558Z",
+        "image": null
+      },
+      "relationships": {
+        "section": {
+          "data": {
+            "id": "1",
+            "type": "consent"
+          }
+        },
+        "link_1": {
+          "data": {
+            "id": "22",
+            "type": "page"
+          }
+        },
+        "link_2": {
+          "data": null
+        }
+      }
+    },
+    {
+      "id": "22",
+      "type": "page",
+      "attributes": {
+        "title": "Purpose Of This Research Study",
+        "body": "The purpose of this study is to look at digital measures, called biomarkers, collected through digital tools like smartphones and wearables that may be helpful in finding out outcomes of pregnancy and overall pregnancy wellness. We will test the digital biomarkers using wearable devices and we will track your overall health during pregnancy with clinical assessments and through this study’s mobile application.\r\n\\n\\nYou may qualify to take part in this research study because you are pregnant and attend a clinic associated with this study as well as meet the other eligibility criteria for this study which you have attested to during the electronic consent process. Funds for conducting this research are provided by TBD.",
+        "link_1_label": "",
+        "link_2_label": "",
+        "external_link_label": "",
+        "external_link_url": "",
+        "created_at": "2020-06-09T12:34:15.654Z",
+        "updated_at": "2020-06-09T12:38:08.723Z",
+        "image": null
+      },
+      "relationships": {
+        "section": {
+          "data": {
+            "id": "1",
+            "type": "consent"
+          }
+        },
+        "link_1": {
+          "data": {
+            "id": "23",
+            "type": "page"
+          }
+        },
+        "link_2": {
+          "data": null
+        }
+      }
+    },
+    {
+      "id": "24",
+      "type": "page",
+      "attributes": {
+        "title": "Description Of What's Involved",
+        "body": "The electronic consent platform (eIC) has explained the project to you to help you make your choice on whether or not to take part. You have already read through the eIC screens, but please feel free to take the time to read this full version of the consent form carefully before making your choice. If you choose to participate in this project, you will be asked to sign the consent. Whether or not you choose to participate in this project, you will receive the same medical care as all patients being followed within Mount Sinai Health System. \r\n\\n\\nIf you agree to participate in this research study, the following information describes what may be involved. \r\n\\n\\nStudy application: Prior to consenting for the study, you will be asked to download and install the study mobile application onto your smartphone. There will be recurring activities taking place on the phone in between study visits. You will be expected to complete the study surveys and activities at the times you are prompted to, ranging from daily to weekly to monthly tasks. We expect the surveys and app activities to take no more than an hour of your time each week. The study surveys and activities will include:",
+        "link_1_label": "",
+        "link_2_label": "",
+        "external_link_label": "",
+        "external_link_url": "",
+        "created_at": "2020-06-09T12:39:52.439Z",
+        "updated_at": "2020-06-09T12:39:52.439Z",
+        "image": null
+      },
+      "relationships": {
+        "section": {
+          "data": {
+            "id": "1",
+            "type": "consent"
+          }
+        },
+        "link_1": {
+          "data": null
+        },
+        "link_2": {
+          "data": null
+        }
+      }
+    },
+    {
+      "id": "23",
+      "type": "page",
+      "attributes": {
+        "title": "Length Of Time And Number Of People Expected To Participate",
+        "body": "Your participation in this research study is expected to last, starting from when you consent through the length of your pregnancy and six week postpartum period. This can range from 9 to 12 months depending on when you were recruited into the study. \r\n\\n\\nThe number of people expected to take part in this research study at the clinics at Mount Sinai Health System is approximately 1,200.",
+        "link_1_label": "",
+        "link_2_label": "",
+        "external_link_label": "",
+        "external_link_url": "",
+        "created_at": "2020-06-09T12:37:15.481Z",
+        "updated_at": "2020-06-09T12:40:13.578Z",
+        "image": null
+      },
+      "relationships": {
+        "section": {
+          "data": {
+            "id": "1",
+            "type": "consent"
+          }
+        },
+        "link_1": {
+          "data": {
+            "id": "24",
+            "type": "page"
+          }
+        },
+        "link_2": {
+          "data": null
+        }
+      }
+    },
+    {
+      "id": "25",
+      "type": "page",
+      "attributes": {
+        "title": "Thank you",
+        "body": "Your participation in this study is helping us better understand pregnancy and may help many in the future.",
+        "link_1_label": "",
+        "link_2_label": "",
+        "external_link_label": "",
+        "external_link_url": "",
+        "created_at": "2020-06-09T12:42:16.241Z",
+        "updated_at": "2020-06-09T12:42:16.247Z",
+        "image": "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"
+      },
+      "relationships": {
+        "section": {
+          "data": {
+            "id": "1",
+            "type": "consent"
+          }
+        },
+        "link_1": {
+          "data": null
+        },
+        "link_2": {
+          "data": null
+        }
+      }
+    }
+  ]
+}
