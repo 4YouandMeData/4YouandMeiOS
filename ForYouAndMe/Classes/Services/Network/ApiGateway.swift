@@ -16,13 +16,17 @@ enum DefaultService {
     case getGlobalConfig
     // Login
     case submitPhoneNumber(phoneNumber: String)
-    case verifyPhoneNumber(phoneNumber: String, secureCode: String)
+    case verifyPhoneNumber(phoneNumber: String, validationCode: String)
     // Screening Section
     case getScreeningSection
     // Informed Consent Section
     case getInformedConsentSection
     // Consent Section
     case getConsentSection
+    // User Consent
+    case submitEmail(email: String)
+    case verifyEmail(validationCode: String)
+    case resendConfirmationEmail
 }
 
 struct ApiRequest {
@@ -35,7 +39,7 @@ struct ApiRequest {
 }
 
 enum ApiError: Error {
-    
+
     case internalError
     case cannotParseData
     case network

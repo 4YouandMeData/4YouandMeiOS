@@ -272,6 +272,13 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         // Consent Section
         case .getConsentSection:
             return "/v1/studies/\(studyId)/consent"
+        // User Consent
+        case .submitEmail:
+            return "/v1/consents/\(studyId)/user_consent"
+        case .verifyEmail:
+            return "/v1/consents/\(studyId)/user_consent/confirm_email"
+        case .resendConfirmationEmail:
+            return "/v1/consents/\(studyId)/user_consent/resend_confirmation_email"
         }
     }
     
@@ -286,7 +293,10 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
              .getConsentSection:
             return .get
         case .submitPhoneNumber,
-             .verifyPhoneNumber:
+             .verifyPhoneNumber,
+             .submitEmail,
+             .verifyEmail,
+             .resendConfirmationEmail:
             return .post
         }
     }
@@ -310,6 +320,10 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         // Consent Section
         case .getConsentSection:
             return Bundle.getTestData(from: "TestGetConsentSection")
+        // User Consent
+            case .submitEmail: return "{}".utf8Encoded
+            case .verifyEmail: return "{}".utf8Encoded
+            case .resendConfirmationEmail: return "{}".utf8Encoded
         }
     }
     
@@ -318,7 +332,8 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         case .getGlobalConfig,
              .getScreeningSection,
              .getInformedConsentSection,
-             .getConsentSection:
+             .getConsentSection,
+             .resendConfirmationEmail:
             return .requestPlain
         case .submitPhoneNumber(let phoneNumber):
             var params: [String: Any] = [:]
@@ -329,6 +344,14 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             params["phone_number"] = phoneNumber
             params["verification_code"] = secureCode
             return .requestParameters(parameters: ["user": params], encoding: JSONEncoding.default)
+        case .submitEmail(let email):
+            var params: [String: Any] = [:]
+            params["new_email"] = email
+            return .requestParameters(parameters: ["user_consent": params], encoding: JSONEncoding.default)
+        case .verifyEmail(let email):
+            var params: [String: Any] = [:]
+            params["email_confirmation_token"] = email
+            return .requestParameters(parameters: ["user_consent": params], encoding: JSONEncoding.default)
         }
     }
     
@@ -344,7 +367,10 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             return nil
         case .getScreeningSection,
              .getInformedConsentSection,
-             .getConsentSection:
+             .getConsentSection,
+             .submitEmail,
+             .verifyEmail,
+             .resendConfirmationEmail:
             return .bearer
         }
     }

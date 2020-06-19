@@ -17,7 +17,6 @@ enum ImageName: String, CaseIterable {
     case nextButtonPrimary
     case backButtonPrimary
     case nextButtonSecondary
-    case nextButtonSmallSecondary
     case backButton
     case closeButton
     case checkmark

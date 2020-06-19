@@ -32,19 +32,11 @@ class ConsentCoordinator {
                                   pages: self.sectionData.pages)
         return AcceptanceViewController(withData: data, coordinator: self)
     }
-    
-    // MARK: - Private Methods
-    
-    private func showUserDataFlow() {
-        // TODO: Show page to get user's first name and last name
-        print("TODO: Show page to get user's first name and last name")
-        self.navigationController.showAlert(withTitle: "Work in progress", message: "User Data Flow coming soon")
-    }
 }
 
 extension ConsentCoordinator: AcceptanceCoordinator {
     func onAgreeButtonPressed() {
-        self.showUserDataFlow()
+        self.completionCallback(self.navigationController)
     }
     
     func onDisagreeButtonPressed() {

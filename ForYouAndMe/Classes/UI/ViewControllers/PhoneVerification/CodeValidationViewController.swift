@@ -25,8 +25,9 @@ public class CodeValidationViewController: UIViewController {
     
     private lazy var confirmButton: UIButton = {
         let button = UIButton()
-        button.setImage(ImagePalette.image(withName: .nextButtonSmallSecondary), for: .normal)
+        button.setImage(ImagePalette.image(withName: .nextButtonSecondary), for: .normal)
         button.addTarget(self, action: #selector(self.confirmButtonPressed), for: .touchUpInside)
+        button.autoSetDimensions(to: CGSize(width: 50.0, height: 50.0))
         return button
     }()
     
@@ -44,7 +45,8 @@ public class CodeValidationViewController: UIViewController {
     
     private lazy var phoneNumberView: PhoneNumberView = {
         let phoneNumberView = PhoneNumberView(presenter: self,
-                                              allowedCountryCodes: CountryCodeProvider.countryCodes)
+                                              allowedCountryCodes: CountryCodeProvider.countryCodes,
+                                              styleCategory: .secondary)
         let button = UIButton()
         phoneNumberView.addSubview(button)
         button.autoPinEdgesToSuperviewEdges()
@@ -53,7 +55,7 @@ public class CodeValidationViewController: UIViewController {
     }()
     
     private lazy var codeTextFieldView: GenericTextFieldView = {
-        let view = GenericTextFieldView(keyboardType: .numberPad)
+        let view = GenericTextFieldView(keyboardType: .numberPad, styleCategory: .secondary)
         view.textField.textContentType = .oneTimeCode
         view.validationCallback = { text -> Bool in
             return text.count == Constants.Misc.ValidationCodeDigitCount
@@ -158,7 +160,7 @@ public class CodeValidationViewController: UIViewController {
     
     @objc private func confirmButtonPressed() {
         self.navigator.pushProgressHUD()
-        self.repository.verifyPhoneNumber(phoneNumber: self.phoneNumberView.fullNumber, secureCode: self.codeTextFieldView.text)
+        self.repository.verifyPhoneNumber(phoneNumber: self.phoneNumberView.fullNumber, validationCode: self.codeTextFieldView.text)
         .subscribe(onSuccess: { [weak self] in
             guard let self = self else { return }
             self.navigator.popProgressHUD()

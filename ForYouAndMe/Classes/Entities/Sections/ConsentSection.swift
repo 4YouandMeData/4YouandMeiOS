@@ -18,7 +18,6 @@ struct ConsentSection {
     let disagreeButton: String
     let pages: [InfoPage]
     let welcomePage: InfoPage
-    let successPage: InfoPage?
 }
 
 extension ConsentSection: JSONAPIMappable {
@@ -26,8 +25,7 @@ extension ConsentSection: JSONAPIMappable {
 pages.link_1,\
 pages.link_2,\
 welcome_page.link_1,\
-welcome_page.link_2,\
-success_page
+welcome_page.link_2
 """
     
     enum CodingKeys: String, CodingKey {
@@ -40,6 +38,5 @@ success_page
         case disagreeButton = "disagree_modal_button"
         case pages
         case welcomePage = "welcome_page"
-        case successPage = "success_page"
     }
 }

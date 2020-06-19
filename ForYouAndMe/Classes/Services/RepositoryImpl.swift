@@ -81,9 +81,9 @@ extension RepositoryImpl: Repository {
         })
     }
     
-    func verifyPhoneNumber(phoneNumber: String, secureCode: String) -> Single<()> {
+    func verifyPhoneNumber(phoneNumber: String, validationCode: String) -> Single<()> {
         return self.api.send(request: ApiRequest(serviceRequest: .verifyPhoneNumber(phoneNumber: phoneNumber,
-                                                                                    secureCode: secureCode)))
+                                                                                    validationCode: validationCode)))
         .handleError()
         .catchError({ error -> Single<()> in
             enum ErrorCode: Int, CaseIterable { case wrongValidationCode = 403 }
@@ -116,6 +116,23 @@ extension RepositoryImpl: Repository {
     
     func getConsentSection() -> Single<ConsentSection> {
         return self.api.send(request: ApiRequest(serviceRequest: .getConsentSection))
+        .handleError()
+    }
+    
+    // MARK: - User Consent
+    
+    func submitEmail(email: String) -> Single<()> {
+        return self.api.send(request: ApiRequest(serviceRequest: .submitEmail(email: email)))
+        .handleError()
+    }
+    
+    func verifyEmail(validationCode: String) -> Single<()> {
+        return self.api.send(request: ApiRequest(serviceRequest: .verifyEmail(validationCode: validationCode)))
+        .handleError()
+    }
+    
+    func resendConfirmationEmail() -> Single<()> {
+        return self.api.send(request: ApiRequest(serviceRequest: .resendConfirmationEmail))
         .handleError()
     }
 }

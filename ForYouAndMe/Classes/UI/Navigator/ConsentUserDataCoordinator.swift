@@ -16,6 +16,7 @@ class ConsentUserDataCoordinator {
     
     private var userFirstName: String?
     private var userLastName: String?
+    private var userEmail: String?
     
     init(withSectionData sectionData: ConsentUserDataSection,
          navigationController: UINavigationController,
@@ -33,10 +34,14 @@ class ConsentUserDataCoordinator {
     
     // MARK: - Private Methods
     
-    private func showUserEmailPage() {
-        // TODO: Show User Email page
-        print("TODO: Show User Email page")
-        self.navigationController.showAlert(withTitle: "Work in progress", message: "User email page coming soon")
+    private func showEnterUserEmail() {
+        self.navigationController.pushViewController(UserEmailViewController(coordinator: self), animated: true)
+    }
+    
+    private func showUserEmailValidation(email: String) {
+        // TODO: Show User Email Validation
+        print("TODO: Show User Email Validation")
+        self.navigationController.showAlert(withTitle: "Work in progress", message: "User email Validation coming soon")
     }
 }
 
@@ -44,6 +49,13 @@ extension ConsentUserDataCoordinator: UserNameCoordinator {
     func onUserNameConfirmPressed(firstName: String, lastName: String) {
         self.userFirstName = firstName
         self.userLastName = lastName
-        self.showUserEmailPage()
+        self.showEnterUserEmail()
+    }
+}
+
+extension ConsentUserDataCoordinator: UserEmailCoordinator {
+    func onUserEmailSubmitted(email: String) {
+        self.userEmail = email
+        self.showUserEmailValidation(email: email)
     }
 }

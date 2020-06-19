@@ -50,11 +50,15 @@ protocol Repository: class {
     var isLoggedIn: Bool { get }
     func logOut()
     func submitPhoneNumber(phoneNumber: String) -> Single<()>
-    func verifyPhoneNumber(phoneNumber: String, secureCode: String) -> Single<()>
+    func verifyPhoneNumber(phoneNumber: String, validationCode: String) -> Single<()>
     // Screening Section
     func getScreeningSection() -> Single<ScreeningSection>
     // Informed Consent Section
     func getInformedConsentSection() -> Single<InformedConsentSection>
     // Consent Section
     func getConsentSection() -> Single<ConsentSection>
+    // User Consent
+    func submitEmail(email: String) -> Single<()>
+    func verifyEmail(validationCode: String) -> Single<()>
+    func resendConfirmationEmail() -> Single<()>
 }

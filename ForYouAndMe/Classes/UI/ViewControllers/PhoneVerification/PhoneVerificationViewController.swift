@@ -45,13 +45,15 @@ public class PhoneVerificationViewController: UIViewController {
     
     private lazy var confirmButton: UIButton = {
         let button = UIButton()
-        button.setImage(ImagePalette.image(withName: .nextButtonSmallSecondary), for: .normal)
+        button.setImage(ImagePalette.image(withName: .nextButtonSecondary), for: .normal)
         button.addTarget(self, action: #selector(self.confirmButtonPressed), for: .touchUpInside)
+        button.autoSetDimensions(to: CGSize(width: 50.0, height: 50.0))
         return button
     }()
     
     private lazy var phoneNumberView: PhoneNumberView = PhoneNumberView(presenter: self,
-                                                                        allowedCountryCodes: CountryCodeProvider.countryCodes)
+                                                                        allowedCountryCodes: CountryCodeProvider.countryCodes,
+                                                                        styleCategory: .secondary)
     
     private lazy var legalNoteView: UIView = {
         let horizontalStackView = UIStackView()

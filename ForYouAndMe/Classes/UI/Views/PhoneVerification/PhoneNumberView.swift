@@ -31,7 +31,7 @@ class PhoneNumberView: GenericTextFieldView {
     
     private lazy var countryCodeButton: UIButton = {
         let button = UIButton()
-        button.setTitleColor(Self.normalTextColor, for: .normal)
+        button.setTitleColor(self.standardColor, for: .normal)
         button.titleLabel?.font = FontPalette.fontStyleData(forStyle: .paragraph).font
         button.contentEdgeInsets = UIEdgeInsets.zero
         button.addTarget(self, action: #selector(self.countryCodeButtonPressed), for: .touchUpInside)
@@ -52,10 +52,10 @@ class PhoneNumberView: GenericTextFieldView {
     private let allowedCountryCodes: [String]
     private let phoneNumberKit = PhoneNumberKit()
     
-    init(presenter: UIViewController, allowedCountryCodes: [String]) {
+    init(presenter: UIViewController, allowedCountryCodes: [String], styleCategory: GenericTextFieldStyleCategory) {
         self.presenter = presenter
         self.allowedCountryCodes = allowedCountryCodes
-        super.init(keyboardType: .phonePad)
+        super.init(keyboardType: .phonePad, styleCategory: styleCategory)
         self.validationCallback = { [weak self] text -> Bool in
             guard let self = self else { return false }
             return self.validateText(text, ignoreType: false)
@@ -74,12 +74,12 @@ class PhoneNumberView: GenericTextFieldView {
     
     public override func setError(errorText: String) {
         super.setError(errorText: errorText)
-        self.countryCodeButton.setTitleColor(Self.errorColor, for: .normal)
+        self.countryCodeButton.setTitleColor(self.errorColor, for: .normal)
     }
     
     public override func clearError(clearErrorText: Bool) {
         super.clearError(clearErrorText: clearErrorText)
-        self.countryCodeButton.setTitleColor(Self.normalTextColor, for: .normal)
+        self.countryCodeButton.setTitleColor(self.standardColor, for: .normal)
     }
     
     // MARK: Actions

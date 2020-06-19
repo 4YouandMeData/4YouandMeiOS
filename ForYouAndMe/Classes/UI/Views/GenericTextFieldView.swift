@@ -10,15 +10,38 @@ import Foundation
 import RxSwift
 import RxCocoa
 
+protocol GenericTextFieldViewDelegate: class {
+    func genericTextFieldShouldReturn(textField: GenericTextFieldView) -> Bool
+}
+
+enum GenericTextFieldStyleCategory: StyleCategory {
+    case primary
+    case secondary
+    
+    var style: Style<GenericTextFieldView> {
+        switch self {
+        case .primary: return Style<GenericTextFieldView> { textFieldView in
+            textFieldView.standardColor = ColorPalette.color(withType: .primaryText)
+            textFieldView.errorColor = ColorPalette.color(withType: .primaryText)
+            }
+        case .secondary: return Style<GenericTextFieldView> { textFieldView in
+            textFieldView.standardColor = ColorPalette.color(withType: .secondaryText)
+            textFieldView.errorColor = ColorPalette.color(withType: .primaryText)
+            }
+        }
+    }
+}
+
 class GenericTextFieldView: UIView {
     
     typealias GenericTextFieldViewValidation = ((String) -> Bool)
     
-    static var normalTextColor: UIColor { ColorPalette.color(withType: .secondaryText) }
-    static var errorColor: UIColor { ColorPalette.color(withType: .primaryText) }
+    public fileprivate (set) var standardColor: UIColor = ColorPalette.color(withType: .secondaryText)
+    public fileprivate (set) var errorColor: UIColor = ColorPalette.color(withType: .primaryText)
     
     public var validationCallback: GenericTextFieldViewValidation?
     public var maxCharacters: Int?
+    public weak var delegate: GenericTextFieldViewDelegate?
     
     public var isValid: BehaviorRelay<Bool> = BehaviorRelay<Bool>(value: false)
     public var text: String {
@@ -39,9 +62,8 @@ class GenericTextFieldView: UIView {
     
     public lazy var textField: UITextField = {
         let textField = UITextField()
-        textField.textColor = Self.normalTextColor
-        textField.tintColor = Self.normalTextColor
-        textField.keyboardType = .phonePad
+        textField.textColor = self.standardColor
+        textField.tintColor = self.standardColor
         textField.font = FontPalette.fontStyleData(forStyle: .paragraph).font
         textField.delegate = self
         textField.addTarget(self, action: #selector(self.textFieldDidChange(_:)), for: .editingChanged)
@@ -51,7 +73,8 @@ class GenericTextFieldView: UIView {
     private lazy var textFieldEditButton: UIButton = {
         let button = UIButton()
         button.imageView?.contentMode = .scaleAspectFit
-        button.setImage(ImagePalette.image(withName: .edit), for: .normal)
+        button.setImage(ImagePalette.image(withName: .edit)?.withRenderingMode(.alwaysTemplate), for: .normal)
+        button.imageView?.tintColor = self.standardColor
         button.addTarget(self, action: #selector(self.textFieldEditButtonPressed), for: .touchUpInside)
         return button
     }()
@@ -59,7 +82,8 @@ class GenericTextFieldView: UIView {
     private lazy var textFieldCheckmarkButton: UIButton = {
         let button = UIButton()
         button.imageView?.contentMode = .scaleAspectFit
-        button.setImage(ImagePalette.image(withName: .checkmark), for: .normal)
+        button.setImage(ImagePalette.image(withName: .checkmark)?.withRenderingMode(.alwaysTemplate), for: .normal)
+        button.imageView?.tintColor = self.standardColor
         button.addTarget(self, action: #selector(self.textFieldEditButtonPressed), for: .touchUpInside)
         return button
     }()
@@ -73,8 +97,10 @@ class GenericTextFieldView: UIView {
     
     private let disposeBag = DisposeBag()
     
-    init(keyboardType: UIKeyboardType) {
+    init(keyboardType: UIKeyboardType, styleCategory: GenericTextFieldStyleCategory) {
         super.init(frame: .zero)
+        
+        self.apply(style: styleCategory.style)
         
         let iconContainerView = UIView()
         iconContainerView.addSubview(self.textFieldEditButton)
@@ -89,7 +115,7 @@ class GenericTextFieldView: UIView {
         textFieldContainerView.addHorizontalBorderLine(position: .bottom,
                                               leftMargin: 0,
                                               rightMargin: 0,
-                                              color: ColorPalette.color(withType: .secondary).applyAlpha(0.2))
+                                              color: self.standardColor.applyAlpha(0.2))
         textFieldContainerView.addSubview(self.horizontalStackView)
         self.horizontalStackView.autoPinEdgesToSuperviewEdges()
         
@@ -121,18 +147,18 @@ class GenericTextFieldView: UIView {
     public func setError(errorText: String) {
         self.errorLabel.attributedText = NSAttributedString.create(withText: errorText,
                                                                    fontStyle: .header3,
-                                                                   color: Self.errorColor,
+                                                                   color: self.errorColor,
                                                                    textAlignment: .left)
-        self.textField.textColor = Self.errorColor
-        self.textField.tintColor = Self.errorColor
+        self.textField.textColor = self.errorColor
+        self.textField.tintColor = self.errorColor
     }
     
     public func clearError(clearErrorText: Bool) {
         if clearErrorText {
             self.errorLabel.text = ""
         }
-        self.textField.textColor = Self.normalTextColor
-        self.textField.tintColor = Self.normalTextColor
+        self.textField.textColor = self.standardColor
+        self.textField.tintColor = self.standardColor
     }
     
     public func checkValidation() {
@@ -179,6 +205,12 @@ extension GenericTextFieldView: UITextFieldDelegate {
         } else {
             return true
         }
+    }
+    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+        guard let delegate = self.delegate else {
+            return false
+        }
+        return delegate.genericTextFieldShouldReturn(textField: self)
     }
 }
 

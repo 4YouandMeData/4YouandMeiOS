@@ -53,9 +53,12 @@ enum StringKey: String, CaseIterable, CodingKey {
     case onboardingUserEmailInfo = "ONBOARDING_USER_EMAIL_INFO"
     case onboardingUserEmailVerificationTitle = "ONBOARDING_USER_EMAIL_VERIFICATION_TITLE"
     case onboardingUserEmailVerificationBody = "ONBOARDING_USER_EMAIL_VERIFICATION_BODY"
-    case onboardingUserEmailVerificationWrongEmail = "ONBOARDING_USER_EMAIL_VERIFICATION_WRONG_EMAIL"
-    case onboardingUserEmailVerificationCodeDescription = "ONBOARDING_USER_EMAIL_VERIFICATION_CODE_DESCRIPTION"
-    case onboardingUserEmailVerificationErrorWrongCode = "ONBOARDING_USER_EMAIL_VERIFICATION_ERROR_WRONG_CODE"
+    case onboardingUserEmailVerificationWrongEmail
+        = "ONBOARDING_USER_EMAIL_VERIFICATION_WRONG_EMAIL"
+    case onboardingUserEmailVerificationCodeDescription
+        = "ONBOARDING_USER_EMAIL_VERIFICATION_CODE_DESCRIPTION"
+    case onboardingUserEmailVerificationErrorWrongCode
+        = "ONBOARDING_USER_EMAIL_VERIFICATION_ERROR_WRONG_CODE"
     case onboardingUserEmailVerificationResend = "ONBOARDING_USER_EMAIL_VERIFICATION_RESEND"
     case onboardingUserSignatureTitle = "ONBOARDING_USER_SIGNATURE_TITLE"
     case onboardingUserSignatureBody = "ONBOARDING_USER_SIGNATURE_BODY"

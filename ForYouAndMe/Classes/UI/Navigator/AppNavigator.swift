@@ -202,7 +202,7 @@ class AppNavigator {
     public func startConsentSection(navigationController: UINavigationController) {
         navigationController.loadViewForRequest(self.repository.getConsentSection()) { section -> UIViewController in
             let completionCallback: NavigationControllerCallback = { [weak self] navigationController in
-                self?.startConsentSection(navigationController: navigationController)
+                self?.startOptInSection(navigationController: navigationController)
             }
             let coordinator = ConsentCoordinator(withSectionData: section,
                                                  navigationController: navigationController,
@@ -214,8 +214,9 @@ class AppNavigator {
     // MARK: Opt-In
     
     public func startOptInSection(navigationController: UINavigationController) {
-        // TODO: Start Opt-in section
-        navigationController.showAlert(withTitle: "Work in progress", message: "Opt-in section coming soon")
+        // TODO: Implement Opt In-section
+        print("TODO: Implement Opt In-section")
+        self.startUserContentDataSection(navigationController: navigationController)
     }
     
     // MARK: Consent User Data

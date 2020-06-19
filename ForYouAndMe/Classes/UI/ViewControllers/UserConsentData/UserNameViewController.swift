@@ -28,24 +28,27 @@ public class UserNameViewController: UIViewController {
     
     private lazy var confirmButton: UIButton = {
         let button = UIButton()
-        button.setImage(ImagePalette.image(withName: .nextButtonSmallSecondary), for: .normal)
+        button.setImage(ImagePalette.image(withName: .nextButtonSecondary), for: .normal)
         button.addTarget(self, action: #selector(self.confirmButtonPressed), for: .touchUpInside)
+        button.autoSetDimensions(to: CGSize(width: 50.0, height: 50.0))
         return button
     }()
     
     private lazy var firstNameFieldView: GenericTextFieldView = {
-        let view = GenericTextFieldView(keyboardType: .default)
+        let view = GenericTextFieldView(keyboardType: .default, styleCategory: .secondary)
         view.validationCallback = { text -> Bool in
             return text.count > 0
         }
+        view.textField.textContentType = .givenName
         return view
     }()
     
     private lazy var lastNameFieldView: GenericTextFieldView = {
-        let view = GenericTextFieldView(keyboardType: .default)
+        let view = GenericTextFieldView(keyboardType: .default, styleCategory: .secondary)
         view.validationCallback = { text -> Bool in
             return text.count > 0
         }
+        view.textField.textContentType = .familyName
         return view
     }()
     
@@ -129,6 +132,7 @@ public class UserNameViewController: UIViewController {
             assertionFailure("Invalid text field data")
             return
         }
+        self.view.endEditing(true)
         self.coordinator.onUserNameConfirmPressed(firstName: self.firstNameFieldView.text,
                                                   lastName: self.lastNameFieldView.text)
     }
