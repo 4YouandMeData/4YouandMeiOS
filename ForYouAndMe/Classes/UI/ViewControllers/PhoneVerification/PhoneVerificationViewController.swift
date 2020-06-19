@@ -201,11 +201,7 @@ public class PhoneVerificationViewController: UIViewController {
     // MARK: Private Methods
     
     private func updateUI() {
-        guard let numberValid = try? self.phoneNumberView.isValid.value() else {
-            assertionFailure("Unexpected throw")
-            return
-        }
-        self.confirmButton.isEnabled = numberValid && self.legalNoteCheckBoxView.isChecked
+        self.confirmButton.isEnabled = self.phoneNumberView.isValid.value && self.legalNoteCheckBoxView.isChecked
     }
     
     private func handleLabelInteractions(_ text: String) {

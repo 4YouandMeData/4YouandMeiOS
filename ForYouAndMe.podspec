@@ -35,6 +35,7 @@ Pod::Spec.new do |s|
   
   s.dependency 'Moya/RxSwift', '~> 14.0.0'
   s.dependency 'Moya-ModelMapper/RxSwift', '~> 10.0.0'
+  s.dependency 'RxCocoa', '~> 5.1.1'
   s.dependency 'PureLayout', '~> 3.1.5'
   s.dependency 'SVProgressHUD', '~> 2.2.5'
   s.dependency 'TPKeyboardAvoiding', '~> 1.3.3'
@@ -46,6 +47,7 @@ Pod::Spec.new do |s|
   s.dependency 'PhoneNumberKit', '~> 3.2.0'
   s.dependency 'CountryPickerView', '~> 3.1.2'
   s.dependency 'Japx/RxCodableMoya', '~> 3.0.0'
+
   
   s.static_framework = true
   

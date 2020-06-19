@@ -183,10 +183,6 @@ public class CodeValidationViewController: UIViewController {
     // MARK: Private Methods
     
     private func updateUI() {
-        guard let codeValid = try? self.codeTextFieldView.isValid.value() else {
-            assertionFailure("Unexpected throw")
-            return
-        }
-        self.confirmButton.isEnabled = codeValid
+        self.confirmButton.isEnabled = self.codeTextFieldView.isValid.value
     }
 }

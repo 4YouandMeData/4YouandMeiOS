@@ -9,14 +9,15 @@
 import UIKit
 import PureLayout
 import RxSwift
+import RxCocoa
 
 class GenericCheckboxView: UIView {
 
     public var isChecked: Bool {
-        return (try? self.isCheckedSubject.value()) ?? false
+        return self.isCheckedSubject.value
     }
     
-    public var isCheckedSubject: BehaviorSubject<Bool>
+    public var isCheckedSubject: BehaviorRelay<Bool>
     
     private lazy var checkboxImageView: UIImageView = {
         let imageView = UIImageView()
@@ -29,7 +30,7 @@ class GenericCheckboxView: UIView {
     private final let disposeBag = DisposeBag()
     
     init(isDefaultChecked: Bool) {
-        self.isCheckedSubject = BehaviorSubject(value: isDefaultChecked)
+        self.isCheckedSubject = BehaviorRelay(value: isDefaultChecked)
         super.init(frame: .zero)
         
         let tap = UITapGestureRecognizer(target: self, action: #selector(self.onTap))
@@ -54,6 +55,6 @@ class GenericCheckboxView: UIView {
     // MARK: - Actions
     
     @objc private func onTap() {
-        self.isCheckedSubject.onNext(!self.isChecked)
+        self.isCheckedSubject.accept(!self.isChecked)
     }
 }

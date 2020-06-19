@@ -46,7 +46,21 @@ enum StringKey: String, CaseIterable, CodingKey {
     case onboardingAbortCancel = "ONBOARDING_ABORT_CANCEL"
     case onboardingAgreeButton = "ONBOARDING_AGREE_BUTTON"
     case onboardingDisagreeButton = "ONBOARDING_DISAGREE_BUTTON"
-    
+    case onboardingUserNameTitle = "ONBOARDING_USER_NAME_TITLE"
+    case onboardingUserNameFirstNameDescription = "ONBOARDING_USER_NAME_FIRST_NAME_DESCRIPTION"
+    case onboardingUserNameLastNameDescription = "ONBOARDING_USER_NAME_LAST_NAME_DESCRIPTION"
+    case onboardingUserEmailEmailDescription = "ONBOARDING_USER_EMAIL_EMAIL_DESCRIPTION"
+    case onboardingUserEmailInfo = "ONBOARDING_USER_EMAIL_INFO"
+    case onboardingUserEmailVerificationTitle = "ONBOARDING_USER_EMAIL_VERIFICATION_TITLE"
+    case onboardingUserEmailVerificationBody = "ONBOARDING_USER_EMAIL_VERIFICATION_BODY"
+    case onboardingUserEmailVerificationWrongEmail = "ONBOARDING_USER_EMAIL_VERIFICATION_WRONG_EMAIL"
+    case onboardingUserEmailVerificationCodeDescription = "ONBOARDING_USER_EMAIL_VERIFICATION_CODE_DESCRIPTION"
+    case onboardingUserEmailVerificationErrorWrongCode = "ONBOARDING_USER_EMAIL_VERIFICATION_ERROR_WRONG_CODE"
+    case onboardingUserEmailVerificationResend = "ONBOARDING_USER_EMAIL_VERIFICATION_RESEND"
+    case onboardingUserSignatureTitle = "ONBOARDING_USER_SIGNATURE_TITLE"
+    case onboardingUserSignatureBody = "ONBOARDING_USER_SIGNATURE_BODY"
+    case onboardingUserSignaturePlaceholder = "ONBOARDING_USER_SIGNATURE_PLACEHOLDER"
+    case onboardingUserSignatureClear = "ONBOARDING_USER_SIGNATURE_CLEAR"
     // Generic
     case genericInfoTitle = "GENERIC_INFO_TITLE"
     

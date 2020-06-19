@@ -14,7 +14,7 @@ protocol InfoPageCoordinator {
 }
 
 enum InfoPageBottomViewStyle {
-    case horizontal
+    case singleButton
     case vertical(backButton: Bool)
 }
 
@@ -31,7 +31,7 @@ struct InfoPageData {
                             addAbortOnboardingButton: false,
                             allowBackwardNavigation: false,
                             bodyTextAlignment: .left,
-                            bottomViewStyle: .horizontal)
+                            bottomViewStyle: .singleButton)
     }
     
     static func createInfoPageData(withinfoPage infopage: InfoPage, isOnboarding: Bool) -> InfoPageData {
@@ -39,7 +39,7 @@ struct InfoPageData {
                             addAbortOnboardingButton: isOnboarding,
                             allowBackwardNavigation: true,
                             bodyTextAlignment: .left,
-                            bottomViewStyle: .horizontal)
+                            bottomViewStyle: .singleButton)
     }
     
     static func createResultPageData(withinfoPage infopage: InfoPage) -> InfoPageData {
@@ -47,7 +47,7 @@ struct InfoPageData {
                             addAbortOnboardingButton: false,
                             allowBackwardNavigation: false,
                             bodyTextAlignment: .center,
-                            bottomViewStyle: .horizontal)
+                            bottomViewStyle: .singleButton)
     }
 }
 
@@ -106,7 +106,7 @@ public class InfoPageViewController: UIViewController {
         // Bottom View
         let bottomView: UIView = {
             switch self.pageData.bottomViewStyle {
-            case .horizontal:
+            case .singleButton:
                 let view: GenericButtonView = {
                     if let confirmButtonText = self.pageData.page.buttonFirstlabel {
                         let view = GenericButtonView(withTextStyleCategory: .secondaryBackground())

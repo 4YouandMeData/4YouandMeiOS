@@ -242,7 +242,6 @@ fileprivate extension PrimitiveSequence where Trait == SingleTrait, Element == R
     }
 }
 
-
 fileprivate extension ApiRequest {
     var isAuthTokenRequired: Bool {
         nil != self.serviceRequest.authorizationType

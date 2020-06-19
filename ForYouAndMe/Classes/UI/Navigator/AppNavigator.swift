@@ -50,6 +50,7 @@ class AppNavigator {
             case .screeningSection: self.startScreeningSection(navigationController: testNavigationViewController)
             case .informedConsentSection: self.startInformedConsentSection(navigationController: testNavigationViewController)
             case .consentSection: self.startConsentSection(navigationController: testNavigationViewController)
+            case .consentUserDataSection: self.startUserContentDataSection(navigationController: testNavigationViewController)
             }
             return
         }
@@ -61,7 +62,6 @@ class AppNavigator {
             let onboardingCompleted = false
             if onboardingCompleted {
                 // TODO: Implement Home
-                print("TODO: Implement Home")
             } else {
                 // If onboarding is not completed, log out (restart from the very beginning)
                 self.logOut()
@@ -216,6 +216,28 @@ class AppNavigator {
     public func startOptInSection(navigationController: UINavigationController) {
         // TODO: Start Opt-in section
         navigationController.showAlert(withTitle: "Work in progress", message: "Opt-in section coming soon")
+    }
+    
+    // MARK: Consent User Data
+    
+    public func startUserContentDataSection(navigationController: UINavigationController) {
+        // TODO: Fetch User Data Section from API
+        print("TODO: Fetch User Data Section from API")
+        let section = ConsentUserDataSection(successPage: nil)
+        let completionCallback: NavigationControllerCallback = { [weak self] navigationController in
+            self?.startDownloadAppsSection(navigationController: navigationController)
+        }
+        let coordinator = ConsentUserDataCoordinator(withSectionData: section,
+                                                     navigationController: navigationController,
+                                                     completionCallback: completionCallback)
+        navigationController.pushViewController(coordinator.getStartingPage(), animated: true)
+    }
+    
+    // MARK: Download Apps
+    
+    public func startDownloadAppsSection(navigationController: UINavigationController) {
+        // TODO: Start Download Apps section
+        navigationController.showAlert(withTitle: "Work in progress", message: "Download Apps section coming soon")
     }
     
     // MARK: Progress HUD

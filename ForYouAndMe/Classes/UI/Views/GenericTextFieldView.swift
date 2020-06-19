@@ -8,6 +8,7 @@
 
 import Foundation
 import RxSwift
+import RxCocoa
 
 class GenericTextFieldView: UIView {
     
@@ -19,7 +20,7 @@ class GenericTextFieldView: UIView {
     public var validationCallback: GenericTextFieldViewValidation?
     public var maxCharacters: Int?
     
-    public var isValid: BehaviorSubject<Bool> = BehaviorSubject<Bool>(value: false)
+    public var isValid: BehaviorRelay<Bool> = BehaviorRelay<Bool>(value: false)
     public var text: String {
         get { self.textField.text ?? "" }
         set {
@@ -136,7 +137,7 @@ class GenericTextFieldView: UIView {
     
     public func checkValidation() {
         let isValid = self.validationCallback?(self.textField.text ?? "") ?? false
-        self.isValid.onNext(isValid)
+        self.isValid.accept(isValid)
     }
     
     // MARK: Actions
