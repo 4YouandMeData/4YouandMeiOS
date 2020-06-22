@@ -6,10 +6,16 @@
 //
 
 import Foundation
+import RxSwift
 
 class ConsentUserDataCoordinator {
     
     public unowned var navigationController: UINavigationController
+    
+    private let repository: Repository
+    private let navigator: AppNavigator
+    
+    private let disposeBag = DisposeBag()
     
     private let sectionData: ConsentUserDataSection
     private let completionCallback: NavigationControllerCallback
@@ -22,6 +28,8 @@ class ConsentUserDataCoordinator {
     init(withSectionData sectionData: ConsentUserDataSection,
          navigationController: UINavigationController,
          completionCallback: @escaping NavigationControllerCallback) {
+        self.repository = Services.shared.repository
+        self.navigator = Services.shared.navigator
         self.sectionData = sectionData
         self.navigationController = navigationController
         self.completionCallback = completionCallback
@@ -48,9 +56,34 @@ class ConsentUserDataCoordinator {
     }
     
     private func submitUserData() {
-        // TODO: Submit User Data
-        print("TODO: Submit User Data")
-        self.navigationController.showAlert(withTitle: "Work in progress", message: "User Data submission coming soon")
+        guard let firstName = self.userFirstName,
+            let lastName = self.userLastName,
+            let signatureImage = self.userSignatureImage else {
+                assertionFailure("Missing user data")
+                return
+        }
+        
+        self.navigator.pushProgressHUD()
+        self.repository.sendUserData(firstName: firstName, lastName: lastName, signatureImage: signatureImage)
+            .subscribe(onSuccess: { [weak self] in
+                guard let self = self else { return }
+                self.navigator.popProgressHUD()
+                self.showSuccess()
+                }, onError: { [weak self] error in
+                    guard let self = self else { return }
+                    self.navigator.popProgressHUD()
+                    self.navigator.handleError(error: error, presenter: self.navigationController)
+            }).disposed(by: self.disposeBag)
+    }
+    
+    private func showSuccess() {
+        guard let successPage = self.sectionData.successPage else {
+            assertionFailure("Missing expected success page")
+            return
+        }
+        let infoPageData = InfoPageData.createResultPageData(withinfoPage: successPage)
+        let viewController = InfoPageViewController(withPageData: infoPageData, coordinator: self)
+        self.navigationController.pushViewController(viewController, animated: true)
     }
 }
 
@@ -83,5 +116,13 @@ extension ConsentUserDataCoordinator: UserSignatureCoordinator {
     func onUserSignatureCreated(signatureImage: UIImage) {
         self.userSignatureImage = signatureImage
         self.submitUserData()
+    }
+}
+
+extension ConsentUserDataCoordinator: PagedSectionCoordinator {
+    var pages: [InfoPage] { self.sectionData.pages }
+    
+    func onUnhandledPrimaryButtonNavigation(page: InfoPage) {
+        self.completionCallback(self.navigationController)
     }
 }

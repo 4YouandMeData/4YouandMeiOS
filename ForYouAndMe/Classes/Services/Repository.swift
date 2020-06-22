@@ -63,8 +63,10 @@ protocol Repository: class {
     func getInformedConsentSection() -> Single<InformedConsentSection>
     // Consent Section
     func getConsentSection() -> Single<ConsentSection>
-    // User Consent
+    // User Consent Section
+    func getUserConsentSection() -> Single<ConsentUserDataSection>
     func submitEmail(email: String) -> Single<()>
     func verifyEmail(validationCode: String) -> Single<()>
     func resendConfirmationEmail() -> Single<()>
+    func sendUserData(firstName: String, lastName: String, signatureImage: UIImage) -> Single<()>
 }

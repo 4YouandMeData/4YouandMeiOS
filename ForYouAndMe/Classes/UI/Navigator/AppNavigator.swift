@@ -218,16 +218,15 @@ class AppNavigator {
     // MARK: Consent User Data
     
     public func startUserContentDataSection(navigationController: UINavigationController) {
-        // TODO: Fetch User Data Section from API
-        print("TODO: Fetch User Data Section from API")
-        let section = ConsentUserDataSection(successPage: nil)
-        let completionCallback: NavigationControllerCallback = { [weak self] navigationController in
-            self?.startDownloadAppsSection(navigationController: navigationController)
+        navigationController.loadViewForRequest(self.repository.getUserConsentSection()) { section -> UIViewController in
+            let completionCallback: NavigationControllerCallback = { [weak self] navigationController in
+                self?.startDownloadAppsSection(navigationController: navigationController)
+            }
+            let coordinator = ConsentUserDataCoordinator(withSectionData: section,
+                                                         navigationController: navigationController,
+                                                         completionCallback: completionCallback)
+            return coordinator.getStartingPage()
         }
-        let coordinator = ConsentUserDataCoordinator(withSectionData: section,
-                                                     navigationController: navigationController,
-                                                     completionCallback: completionCallback)
-        navigationController.pushViewController(coordinator.getStartingPage(), animated: true)
     }
     
     // MARK: Download Apps

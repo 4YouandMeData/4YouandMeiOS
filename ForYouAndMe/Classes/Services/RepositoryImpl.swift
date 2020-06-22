@@ -121,6 +121,11 @@ extension RepositoryImpl: Repository {
     
     // MARK: - User Consent
     
+    func getUserConsentSection() -> Single<ConsentUserDataSection> {
+        return self.api.send(request: ApiRequest(serviceRequest: .getUserConsentSection))
+        .handleError()
+    }
+    
     func submitEmail(email: String) -> Single<()> {
         return self.api.send(request: ApiRequest(serviceRequest: .submitEmail(email: email)))
         .handleError()
@@ -144,6 +149,13 @@ extension RepositoryImpl: Repository {
     
     func resendConfirmationEmail() -> Single<()> {
         return self.api.send(request: ApiRequest(serviceRequest: .resendConfirmationEmail))
+        .handleError()
+    }
+    
+    func sendUserData(firstName: String, lastName: String, signatureImage: UIImage) -> Single<()> {
+        return self.api.send(request: ApiRequest(serviceRequest: .sendUserData(firstName: firstName,
+                                                                               lastName: lastName,
+                                                                               signatureImage: signatureImage)))
         .handleError()
     }
 }

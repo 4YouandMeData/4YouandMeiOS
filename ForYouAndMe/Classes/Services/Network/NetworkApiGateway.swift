@@ -272,13 +272,17 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         // Consent Section
         case .getConsentSection:
             return "/v1/studies/\(studyId)/consent"
-        // User Consent
+        // User Consent Section
+        case .getUserConsentSection:
+            return "/v1/consents/\(studyId)/user_consent"
         case .submitEmail:
             return "/v1/consents/\(studyId)/user_consent"
         case .verifyEmail:
             return "/v1/consents/\(studyId)/user_consent/confirm_email"
         case .resendConfirmationEmail:
             return "/v1/consents/\(studyId)/user_consent/resend_confirmation_email"
+        case .sendUserData:
+            return "/v1/consents/\(studyId)/user_consent"
         }
     }
     
@@ -290,13 +294,15 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         case .getGlobalConfig,
              .getScreeningSection,
              .getInformedConsentSection,
-             .getConsentSection:
+             .getConsentSection,
+             .getUserConsentSection:
             return .get
         case .submitPhoneNumber,
              .verifyPhoneNumber,
              .submitEmail,
              .verifyEmail,
-             .resendConfirmationEmail:
+             .resendConfirmationEmail,
+             .sendUserData:
             return .post
         }
     }
@@ -318,12 +324,13 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
                 return Bundle.getTestData(from: "TestGetInformedConsentSection")
             }
         // Consent Section
-        case .getConsentSection:
-            return Bundle.getTestData(from: "TestGetConsentSection")
-        // User Consent
+        case .getConsentSection: return Bundle.getTestData(from: "TestGetConsentSection")
+        // User Consent Section
+        case .getUserConsentSection: return Bundle.getTestData(from: "TestGetUserConsentSection")
         case .submitEmail: return "{}".utf8Encoded
         case .verifyEmail: return "{}".utf8Encoded
         case .resendConfirmationEmail: return "{}".utf8Encoded
+        case .sendUserData: return "{}".utf8Encoded
         }
     }
     
@@ -333,6 +340,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
              .getScreeningSection,
              .getInformedConsentSection,
              .getConsentSection,
+             .getUserConsentSection,
              .resendConfirmationEmail:
             return .requestPlain
         case .submitPhoneNumber(let phoneNumber):
@@ -352,6 +360,16 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             var params: [String: Any] = [:]
             params["email_confirmation_token"] = email
             return .requestParameters(parameters: ["user_consent": params], encoding: JSONEncoding.default)
+        case .sendUserData(let firstName, let lastName, let signatureImage):
+            var params: [String: Any] = [:]
+            params["first_name"] = firstName
+            params["last_name"] = lastName
+            if let imageData = signatureImage.pngData() {
+                params["signature_base64"] = imageData.base64EncodedString(options: .lineLength64Characters)
+            } else {
+                assertionFailure("Cannot image to PNG")
+            }
+            return .requestParameters(parameters: ["user_consent": params], encoding: JSONEncoding.default)
         }
     }
     
@@ -368,9 +386,11 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         case .getScreeningSection,
              .getInformedConsentSection,
              .getConsentSection,
+             .getUserConsentSection,
              .submitEmail,
              .verifyEmail,
-             .resendConfirmationEmail:
+             .resendConfirmationEmail,
+             .sendUserData:
             return .bearer
         }
     }
