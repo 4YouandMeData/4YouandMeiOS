@@ -19,7 +19,10 @@ enum RepositoryError: LocalizedError {
     
     // Login
     case missingPhoneNumber
-    case wrongValidationCode
+    case wrongPhoneValidationCode
+    
+    // Onboarding
+    case wrongEmailValidationCode
     
     // Shared
     case connectivityError
@@ -36,7 +39,10 @@ enum RepositoryError: LocalizedError {
             
         // Login
         case .missingPhoneNumber: return StringsProvider.string(forKey: .phoneVerificationErrorMissingNumber)
-        case .wrongValidationCode: return StringsProvider.string(forKey: .phoneVerificationErrorWrongCode)
+        case .wrongPhoneValidationCode: return StringsProvider.string(forKey: .phoneVerificationErrorWrongCode)
+        
+        // Onboarding
+        case .wrongEmailValidationCode: return StringsProvider.string(forKey: .onboardingUserEmailVerificationErrorWrongCode)
             
         // Shared
         case .connectivityError: return StringsProvider.string(forKey: .errorMessageConnectivity)

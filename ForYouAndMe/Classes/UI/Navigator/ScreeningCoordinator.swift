@@ -57,12 +57,7 @@ class ScreeningCoordinator {
     }
     
     private func popBackToQuestions() {
-        guard let questionsViewController = self.navigationController.viewControllers.reversed()
-            .first(where: {$0 is BooleanQuestionsViewController }) else {
-                assertionFailure("Missing view controller in navigation stack")
-            return
-        }
-        self.navigationController.popToViewController(questionsViewController, animated: true)
+        self.navigationController.popToExpectedViewController(ofClass: BooleanQuestionsViewController.self, animated: true)
     }
 }
 

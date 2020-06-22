@@ -115,11 +115,7 @@ class AppNavigator {
             assertionFailure("Missing UINavigationController")
             return
         }
-        guard let welcomeViewController = navigationController.viewControllers.first(where: { $0 is WelcomeViewController }) else {
-            assertionFailure("Missing WelcomeViewController in navigation stack")
-            return
-        }
-        navigationController.popToViewController(welcomeViewController, animated: true)
+        navigationController.popToExpectedViewController(ofClass: WelcomeViewController.self, animated: true)
     }
     
     // MARK: - Login

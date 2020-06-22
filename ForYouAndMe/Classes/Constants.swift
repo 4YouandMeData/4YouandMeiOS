@@ -38,6 +38,7 @@ struct Constants {
         static let DefaultBundleName: String = "ForYouAndMe"
     }
     struct Misc {
-        static let ValidationCodeDigitCount: Int = 6
+        static let PhoneValidationCodeDigitCount: Int = 6
+        static let EmailValidationCodeDigitCount: Int = 6
     }
 }

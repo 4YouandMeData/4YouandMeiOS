@@ -1,9 +1,8 @@
 //
-//  CodeValidationViewController.swift
+//  UserEmailVerificationViewController.swift
 //  ForYouAndMe
 //
-//  Created by Leonardo Passeri on 14/05/2020.
-//  Copyright © 2020 Balzo srl. All rights reserved.
+//  Created by Leonardo Passeri on 22/06/2020.
 //
 
 import Foundation
@@ -11,10 +10,17 @@ import PureLayout
 import TPKeyboardAvoiding
 import RxSwift
 
-public class CodeValidationViewController: UIViewController {
+protocol UserEmailVerificationCoordinator {
+    func onUserEmailPressed()
+    func onUserEmailVerified()
+}
+
+public class UserEmailVerificationViewController: UIViewController {
     
     private let navigator: AppNavigator
     private let repository: Repository
+    private let coordinator: UserEmailVerificationCoordinator
+    
     private let disposeBag = DisposeBag()
     
     private lazy var scrollView: UIScrollView = {
@@ -34,7 +40,7 @@ public class CodeValidationViewController: UIViewController {
     private lazy var resendCodeButton: UIButton = {
         let button = UIButton()
         button.addTarget(self, action: #selector(self.resendCodeButtonPressed), for: .touchUpInside)
-        let attributedText = NSAttributedString.create(withText: StringsProvider.string(forKey: .phoneVerificationCodeResend),
+        let attributedText = NSAttributedString.create(withText: StringsProvider.string(forKey: .onboardingUserEmailVerificationResend),
                                                        fontStyle: .header3,
                                                        colorType: .secondaryText,
                                                        textAlignment: .left,
@@ -43,33 +49,30 @@ public class CodeValidationViewController: UIViewController {
         return button
     }()
     
-    private lazy var phoneNumberView: PhoneNumberView = {
-        let phoneNumberView = PhoneNumberView(presenter: self,
-                                              allowedCountryCodes: CountryCodeProvider.countryCodes,
-                                              styleCategory: .secondary)
+    private lazy var emailFieldView: GenericTextFieldView = {
+        let view = GenericTextFieldView(keyboardType: .emailAddress, styleCategory: .secondary)
         let button = UIButton()
-        phoneNumberView.addSubview(button)
+        view.addSubview(button)
         button.autoPinEdgesToSuperviewEdges()
-        button.addTarget(self, action: #selector(self.phoneNumberPressed), for: .touchUpInside)
-        return phoneNumberView
+        button.addTarget(self, action: #selector(self.emailPressed), for: .touchUpInside)
+        return view
     }()
     
     private lazy var codeTextFieldView: GenericTextFieldView = {
         let view = GenericTextFieldView(keyboardType: .numberPad, styleCategory: .secondary)
-        view.textField.textContentType = .oneTimeCode
         view.validationCallback = { text -> Bool in
-            return text.count == Constants.Misc.PhoneValidationCodeDigitCount
+            return text.count == Constants.Misc.EmailValidationCodeDigitCount
         }
-        view.maxCharacters = Constants.Misc.PhoneValidationCodeDigitCount
+        view.maxCharacters = Constants.Misc.EmailValidationCodeDigitCount
         return view
     }()
     
-    init(countryCode: String, phoneNumber: String) {
+    init(email: String, coordinator: UserEmailVerificationCoordinator) {
         self.navigator = Services.shared.navigator
         self.repository = Services.shared.repository
+        self.coordinator = coordinator
         super.init(nibName: nil, bundle: nil)
-        self.phoneNumberView.countryCode = countryCode
-        self.phoneNumberView.text = phoneNumber
+        self.emailFieldView.text = email
     }
     
     required init?(coder: NSCoder) {
@@ -95,23 +98,23 @@ public class CodeValidationViewController: UIViewController {
                                                                   right: Constants.Style.DefaultHorizontalMargins))
         stackView.autoAlignAxis(toSuperviewAxis: .vertical)
         
-        stackView.addLabel(withText: StringsProvider.string(forKey: .phoneVerificationCodeTitle),
+        stackView.addLabel(withText: StringsProvider.string(forKey: .onboardingUserEmailVerificationTitle),
                            fontStyle: .title,
                            colorType: .secondaryText,
                            textAlignment: .left)
         stackView.addBlankSpace(space: 30.0)
-        stackView.addLabel(withText: StringsProvider.string(forKey: .phoneVerificationCodeBody),
+        stackView.addLabel(withText: StringsProvider.string(forKey: .onboardingUserEmailVerificationBody),
                            fontStyle: .paragraph,
                            colorType: .secondaryText,
                            textAlignment: .left)
         stackView.addBlankSpace(space: 48.0)
-        stackView.addLabel(withText: StringsProvider.string(forKey: .phoneVerificationWrongNumber),
+        stackView.addLabel(withText: StringsProvider.string(forKey: .onboardingUserEmailVerificationWrongEmail),
                            fontStyle: .paragraph,
                            color: ColorPalette.color(withType: .secondaryText).applyAlpha(0.5),
                            textAlignment: .left)
         stackView.addBlankSpace(space: 24.0)
-        stackView.addArrangedSubview(self.phoneNumberView)
-        stackView.addLabel(withText: StringsProvider.string(forKey: .phoneVerificationCodeDescription),
+        stackView.addArrangedSubview(self.emailFieldView)
+        stackView.addLabel(withText: StringsProvider.string(forKey: .onboardingUserEmailVerificationCodeDescription),
                            fontStyle: .paragraph,
                            colorType: .secondaryText,
                            textAlignment: .left)
@@ -147,7 +150,7 @@ public class CodeValidationViewController: UIViewController {
     
     @objc private func resendCodeButtonPressed() {
         self.navigator.pushProgressHUD()
-        self.repository.submitPhoneNumber(phoneNumber: self.phoneNumberView.fullNumber)
+        self.repository.resendConfirmationEmail()
             .subscribe(onSuccess: { [weak self] in
                 guard let self = self else { return }
                 self.navigator.popProgressHUD()
@@ -159,18 +162,23 @@ public class CodeValidationViewController: UIViewController {
     }
     
     @objc private func confirmButtonPressed() {
+        guard self.codeTextFieldView.isValid.value else {
+            assertionFailure("Invalid text field data")
+            return
+        }
+        
         self.navigator.pushProgressHUD()
-        self.repository.verifyPhoneNumber(phoneNumber: self.phoneNumberView.fullNumber, validationCode: self.codeTextFieldView.text)
+        self.repository.verifyEmail(validationCode: self.codeTextFieldView.text)
         .subscribe(onSuccess: { [weak self] in
             guard let self = self else { return }
             self.navigator.popProgressHUD()
             self.codeTextFieldView.clearError(clearErrorText: true)
             self.view.endEditing(true)
-            self.navigator.showIntroVideo(presenter: self)
+            self.coordinator.onUserEmailVerified()
         }, onError: { [weak self] error in
             guard let self = self else { return }
             self.navigator.popProgressHUD()
-            if let error = error as? RepositoryError, case .wrongPhoneValidationCode = error {
+            if let error = error as? RepositoryError, case .wrongEmailValidationCode = error {
                 self.codeTextFieldView.setError(errorText: error.localizedDescription)
             } else {
                 self.navigator.handleError(error: error, presenter: self)
@@ -178,8 +186,8 @@ public class CodeValidationViewController: UIViewController {
         }).disposed(by: self.disposeBag)
     }
     
-    @objc private func phoneNumberPressed() {
-        self.navigationController?.popViewController(animated: true)
+    @objc private func emailPressed() {
+        self.coordinator.onUserEmailPressed()
     }
     
     // MARK: Private Methods

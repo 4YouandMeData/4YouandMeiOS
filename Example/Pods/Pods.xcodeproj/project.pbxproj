@@ -771,6 +771,7 @@
 		88B7F4E9AC2AC10B8C7DEDB9FE1EA79C /* FIRCLSLogger.m in Sources */ = {isa = PBXBuildFile; fileRef = AB8A8E679B6545E90FBB0A716B6354F9 /* FIRCLSLogger.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
 		88D795191B71868DC81D5D3F45D7338F /* Quick-dummy.m in Sources */ = {isa = PBXBuildFile; fileRef = EAEAE12F6E4B74DCF0BE28CEFFCCC789 /* Quick-dummy.m */; };
 		892F567BF4D68BB3C3AE4687AE25BE8C /* FIRCLSDownloadAndSaveSettingsOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 5C4F596F945812CFBA07C779B1B31041 /* FIRCLSDownloadAndSaveSettingsOperation.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
+		893ECFE724A09ECD00A27C2A /* UserEmailVerificationViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893ECFE624A09ECD00A27C2A /* UserEmailVerificationViewController.swift */; };
 		8942075F249CC66E00EFB2B4 /* ConsentUserDataCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8942075E249CC66E00EFB2B4 /* ConsentUserDataCoordinator.swift */; };
 		89420761249CC85200EFB2B4 /* ConsentUserDataSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89420760249CC85200EFB2B4 /* ConsentUserDataSection.swift */; };
 		89420763249CE9DA00EFB2B4 /* UserEmailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89420762249CE9DA00EFB2B4 /* UserEmailViewController.swift */; };
@@ -2782,6 +2783,7 @@
 		88FE07D6117F68B26D218F86F37CDA33 /* GDTCOREventDataObject.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = GDTCOREventDataObject.h; path = GoogleDataTransport/GDTCORLibrary/Public/GDTCOREventDataObject.h; sourceTree = "<group>"; };
 		890B5495B23E1657667A79E244A4BBE5 /* RxRelay.modulemap */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.module; path = RxRelay.modulemap; sourceTree = "<group>"; };
 		89251E3E91103B1F8578C5A1EF0FFC9A /* String+Localization.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = "String+Localization.swift"; sourceTree = "<group>"; };
+		893ECFE624A09ECD00A27C2A /* UserEmailVerificationViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserEmailVerificationViewController.swift; sourceTree = "<group>"; };
 		8942075E249CC66E00EFB2B4 /* ConsentUserDataCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConsentUserDataCoordinator.swift; sourceTree = "<group>"; };
 		89420760249CC85200EFB2B4 /* ConsentUserDataSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConsentUserDataSection.swift; sourceTree = "<group>"; };
 		89420762249CE9DA00EFB2B4 /* UserEmailViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserEmailViewController.swift; sourceTree = "<group>"; };
@@ -3826,6 +3828,7 @@
 			children = (
 				DBFDAB435B662C0AB4E0692989608FC3 /* UserNameViewController.swift */,
 				89420762249CE9DA00EFB2B4 /* UserEmailViewController.swift */,
+				893ECFE624A09ECD00A27C2A /* UserEmailVerificationViewController.swift */,
 			);
 			path = UserConsentData;
 			sourceTree = "<group>";
@@ -8861,6 +8864,7 @@
 				D307B65E9F5E1A6087965975B3857183 /* SetupLaterViewController.swift in Sources */,
 				1BF83AF9196271EECE15CDA4F78BA7D6 /* String+Localization.swift in Sources */,
 				414A044CF250EA0A5904461CDA39A977 /* StringsProvider.swift in Sources */,
+				893ECFE724A09ECD00A27C2A /* UserEmailVerificationViewController.swift in Sources */,
 				2D7E65DB266BC9B31AC370737B7FEE00 /* Style.swift in Sources */,
 				1581228D8E7FB72146195CC25FF9B902 /* StyleCategory.swift in Sources */,
 				13B2C69A4FCBEA332DC2307737643CC0 /* TestNetworkApiGateway.swift in Sources */,

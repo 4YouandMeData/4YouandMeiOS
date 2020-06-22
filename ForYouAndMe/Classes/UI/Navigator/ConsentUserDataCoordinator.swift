@@ -39,9 +39,13 @@ class ConsentUserDataCoordinator {
     }
     
     private func showUserEmailValidation(email: String) {
-        // TODO: Show User Email Validation
-        print("TODO: Show User Email Validation")
-        self.navigationController.showAlert(withTitle: "Work in progress", message: "User email Validation coming soon")
+        self.navigationController.pushViewController(UserEmailVerificationViewController(email: email, coordinator: self), animated: true)
+    }
+    
+    private func showUserDigitalSignature() {
+        // TODO: Show User Digital Signature
+        print("TODO: Show User Digital Signature")
+        self.navigationController.showAlert(withTitle: "Work in progress", message: "User Digital Signature coming soon")
     }
 }
 
@@ -57,5 +61,15 @@ extension ConsentUserDataCoordinator: UserEmailCoordinator {
     func onUserEmailSubmitted(email: String) {
         self.userEmail = email
         self.showUserEmailValidation(email: email)
+    }
+}
+
+extension ConsentUserDataCoordinator: UserEmailVerificationCoordinator {
+    func onUserEmailPressed() {
+        self.navigationController.popToExpectedViewController(ofClass: UserEmailViewController.self, animated: true)
+    }
+    
+    func onUserEmailVerified() {
+        self.showUserDigitalSignature()
     }
 }

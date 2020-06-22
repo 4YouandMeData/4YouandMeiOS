@@ -90,7 +90,7 @@ extension RepositoryImpl: Repository {
             if let errorCodeNumber = error.getFirstServerError(forExpectedStatusCodes: ErrorCode.allCases.map { $0.rawValue }),
                 let errorCode = ErrorCode(rawValue: errorCodeNumber) {
                 switch errorCode {
-                case .wrongValidationCode: return Single.error(RepositoryError.wrongValidationCode)
+                case .wrongValidationCode: return Single.error(RepositoryError.wrongPhoneValidationCode)
                 }
             } else {
                 return Single.error(error)
@@ -129,6 +129,17 @@ extension RepositoryImpl: Repository {
     func verifyEmail(validationCode: String) -> Single<()> {
         return self.api.send(request: ApiRequest(serviceRequest: .verifyEmail(validationCode: validationCode)))
         .handleError()
+        .catchError({ error -> Single<()> in
+            enum ErrorCode: Int, CaseIterable { case wrongValidationCode = 403 }
+            if let errorCodeNumber = error.getFirstServerError(forExpectedStatusCodes: ErrorCode.allCases.map { $0.rawValue }),
+                let errorCode = ErrorCode(rawValue: errorCodeNumber) {
+                switch errorCode {
+                case .wrongValidationCode: return Single.error(RepositoryError.wrongEmailValidationCode)
+                }
+            } else {
+                return Single.error(error)
+            }
+        })
     }
     
     func resendConfirmationEmail() -> Single<()> {
