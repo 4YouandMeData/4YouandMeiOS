@@ -321,9 +321,9 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         case .getConsentSection:
             return Bundle.getTestData(from: "TestGetConsentSection")
         // User Consent
-            case .submitEmail: return "{}".utf8Encoded
-            case .verifyEmail: return "{}".utf8Encoded
-            case .resendConfirmationEmail: return "{}".utf8Encoded
+        case .submitEmail: return "{}".utf8Encoded
+        case .verifyEmail: return "{}".utf8Encoded
+        case .resendConfirmationEmail: return "{}".utf8Encoded
         }
     }
     

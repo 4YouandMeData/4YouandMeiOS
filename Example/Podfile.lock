@@ -65,6 +65,7 @@ PODS:
     - RxCocoa (~> 5.1.1)
     - SVProgressHUD (~> 2.2.5)
     - TPKeyboardAvoiding (~> 1.3.3)
+    - UberSignature (~> 1.0.3)
     - Validator (~> 3.2.1)
   - GoogleAppMeasurement (6.5.1):
     - GoogleUtilities/AppDelegateSwizzler (~> 6.0)
@@ -160,6 +161,9 @@ PODS:
   - SVProgressHUD (2.2.5)
   - SwiftLint (0.39.2)
   - TPKeyboardAvoiding (1.3.3)
+  - UberSignature (1.0.3):
+    - UberSignature/Swift (= 1.0.3)
+  - UberSignature/Swift (1.0.3)
   - Validator (3.2.1)
 
 DEPENDENCIES:
@@ -206,6 +210,7 @@ SPEC REPOS:
     - SVProgressHUD
     - SwiftLint
     - TPKeyboardAvoiding
+    - UberSignature
     - Validator
 
 EXTERNAL SOURCES:
@@ -224,7 +229,7 @@ SPEC CHECKSUMS:
   FirebaseCoreDiagnosticsInterop: 296e2c5f5314500a850ad0b83e9e7c10b011a850
   FirebaseCrashlytics: a87cce5746d3335995bd18b1b60d073cd05a6920
   FirebaseInstallations: 6f5f680e65dc374397a483c32d1799ba822a395b
-  ForYouAndMe: e70072ec9ffef355616bbc4ae7163f20f5109236
+  ForYouAndMe: 16ae67b02bf088f16325263665a0e156686c89c0
   GoogleAppMeasurement: 137afe68bfa406c3f4221b9395253d9e5d4654cf
   GoogleDataTransport: 9a8a16f79feffc7f42096743de2a7c4815e84020
   GoogleDataTransportCCTSupport: d70a561f7d236af529fee598835caad5e25f6d3d
@@ -248,6 +253,7 @@ SPEC CHECKSUMS:
   SVProgressHUD: 1428aafac632c1f86f62aa4243ec12008d7a51d6
   SwiftLint: 22ccbbe3b8008684be5955693bab135e0ed6a447
   TPKeyboardAvoiding: 6dd3fe3268b8f2627beb7ff3d82a3cacbdf66a36
+  UberSignature: 93a5860a83211569d6d25b586e0fcad8aa163144
   Validator: 80a6f567220c962dfd2d9928ae98a8c1d164f6f4
 
 PODFILE CHECKSUM: e181920184f7e7ee94f597d10e49241c00169fde

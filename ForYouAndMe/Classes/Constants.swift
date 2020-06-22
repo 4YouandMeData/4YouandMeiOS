@@ -17,11 +17,11 @@ enum TestSection {
 
 struct Constants {
     struct Test {
-        static let NetworkStubsEnabled = false
+        static let NetworkStubsEnabled = true
         static let NetworkStubsDelay = 0.3
         static let NetworkLogVerbose = true
         
-        static let NoCacheGlobalConfig = true
+        static let NoCacheGlobalConfig = false
         static let Section: TestSection? = nil//.consentUserDataSection
         
         static let InformedConsentWithoutQuestions: Bool = false

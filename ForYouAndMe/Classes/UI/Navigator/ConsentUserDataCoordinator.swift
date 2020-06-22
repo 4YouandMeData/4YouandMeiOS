@@ -17,6 +17,7 @@ class ConsentUserDataCoordinator {
     private var userFirstName: String?
     private var userLastName: String?
     private var userEmail: String?
+    private var userSignatureImage: UIImage?
     
     init(withSectionData sectionData: ConsentUserDataSection,
          navigationController: UINavigationController,
@@ -43,9 +44,13 @@ class ConsentUserDataCoordinator {
     }
     
     private func showUserDigitalSignature() {
-        // TODO: Show User Digital Signature
-        print("TODO: Show User Digital Signature")
-        self.navigationController.showAlert(withTitle: "Work in progress", message: "User Digital Signature coming soon")
+        self.navigationController.pushViewController(UserSignatureViewController(coordinator: self), animated: true)
+    }
+    
+    private func submitUserData() {
+        // TODO: Submit User Data
+        print("TODO: Submit User Data")
+        self.navigationController.showAlert(withTitle: "Work in progress", message: "User Data submission coming soon")
     }
 }
 
@@ -71,5 +76,12 @@ extension ConsentUserDataCoordinator: UserEmailVerificationCoordinator {
     
     func onUserEmailVerified() {
         self.showUserDigitalSignature()
+    }
+}
+
+extension ConsentUserDataCoordinator: UserSignatureCoordinator {
+    func onUserSignatureCreated(signatureImage: UIImage) {
+        self.userSignatureImage = signatureImage
+        self.submitUserData()
     }
 }
