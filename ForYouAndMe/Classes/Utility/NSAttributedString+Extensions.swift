@@ -19,7 +19,6 @@ extension NSAttributedString {
                       textAlignment: NSTextAlignment = .center,
                       underlined: Bool = false) -> NSAttributedString {
         guard false == text.isEmpty else {
-            assertionFailure("Attempting to create an empty NSAttributedString")
             return NSAttributedString(string: text)
         }
         let mutableAttributedString = NSMutableAttributedString(string: uppercase ? text.uppercased() : text)

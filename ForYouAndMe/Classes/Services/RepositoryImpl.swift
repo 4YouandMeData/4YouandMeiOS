@@ -138,7 +138,7 @@ extension RepositoryImpl: Repository {
         return self.api.send(request: ApiRequest(serviceRequest: .verifyEmail(validationCode: validationCode)))
             .handleError()
             .catchError({ error -> Single<()> in
-                enum ErrorCode: Int, CaseIterable { case wrongValidationCode = 403 }
+                enum ErrorCode: Int, CaseIterable { case wrongValidationCode = 422 }
                 if let errorCodeNumber = error.getFirstServerError(forExpectedStatusCodes: ErrorCode.allCases.map { $0.rawValue }),
                     let errorCode = ErrorCode(rawValue: errorCodeNumber) {
                     switch errorCode {
