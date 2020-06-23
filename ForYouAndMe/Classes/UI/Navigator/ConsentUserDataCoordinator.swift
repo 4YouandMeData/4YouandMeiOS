@@ -117,6 +117,10 @@ extension ConsentUserDataCoordinator: UserSignatureCoordinator {
         self.userSignatureImage = signatureImage
         self.submitUserData()
     }
+    
+    func onUserSignatureBackButtonPressed() {
+        self.navigationController.popToExpectedViewController(ofClass: UserEmailViewController.self, animated: true)
+    }
 }
 
 extension ConsentUserDataCoordinator: PagedSectionCoordinator {

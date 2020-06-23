@@ -27,11 +27,11 @@ extension UIViewController {
         }
     }
     
-    @objc private func customBackButtonPressed() {
+    @objc func customBackButtonPressed() {
         self.navigationController?.popViewController(animated: true)
     }
     
-    @objc private func customCloseButtonPressed() {
+    @objc func customCloseButtonPressed() {
         self.navigationController?.dismiss(animated: true)
     }
 }

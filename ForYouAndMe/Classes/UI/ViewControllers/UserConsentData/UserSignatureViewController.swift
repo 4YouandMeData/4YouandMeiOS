@@ -10,6 +10,7 @@ import UberSignature
 
 protocol UserSignatureCoordinator {
     func onUserSignatureCreated(signatureImage: UIImage)
+    func onUserSignatureBackButtonPressed()
 }
 
 class UserSignatureViewController: UIViewController {
@@ -175,6 +176,10 @@ class UserSignatureViewController: UIViewController {
     @objc private func clearButtonPressed() {
         self.signatureViewController.reset()
         self.updateUI(signatureIsEmpty: true)
+    }
+    
+    @objc override func customBackButtonPressed() {
+        self.coordinator.onUserSignatureBackButtonPressed()
     }
     
     // MARK: Private Methods
