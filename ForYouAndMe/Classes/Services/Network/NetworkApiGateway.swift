@@ -274,15 +274,13 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             return "/v1/studies/\(studyId)/consent"
         // User Consent Section
         case .getUserConsentSection:
-            return "/v1/consents/\(studyId)/user_consent"
-        case .submitEmail:
-            return "/v1/consents/\(studyId)/user_consent"
+            return "/v1/studies/\(studyId)/signature"
+        case .createUserConsent, .updateUserConsent:
+            return "/v1/studies/\(studyId)/user_consent"
         case .verifyEmail:
-            return "/v1/consents/\(studyId)/user_consent/confirm_email"
+            return "/v1/studies/\(studyId)/user_consent/confirm_email"
         case .resendConfirmationEmail:
-            return "/v1/consents/\(studyId)/user_consent/resend_confirmation_email"
-        case .sendUserData:
-            return "/v1/consents/\(studyId)/user_consent"
+            return "/v1/studies/\(studyId)/user_consent/resend_confirmation_email"
         }
     }
     
@@ -299,11 +297,12 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             return .get
         case .submitPhoneNumber,
              .verifyPhoneNumber,
-             .submitEmail,
-             .verifyEmail,
-             .resendConfirmationEmail,
-             .sendUserData:
+             .createUserConsent:
             return .post
+        case .verifyEmail,
+             .resendConfirmationEmail,
+             .updateUserConsent:
+            return .patch
         }
     }
     
@@ -327,10 +326,10 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         case .getConsentSection: return Bundle.getTestData(from: "TestGetConsentSection")
         // User Consent Section
         case .getUserConsentSection: return Bundle.getTestData(from: "TestGetUserConsentSection")
-        case .submitEmail: return "{}".utf8Encoded
+        case .createUserConsent: return "{}".utf8Encoded
+        case .updateUserConsent: return "{}".utf8Encoded
         case .verifyEmail: return "{}".utf8Encoded
         case .resendConfirmationEmail: return "{}".utf8Encoded
-        case .sendUserData: return "{}".utf8Encoded
         }
     }
     
@@ -352,23 +351,21 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             params["phone_number"] = phoneNumber
             params["verification_code"] = secureCode
             return .requestParameters(parameters: ["user": params], encoding: JSONEncoding.default)
-        case .submitEmail(let email):
-            var params: [String: Any] = [:]
-            params["new_email"] = email
-            return .requestParameters(parameters: ["user_consent": params], encoding: JSONEncoding.default)
+        case let .createUserConsent(email, firstName, lastName, signatureImage):
+            return Task.createForUserContent(withEmail: email,
+                                             firstName: firstName,
+                                             lastName: lastName,
+                                             signatureImage: signatureImage,
+                                             isCreate: true)
+        case let .updateUserConsent(email, firstName, lastName, signatureImage):
+            return Task.createForUserContent(withEmail: email,
+                                             firstName: firstName,
+                                             lastName: lastName,
+                                             signatureImage: signatureImage,
+                                             isCreate: false)
         case .verifyEmail(let email):
             var params: [String: Any] = [:]
             params["email_confirmation_token"] = email
-            return .requestParameters(parameters: ["user_consent": params], encoding: JSONEncoding.default)
-        case .sendUserData(let firstName, let lastName, let signatureImage):
-            var params: [String: Any] = [:]
-            params["first_name"] = firstName
-            params["last_name"] = lastName
-            if let imageData = signatureImage.pngData() {
-                params["signature_base64"] = imageData.base64EncodedString(options: .lineLength64Characters)
-            } else {
-                assertionFailure("Cannot image to PNG")
-            }
             return .requestParameters(parameters: ["user_consent": params], encoding: JSONEncoding.default)
         }
     }
@@ -387,11 +384,41 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
              .getInformedConsentSection,
              .getConsentSection,
              .getUserConsentSection,
-             .submitEmail,
+             .createUserConsent,
+             .updateUserConsent,
              .verifyEmail,
-             .resendConfirmationEmail,
-             .sendUserData:
+             .resendConfirmationEmail:
             return .bearer
         }
+    }
+}
+
+fileprivate extension Task {
+    static func createForUserContent(withEmail email: String?,
+                                     firstName: String?,
+                                     lastName: String?,
+                                     signatureImage: UIImage?,
+                                     isCreate: Bool) -> Task {
+        var params: [String: Any] = [:]
+        if isCreate == false {
+            params["agree"] = true
+        }
+        if let email = email {
+            params["new_email"] = email
+        }
+        if let firstName = firstName {
+            params["first_name"] = firstName
+        }
+        if let lastName = lastName {
+            params["last_name"] = lastName
+        }
+        if let signatureImage = signatureImage {
+            if let imageData = signatureImage.pngData() {
+                params["signature_base64"] = imageData.base64EncodedString(options: .lineLength64Characters)
+            } else {
+                assertionFailure("Cannot image to PNG")
+            }
+        }
+        return .requestParameters(parameters: ["user_consent": params], encoding: JSONEncoding.default)
     }
 }

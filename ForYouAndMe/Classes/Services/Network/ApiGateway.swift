@@ -25,10 +25,10 @@ enum DefaultService {
     case getConsentSection
     // User Consent Section
     case getUserConsentSection
-    case submitEmail(email: String)
+    case createUserConsent(email: String?, firstName: String?, lastName: String?, signatureImage: UIImage?)
+    case updateUserConsent(email: String?, firstName: String?, lastName: String?, signatureImage: UIImage?)
     case verifyEmail(validationCode: String)
     case resendConfirmationEmail
-    case sendUserData(firstName: String, lastName: String, signatureImage: UIImage)
 }
 
 struct ApiRequest {

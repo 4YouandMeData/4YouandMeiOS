@@ -67,35 +67,35 @@ extension RepositoryImpl: Repository {
     
     func submitPhoneNumber(phoneNumber: String) -> Single<()> {
         return self.api.send(request: ApiRequest(serviceRequest: .submitPhoneNumber(phoneNumber: phoneNumber)))
-        .handleError()
-        .catchError({ error -> Single<()> in
-            enum ErrorCode: Int, CaseIterable { case missingPhoneNumber = 404 }
-            if let errorCodeNumber = error.getFirstServerError(forExpectedStatusCodes: ErrorCode.allCases.map { $0.rawValue }),
-                let errorCode = ErrorCode(rawValue: errorCodeNumber) {
-                switch errorCode {
-                case .missingPhoneNumber: return Single.error(RepositoryError.missingPhoneNumber)
+            .handleError()
+            .catchError({ error -> Single<()> in
+                enum ErrorCode: Int, CaseIterable { case missingPhoneNumber = 404 }
+                if let errorCodeNumber = error.getFirstServerError(forExpectedStatusCodes: ErrorCode.allCases.map { $0.rawValue }),
+                    let errorCode = ErrorCode(rawValue: errorCodeNumber) {
+                    switch errorCode {
+                    case .missingPhoneNumber: return Single.error(RepositoryError.missingPhoneNumber)
+                    }
+                } else {
+                    return Single.error(error)
                 }
-            } else {
-                return Single.error(error)
-            }
-        })
+            })
     }
     
     func verifyPhoneNumber(phoneNumber: String, validationCode: String) -> Single<()> {
         return self.api.send(request: ApiRequest(serviceRequest: .verifyPhoneNumber(phoneNumber: phoneNumber,
                                                                                     validationCode: validationCode)))
-        .handleError()
-        .catchError({ error -> Single<()> in
-            enum ErrorCode: Int, CaseIterable { case wrongValidationCode = 403 }
-            if let errorCodeNumber = error.getFirstServerError(forExpectedStatusCodes: ErrorCode.allCases.map { $0.rawValue }),
-                let errorCode = ErrorCode(rawValue: errorCodeNumber) {
-                switch errorCode {
-                case .wrongValidationCode: return Single.error(RepositoryError.wrongPhoneValidationCode)
+            .handleError()
+            .catchError({ error -> Single<()> in
+                enum ErrorCode: Int, CaseIterable { case wrongValidationCode = 403 }
+                if let errorCodeNumber = error.getFirstServerError(forExpectedStatusCodes: ErrorCode.allCases.map { $0.rawValue }),
+                    let errorCode = ErrorCode(rawValue: errorCodeNumber) {
+                    switch errorCode {
+                    case .wrongValidationCode: return Single.error(RepositoryError.wrongPhoneValidationCode)
+                    }
+                } else {
+                    return Single.error(error)
                 }
-            } else {
-                return Single.error(error)
-            }
-        })
+            })
     }
     
     // MARK: - Screening
@@ -109,54 +109,58 @@ extension RepositoryImpl: Repository {
     
     func getInformedConsentSection() -> Single<InformedConsentSection> {
         return self.api.send(request: ApiRequest(serviceRequest: .getInformedConsentSection))
-        .handleError()
+            .handleError()
     }
     
     // MARK: - Consent
     
     func getConsentSection() -> Single<ConsentSection> {
         return self.api.send(request: ApiRequest(serviceRequest: .getConsentSection))
-        .handleError()
+            .handleError()
     }
     
     // MARK: - User Consent
     
     func getUserConsentSection() -> Single<ConsentUserDataSection> {
         return self.api.send(request: ApiRequest(serviceRequest: .getUserConsentSection))
-        .handleError()
+            .handleError()
     }
     
     func submitEmail(email: String) -> Single<()> {
-        return self.api.send(request: ApiRequest(serviceRequest: .submitEmail(email: email)))
-        .handleError()
+        return self.api.send(request: ApiRequest(serviceRequest: .createUserConsent(email: email,
+                                                                                    firstName: nil,
+                                                                                    lastName: nil,
+                                                                                    signatureImage: nil)))
+            .handleError()
     }
     
     func verifyEmail(validationCode: String) -> Single<()> {
         return self.api.send(request: ApiRequest(serviceRequest: .verifyEmail(validationCode: validationCode)))
-        .handleError()
-        .catchError({ error -> Single<()> in
-            enum ErrorCode: Int, CaseIterable { case wrongValidationCode = 403 }
-            if let errorCodeNumber = error.getFirstServerError(forExpectedStatusCodes: ErrorCode.allCases.map { $0.rawValue }),
-                let errorCode = ErrorCode(rawValue: errorCodeNumber) {
-                switch errorCode {
-                case .wrongValidationCode: return Single.error(RepositoryError.wrongEmailValidationCode)
+            .handleError()
+            .catchError({ error -> Single<()> in
+                enum ErrorCode: Int, CaseIterable { case wrongValidationCode = 403 }
+                if let errorCodeNumber = error.getFirstServerError(forExpectedStatusCodes: ErrorCode.allCases.map { $0.rawValue }),
+                    let errorCode = ErrorCode(rawValue: errorCodeNumber) {
+                    switch errorCode {
+                    case .wrongValidationCode: return Single.error(RepositoryError.wrongEmailValidationCode)
+                    }
+                } else {
+                    return Single.error(error)
                 }
-            } else {
-                return Single.error(error)
-            }
-        })
+            })
     }
     
     func resendConfirmationEmail() -> Single<()> {
         return self.api.send(request: ApiRequest(serviceRequest: .resendConfirmationEmail))
-        .handleError()
+            .handleError()
     }
     
     func sendUserData(firstName: String, lastName: String, signatureImage: UIImage) -> Single<()> {
-        return self.api.send(request: ApiRequest(serviceRequest: .sendUserData(firstName: firstName,
-                                                                               lastName: lastName,
-                                                                               signatureImage: signatureImage)))
-        .handleError()
+        return self.api.send(request: ApiRequest(serviceRequest: .createUserConsent(email: nil,
+                                                                                    firstName: firstName,
+                                                                                    lastName: lastName,
+                                                                                    signatureImage: signatureImage)))
+            .handleError()
     }
 }
 
