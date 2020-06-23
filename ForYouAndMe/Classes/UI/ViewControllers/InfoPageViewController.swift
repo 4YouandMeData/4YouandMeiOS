@@ -136,7 +136,7 @@ public class InfoPageViewController: UIViewController {
     public override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         
-        self.navigationController?.navigationBar.apply(style: NavigationBarStyles.secondaryStyle)
+        self.navigationController?.navigationBar.apply(style: NavigationBarStyleCategory.secondary(hidden: false).style)
         if self.pageData.allowBackwardNavigation {
             self.addCustomBackButton()
         } else {

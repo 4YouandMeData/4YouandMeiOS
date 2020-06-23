@@ -83,11 +83,6 @@ public class PopupViewController: UIViewController {
         stackView.addArrangedSubview(confirmButton)
     }
     
-    public override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
-        self.navigationController?.navigationBar.apply(style: NavigationBarStyles.hiddenStyle)
-    }
-    
     // MARK: Actions
     
     @objc private func confirmButtonPressed() {

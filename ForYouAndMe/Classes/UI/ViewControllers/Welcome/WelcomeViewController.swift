@@ -9,7 +9,7 @@
 import UIKit
 import PureLayout
 
-public class WelcomeViewController: UIViewController {
+class WelcomeViewController: UIViewController {
     
     private let navigator: AppNavigator
     
@@ -30,7 +30,7 @@ public class WelcomeViewController: UIViewController {
         fatalError("init(coder:) has not been implemented")
     }
     
-    public override func viewDidLoad() {
+    override func viewDidLoad() {
         super.viewDidLoad()
         
         self.view.addGradientView(GradientView(type: .primaryBackground))
@@ -50,10 +50,10 @@ public class WelcomeViewController: UIViewController {
         stackView.addArrangedSubview(self.continueButton)
     }
     
-    public override func viewWillAppear(_ animated: Bool) {
+    override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         
-        self.navigationController?.navigationBar.apply(style: NavigationBarStyles.primaryStyle)
+        self.navigationController?.navigationBar.apply(style: NavigationBarStyleCategory.primary(hidden: false).style)
 
         self.continueButton.alpha = 0
         UIView.animate(withDuration: 0.8, delay: 0.0, options: .curveEaseInOut, animations: { [weak self] in

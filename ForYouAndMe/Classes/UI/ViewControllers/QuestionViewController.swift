@@ -90,7 +90,7 @@ class QuestionViewController: UIViewController {
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        self.navigationController?.navigationBar.apply(style: NavigationBarStyles.primaryStyle)
+        self.navigationController?.navigationBar.apply(style: NavigationBarStyleCategory.primary(hidden: false).style)
         self.addOnboardingAbortButton(withColor: ColorPalette.color(withType: .secondaryText))
         self.navigationItem.hidesBackButton = true
     }

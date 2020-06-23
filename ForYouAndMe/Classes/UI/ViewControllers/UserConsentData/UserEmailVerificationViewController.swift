@@ -142,7 +142,7 @@ public class UserEmailVerificationViewController: UIViewController {
     public override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         
-        self.navigationController?.navigationBar.apply(style: NavigationBarStyles.activeStyle)
+        self.navigationController?.navigationBar.apply(style: NavigationBarStyleCategory.active(hidden: false).style)
         self.addCustomBackButton()
     }
     

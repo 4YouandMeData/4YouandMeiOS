@@ -100,7 +100,7 @@ class WebViewViewController: UIViewController {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         
-        self.navigationController?.navigationBar.apply(style: NavigationBarStyles.secondaryStyle)
+        self.navigationController?.navigationBar.apply(style: NavigationBarStyleCategory.secondary(hidden: false).style)
         self.addCustomCloseButton()
     }
     
