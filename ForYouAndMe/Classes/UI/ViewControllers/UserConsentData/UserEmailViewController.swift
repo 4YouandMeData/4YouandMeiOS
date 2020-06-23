@@ -124,7 +124,7 @@ public class UserEmailViewController: UIViewController {
         super.viewWillAppear(animated)
         
         self.navigationController?.navigationBar.apply(style: NavigationBarStyleCategory.secondary(hidden: false).style)
-        self.navigationItem.hidesBackButton = true
+        self.addCustomBackButton()
     }
     
     // MARK: Actions
