@@ -414,7 +414,7 @@ fileprivate extension Task {
         }
         if let signatureImage = signatureImage {
             if let imageData = signatureImage.pngData() {
-                params["signature_base64"] = imageData.base64EncodedString(options: .lineLength64Characters)
+                params["signature_base64"] = imageData.base64EncodedString()
             } else {
                 assertionFailure("Cannot image to PNG")
             }
