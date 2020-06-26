@@ -33,7 +33,7 @@ welcome_page.link_2
         case type
         case title
         case body
-        case subtitle
+        case subtitle = "pages_subtitle"
         case disagreeBody = "disagree_modal_body"
         case disagreeButton = "disagree_modal_button"
         case pages
