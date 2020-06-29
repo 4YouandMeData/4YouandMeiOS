@@ -400,7 +400,7 @@ fileprivate extension Task {
                                      signatureImage: UIImage?,
                                      isCreate: Bool) -> Task {
         var params: [String: Any] = [:]
-        if isCreate == false {
+        if isCreate {
             params["agree"] = true
         }
         if let email = email {
