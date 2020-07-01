@@ -29,12 +29,8 @@ class RepositoryImpl {
     // MARK: - Private Methods
     
     private func fetchGlobalConfig() -> Single<()> {
-        var cacheGlobalConfig = true
-        #if DEBUG
-        cacheGlobalConfig = false == Constants.Test.NoCacheGlobalConfig
-        #endif
         let request: Single<GlobalConfig> = {
-            if let storedItem = self.storage.globalConfig, cacheGlobalConfig {
+            if let storedItem = self.storage.globalConfig, Constants.Misc.EnableGlobalConfigCache {
                 return Single.just(storedItem)
             } else {
                 return self.api.send(request: ApiRequest(serviceRequest: .getGlobalConfig))
