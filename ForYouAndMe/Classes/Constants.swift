@@ -21,7 +21,7 @@ struct Constants {
         static let NetworkStubsDelay = 0.3
         static let NetworkLogVerbose = true
         
-        static let NoCacheGlobalConfig = false
+        static let NoCacheGlobalConfig = true
         static let Section: TestSection? = nil//.consentUserDataSection
         
         static let InformedConsentWithoutQuestions: Bool = false
