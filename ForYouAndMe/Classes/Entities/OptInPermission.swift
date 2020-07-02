@@ -23,7 +23,8 @@ struct OptInPermission {
     let systemPermissions: [SystemPermission]
     let imageData: Data?
     let isMandatory: Bool
-    let mandatoryText: String
+    @NilIfEmptyString
+    var mandatoryText: String?
 }
 
 extension OptInPermission: JSONAPIMappable {

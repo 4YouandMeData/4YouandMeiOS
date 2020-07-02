@@ -81,6 +81,14 @@ extension OptInSectionCoordinator: PagedSectionCoordinator {
 extension OptInSectionCoordinator: OptInPermissionCoordinator {
     func onOptInPermissionSet(optInPermission: OptInPermission, granted: Bool) {
         
+        guard granted || false == optInPermission.isMandatory else {
+            let message = optInPermission.mandatoryText ?? StringsProvider.string(forKey: .onboardingOptInMandatoryDefault)
+            self.navigationController.showAlert(withTitle: StringsProvider.string(forKey: .onboardingOptInMandatoryTitle),
+                                                message: message,
+                                                closeButtonText: StringsProvider.string(forKey: .onboardingOptInMandatoryClose))
+            return
+        }
+        
         self.navigator.pushProgressHUD()
         self.repository
             .sendOptInPermission(permission: optInPermission, granted: granted)

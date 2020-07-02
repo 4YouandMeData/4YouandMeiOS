@@ -34,10 +34,11 @@ extension UIViewController {
     
     public func showAlert(withTitle title: String,
                           message: String,
+                          confirmButtonText: String,
                           tintColor: UIColor? = nil,
                           completion: @escaping (() -> Void)) {
         let alertView = UIAlertController(title: title, message: message, preferredStyle: .alert)
-        let closeAction = UIAlertAction(title: "OK", style: .cancel) { _ in
+        let closeAction = UIAlertAction(title: confirmButtonText, style: .cancel) { _ in
             completion()
         }
         if let tintColor = tintColor {

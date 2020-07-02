@@ -240,7 +240,7 @@ class AppNavigator {
     
     public func startWearablesSetupSection(navigationController: UINavigationController) {
         // TODO: Start Wearables setup section
-        navigationController.showAlert(withTitle: "Work in progress", message: "Wearables setup section coming soon")
+        navigationController.showAlert(withTitle: "Work in progress", message: "Wearables setup section coming soon", closeButtonText: "Ok")
     }
     
     // MARK: Progress HUD
@@ -318,6 +318,7 @@ extension UIViewController {
     func showAlert(forError error: Error, completion: @escaping (() -> Void) = {}) {
         self.showAlert(withTitle: StringsProvider.string(forKey: .errorTitleDefault),
                        message: error.localizedDescription,
+                       confirmButtonText: StringsProvider.string(forKey: .errorButtonClose),
                        tintColor: ColorPalette.color(withType: .primary),
                        completion: completion)
     }
@@ -325,13 +326,15 @@ extension UIViewController {
     func showGenericErrorAlert() {
         self.showAlert(withTitle: StringsProvider.string(forKey: .errorTitleDefault),
                        message: StringsProvider.string(forKey: .errorMessageDefault),
+                       confirmButtonText: StringsProvider.string(forKey: .errorButtonClose),
                        tintColor: ColorPalette.color(withType: .primary),
                        completion: {})
     }
     
-    func showAlert(withTitle title: String, message: String) {
+    func showAlert(withTitle title: String, message: String, closeButtonText: String) {
         self.showAlert(withTitle: title,
                        message: message,
+                       confirmButtonText: closeButtonText,
                        tintColor: ColorPalette.color(withType: .primary),
                        completion: {})
     }
