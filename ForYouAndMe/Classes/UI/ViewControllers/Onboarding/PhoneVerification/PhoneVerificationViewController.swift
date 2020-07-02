@@ -92,7 +92,7 @@ public class PhoneVerificationViewController: UIViewController {
         return containerView
     }()
     
-    private let legalNoteCheckBoxView: GenericCheckboxView = GenericCheckboxView(isDefaultChecked: false)
+    private let legalNoteCheckBoxView: GenericCheckboxView = GenericCheckboxView(isDefaultChecked: false, styleCategory: .secondary)
     
     private var legalLabelInteractionManager: UILabelInteractionManager?
     
@@ -203,7 +203,7 @@ public class PhoneVerificationViewController: UIViewController {
     // MARK: Private Methods
     
     private func updateUI() {
-        self.confirmButton.isEnabled = self.phoneNumberView.isValid.value && self.legalNoteCheckBoxView.isChecked
+        self.confirmButton.isEnabled = self.phoneNumberView.isValid.value && self.legalNoteCheckBoxView.isCheckedSubject.value
     }
     
     private func handleLabelInteractions(_ text: String) {

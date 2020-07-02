@@ -6,8 +6,8 @@
 //
 
 import Foundation
-
 import PureLayout
+import RxSwift
 
 protocol OptInPermissionCoordinator {
     func onOptInPermissionSet(optInPermission: OptInPermission, granted: Bool)
@@ -17,11 +17,21 @@ class OptInPermissionViewController: UIViewController {
     
     let optInPermission: OptInPermission
     
-    private var permission: SystemPermission? { self.optInPermission.systemPermissions.first }
-    private var granted: Bool?
-    
     private let navigator: AppNavigator
     private let coordinator: OptInPermissionCoordinator
+    private let disposeBag = DisposeBag()
+    
+    private lazy var grantTextCheckbox: GenericTextCheckboxView = {
+        let textCheckBox = GenericTextCheckboxView(isDefaultChecked: false, styleCategory: .primary)
+        textCheckBox.setLabelText(self.optInPermission.grantText)
+        return textCheckBox
+    }()
+    
+    private lazy var denyTextCheckbox: GenericTextCheckboxView = {
+        let textCheckBox = GenericTextCheckboxView(isDefaultChecked: false, styleCategory: .primary)
+        textCheckBox.setLabelText(self.optInPermission.denyText)
+        return textCheckBox
+    }()
     
     private lazy var confirmButtonView: GenericButtonView = {
         let view = GenericButtonView(withTextStyleCategory: .secondaryBackground())
@@ -29,6 +39,17 @@ class OptInPermissionViewController: UIViewController {
         view.addTarget(target: self, action: #selector(self.confirmButtonPressed))
         return view
     }()
+    
+    private var permission: SystemPermission? { self.optInPermission.systemPermissions.first }
+    private var granted: Bool? {
+        if self.grantTextCheckbox.isCheckedSubject.value {
+            return true
+        } else if self.denyTextCheckbox.isCheckedSubject.value {
+            return false
+        } else {
+            return nil
+        }
+    }
     
     init(withOptInPermission optInPermission: OptInPermission, coordinator: OptInPermissionCoordinator) {
         self.optInPermission = optInPermission
@@ -67,7 +88,9 @@ class OptInPermissionViewController: UIViewController {
                                            colorType: .primaryText,
                                            textAlignment: .left)
         // Permissions
-        // TODO: Add Permission checkboxes
+        scrollStackView.stackView.addArrangedSubview(self.grantTextCheckbox)
+        scrollStackView.stackView.addArrangedSubview(self.denyTextCheckbox)
+        
         scrollStackView.stackView.addBlankSpace(space: 27.0)
         
         // Bottom View
@@ -75,6 +98,26 @@ class OptInPermissionViewController: UIViewController {
         
         self.confirmButtonView.autoPinEdgesToSuperviewSafeArea(with: UIEdgeInsets.zero, excludingEdge: .top)
         scrollStackView.scrollView.autoPinEdge(.bottom, to: .top, of: self.confirmButtonView)
+        
+        self.grantTextCheckbox.isCheckedSubject
+        .subscribe(onNext: { [weak self] result in
+            guard let self = self else { return }
+            if result {
+                self.denyTextCheckbox.isCheckedSubject.accept(false)
+            }
+            self.updateUI()
+        })
+        .disposed(by: self.disposeBag)
+        
+        self.denyTextCheckbox.isCheckedSubject
+        .subscribe(onNext: { [weak self] result in
+            guard let self = self else { return }
+            if result {
+                self.grantTextCheckbox.isCheckedSubject.accept(false)
+            }
+            self.updateUI()
+        })
+        .disposed(by: self.disposeBag)
         
         self.updateUI()
     }

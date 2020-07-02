@@ -11,11 +11,28 @@ import PureLayout
 import RxSwift
 import RxCocoa
 
+enum GenericCheckboxStyleCategory: StyleCategory {
+    case primary
+    case secondary
+    
+    var style: Style<GenericCheckboxView> {
+        switch self {
+        case .primary: return Style<GenericCheckboxView> { checkboxView in
+            checkboxView.checkboxFilledImage = ImagePalette.image(withName: .checkboxPrimaryFilled)
+            checkboxView.checkboxOutlineImage = ImagePalette.image(withName: .checkboxPrimaryOutline)
+            }
+        case .secondary: return Style<GenericCheckboxView> { checkboxView in
+            checkboxView.checkboxFilledImage = ImagePalette.image(withName: .checkboxSecondaryFilled)
+            checkboxView.checkboxOutlineImage = ImagePalette.image(withName: .checkboxSecondaryOutline)
+            }
+        }
+    }
+}
+
 class GenericCheckboxView: UIView {
 
-    public var isChecked: Bool {
-        return self.isCheckedSubject.value
-    }
+    fileprivate var checkboxFilledImage: UIImage?
+    fileprivate var checkboxOutlineImage: UIImage?
     
     public var isCheckedSubject: BehaviorRelay<Bool>
     
@@ -29,9 +46,11 @@ class GenericCheckboxView: UIView {
     
     private final let disposeBag = DisposeBag()
     
-    init(isDefaultChecked: Bool) {
+    init(isDefaultChecked: Bool, styleCategory: GenericCheckboxStyleCategory) {
         self.isCheckedSubject = BehaviorRelay(value: isDefaultChecked)
         super.init(frame: .zero)
+        
+        self.apply(style: styleCategory.style)
         
         let tap = UITapGestureRecognizer(target: self, action: #selector(self.onTap))
         self.addGestureRecognizer(tap)
@@ -41,9 +60,9 @@ class GenericCheckboxView: UIView {
         
         self.isCheckedSubject.asObservable().subscribe(onNext: { checked in
             if checked {
-                self.checkboxImageView.image = ImagePalette.image(withName: .checkboxFilled)
+                self.checkboxImageView.image = self.checkboxFilledImage
             } else {
-                self.checkboxImageView.image = ImagePalette.image(withName: .checkboxOutline)
+                self.checkboxImageView.image = self.checkboxOutlineImage
             }
         }).disposed(by: self.disposeBag)
     }
@@ -55,6 +74,6 @@ class GenericCheckboxView: UIView {
     // MARK: - Actions
     
     @objc private func onTap() {
-        self.isCheckedSubject.accept(!self.isChecked)
+        self.isCheckedSubject.accept(!self.isCheckedSubject.value)
     }
 }

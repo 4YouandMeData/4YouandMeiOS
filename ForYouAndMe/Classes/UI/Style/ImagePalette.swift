@@ -22,8 +22,10 @@ enum ImageName: String, CaseIterable {
     case clearButton
     case checkmark
     case edit
-    case checkboxOutline
-    case checkboxFilled
+    case checkboxPrimaryOutline
+    case checkboxPrimaryFilled
+    case checkboxSecondaryOutline
+    case checkboxSecondaryFilled
     case radioButtonPrimaryFilled
     case radioButtonPrimaryOutline
     case radioButtonSecondaryFilled
