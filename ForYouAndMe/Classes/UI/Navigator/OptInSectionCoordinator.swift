@@ -20,6 +20,9 @@ class OptInSectionCoordinator {
     
     private let disposeBag = DisposeBag()
     
+    private let healthService: HealthService
+    private let locationService: LocationService
+    
     var answers: [Question: PossibleAnswer] = [:]
     
     init(withSectionData sectionData: OptInSection,
@@ -27,6 +30,8 @@ class OptInSectionCoordinator {
          completionCallback: @escaping NavigationControllerCallback) {
         self.repository = Services.shared.repository
         self.navigator = Services.shared.navigator
+        self.healthService = Services.shared.healthService
+        self.locationService = Services.shared.locationService
         self.sectionData = sectionData
         self.navigationController = navigationController
         self.completionCallback = completionCallback
@@ -89,9 +94,17 @@ extension OptInSectionCoordinator: OptInPermissionCoordinator {
             return
         }
         
-        self.navigator.pushProgressHUD()
-        self.repository
-            .sendOptInPermission(permission: optInPermission, granted: granted)
+        let systemPermissionRequests: Single<()> = optInPermission.systemPermissions
+            .reduce(Single.just(())) { (result, systemPermission) in
+                switch systemPermission {
+                case .health: return result.flatMap { self.healthService.requestPermission().catchErrorJustReturn(()) }
+                case .location: return result.flatMap { self.locationService.requestPermission(always: false).catchErrorJustReturn(()) }
+                }
+        }
+        
+        systemPermissionRequests
+            .do(onSuccess: { self.navigator.pushProgressHUD() })
+            .flatMap { self.repository.sendOptInPermission(permission: optInPermission, granted: granted) }
             .subscribe(onSuccess: { [weak self] () in
                 guard let self = self else { return }
                 self.navigator.popProgressHUD()

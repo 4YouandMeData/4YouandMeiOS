@@ -30,7 +30,7 @@ public extension Int {
 }
 
 public extension Date {
-    var toISO8601String:String {
+    var toISO8601String: String {
         let dateFormatter = ISO8601DateFormatter()
         return dateFormatter.string(from: self)
     }

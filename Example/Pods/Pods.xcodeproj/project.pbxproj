@@ -730,9 +730,13 @@
 		87E6FDEC28B1FEDA68FEF97A625D35C2 /* PhoneVerificationViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7E2331AD873EEF656A3DBD17438171C /* PhoneVerificationViewController.swift */; };
 		88B7F4E9AC2AC10B8C7DEDB9FE1EA79C /* FIRCLSLogger.m in Sources */ = {isa = PBXBuildFile; fileRef = E0317C559014ED77B69C4CF932F3FFBC /* FIRCLSLogger.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
 		88D795191B71868DC81D5D3F45D7338F /* Quick-dummy.m in Sources */ = {isa = PBXBuildFile; fileRef = 163D1CBF8564C35022DFA83419B1F4C5 /* Quick-dummy.m */; };
+		8926F29D24AE404000BA528D /* HealthService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8926F29C24AE404000BA528D /* HealthService.swift */; };
 		892F567BF4D68BB3C3AE4687AE25BE8C /* FIRCLSDownloadAndSaveSettingsOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 0B0E0692170BF23FF0DFBA9EB42C9A64 /* FIRCLSDownloadAndSaveSettingsOperation.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
 		893D44B224ADE99800275C9A /* GenericTextCheckboxView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893D44B124ADE99800275C9A /* GenericTextCheckboxView.swift */; };
+		893D44B924AE222F00275C9A /* LocationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893D44B824AE222F00275C9A /* LocationManager.swift */; };
+		894BEE6824AE453E00254DC6 /* LocationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8937FC0D24AE40DB004358AA /* LocationService.swift */; };
 		895CE133386CDA2B4B271287050A9BBB /* GULKeychainStorage.h in Headers */ = {isa = PBXBuildFile; fileRef = FA07C96CD7889477F5EC9A1F6C1DEE1E /* GULKeychainStorage.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		8960D03524AE3C02000E4998 /* HealthManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8960D03424AE3C02000E4998 /* HealthManager.swift */; };
 		89CFFD056DA3021A86AAC13FF7A28337 /* NetworkUtility.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF90680ACF970C0B014692CA2F7BA9CC /* NetworkUtility.swift */; };
 		8A22C9AF734E38ECCCECE2DAFFE9D9B7 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7D3893DF7ABDE912C872A3CD1578BE92 /* Foundation.framework */; };
 		8A63D9A834E4615562EF05D125F73F6D /* WKWebView+Rx.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5A069DC7CB35FA1713A46FC86C33AA9 /* WKWebView+Rx.swift */; };
@@ -2831,9 +2835,13 @@
 		88CE1E423B4288C996D0E1129ECA0746 /* PriorityQueue.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = PriorityQueue.swift; path = Platform/DataStructures/PriorityQueue.swift; sourceTree = "<group>"; };
 		88D2B64C9192E68CE528DC9DB5D1C02D /* FIRCLSThreadState.c */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.c; name = FIRCLSThreadState.c; path = Crashlytics/Crashlytics/Helpers/FIRCLSThreadState.c; sourceTree = "<group>"; };
 		892329DE8A4F4E1EE192AFB2CC661405 /* CodableDictionary.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CodableDictionary.swift; sourceTree = "<group>"; };
+		8926F29C24AE404000BA528D /* HealthService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthService.swift; sourceTree = "<group>"; };
+		8937FC0D24AE40DB004358AA /* LocationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationService.swift; sourceTree = "<group>"; };
 		893D44B124ADE99800275C9A /* GenericTextCheckboxView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GenericTextCheckboxView.swift; sourceTree = "<group>"; };
+		893D44B824AE222F00275C9A /* LocationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationManager.swift; sourceTree = "<group>"; };
 		894E5B0986AF3444FCF2E8967F66C3D5 /* TPKeyboardAvoidingCollectionView.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = TPKeyboardAvoidingCollectionView.h; path = TPKeyboardAvoiding/TPKeyboardAvoidingCollectionView.h; sourceTree = "<group>"; };
 		895F04B7044A817FB03E0AA852E4A56E /* SVProgressAnimatedView.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = SVProgressAnimatedView.m; path = SVProgressHUD/SVProgressAnimatedView.m; sourceTree = "<group>"; };
+		8960D03424AE3C02000E4998 /* HealthManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthManager.swift; sourceTree = "<group>"; };
 		89ACD9A2B032B87D7DD8B7FF09D316B5 /* UberSignature.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = UberSignature.release.xcconfig; sourceTree = "<group>"; };
 		89B6E1C9B6933FF6D6C34257160404C5 /* GDTCORTargets.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = GDTCORTargets.h; path = GoogleDataTransport/GDTCORLibrary/Public/GDTCORTargets.h; sourceTree = "<group>"; };
 		89BEEFB163B669B497BEC1AFDF7F6CFC /* FIRCLSAsyncOperation_Private.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = FIRCLSAsyncOperation_Private.h; path = Crashlytics/Crashlytics/Operations/FIRCLSAsyncOperation_Private.h; sourceTree = "<group>"; };
@@ -4574,6 +4582,8 @@
 				4F4B477B62CD539179F77104D244A0C0 /* Repository.swift */,
 				38A67DD565D06B9176097C5A26CC7FBE /* RepositoryImpl.swift */,
 				312E1C6CF8E39D5F5004FF1F912EEB55 /* Services.swift */,
+				8926F29B24AE3FD800BA528D /* HealthKit */,
+				893D44B324AE1F9900275C9A /* CoreLocation */,
 				1E490F0D6BE3BD0C10ABAB967E342B3F /* Cache */,
 				F481D56582C63F090C4EC6AC10944E41 /* Network */,
 			);
@@ -5210,6 +5220,24 @@
 				065C353B712AF5815DC48911888F40E4 /* GULSceneDelegateSwizzler_Private.h */,
 			);
 			name = AppDelegateSwizzler;
+			sourceTree = "<group>";
+		};
+		8926F29B24AE3FD800BA528D /* HealthKit */ = {
+			isa = PBXGroup;
+			children = (
+				8960D03424AE3C02000E4998 /* HealthManager.swift */,
+				8926F29C24AE404000BA528D /* HealthService.swift */,
+			);
+			path = HealthKit;
+			sourceTree = "<group>";
+		};
+		893D44B324AE1F9900275C9A /* CoreLocation */ = {
+			isa = PBXGroup;
+			children = (
+				893D44B824AE222F00275C9A /* LocationManager.swift */,
+				8937FC0D24AE40DB004358AA /* LocationService.swift */,
+			);
+			path = CoreLocation;
 			sourceTree = "<group>";
 		};
 		8D6794ABDA3C69F142F7A60C7A11A13F /* GoogleDataTransportCCTSupport */ = {
@@ -7616,6 +7644,11 @@
 			attributes = {
 				LastSwiftUpdateCheck = 1100;
 				LastUpgradeCheck = 1100;
+				TargetAttributes = {
+					4402AFF83DBDC4DD07E198685FDC2DF2 = {
+						LastSwiftMigration = 1150;
+					};
+				};
 			};
 			buildConfigurationList = 4821239608C13582E20E6DA73FD5F1F9 /* Build configuration list for PBXProject "Pods" */;
 			compatibilityVersion = "Xcode 10.0";
@@ -8497,6 +8530,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				893D44B924AE222F00275C9A /* LocationManager.swift in Sources */,
 				B8290E874FD9F375F224D41E1D142DB8 /* AcceptanceViewController.swift in Sources */,
 				FB023A1CAE6850BAA1087C00E9612EB9 /* ApiGateway.swift in Sources */,
 				99AB34E9C2D2DCAB7BC72DA24ED83FC3 /* AppNavigator.swift in Sources */,
@@ -8514,6 +8548,7 @@
 				80A3A519C8D0B17D479B6859647E2CF5 /* ConsentUserDataSection.swift in Sources */,
 				1B815014BCC1ADAE8F4839A746BE8D4C /* ConsentUserDataSectionCoordinator.swift in Sources */,
 				DB866D0BC564271E4D5D9E4A4101A368 /* Constants.swift in Sources */,
+				8960D03524AE3C02000E4998 /* HealthManager.swift in Sources */,
 				7800FBE51FCD21898C27667A1F26A0F9 /* CountryCodeProvider.swift in Sources */,
 				9317C40608B622AAC20E4D3D860EE81B /* Date+Extensions.swift in Sources */,
 				9DC2D4ED2391576252214E8965D79647 /* DoubleButtonHorizontalView.swift in Sources */,
@@ -8524,6 +8559,7 @@
 				6C4538AB96648350083ABF55786F61D4 /* GenericButtonView.swift in Sources */,
 				06FE62322B81AB6823012E90B5CAA7EC /* GenericCheckboxView.swift in Sources */,
 				D057EBE0488418031A0135F0D9087DAF /* GenericTextFieldView.swift in Sources */,
+				8926F29D24AE404000BA528D /* HealthService.swift in Sources */,
 				4250E9659C118CF76CF5969B0EF1DF24 /* GlobalConfig+Mappable.swift in Sources */,
 				0E30DCD7F114AB506698852717D95CBB /* GlobalConfig.swift in Sources */,
 				3003B096202CB4E1E9CA1C78EC943CB7 /* Gradient+Extension.swift in Sources */,
@@ -8544,6 +8580,7 @@
 				CB63ED2ADD3BEF03B1133548AD690BD1 /* NetworkApiGateway.swift in Sources */,
 				89CFFD056DA3021A86AAC13FF7A28337 /* NetworkUtility.swift in Sources */,
 				3E5B8C8146A4502C29B06C9E53427E94 /* NSAttributedString+Extensions.swift in Sources */,
+				894BEE6824AE453E00254DC6 /* LocationService.swift in Sources */,
 				AF599A22E063C8F6D37CF2BA0C951E05 /* NSAttributedString+Palette.swift in Sources */,
 				C2D121D5863B7860E58188199D038520 /* OptInPermission.swift in Sources */,
 				C36B69C8D06D705D7FF46B954C8D882C /* OptInPermissionViewController.swift in Sources */,
@@ -9614,6 +9651,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = BB21F6B698DAE6B1C73CB11BAC3F5163 /* FirebaseCore.release.xcconfig */;
 			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGNING_ALLOWED = NO;
 				CODE_SIGNING_REQUIRED = NO;
 				CODE_SIGN_IDENTITY = "";
@@ -11304,6 +11342,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 003A054459C3925E6AE0F95C66C35E54 /* FirebaseCore.debug.xcconfig */;
 			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGNING_ALLOWED = NO;
 				CODE_SIGNING_REQUIRED = NO;
 				CODE_SIGN_IDENTITY = "";
@@ -11331,6 +11370,7 @@
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) ";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VERSIONING_SYSTEM = "apple-generic";
