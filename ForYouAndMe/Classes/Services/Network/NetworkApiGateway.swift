@@ -272,8 +272,11 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         // Consent Section
         case .getConsentSection:
             return "/v1/studies/\(studyId)/consent"
+        // Opt In Section
         case .getOptInSection:
             return "/v1/studies/\(studyId)/opt_in"
+        case .sendOptInPermission(let permissionId, _):
+            return "/v1/permissions/\(permissionId)/user_permission"
         // User Consent Section
         case .getUserConsentSection:
             return "/v1/studies/\(studyId)/signature"
@@ -300,7 +303,8 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             return .get
         case .submitPhoneNumber,
              .verifyPhoneNumber,
-             .createUserConsent:
+             .createUserConsent,
+             .sendOptInPermission:
             return .post
         case .verifyEmail,
              .resendConfirmationEmail,
@@ -329,6 +333,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         case .getConsentSection: return Bundle.getTestData(from: "TestGetConsentSection")
         // Opt In Section
         case .getOptInSection: return Bundle.getTestData(from: "TestGetOptInSection")
+        case .sendOptInPermission: return "{}".utf8Encoded
         // User Consent Section
         case .getUserConsentSection: return Bundle.getTestData(from: "TestGetUserConsentSection")
         case .createUserConsent: return "{}".utf8Encoded
@@ -373,6 +378,12 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             var params: [String: Any] = [:]
             params["email_confirmation_token"] = email
             return .requestParameters(parameters: ["user_consent": params], encoding: JSONEncoding.default)
+        case .sendOptInPermission(_, let granted):
+            var params: [String: Any] = [:]
+            params["agree"] = granted
+            // TODO: handle batch logic in a decent way
+            params["batch"] = Date().toISO8601String
+            return .requestParameters(parameters: ["answer": params], encoding: JSONEncoding.default)
         }
     }
     
@@ -390,6 +401,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
              .getInformedConsentSection,
              .getConsentSection,
              .getOptInSection,
+             .sendOptInPermission,
              .getUserConsentSection,
              .createUserConsent,
              .updateUserConsent,

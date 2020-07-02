@@ -122,6 +122,11 @@ extension RepositoryImpl: Repository {
             .handleError()
     }
     
+    func sendOptInPermission(permission: OptInPermission, granted: Bool) -> Single<()> {
+        return self.api.send(request: ApiRequest(serviceRequest: .sendOptInPermission(permissionId: permission.id, granted: granted)))
+            .handleError()
+    }
+    
     // MARK: - User Consent
     
     func getUserConsentSection() -> Single<ConsentUserDataSection> {

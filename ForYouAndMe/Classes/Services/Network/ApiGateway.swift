@@ -25,6 +25,7 @@ enum DefaultService {
     case getConsentSection
     // Opt In Section
     case getOptInSection
+    case sendOptInPermission(permissionId: String, granted: Bool)
     // User Consent Section
     case getUserConsentSection
     case createUserConsent(email: String?, firstName: String?, lastName: String?, signatureImage: UIImage?)

@@ -65,6 +65,7 @@ protocol Repository: class {
     func getConsentSection() -> Single<ConsentSection>
     // Opt In Section
     func getOptInSection() -> Single<OptInSection>
+    func sendOptInPermission(permission: OptInPermission, granted: Bool) -> Single<()>
     // User Consent Section
     func getUserConsentSection() -> Single<ConsentUserDataSection>
     func submitEmail(email: String) -> Single<()>

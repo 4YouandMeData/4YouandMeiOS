@@ -6,19 +6,27 @@
 //
 
 import Foundation
+import RxSwift
 
 class OptInSectionCoordinator {
     
     public unowned var navigationController: UINavigationController
     
+    private let repository: Repository
+    private let navigator: AppNavigator
+    
     private let sectionData: OptInSection
     private let completionCallback: NavigationControllerCallback
+    
+    private let disposeBag = DisposeBag()
     
     var answers: [Question: PossibleAnswer] = [:]
     
     init(withSectionData sectionData: OptInSection,
          navigationController: UINavigationController,
          completionCallback: @escaping NavigationControllerCallback) {
+        self.repository = Services.shared.repository
+        self.navigator = Services.shared.navigator
         self.sectionData = sectionData
         self.navigationController = navigationController
         self.completionCallback = completionCallback
@@ -72,18 +80,29 @@ extension OptInSectionCoordinator: PagedSectionCoordinator {
 
 extension OptInSectionCoordinator: OptInPermissionCoordinator {
     func onOptInPermissionSet(optInPermission: OptInPermission, granted: Bool) {
-        guard let permissionIndex = self.sectionData.optInPermissions.firstIndex(where: { $0.id == optInPermission.id }) else {
-            assertionFailure("Missing Permission with give ID")
-            return
-        }
         
-        // TODO: Call API to set the permission state
-        
-        let nextPermissionIndex = permissionIndex + 1
-        if nextPermissionIndex < self.sectionData.optInPermissions.count {
-            self.showOptInPermission(self.sectionData.optInPermissions[nextPermissionIndex])
-        } else {
-            self.showSuccess()
-        }
+        self.navigator.pushProgressHUD()
+        self.repository
+            .sendOptInPermission(permission: optInPermission, granted: granted)
+            .subscribe(onSuccess: { [weak self] () in
+                guard let self = self else { return }
+                self.navigator.popProgressHUD()
+                
+                guard let permissionIndex = self.sectionData.optInPermissions.firstIndex(where: { $0.id == optInPermission.id }) else {
+                    assertionFailure("Missing Permission with give ID")
+                    return
+                }
+                
+                let nextPermissionIndex = permissionIndex + 1
+                if nextPermissionIndex < self.sectionData.optInPermissions.count {
+                    self.showOptInPermission(self.sectionData.optInPermissions[nextPermissionIndex])
+                } else {
+                    self.showSuccess()
+                }
+                }, onError: { [weak self] error in
+                    guard let self = self else { return }
+                    self.navigator.popProgressHUD()
+                    self.navigator.handleError(error: error, presenter: self.navigationController)
+            }).disposed(by: self.disposeBag)
     }
 }
