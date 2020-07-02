@@ -72,6 +72,18 @@ extension OptInSectionCoordinator: PagedSectionCoordinator {
 
 extension OptInSectionCoordinator: OptInPermissionCoordinator {
     func onOptInPermissionSet(optInPermission: OptInPermission, granted: Bool) {
-        // TODO: Go to next opt in page or to success page
+        guard let permissionIndex = self.sectionData.optInPermissions.firstIndex(where: { $0.id == optInPermission.id }) else {
+            assertionFailure("Missing Permission with give ID")
+            return
+        }
+        
+        // TODO: Call API to set the permission state
+        
+        let nextPermissionIndex = permissionIndex + 1
+        if nextPermissionIndex < self.sectionData.optInPermissions.count {
+            self.showOptInPermission(self.sectionData.optInPermissions[nextPermissionIndex])
+        } else {
+            self.showSuccess()
+        }
     }
 }
