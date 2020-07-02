@@ -1,5 +1,5 @@
 //
-//  InformedConsentCoordinator.swift
+//  InformedConsentSectionCoordinator.swift
 //  ForYouAndMe
 //
 //  Created by Leonardo Passeri on 10/06/2020.
@@ -7,7 +7,7 @@
 
 import Foundation
 
-class InformedConsentCoordinator {
+class InformedConsentSectionCoordinator {
     
     public unowned var navigationController: UINavigationController
     
@@ -73,7 +73,7 @@ class InformedConsentCoordinator {
     }
 }
 
-extension InformedConsentCoordinator: PagedSectionCoordinator {
+extension InformedConsentSectionCoordinator: PagedSectionCoordinator {
     
     var pages: [InfoPage] { self.sectionData.pages }
     
@@ -94,7 +94,7 @@ extension InformedConsentCoordinator: PagedSectionCoordinator {
     }
 }
 
-extension InformedConsentCoordinator: QuestionViewCoordinator {
+extension InformedConsentSectionCoordinator: QuestionViewCoordinator {
     func onQuestionAnsweredSuccess(possibleAnswer: PossibleAnswer, forQuestion question: Question) {
         self.answers[question] = possibleAnswer
         

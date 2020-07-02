@@ -46,6 +46,7 @@ enum StringKey: String, CaseIterable, CodingKey {
     case onboardingAbortCancel = "ONBOARDING_ABORT_CANCEL"
     case onboardingAgreeButton = "ONBOARDING_AGREE_BUTTON"
     case onboardingDisagreeButton = "ONBOARDING_DISAGREE_BUTTON"
+    case onboardingOptInSubmitButton = "ONBOARDING_OPT_IN_SUBMIT_BUTTON"
     case onboardingUserNameTitle = "ONBOARDING_USER_NAME_TITLE"
     case onboardingUserNameFirstNameDescription = "ONBOARDING_USER_NAME_FIRST_NAME_DESCRIPTION"
     case onboardingUserNameLastNameDescription = "ONBOARDING_USER_NAME_LAST_NAME_DESCRIPTION"

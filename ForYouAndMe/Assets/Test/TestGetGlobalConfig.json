@@ -37,6 +37,7 @@
       "ONBOARDING_ABORT_MESSAGE": "If you click cancel you will return to the beginning of the app and lose all progress",
       "ONBOARDING_AGREE_BUTTON": "Agree",
       "ONBOARDING_DISAGREE_BUTTON": "Disagree",
+      "ONBOARDING_OPT_IN_SUBMIT_BUTTON": "Next",
       "ONBOARDING_USER_NAME_TITLE": "Consent",
       "ONBOARDING_USER_NAME_FIRST_NAME_DESCRIPTION": "First Name",
       "ONBOARDING_USER_NAME_LAST_NAME_DESCRIPTION": "Last Name",

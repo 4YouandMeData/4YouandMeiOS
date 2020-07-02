@@ -115,6 +115,13 @@ extension RepositoryImpl: Repository {
             .handleError()
     }
     
+    // MARK: - Opt In
+    
+    func getOptInSection() -> Single<OptInSection> {
+        return self.api.send(request: ApiRequest(serviceRequest: .getOptInSection))
+            .handleError()
+    }
+    
     // MARK: - User Consent
     
     func getUserConsentSection() -> Single<ConsentUserDataSection> {

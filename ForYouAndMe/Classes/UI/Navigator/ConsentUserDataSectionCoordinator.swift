@@ -1,5 +1,5 @@
 //
-//  ConsentUserDataCoordinator.swift
+//  ConsentUserDataSectionCoordinator.swift
 //  ForYouAndMe
 //
 //  Created by Leonardo Passeri on 19/06/2020.
@@ -8,7 +8,7 @@
 import Foundation
 import RxSwift
 
-class ConsentUserDataCoordinator {
+class ConsentUserDataSectionCoordinator {
     
     public unowned var navigationController: UINavigationController
     
@@ -87,7 +87,7 @@ class ConsentUserDataCoordinator {
     }
 }
 
-extension ConsentUserDataCoordinator: UserNameCoordinator {
+extension ConsentUserDataSectionCoordinator: UserNameCoordinator {
     func onUserNameConfirmPressed(firstName: String, lastName: String) {
         self.userFirstName = firstName
         self.userLastName = lastName
@@ -95,14 +95,14 @@ extension ConsentUserDataCoordinator: UserNameCoordinator {
     }
 }
 
-extension ConsentUserDataCoordinator: UserEmailCoordinator {
+extension ConsentUserDataSectionCoordinator: UserEmailCoordinator {
     func onUserEmailSubmitted(email: String) {
         self.userEmail = email
         self.showUserEmailValidation(email: email)
     }
 }
 
-extension ConsentUserDataCoordinator: UserEmailVerificationCoordinator {
+extension ConsentUserDataSectionCoordinator: UserEmailVerificationCoordinator {
     func onUserEmailPressed() {
         self.navigationController.popToExpectedViewController(ofClass: UserEmailViewController.self, animated: true)
     }
@@ -112,7 +112,7 @@ extension ConsentUserDataCoordinator: UserEmailVerificationCoordinator {
     }
 }
 
-extension ConsentUserDataCoordinator: UserSignatureCoordinator {
+extension ConsentUserDataSectionCoordinator: UserSignatureCoordinator {
     func onUserSignatureCreated(signatureImage: UIImage) {
         self.userSignatureImage = signatureImage
         self.submitUserData()
@@ -123,7 +123,7 @@ extension ConsentUserDataCoordinator: UserSignatureCoordinator {
     }
 }
 
-extension ConsentUserDataCoordinator: PagedSectionCoordinator {
+extension ConsentUserDataSectionCoordinator: PagedSectionCoordinator {
     var pages: [InfoPage] { self.sectionData.pages }
     
     func onUnhandledPrimaryButtonNavigation(page: InfoPage) {

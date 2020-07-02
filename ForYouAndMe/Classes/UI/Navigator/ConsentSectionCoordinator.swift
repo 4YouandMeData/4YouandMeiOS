@@ -1,5 +1,5 @@
 //
-//  ConsentCoordinator.swift
+//  ConsentSectionCoordinator.swift
 //  ForYouAndMe
 //
 //  Created by Leonardo Passeri on 18/06/2020.
@@ -7,7 +7,7 @@
 
 import Foundation
 
-class ConsentCoordinator {
+class ConsentSectionCoordinator {
     
     public unowned var navigationController: UINavigationController
     
@@ -34,7 +34,7 @@ class ConsentCoordinator {
     }
 }
 
-extension ConsentCoordinator: AcceptanceCoordinator {
+extension ConsentSectionCoordinator: AcceptanceCoordinator {
     func onAgreeButtonPressed() {
         self.completionCallback(self.navigationController)
     }
@@ -48,7 +48,7 @@ extension ConsentCoordinator: AcceptanceCoordinator {
     }
 }
 
-extension ConsentCoordinator: PopupCoordinator {
+extension ConsentSectionCoordinator: PopupCoordinator {
     func onConfirmButtonPressed(popupViewController: PopupViewController) {
         popupViewController.dismiss(animated: false, completion: {
             Services.shared.navigator.abortOnboarding()

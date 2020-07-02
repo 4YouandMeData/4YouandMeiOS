@@ -23,6 +23,8 @@ enum DefaultService {
     case getInformedConsentSection
     // Consent Section
     case getConsentSection
+    // Opt In Section
+    case getOptInSection
     // User Consent Section
     case getUserConsentSection
     case createUserConsent(email: String?, firstName: String?, lastName: String?, signatureImage: UIImage?)

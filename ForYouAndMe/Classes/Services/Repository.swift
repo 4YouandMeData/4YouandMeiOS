@@ -63,6 +63,8 @@ protocol Repository: class {
     func getInformedConsentSection() -> Single<InformedConsentSection>
     // Consent Section
     func getConsentSection() -> Single<ConsentSection>
+    // Opt In Section
+    func getOptInSection() -> Single<OptInSection>
     // User Consent Section
     func getUserConsentSection() -> Single<ConsentUserDataSection>
     func submitEmail(email: String) -> Single<()>

@@ -50,6 +50,7 @@ class AppNavigator {
             case .screeningSection: self.startScreeningSection(navigationController: testNavigationViewController)
             case .informedConsentSection: self.startInformedConsentSection(navigationController: testNavigationViewController)
             case .consentSection: self.startConsentSection(navigationController: testNavigationViewController)
+            case .optInSection: self.startOptInSection(navigationController: testNavigationViewController)
             case .consentUserDataSection: self.startUserContentDataSection(navigationController: testNavigationViewController)
             }
             return
@@ -172,9 +173,9 @@ class AppNavigator {
             let completionCallback: NavigationControllerCallback = { [weak self] navigationController in
                 self?.startInformedConsentSection(navigationController: navigationController)
             }
-            let coordinator = ScreeningCoordinator(withSectionData: section,
-                                                            navigationController: navigationController,
-                                                            completionCallback: completionCallback)
+            let coordinator = ScreeningSectionCoordinator(withSectionData: section,
+                                                          navigationController: navigationController,
+                                                          completionCallback: completionCallback)
             return coordinator.getStartingPage()
         }
     }
@@ -186,7 +187,7 @@ class AppNavigator {
             let completionCallback: NavigationControllerCallback = { [weak self] navigationController in
                 self?.startConsentSection(navigationController: navigationController)
             }
-            let coordinator = InformedConsentCoordinator(withSectionData: section,
+            let coordinator = InformedConsentSectionCoordinator(withSectionData: section,
                                                                   navigationController: navigationController,
                                                                   completionCallback: completionCallback)
             return coordinator.getStartingPage()
@@ -200,9 +201,9 @@ class AppNavigator {
             let completionCallback: NavigationControllerCallback = { [weak self] navigationController in
                 self?.startOptInSection(navigationController: navigationController)
             }
-            let coordinator = ConsentCoordinator(withSectionData: section,
-                                                 navigationController: navigationController,
-                                                 completionCallback: completionCallback)
+            let coordinator = ConsentSectionCoordinator(withSectionData: section,
+                                                        navigationController: navigationController,
+                                                        completionCallback: completionCallback)
             return coordinator.getStartingPage()
         }
     }
@@ -210,9 +211,15 @@ class AppNavigator {
     // MARK: Opt-In
     
     public func startOptInSection(navigationController: UINavigationController) {
-        // TODO: Implement Opt In-section
-        print("TODO: Implement Opt In-section")
-        self.startUserContentDataSection(navigationController: navigationController)
+        navigationController.loadViewForRequest(self.repository.getOptInSection()) { section -> UIViewController in
+            let completionCallback: NavigationControllerCallback = { [weak self] navigationController in
+                self?.startUserContentDataSection(navigationController: navigationController)
+            }
+            let coordinator = OptInSectionCoordinator(withSectionData: section,
+                                                      navigationController: navigationController,
+                                                      completionCallback: completionCallback)
+            return coordinator.getStartingPage()
+        }
     }
     
     // MARK: Consent User Data
@@ -220,20 +227,20 @@ class AppNavigator {
     public func startUserContentDataSection(navigationController: UINavigationController) {
         navigationController.loadViewForRequest(self.repository.getUserConsentSection()) { section -> UIViewController in
             let completionCallback: NavigationControllerCallback = { [weak self] navigationController in
-                self?.startDownloadAppsSection(navigationController: navigationController)
+                self?.startWearablesSetupSection(navigationController: navigationController)
             }
-            let coordinator = ConsentUserDataCoordinator(withSectionData: section,
-                                                         navigationController: navigationController,
-                                                         completionCallback: completionCallback)
+            let coordinator = ConsentUserDataSectionCoordinator(withSectionData: section,
+                                                                navigationController: navigationController,
+                                                                completionCallback: completionCallback)
             return coordinator.getStartingPage()
         }
     }
     
-    // MARK: Download Apps
+    // MARK: Wearables Setup
     
-    public func startDownloadAppsSection(navigationController: UINavigationController) {
-        // TODO: Start Download Apps section
-        navigationController.showAlert(withTitle: "Work in progress", message: "Download Apps section coming soon")
+    public func startWearablesSetupSection(navigationController: UINavigationController) {
+        // TODO: Start Wearables setup section
+        navigationController.showAlert(withTitle: "Work in progress", message: "Wearables setup section coming soon")
     }
     
     // MARK: Progress HUD

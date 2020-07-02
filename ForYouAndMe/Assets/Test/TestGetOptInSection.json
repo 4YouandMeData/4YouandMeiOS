@@ -1,0 +1,79 @@
+{
+  "data": {
+    "id": "1",
+    "type": "opt_in",
+    "attributes": {
+      "title": "Opt-in questions",
+      "description": "On the next screens, we will ask for your permission to share additional data with the study researchers. The choice to share is totally up to you.",
+      "created_at": "2020-06-15T12:57:19.782Z",
+      "updated_at": "2020-06-15T12:57:19.782Z"
+    },
+    "relationships": {
+      "permissions": {
+        "data": [
+          {
+            "id": "1",
+            "type": "permission"
+          },
+          {
+            "id": "2",
+            "type": "permission"
+          },
+          {
+            "id": "3",
+            "type": "permission"
+          }
+        ]
+      }
+    }
+  },
+  "included": [
+    {
+      "id": "1",
+      "type": "permission",
+      "attributes": {
+        "title": "Share sent and received text messages",
+        "body": "You have the option to consent to allow the 4YouandMe with BUMP study app to collect the content of text messages that you send and receive throughout the duration of the study. This data will be de-identiﬁed and used by the research team to better understand your pregnancy symptoms. \r\nIf you do not consent to share your text messages, this information will not be stored or used. Please ask a member of the research team if you have any questions or concerns.",
+        "position": 1,
+        "agree_text": "I agree to have the 4YouandMe with BUMP study collect the content of my text messages.",
+        "disagree_text": "I do not consent to sharing my text messages",
+        "system_permissions": [],
+        "created_at": "2020-06-15T13:00:50.100Z",
+        "updated_at": "2020-06-15T15:35:27.496Z",
+        "image": null
+      }
+    },
+    {
+      "id": "2",
+      "type": "permission",
+      "attributes": {
+        "title": "GPS",
+        "body": "You have the option to consent to allow your GPS information to be collected by the BUMP study app. Your GPS information will be used to verify environmental context and information such as how far you traveled or speed at which you traveled. If you do not consent to share your GPS data, this information will not be stored or used. \r\n\r\nPlease ask a member of the research team if you have any questions or concerns.",
+        "position": 2,
+        "agree_text": "I agree to have the 4YouandMe with BUMP study collect to my GPS data.",
+        "disagree_text": "No, I do not want to share my location information",
+        "system_permissions": [
+          "location"
+        ],
+        "created_at": "2020-06-15T15:34:42.486Z",
+        "updated_at": "2020-06-15T15:34:42.486Z",
+        "image": null
+      }
+    },
+    {
+      "id": "3",
+      "type": "permission",
+      "attributes": {
+        "title": "Sharing Options",
+        "body": "4YouandMe and its partners will receive your study data from your participation in this study. Sharing your coded study data more broadly (without information such as your name) may beneﬁt this and future research. \r\n\r\nShare my data with 4YouandMe and qualiﬁed researchers worldwide. Only share my data with 4YouandMe and its partners",
+        "position": 3,
+        "agree_text": "I agree to share my data",
+        "disagree_text": "No, I do not want to share my data",
+        "system_permissions": [],
+        "created_at": "2020-06-15T15:37:09.933Z",
+        "updated_at": "2020-06-15T15:37:09.933Z",
+        "image": null
+      }
+    }
+  ]
+}

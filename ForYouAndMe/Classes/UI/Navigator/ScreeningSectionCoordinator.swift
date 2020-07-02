@@ -1,5 +1,5 @@
 //
-//  ScreeningCoordinator.swift
+//  ScreeningSectionCoordinator.swift
 //  ForYouAndMe
 //
 //  Created by Leonardo Passeri on 28/05/2020.
@@ -7,7 +7,7 @@
 
 import Foundation
 
-class ScreeningCoordinator {
+class ScreeningSectionCoordinator {
     
     public unowned var navigationController: UINavigationController
     
@@ -61,7 +61,7 @@ class ScreeningCoordinator {
     }
 }
 
-extension ScreeningCoordinator: PagedSectionCoordinator {
+extension ScreeningSectionCoordinator: PagedSectionCoordinator {
     
     var pages: [InfoPage] { self.sectionData.pages }
     
@@ -85,7 +85,7 @@ extension ScreeningCoordinator: PagedSectionCoordinator {
     }
 }
 
-extension ScreeningCoordinator: BooleanQuestionsCoordinator {
+extension ScreeningSectionCoordinator: BooleanQuestionsCoordinator {
     func onBooleanQuestionsSuccess() {
         self.showSuccess()
     }

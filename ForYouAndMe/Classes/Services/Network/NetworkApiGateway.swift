@@ -272,6 +272,8 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         // Consent Section
         case .getConsentSection:
             return "/v1/studies/\(studyId)/consent"
+        case .getOptInSection:
+            return "/v1/studies/\(studyId)/opt_in"
         // User Consent Section
         case .getUserConsentSection:
             return "/v1/studies/\(studyId)/signature"
@@ -293,6 +295,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
              .getScreeningSection,
              .getInformedConsentSection,
              .getConsentSection,
+             .getOptInSection,
              .getUserConsentSection:
             return .get
         case .submitPhoneNumber,
@@ -324,6 +327,8 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             }
         // Consent Section
         case .getConsentSection: return Bundle.getTestData(from: "TestGetConsentSection")
+        // Opt In Section
+        case .getOptInSection: return Bundle.getTestData(from: "TestGetOptInSection")
         // User Consent Section
         case .getUserConsentSection: return Bundle.getTestData(from: "TestGetUserConsentSection")
         case .createUserConsent: return "{}".utf8Encoded
@@ -339,6 +344,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
              .getScreeningSection,
              .getInformedConsentSection,
              .getConsentSection,
+             .getOptInSection,
              .getUserConsentSection,
              .resendConfirmationEmail:
             return .requestPlain
@@ -383,6 +389,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         case .getScreeningSection,
              .getInformedConsentSection,
              .getConsentSection,
+             .getOptInSection,
              .getUserConsentSection,
              .createUserConsent,
              .updateUserConsent,
