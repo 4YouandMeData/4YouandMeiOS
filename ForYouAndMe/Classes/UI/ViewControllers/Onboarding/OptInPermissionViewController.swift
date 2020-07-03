@@ -72,14 +72,15 @@ class OptInPermissionViewController: UIViewController {
         self.view.addSubview(scrollStackView)
         scrollStackView.autoPinEdgesToSuperviewSafeArea(with: .zero, excludingEdge: .bottom)
         
-        scrollStackView.stackView.addBlankSpace(space: 16.0)
+        scrollStackView.stackView.addBlankSpace(space: 27.0)
         // Image
         scrollStackView.stackView.addHeaderImage(image: self.optInPermission.image, height: 82.0)
         scrollStackView.stackView.addBlankSpace(space: 40.0)
         // Title
         scrollStackView.stackView.addLabel(withText: self.optInPermission.title,
                                            fontStyle: .title,
-                                           colorType: .primaryText)
+                                           colorType: .primaryText,
+                                           textAlignment: .left)
         
         scrollStackView.stackView.addBlankSpace(space: 27.0)
         // Body
@@ -87,8 +88,11 @@ class OptInPermissionViewController: UIViewController {
                                            fontStyle: .paragraph,
                                            colorType: .primaryText,
                                            textAlignment: .left)
+        
+        scrollStackView.stackView.addBlankSpace(space: 30.0)
         // Permissions
         scrollStackView.stackView.addArrangedSubview(self.grantTextCheckbox)
+        scrollStackView.stackView.addBlankSpace(space: 8.0)
         scrollStackView.stackView.addArrangedSubview(self.denyTextCheckbox)
         
         scrollStackView.stackView.addBlankSpace(space: 27.0)

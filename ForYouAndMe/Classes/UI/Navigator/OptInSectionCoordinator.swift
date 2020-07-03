@@ -40,7 +40,11 @@ class OptInSectionCoordinator {
     // MARK: - Public Methods
     
     public func getStartingPage() -> UIViewController {
-        let infoPageData = InfoPageData.createWelcomePageData(withinfoPage: self.sectionData.welcomePage)
+        let infoPageData = InfoPageData(page: self.sectionData.welcomePage,
+                                        addAbortOnboardingButton: false,
+                                        allowBackwardNavigation: false,
+                                        bodyTextAlignment: .center,
+                                        bottomViewStyle: .singleButton)
         return InfoPageViewController(withPageData: infoPageData, coordinator: self)
     }
     
@@ -97,7 +101,7 @@ extension OptInSectionCoordinator: OptInPermissionCoordinator {
         let systemPermissionRequests: Single<()> = optInPermission.systemPermissions
             .reduce(Single.just(())) { (result, systemPermission) in
                 switch systemPermission {
-                case .health: return result.flatMap { self.healthService.requestPermission().catchErrorJustReturn(()) }
+                case .health: return result.flatMap { self.healthService.requestPermissionDefaultMeasurements().catchErrorJustReturn(()) }
                 case .location: return result.flatMap { self.locationService.requestPermission(always: false).catchErrorJustReturn(()) }
                 }
         }

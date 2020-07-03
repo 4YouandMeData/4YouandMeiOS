@@ -18,6 +18,30 @@ struct FailableDecodable<Wrapped: Decodable>: Decodable {
 }
 
 @propertyWrapper
+struct ExcludeInvalid<Element: Decodable>: Decodable {
+
+    var wrappedValue: [Element]
+    
+    init(from decoder: Decoder) throws {
+
+        var container = try decoder.unkeyedContainer()
+        
+        var elements = [Element]()
+        if let count = container.count {
+            elements.reserveCapacity(count)
+        }
+
+        while !container.isAtEnd {
+            if let element = try container.decode(FailableDecodable<Element>.self).wrappedValue {
+                elements.append(element)
+            }
+        }
+
+        self.wrappedValue = elements
+    }
+}
+
+@propertyWrapper
 struct NilIfEmptyString: Decodable {
     var wrappedValue: String?
 

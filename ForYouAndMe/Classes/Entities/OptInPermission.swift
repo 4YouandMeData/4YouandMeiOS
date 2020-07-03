@@ -12,7 +12,6 @@ enum SystemPermission: String, Codable {
     case health
 }
 
-/// <#Description#>
 struct OptInPermission {
     let id: String
     let type: String
@@ -21,7 +20,8 @@ struct OptInPermission {
     let body: String
     let grantText: String
     let denyText: String
-    let systemPermissions: [SystemPermission]
+    @ExcludeInvalid
+    var systemPermissions: [SystemPermission]
     let imageData: Data?
     let isMandatory: Bool
     @NilIfEmptyString

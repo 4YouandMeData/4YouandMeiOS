@@ -15,10 +15,14 @@ enum GenericTextCheckboxStyleCategory: StyleCategory {
     var style: Style<GenericTextCheckboxView> {
         switch self {
         case .primary: return Style<GenericTextCheckboxView> { textCheckboxView in
-            textCheckboxView.labelAttributedTextStyle = AttributedTextStyle(fontStyle: .header3, colorType: .primaryText)
+            textCheckboxView.labelAttributedTextStyle = AttributedTextStyle(fontStyle: .header3,
+                                                                            colorType: .primaryText,
+                                                                            textAlignment: .left)
             }
         case .secondary: return Style<GenericTextCheckboxView> { textCheckboxView in
-            textCheckboxView.labelAttributedTextStyle = AttributedTextStyle(fontStyle: .header3, colorType: .secondaryText)
+            textCheckboxView.labelAttributedTextStyle = AttributedTextStyle(fontStyle: .header3,
+                                                                            colorType: .secondaryText,
+                                                                            textAlignment: .left)
             }
         }
     }
@@ -65,6 +69,8 @@ class GenericTextCheckboxView: UIView {
         
         horizontalStackView.addArrangedSubview(checkboxContainerView)
         horizontalStackView.addArrangedSubview(self.label)
+        
+        self.apply(style: styleCategory.style)
     }
     
     required init?(coder: NSCoder) {

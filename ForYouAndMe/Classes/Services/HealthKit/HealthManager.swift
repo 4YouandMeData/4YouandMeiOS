@@ -11,23 +11,28 @@ import RxSwift
 
 class HealthManager: HealthService {
     
+    private static let defaultMeasurements: Set<HKSampleType> = [
+        HKObjectType.categoryType(forIdentifier: HKCategoryTypeIdentifier.sleepAnalysis)!,
+        HKObjectType.quantityType(forIdentifier: HKQuantityTypeIdentifier.stepCount)!,
+        HKObjectType.quantityType(forIdentifier: HKQuantityTypeIdentifier.heartRate)!
+    ]
+    
     private let healthStore = HKHealthStore()
     
     // MARK: - HealthService
     
-    public func requestPermission() -> Single<()> {
+    public func requestPermissionDefaultMeasurements() -> Single<()> {
+        return self.requestPermission(measurements: Self.defaultMeasurements)
+    }
+    
+    public func requestPermission(measurements: Set<HKSampleType>) -> Single<()> {
         guard HKHealthStore.isHealthDataAvailable() else {
             return Single.error(HealthError.healthKitNotAvailable)
         }
         
-        // TODO: Get these dynamically
-        let measuraments: Set = [HKObjectType.categoryType(forIdentifier: HKCategoryTypeIdentifier.sleepAnalysis)!,
-                                 HKObjectType.quantityType(forIdentifier: HKQuantityTypeIdentifier.stepCount)!,
-                                 HKObjectType.quantityType(forIdentifier: HKQuantityTypeIdentifier.heartRate)!]
-        
         return Single.create { singleEvent -> Disposable in
             //Background Thread
-            self.healthStore.requestAuthorization(toShare: measuraments, read: nil, completion: { (success, error) in
+            self.healthStore.requestAuthorization(toShare: measurements, read: nil, completion: { (success, error) in
                 
                 //Main Thread
                 DispatchQueue.main.async {
