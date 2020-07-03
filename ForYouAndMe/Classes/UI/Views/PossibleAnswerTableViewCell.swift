@@ -82,10 +82,13 @@ class PossibleAnswerTableViewCell: UITableViewCell {
                                                                       fontStyle: .paragraph,
                                                                       colorType: .secondaryText,
                                                                       textAlignment: .left)
-        let buttonImage = isSelected
-            ? ImagePalette.image(withName: .radioButtonSecondaryFilled)
-            : ImagePalette.image(withName: .radioButtonSecondaryOutline)
-        self.button.setImage(buttonImage, for: .normal)
+        if isSelected {
+            self.button.setImage(ImagePalette.templateImage(withName: .radioButtonFilled), for: .normal)
+            self.button.imageView?.tintColor = ColorPalette.color(withType: .secondary)
+        } else {
+            self.button.setImage(ImagePalette.templateImage(withName: .radioButtonOutline), for: .normal)
+            self.button.imageView?.tintColor = ColorPalette.color(withType: .secondary).applyAlpha(0.5)
+        }
     }
     
     // MARK: - Actions

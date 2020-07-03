@@ -22,7 +22,7 @@ struct Constants {
         static let NetworkStubsDelay = 0.3
         static let NetworkLogVerbose = true
         
-        static let Section: TestSection? = .optInSection
+        static let Section: TestSection? = nil//.optInSection
         
         static let InformedConsentWithoutQuestions: Bool = false
     }

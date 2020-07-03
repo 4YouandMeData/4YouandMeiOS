@@ -18,12 +18,12 @@ enum GenericCheckboxStyleCategory: StyleCategory {
     var style: Style<GenericCheckboxView> {
         switch self {
         case .primary: return Style<GenericCheckboxView> { checkboxView in
-            checkboxView.checkboxFilledImage = ImagePalette.image(withName: .checkboxPrimaryFilled)
-            checkboxView.checkboxOutlineImage = ImagePalette.image(withName: .checkboxPrimaryOutline)
+            checkboxView.checkboxFilledColor = ColorPalette.color(withType: .primary)
+            checkboxView.checkboxOutlineColor = ColorPalette.color(withType: .inactive)
             }
         case .secondary: return Style<GenericCheckboxView> { checkboxView in
-            checkboxView.checkboxFilledImage = ImagePalette.image(withName: .checkboxSecondaryFilled)
-            checkboxView.checkboxOutlineImage = ImagePalette.image(withName: .checkboxSecondaryOutline)
+            checkboxView.checkboxFilledColor = ColorPalette.color(withType: .secondary)
+            checkboxView.checkboxOutlineColor = ColorPalette.color(withType: .secondary)
             }
         }
     }
@@ -31,8 +31,8 @@ enum GenericCheckboxStyleCategory: StyleCategory {
 
 class GenericCheckboxView: UIView {
 
-    fileprivate var checkboxFilledImage: UIImage?
-    fileprivate var checkboxOutlineImage: UIImage?
+    fileprivate var checkboxFilledColor: UIColor = UIColor.white
+    fileprivate var checkboxOutlineColor: UIColor = UIColor.white
     
     public var isCheckedSubject: BehaviorRelay<Bool>
     
@@ -51,7 +51,6 @@ class GenericCheckboxView: UIView {
         super.init(frame: .zero)
         
         self.apply(style: styleCategory.style)
-        
         let tap = UITapGestureRecognizer(target: self, action: #selector(self.onTap))
         self.addGestureRecognizer(tap)
         
@@ -60,9 +59,11 @@ class GenericCheckboxView: UIView {
         
         self.isCheckedSubject.asObservable().subscribe(onNext: { checked in
             if checked {
-                self.checkboxImageView.image = self.checkboxFilledImage
+                self.checkboxImageView.image = ImagePalette.templateImage(withName: .checkboxFilled)
+                self.checkboxImageView.tintColor = self.checkboxFilledColor
             } else {
-                self.checkboxImageView.image = self.checkboxOutlineImage
+                self.checkboxImageView.image = ImagePalette.templateImage(withName: .checkboxOutline)
+                self.checkboxImageView.tintColor = self.checkboxOutlineColor
             }
         }).disposed(by: self.disposeBag)
     }

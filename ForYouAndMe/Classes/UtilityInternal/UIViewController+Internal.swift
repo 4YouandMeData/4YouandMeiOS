@@ -11,7 +11,7 @@ import RxSwift
 
 extension UIViewController {
     func addCustomBackButton() {
-        self.addCustomBackButton(withImage: ImagePalette.image(withName: .backButton))
+        self.addCustomBackButton(withImage: ImagePalette.templateImage(withName: .backButtonNavigation))
     }
     
     func addCustomCloseButton() {

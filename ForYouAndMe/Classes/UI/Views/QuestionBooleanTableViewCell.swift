@@ -98,13 +98,13 @@ class QuestionBooleanTableViewCell: UITableViewCell {
         self.answerBLabel.attributedText = NSAttributedString.create(withText: data.answerB,
                                                                      fontStyle: .paragraph,
                                                                      colorType: .fourthText)
-        self.answerAButton.setImage(ImagePalette.image(withName: .radioButtonPrimaryOutline), for: .normal)
-        self.answerBButton.setImage(ImagePalette.image(withName: .radioButtonPrimaryOutline), for: .normal)
+        self.setButton(self.answerAButton, active: false)
+        self.setButton(self.answerBButton, active: false)
         if let answerAisActive = data.answerAisActive {
             if answerAisActive {
-                self.answerAButton.setImage(ImagePalette.image(withName: .radioButtonPrimaryFilled), for: .normal)
+                self.setButton(self.answerAButton, active: true)
             } else {
-                self.answerBButton.setImage(ImagePalette.image(withName: .radioButtonPrimaryFilled), for: .normal)
+                self.setButton(self.answerBButton, active: true)
             }
         }
     }
@@ -117,6 +117,18 @@ class QuestionBooleanTableViewCell: UITableViewCell {
     
     @objc private func answerBButtonPressed() {
         self.answerPressedCallback?(false)
+    }
+    
+    // MARK: - Private Methods
+    
+    private func setButton(_ button: UIButton, active: Bool) {
+        if active {
+            button.setImage(ImagePalette.templateImage(withName: .radioButtonFilled), for: .normal)
+            button.imageView?.tintColor = ColorPalette.color(withType: .active)
+        } else {
+            button.setImage(ImagePalette.templateImage(withName: .radioButtonOutline), for: .normal)
+            button.imageView?.tintColor = ColorPalette.color(withType: .inactive)
+        }
     }
 }
 
