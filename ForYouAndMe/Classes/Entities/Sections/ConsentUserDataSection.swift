@@ -11,8 +11,8 @@ struct ConsentUserDataSection {
     let id: String
     let type: String
     
-    let pages: [InfoPage]
-    let successPage: InfoPage?
+    let pages: [Page]
+    let successPage: Page?
 }
 
 extension ConsentUserDataSection: JSONAPIMappable {

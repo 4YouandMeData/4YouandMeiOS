@@ -8,42 +8,36 @@
 import Foundation
 import PureLayout
 
-protocol InfoPageCoordinator {
-    func onInfoPagePrimaryButtonPressed(pageData: InfoPageData)
-    func onInfoPageSecondaryButtonPressed(pageData: InfoPageData)
-}
-
 enum InfoPageBottomViewStyle {
     case singleButton
     case vertical(backButton: Bool)
 }
 
 struct InfoPageData {
-    let page: InfoPage
+    let page: Page
     let addAbortOnboardingButton: Bool
     let allowBackwardNavigation: Bool
-    // TODO: Replace if with info from InfoPage
     let bodyTextAlignment: NSTextAlignment
     let bottomViewStyle: InfoPageBottomViewStyle
     
-    static func createWelcomePageData(withinfoPage infopage: InfoPage) -> InfoPageData {
-        return InfoPageData(page: infopage,
+    static func createWelcomePageData(withPage page: Page) -> InfoPageData {
+        return InfoPageData(page: page,
                             addAbortOnboardingButton: false,
                             allowBackwardNavigation: false,
                             bodyTextAlignment: .left,
                             bottomViewStyle: .singleButton)
     }
     
-    static func createInfoPageData(withinfoPage infopage: InfoPage, isOnboarding: Bool) -> InfoPageData {
-        return InfoPageData(page: infopage,
+    static func createInfoPageData(withPage page: Page, isOnboarding: Bool) -> InfoPageData {
+        return InfoPageData(page: page,
                             addAbortOnboardingButton: isOnboarding,
                             allowBackwardNavigation: true,
                             bodyTextAlignment: .left,
                             bottomViewStyle: .singleButton)
     }
     
-    static func createResultPageData(withinfoPage infopage: InfoPage) -> InfoPageData {
-        return InfoPageData(page: infopage,
+    static func createResultPageData(withPage page: Page) -> InfoPageData {
+        return InfoPageData(page: page,
                             addAbortOnboardingButton: false,
                             allowBackwardNavigation: false,
                             bodyTextAlignment: .center,
@@ -51,14 +45,16 @@ struct InfoPageData {
     }
 }
 
-public class InfoPageViewController: UIViewController {
+public class InfoPageViewController: UIViewController, PageProvider {
     
-    let pageData: InfoPageData
+    var page: Page { return self.pageData.page }
+    
+    private let pageData: InfoPageData
     
     private let navigator: AppNavigator
-    private let coordinator: InfoPageCoordinator
+    private let coordinator: PageCoordinator
     
-    init(withPageData pageData: InfoPageData, coordinator: InfoPageCoordinator) {
+    init(withPageData pageData: InfoPageData, coordinator: PageCoordinator) {
         self.pageData = pageData
         self.coordinator = coordinator
         self.navigator = Services.shared.navigator
@@ -150,11 +146,11 @@ public class InfoPageViewController: UIViewController {
     // MARK: Actions
     
     @objc private func primaryButtonPressed() {
-        self.coordinator.onInfoPagePrimaryButtonPressed(pageData: self.pageData)
+        self.coordinator.onPagePrimaryButtonPressed(page: self.pageData.page)
     }
     
     @objc private func secondaryButtonPressed() {
-        self.coordinator.onInfoPageSecondaryButtonPressed(pageData: self.pageData)
+        self.coordinator.onPageSecondaryButtonPressed(page: self.pageData.page)
     }
     
     @objc private func externalLinkButtonPressed() {

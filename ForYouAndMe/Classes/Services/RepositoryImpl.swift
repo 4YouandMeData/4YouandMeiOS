@@ -170,6 +170,13 @@ extension RepositoryImpl: Repository {
                                                                                     signatureImage: signatureImage)))
             .handleError()
     }
+    
+    // MARK: - Wearable
+    
+    func getWearablesSection() -> Single<WearablesSection> {
+        return self.api.send(request: ApiRequest(serviceRequest: .getWearablesSection))
+            .handleError()
+    }
 }
 
 // MARK: - Extension(PrimitiveSequence)

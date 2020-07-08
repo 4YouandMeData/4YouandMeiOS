@@ -16,8 +16,8 @@ struct ConsentSection {
     let subtitle: String?
     let disagreeBody: String
     let disagreeButton: String
-    let pages: [InfoPage]
-    let welcomePage: InfoPage
+    let pages: [Page]
+    let welcomePage: Page
 }
 
 extension ConsentSection: JSONAPIMappable {

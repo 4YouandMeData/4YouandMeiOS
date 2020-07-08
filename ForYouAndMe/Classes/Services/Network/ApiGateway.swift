@@ -32,6 +32,8 @@ enum DefaultService {
     case updateUserConsent(email: String?, firstName: String?, lastName: String?, signatureImage: UIImage?)
     case verifyEmail(validationCode: String)
     case resendConfirmationEmail
+    // Wearable Section
+    case getWearablesSection
 }
 
 struct ApiRequest {

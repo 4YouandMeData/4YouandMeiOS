@@ -72,4 +72,6 @@ protocol Repository: class {
     func verifyEmail(validationCode: String) -> Single<()>
     func resendConfirmationEmail() -> Single<()>
     func sendUserData(firstName: String, lastName: String, signatureImage: UIImage) -> Single<()>
+    // Wearables Section
+    func getWearablesSection() -> Single<WearablesSection>
 }

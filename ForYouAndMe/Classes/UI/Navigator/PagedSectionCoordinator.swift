@@ -7,32 +7,32 @@
 
 import Foundation
 
-protocol PagedSectionCoordinator: InfoPageCoordinator {
+protocol PagedSectionCoordinator: PageCoordinator {
     var navigationController: UINavigationController { get }
-    var pages: [InfoPage] { get }
+    var pages: [Page] { get }
     
-    func showInfoPage(_ page: InfoPage, isOnboarding: Bool)
-    func showLinkedPage(forPageRef pageRef: InfoPageRef, isOnboarding: Bool)
+    func showPage(_ page: Page, isOnboarding: Bool)
+    func showLinkedPage(forPageRef pageRef: PageRef, isOnboarding: Bool)
     
-    func performCustomPrimaryButtonNavigation(page: InfoPage) -> Bool
-    func onUnhandledPrimaryButtonNavigation(page: InfoPage)
+    func performCustomPrimaryButtonNavigation(page: Page) -> Bool
+    func onUnhandledPrimaryButtonNavigation(page: Page)
     
-    func performCustomSecondaryButtonNavigation(page: InfoPage) -> Bool
-    func onUnhandledSecondaryButtonNavigation(page: InfoPage)
+    func performCustomSecondaryButtonNavigation(page: Page) -> Bool
+    func onUnhandledSecondaryButtonNavigation(page: Page)
 }
 
 extension PagedSectionCoordinator {
     
-    func showInfoPage(_ page: InfoPage, isOnboarding: Bool) {
-        let infoPageData = InfoPageData.createInfoPageData(withinfoPage: page, isOnboarding: isOnboarding)
+    func showPage(_ page: Page, isOnboarding: Bool) {
+        let infoPageData = InfoPageData.createInfoPageData(withPage: page, isOnboarding: isOnboarding)
         let viewController = InfoPageViewController(withPageData: infoPageData, coordinator: self)
         self.navigationController.pushViewController(viewController, animated: true)
     }
     
-    func showLinkedPage(forPageRef pageRef: InfoPageRef, isOnboarding: Bool) {
+    func showLinkedPage(forPageRef pageRef: PageRef, isOnboarding: Bool) {
         let previousController = self.navigationController.viewControllers.reversed().first { viewController -> Bool in
-            if let infoPageViewController = viewController as? InfoPageViewController,
-                infoPageViewController.pageData.page.id == pageRef.id {
+            if let pageProvider = viewController as? PageProvider,
+                pageProvider.page.id == pageRef.id {
                 return true
             } else {
                 return false
@@ -41,50 +41,50 @@ extension PagedSectionCoordinator {
         if let previousController = previousController {
             self.navigationController.popToViewController(previousController, animated: true)
         } else {
-            guard let nextPage = self.pages.getInfoPage(forInfoPageRef: pageRef) else {
+            guard let nextPage = self.pages.getPage(forPageRef: pageRef) else {
                 assertionFailure("Missing page for page ref")
                 return
             }
-            self.showInfoPage(nextPage, isOnboarding: isOnboarding)
+            self.showPage(nextPage, isOnboarding: isOnboarding)
         }
     }
     
-    func performCustomPrimaryButtonNavigation(page: InfoPage) -> Bool {
+    func performCustomPrimaryButtonNavigation(page: Page) -> Bool {
         return false
     }
     
-    func onUnhandledPrimaryButtonNavigation(page: InfoPage) {
+    func onUnhandledPrimaryButtonNavigation(page: Page) {
         assertionFailure("Missing action for primary button pressed!")
     }
     
-    func performCustomSecondaryButtonNavigation(page: InfoPage) -> Bool {
+    func performCustomSecondaryButtonNavigation(page: Page) -> Bool {
         return false
     }
     
-    func onUnhandledSecondaryButtonNavigation(page: InfoPage) {
+    func onUnhandledSecondaryButtonNavigation(page: Page) {
         assertionFailure("Missing action for secondary button pressed!")
     }
     
-    // MARK: - InfoPageCoordinator
+    // MARK: - PageCoordinator
     
-    func onInfoPagePrimaryButtonPressed(pageData: InfoPageData) {
-        let handled = self.performCustomPrimaryButtonNavigation(page: pageData.page)
+    func onPagePrimaryButtonPressed(page: Page) {
+        let handled = self.performCustomPrimaryButtonNavigation(page: page)
         if false == handled {
-            if let pageRef = pageData.page.buttonFirstPage {
+            if let pageRef = page.buttonFirstPage {
                 self.showLinkedPage(forPageRef: pageRef, isOnboarding: true)
             } else {
-                self.onUnhandledPrimaryButtonNavigation(page: pageData.page)
+                self.onUnhandledPrimaryButtonNavigation(page: page)
             }
         }
     }
     
-    func onInfoPageSecondaryButtonPressed(pageData: InfoPageData) {
-        let handled = self.performCustomSecondaryButtonNavigation(page: pageData.page)
+    func onPageSecondaryButtonPressed(page: Page) {
+        let handled = self.performCustomSecondaryButtonNavigation(page: page)
         if false == handled {
-            if let pageRef = pageData.page.buttonSecondPage {
+            if let pageRef = page.buttonSecondPage {
                 self.showLinkedPage(forPageRef: pageRef, isOnboarding: true)
             } else {
-                self.onUnhandledSecondaryButtonNavigation(page: pageData.page)
+                self.onUnhandledSecondaryButtonNavigation(page: page)
             }
         }
     }

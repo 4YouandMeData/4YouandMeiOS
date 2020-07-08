@@ -68,6 +68,7 @@ enum StringKey: String, CaseIterable, CodingKey {
     case onboardingUserSignatureBody = "ONBOARDING_USER_SIGNATURE_BODY"
     case onboardingUserSignaturePlaceholder = "ONBOARDING_USER_SIGNATURE_PLACEHOLDER"
     case onboardingUserSignatureClear = "ONBOARDING_USER_SIGNATURE_CLEAR"
+    case onboardingWearablesNextButtonDefault = "ONBOARDING_WEARABLES_NEXT_BUTTON_DEFAULT"
     // Generic
     case genericInfoTitle = "GENERIC_INFO_TITLE"
     

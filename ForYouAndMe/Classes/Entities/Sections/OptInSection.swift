@@ -11,10 +11,10 @@ struct OptInSection {
     let id: String
     let type: String
 
-    let pages: [InfoPage]
-    let welcomePage: InfoPage
+    let pages: [Page]
+    let welcomePage: Page
     let optInPermissions: [OptInPermission]
-    let successPage: InfoPage?
+    let successPage: Page?
 }
 
 extension OptInSection: JSONAPIMappable {

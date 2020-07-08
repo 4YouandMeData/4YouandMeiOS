@@ -81,7 +81,7 @@ class ConsentUserDataSectionCoordinator {
             assertionFailure("Missing expected success page")
             return
         }
-        let infoPageData = InfoPageData.createResultPageData(withinfoPage: successPage)
+        let infoPageData = InfoPageData.createResultPageData(withPage: successPage)
         let viewController = InfoPageViewController(withPageData: infoPageData, coordinator: self)
         self.navigationController.pushViewController(viewController, animated: true)
     }
@@ -124,9 +124,9 @@ extension ConsentUserDataSectionCoordinator: UserSignatureCoordinator {
 }
 
 extension ConsentUserDataSectionCoordinator: PagedSectionCoordinator {
-    var pages: [InfoPage] { self.sectionData.pages }
+    var pages: [Page] { self.sectionData.pages }
     
-    func onUnhandledPrimaryButtonNavigation(page: InfoPage) {
+    func onUnhandledPrimaryButtonNavigation(page: Page) {
         self.completionCallback(self.navigationController)
     }
 }

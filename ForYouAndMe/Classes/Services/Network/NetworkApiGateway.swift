@@ -286,6 +286,9 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             return "/v1/studies/\(studyId)/user_consent/confirm_email"
         case .resendConfirmationEmail:
             return "/v1/studies/\(studyId)/user_consent/resend_confirmation_email"
+        // Wearables Section
+        case .getWearablesSection:
+            return "/v1/studies/\(studyId)/wearables"
         }
     }
     
@@ -299,7 +302,8 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
              .getInformedConsentSection,
              .getConsentSection,
              .getOptInSection,
-             .getUserConsentSection:
+             .getUserConsentSection,
+             .getWearablesSection:
             return .get
         case .submitPhoneNumber,
              .verifyPhoneNumber,
@@ -340,6 +344,8 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         case .updateUserConsent: return "{}".utf8Encoded
         case .verifyEmail: return "{}".utf8Encoded
         case .resendConfirmationEmail: return "{}".utf8Encoded
+        // Wearables Section
+        case .getWearablesSection: return Bundle.getTestData(from: "TestGetWearablesSection")
         }
     }
     
@@ -351,7 +357,8 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
              .getConsentSection,
              .getOptInSection,
              .getUserConsentSection,
-             .resendConfirmationEmail:
+             .resendConfirmationEmail,
+             .getWearablesSection:
             return .requestPlain
         case .submitPhoneNumber(let phoneNumber):
             var params: [String: Any] = [:]
@@ -406,7 +413,8 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
              .createUserConsent,
              .updateUserConsent,
              .verifyEmail,
-             .resendConfirmationEmail:
+             .resendConfirmationEmail,
+             .getWearablesSection:
             return .bearer
         }
     }

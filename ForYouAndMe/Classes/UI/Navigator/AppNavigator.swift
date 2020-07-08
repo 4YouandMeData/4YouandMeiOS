@@ -52,6 +52,7 @@ class AppNavigator {
             case .consentSection: self.startConsentSection(navigationController: testNavigationViewController)
             case .optInSection: self.startOptInSection(navigationController: testNavigationViewController)
             case .consentUserDataSection: self.startUserContentDataSection(navigationController: testNavigationViewController)
+            case .wearablesSection: self.startWearablesSection(navigationController: testNavigationViewController)
             }
             return
         }
@@ -227,7 +228,7 @@ class AppNavigator {
     public func startUserContentDataSection(navigationController: UINavigationController) {
         navigationController.loadViewForRequest(self.repository.getUserConsentSection()) { section -> UIViewController in
             let completionCallback: NavigationControllerCallback = { [weak self] navigationController in
-                self?.startWearablesSetupSection(navigationController: navigationController)
+                self?.startWearablesSection(navigationController: navigationController)
             }
             let coordinator = ConsentUserDataSectionCoordinator(withSectionData: section,
                                                                 navigationController: navigationController,
@@ -236,11 +237,25 @@ class AppNavigator {
         }
     }
     
-    // MARK: Wearables Setup
+    // MARK: Wearables
     
-    public func startWearablesSetupSection(navigationController: UINavigationController) {
-        // TODO: Start Wearables setup section
-        navigationController.showAlert(withTitle: "Work in progress", message: "Wearables setup section coming soon", closeButtonText: "Ok")
+    public func startWearablesSection(navigationController: UINavigationController) {
+        navigationController.loadViewForRequest(self.repository.getWearablesSection()) { section -> UIViewController in
+            let completionCallback: NavigationControllerCallback = { [weak self] navigationController in
+                self?.goHome(navigationController: navigationController)
+            }
+            let coordinator = WearablesSectionCoordinator(withSectionData: section,
+                                                         navigationController: navigationController,
+                                                         completionCallback: completionCallback)
+            return coordinator.getStartingPage()
+        }
+    }
+    
+    // MARK: Home
+    
+    public func goHome(navigationController: UINavigationController) {
+        // TODO: Implement home
+        navigationController.showAlert(withTitle: "Work in progress", message: "Home coming soon", closeButtonText: "Ok")
     }
     
     // MARK: Progress HUD
@@ -268,7 +283,15 @@ class AppNavigator {
         self.goToWelcome()
     }
     
-    public func openOnExternalBrowser(url: URL) {
+    public func canOpenExternalUrl(_ url: URL) -> Bool {
+        return UIApplication.shared.canOpenURL(url)
+    }
+    
+    public func openExternalUrl(_ url: URL) {
+        guard self.canOpenExternalUrl(url) else {
+            print("Cannot open given url: \(url)")
+            return
+        }
         UIApplication.shared.open(url)
     }
     

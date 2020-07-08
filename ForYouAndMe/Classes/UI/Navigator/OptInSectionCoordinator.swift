@@ -55,7 +55,7 @@ class OptInSectionCoordinator {
             assertionFailure("Missing expected success page")
             return
         }
-        let infoPageData = InfoPageData.createResultPageData(withinfoPage: successPage)
+        let infoPageData = InfoPageData.createResultPageData(withPage: successPage)
         let viewController = InfoPageViewController(withPageData: infoPageData, coordinator: self)
         self.navigationController.pushViewController(viewController, animated: true)
     }
@@ -68,9 +68,9 @@ class OptInSectionCoordinator {
 
 extension OptInSectionCoordinator: PagedSectionCoordinator {
     
-    var pages: [InfoPage] { self.sectionData.pages }
+    var pages: [Page] { self.sectionData.pages }
     
-    func performCustomPrimaryButtonNavigation(page: InfoPage) -> Bool {
+    func performCustomPrimaryButtonNavigation(page: Page) -> Bool {
         if self.sectionData.successPage?.id == page.id {
             self.completionCallback(self.navigationController)
             return true
@@ -78,7 +78,7 @@ extension OptInSectionCoordinator: PagedSectionCoordinator {
         return false
     }
     
-    func onUnhandledPrimaryButtonNavigation(page: InfoPage) {
+    func onUnhandledPrimaryButtonNavigation(page: Page) {
         if let firstOptInPermission = self.sectionData.optInPermissions.first {
             self.showOptInPermission(firstOptInPermission)
         } else {

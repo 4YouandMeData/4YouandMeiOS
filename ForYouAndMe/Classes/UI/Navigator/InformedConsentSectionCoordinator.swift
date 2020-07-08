@@ -27,7 +27,7 @@ class InformedConsentSectionCoordinator {
     // MARK: - Public Methods
     
     public func getStartingPage() -> UIViewController {
-        let infoPageData = InfoPageData.createWelcomePageData(withinfoPage: self.sectionData.welcomePage)
+        let infoPageData = InfoPageData.createWelcomePageData(withPage: self.sectionData.welcomePage)
         return InfoPageViewController(withPageData: infoPageData, coordinator: self)
     }
     
@@ -38,7 +38,7 @@ class InformedConsentSectionCoordinator {
             assertionFailure("Missing expected success page")
             return
         }
-        let infoPageData = InfoPageData.createResultPageData(withinfoPage: successPage)
+        let infoPageData = InfoPageData.createResultPageData(withPage: successPage)
         let viewController = InfoPageViewController(withPageData: infoPageData, coordinator: self)
         self.navigationController.pushViewController(viewController, animated: true)
     }
@@ -75,9 +75,9 @@ class InformedConsentSectionCoordinator {
 
 extension InformedConsentSectionCoordinator: PagedSectionCoordinator {
     
-    var pages: [InfoPage] { self.sectionData.pages }
+    var pages: [Page] { self.sectionData.pages }
     
-    func performCustomPrimaryButtonNavigation(page: InfoPage) -> Bool {
+    func performCustomPrimaryButtonNavigation(page: Page) -> Bool {
         if self.sectionData.successPage?.id == page.id {
             self.completionCallback(self.navigationController)
             return true
@@ -85,7 +85,7 @@ extension InformedConsentSectionCoordinator: PagedSectionCoordinator {
         return false
     }
     
-    func onUnhandledPrimaryButtonNavigation(page: InfoPage) {
+    func onUnhandledPrimaryButtonNavigation(page: Page) {
         if let firstQuestion = self.sectionData.questions.first {
             self.showQuestion(firstQuestion)
         } else {

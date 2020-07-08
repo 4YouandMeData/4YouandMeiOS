@@ -14,6 +14,7 @@ enum TestSection {
     case consentSection
     case optInSection
     case consentUserDataSection
+    case wearablesSection
 }
 
 struct Constants {
@@ -22,7 +23,7 @@ struct Constants {
         static let NetworkStubsDelay = 0.3
         static let NetworkLogVerbose = true
         
-        static let Section: TestSection? = nil//.optInSection
+        static let Section: TestSection? = .wearablesSection
         
         static let InformedConsentWithoutQuestions: Bool = false
     }

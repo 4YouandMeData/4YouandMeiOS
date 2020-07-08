@@ -17,8 +17,8 @@ struct AcceptanceData {
     let title: String
     let subtitle: String?
     let body: String
-    let startingPage: InfoPage
-    let pages: [InfoPage]
+    let startingPage: Page
+    let pages: [Page]
 }
 
 public class AcceptanceViewController: UIViewController {
@@ -68,11 +68,11 @@ public class AcceptanceViewController: UIViewController {
         
         scrollStackView.stackView.addBlankSpace(space: 21.0)
         
-        var nextPage: InfoPage? = self.data.startingPage
+        var nextPage: Page? = self.data.startingPage
         while let currentPage = nextPage {
             scrollStackView.stackView.addPage(currentPage)
             scrollStackView.stackView.addBlankSpace(space: 40.0)
-            nextPage = currentPage.buttonFirstPage?.getInfoPage(fromInfoPages: self.data.pages)
+            nextPage = currentPage.buttonFirstPage?.getPage(fromPages: self.data.pages)
         }
         
         // Bottom View
@@ -108,7 +108,7 @@ public class AcceptanceViewController: UIViewController {
 
 fileprivate extension UIStackView {
     
-    func addPage(_ page: InfoPage) {
+    func addPage(_ page: Page) {
         let view = UIView()
         view.backgroundColor = ColorPalette.color(withType: .inactive)
         view.round(radius: 8.0)

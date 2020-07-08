@@ -25,7 +25,7 @@ class ScreeningSectionCoordinator {
     // MARK: - Public Methods
     
     public func getStartingPage() -> UIViewController {
-        let infoPageData = InfoPageData.createWelcomePageData(withinfoPage: self.sectionData.welcomePage)
+        let infoPageData = InfoPageData.createWelcomePageData(withPage: self.sectionData.welcomePage)
         return InfoPageViewController(withPageData: infoPageData, coordinator: self)
     }
     
@@ -41,7 +41,7 @@ class ScreeningSectionCoordinator {
             assertionFailure("Missing expected success page")
             return
         }
-        let infoPageData = InfoPageData.createResultPageData(withinfoPage: successPage)
+        let infoPageData = InfoPageData.createResultPageData(withPage: successPage)
         let viewController = InfoPageViewController(withPageData: infoPageData, coordinator: self)
         self.navigationController.pushViewController(viewController, animated: true)
     }
@@ -51,7 +51,7 @@ class ScreeningSectionCoordinator {
             assertionFailure("Missing expected failure page")
             return
         }
-        let infoPageData = InfoPageData.createResultPageData(withinfoPage: failurePage)
+        let infoPageData = InfoPageData.createResultPageData(withPage: failurePage)
         let viewController = InfoPageViewController(withPageData: infoPageData, coordinator: self)
         self.navigationController.pushViewController(viewController, animated: true)
     }
@@ -63,9 +63,9 @@ class ScreeningSectionCoordinator {
 
 extension ScreeningSectionCoordinator: PagedSectionCoordinator {
     
-    var pages: [InfoPage] { self.sectionData.pages }
+    var pages: [Page] { self.sectionData.pages }
     
-    func performCustomPrimaryButtonNavigation(page: InfoPage) -> Bool {
+    func performCustomPrimaryButtonNavigation(page: Page) -> Bool {
         if self.sectionData.successPage?.id == page.id {
             self.completionCallback(self.navigationController)
             return true
@@ -76,7 +76,7 @@ extension ScreeningSectionCoordinator: PagedSectionCoordinator {
         return false
     }
     
-    func onUnhandledPrimaryButtonNavigation(page: InfoPage) {
+    func onUnhandledPrimaryButtonNavigation(page: Page) {
         if self.sectionData.questions.count > 0 {
             self.showQuestions()
         } else {

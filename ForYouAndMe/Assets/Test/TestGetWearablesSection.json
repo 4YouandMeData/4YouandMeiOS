@@ -1,0 +1,288 @@
+{
+  "data": {
+    "id": "1",
+    "type": "wearable",
+    "attributes": {
+      "created_at": "2020-05-22T16:17:33.161Z",
+      "updated_at": "2020-06-03T13:39:25.213Z"
+    },
+    "relationships": {
+      "pages": {
+        "data": [
+          {
+            "id": "1",
+            "type": "page"
+          },
+          {
+            "id": "2",
+            "type": "page"
+          },
+          {
+            "id": "3",
+            "type": "page"
+          },
+          {
+            "id": "4",
+            "type": "page"
+          },
+          {
+            "id": "5",
+            "type": "page"
+          },
+          {
+            "id": "6",
+            "type": "page"
+          },
+          {
+            "id": "7",
+            "type": "page"
+          }
+        ]
+      },
+      "welcome_page": {
+        "data": {
+          "id": "1",
+          "type": "page"
+        }
+      },
+      "success_page": {
+        "data": {
+          "id": "7",
+          "type": "page"
+        }
+      }
+    }
+  },
+  "included": [
+    {
+      "id": "1",
+      "type": "page",
+      "attributes": {
+        "title": "Download apps",
+        "body": "You’ll need to install 4 additional apps for this study. On the next few screens, click the link to download the third party app (e.g Oura). If you need assistance, please contact a research coordinator for help.",
+        "link_1_label": "",
+        "link_2_label": "",
+        "external_link_label": "",
+        "external_link_url": "",
+        "special_link_label": "",
+        "special_link_type": "",
+        "created_at": "2020-05-22T16:27:43.154Z",
+        "updated_at": "2020-05-28T13:32:51.913Z",
+        "image": null
+      },
+      "relationships": {
+        "section": {
+          "data": {
+            "id": "1",
+            "type": "wearable"
+          }
+        },
+        "link_1": {
+          "data": {
+            "id": "2",
+            "type": "page"
+          }
+        },
+        "link_2": {
+          "data": null
+        }
+      }
+    },
+    {
+      "id": "2",
+      "type": "page",
+      "attributes": {
+        "title": "Empatica Mate",
+        "body": "Download the Empatica Mate app and then re-open the BUMP study app.",
+        "link_1_label": "Next",
+        "link_2_label": "",
+        "external_link_label": "",
+        "external_link_url": "",
+        "special_link_label": "Download",
+        "special_link_type": "App",
+        "special_link_value": "itms-apps://apps.apple.com/us/app/mate-for-embrace-watch/id1162089791",
+        "created_at": "2020-05-22T16:27:43.154Z",
+        "updated_at": "2020-05-28T13:32:51.913Z",
+        "image": null
+      },
+      "relationships": {
+        "section": {
+          "data": {
+            "id": "1",
+            "type": "wearable"
+          }
+        },
+        "link_1": {
+          "data": {
+            "id": "3",
+            "type": "page"
+          }
+        },
+        "link_2": {
+          "data": null
+        }
+      }
+    },
+    {
+      "id": "3",
+      "type": "page",
+      "attributes": {
+        "title": "Oura",
+        "body": "Download the Oura app and then re-open the BUMP study app.",
+        "link_1_label": "Next",
+        "link_2_label": "",
+        "external_link_label": "",
+        "external_link_url": "",
+        "special_link_label": "Download",
+        "special_link_type": "App",
+        "special_link_value": "itms-apps://apps.apple.com/it/app/oura/id1043837948",
+        "created_at": "2020-05-22T16:27:43.154Z",
+        "updated_at": "2020-05-28T13:32:51.913Z",
+        "image": null
+      },
+      "relationships": {
+        "section": {
+          "data": {
+            "id": "1",
+            "type": "wearable"
+          }
+        },
+        "link_1": {
+          "data": {
+            "id": "4",
+            "type": "page"
+          }
+        },
+        "link_2": {
+          "data": null
+        }
+      }
+    },
+    {
+      "id": "4",
+      "type": "page",
+      "attributes": {
+        "title": "Connect apps",
+        "body": "Next we’ll set up the apps you just installed. Follow the instructions on the next few screens to complete set up.",
+        "link_1_label": "",
+        "link_2_label": "",
+        "external_link_label": "",
+        "external_link_url": "",
+        "created_at": "2020-05-22T16:27:43.154Z",
+        "updated_at": "2020-05-28T13:32:51.913Z",
+        "image": null
+      },
+      "relationships": {
+        "section": {
+          "data": {
+            "id": "1",
+            "type": "wearable"
+          }
+        },
+        "link_1": {
+          "data": {
+            "id": "5",
+            "type": "page"
+          }
+        },
+        "link_2": {
+          "data": null
+        }
+      }
+    },
+      {
+        "id": "5",
+        "type": "page",
+        "attributes": {
+          "title": "Oura",
+          "body": "Let’s set up Oura\r\n\r\n1. Click to open the Oura app\r\n2. Create an account\r\n3. When prompted to connect a ring, close the Oura app and re-open this app.\r\n4. Then press the next button below to continue",
+          "link_1_label": "Next",
+          "link_2_label": "",
+          "external_link_label": "",
+          "external_link_url": "",
+          "special_link_label": "Open App",
+          "special_link_type": "App",
+          "special_link_value": "oura://",
+          "created_at": "2020-05-22T16:27:43.154Z",
+          "updated_at": "2020-05-28T13:32:51.913Z",
+          "image": null
+        },
+        "relationships": {
+          "section": {
+            "data": {
+              "id": "1",
+              "type": "wearable"
+            }
+          },
+          "link_1": {
+            "data": {
+              "id": "6",
+              "type": "page"
+            }
+          },
+          "link_2": {
+            "data": null
+          }
+        }
+      },
+      {
+        "id": "6",
+        "type": "page",
+        "attributes": {
+          "title": "Oura",
+          "body": "On the next screen we’ll ask you to log into the Oura account you just created. Then you’ll be asked to share your Oura data with the study team.\r\nPress the button below. After you log in, please press “Allow”.",
+          "link_1_label": "Next",
+          "link_2_label": "",
+          "external_link_label": "Login",
+          "external_link_url": "https://google.com",
+          "special_link_type": "UnexpectedType",
+          "created_at": "2020-05-22T16:27:43.154Z",
+          "updated_at": "2020-05-28T13:32:51.913Z",
+          "image": null
+        },
+        "relationships": {
+          "section": {
+            "data": {
+              "id": "1",
+              "type": "wearable"
+            }
+          },
+          "link_1": {
+            "data": null
+          },
+          "link_2": {
+            "data": null
+          }
+        }
+      },
+      {
+        "id": "7",
+        "type": "page",
+        "attributes": {
+          "title": "Your apps are now connected",
+          "body": "You’ll sync your apps with your study devices during your next study visit.",
+          "link_1_label": "",
+          "link_2_label": "",
+          "external_link_label": "",
+          "external_link_url": "",
+          "created_at": "2020-05-22T16:27:43.154Z",
+          "updated_at": "2020-05-28T13:32:51.913Z",
+          "image": null
+        },
+        "relationships": {
+          "section": {
+            "data": {
+              "id": "1",
+              "type": "wearable"
+            }
+          },
+          "link_1": {
+            "data": null
+          },
+          "link_2": {
+            "data": null
+          }
+        }
+      }
+  ]
+}

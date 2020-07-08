@@ -57,6 +57,7 @@
       "ONBOARDING_USER_SIGNATURE_BODY": "Please sign using your finger on the line below.",
       "ONBOARDING_USER_SIGNATURE_PLACEHOLDER": "Sign here",
       "ONBOARDING_USER_SIGNATURE_CLEAR": "Clear",
+      "ONBOARDING_WEARABLES_NEXT_BUTTON_DEFAULT": "Next",
       "PHONE_VERIFICATION_LEGAL": "By checking this box, I hereby agree to the Terms of service and Privacy Policy",
       "PHONE_VERIFICATION_TITLE": "Welcome to the BUMP study app",
       "ERROR_MESSAGE_CONNECTIVITY": "You seem to be offline.\nPlease check your internet connection and try again.",
