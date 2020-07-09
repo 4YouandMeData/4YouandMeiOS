@@ -55,31 +55,27 @@ public class WearablePageViewController: UIViewController, PageProvider {
                                            textAlignment: .left)
         // Bottom View
         let bottomView: UIView = {
-            let hasSpecialLinkBehavior = self.page.wearablesSpecialLinkBehaviour != nil
-            let hasExternalLinkBehavior = self.page.externalLinkUrl != nil
+            let specialLinkBehavior = self.page.wearablesSpecialLinkBehaviour
+            let externalLinkBehavior = self.page.externalLinkUrl
             
-            if hasSpecialLinkBehavior || hasExternalLinkBehavior {
+            if nil != specialLinkBehavior || nil != externalLinkBehavior {
                 let view = DoubleButtonHorizontalView(styleCategory: .secondaryBackground(firstButtonPrimary: true,
                                                                                           secondButtonPrimary: false))
                 view.addTargetToSecondButton(target: self, action: #selector(self.primaryButtonPressed))
                 let nextButtonText = self.page.buttonSecondlabel ?? StringsProvider.string(forKey: .onboardingWearablesNextButtonDefault)
                 view.setSecondButtonText(nextButtonText)
                 
-                if hasSpecialLinkBehavior {
+                if let specialLinkBehavior = specialLinkBehavior {
                     view.addTargetToFirstButton(target: self, action: #selector(self.specialLinkButtonPressed))
-                    guard let text = self.page.specialLinkLabel else {
-                        assertionFailure("Missing special link label for expected special link behviour")
-                        view.setFirstButtonText("")
-                        return view
-                    }
-                    view.setFirstButtonText(text)
+                    let defaultText: String = {
+                        switch specialLinkBehavior {
+                        case .download: return StringsProvider.string(forKey: .onboardingWearablesDownloadButtonDefault)
+                        case .open: return StringsProvider.string(forKey: .onboardingWearablesOpenAppButtonDefault)
+                        }
+                    }()
+                    view.setFirstButtonText(self.page.specialLinkLabel ?? defaultText)
                 } else {
-                    view.addTargetToFirstButton(target: self, action: #selector(self.externalLinkButtonPressed))
-                    guard let text = self.page.externalLinkLabel else {
-                        assertionFailure("Missing special link label for expected external link behviour")
-                        view.setFirstButtonText("")
-                        return view
-                    }
+                    let text = self.page.externalLinkLabel ?? StringsProvider.string(forKey: .onboardingWearablesLoginButtonDefault)
                     view.setFirstButtonText(text)
                 }
                 
