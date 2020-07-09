@@ -85,6 +85,8 @@ class NetworkApiGateway: ApiGateway {
     
     // MARK: - ApiGateway Protocol Implementation
     
+    var accessToken: String? { self.storage.accessToken }
+    
     func isLoggedIn() -> Bool {
         return self.storage.accessToken != nil
     }

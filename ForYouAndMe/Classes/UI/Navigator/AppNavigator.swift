@@ -63,7 +63,7 @@ class AppNavigator {
             print("TODO: Check if onboarding is completed")
             let onboardingCompleted = false
             if onboardingCompleted {
-                // TODO: Implement Home
+                self.goHome()
             } else {
                 // If onboarding is not completed, log out (restart from the very beginning)
                 self.logOut()
@@ -242,7 +242,7 @@ class AppNavigator {
     public func startWearablesSection(navigationController: UINavigationController) {
         navigationController.loadViewForRequest(self.repository.getWearablesSection()) { section -> UIViewController in
             let completionCallback: NavigationControllerCallback = { [weak self] navigationController in
-                self?.goHome(navigationController: navigationController)
+                self?.goHome()
             }
             let coordinator = WearablesSectionCoordinator(withSectionData: section,
                                                          navigationController: navigationController,
@@ -253,9 +253,9 @@ class AppNavigator {
     
     // MARK: Home
     
-    public func goHome(navigationController: UINavigationController) {
+    public func goHome() {
         // TODO: Implement home
-        navigationController.showAlert(withTitle: "Work in progress", message: "Home coming soon", closeButtonText: "Ok")
+        self.window.rootViewController?.showAlert(withTitle: "Work in progress", message: "Home coming soon", closeButtonText: "Ok")
     }
     
     // MARK: Progress HUD
@@ -360,15 +360,5 @@ extension UIViewController {
                        confirmButtonText: closeButtonText,
                        tintColor: ColorPalette.color(withType: .primary),
                        completion: {})
-    }
-}
-
-// MARK: - Extension(UINavigationController)
-
-fileprivate extension UINavigationController {
-    func preventPopWithSwipe() {
-        if self.responds(to: #selector(getter: UINavigationController.interactivePopGestureRecognizer)) {
-            self.interactivePopGestureRecognizer?.isEnabled = false
-        }
     }
 }

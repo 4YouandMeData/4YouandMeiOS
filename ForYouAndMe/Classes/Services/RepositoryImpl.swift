@@ -53,6 +53,10 @@ class RepositoryImpl {
 extension RepositoryImpl: Repository {
     // MARK: - Authentication
     
+    var accessToken: String? {
+        self.api.accessToken
+    }
+    
     var isLoggedIn: Bool {
         return self.api.isLoggedIn()
     }

@@ -53,6 +53,7 @@ enum RepositoryError: LocalizedError {
 
 protocol Repository: class {
     // Authentication
+    var accessToken: String? { get }
     var isLoggedIn: Bool { get }
     func logOut()
     func submitPhoneNumber(phoneNumber: String) -> Single<()>

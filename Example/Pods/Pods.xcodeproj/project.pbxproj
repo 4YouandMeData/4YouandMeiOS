@@ -756,6 +756,7 @@
 		892F567BF4D68BB3C3AE4687AE25BE8C /* FIRCLSDownloadAndSaveSettingsOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 0B0E0692170BF23FF0DFBA9EB42C9A64 /* FIRCLSDownloadAndSaveSettingsOperation.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
 		8939DB7624B71DC1009C178F /* WearableApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8939DB7524B71DC1009C178F /* WearableApp.swift */; };
 		8939DB7824B71E1A009C178F /* Page+Wearable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8939DB7724B71E1A009C178F /* Page+Wearable.swift */; };
+		8939DB7A24B72DD5009C178F /* WearableLoginViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8939DB7924B72DD5009C178F /* WearableLoginViewController.swift */; };
 		895CE133386CDA2B4B271287050A9BBB /* GULKeychainStorage.h in Headers */ = {isa = PBXBuildFile; fileRef = FA07C96CD7889477F5EC9A1F6C1DEE1E /* GULKeychainStorage.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		8A72AC2423E477482DE32997E5A3FA90 /* HistoricalSchedulerTimeConverter.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF1A38A84ABE87BDEB55AAF3D573A7E5 /* HistoricalSchedulerTimeConverter.swift */; };
 		8AA937910F87915DE700CAB6C868689E /* Notifications.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94104E6EF2D35223DCA9DBC8EC8376EC /* Notifications.swift */; };
@@ -2850,6 +2851,7 @@
 		88D2B64C9192E68CE528DC9DB5D1C02D /* FIRCLSThreadState.c */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.c; name = FIRCLSThreadState.c; path = Crashlytics/Crashlytics/Helpers/FIRCLSThreadState.c; sourceTree = "<group>"; };
 		8939DB7524B71DC1009C178F /* WearableApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WearableApp.swift; sourceTree = "<group>"; };
 		8939DB7724B71E1A009C178F /* Page+Wearable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Page+Wearable.swift"; sourceTree = "<group>"; };
+		8939DB7924B72DD5009C178F /* WearableLoginViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WearableLoginViewController.swift; sourceTree = "<group>"; };
 		894E5B0986AF3444FCF2E8967F66C3D5 /* TPKeyboardAvoidingCollectionView.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = TPKeyboardAvoidingCollectionView.h; path = TPKeyboardAvoiding/TPKeyboardAvoidingCollectionView.h; sourceTree = "<group>"; };
 		895F04B7044A817FB03E0AA852E4A56E /* SVProgressAnimatedView.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = SVProgressAnimatedView.m; path = SVProgressHUD/SVProgressAnimatedView.m; sourceTree = "<group>"; };
 		89ACD9A2B032B87D7DD8B7FF09D316B5 /* UberSignature.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = UberSignature.release.xcconfig; sourceTree = "<group>"; };
@@ -3883,6 +3885,7 @@
 			children = (
 				2DB5D9B15438F81AC2C0E35B0E5F2377 /* OptInPermissionViewController.swift */,
 				17314185BDDB5ABC240F42F57BCFD0AB /* WearablePageViewController.swift */,
+				8939DB7924B72DD5009C178F /* WearableLoginViewController.swift */,
 				72B8990361A45661EE438019E0DEC54B /* PhoneVerification */,
 				093637BCAA56BCF7E6832AC790CC94A2 /* UserConsentData */,
 				0C612B0BF50DA6ED14E34CBBEEF11010 /* Welcome */,
@@ -8537,6 +8540,7 @@
 				109372CC442B4AD2521FF972A6FB59A1 /* LocationManager.swift in Sources */,
 				1FA7E685DEF0FA513FD204F7EBFC3453 /* LocationService.swift in Sources */,
 				C882B6A70E2C19989BAFFBE621A33AD4 /* Mapper+Extensions.swift in Sources */,
+				8939DB7A24B72DD5009C178F /* WearableLoginViewController.swift in Sources */,
 				AB6185E8CEC04103A83CB1E2D8A9F942 /* NavigationBarStyles.swift in Sources */,
 				FB4FB7259CE19C913032D4D9F7277ADC /* NetworkApiGateway.swift in Sources */,
 				8C742B128B6946EC5681E4CF6360BD20 /* NetworkUtility.swift in Sources */,

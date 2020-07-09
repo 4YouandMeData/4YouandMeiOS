@@ -71,6 +71,7 @@ protocol ApiGateway {
     func send<T: JSONAPIMappable, E: Mappable>(request: ApiRequest, errorType: E.Type) -> Single<T?>
     func send<T: JSONAPIMappable, E: Mappable>(request: ApiRequest, errorType: E.Type) -> Single<[T]>
     
+    var accessToken: String? { get }
     func isLoggedIn() -> Bool
     func logOut()
 }

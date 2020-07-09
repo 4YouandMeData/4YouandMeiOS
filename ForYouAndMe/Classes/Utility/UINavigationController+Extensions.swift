@@ -30,4 +30,10 @@ extension UINavigationController {
         }
         self.popToViewController(viewController, animated: animated)
     }
+    
+    func preventPopWithSwipe() {
+        if self.responds(to: #selector(getter: UINavigationController.interactivePopGestureRecognizer)) {
+            self.interactivePopGestureRecognizer?.isEnabled = false
+        }
+    }
 }

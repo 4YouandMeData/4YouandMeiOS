@@ -80,10 +80,19 @@ extension WearablesSectionCoordinator: WearablePageCoordinator {
             assertionFailure("Missing expected external link url")
             return
         }
-        // TODO: Implement Wearable login
-        print("WearablesSectionCoordinator - TODO: Open url \(externalLinkUrl) on webview")
-        self.navigationController.showAlert(withTitle: "Work in progress", message: "Wearable login coming soon", closeButtonText: "Ok")
-//        self.navigator.openWebView(withTitle: page.title, url: externalLinkUrl, presenter: self.navigationController)
+        let viewController = WearableLoginViewController(withTitle: "",
+                                                         url: externalLinkUrl,
+                                                         onLoginSuccessCallback: { loginViewController in
+                                                            loginViewController.dismiss(animated: true, completion: { [weak self] in
+                                                                self?.onPagePrimaryButtonPressed(page: page)
+                                                            })
+        },
+                                                         onLoginFailureCallback: { loginViewController in
+                                                            loginViewController.dismiss(animated: true, completion: nil)
+        })
+        let navigationViewController = UINavigationController(rootViewController: viewController)
+        navigationViewController.preventPopWithSwipe()
+        self.navigationController.present(navigationViewController, animated: true, completion: nil)
     }
     
     func onWearablePageSpecialLinkButtonPressed(page: Page) {

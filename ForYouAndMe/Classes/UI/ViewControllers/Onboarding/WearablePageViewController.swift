@@ -75,6 +75,7 @@ public class WearablePageViewController: UIViewController, PageProvider {
                     }()
                     view.setFirstButtonText(self.page.specialLinkLabel ?? defaultText)
                 } else {
+                    view.addTargetToFirstButton(target: self, action: #selector(self.externalLinkButtonPressed))
                     let text = self.page.externalLinkLabel ?? StringsProvider.string(forKey: .onboardingWearablesLoginButtonDefault)
                     view.setFirstButtonText(text)
                 }
