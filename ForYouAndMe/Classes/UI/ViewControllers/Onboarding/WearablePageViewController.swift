@@ -17,13 +17,13 @@ public class WearablePageViewController: UIViewController, PageProvider {
     
     var page: Page
     
-    private let navigator: AppNavigator
     private let coordinator: WearablePageCoordinator
+    private let backwardNavigation: Bool
     
-    init(withPage page: Page, coordinator: WearablePageCoordinator) {
+    init(withPage page: Page, coordinator: WearablePageCoordinator, backwardNavigation: Bool) {
         self.page = page
         self.coordinator = coordinator
-        self.navigator = Services.shared.navigator
+        self.backwardNavigation = backwardNavigation
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -53,21 +53,19 @@ public class WearablePageViewController: UIViewController, PageProvider {
                                            fontStyle: .paragraph,
                                            colorType: .primaryText,
                                            textAlignment: .left)
-        // External Link
-        
         // Bottom View
         let bottomView: UIView = {
-            let specialLinkBehavior = PageSpecialLinkType.app == self.page.specialLinkType && self.page.specialLinkValue != nil
+            let hasSpecialLinkBehavior = self.page.wearablesSpecialLinkBehaviour != nil
             let hasExternalLinkBehavior = self.page.externalLinkUrl != nil
             
-            if specialLinkBehavior || hasExternalLinkBehavior {
+            if hasSpecialLinkBehavior || hasExternalLinkBehavior {
                 let view = DoubleButtonHorizontalView(styleCategory: .secondaryBackground(firstButtonPrimary: true,
                                                                                           secondButtonPrimary: false))
                 view.addTargetToSecondButton(target: self, action: #selector(self.primaryButtonPressed))
                 let nextButtonText = self.page.buttonSecondlabel ?? StringsProvider.string(forKey: .onboardingWearablesNextButtonDefault)
                 view.setSecondButtonText(nextButtonText)
                 
-                if specialLinkBehavior {
+                if hasSpecialLinkBehavior {
                     view.addTargetToFirstButton(target: self, action: #selector(self.specialLinkButtonPressed))
                     guard let text = self.page.specialLinkLabel else {
                         assertionFailure("Missing special link label for expected special link behviour")
@@ -101,7 +99,12 @@ public class WearablePageViewController: UIViewController, PageProvider {
         super.viewWillAppear(animated)
         
         self.navigationController?.navigationBar.apply(style: NavigationBarStyleCategory.secondary(hidden: false).style)
-        self.addCustomBackButton()
+        if self.backwardNavigation {
+            self.addCustomBackButton()
+        } else {
+            self.navigationItem.hidesBackButton = true
+        }
+        
     }
     
     // MARK: Actions

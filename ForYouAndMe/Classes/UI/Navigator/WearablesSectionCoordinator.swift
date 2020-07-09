@@ -7,6 +7,22 @@
 
 import Foundation
 
+enum WearablesSpecialLinkBehaviour: CaseIterable {
+    static var allCases: [WearablesSpecialLinkBehaviour] {
+        return [.download(app: nil), .open(app: nil)]
+    }
+    
+    case download(app: WearableApp?)
+    case open(app: WearableApp?)
+    
+    var keyword: String {
+        switch self {
+        case .download: return "download"
+        case .open: return "open"
+        }
+    }
+}
+
 class WearablesSectionCoordinator {
     
     public unowned var navigationController: UINavigationController
@@ -28,7 +44,7 @@ class WearablesSectionCoordinator {
     // MARK: - Public Methods
     
     public func getStartingPage() -> UIViewController {
-        return WearablePageViewController(withPage: self.sectionData.welcomePage, coordinator: self)
+        return WearablePageViewController(withPage: self.sectionData.welcomePage, coordinator: self, backwardNavigation: false)
     }
 }
 
@@ -37,7 +53,7 @@ extension WearablesSectionCoordinator: PagedSectionCoordinator {
     var pages: [Page] { self.sectionData.pages }
     
     func showPage(_ page: Page, isOnboarding: Bool) {
-        let viewController = WearablePageViewController(withPage: page, coordinator: self)
+        let viewController = WearablePageViewController(withPage: page, coordinator: self, backwardNavigation: true)
         self.navigationController.pushViewController(viewController, animated: true)
     }
     
@@ -69,17 +85,30 @@ extension WearablesSectionCoordinator: WearablePageCoordinator {
         self.navigationController.showAlert(withTitle: "Work in progress", message: "Wearable login coming soon", closeButtonText: "Ok")
 //        self.navigator.openWebView(withTitle: page.title, url: externalLinkUrl, presenter: self.navigationController)
     }
+    
     func onWearablePageSpecialLinkButtonPressed(page: Page) {
-        guard let specialLinkValue = page.specialLinkValue else {
-            assertionFailure("Missing expected special link url")
+        guard let specialLinkBehaviour = page.wearablesSpecialLinkBehaviour else {
+            assertionFailure("Missing expected special link behaviour")
             return
         }
-        if self.navigator.canOpenExternalUrl(specialLinkValue) {
-            self.navigator.openExternalUrl(specialLinkValue)
-        } else {
-            self.navigationController.showAlert(withTitle: page.title,
-                                                message: "You did not downloaded the app. Please download the app and try again",
-                                                closeButtonText: StringsProvider.string(forKey: .errorButtonClose))
+        
+        switch specialLinkBehaviour {
+        case .download(let app):
+            guard let app = app else {
+                assertionFailure("Missing app for download behaviour")
+                return
+            }
+            self.navigator.openExternalUrl(app.storeUrl)
+        case .open(let app):
+            guard let app = app else {
+                assertionFailure("Missing app for open behaviour")
+                return
+            }
+            if self.navigator.canOpenExternalUrl(app.appSchemaUrl) {
+                self.navigator.openExternalUrl(app.appSchemaUrl)
+            } else {
+                self.navigator.openExternalUrl(app.storeUrl)
+            }
         }
     }
 }

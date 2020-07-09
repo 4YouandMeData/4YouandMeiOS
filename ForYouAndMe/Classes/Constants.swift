@@ -43,4 +43,11 @@ struct Constants {
         static let PhoneValidationCodeDigitCount: Int = 6
         static let EmailValidationCodeDigitCount: Int = 6
     }
+    
+    struct Url {
+        static let OuraStoreUrl: URL = URL(string: "itms-apps://apps.apple.com/it/app/oura/id1043837948")!
+        static let OuraAppSchema: URL = URL(string: "oura://")!
+        static let FitbitStoreUrl: URL = URL(string: "itms-apps://apps.apple.com/us/app/fitbit-health-fitness/id462638897")!
+        static let FitbitAppSchema: URL = URL(string: "fitbit://")!
+    }
 }

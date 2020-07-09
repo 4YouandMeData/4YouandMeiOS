@@ -36,6 +36,14 @@
           {
             "id": "7",
             "type": "page"
+          },
+          {
+            "id": "8",
+            "type": "page"
+          },
+          {
+            "id": "9",
+            "type": "page"
           }
         ]
       },
@@ -47,7 +55,7 @@
       },
       "success_page": {
         "data": {
-          "id": "7",
+          "id": "9",
           "type": "page"
         }
       }
@@ -92,15 +100,15 @@
       "id": "2",
       "type": "page",
       "attributes": {
-        "title": "Empatica Mate",
-        "body": "Download the Empatica Mate app and then re-open the BUMP study app.",
+        "title": "Oura",
+        "body": "Download the Oura app and then re-open the BUMP study app.",
         "link_1_label": "Next",
         "link_2_label": "",
         "external_link_label": "",
         "external_link_url": "",
         "special_link_label": "Download",
         "special_link_type": "App",
-        "special_link_value": "itms-apps://apps.apple.com/us/app/mate-for-embrace-watch/id1162089791",
+        "special_link_value": "download_oura",
         "created_at": "2020-05-22T16:27:43.154Z",
         "updated_at": "2020-05-28T13:32:51.913Z",
         "image": null
@@ -127,15 +135,15 @@
       "id": "3",
       "type": "page",
       "attributes": {
-        "title": "Oura",
-        "body": "Download the Oura app and then re-open the BUMP study app.",
+        "title": "Fitbit",
+        "body": "Download the Fitbit app and then re-open the BUMP study app.",
         "link_1_label": "Next",
         "link_2_label": "",
         "external_link_label": "",
         "external_link_url": "",
         "special_link_label": "Download",
         "special_link_type": "App",
-        "special_link_value": "itms-apps://apps.apple.com/it/app/oura/id1043837948",
+        "special_link_value": "download_fitbit",
         "created_at": "2020-05-22T16:27:43.154Z",
         "updated_at": "2020-05-28T13:32:51.913Z",
         "image": null
@@ -202,7 +210,7 @@
           "external_link_url": "",
           "special_link_label": "Open App",
           "special_link_type": "App",
-          "special_link_value": "oura://",
+          "special_link_value": "open_oura",
           "created_at": "2020-05-22T16:27:43.154Z",
           "updated_at": "2020-05-28T13:32:51.913Z",
           "image": null
@@ -248,7 +256,10 @@
             }
           },
           "link_1": {
-            "data": null
+            "data": {
+              "id": "7",
+              "type": "page"
+            }
           },
           "link_2": {
             "data": null
@@ -257,6 +268,71 @@
       },
       {
         "id": "7",
+        "type": "page",
+        "attributes": {
+          "title": "Fitbit",
+          "body": "Let’s set up Fitbit\r\n\r\n1. Click to open the Fitbit app\r\n2. Create an account\r\n3. When prompted to connect a device, close the Fitbit app and re-open this app.\r\n4. Then press the next button below to continue",
+          "link_1_label": "Next",
+          "link_2_label": "",
+          "external_link_label": "",
+          "external_link_url": "",
+          "special_link_label": "Open App",
+          "special_link_type": "App",
+          "special_link_value": "open_fitbit",
+          "created_at": "2020-05-22T16:27:43.154Z",
+          "updated_at": "2020-05-28T13:32:51.913Z",
+          "image": null
+        },
+        "relationships": {
+          "section": {
+            "data": {
+              "id": "1",
+              "type": "wearable"
+            }
+          },
+          "link_1": {
+            "data": {
+              "id": "8",
+              "type": "page"
+            }
+          },
+          "link_2": {
+            "data": null
+          }
+        }
+      },
+      {
+        "id": "8",
+        "type": "page",
+        "attributes": {
+          "title": "Fitbit",
+          "body": "On the next screen we’ll ask you to log into the Fitbit account you just created. Then you’ll be asked to share your Oura data with the study team.\r\nPress the button below. After you log in, please press “Allow”.",
+          "link_1_label": "Next",
+          "link_2_label": "",
+          "external_link_label": "Login",
+          "external_link_url": "https://google.com",
+          "special_link_type": "UnexpectedType",
+          "created_at": "2020-05-22T16:27:43.154Z",
+          "updated_at": "2020-05-28T13:32:51.913Z",
+          "image": null
+        },
+        "relationships": {
+          "section": {
+            "data": {
+              "id": "1",
+              "type": "wearable"
+            }
+          },
+          "link_1": {
+            "data": null
+          },
+          "link_2": {
+            "data": null
+          }
+        }
+      },
+      {
+        "id": "9",
         "type": "page",
         "attributes": {
           "title": "Your apps are now connected",

@@ -44,5 +44,10 @@
 	<string>Light</string>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
+    <key>LSApplicationQueriesSchemes</key>
+    <array>
+        <string>oura</string>
+        <string>fitbit</string>
+    </array>
 </dict>
 </plist>

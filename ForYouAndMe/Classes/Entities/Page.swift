@@ -23,8 +23,8 @@ struct Page {
     var externalLinkUrl: URL?
     @NilIfEmptyString
     var specialLinkLabel: String?
-    @FailableDecodable
-    var specialLinkValue: URL?
+    @NilIfEmptyString
+    var specialLinkValue: String?
     @FailableDecodable
     var specialLinkType: PageSpecialLinkType?
     let imageData: Data?
