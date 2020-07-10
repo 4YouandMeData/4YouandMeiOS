@@ -38,8 +38,8 @@ extension OptInPermission: JSONAPIMappable {
         case denyText = "disagree_text"
         case systemPermissions = "system_permissions"
         case imageData = "image"
-        case isMandatory = "is_mandatory"
-        case mandatoryText = "mandatory_text"
+        case isMandatory = "mandatory"
+        case mandatoryText = "mandatory_description"
     }
 }
 
