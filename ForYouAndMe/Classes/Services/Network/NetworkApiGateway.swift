@@ -392,7 +392,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             params["agree"] = granted
             // TODO: handle batch logic in a decent way
             params["batch"] = Date().toISO8601String
-            return .requestParameters(parameters: ["answer": params], encoding: JSONEncoding.default)
+            return .requestParameters(parameters: ["user_permission": params], encoding: JSONEncoding.default)
         }
     }
     
