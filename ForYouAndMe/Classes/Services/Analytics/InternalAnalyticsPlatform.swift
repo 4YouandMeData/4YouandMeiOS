@@ -23,6 +23,8 @@ class InternalAnalyticsPlatform: AnalyticsPlatform {
         switch event {
         case .screeningQuizCompleted(let answers):
             self.sendAnwsers(answers: answers)
+        case .informedConsentQuizCompleted(let answers):
+            self.sendAnwsers(answers: answers)
         }
     }
     

@@ -13,6 +13,7 @@ class InformedConsentSectionCoordinator {
     
     private let sectionData: InformedConsentSection
     private let completionCallback: NavigationControllerCallback
+    private let analyticsService: AnalyticsService
     
     var answers: [Answer] = []
     
@@ -22,6 +23,7 @@ class InformedConsentSectionCoordinator {
         self.sectionData = sectionData
         self.navigationController = navigationController
         self.completionCallback = completionCallback
+        self.analyticsService = Services.shared.analyticsService
     }
     
     // MARK: - Public Methods
@@ -100,6 +102,7 @@ extension InformedConsentSectionCoordinator: QuestionViewCoordinator {
         let nextQuestionIndex = questionIndex + 1
         if nextQuestionIndex == self.sectionData.questions.count {
             assert(self.answers.count == self.sectionData.questions.count, "Mismatch answers count and questions count")
+            self.analyticsService.track(event: .informedConsentQuizCompleted(answers: self.answers))
             if self.answers.validate(withMinimumCorrectAnswers: self.sectionData.minimumCorrectAnswers) {
                 self.showSuccess()
             } else {
