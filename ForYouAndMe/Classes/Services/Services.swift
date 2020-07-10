@@ -24,6 +24,7 @@ class Services {
     private(set) var navigator: AppNavigator!
     private(set) var healthService: HealthService!
     private(set) var locationService: LocationService!
+    private(set) var analyticsService: AnalyticsService!
     
     private var window: UIWindow?
     
@@ -58,6 +59,9 @@ class Services {
                                         storage: storage)
         self.services.append(repository)
         
+        let analyticsService = AnalyticsManager(gateway: repository)
+        self.services.append(analyticsService)
+        
         let navigator = AppNavigator(withRepository: repository, window: window)
         self.services.append(navigator)
         
@@ -66,6 +70,7 @@ class Services {
         self.navigator = navigator
         self.healthService = healthService
         self.locationService = locationService
+        self.analyticsService = analyticsService
         
         self.navigator.showSetupScreen()
     }

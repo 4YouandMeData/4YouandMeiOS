@@ -78,7 +78,7 @@ class QuestionBooleanTableViewCell: UITableViewCell {
     
     // MARK: - Public Methods
     
-    public func display(data: Answer, answerPressedCallback: @escaping QuestionBooleanAnswerCallback) {
+    public func display(data: OptionalAnswer, answerPressedCallback: @escaping QuestionBooleanAnswerCallback) {
         self.questionIdentifier = data.question.id
         self.answerPressedCallback = answerPressedCallback
         guard data.question.possibleAnswers.count >= 2 else {
@@ -101,8 +101,8 @@ class QuestionBooleanTableViewCell: UITableViewCell {
                                                                      colorType: .fourthText)
         self.setButton(self.answerAButton, active: false)
         self.setButton(self.answerBButton, active: false)
-        if let currentAnswer = data.currentAnswer {
-            if currentAnswer == answerA {
+        if let possibleAnswer = data.possibleAnswer {
+            if possibleAnswer == answerA {
                 self.setButton(self.answerAButton, active: true)
             } else {
                 self.setButton(self.answerBButton, active: true)

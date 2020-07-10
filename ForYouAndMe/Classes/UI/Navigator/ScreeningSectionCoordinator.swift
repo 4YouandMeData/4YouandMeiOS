@@ -13,6 +13,7 @@ class ScreeningSectionCoordinator {
     
     private let sectionData: ScreeningSection
     private let completionCallback: NavigationControllerCallback
+    private let analyticsService: AnalyticsService
     
     init(withSectionData sectionData: ScreeningSection,
          navigationController: UINavigationController,
@@ -20,6 +21,7 @@ class ScreeningSectionCoordinator {
         self.sectionData = sectionData
         self.navigationController = navigationController
         self.completionCallback = completionCallback
+        self.analyticsService = Services.shared.analyticsService
     }
     
     // MARK: - Public Methods
@@ -87,6 +89,7 @@ extension ScreeningSectionCoordinator: PagedSectionCoordinator {
 
 extension ScreeningSectionCoordinator: BooleanQuestionsCoordinator {
     func onBooleanQuestionsSubmit(answers: [Answer]) {
+        self.analyticsService.track(event: .screeningQuizCompleted(answers: answers))
         if answers.validate(withMinimumCorrectAnswers: self.sectionData.minimumCorrectAnswers) {
             self.showSuccess()
         } else {

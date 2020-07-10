@@ -758,6 +758,10 @@
 		8939DB7824B71E1A009C178F /* Page+Wearable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8939DB7724B71E1A009C178F /* Page+Wearable.swift */; };
 		8939DB7A24B72DD5009C178F /* WearableLoginViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8939DB7924B72DD5009C178F /* WearableLoginViewController.swift */; };
 		8939DB7C24B782D0009C178F /* Answer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8939DB7B24B782D0009C178F /* Answer.swift */; };
+		893AA57924B869BC00737EAE /* AnalyticsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893AA57824B869BC00737EAE /* AnalyticsService.swift */; };
+		893AA57B24B869C900737EAE /* AnalyticsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893AA57A24B869C900737EAE /* AnalyticsManager.swift */; };
+		893AA57D24B86D3500737EAE /* InternalAnalyticsPlatform.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893AA57C24B86D3500737EAE /* InternalAnalyticsPlatform.swift */; };
+		893AA57F24B87EB200737EAE /* ApiContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893AA57E24B87EB200737EAE /* ApiContext.swift */; };
 		895CE133386CDA2B4B271287050A9BBB /* GULKeychainStorage.h in Headers */ = {isa = PBXBuildFile; fileRef = FA07C96CD7889477F5EC9A1F6C1DEE1E /* GULKeychainStorage.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		8A72AC2423E477482DE32997E5A3FA90 /* HistoricalSchedulerTimeConverter.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF1A38A84ABE87BDEB55AAF3D573A7E5 /* HistoricalSchedulerTimeConverter.swift */; };
 		8AA937910F87915DE700CAB6C868689E /* Notifications.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94104E6EF2D35223DCA9DBC8EC8376EC /* Notifications.swift */; };
@@ -2854,6 +2858,10 @@
 		8939DB7724B71E1A009C178F /* Page+Wearable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Page+Wearable.swift"; sourceTree = "<group>"; };
 		8939DB7924B72DD5009C178F /* WearableLoginViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WearableLoginViewController.swift; sourceTree = "<group>"; };
 		8939DB7B24B782D0009C178F /* Answer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Answer.swift; sourceTree = "<group>"; };
+		893AA57824B869BC00737EAE /* AnalyticsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyticsService.swift; sourceTree = "<group>"; };
+		893AA57A24B869C900737EAE /* AnalyticsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyticsManager.swift; sourceTree = "<group>"; };
+		893AA57C24B86D3500737EAE /* InternalAnalyticsPlatform.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InternalAnalyticsPlatform.swift; sourceTree = "<group>"; };
+		893AA57E24B87EB200737EAE /* ApiContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApiContext.swift; sourceTree = "<group>"; };
 		894E5B0986AF3444FCF2E8967F66C3D5 /* TPKeyboardAvoidingCollectionView.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = TPKeyboardAvoidingCollectionView.h; path = TPKeyboardAvoiding/TPKeyboardAvoidingCollectionView.h; sourceTree = "<group>"; };
 		895F04B7044A817FB03E0AA852E4A56E /* SVProgressAnimatedView.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = SVProgressAnimatedView.m; path = SVProgressHUD/SVProgressAnimatedView.m; sourceTree = "<group>"; };
 		89ACD9A2B032B87D7DD8B7FF09D316B5 /* UberSignature.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = UberSignature.release.xcconfig; sourceTree = "<group>"; };
@@ -4418,6 +4426,7 @@
 				AD387B61ADD9BA3B28F7948A1016A7BF /* Repository.swift */,
 				CAE678C4494E64C0C77B74B85FBEBA04 /* RepositoryImpl.swift */,
 				BC6C77D59128C8DE9FE8A37975A88828 /* Services.swift */,
+				893AA57724B8699E00737EAE /* Analytics */,
 				146AC5C07C0B75BF9E4EDC732E987521 /* Cache */,
 				C1BFED169A780DEF5CFA8D99090CB88C /* CoreLocation */,
 				E09531A872F33B3BD523949B4E29D002 /* HealthKit */,
@@ -5339,6 +5348,16 @@
 			name = AppDelegateSwizzler;
 			sourceTree = "<group>";
 		};
+		893AA57724B8699E00737EAE /* Analytics */ = {
+			isa = PBXGroup;
+			children = (
+				893AA57824B869BC00737EAE /* AnalyticsService.swift */,
+				893AA57A24B869C900737EAE /* AnalyticsManager.swift */,
+				893AA57C24B86D3500737EAE /* InternalAnalyticsPlatform.swift */,
+			);
+			path = Analytics;
+			sourceTree = "<group>";
+		};
 		8D6794ABDA3C69F142F7A60C7A11A13F /* GoogleDataTransportCCTSupport */ = {
 			isa = PBXGroup;
 			children = (
@@ -5535,6 +5554,7 @@
 				186F8525998B4683AF19C1271A17D31E /* ResponseError.swift */,
 				A9CE9E1D1D9352885F9C844873B2F770 /* ServerErrors.swift */,
 				A761141ADCA80FF82C64F43E862150DA /* TestNetworkApiGateway.swift */,
+				893AA57E24B87EB200737EAE /* ApiContext.swift */,
 				665D8075B43691C444CF790CCB4842BE /* Mapping */,
 			);
 			path = Network;
@@ -8518,11 +8538,13 @@
 				F34970B03F23E08096427393363113F2 /* CountryCodeProvider.swift in Sources */,
 				0B6016A1B5F5ECDA00810011525D113A /* Date+Extensions.swift in Sources */,
 				D6F61552F5808B33B89B6D2329746AEB /* DoubleButtonHorizontalView.swift in Sources */,
+				893AA57D24B86D3500737EAE /* InternalAnalyticsPlatform.swift in Sources */,
 				042F0B10C782B9FD20AF80EF172DC127 /* DoubleButtonVerticalView.swift in Sources */,
 				0EC9EE1BA957C8BB9360F95DC382EB1A /* FontPalette.swift in Sources */,
 				F43CF9B7C5C8DACBD744559F43CDB363 /* ForYouAndMe-dummy.m in Sources */,
 				0DDEAF4D90538763E384BB985AC59001 /* FYAMManager.swift in Sources */,
 				558E8A6CA842BAA106075AB38EC836B7 /* GenericButtonView.swift in Sources */,
+				893AA57F24B87EB200737EAE /* ApiContext.swift in Sources */,
 				9F42655834091052E9403A71B17B9600 /* GenericCheckboxView.swift in Sources */,
 				9BBA7D4D7E2FAF12862969B015123071 /* GenericTextCheckboxView.swift in Sources */,
 				58EA1A3430D5B538F4254908DA726DBC /* GenericTextFieldView.swift in Sources */,
@@ -8548,6 +8570,7 @@
 				FB4FB7259CE19C913032D4D9F7277ADC /* NetworkApiGateway.swift in Sources */,
 				8C742B128B6946EC5681E4CF6360BD20 /* NetworkUtility.swift in Sources */,
 				D229BC2594A37FF5553029A041346C19 /* NSAttributedString+Extensions.swift in Sources */,
+				893AA57924B869BC00737EAE /* AnalyticsService.swift in Sources */,
 				D0C2005A2DC1112057F1826044FB66F4 /* NSAttributedString+Palette.swift in Sources */,
 				471D678D1F7E9E638F33D431ACACB2AC /* OptInPermission.swift in Sources */,
 				FC985D96497B15A1904AEAA05D4943AE /* OptInPermissionViewController.swift in Sources */,
@@ -8610,6 +8633,7 @@
 				AEA670F59728984FCACCF8F227D2C802 /* UserNameViewController.swift in Sources */,
 				2D309265DD72E14929B4495C94F67905 /* UserSignatureViewController.swift in Sources */,
 				8939DB7C24B782D0009C178F /* Answer.swift in Sources */,
+				893AA57B24B869C900737EAE /* AnalyticsManager.swift in Sources */,
 				8FF05C5C208A4425479684B96F56A4B8 /* WearablePageViewController.swift in Sources */,
 				0F5A31103D14CA6F34F9797452E76141 /* WearablesSection.swift in Sources */,
 				2CCEC96783A349D0443C21AA0CC03AA5 /* WearablesSectionCoordinator.swift in Sources */,

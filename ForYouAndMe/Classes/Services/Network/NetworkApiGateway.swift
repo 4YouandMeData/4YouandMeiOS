@@ -277,7 +277,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         // Opt In Section
         case .getOptInSection:
             return "/v1/studies/\(studyId)/opt_in"
-        case .sendOptInPermission(let permissionId, _):
+        case .sendOptInPermission(let permissionId, _, _):
             return "/v1/permissions/\(permissionId)/user_permission"
         // User Consent Section
         case .getUserConsentSection:
@@ -291,6 +291,9 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         // Wearables Section
         case .getWearablesSection:
             return "/v1/studies/\(studyId)/wearables"
+        // Answers
+        case .sendAnswer(let answer, _):
+            return "v1/questions/\(answer.question.id)/answer"
         }
     }
     
@@ -310,7 +313,8 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         case .submitPhoneNumber,
              .verifyPhoneNumber,
              .createUserConsent,
-             .sendOptInPermission:
+             .sendOptInPermission,
+             .sendAnswer:
             return .post
         case .verifyEmail,
              .resendConfirmationEmail,
@@ -348,6 +352,8 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         case .resendConfirmationEmail: return "{}".utf8Encoded
         // Wearables Section
         case .getWearablesSection: return Bundle.getTestData(from: "TestGetWearablesSection")
+        // Answers
+        case .sendAnswer: return "{}".utf8Encoded
         }
     }
     
@@ -387,12 +393,17 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             var params: [String: Any] = [:]
             params["email_confirmation_token"] = email
             return .requestParameters(parameters: ["user_consent": params], encoding: JSONEncoding.default)
-        case .sendOptInPermission(_, let granted):
+        case .sendOptInPermission(_, let granted, let context):
             var params: [String: Any] = [:]
             params["agree"] = granted
-            // TODO: handle batch logic in a decent way
-            params["batch"] = Date().toISO8601String
+            params.addContext(context)
             return .requestParameters(parameters: ["user_permission": params], encoding: JSONEncoding.default)
+        case .sendAnswer(let answer, let context):
+            var params: [String: Any] = [:]
+            params["answer_text"] = answer.possibleAnswer.text
+            params["possible_answer_id"] = answer.possibleAnswer.id
+            params.addContext(context)
+            return .requestParameters(parameters: ["answer": params], encoding: JSONEncoding.default)
         }
     }
     
@@ -416,7 +427,8 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
              .updateUserConsent,
              .verifyEmail,
              .resendConfirmationEmail,
-             .getWearablesSection:
+             .getWearablesSection,
+             .sendAnswer:
             return .bearer
         }
     }
@@ -452,5 +464,12 @@ fileprivate extension Task {
             }
         }
         return .requestParameters(parameters: ["user_consent": params], encoding: JSONEncoding.default)
+    }
+}
+
+fileprivate extension Dictionary where Key == String, Value == Any {
+    mutating func addContext(_ optionalContext: ApiContext?) {
+        let context = optionalContext ?? ApiContext()
+        self["batch_code"] = context.batchIdentifier
     }
 }

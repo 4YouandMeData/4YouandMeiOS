@@ -85,16 +85,14 @@ extension InformedConsentSectionCoordinator: PagedSectionCoordinator {
 }
 
 extension InformedConsentSectionCoordinator: QuestionViewCoordinator {
-    func onQuestionAnsweredSuccess(possibleAnswer: PossibleAnswer, forQuestion question: Question) {
-        if let answerIndex = self.answers.firstIndex(where: { $0.question == question }) {
-            var answer = self.answers[answerIndex]
-            answer.currentAnswer = possibleAnswer
+    func onQuestionAnsweredSuccess(answer: Answer) {
+        if let answerIndex = self.answers.firstIndex(where: { $0.question == answer.question }) {
             self.answers[answerIndex] = answer
         } else {
-            self.answers.append(Answer(question: question, currentAnswer: possibleAnswer))
+            self.answers.append(answer)
         }
         
-        guard let questionIndex = self.sectionData.questions.firstIndex(of: question) else {
+        guard let questionIndex = self.sectionData.questions.firstIndex(of: answer.question) else {
             assertionFailure("Missing question in question array")
             return
         }

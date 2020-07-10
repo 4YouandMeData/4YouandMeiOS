@@ -9,7 +9,7 @@ import Foundation
 import PureLayout
 
 protocol QuestionViewCoordinator {
-    func onQuestionAnsweredSuccess(possibleAnswer: PossibleAnswer, forQuestion question: Question)
+    func onQuestionAnsweredSuccess(answer: Answer)
 }
 
 class QuestionViewController: UIViewController {
@@ -108,7 +108,7 @@ class QuestionViewController: UIViewController {
             assertionFailure("Missing selected possible answer")
             return
         }
-        self.coordinator.onQuestionAnsweredSuccess(possibleAnswer: selectedPossibleAnswer, forQuestion: self.question)
+        self.coordinator.onQuestionAnsweredSuccess(answer: Answer(question: self.question, possibleAnswer: selectedPossibleAnswer))
     }
     
     // MARK: Private Methods

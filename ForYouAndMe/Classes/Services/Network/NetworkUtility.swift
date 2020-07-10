@@ -29,13 +29,6 @@ public extension Int {
     }
 }
 
-public extension Date {
-    var toISO8601String: String {
-        let dateFormatter = ISO8601DateFormatter()
-        return dateFormatter.string(from: self)
-    }
-}
-
 public extension Bundle {
     static func getTestData(from fileName: String) -> Data {
         guard let podBundle = PodUtils.getPodResourceBundle(withName: Constants.Resources.DefaultBundleName),

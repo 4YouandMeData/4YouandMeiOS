@@ -19,11 +19,11 @@ enum TestSection {
 
 struct Constants {
     struct Test {
-        static let NetworkStubsEnabled = true
+        static let NetworkStubsEnabled = false
         static let NetworkStubsDelay = 0.3
         static let NetworkLogVerbose = true
         
-        static let Section: TestSection? = .wearablesSection
+        static let Section: TestSection? = .screeningSection//.wearablesSection
         
         static let InformedConsentWithoutQuestions: Bool = false
     }

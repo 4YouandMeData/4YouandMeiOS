@@ -9,13 +9,18 @@
 import Foundation
 import PureLayout
 
+struct OptionalAnswer {
+    let question: Question
+    var possibleAnswer: PossibleAnswer?
+}
+
 protocol BooleanQuestionsCoordinator {
     func onBooleanQuestionsSubmit(answers: [Answer])
 }
 
 public class BooleanQuestionsViewController: UIViewController {
     
-    private var items: [Answer]
+    private var items: [OptionalAnswer]
     private let coordinator: BooleanQuestionsCoordinator
     
     lazy private var tableView: UITableView = {
@@ -36,7 +41,7 @@ public class BooleanQuestionsViewController: UIViewController {
     }()
     
     init(withQuestions questions: [Question], coordinator: BooleanQuestionsCoordinator) {
-        self.items = questions.map { Answer(question: $0, currentAnswer: nil) }
+        self.items = questions.map { OptionalAnswer(question: $0, possibleAnswer: nil) }
         self.coordinator = coordinator
         super.init(nibName: nil, bundle: nil)
     }
@@ -73,7 +78,15 @@ public class BooleanQuestionsViewController: UIViewController {
     // MARK: Actions
     
     @objc private func confirmButtonPressed() {
-        self.coordinator.onBooleanQuestionsSubmit(answers: self.items)
+        let answers: [Answer] = self.items.compactMap { optionalAnswer in
+            if let possibleAnswer = optionalAnswer.possibleAnswer {
+                return Answer(question: optionalAnswer.question, possibleAnswer: possibleAnswer)
+            } else {
+                return nil
+            }
+        }
+        assert(answers.count == self.items.count, "Not all questions have been answered")
+        self.coordinator.onBooleanQuestionsSubmit(answers: answers)
     }
     
     // MARK: Private Methods
@@ -88,14 +101,14 @@ public class BooleanQuestionsViewController: UIViewController {
             assertionFailure("Cannot find possibile answer with id: '\(answerIdentifier)', in question: \(item)")
             return
         }
-        item.currentAnswer = item.question.possibleAnswers[answerIndex]
+        item.possibleAnswer = item.question.possibleAnswers[answerIndex]
         self.items[itemIndex] = item
         self.tableView.reloadData()
         self.updateConfirmButton()
     }
     
     private func updateConfirmButton() {
-        let buttonEnabled = self.items.allSatisfy({ $0.currentAnswer != nil })
+        let buttonEnabled = self.items.allSatisfy({ $0.possibleAnswer != nil })
         self.confirmButtonView.setButtonEnabled(enabled: buttonEnabled)
     }
 }
