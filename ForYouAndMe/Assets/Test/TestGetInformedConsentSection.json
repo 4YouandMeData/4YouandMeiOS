@@ -3,6 +3,7 @@
     "id": "1",
     "type": "informed_consent",
     "attributes": {
+      "minimum_required_correct_answers": 4,
       "created_at": "2020-06-03T12:59:39.083Z",
       "updated_at": "2020-06-12T10:16:59.364Z"
     },

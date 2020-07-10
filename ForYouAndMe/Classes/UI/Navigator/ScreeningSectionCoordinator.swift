@@ -86,11 +86,11 @@ extension ScreeningSectionCoordinator: PagedSectionCoordinator {
 }
 
 extension ScreeningSectionCoordinator: BooleanQuestionsCoordinator {
-    func onBooleanQuestionsSuccess() {
-        self.showSuccess()
-    }
-    
-    func onBooleanQuestionsFailure() {
-        self.showFailure()
+    func onBooleanQuestionsSubmit(answers: [Answer]) {
+        if answers.validate(withMinimumCorrectAnswers: self.sectionData.minimumCorrectAnswers) {
+            self.showSuccess()
+        } else {
+            self.showFailure()
+        }
     }
 }

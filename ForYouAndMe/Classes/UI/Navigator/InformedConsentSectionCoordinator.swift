@@ -14,7 +14,7 @@ class InformedConsentSectionCoordinator {
     private let sectionData: InformedConsentSection
     private let completionCallback: NavigationControllerCallback
     
-    var answers: [Question: PossibleAnswer] = [:]
+    var answers: [Answer] = []
     
     init(withSectionData sectionData: InformedConsentSection,
          navigationController: UINavigationController,
@@ -61,16 +61,6 @@ class InformedConsentSectionCoordinator {
         let viewController = QuestionViewController(withQuestion: question, coordinator: self)
         self.navigationController.pushViewController(viewController, animated: true)
     }
-    
-    private func validateAnswers() -> Bool {
-        // TODO: Implement correct answers validation
-        
-        // Current hardcoded logic: success if all answers - max 1 answer are correct
-        let minimumCorrectAnswerCount = self.answers.count - 1
-        var currentCorrectAnswerCount = 0
-        self.answers.values.forEach { currentCorrectAnswerCount += $0.correct ? 1 : 0 }
-        return currentCorrectAnswerCount >= minimumCorrectAnswerCount
-    }
 }
 
 extension InformedConsentSectionCoordinator: PagedSectionCoordinator {
@@ -96,7 +86,13 @@ extension InformedConsentSectionCoordinator: PagedSectionCoordinator {
 
 extension InformedConsentSectionCoordinator: QuestionViewCoordinator {
     func onQuestionAnsweredSuccess(possibleAnswer: PossibleAnswer, forQuestion question: Question) {
-        self.answers[question] = possibleAnswer
+        if let answerIndex = self.answers.firstIndex(where: { $0.question == question }) {
+            var answer = self.answers[answerIndex]
+            answer.currentAnswer = possibleAnswer
+            self.answers[answerIndex] = answer
+        } else {
+            self.answers.append(Answer(question: question, currentAnswer: possibleAnswer))
+        }
         
         guard let questionIndex = self.sectionData.questions.firstIndex(of: question) else {
             assertionFailure("Missing question in question array")
@@ -106,7 +102,7 @@ extension InformedConsentSectionCoordinator: QuestionViewCoordinator {
         let nextQuestionIndex = questionIndex + 1
         if nextQuestionIndex == self.sectionData.questions.count {
             assert(self.answers.count == self.sectionData.questions.count, "Mismatch answers count and questions count")
-            if self.validateAnswers() {
+            if self.answers.validate(withMinimumCorrectAnswers: self.sectionData.minimumCorrectAnswers) {
                 self.showSuccess()
             } else {
                 self.showFailure()
@@ -115,15 +111,5 @@ extension InformedConsentSectionCoordinator: QuestionViewCoordinator {
             let nextQuestion = self.sectionData.questions[nextQuestionIndex]
             self.showQuestion(nextQuestion)
         }
-    }
-}
-
-extension Question: Hashable, Equatable {
-    static func == (lhs: Question, rhs: Question) -> Bool {
-        return lhs.id == rhs.id
-    }
-    
-    func hash(into hasher: inout Hasher) {
-        hasher.combine(self.id)
     }
 }

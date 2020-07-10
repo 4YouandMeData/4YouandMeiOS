@@ -757,6 +757,7 @@
 		8939DB7624B71DC1009C178F /* WearableApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8939DB7524B71DC1009C178F /* WearableApp.swift */; };
 		8939DB7824B71E1A009C178F /* Page+Wearable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8939DB7724B71E1A009C178F /* Page+Wearable.swift */; };
 		8939DB7A24B72DD5009C178F /* WearableLoginViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8939DB7924B72DD5009C178F /* WearableLoginViewController.swift */; };
+		8939DB7C24B782D0009C178F /* Answer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8939DB7B24B782D0009C178F /* Answer.swift */; };
 		895CE133386CDA2B4B271287050A9BBB /* GULKeychainStorage.h in Headers */ = {isa = PBXBuildFile; fileRef = FA07C96CD7889477F5EC9A1F6C1DEE1E /* GULKeychainStorage.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		8A72AC2423E477482DE32997E5A3FA90 /* HistoricalSchedulerTimeConverter.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF1A38A84ABE87BDEB55AAF3D573A7E5 /* HistoricalSchedulerTimeConverter.swift */; };
 		8AA937910F87915DE700CAB6C868689E /* Notifications.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94104E6EF2D35223DCA9DBC8EC8376EC /* Notifications.swift */; };
@@ -2852,6 +2853,7 @@
 		8939DB7524B71DC1009C178F /* WearableApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WearableApp.swift; sourceTree = "<group>"; };
 		8939DB7724B71E1A009C178F /* Page+Wearable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Page+Wearable.swift"; sourceTree = "<group>"; };
 		8939DB7924B72DD5009C178F /* WearableLoginViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WearableLoginViewController.swift; sourceTree = "<group>"; };
+		8939DB7B24B782D0009C178F /* Answer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Answer.swift; sourceTree = "<group>"; };
 		894E5B0986AF3444FCF2E8967F66C3D5 /* TPKeyboardAvoidingCollectionView.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = TPKeyboardAvoidingCollectionView.h; path = TPKeyboardAvoiding/TPKeyboardAvoidingCollectionView.h; sourceTree = "<group>"; };
 		895F04B7044A817FB03E0AA852E4A56E /* SVProgressAnimatedView.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = SVProgressAnimatedView.m; path = SVProgressHUD/SVProgressAnimatedView.m; sourceTree = "<group>"; };
 		89ACD9A2B032B87D7DD8B7FF09D316B5 /* UberSignature.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = UberSignature.release.xcconfig; sourceTree = "<group>"; };
@@ -5446,6 +5448,7 @@
 				8BF08E527B24CDB1EC144970D752C9D1 /* PageRef.swift */,
 				D97887F8F60B4622FA3A52D343682772 /* PossibleAnswer.swift */,
 				15957650D508B0296FD8B49B66574B9F /* Question.swift */,
+				8939DB7B24B782D0009C178F /* Answer.swift */,
 				88A807EB9F70007013F012A78100693E /* Sections */,
 			);
 			name = Entities;
@@ -8606,6 +8609,7 @@
 				93DD3807E594AB3CEE14C0E8F966050D /* UserEmailViewController.swift in Sources */,
 				AEA670F59728984FCACCF8F227D2C802 /* UserNameViewController.swift in Sources */,
 				2D309265DD72E14929B4495C94F67905 /* UserSignatureViewController.swift in Sources */,
+				8939DB7C24B782D0009C178F /* Answer.swift in Sources */,
 				8FF05C5C208A4425479684B96F56A4B8 /* WearablePageViewController.swift in Sources */,
 				0F5A31103D14CA6F34F9797452E76141 /* WearablesSection.swift in Sources */,
 				2CCEC96783A349D0443C21AA0CC03AA5 /* WearablesSectionCoordinator.swift in Sources */,

@@ -8,18 +8,9 @@
 
 import UIKit
 
-struct QuestionBooleanDisplayData {
-    let identifier: String
-    let question: String
-    let answerA: String
-    let answerB: String
-    let correctAnswerA: Bool?
-    var answerAisActive: Bool?
-}
-
 class QuestionBooleanTableViewCell: UITableViewCell {
     
-    typealias QuestionBooleanAnswerCallback = ((Bool) -> Void)
+    typealias QuestionBooleanAnswerCallback = ((String) -> Void)
     
     fileprivate static let optionWidth: CGFloat = 50.0
     
@@ -44,6 +35,8 @@ class QuestionBooleanTableViewCell: UITableViewCell {
     }()
     
     private var questionIdentifier: String = ""
+    private var answerAIdentifier: String = ""
+    private var answerBIdentifier: String = ""
     private var answerPressedCallback: QuestionBooleanAnswerCallback?
     
     private let answerALabel: UILabel = UILabel()
@@ -85,23 +78,31 @@ class QuestionBooleanTableViewCell: UITableViewCell {
     
     // MARK: - Public Methods
     
-    public func display(data: QuestionBooleanDisplayData, answerPressedCallback: @escaping QuestionBooleanAnswerCallback) {
-        self.questionIdentifier = data.identifier
+    public func display(data: Answer, answerPressedCallback: @escaping QuestionBooleanAnswerCallback) {
+        self.questionIdentifier = data.question.id
         self.answerPressedCallback = answerPressedCallback
-        self.questionLabel.attributedText = NSAttributedString.create(withText: data.question,
+        guard data.question.possibleAnswers.count >= 2 else {
+            assertionFailure("Unexpected number of possibile answers")
+            return
+        }
+        let answerA = data.question.possibleAnswers[0]
+        self.answerAIdentifier = answerA.id
+        let answerB = data.question.possibleAnswers[1]
+        self.answerBIdentifier = answerB.id
+        self.questionLabel.attributedText = NSAttributedString.create(withText: data.question.text,
                                                                       fontStyle: .paragraph,
                                                                       colorType: .primaryText,
                                                                       textAlignment: .left)
-        self.answerALabel.attributedText = NSAttributedString.create(withText: data.answerA,
+        self.answerALabel.attributedText = NSAttributedString.create(withText: answerA.text,
                                                                      fontStyle: .paragraph,
                                                                      colorType: .fourthText)
-        self.answerBLabel.attributedText = NSAttributedString.create(withText: data.answerB,
+        self.answerBLabel.attributedText = NSAttributedString.create(withText: answerB.text,
                                                                      fontStyle: .paragraph,
                                                                      colorType: .fourthText)
         self.setButton(self.answerAButton, active: false)
         self.setButton(self.answerBButton, active: false)
-        if let answerAisActive = data.answerAisActive {
-            if answerAisActive {
+        if let currentAnswer = data.currentAnswer {
+            if currentAnswer == answerA {
                 self.setButton(self.answerAButton, active: true)
             } else {
                 self.setButton(self.answerBButton, active: true)
@@ -112,11 +113,11 @@ class QuestionBooleanTableViewCell: UITableViewCell {
     // MARK: - Actions
     
     @objc private func answerAButtonPressed() {
-        self.answerPressedCallback?(true)
+        self.answerPressedCallback?(self.answerAIdentifier)
     }
     
     @objc private func answerBButtonPressed() {
-        self.answerPressedCallback?(false)
+        self.answerPressedCallback?(self.answerBIdentifier)
     }
     
     // MARK: - Private Methods

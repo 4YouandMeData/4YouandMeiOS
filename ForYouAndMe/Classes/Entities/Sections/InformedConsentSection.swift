@@ -11,6 +11,7 @@ struct InformedConsentSection {
     let id: String
     let type: String
 
+    let minimumCorrectAnswers: Int
     let pages: [Page]
     let questions: [Question]
     let welcomePage: Page
@@ -33,6 +34,7 @@ questions.possible_answers
     enum CodingKeys: String, CodingKey {
         case id
         case type
+        case minimumCorrectAnswers = "minimum_required_correct_answers"
         case pages
         case questions
         case welcomePage = "welcome_page"

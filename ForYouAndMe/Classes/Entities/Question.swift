@@ -23,3 +23,13 @@ extension Question: JSONAPIMappable {
         case possibleAnswers = "possible_answers"
     }
 }
+
+extension Question: Hashable, Equatable {
+    static func == (lhs: Question, rhs: Question) -> Bool {
+        return lhs.id == rhs.id
+    }
+    
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(self.id)
+    }
+}

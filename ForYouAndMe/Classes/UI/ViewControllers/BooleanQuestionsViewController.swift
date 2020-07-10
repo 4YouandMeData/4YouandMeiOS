@@ -10,13 +10,12 @@ import Foundation
 import PureLayout
 
 protocol BooleanQuestionsCoordinator {
-    func onBooleanQuestionsSuccess()
-    func onBooleanQuestionsFailure()
+    func onBooleanQuestionsSubmit(answers: [Answer])
 }
 
 public class BooleanQuestionsViewController: UIViewController {
     
-    private let questions: [Question]
+    private var items: [Answer]
     private let coordinator: BooleanQuestionsCoordinator
     
     lazy private var tableView: UITableView = {
@@ -36,10 +35,8 @@ public class BooleanQuestionsViewController: UIViewController {
         return view
     }()
     
-    private var items: [QuestionBooleanDisplayData] = []
-    
     init(withQuestions questions: [Question], coordinator: BooleanQuestionsCoordinator) {
-        self.questions = questions
+        self.items = questions.map { Answer(question: $0, currentAnswer: nil) }
         self.coordinator = coordinator
         super.init(nibName: nil, bundle: nil)
     }
@@ -61,8 +58,6 @@ public class BooleanQuestionsViewController: UIViewController {
         stackView.addArrangedSubview(self.tableView)
         stackView.addArrangedSubview(self.confirmButtonView)
         
-        self.items = self.questions.compactMap { $0.questionBooleanData }
-        
         self.tableView.reloadData()
         self.updateConfirmButton()
     }
@@ -78,40 +73,30 @@ public class BooleanQuestionsViewController: UIViewController {
     // MARK: Actions
     
     @objc private func confirmButtonPressed() {
-        if self.validateAnswers() {
-            self.coordinator.onBooleanQuestionsSuccess()
-        } else {
-            self.coordinator.onBooleanQuestionsFailure()
-        }
+        self.coordinator.onBooleanQuestionsSubmit(answers: self.items)
     }
     
     // MARK: Private Methods
     
-    private func updateItem(identifier: String, answerA: Bool) {
-        guard let itemIndex = self.items.firstIndex(where: { $0.identifier == identifier }) else {
-            assertionFailure("Cannot find item with id: '\(identifier)'")
+    private func updateItem(questionIdentifier: String, answerIdentifier: String) {
+        guard let itemIndex = self.items.firstIndex(where: { $0.question.id == questionIdentifier }) else {
+            assertionFailure("Cannot find item with id: '\(questionIdentifier)'")
             return
         }
         var item = self.items[itemIndex]
-        item.answerAisActive = answerA
+        guard let answerIndex = item.question.possibleAnswers.firstIndex(where: { $0.id == answerIdentifier }) else {
+            assertionFailure("Cannot find possibile answer with id: '\(answerIdentifier)', in question: \(item)")
+            return
+        }
+        item.currentAnswer = item.question.possibleAnswers[answerIndex]
         self.items[itemIndex] = item
         self.tableView.reloadData()
         self.updateConfirmButton()
     }
     
     private func updateConfirmButton() {
-        let buttonEnabled = self.items.allSatisfy({ $0.answerAisActive != nil })
+        let buttonEnabled = self.items.allSatisfy({ $0.currentAnswer != nil })
         self.confirmButtonView.setButtonEnabled(enabled: buttonEnabled)
-    }
-    
-    private func validateAnswers() -> Bool {
-        return self.items.allSatisfy { question in
-            if let correctAnswerA = question.correctAnswerA {
-                return question.answerAisActive == correctAnswerA
-            } else {
-                return true
-            }
-        }
     }
 }
 
@@ -131,26 +116,9 @@ extension BooleanQuestionsViewController: UITableViewDataSource {
         }
         let item = self.items[indexPath.row]
         cell.display(data: item,
-                     answerPressedCallback: { [weak self] answerA in
-                        self?.updateItem(identifier: item.identifier,
-                                         answerA: answerA)
+                     answerPressedCallback: { [weak self] answerIdentifier in
+                        self?.updateItem(questionIdentifier: item.question.id, answerIdentifier: answerIdentifier)
         })
         return cell
-    }
-}
-
-fileprivate extension Question {
-    var questionBooleanData: QuestionBooleanDisplayData? {
-        guard self.possibleAnswers.count >= 2 else {
-            return nil
-        }
-        let answerA = self.possibleAnswers[0]
-        let answerB = self.possibleAnswers[1]
-        return QuestionBooleanDisplayData(identifier: self.id,
-                                         question: self.text,
-                                         answerA: answerA.text,
-                                         answerB: answerB.text,
-                                         correctAnswerA: answerA.correct,
-                                         answerAisActive: nil)
     }
 }

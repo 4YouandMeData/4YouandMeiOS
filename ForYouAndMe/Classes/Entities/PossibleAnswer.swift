@@ -16,3 +16,9 @@ struct PossibleAnswer {
 }
 
 extension PossibleAnswer: JSONAPIMappable {}
+
+extension PossibleAnswer: Equatable {
+    static func == (lhs: PossibleAnswer, rhs: PossibleAnswer) -> Bool {
+        return lhs.id == rhs.id
+    }
+}
