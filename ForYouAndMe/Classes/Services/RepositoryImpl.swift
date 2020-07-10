@@ -19,7 +19,6 @@ class RepositoryImpl {
     
     private var storage: RepositoryStorage
     private let api: ApiGateway
-    private let disposeBag = DisposeBag()
     
     init(api: ApiGateway,
          storage: RepositoryStorage) {
@@ -184,21 +183,6 @@ extension RepositoryImpl: Repository {
         return self.api.send(request: ApiRequest(serviceRequest: .getWearablesSection))
             .handleError()
     }
-    
-    // MARK: - Private
-    
-    private func sendAnwsers(answers: [Answer]) {
-        let context = ApiContext()
-        let requests: [Single<()>] = answers.map { self.api
-            .send(request: ApiRequest(serviceRequest: .sendAnswer(answer: $0, context: context)))
-            .handleError()
-            .do(onError: { print("RepositoryImpl - Answer sending error: \($0)") })
-            // TODO: Add RxSwiftExt pod and uncomment to implement retry
-//            .retry(.delayed(maxCount: 3, time: 10.0))
-            .catchErrorJustReturn(())
-        }
-        Single<()>.zip(requests).subscribe().disposed(by: self.disposeBag)
-    }
 }
 
 // MARK: - Extension(PrimitiveSequence)
@@ -232,14 +216,6 @@ extension RepositoryImpl: InitializableService {
     func initialize() -> Single<()> {
         return self.fetchGlobalConfig()
             .do(onSuccess: { self.isInitialized = true })
-    }
-}
-
-// MARK: - InternalAnalyticsPlatformGateway
-
-extension RepositoryImpl: InternalAnalyticsPlatformGateway {
-    func sendScreeningAnswers(answers: [Answer]) {
-        self.sendAnwsers(answers: answers)
     }
 }
 

@@ -15,8 +15,8 @@ class AnalyticsManager: AnalyticsService {
     
     private let platforms: [AnalyticsPlatform]
     
-    init(gateway: InternalAnalyticsPlatformGateway) {
-        self.platforms = [InternalAnalyticsPlatform(gateway: gateway)]
+    init(api: ApiGateway) {
+        self.platforms = [InternalAnalyticsPlatform(api: api)]
     }
     
     func track(event: AnalyticsEvent) {

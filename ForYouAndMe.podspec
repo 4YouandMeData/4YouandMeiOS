@@ -48,6 +48,7 @@ Pod::Spec.new do |s|
   s.dependency 'CountryPickerView', '~> 3.1.2'
   s.dependency 'Japx/RxCodableMoya', '~> 3.0.0'
   s.dependency 'UberSignature', '~> 1.0.3'
+  s.dependency 'RxSwiftExt', '~> 5.2.0'
   
   s.static_framework = true
   

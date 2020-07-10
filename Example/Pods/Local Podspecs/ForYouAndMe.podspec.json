@@ -72,6 +72,9 @@
     ],
     "UberSignature": [
       "~> 1.0.3"
+    ],
+    "RxSwiftExt": [
+      "~> 5.2.0"
     ]
   },
   "static_framework": true,

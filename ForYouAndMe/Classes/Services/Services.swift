@@ -59,7 +59,7 @@ class Services {
                                         storage: storage)
         self.services.append(repository)
         
-        let analyticsService = AnalyticsManager(gateway: repository)
+        let analyticsService = AnalyticsManager(api: networkApiGateway)
         self.services.append(analyticsService)
         
         let navigator = AppNavigator(withRepository: repository, window: window)
