@@ -8,7 +8,7 @@
 import Foundation
 
 enum PageSpecialLinkType: String, Decodable {
-    case app = "App"
+    case app
 }
 
 struct Page {
@@ -45,7 +45,7 @@ extension Page: JSONAPIMappable {
         case externalLinkLabel = "external_link_label"
         case externalLinkUrl = "external_link_url"
         case specialLinkLabel = "special_link_label"
-        case specialLinkValue = "special_link_value"
+        case specialLinkValue = "special_link_data"
         case specialLinkType = "special_link_type"
         case buttonFirstlabel = "link_1_label"
         case buttonFirstPage = "link_1"

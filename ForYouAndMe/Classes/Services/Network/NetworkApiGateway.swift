@@ -290,7 +290,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             return "/v1/studies/\(studyId)/user_consent/resend_confirmation_email"
         // Wearables Section
         case .getWearablesSection:
-            return "/v1/studies/\(studyId)/wearables"
+            return "/v1/studies/\(studyId)/wearable"
         // Answers
         case .sendAnswer(let answer, _):
             return "v1/questions/\(answer.question.id)/answer"
