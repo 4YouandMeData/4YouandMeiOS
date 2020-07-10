@@ -10,6 +10,10 @@ import WebKit
 
 class WearableLoginViewController: UIViewController {
     
+    private enum WearableLoginScriptInterface: String {
+        case login = "wearableLogin"
+    }
+    
     private enum WearableLoginResult: String {
         case success
         case failure
@@ -57,7 +61,7 @@ class WearableLoginViewController: UIViewController {
         self.view.addSubview(self.webView)
         self.webView.autoPinEdgesToSuperviewSafeArea()
         self.webView.navigationDelegate = self
-        self.webView.configuration.userContentController.add(self, name: "wearableLogin")
+        self.webView.configuration.userContentController.add(self, name: WearableLoginScriptInterface.login.rawValue)
         
         // Progress bar
         self.view.addSubview(self.progressView)
@@ -96,7 +100,8 @@ class WearableLoginViewController: UIViewController {
             .path: "/",
             .name: "token",
             .value: "Bearer \(accessToken)",
-            .secure: "TRUE"
+            .secure: "TRUE",
+            .expires: Date(timeIntervalSinceNow: 31556926)
         ]
         
         guard let authenticationCookie = HTTPCookie(properties: httpCookieProperties) else {
@@ -169,13 +174,20 @@ extension WearableLoginViewController: WKNavigationDelegate {
 
 extension WearableLoginViewController: WKScriptMessageHandler {
     func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
-        guard let result = WearableLoginResult(rawValue: message.name) else {
-            print("WearableLoginViewController - Unhandled message: \(message)")
+        guard let scriptInterface = WearableLoginScriptInterface(rawValue: message.name) else {
+            print("WearableLoginViewController - Unhandled interface for message with name: \(message.name) and body: \(message.body)")
             return
         }
-        switch result {
-        case .success: self.onLoginSuccessCallback(self)
-        case .failure: self.onLoginFailureCallback(self)
+        switch scriptInterface {
+        case .login:
+           guard let resultTypeString = message.body as? String, let result = WearableLoginResult(rawValue: resultTypeString) else {
+               print("WearableLoginViewController - Unhandled message with name: \(message.name) and body: \(message.body)")
+               return
+           }
+           switch result {
+           case .success: self.onLoginSuccessCallback(self)
+           case .failure: self.onLoginFailureCallback(self)
+           }
         }
     }
 }
