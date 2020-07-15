@@ -86,7 +86,7 @@ extension RepositoryImpl: Repository {
                                                                                     validationCode: validationCode)))
             .handleError()
             .catchError({ error -> Single<()> in
-                enum ErrorCode: Int, CaseIterable { case wrongValidationCode = 403 }
+                enum ErrorCode: Int, CaseIterable { case wrongValidationCode = 401 }
                 if let errorCodeNumber = error.getFirstServerError(forExpectedStatusCodes: ErrorCode.allCases.map { $0.rawValue }),
                     let errorCode = ErrorCode(rawValue: errorCodeNumber) {
                     switch errorCode {
