@@ -32,6 +32,7 @@ Pod::Spec.new do |s|
   }
    
   s.frameworks = 'UIKit'
+  s.ios.vendored_frameworks = 'ForYouAndMe/Frameworks/ResearchKit.framework'
   
   s.dependency 'Moya/RxSwift', '~> 14.0.0'
   s.dependency 'Moya-ModelMapper/RxSwift', '~> 10.0.0'

@@ -43,6 +43,7 @@ class AppNavigator {
         #if DEBUG
         if let testSection = Constants.Test.Section {
             let testNavigationViewController = UINavigationController(rootViewController: UIViewController())
+            
             testNavigationViewController.preventPopWithSwipe()
             self.window.rootViewController = testNavigationViewController
             
@@ -53,6 +54,8 @@ class AppNavigator {
             case .optInSection: self.startOptInSection(navigationController: testNavigationViewController)
             case .consentUserDataSection: self.startUserContentDataSection(navigationController: testNavigationViewController)
             case .wearablesSection: self.startWearablesSection(navigationController: testNavigationViewController)
+            case .testTaskSheetSection:
+                testNavigationViewController.pushViewController(TestTaskSheetViewController(), animated: true)
             }
             return
         }

@@ -15,6 +15,7 @@ enum TestSection {
     case optInSection
     case consentUserDataSection
     case wearablesSection
+    case testTaskSheetSection
 }
 
 struct Constants {

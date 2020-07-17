@@ -1,6 +1,6 @@
 {
   "name": "ForYouAndMe",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "summary": "Framework for research studies apps",
   "description": "ForYouAndMe is a framework aimed to easily develop an app for research study",
   "homepage": "http://balzo.eu",
@@ -13,7 +13,7 @@
   },
   "source": {
     "git": "https://github.com/balzo-tech/4youandmeiOS.git",
-    "tag": "0.7.0"
+    "tag": "0.8.0"
   },
   "cocoapods_version": ">= 1.6.0",
   "platforms": {
@@ -27,6 +27,9 @@
     ]
   },
   "frameworks": "UIKit",
+  "ios": {
+    "vendored_frameworks": "ForYouAndMe/Frameworks/ResearchKit.framework"
+  },
   "dependencies": {
     "Moya/RxSwift": [
       "~> 14.0.0"

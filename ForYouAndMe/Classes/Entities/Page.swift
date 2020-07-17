@@ -63,6 +63,23 @@ extension Page {
             return nil
         }
     }
+    
+    init(id: String, title: String, body: String) {
+        self.id = id
+        self.type = "page"
+        self.title = title
+        self.body = body
+        self.externalLinkLabel = nil
+        self.externalLinkUrl = nil
+        self.specialLinkLabel = nil
+        self.specialLinkValue = nil
+        self.specialLinkType = nil
+        self.imageData = nil
+        self.buttonFirstlabel = nil
+        self.buttonFirstPage = nil
+        self.buttonSecondlabel = nil
+        self.buttonSecondPage = nil
+    }
 }
 
 extension Array where Element == Page {
