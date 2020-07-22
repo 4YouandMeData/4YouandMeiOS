@@ -24,6 +24,7 @@ struct Constants {
         static let NetworkLogVerbose = true
         
         static let Section: TestSection? = nil//.wearablesSection
+        static let OnboardingCompleted: Bool? = true
         
         static let InformedConsentWithoutQuestions: Bool = false
     }

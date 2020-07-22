@@ -72,6 +72,11 @@ enum StringKey: String, CaseIterable, CodingKey {
     case onboardingWearablesDownloadButtonDefault = "ONBOARDING_WEARABLES_DOWNLOAD_BUTTON_DEFAULT"
     case onboardingWearablesOpenAppButtonDefault = "ONBOARDING_WEARABLES_OPEN_APP_BUTTON_DEFAULT"
     case onboardingWearablesLoginButtonDefault = "ONBOARDING_WEARABLES_LOGIN_BUTTON_DEFAULT"
+    // Main
+    case tabFeed = "TAB_FEED"
+    case tabTask = "TAB_TASK"
+    case tabUserData = "TAB_USER_DATA"
+    case tabStudyInfo = "TAB_STUDY_INFO"
     // Generic
     case genericInfoTitle = "GENERIC_INFO_TITLE"
     

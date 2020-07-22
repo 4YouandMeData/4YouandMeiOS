@@ -61,7 +61,12 @@ class AppNavigator {
         if self.repository.isLoggedIn {
             // TODO: Check if onboarding is completed
             print("TODO: Check if onboarding is completed")
-            let onboardingCompleted = false
+            var onboardingCompleted = false
+            #if DEBUG
+            if let testOnboardingCompleted = Constants.Test.OnboardingCompleted {
+                onboardingCompleted = testOnboardingCompleted
+            }
+            #endif
             if onboardingCompleted {
                 self.goHome()
             } else {
@@ -254,8 +259,61 @@ class AppNavigator {
     // MARK: Home
     
     public func goHome() {
-        // TODO: Implement home
-        self.window.rootViewController?.showAlert(withTitle: "Work in progress", message: "Home coming soon", closeButtonText: "Ok")
+        let tabBarController = UITabBarController()
+        
+        // Basically, we want the content not to fall behind the tab bar
+        tabBarController.tabBar.isTranslucent = false
+        
+        // Colors
+        tabBarController.tabBar.tintColor = ColorPalette.color(withType: .primaryText)
+        tabBarController.tabBar.barTintColor = ColorPalette.color(withType: .secondary)
+        tabBarController.tabBar.unselectedItemTintColor = ColorPalette.color(withType: .secondaryMenu)
+        
+        // Remove top line
+        tabBarController.tabBar.barStyle = .black
+        
+        // Add shadow
+        tabBarController.tabBar.addShadowLinear(goingDown: false)
+        
+        var viewControllers: [UIViewController] = []
+        
+        let titleFont = FontPalette.fontStyleData(forStyle: .menu).font
+        
+        let feedViewController = FeedViewController()
+        let feedNavigationController = UINavigationController(rootViewController: feedViewController)
+        feedNavigationController.preventPopWithSwipe()
+        feedNavigationController.tabBarItem.image = ImagePalette.templateImage(withName: .tabFeed)
+        feedNavigationController.tabBarItem.title = StringsProvider.string(forKey: .tabFeed)
+        feedNavigationController.tabBarItem.setTitleTextAttributes([.font: titleFont], for: .normal)
+        viewControllers.append(feedNavigationController)
+        
+        let taskViewController = TaskViewController()
+        let taskNavigationController = UINavigationController(rootViewController: taskViewController)
+        taskNavigationController.preventPopWithSwipe()
+        taskNavigationController.tabBarItem.image = ImagePalette.templateImage(withName: .tabTask)
+        taskNavigationController.tabBarItem.title = StringsProvider.string(forKey: .tabTask)
+        taskNavigationController.tabBarItem.setTitleTextAttributes([.font: titleFont], for: .normal)
+        viewControllers.append(taskNavigationController)
+        
+        let userDataViewController = UserDataViewController()
+        let userDataNavigationController = UINavigationController(rootViewController: userDataViewController)
+        userDataNavigationController.preventPopWithSwipe()
+        userDataNavigationController.tabBarItem.image = ImagePalette.templateImage(withName: .tabUserData)
+        userDataNavigationController.tabBarItem.title = StringsProvider.string(forKey: .tabUserData)
+        userDataNavigationController.tabBarItem.setTitleTextAttributes([.font: titleFont], for: .normal)
+        viewControllers.append(userDataNavigationController)
+        
+        let studyInfoViewController = StudyInfoViewController()
+        let studyInfoNavigationController = UINavigationController(rootViewController: studyInfoViewController)
+        studyInfoNavigationController.preventPopWithSwipe()
+        studyInfoNavigationController.tabBarItem.image = ImagePalette.templateImage(withName: .tabStudyInfo)
+        studyInfoNavigationController.tabBarItem.title = StringsProvider.string(forKey: .tabStudyInfo)
+        studyInfoNavigationController.tabBarItem.setTitleTextAttributes([.font: titleFont], for: .normal)
+        viewControllers.append(studyInfoNavigationController)
+        
+        tabBarController.viewControllers = viewControllers
+        tabBarController.selectedIndex = viewControllers.firstIndex(of: feedViewController) ?? 0
+        self.window.rootViewController = tabBarController
     }
     
     // MARK: Progress HUD
