@@ -34,6 +34,23 @@ public class GradientView: UIView {
         
         self.gradientMask.frame = CGRect(x: 0.0, y: 0.0, width: self.frame.size.width, height: self.frame.size.height)
     }
+    
+    // MARK: - Public Methods
+    
+    func updateParameters(colors: [UIColor]? = nil, locations: [Double]? = nil, startPoint: CGPoint? = nil, endPoint: CGPoint? = nil) {
+        if let colors = colors {
+            self.gradientMask.colors = colors.map { $0.cgColor }
+        }
+        if let locations = locations {
+            self.gradientMask.locations = locations.map { NSNumber(value: $0)}
+        }
+        if let startPoint = startPoint {
+            self.gradientMask.startPoint = startPoint
+        }
+        if let endPoint = endPoint {
+            self.gradientMask.endPoint = endPoint
+        }
+    }
 }
 
 public extension UIView {

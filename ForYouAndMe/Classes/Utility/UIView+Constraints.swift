@@ -28,6 +28,7 @@ public extension UIView {
             }
         }
     }
+    
     var widthConstraintValue: CGFloat? {
         get {
             return self.constraints.first(where: { $0.firstAttribute == .width })?.constant
@@ -45,5 +46,12 @@ public extension UIView {
                 }
             }
         }
+    }
+    
+    func autoPinEdge(to view: UIView, with insets: UIEdgeInsets? = nil) {
+        self.autoPinEdge(.top, to: .top, of: view, withOffset: insets?.top ?? 0.0)
+        self.autoPinEdge(.bottom, to: .bottom, of: view, withOffset: insets?.bottom ?? 0.0)
+        self.autoPinEdge(.leading, to: .leading, of: view, withOffset: insets?.left ?? 0.0)
+        self.autoPinEdge(.trailing, to: .trailing, of: view, withOffset: insets?.right ?? 0.0)
     }
 }

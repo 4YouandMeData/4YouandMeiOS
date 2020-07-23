@@ -77,9 +77,16 @@ enum StringKey: String, CaseIterable, CodingKey {
     case tabTask = "TAB_TASK"
     case tabUserData = "TAB_USER_DATA"
     case tabStudyInfo = "TAB_STUDY_INFO"
+    case tabTaskTitle = "TAB_TASK_TITLE"
+    case tabUserDataTitle = "TAB_USER_DATA_TITLE"
+    case tabStudyInfoTitle = "TAB_STUDY_INFO_TITLE"
+    case tabFeedEmptyTitle = "TAB_FEED_EMPTY_TITLE"
+    case tabFeedEmptySubtitle = "TAB_FEED_EMPTY_SUBTITLE"
+    case tabTaskEmptyTitle = "TAB_TASK_EMPTY_TITLE"
+    case tabTaskEmptySubtitle = "TAB_TASK_EMPTY_SUBTITLE"
+    case tabTaskEmptyButton = "TAB_TASK_EMPTY_BUTTON"
     // Generic
     case genericInfoTitle = "GENERIC_INFO_TITLE"
-    
     // Errors
     case errorTitleDefault = "ERROR_TITLE_DEFAULT"
     case errorButtonCancel = "ERROR_BUTTON_CANCEL"
@@ -88,7 +95,6 @@ enum StringKey: String, CaseIterable, CodingKey {
     case errorMessageDefault = "ERROR_MESSAGE_DEFAULT"
     case errorMessageRemoteServer = "ERROR_MESSAGE_REMOTE_SERVER"
     case errorMessageConnectivity = "ERROR_MESSAGE_CONNECTIVITY"
-    
     // Urls
     case urlPrivacyPolicy = "URL_PRIVACY_POLICY"
     case urlTermsOfService = "URL_TERMS_OF_SERVICE"

@@ -800,6 +800,12 @@
 		893A0A9A24C86BB800517756 /* TaskViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893A0A9924C86BB800517756 /* TaskViewController.swift */; };
 		893A0A9E24C86DFF00517756 /* UserDataViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893A0A9D24C86DFF00517756 /* UserDataViewController.swift */; };
 		893A0AA024C86E1300517756 /* StudyInfoViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893A0A9F24C86E1300517756 /* StudyInfoViewController.swift */; };
+		893DC77624C98664009B40FC /* FeedTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893DC77524C98664009B40FC /* FeedTableViewCell.swift */; };
+		893DC77824C9889B009B40FC /* Feed.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893DC77724C9889B009B40FC /* Feed.swift */; };
+		893DC77D24C98BFF009B40FC /* FeedListManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893DC77C24C98BFF009B40FC /* FeedListManager.swift */; };
+		893DC77F24C9BB0E009B40FC /* SingleTextHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893DC77E24C9BB0E009B40FC /* SingleTextHeaderView.swift */; };
+		893DC78124C9E753009B40FC /* FeedListSectionHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893DC78024C9E753009B40FC /* FeedListSectionHeader.swift */; };
+		893DC78324C9EC39009B40FC /* TaskEmptyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893DC78224C9EC39009B40FC /* TaskEmptyView.swift */; };
 		89401D2F252E521EDF9B2B8A1E898A53 /* ObservableAvailability.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51E70EA5F9BD40CDCE9CAC81D200ADAB /* ObservableAvailability.swift */; };
 		895CE133386CDA2B4B271287050A9BBB /* GULKeychainStorage.h in Headers */ = {isa = PBXBuildFile; fileRef = E217C5A1B9F893203C6462748A4F8815 /* GULKeychainStorage.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		8A64A362D232CE525F4822D8A280151A /* Materialize.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17B24ADA388D18AF428367F9452B3771 /* Materialize.swift */; };
@@ -2971,6 +2977,12 @@
 		893A0A9924C86BB800517756 /* TaskViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskViewController.swift; sourceTree = "<group>"; };
 		893A0A9D24C86DFF00517756 /* UserDataViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserDataViewController.swift; sourceTree = "<group>"; };
 		893A0A9F24C86E1300517756 /* StudyInfoViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StudyInfoViewController.swift; sourceTree = "<group>"; };
+		893DC77524C98664009B40FC /* FeedTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedTableViewCell.swift; sourceTree = "<group>"; };
+		893DC77724C9889B009B40FC /* Feed.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Feed.swift; sourceTree = "<group>"; };
+		893DC77C24C98BFF009B40FC /* FeedListManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedListManager.swift; sourceTree = "<group>"; };
+		893DC77E24C9BB0E009B40FC /* SingleTextHeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SingleTextHeaderView.swift; sourceTree = "<group>"; };
+		893DC78024C9E753009B40FC /* FeedListSectionHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedListSectionHeader.swift; sourceTree = "<group>"; };
+		893DC78224C9EC39009B40FC /* TaskEmptyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskEmptyView.swift; sourceTree = "<group>"; };
 		8959033B5030CA886D438F915173273B /* firebasecore.nanopb.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = firebasecore.nanopb.h; path = Firebase/CoreDiagnostics/FIRCDLibrary/Protogen/nanopb/firebasecore.nanopb.h; sourceTree = "<group>"; };
 		897C573997D1D98B093671F4CE8BF1AC /* UIApplication+StrictKeyWindow.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = "UIApplication+StrictKeyWindow.h"; path = "FBSnapshotTestCase/Categories/UIApplication+StrictKeyWindow.h"; sourceTree = "<group>"; };
 		8990D662C6C1C52AF2C581CB14D628D5 /* UberSignature-dummy.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = "UberSignature-dummy.m"; sourceTree = "<group>"; };
@@ -5199,6 +5211,10 @@
 				073A7CFFF75AA57157CF32307923D506 /* GenericTextFieldView.swift */,
 				EBC38129EE8D4476044D47FD330786D5 /* PossibleAnswerTableViewCell.swift */,
 				8CA60FE242DE8DD7004F46A8D8DA74B6 /* QuestionBooleanTableViewCell.swift */,
+				893DC77524C98664009B40FC /* FeedTableViewCell.swift */,
+				893DC77E24C9BB0E009B40FC /* SingleTextHeaderView.swift */,
+				893DC78024C9E753009B40FC /* FeedListSectionHeader.swift */,
+				893DC78224C9EC39009B40FC /* TaskEmptyView.swift */,
 				BE17DDE012E9646ADFFEC61A426C2DFE /* PhoneVerification */,
 			);
 			path = Views;
@@ -5342,6 +5358,14 @@
 				893A0A9F24C86E1300517756 /* StudyInfoViewController.swift */,
 			);
 			path = Main;
+			sourceTree = "<group>";
+		};
+		893DC77B24C98BE3009B40FC /* Helpers */ = {
+			isa = PBXGroup;
+			children = (
+				893DC77C24C98BFF009B40FC /* FeedListManager.swift */,
+			);
+			path = Helpers;
 			sourceTree = "<group>";
 		};
 		8A9D6CBC3AC124C2B7A33B2539FD8DEC /* Core */ = {
@@ -5586,6 +5610,7 @@
 				2E4F7601DA9F879C0D045D47A94E885A /* PossibleAnswer.swift */,
 				98C7920231F1771D2C5713EE405DFFFD /* Question.swift */,
 				C0EE9C26E91224861DFA74BF9FA30546 /* WearableApp.swift */,
+				893DC77724C9889B009B40FC /* Feed.swift */,
 				4C3545BFEDB68FF0140D033D729E520B /* Sections */,
 			);
 			name = Entities;
@@ -6033,6 +6058,7 @@
 		AD9D7D04BF41FD5694BAFD6F43D79548 /* UI */ = {
 			isa = PBXGroup;
 			children = (
+				893DC77B24C98BE3009B40FC /* Helpers */,
 				6468607A25B2D27ED901974034C98091 /* Navigator */,
 				A0DD7F267BB716012E02950248324B42 /* Style */,
 				626F31705EE99CD3DF2E83618BAB4F4B /* ViewControllers */,
@@ -8525,7 +8551,9 @@
 				23E7AD2C822ABB3C56E1A8C345D8AF12 /* ColorPalette.swift in Sources */,
 				58744DE688DF89984CCE0FBB50C6C730 /* ConsentSection.swift in Sources */,
 				BB47D3AEBF0871280E9CB679318A32C2 /* ConsentSectionCoordinator.swift in Sources */,
+				893DC77F24C9BB0E009B40FC /* SingleTextHeaderView.swift in Sources */,
 				893A0AA024C86E1300517756 /* StudyInfoViewController.swift in Sources */,
+				893DC77D24C98BFF009B40FC /* FeedListManager.swift in Sources */,
 				E450B5464298B0F5F30FEA52B5A69C5B /* ConsentUserDataSection.swift in Sources */,
 				93F8C3E0E5CDCB95FFA590CF68006A32 /* ConsentUserDataSectionCoordinator.swift in Sources */,
 				0715FC5D273D1D07D32D98E723A46108 /* Constants.swift in Sources */,
@@ -8533,6 +8561,7 @@
 				29656980DA12E4E92324A42038EE91CF /* Date+Extensions.swift in Sources */,
 				EF242E506C2509997091B6EC4F7AC1CE /* DoubleButtonHorizontalView.swift in Sources */,
 				0416E103890014ECDFFC627E76BDEBFE /* DoubleButtonVerticalView.swift in Sources */,
+				893DC77824C9889B009B40FC /* Feed.swift in Sources */,
 				2C533DF7A3DA348BACC5DA517D86CFAA /* FontPalette.swift in Sources */,
 				26260946FCDA90258556E7F20FDCEC9F /* ForYouAndMe-dummy.m in Sources */,
 				A2DFE358D3BA73154D2611D8D9B8196D /* FYAMManager.swift in Sources */,
@@ -8557,12 +8586,14 @@
 				4FB6A47A9E714334374F0DD689AF7DBD /* KeyboardNotificationProvider.swift in Sources */,
 				F90F4F42677117EA77461B1175E08F00 /* LoadingViewController.swift in Sources */,
 				52DCB349A1366D63BA17015778370DC8 /* LocationManager.swift in Sources */,
+				893DC78324C9EC39009B40FC /* TaskEmptyView.swift in Sources */,
 				22960931F56B74CFCCD74457924AA639 /* LocationService.swift in Sources */,
 				A78DC82415C9595D7C2E2073728850B7 /* Mapper+Extensions.swift in Sources */,
 				FD6FE851111BC7C23AAFFBEB8A3371E3 /* NavigationBarStyles.swift in Sources */,
 				A9813D28CBE43D866095CF469018E1CA /* NetworkApiGateway.swift in Sources */,
 				7CA4E06970B29130007E058AE7648CC3 /* NetworkUtility.swift in Sources */,
 				1A78BA404AD668A11650D84004987AD9 /* NSAttributedString+Extensions.swift in Sources */,
+				893DC77624C98664009B40FC /* FeedTableViewCell.swift in Sources */,
 				EC1BB5FD1D19500AF9AEEACF30A2BA4D /* NSAttributedString+Palette.swift in Sources */,
 				3B7F40060826A23D8062D4D22B640BCE /* OptInPermission.swift in Sources */,
 				B6F0CE88E3C1428540811DB946969312 /* OptInPermissionViewController.swift in Sources */,
@@ -8571,6 +8602,7 @@
 				356546F32AB4C24FFB06799DA286E1DD /* Page+Wearable.swift in Sources */,
 				FEBCEC7BD91AD599B07411DB038A68CE /* Page.swift in Sources */,
 				506B23A309549F443810E45662F603E4 /* PagedSectionCoordinator.swift in Sources */,
+				893DC78124C9E753009B40FC /* FeedListSectionHeader.swift in Sources */,
 				A61A07DE4576DEC6C265C6317E23D5D4 /* PageProtocols.swift in Sources */,
 				4D3C6C135CFAAD6D54B41063C5E31B41 /* PageRef.swift in Sources */,
 				472B7C20616F171160AE5927A2BD62AA /* PhoneNumberView.swift in Sources */,

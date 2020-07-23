@@ -11,6 +11,7 @@ import UIKit
 enum GenericButtonTextStyleCategory: StyleCategory {
     case primaryBackground(shadow: Bool = true)
     case secondaryBackground(shadow: Bool = true)
+    case feed
     
     var style: Style<GenericButtonView> {
         switch self {
@@ -30,6 +31,11 @@ enum GenericButtonTextStyleCategory: StyleCategory {
             if shadow {
                 buttonView.addShadowLinear(goingDown: false)
             }
+            }
+        case .feed: return Style<GenericButtonView> { buttonView in
+            buttonView.backgroundColor = .clear
+            buttonView.button.apply(style: ButtonTextStyleCategory.feed.style)
+            buttonView.buttonAttributedTextStyle = AttributedTextStyle(fontStyle: .header2, colorType: .primaryText)
             }
         }
     }
@@ -60,7 +66,11 @@ class GenericButtonView: UIView {
     
     fileprivate var buttonAttributedTextStyle: AttributedTextStyle?
     
-    fileprivate let button = UIButton()
+    fileprivate let button: UIButton = {
+        let button = UIButton()
+        button.contentEdgeInsets = UIEdgeInsets(top: 0.0, left: 18.0, bottom: 0.0, right: 18.0)
+        return button
+    }()
     
     private var buttonEnabledObserver: NSKeyValueObservation?
     

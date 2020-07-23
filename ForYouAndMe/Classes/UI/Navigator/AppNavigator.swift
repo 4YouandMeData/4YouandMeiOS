@@ -316,6 +316,14 @@ class AppNavigator {
         self.window.rootViewController = tabBarController
     }
     
+    public func switchToFeedTab(presenter: UIViewController) {
+        guard let tabBarController = presenter.tabBarController else { return }
+        guard let feedViewControllerIndex = tabBarController.viewControllers?.firstIndex(where: { viewController in
+            (viewController as? UINavigationController)?.viewControllers.first is FeedViewController
+        }) else { return }
+        tabBarController.selectedIndex = feedViewControllerIndex
+    }
+    
     // MARK: Progress HUD
     
     public func pushProgressHUD() {

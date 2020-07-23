@@ -78,9 +78,17 @@
       "PHONE_VERIFICATION_LEGAL_PRIVACY_POLICY": "Privacy Policy",
       "PHONE_VERIFICATION_LEGAL_TERMS_OF_SERVICE": "Terms of service",
       "TAB_FEED": "FEED",
-      "TAB_TASK": "TASK",
+      "TAB_TASK": "TASKS",
       "TAB_USER_DATA": "YOUR DATA",
-      "TAB_STUDY_INFO": "STUDY INFO"
+      "TAB_STUDY_INFO": "STUDY INFO",
+      "TAB_TASK_TITLE": "Tasks",
+      "TAB_USER_DATA_TITLE": "Your Data",
+      "TAB_STUDY_INFO_TITLE": "Study Info",
+      "TAB_FEED_EMPTY_TITLE": "No tasks are available yet",
+      "TAB_FEED_EMPTY_SUBTITLE": "Wait 24 hours and try again",
+      "TAB_TASK_EMPTY_TITLE": "You haven’t started any tasks yet",
+      "TAB_TASK_EMPTY_SUBTITLE": "Start a new task!",
+      "TAB_TASK_EMPTY_BUTTON": "Go!"
     },
     "country_codes": ["US", "GB", "IT"]
 }
