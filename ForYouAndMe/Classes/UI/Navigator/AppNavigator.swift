@@ -16,6 +16,8 @@ class AppNavigator {
     private let repository: Repository
     private let window: UIWindow
     
+    private var currentTaskCoordinator: TaskSectionCoordinator?
+    
     init(withRepository repository: Repository, window: UIWindow) {
         self.repository = repository
         self.window = window
@@ -54,8 +56,6 @@ class AppNavigator {
             case .optInSection: self.startOptInSection(navigationController: testNavigationViewController)
             case .consentUserDataSection: self.startUserContentDataSection(navigationController: testNavigationViewController)
             case .wearablesSection: self.startWearablesSection(navigationController: testNavigationViewController)
-            case .testTaskSheetSection:
-                testNavigationViewController.pushViewController(TestTaskSheetViewController(), animated: true)
             }
             return
         }
@@ -325,6 +325,22 @@ class AppNavigator {
             (viewController as? UINavigationController)?.viewControllers.first is FeedViewController
         }) else { return }
         tabBarController.selectedIndex = feedViewControllerIndex
+    }
+    
+    // MARK: Task
+    
+    public func startTaskSection(taskType: TaskType, presenter: UIViewController) {
+        let completionCallback: ViewControllerCallback = { [weak self] presenter in
+            guard let self = self else { return }
+            presenter.dismiss(animated: true, completion: nil)
+            self.currentTaskCoordinator = nil
+        }
+        let coordinator = TaskSectionCoordinator(withTaskType: taskType,
+                                                 presenter: presenter,
+                                                 completionCallback: completionCallback)
+        let startingPage = coordinator.getStartingPage()
+        presenter.present(startingPage, animated: true, completion: nil)
+        self.currentTaskCoordinator = coordinator
     }
     
     // MARK: Progress HUD

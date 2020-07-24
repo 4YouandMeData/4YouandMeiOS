@@ -104,7 +104,7 @@ extension TaskViewController: FeedListManagerDelegate {
         var testFeed = Feed.createTestTaskFeed(title: "Reaction Time Task",
                                                description: "Description",
                                                creationDate: date,
-                                               taskType: "reaction_time",
+                                               taskType: .reactionTime,
                                                startColor: UIColor(hexRGB: 0x918EF2),
                                                endColor: UIColor(hexRGB: 0x918EF2))
         feeds.append(testFeed)
@@ -112,7 +112,7 @@ extension TaskViewController: FeedListManagerDelegate {
         testFeed = Feed.createTestTaskFeed(title: "Trail Making Task",
                                            description: "Description",
                                            creationDate: date,
-                                           taskType: "trail_making",
+                                           taskType: .trailMaking,
                                            startColor: ColorPalette.color(withType: .primary),
                                            endColor: ColorPalette.color(withType: .gradientPrimaryEnd))
         feeds.append(testFeed)
@@ -120,7 +120,7 @@ extension TaskViewController: FeedListManagerDelegate {
         testFeed = Feed.createTestTaskFeed(title: "Walk Test",
                                            description: "Complete your 3-Minute Walk Test",
                                            creationDate: date,
-                                           taskType: "walk",
+                                           taskType: .walk,
                                            startColor: UIColor(hexRGB: 0xFF94C5),
                                            endColor: UIColor(hexRGB: 0xE167AC))
         feeds.append(testFeed)
@@ -128,7 +128,7 @@ extension TaskViewController: FeedListManagerDelegate {
         testFeed = Feed.createTestTaskFeed(title: "Gait Activity",
                                            description: "Measure your gait and balance as you walk and stand still",
                                            creationDate: date,
-                                           taskType: "gait",
+                                           taskType: .gait,
                                            startColor: UIColor(hexRGB: 0xFA8886),
                                            endColor: UIColor(hexRGB: 0xF57286))
         feeds.append(testFeed)
@@ -136,7 +136,7 @@ extension TaskViewController: FeedListManagerDelegate {
         testFeed = Feed.createTestTaskFeed(title: "Tremor Task",
                                            description: "Description",
                                            creationDate: date,
-                                           taskType: "tremor",
+                                           taskType: .tremor,
                                            startColor: UIColor(hexRGB: 0x918EF2),
                                            endColor: UIColor(hexRGB: 0x918EF2))
         feeds.append(testFeed)
@@ -149,7 +149,7 @@ extension Feed {
     static func createTestTaskFeed(title: String,
                                    description: String,
                                    creationDate: Date,
-                                   taskType: String,
+                                   taskType: TaskType,
                                    startColor: UIColor,
                                    endColor: UIColor) -> Feed {
         return Feed(title: title,

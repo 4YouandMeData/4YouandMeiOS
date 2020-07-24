@@ -165,7 +165,8 @@ extension FeedListManager: UITableViewDataSource {
                 return UITableViewCell()
             }
             cell.display(data: feed, buttonPressedCallback: { [weak self] in
-                guard let delegate = self?.delegate else { return }
+                guard let self = self else { return }
+                guard let delegate = self.delegate else { return }
                 guard let feedBehavior = feed.behavior else {
                     assertionFailure("Missing behavior for FeedTableViewCell button callback")
                     return
@@ -180,10 +181,8 @@ extension FeedListManager: UITableViewDataSource {
                     // TODO: Show external link
                     print("TODO: Show external link with url '\(url)'")
                     delegate.presenter.showAlert(withTitle: "External Link", message: "Work in progress", closeButtonText: "OK")
-                case .task(let taskId, let taskType):
-                    // TODO: Show task
-                    print("TODO: Show task with Id '\(taskId)' and type '\(taskType)'")
-                    delegate.presenter.showAlert(withTitle: "Task", message: "Work in progress", closeButtonText: "OK")
+                case .task(_, let taskType):
+                    self.navigator.startTaskSection(taskType: taskType, presenter: delegate.presenter)
                 }
             })
             return cell

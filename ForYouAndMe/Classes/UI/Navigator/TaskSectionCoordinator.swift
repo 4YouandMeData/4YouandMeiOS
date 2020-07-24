@@ -20,113 +20,17 @@ enum TaskType: String, CaseIterable {
     }
 }
 
-class TestTaskSheetViewController: UIViewController {
-    
-    var currentTaskCoordinator: TaskSectionCoordinator?
-    
-    init() {
-        super.init(nibName: nil, bundle: nil)
-    }
-    
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-    
-    public override func viewDidLoad() {
-        super.viewDidLoad()
-        
-        self.view.backgroundColor = ColorPalette.color(withType: .secondary)
-        
-        // ScrollStackView
-        let scrollStackView = ScrollStackView(axis: .vertical, horizontalInset: Constants.Style.DefaultHorizontalMargins)
-        self.view.addSubview(scrollStackView)
-        scrollStackView.autoPinEdgesToSuperviewSafeArea(with: .zero)
-        
-        scrollStackView.stackView.addBlankSpace(space: 50.0)
-        
-        TaskType.allCases.forEach { taskType in
-            self.addButton(forType: taskType, stackView: scrollStackView.stackView)
-        }
-    }
-    
-    public override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
-        self.navigationController?.navigationBar.apply(style: NavigationBarStyleCategory.secondary(hidden: true).style)
-    }
-    
-    // MARK: Actions
-    
-    @objc private func reactionTimeButtonPressed() {
-        self.startTaskSection(taskType: .reactionTime)
-    }
-    
-    @objc private func trailMakingButtonPressed() {
-        self.startTaskSection(taskType: .trailMaking)
-    }
-    
-    @objc private func walkButtonPressed() {
-        self.startTaskSection(taskType: .walk)
-    }
-    
-    @objc private func gaitButtonPressed() {
-        self.startTaskSection(taskType: .gait)
-    }
-    
-    @objc private func tremorButtonPressed() {
-        self.startTaskSection(taskType: .tremor)
-    }
-    
-    // MARK: Private Methods
-    
-    private func addButton(forType type: TaskType, stackView: UIStackView) {
-        let buttonView = GenericButtonView(withTextStyleCategory: .secondaryBackground(shadow: false))
-        switch type {
-        case .reactionTime:
-            buttonView.setButtonText("Reaction Time")
-            buttonView.addTarget(target: self, action: #selector(self.reactionTimeButtonPressed))
-        case .trailMaking:
-            buttonView.setButtonText("Trail Making")
-            buttonView.addTarget(target: self, action: #selector(self.trailMakingButtonPressed))
-        case .walk:
-            buttonView.setButtonText("Walk")
-            buttonView.addTarget(target: self, action: #selector(self.walkButtonPressed))
-        case .gait:
-            buttonView.setButtonText("Gait")
-            buttonView.addTarget(target: self, action: #selector(self.gaitButtonPressed))
-        case .tremor:
-            buttonView.setButtonText("Tremor")
-            buttonView.addTarget(target: self, action: #selector(self.tremorButtonPressed))
-        }
-        stackView.addArrangedSubview(buttonView)
-    }
-    
-    private func startTaskSection(taskType: TaskType) {
-        guard let navigationController = self.navigationController else { return }
-        let completionCallback: NavigationControllerCallback = { [weak self] navigationController in
-            guard let self = self else { return }
-            navigationController.dismiss(animated: true, completion: nil)
-            self.currentTaskCoordinator = nil
-        }
-        let coordinator = TaskSectionCoordinator(withTaskType: taskType,
-                                                 navigationController: navigationController,
-                                                 completionCallback: completionCallback)
-        let startingPage = coordinator.getStartingPage()
-        navigationController.present(startingPage, animated: true, completion: nil)
-        self.currentTaskCoordinator = coordinator
-    }
-}
-
 class TaskSectionCoordinator: NSObject {
     
-    public unowned var navigationController: UINavigationController
+    public unowned var presenter: UIViewController
     
     private let taskType: TaskType
-    private let completionCallback: NavigationControllerCallback
+    private let completionCallback: ViewControllerCallback
     
     init(withTaskType taskType: TaskType,
-         navigationController: UINavigationController,
-         completionCallback: @escaping NavigationControllerCallback) {
-        self.navigationController = navigationController
+         presenter: UIViewController,
+         completionCallback: @escaping ViewControllerCallback) {
+        self.presenter = presenter
         self.taskType = taskType
         self.completionCallback = completionCallback
         super.init()
@@ -153,8 +57,6 @@ class TaskSectionCoordinator: NSObject {
         taskViewController.delegate = self
         // It's mandatory for som tasks (e.g.: Reaction Time Task)
         taskViewController.outputDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
-//        taskViewController.view.backgroundColor = ColorPalette.color(withType: .secondary)
-//        taskViewController.isNavigationBarHidden = true
         return taskViewController
     }
     
@@ -214,7 +116,7 @@ class TaskSectionCoordinator: NSObject {
     }
     
     private func cancelTask() {
-        self.completionCallback(self.navigationController)
+        self.completionCallback(self.presenter)
     }
     
     private func delay(_ delay: Double, closure: @escaping () -> Void ) {
@@ -231,12 +133,12 @@ extension TaskSectionCoordinator: ORKTaskViewControllerDelegate {
         print("TaskSectionCoordinator - Task Finished with reason: \(reason). Result: \(taskViewController.result)")
         switch reason {
         case .completed:
-            self.completionCallback(self.navigationController)
+            self.completionCallback(self.presenter)
         case .discarded:
             print("TaskSectionCoordinator - Task Discarded")
             self.cancelTask()
         case .failed:
-            self.completionCallback(self.navigationController)
+            self.completionCallback(self.presenter)
         case .saved:
             print("TaskSectionCoordinator - Task Saved")
             self.cancelTask()

@@ -10,7 +10,7 @@ import Foundation
 enum FeedBehavior {
     case info(body: String)
     case externalLink(url: URL)
-    case task(taskId: String, taskType: String)
+    case task(taskId: String, taskType: TaskType)
 }
 
 struct Feed {
@@ -22,7 +22,7 @@ struct Feed {
     let infoBody: String?
     let externalLinkUrl: URL?
     let taskId: String?
-    let taskType: String? // TODO: Replace with enum representing the possible tasks
+    let taskType: TaskType?
     
     let startColor: UIColor
     let endColor: UIColor
