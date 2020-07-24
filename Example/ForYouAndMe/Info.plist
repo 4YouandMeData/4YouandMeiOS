@@ -32,6 +32,12 @@
 	<string>$(PRODUCT_NAME) will use your location to verify information such as how far you travelled and the speed at which you travelled, as described in the informed consent.</string>
     <key>NSMotionUsageDescription</key>
     <string>$(PRODUCT_NAME) will use your motion data for your active tasks.</string>
+    <key>NSMicrophoneUsageDescription</key>
+    <string>$(PRODUCT_NAME) records audio during certain tasks.</string>
+    <key>NSCameraUsageDescription</key>
+    <string>$(PRODUCT_NAME) captures photos and video during certain tasks.</string>
+    <key>NSSpeechRecognitionUsageDescription</key>
+    <string>$(PRODUCT_NAME) uses Speech Recognition during certain tasks.</string>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIRequiredDeviceCapabilities</key>
