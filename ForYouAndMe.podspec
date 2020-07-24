@@ -32,7 +32,6 @@ Pod::Spec.new do |s|
   }
    
   s.frameworks = 'UIKit'
-  s.ios.vendored_frameworks = 'ForYouAndMe/Frameworks/ResearchKit.framework'
   
   s.dependency 'Moya/RxSwift', '~> 14.0.0'
   s.dependency 'Moya-ModelMapper/RxSwift', '~> 10.0.0'
@@ -50,6 +49,7 @@ Pod::Spec.new do |s|
   s.dependency 'Japx/RxCodableMoya', '~> 3.0.0'
   s.dependency 'UberSignature', '~> 1.0.3'
   s.dependency 'RxSwiftExt', '~> 5.2.0'
+  s.dependency 'FYAMResearchKit', '~> 2.1.3'
   
   s.static_framework = true
   

@@ -27,9 +27,6 @@
     ]
   },
   "frameworks": "UIKit",
-  "ios": {
-    "vendored_frameworks": "ForYouAndMe/Frameworks/ResearchKit.framework"
-  },
   "dependencies": {
     "Moya/RxSwift": [
       "~> 14.0.0"
@@ -78,6 +75,9 @@
     ],
     "RxSwiftExt": [
       "~> 5.2.0"
+    ],
+    "FYAMResearchKit": [
+      "~> 2.1.3"
     ]
   },
   "static_framework": true,

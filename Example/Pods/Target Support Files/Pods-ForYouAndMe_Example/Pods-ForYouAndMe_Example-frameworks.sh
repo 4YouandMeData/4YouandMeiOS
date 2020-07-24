@@ -199,7 +199,7 @@ fi
 if [[ "$CONFIGURATION" == "Debug" ]]; then
   install_framework "${BUILT_PRODUCTS_DIR}/Alamofire/Alamofire.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/CountryPickerView/CountryPickerView.framework"
-  install_framework "${PODS_ROOT}/../../ForYouAndMe/Frameworks/ResearchKit.framework"
+  install_framework "${BUILT_PRODUCTS_DIR}/FYAMResearchKit/ResearchKit.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/GoogleUtilities/GoogleUtilities.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/Japx/Japx.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/ModelMapper/Mapper.framework"
@@ -223,7 +223,7 @@ fi
 if [[ "$CONFIGURATION" == "Release" ]]; then
   install_framework "${BUILT_PRODUCTS_DIR}/Alamofire/Alamofire.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/CountryPickerView/CountryPickerView.framework"
-  install_framework "${PODS_ROOT}/../../ForYouAndMe/Frameworks/ResearchKit.framework"
+  install_framework "${BUILT_PRODUCTS_DIR}/FYAMResearchKit/ResearchKit.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/GoogleUtilities/GoogleUtilities.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/Japx/Japx.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/ModelMapper/Mapper.framework"
