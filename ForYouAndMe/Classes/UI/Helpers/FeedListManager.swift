@@ -58,7 +58,6 @@ class FeedListManager: NSObject {
         self.tableView.tableFooterView = UIView()
         self.tableView.separatorStyle = .none
         self.tableView.estimatedRowHeight = 300.0
-        self.tableView.contentInset = UIEdgeInsets(top: 16.0, left: 0.0, bottom: 0.0, right: 0.0)
         
         // Pull to refresh
         if pullToRefresh {
@@ -81,6 +80,11 @@ class FeedListManager: NSObject {
     
     public func viewWillAppear() {
         self.loadItems()
+    }
+    
+    public func viewDidLayoutSubviews() {
+        self.tableView.reloadData()
+        self.tableView.sizeHeaderToFit()
     }
     
     // MARK: - Private Methods
@@ -106,7 +110,6 @@ class FeedListManager: NSObject {
                 self.reloadTableView()
                 
                 self.currentRequestDisposable = nil
-                self.tableView.sizeHeaderToFit()
                 
                 onCompletion?()
                 
@@ -121,9 +124,18 @@ class FeedListManager: NSObject {
     
     private func reloadTableView() {
         // TODO: Update show logic when quick activities are added
-        let showContent = self.sections.count > 0
-        self.delegate?.handleEmptyList(show: !showContent)
+        let showEmptyView = self.sections.count == 0
+        self.delegate?.handleEmptyList(show: showEmptyView)
         self.tableView.reloadData()
+        self.tableView.sizeHeaderToFit()
+        if showEmptyView {
+            self.goToTop()
+        }
+    }
+    
+    private func goToTop() {
+        self.tableView.contentOffset = .zero
+        self.tableView.scrollRectToVisible(CGRect(x: 0, y: 0, width: 1, height: 1), animated: false)
     }
     
     // MARK: - Actions

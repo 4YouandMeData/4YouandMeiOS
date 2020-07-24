@@ -15,6 +15,7 @@ public extension UITableView {
             
             let height = headerView.systemLayoutSizeFitting(CGSize(width: self.frame.width, height: 0)).height
             var frame = headerView.frame
+            frame.size.width = self.frame.width
             frame.size.height = height
             headerView.frame = frame
             

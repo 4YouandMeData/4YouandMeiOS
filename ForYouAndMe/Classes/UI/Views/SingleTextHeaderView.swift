@@ -9,7 +9,7 @@ import UIKit
 
 class SingleTextHeaderView: UIView {
     
-    private static let headerHeight: CGFloat = 44.0
+    private static let headerHeight: CGFloat = 64.0
     
     private let titleLabel = UILabel()
     

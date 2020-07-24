@@ -36,6 +36,9 @@ class TaskViewController: UIViewController {
         
         tableView.backgroundColor = .clear
         tableView.separatorStyle = .none
+        
+        tableView.contentInset = UIEdgeInsets(top: 16.0, left: 0.0, bottom: 0.0, right: 0.0)
+        
         return tableView
     }()
     
@@ -79,6 +82,11 @@ class TaskViewController: UIViewController {
         self.navigationController?.navigationBar.apply(style: NavigationBarStyleCategory.primary(hidden: true).style)
         
         self.listManager.viewWillAppear()
+    }
+    
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        self.listManager.viewDidLayoutSubviews()
     }
 }
 
