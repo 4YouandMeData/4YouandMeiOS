@@ -85,6 +85,12 @@ enum TaskNetworkParameter: String {
     case index
     case incorrect
     case taps
+    case timedWalkTrial1 = "timed_walk_trial_1"
+    case timedWalkTurnAround = "timed_walk_turn_around"
+    case timedWalkTrial2 = "timed_walk_trial_2"
+    case distanceInMeters = "distance_in_meters"
+    case timeLimit = "time_limit"
+    case duration = "duration"
 }
 
 // MARK: - TaskOptions
@@ -192,5 +198,46 @@ extension Array where Element == TaskHandOption {
             result.insert(option.internalValue)
             return result
         }
+    }
+}
+
+extension ORKTaskResult {
+    func getResult<T: ORKResult>(forIdentifier identifier: String) -> [T]? {
+        guard let result = ((self.results?
+            .filter({ $0.identifier == identifier })
+            .first as? ORKStepResult)?
+            .results?
+            .filter({ $0 is T }) as? [T]) else {
+            return nil
+        }
+        return result
+    }
+}
+
+extension Array where Element == ORKFileResult {
+    var fileResults: [String: Any] {
+        var result: [String: Any] = [:]
+        
+        for fileResult in self {
+            guard fileResult.contentType == Constants.Task.fileResultMimeType,
+                let url = fileResult.fileURL,
+                let value = try? String(contentsOf: url, encoding: .utf8) else {
+                    return result
+            }
+
+            switch fileResult.identifier {
+            case TaskRecorderIdentifier.deviceMotion.rawValue:
+                result[TaskNetworkParameter.deviceMotionInfo.rawValue] = value
+            case TaskRecorderIdentifier.accelerometer.rawValue:
+                result[TaskNetworkParameter.accelerometerInfo.rawValue] = value
+            case TaskRecorderIdentifier.pedometer.rawValue:
+                result[TaskNetworkParameter.pedometerInfo.rawValue] = value
+            case TaskRecorderIdentifier.location.rawValue:
+                result[TaskNetworkParameter.locationInfo.rawValue] = value
+            default:
+                break
+            }
+        }
+        return result
     }
 }

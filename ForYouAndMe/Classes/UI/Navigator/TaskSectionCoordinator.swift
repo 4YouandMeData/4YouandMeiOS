@@ -50,45 +50,6 @@ class TaskSectionCoordinator: NSObject {
     
     // MARK: - Private Methods
     
-    private func createTrailMakingTask() -> ORKTask {
-        
-        return ORKOrderedTask.trailmakingTask(withIdentifier: self.taskType.identifier,
-                                              intendedUseDescription: "Trail making",
-                                              trailmakingInstruction: "Trail making instructions",
-                                              trailType: ORKTrailMakingTypeIdentifier.A,
-                                              options: [])
-    }
-    
-    private func createWalkTask() -> ORKTask {
-        
-        return ORKOrderedTask.timedWalk(withIdentifier: self.taskType.identifier,
-                                        intendedUseDescription: "Walk Test",
-                                        distanceInMeters: 100,
-                                        timeLimit: 180.0,
-                                        turnAroundTimeLimit: 60.0,
-                                        includeAssistiveDeviceForm: true,
-                                        options: [])
-    }
-    
-    private func createGaitTask() -> ORKTask {
-        
-        return ORKOrderedTask.shortWalk(withIdentifier: self.taskType.identifier,
-                                        intendedUseDescription: nil,
-                                        numberOfStepsPerLeg: 20,
-                                        restDuration: 20,
-                                        options: [])
-    }
-    
-    private func createTremorTask() -> ORKTask {
-        
-        return ORKOrderedTask.tremorTest(withIdentifier: self.taskType.identifier,
-                                         intendedUseDescription: nil,
-                                         activeStepDuration: 10,
-                                         activeTaskOptions: [],
-                                         handOptions: [.both],
-                                         options: [])
-    }
-    
     private func cancelTask() {
         self.completionCallback()
     }
@@ -115,6 +76,7 @@ class TaskSectionCoordinator: NSObject {
             .subscribe(onSuccess: { [weak self] in
                 guard let self = self else { return }
                 self.navigator.popProgressHUD()
+                self.deleteTaskResult(path: Constants.Task.taskResultURL)
                 self.completionCallback()
             }, onError: { [weak self] error in
                 guard let self = self else { return }
@@ -127,6 +89,15 @@ class TaskSectionCoordinator: NSObject {
         let delayTime = DispatchTime.now() + delay
         let dispatchWorkItem = DispatchWorkItem(block: closure)
         DispatchQueue.main.asyncAfter(deadline: delayTime, execute: dispatchWorkItem)
+    }
+    
+    private func deleteTaskResult(path: URL) {
+        let outputDirectory = path
+        do {
+            try FileManager.default.removeItem(atPath: outputDirectory.path)
+        } catch let error {
+            debugPrint(error)
+        }
     }
 }
 

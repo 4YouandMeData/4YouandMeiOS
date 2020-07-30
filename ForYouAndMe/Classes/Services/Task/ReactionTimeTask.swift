@@ -25,9 +25,7 @@ class ReactionTimeTask {
     
     static func getNetworkResultData(taskResult: ORKTaskResult) -> TaskNetworkResult? {
         let reactionTimeIdentifier = ORKReactionTimeStepIdentifier
-        guard let reactionTimeTaskResult = ((taskResult.results?
-            .filter({ $0.identifier == reactionTimeIdentifier })
-            .first as? ORKStepResult)?.results as? [ORKReactionTimeResult]) else {
+        guard let reactionTimeTaskResult: [ORKReactionTimeResult] = taskResult.getResult(forIdentifier: reactionTimeIdentifier) else {
                 assertionFailure("Couldn't find expected result data")
                 return nil
         }
