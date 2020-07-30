@@ -329,14 +329,15 @@ class AppNavigator {
     
     // MARK: Task
     
-    public func startTaskSection(taskType: TaskType, presenter: UIViewController) {
-        let completionCallback: ViewControllerCallback = { [weak self] presenter in
+    public func startTaskSection(taskIdentifier: String, taskType: TaskType, taskOptions: TaskOptions?, presenter: UIViewController) {
+        let completionCallback: NotificationCallback = { [weak self] in
             guard let self = self else { return }
             presenter.dismiss(animated: true, completion: nil)
             self.currentTaskCoordinator = nil
         }
-        let coordinator = TaskSectionCoordinator(withTaskType: taskType,
-                                                 presenter: presenter,
+        let coordinator = TaskSectionCoordinator(withTaskIdentifier: taskIdentifier,
+                                                 taskType: taskType,
+                                                 taskOptions: taskOptions,
                                                  completionCallback: completionCallback)
         let startingPage = coordinator.getStartingPage()
         presenter.present(startingPage, animated: true, completion: nil)
@@ -387,7 +388,7 @@ class AppNavigator {
         presenter.present(navigationViewController, animated: true)
     }
     
-    public func handleError(error: Error?, presenter: UIViewController) {
+    public func handleError(error: Error?, presenter: UIViewController, completion: @escaping NotificationCallback = {}) {
         SVProgressHUD.dismiss() // Safety dismiss
         guard let error = error else {
             presenter.showGenericErrorAlert()
@@ -400,7 +401,7 @@ class AppNavigator {
         }
         
         if false == self.handleUserNotLoggedError(error: error) {
-            presenter.showAlert(forError: repositoryError)
+            presenter.showAlert(forError: repositoryError, completion: completion)
         }
     }
     

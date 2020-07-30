@@ -294,6 +294,11 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         // Answers
         case .sendAnswer(let answer, _):
             return "v1/questions/\(answer.question.id)/answer"
+        // Task
+        case .sendTaskResultData(let taskId, _):
+            return "v1/tasks/\(taskId)"
+        case .sendTaskResultFile(let taskId, _):
+            return "v1/tasks/\(taskId)/attach"
         }
     }
     
@@ -318,7 +323,9 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             return .post
         case .verifyEmail,
              .resendConfirmationEmail,
-             .updateUserConsent:
+             .updateUserConsent,
+             .sendTaskResultData,
+             .sendTaskResultFile:
             return .patch
         }
     }
@@ -354,6 +361,9 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         case .getWearablesSection: return Bundle.getTestData(from: "TestGetWearablesSection")
         // Answers
         case .sendAnswer: return "{}".utf8Encoded
+        // Task
+        case .sendTaskResultData: return "{}".utf8Encoded
+        case .sendTaskResultFile: return "{}".utf8Encoded
         }
     }
     
@@ -404,6 +414,14 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             params["possible_answer_id"] = answer.possibleAnswer.id
             params.addContext(context)
             return .requestParameters(parameters: ["answer": params], encoding: JSONEncoding.default)
+        case .sendTaskResultData(_, let resultData):
+            var params: [String: Any] = [:]
+            params["result"] = resultData
+            return .requestParameters(parameters: ["task": params], encoding: JSONEncoding.default)
+        case .sendTaskResultFile(_, let resultFileString):
+            var params: [String: Any] = [:]
+            params["attachment_base64"] = resultFileString
+            return .requestParameters(parameters: ["task": params], encoding: JSONEncoding.default)
         }
     }
     
@@ -428,7 +446,9 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
              .verifyEmail,
              .resendConfirmationEmail,
              .getWearablesSection,
-             .sendAnswer:
+             .sendAnswer,
+             .sendTaskResultData,
+             .sendTaskResultFile:
             return .bearer
         }
     }

@@ -10,6 +10,7 @@ import RxSwift
 import CoreLocation
 
 protocol LocationService {
+    var locationAuthorized: Bool { get }
     var currentPermissionStatus: CLAuthorizationStatus { get }
     func requestPermission(always: Bool) -> Single<()>
 }

@@ -75,4 +75,6 @@ protocol Repository: class {
     func sendUserData(firstName: String, lastName: String, signatureImage: UIImage) -> Single<()>
     // Wearables Section
     func getWearablesSection() -> Single<WearablesSection>
+    // Tasks
+    func sendTaskResult(taskId: String, taskResult: TaskNetworkResult) -> Single<()>
 }

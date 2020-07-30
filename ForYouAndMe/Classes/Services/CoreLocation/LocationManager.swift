@@ -11,6 +11,10 @@ import RxSwift
 
 class LocationManager: NSObject, LocationService {
     
+    var locationAuthorized: Bool {
+        return CLLocationManager.locationServicesEnabled()
+            && [.authorizedAlways, .authorizedWhenInUse].contains(CLLocationManager.authorizationStatus())
+    }
     var currentPermissionStatus: CLAuthorizationStatus { CLLocationManager.authorizationStatus() }
     
     private let locationManager: CLLocationManager

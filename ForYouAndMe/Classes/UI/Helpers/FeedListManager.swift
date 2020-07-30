@@ -181,8 +181,12 @@ extension FeedListManager: UITableViewDataSource {
                     // TODO: Show external link
                     print("TODO: Show external link with url '\(url)'")
                     delegate.presenter.showAlert(withTitle: "External Link", message: "Work in progress", closeButtonText: "OK")
-                case .task(_, let taskType):
-                    self.navigator.startTaskSection(taskType: taskType, presenter: delegate.presenter)
+                case .task(let taskId, let taskType):
+                    // TODO: Provide task options if expected by API design
+                    self.navigator.startTaskSection(taskIdentifier: taskId,
+                                                    taskType: taskType,
+                                                    taskOptions: nil,
+                                                    presenter: delegate.presenter)
                 }
             })
             return cell

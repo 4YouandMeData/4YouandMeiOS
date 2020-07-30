@@ -183,6 +183,21 @@ extension RepositoryImpl: Repository {
         return self.api.send(request: ApiRequest(serviceRequest: .getWearablesSection))
             .handleError()
     }
+    
+    // MARK: - Tasks
+    
+    func sendTaskResult(taskId: String, taskResult: TaskNetworkResult) -> Single<()> {
+        var sendRequest = self.api.send(request: ApiRequest(serviceRequest: .sendTaskResultData(taskId: taskId,
+                                                                                                resultData: taskResult.data)))
+            .handleError()
+        if let taskResultFile = taskResult.attachedFile {
+            sendRequest = sendRequest.flatMap {
+                self.api.send(request: ApiRequest(serviceRequest: .sendTaskResultFile(taskId: taskId, resultFileString: taskResultFile)))
+                .handleError()
+            }
+        }
+        return sendRequest
+    }
 }
 
 // MARK: - Extension(PrimitiveSequence)

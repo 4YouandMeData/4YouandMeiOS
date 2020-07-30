@@ -11,6 +11,9 @@ import RxSwift
 import Mapper
 import Japx
 
+typealias TaskNetworkResultData = [String: Any]
+typealias TaskNetworkResultFile = String // Base 64 String representation of the attached file
+
 enum DefaultService {
     // Misc
     case getGlobalConfig
@@ -36,6 +39,9 @@ enum DefaultService {
     case getWearablesSection
     // Answer
     case sendAnswer(answer: Answer, context: ApiContext?)
+    // Task
+    case sendTaskResultData(taskId: String, resultData: TaskNetworkResultData)
+    case sendTaskResultFile(taskId: String, resultFileString: TaskNetworkResultFile)
 }
 
 struct ApiRequest {

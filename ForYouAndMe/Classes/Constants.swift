@@ -52,4 +52,15 @@ struct Constants {
         static let FitbitStoreUrl: URL = URL(string: "itms-apps://apps.apple.com/us/app/fitbit-health-fitness/id462638897")!
         static let FitbitAppSchema: URL = URL(string: "fitbit://")!
     }
+    
+    struct Task {
+        static let fileResultMimeType = "application/json"
+        
+        static let taskResultURL: URL = {
+            let documentsDirectoryString = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)[0]
+            var resultDirectory = URL(fileURLWithPath: documentsDirectoryString, isDirectory: true)
+            resultDirectory.appendPathComponent("TaskResult")
+            return resultDirectory
+        }()
+    }
 }

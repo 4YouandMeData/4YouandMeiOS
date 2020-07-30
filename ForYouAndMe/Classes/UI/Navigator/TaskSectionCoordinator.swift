@@ -7,74 +7,48 @@
 
 import Foundation
 import ResearchKit
-
-enum TaskType: String, CaseIterable {
-    case reactionTime
-    case trailMaking
-    case walk
-    case gait
-    case tremor
-    
-    var identifier: String {
-        return self.rawValue
-    }
-}
+import RxSwift
 
 class TaskSectionCoordinator: NSObject {
     
-    public unowned var presenter: UIViewController
-    
+    private let taskIdentifier: String
     private let taskType: TaskType
-    private let completionCallback: ViewControllerCallback
+    private let taskOptions: TaskOptions?
+    private let completionCallback: NotificationCallback
     
-    init(withTaskType taskType: TaskType,
-         presenter: UIViewController,
-         completionCallback: @escaping ViewControllerCallback) {
-        self.presenter = presenter
+    private let locationService: LocationService
+    private let navigator: AppNavigator
+    private let repository: Repository
+    
+    private let diposeBag = DisposeBag()
+    
+    init(withTaskIdentifier taskIdentifier: String,
+         taskType: TaskType,
+         taskOptions: TaskOptions?,
+         completionCallback: @escaping NotificationCallback) {
+        self.taskIdentifier = taskIdentifier
         self.taskType = taskType
+        self.taskOptions = taskOptions
         self.completionCallback = completionCallback
+        self.locationService = Services.shared.locationService
+        self.navigator = Services.shared.navigator
+        self.repository = Services.shared.repository
         super.init()
     }
     
     // MARK: - Public Methods
     
     public func getStartingPage() -> UIViewController {
-        let task: ORKTask = {
-            switch self.taskType {
-            case .reactionTime:
-                return self.createReactionTimeTask()
-            case .trailMaking:
-                return self.createTrailMakingTask()
-            case .walk:
-                return self.createWalkTask()
-            case .gait:
-                return self.createGaitTask()
-            case .tremor:
-                return self.createTremorTask()
-            }
-        }()
+        let task = self.taskType.createTask(withIdentifier: self.taskIdentifier,
+                                            options: self.taskOptions,
+                                            locationAuthorised: self.locationService.locationAuthorized)
         let taskViewController = ORKTaskViewController(task: task, taskRun: nil)
         taskViewController.delegate = self
-        // It's mandatory for som tasks (e.g.: Reaction Time Task)
-        taskViewController.outputDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+        taskViewController.outputDirectory = Constants.Task.taskResultURL
         return taskViewController
     }
     
     // MARK: - Private Methods
-    
-    private func createReactionTimeTask() -> ORKTask {
-        return ORKOrderedTask.reactionTime(withIdentifier: self.taskType.identifier,
-                                           intendedUseDescription: "aovoiv oon auvon",
-                                           maximumStimulusInterval: 10,
-                                           minimumStimulusInterval: 4,
-                                           thresholdAcceleration: 0.5,
-                                           numberOfAttempts: 3,
-                                           timeout: 3,
-                                           successSound: UInt32(kSystemSoundID_Vibrate),
-                                           timeoutSound: 0,
-                                           failureSound: UInt32(kSystemSoundID_Vibrate),
-                                           options: [])
-    }
     
     private func createTrailMakingTask() -> ORKTask {
         
@@ -116,7 +90,37 @@ class TaskSectionCoordinator: NSObject {
     }
     
     private func cancelTask() {
-        self.completionCallback(self.presenter)
+        self.completionCallback()
+    }
+    
+    private func handleError(error: Error?, presenter: UIViewController) {
+        if let error = error {
+            print("TaskSectionCoordinator - Error: \(error)")
+        }
+        self.navigator.handleError(error: nil, presenter: presenter, completion: { [weak self] in
+            self?.cancelTask()
+        })
+    }
+    
+    private func sendResult(taskResult: ORKTaskResult, presenter: UIViewController) {
+        guard let taskNetworkResult = self.taskType.getNetworkResultData(taskResult: taskResult) else {
+            assertionFailure("Couldn't transform result data to expected network representation")
+            self.navigator.handleError(error: nil, presenter: presenter, completion: { [weak self] in
+                self?.cancelTask()
+            })
+            return
+        }
+        self.navigator.pushProgressHUD()
+        self.repository.sendTaskResult(taskId: self.taskIdentifier, taskResult: taskNetworkResult)
+            .subscribe(onSuccess: { [weak self] in
+                guard let self = self else { return }
+                self.navigator.popProgressHUD()
+                self.completionCallback()
+            }, onError: { [weak self] error in
+                guard let self = self else { return }
+                self.navigator.popProgressHUD()
+                self.navigator.handleError(error: error, presenter: presenter)
+            }).disposed(by: self.diposeBag)
     }
     
     private func delay(_ delay: Double, closure: @escaping () -> Void ) {
@@ -130,21 +134,23 @@ extension TaskSectionCoordinator: ORKTaskViewControllerDelegate {
     func taskViewController(_ taskViewController: ORKTaskViewController,
                             didFinishWith reason: ORKTaskViewControllerFinishReason,
                             error: Error?) {
-        print("TaskSectionCoordinator - Task Finished with reason: \(reason). Result: \(taskViewController.result)")
+//        print("TaskSectionCoordinator - Task Finished with reason: \(reason). Result: \(taskViewController.result)")
         switch reason {
         case .completed:
-            self.completionCallback(self.presenter)
+            print("TaskSectionCoordinator - Task Completed")
+            self.sendResult(taskResult: taskViewController.result, presenter: taskViewController)
         case .discarded:
             print("TaskSectionCoordinator - Task Discarded")
             self.cancelTask()
         case .failed:
-            self.completionCallback(self.presenter)
+            print("TaskSectionCoordinator - Task Failed")
+            self.handleError(error: error, presenter: taskViewController)
         case .saved:
             print("TaskSectionCoordinator - Task Saved")
             self.cancelTask()
         @unknown default:
             print("TaskSectionCoordinator - Unhandled case")
-            self.cancelTask()
+            self.handleError(error: error, presenter: taskViewController)
         }
     }
     
