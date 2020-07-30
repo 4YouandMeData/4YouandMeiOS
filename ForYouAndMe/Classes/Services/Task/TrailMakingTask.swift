@@ -18,7 +18,25 @@ class TrailMakingTask {
     }
     
     static func getNetworkResultData(taskResult: ORKTaskResult) -> TaskNetworkResult? {
-        // TODO: return Trail Making network data
-        return nil
+        let trailMakingIdentifier = "trailmaking" // TODO: Replace with pod identifier when available on FYAMResearchKit
+        guard let trailMakingResult = ((taskResult.results?.filter({ $0.identifier == trailMakingIdentifier }).first as? ORKStepResult)?.results as? [ORKTrailmakingResult])?.first else {
+            assertionFailure("Couldn't find expected result data")
+            return nil
+        }
+        
+        var resultData: [String: Any] = [:]
+        var taps: [[String: Any]] = []
+        
+        for tap in trailMakingResult.taps {
+            let tapInfo: [String: Any] = [TaskNetworkParameter.timestamp.rawValue: tap.timestamp,
+                                          TaskNetworkParameter.index.rawValue: tap.index,
+                                          TaskNetworkParameter.incorrect.rawValue: tap.incorrect]
+            taps.append(tapInfo)
+        }
+        resultData[TaskNetworkParameter.taps.rawValue] = taps
+        resultData[TaskNetworkParameter.numberOfErrors.rawValue] = trailMakingResult.numberOfErrors
+        resultData[TaskNetworkParameter.startTime.rawValue] = trailMakingResult.startDate.timeIntervalSince1970
+        resultData[TaskNetworkParameter.endTime.rawValue] = trailMakingResult.endDate.timeIntervalSince1970
+        return TaskNetworkResult(data: resultData, attachedFile: nil)
     }
 }

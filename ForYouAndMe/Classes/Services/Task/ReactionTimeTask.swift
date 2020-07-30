@@ -56,7 +56,7 @@ class ReactionTimeTask {
 
         resultData[TaskNetworkParameter.attempts.rawValue] = attempts
         resultData[TaskNetworkParameter.startTime.rawValue] = reactionTimeResult.first?.startDate.timeIntervalSince1970
-        resultData[TaskNetworkParameter.endTime.rawValue] = reactionTimeResult.first?.endDate.timeIntervalSince1970
+        resultData[TaskNetworkParameter.endTime.rawValue] = reactionTimeResult.last?.endDate.timeIntervalSince1970
         return TaskNetworkResult(data: resultData, attachedFile: nil)
     }
 }

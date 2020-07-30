@@ -82,6 +82,9 @@ enum TaskNetworkParameter: String {
     case endTime = "end_time"
     case startDate = "start_date"
     case endDate = "end_date"
+    case index
+    case incorrect
+    case taps
 }
 
 // MARK: - TaskOptions
