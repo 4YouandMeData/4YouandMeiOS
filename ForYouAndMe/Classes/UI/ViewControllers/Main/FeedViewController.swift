@@ -31,8 +31,6 @@ class FeedViewController: UIViewController {
         // TODO: Replace with FeedTableViewHeader
         let view = UIView()
         view.autoSetDimension(.height, toSize: Self.tableViewHeaderHeight)
-        // TODO: Handle this (without this constraint, the header width is 0)
-        view.autoSetDimension(.width, toSize: UIScreen.main.bounds.width)
         view.addGradientView(GradientView(type: .primaryBackground))
         return view
     }()
