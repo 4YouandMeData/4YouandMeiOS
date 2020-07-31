@@ -20,7 +20,68 @@ class TremorTask {
     }
     
     static func getNetworkResultData(taskResult: ORKTaskResult) -> TaskNetworkResult? {
-        // TODO: return Tremor network data
-        return nil
+        let leftHandIdentifier = "left"
+        let mostAffectedHandIdentifier = "mostAffected"
+        let rightHandIdentifier = "right"
+        
+        let skipHandIdentifier = "skipHand"
+        
+        let inLapStepIdentifier = "tremor.handInLap"
+        let extendArmStepIdentifier = "tremor.handAtShoulderLength"
+        let bendArmStepIdentifier = "tremor.handAtShoulderLengthWithElbowBent"
+        let touchNoseStepIdentifier = "tremor.handToNose"
+        let turnWristStepIdentifier = "tremor.handQueenWave"
+        
+        let skipHandAnswerResultInfo: ORKChoiceQuestionResult? = taskResult.getResult(forIdentifier: skipHandIdentifier)?.first
+
+        var startDate: Date = taskResult.startDate
+        var endDate: Date = taskResult.endDate
+        
+        var resultData: [String: Any] = [:]
+        
+        if let skipHandAnswerResultInfo = skipHandAnswerResultInfo, let answers = skipHandAnswerResultInfo.choiceAnswers {
+            resultData[TaskNetworkParameter.tremorHandSkip.rawValue] = answers
+        }
+        
+        let addFiles: ((String, String, TaskNetworkParameter) -> Void) = { (stepIdentifier, handIdentifier, networkParameter) in
+            let identifier = String.createHandStepIdentifier(forStepIdentifier: stepIdentifier, handIdentifier: handIdentifier)
+            if let resultFiles: [ORKFileResult] = taskResult.getResult(forIdentifier: identifier) {
+                var resultStepData: [String: Any] = [:]
+                resultFiles.fileResults.forEach { resultStepData[$0] = $1 }
+                resultData[networkParameter.getNetworkParameterValue(forHandIdentifier: handIdentifier)] = resultStepData
+                if let newStartDate = resultFiles.first?.startDate, newStartDate < startDate {
+                    startDate = newStartDate
+                }
+                if let newEndDate = resultFiles.first?.endDate, newEndDate > endDate {
+                    endDate = newEndDate
+                }
+            }
+        }
+        
+        let handIdentifiers: [String] = [leftHandIdentifier, mostAffectedHandIdentifier, rightHandIdentifier]
+        handIdentifiers.forEach { handIdentifier in
+            addFiles(inLapStepIdentifier, handIdentifier, .tremorHandInLap)
+            addFiles(extendArmStepIdentifier, handIdentifier, .tremorHandExtendArm)
+            addFiles(bendArmStepIdentifier, handIdentifier, .tremorHandBendArm)
+            addFiles(touchNoseStepIdentifier, handIdentifier, .tremorHandTouchNose)
+            addFiles(turnWristStepIdentifier, handIdentifier, .tremorHandTurnWrist)
+        }
+        
+        resultData[TaskNetworkParameter.startTime.rawValue] = startDate.timeIntervalSince1970
+        resultData[TaskNetworkParameter.endTime.rawValue] = endDate.timeIntervalSince1970
+        return TaskNetworkResult(data: resultData, attachedFile: nil)
+    }
+}
+
+fileprivate extension String {
+    static func createHandStepIdentifier(forStepIdentifier stepIdentifier: String, handIdentifier: String) -> String {
+        // TODO: Get this static method from Research Kit
+        return stepIdentifier + "." + handIdentifier
+    }
+}
+
+fileprivate extension TaskNetworkParameter {
+    func getNetworkParameterValue(forHandIdentifier handIdentifier: String) -> String {
+        return self.rawValue + "_" + handIdentifier
     }
 }

@@ -64,6 +64,9 @@ enum TaskRecorderIdentifier: String {
     case accelerometer
     case pedometer
     case location
+    // TODO: Remove these ones when Tremor task has been fixed on ResearchKit
+    case accelerometerAltSuffix = "_acc"
+    case deviceMotionAltSuffix = "_motion"
 }
 
 // MARK: - TaskNetworkParameter
@@ -74,7 +77,7 @@ enum TaskNetworkParameter: String {
     case id
     case numberOfErrors
     case attempts
-    case deviceMotionInfo = "deviceMotion_info"
+    case deviceMotionInfo = "device_motion_info"
     case accelerometerInfo = "accelerometer_info"
     case locationInfo = "location_info"
     case pedometerInfo = "pedometer_info"
@@ -96,6 +99,12 @@ enum TaskNetworkParameter: String {
     case gaitOutbound = "gait_outbound"
     case gaitReturn = "gait_return"
     case gaitRest = "gait_rest"
+    case tremorHandSkip = "tremor_hand_skip"
+    case tremorHandInLap = "tremor_hand_in_lap"
+    case tremorHandExtendArm = "tremor_hand_extern_arm"
+    case tremorHandBendArm = "tremor_hand_bend_arm"
+    case tremorHandTouchNose = "tremor_hand_touch_nose"
+    case tremorHandTurnWrist = "tremor_hand_turn_wrist"
 }
 
 // MARK: - TaskOptions
@@ -239,6 +248,11 @@ extension Array where Element == ORKFileResult {
                 result[TaskNetworkParameter.pedometerInfo.rawValue] = value
             case TaskRecorderIdentifier.location.rawValue:
                 result[TaskNetworkParameter.locationInfo.rawValue] = value
+            // TODO: Remove these ones when Tremor task has been fixed on ResearchKit
+            case _ where fileResult.identifier.hasSuffix(TaskRecorderIdentifier.accelerometerAltSuffix.rawValue):
+                result[TaskNetworkParameter.accelerometerInfo.rawValue] = value
+            case _ where fileResult.identifier.hasSuffix(TaskRecorderIdentifier.deviceMotionAltSuffix.rawValue):
+                result[TaskNetworkParameter.deviceMotionInfo.rawValue] = value
             default:
                 break
             }
