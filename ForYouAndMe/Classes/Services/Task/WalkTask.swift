@@ -20,11 +20,20 @@ class WalkTask {
     }
     
     static func getNetworkResultData(taskResult: ORKTaskResult) -> TaskNetworkResult? {
+        let formStepIdentifier = "timed.walk.form"
+        let formAfoStepIdentifier = "timed.walk.form.afo"
+        let formAssitanceStepIdentifier = "timed.walk.form.assistance"
+        
         let trial1StepIdentifier = "timed.walk.trial1"
         let turnAroundStepIdentifier = "timed.walk.turn.around"
         let trial2StepIdentifier = "timed.walk.trial2"
         
-        // TODO: Add Assistive Device Form Result when provided
+        let formStepResultInfo: [ORKQuestionResult]? = taskResult.getResult(forIdentifier: formStepIdentifier)
+        
+        let formAfoStepResultInfo = formStepResultInfo?
+            .first(where: {$0.identifier == formAfoStepIdentifier }) as? ORKBooleanQuestionResult
+        let formAssistanceStepResultInfo = formStepResultInfo?
+            .first(where: {$0.identifier == formAssitanceStepIdentifier }) as? ORKChoiceQuestionResult
         
         guard let trial1StepResultInfo: ORKTimedWalkResult = taskResult.getResult(forIdentifier: trial1StepIdentifier)?.first else {
             assertionFailure("Couldn't find expected result data")
@@ -48,6 +57,14 @@ class WalkTask {
         }
         
         var resultData: [String: Any] = [:]
+        
+        // Form
+        if let formAfoStepResultInfo = formAfoStepResultInfo, let booleanAnswer = formAfoStepResultInfo.booleanAnswer {
+            resultData[TaskNetworkParameter.timedWalkFormAfo.rawValue] = booleanAnswer
+        }
+        if let formAssistanceStepResultInfo = formAssistanceStepResultInfo, let answers = formAssistanceStepResultInfo.choiceAnswers {
+            resultData[TaskNetworkParameter.timedWalkFormAssistance.rawValue] = answers
+        }
         
         // Trial 1
         var trial1StepResultData: [String: Any] = [

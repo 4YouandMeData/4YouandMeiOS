@@ -91,6 +91,8 @@ enum TaskNetworkParameter: String {
     case distanceInMeters = "distance_in_meters"
     case timeLimit = "time_limit"
     case duration = "duration"
+    case timedWalkFormAfo = "timed_walk_form_afo"
+    case timedWalkFormAssistance = "timed_walk_form_assistance"
 }
 
 // MARK: - TaskOptions
