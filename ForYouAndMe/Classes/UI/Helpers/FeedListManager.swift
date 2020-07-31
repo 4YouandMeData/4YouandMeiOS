@@ -176,11 +176,11 @@ extension FeedListManager: UITableViewDataSource {
                 case .info(let body):
                     // TODO: Show content page
                     print("TODO: Show content page with body '\(body)'")
-                    delegate.presenter.showAlert(withTitle: "Info page", message: "Work in progress", closeButtonText: "OK")
+                    delegate.presenter.showAlert(withTitle: "Info page", message: "Work in progress", dismissButtonText: "OK")
                 case .externalLink(let url):
                     // TODO: Show external link
                     print("TODO: Show external link with url '\(url)'")
-                    delegate.presenter.showAlert(withTitle: "External Link", message: "Work in progress", closeButtonText: "OK")
+                    delegate.presenter.showAlert(withTitle: "External Link", message: "Work in progress", dismissButtonText: "OK")
                 case .task(let taskId, let taskType):
                     // TODO: Provide task options if expected by API design
                     self.navigator.startTaskSection(taskIdentifier: taskId,

@@ -82,14 +82,16 @@ class AppNavigator {
     }
     
     public func abortOnboardingWithWarning(presenter: UIViewController) {
+        let cancelAction = UIAlertAction(title: StringsProvider.string(forKey: .onboardingAbortCancel),
+                                         style: .cancel,
+                                         handler: nil)
+        let confirmAction = UIAlertAction(title: StringsProvider.string(forKey: .onboardingAbortConfirm),
+                                        style: .destructive,
+                                        handler: { [weak self] _ in self?.abortOnboarding() })
         presenter.showAlert(withTitle: StringsProvider.string(forKey: .onboardingAbortTitle),
-                            message: StringsProvider.string(forKey: .onboardingAbortMessage),
-                            cancelText: StringsProvider.string(forKey: .onboardingAbortCancel),
-                            confirmText: StringsProvider.string(forKey: .onboardingAbortConfirm),
-                            tintColor: ColorPalette.color(withType: .primary),
-                            confirm: { [weak self] in
-                                self?.abortOnboarding()
-        })
+                       message: StringsProvider.string(forKey: .onboardingAbortMessage),
+                       actions: [cancelAction, confirmAction],
+                       tintColor: ColorPalette.color(withType: .primary))
     }
     
     public func abortOnboarding() {
@@ -340,6 +342,7 @@ class AppNavigator {
                                                  taskOptions: taskOptions,
                                                  completionCallback: completionCallback)
         let startingPage = coordinator.getStartingPage()
+        startingPage.modalPresentationStyle = .fullScreen
         presenter.present(startingPage, animated: true, completion: nil)
         self.currentTaskCoordinator = coordinator
     }
@@ -388,20 +391,24 @@ class AppNavigator {
         presenter.present(navigationViewController, animated: true)
     }
     
-    public func handleError(error: Error?, presenter: UIViewController, completion: @escaping NotificationCallback = {}) {
+    public func handleError(error: Error?,
+                            presenter: UIViewController,
+                            onDismiss: @escaping NotificationCallback = {},
+                            onRetry: NotificationCallback? = nil,
+                            dismissStyle: UIAlertAction.Style = .cancel) {
         SVProgressHUD.dismiss() // Safety dismiss
         guard let error = error else {
-            presenter.showGenericErrorAlert()
+            presenter.showAlert(forError: nil, onDismiss: onDismiss, onRetry: onRetry, dismissStyle: dismissStyle)
             return
         }
         guard let repositoryError = error as? RepositoryError else {
             assertionFailure("Unexpected error type")
-            presenter.showGenericErrorAlert()
+            presenter.showAlert(forError: nil, onDismiss: onDismiss, onRetry: onRetry, dismissStyle: dismissStyle)
             return
         }
         
         if false == self.handleUserNotLoggedError(error: error) {
-            presenter.showAlert(forError: repositoryError, completion: completion)
+            presenter.showAlert(forError: repositoryError, onDismiss: onDismiss, onRetry: onRetry, dismissStyle: dismissStyle)
         }
     }
     
@@ -424,27 +431,37 @@ class AppNavigator {
 // MARK: - Extension(UIViewController)
 
 extension UIViewController {
-    func showAlert(forError error: Error, completion: @escaping (() -> Void) = {}) {
+    func showAlert(forError error: Error?,
+                   onDismiss: @escaping NotificationCallback = {},
+                   onRetry: NotificationCallback? = nil,
+                   dismissStyle: UIAlertAction.Style = .cancel) {
+        var actions: [UIAlertAction] = []
+        let dismissAction = UIAlertAction(title: StringsProvider.string(forKey: .errorButtonClose),
+                                         style: dismissStyle,
+                                         handler: { _ in onDismiss() })
+        actions.append(dismissAction)
+        if let onRetry = onRetry {
+            let retryAction = UIAlertAction(title: StringsProvider.string(forKey: .errorButtonRetry),
+                                            style: .default,
+                                            handler: { _ in onRetry() })
+            actions.append(retryAction)
+        }
         self.showAlert(withTitle: StringsProvider.string(forKey: .errorTitleDefault),
-                       message: error.localizedDescription,
-                       confirmButtonText: StringsProvider.string(forKey: .errorButtonClose),
-                       tintColor: ColorPalette.color(withType: .primary),
-                       completion: completion)
+                       message: error?.localizedDescription ?? StringsProvider.string(forKey: .errorMessageDefault),
+                       actions: actions,
+                       tintColor: ColorPalette.color(withType: .primary))
     }
     
-    func showGenericErrorAlert() {
-        self.showAlert(withTitle: StringsProvider.string(forKey: .errorTitleDefault),
-                       message: StringsProvider.string(forKey: .errorMessageDefault),
-                       confirmButtonText: StringsProvider.string(forKey: .errorButtonClose),
-                       tintColor: ColorPalette.color(withType: .primary),
-                       completion: {})
-    }
-    
-    func showAlert(withTitle title: String, message: String, closeButtonText: String) {
+    func showAlert(withTitle title: String,
+                   message: String,
+                   dismissButtonText: String,
+                   onDismiss: @escaping NotificationCallback = {}) {
+        let dismissAction = UIAlertAction(title: dismissButtonText,
+                                         style: .default,
+                                         handler: { _ in onDismiss() })
         self.showAlert(withTitle: title,
                        message: message,
-                       confirmButtonText: closeButtonText,
-                       tintColor: ColorPalette.color(withType: .primary),
-                       completion: {})
+                       actions: [dismissAction],
+                       tintColor: ColorPalette.color(withType: .primary))
     }
 }

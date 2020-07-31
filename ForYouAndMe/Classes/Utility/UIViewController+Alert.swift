@@ -9,42 +9,15 @@
 import UIKit
 
 extension UIViewController {
-    
     public func showAlert(withTitle title: String,
                           message: String,
-                          cancelText: String,
-                          confirmText: String,
-                          tintColor: UIColor? = nil,
-                          cancel: @escaping (() -> Void) = {},
-                          confirm: @escaping (() -> Void) = {}) {
+                          actions: [UIAlertAction],
+                          tintColor: UIColor? = nil) {
         let alertView = UIAlertController(title: title, message: message, preferredStyle: .alert)
-        let cancelAction = UIAlertAction(title: cancelText, style: .cancel) { _ in
-            cancel()
-        }
-        let confirmAction = UIAlertAction(title: confirmText, style: .default) { _ in
-            confirm()
-        }
         if let tintColor = tintColor {
             alertView.view.tintColor = tintColor
         }
-        alertView.addAction(cancelAction)
-        alertView.addAction(confirmAction)
-        present(alertView, animated: true, completion: nil)
-    }
-    
-    public func showAlert(withTitle title: String,
-                          message: String,
-                          confirmButtonText: String,
-                          tintColor: UIColor? = nil,
-                          completion: @escaping (() -> Void)) {
-        let alertView = UIAlertController(title: title, message: message, preferredStyle: .alert)
-        let closeAction = UIAlertAction(title: confirmButtonText, style: .cancel) { _ in
-            completion()
-        }
-        if let tintColor = tintColor {
-            alertView.view.tintColor = tintColor
-        }
-        alertView.addAction(closeAction)
+        actions.forEach { alertView.addAction($0) }
         present(alertView, animated: true, completion: nil)
     }
 }

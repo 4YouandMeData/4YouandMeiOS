@@ -94,7 +94,7 @@ extension OptInSectionCoordinator: OptInPermissionCoordinator {
             let message = optInPermission.mandatoryText ?? StringsProvider.string(forKey: .onboardingOptInMandatoryDefault)
             self.navigationController.showAlert(withTitle: StringsProvider.string(forKey: .onboardingOptInMandatoryTitle),
                                                 message: message,
-                                                closeButtonText: StringsProvider.string(forKey: .onboardingOptInMandatoryClose))
+                                                dismissButtonText: StringsProvider.string(forKey: .onboardingOptInMandatoryClose))
             return
         }
         

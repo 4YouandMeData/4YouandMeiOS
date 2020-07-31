@@ -58,7 +58,7 @@ class TaskSectionCoordinator: NSObject {
         if let error = error {
             print("TaskSectionCoordinator - Error: \(error)")
         }
-        self.navigator.handleError(error: nil, presenter: presenter, completion: { [weak self] in
+        self.navigator.handleError(error: nil, presenter: presenter, onDismiss: { [weak self] in
             self?.cancelTask()
         })
     }
@@ -66,7 +66,7 @@ class TaskSectionCoordinator: NSObject {
     private func sendResult(taskResult: ORKTaskResult, presenter: UIViewController) {
         guard let taskNetworkResult = self.taskType.getNetworkResultData(taskResult: taskResult) else {
             assertionFailure("Couldn't transform result data to expected network representation")
-            self.navigator.handleError(error: nil, presenter: presenter, completion: { [weak self] in
+            self.navigator.handleError(error: nil, presenter: presenter, onDismiss: { [weak self] in
                 self?.cancelTask()
             })
             return
@@ -78,10 +78,17 @@ class TaskSectionCoordinator: NSObject {
                 self.navigator.popProgressHUD()
                 self.deleteTaskResult(path: Constants.Task.taskResultURL)
                 self.completionCallback()
-            }, onError: { [weak self] error in
-                guard let self = self else { return }
-                self.navigator.popProgressHUD()
-                self.navigator.handleError(error: error, presenter: presenter)
+                }, onError: { [weak self] error in
+                    guard let self = self else { return }
+                    self.navigator.popProgressHUD()
+                    self.navigator.handleError(error: error,
+                                               presenter: presenter,
+                                               onDismiss: { [weak self] in
+                                                self?.cancelTask()
+                        },
+                                               onRetry: { [weak self] in
+                                                self?.sendResult(taskResult: taskResult, presenter: presenter)
+                    }, dismissStyle: .destructive)
             }).disposed(by: self.diposeBag)
     }
     
