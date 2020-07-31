@@ -93,6 +93,9 @@ enum TaskNetworkParameter: String {
     case duration = "duration"
     case timedWalkFormAfo = "timed_walk_form_afo"
     case timedWalkFormAssistance = "timed_walk_form_assistance"
+    case gaitOutbound = "gait_outbound"
+    case gaitReturn = "gait_return"
+    case gaitRest = "gait_rest"
 }
 
 // MARK: - TaskOptions
