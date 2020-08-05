@@ -101,7 +101,6 @@ extension FeedViewController: FeedListManagerDelegate {
     }
     
     func getDataProviderSingle(repository: Repository) -> Single<FeedContent> {
-        let feedContent = FeedContent(feedItems: [])
-        return Single.just(feedContent).delaySubscription(.seconds(1), scheduler: MainScheduler.instance)
+        return self.repository.getFeeds().map { FeedContent(withFeeds: $0) }
     }
 }

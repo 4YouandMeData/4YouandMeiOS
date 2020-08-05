@@ -88,16 +88,36 @@ class FeedTableViewCell: UITableViewCell {
     
     // MARK: - Public Methods
     
-    public func display(data: Feed, buttonPressedCallback: @escaping NotificationCallback) {
+    public func display(data: Activity, buttonPressedCallback: @escaping NotificationCallback) {
         self.buttonPressedCallback = buttonPressedCallback
-        self.gradientView.updateParameters(colors: [data.startColor, data.endColor])
-        self.taskImageView.image = data.image
-        self.taskTitleLabel.attributedText = NSAttributedString.create(withText: data.title,
-                                                                       fontStyle: .header2,
-                                                                       colorType: .secondaryText)
-        self.taskDescriptionLabel.attributedText = NSAttributedString.create(withText: data.body,
-                                                                             fontStyle: .paragraph,
-                                                                             colorType: .secondaryText)
+        self.gradientView.updateParameters(colors: [data.startColor ?? ColorPalette.color(withType: .primary),
+                                                    data.endColor ?? ColorPalette.color(withType: .gradientPrimaryEnd)])
+        
+        if let image = data.image {
+            self.taskImageView.isHidden = false
+            self.taskImageView.image = image
+        } else {
+            self.taskImageView.isHidden = true
+        }
+        
+        if let title = data.title {
+            self.taskTitleLabel.isHidden = false
+            self.taskTitleLabel.attributedText = NSAttributedString.create(withText: title,
+                                                                           fontStyle: .header2,
+                                                                           colorType: .secondaryText)
+        } else {
+            self.taskTitleLabel.isHidden = true
+        }
+        
+        if let body = data.body {
+            self.taskDescriptionLabel.isHidden = false
+            self.taskDescriptionLabel.attributedText = NSAttributedString.create(withText: body,
+                                                                                 fontStyle: .paragraph,
+                                                                                 colorType: .secondaryText)
+        } else {
+            self.taskDescriptionLabel.isHidden = true
+        }
+        
         if let buttonText = data.buttonText, nil != data.behavior {
             self.buttonView.isHidden = false
             self.buttonView.setButtonText(buttonText)

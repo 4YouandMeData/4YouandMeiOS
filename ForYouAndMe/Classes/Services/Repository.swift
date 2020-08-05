@@ -76,5 +76,6 @@ protocol Repository: class {
     // Wearables Section
     func getWearablesSection() -> Single<WearablesSection>
     // Tasks
+    func getFeeds() -> Single<[Feed]>
     func sendTaskResult(taskId: String, taskResult: TaskNetworkResult) -> Single<()>
 }

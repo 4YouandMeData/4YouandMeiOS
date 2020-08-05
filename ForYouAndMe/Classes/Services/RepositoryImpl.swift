@@ -186,6 +186,12 @@ extension RepositoryImpl: Repository {
     
     // MARK: - Tasks
     
+    func getFeeds() -> Single<[Feed]> {
+        return self.api.send(request: ApiRequest(serviceRequest: .getTasks))
+            .map { (items: ExcludeInvalid<Feed>) in items.wrappedValue }
+            .handleError()
+    }
+    
     func sendTaskResult(taskId: String, taskResult: TaskNetworkResult) -> Single<()> {
         var sendRequest = self.api.send(request: ApiRequest(serviceRequest: .sendTaskResultData(taskId: taskId,
                                                                                                 resultData: taskResult.data)))

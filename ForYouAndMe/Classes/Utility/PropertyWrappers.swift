@@ -85,3 +85,110 @@ struct NilIfEmptyString: Decodable, OptionalCodingWrapper {
         }
     }
 }
+
+@propertyWrapper
+struct ImageDecodable: Decodable, OptionalCodingWrapper {
+    
+    var wrappedValue: UIImage?
+    
+    init(wrappedValue: UIImage?) {
+        self.wrappedValue = wrappedValue
+    }
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        if let data = try? container.decode(Data.self) {
+            self.wrappedValue = UIImage(data: data)
+        } else {
+            self.wrappedValue = nil
+        }
+    }
+}
+
+@propertyWrapper
+struct ColorDecodable: Decodable, OptionalCodingWrapper {
+    
+    var wrappedValue: UIColor?
+    
+    init(wrappedValue: UIColor?) {
+        self.wrappedValue = wrappedValue
+    }
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        if let colorString = try? container.decode(String.self) {
+            self.wrappedValue = UIColor(hexString: colorString)
+        } else {
+            self.wrappedValue = nil
+        }
+    }
+}
+
+@propertyWrapper
+struct EnumStringDecodable<T>: Decodable, OptionalCodingWrapper where T: RawRepresentable, T.RawValue == String {
+    
+    var wrappedValue: T?
+    
+    init(wrappedValue: T?) {
+        self.wrappedValue = wrappedValue
+    }
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        if let dataString = try? container.decode(String.self) {
+            self.wrappedValue = T(rawValue: dataString)
+        } else {
+            self.wrappedValue = nil
+        }
+    }
+}
+
+enum DateCodableError: Error {
+    case invalidString
+}
+
+public protocol DateValueCodableStrategy {
+    associatedtype RawValue: Codable
+
+    static func decode(_ value: RawValue) throws -> Date
+    static func encode(_ date: Date) -> RawValue
+}
+
+@propertyWrapper
+public struct DateValue<Formatter: DateValueCodableStrategy>: Codable {
+    private let value: Formatter.RawValue
+    public var wrappedValue: Date
+
+    public init(wrappedValue: Date) {
+        self.wrappedValue = wrappedValue
+        self.value = Formatter.encode(wrappedValue)
+    }
+    
+    public init(from decoder: Decoder) throws {
+        self.value = try Formatter.RawValue(from: decoder)
+        self.wrappedValue = try Formatter.decode(self.value)
+    }
+    
+    public func encode(to encoder: Encoder) throws {
+        try self.value.encode(to: encoder)
+    }
+}
+
+public struct ISO8601Strategy: DateValueCodableStrategy {
+    static let dateFormatter: ISO8601DateFormatter = {
+        let dateFormatter = ISO8601DateFormatter()
+        dateFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return dateFormatter
+    }()
+    
+    public static func decode(_ value: String) throws -> Date {
+        guard let date = Self.dateFormatter.date(from: value) else {
+            throw DateCodableError.invalidString
+        }
+        return date
+    }
+    
+    public static func encode(_ date: Date) -> String {
+        return Self.dateFormatter.string(from: date)
+    }
+}

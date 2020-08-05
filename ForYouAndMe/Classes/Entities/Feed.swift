@@ -7,37 +7,64 @@
 
 import Foundation
 
-enum FeedBehavior {
-    case info(body: String)
-    case externalLink(url: URL)
-    case task(taskId: String, taskType: TaskType)
+enum Schedulable {
+    case activity(activity: Activity)
+    
+    var schedulableType: String {
+        switch self {
+        case .activity: return "activity"
+        }
+    }
 }
 
 struct Feed {
-    let title: String
-    let body: String
-    let image: UIImage?
-    let creationDate: Date
-    let buttonText: String?
-    let infoBody: String?
-    let externalLinkUrl: URL?
-    let taskId: String?
-    let taskType: TaskType?
+    let id: String
+    let type: String
     
-    let startColor: UIColor
-    let endColor: UIColor
+    @DateValue<ISO8601Strategy>
+    var fromDate: Date
+    @DateValue<ISO8601Strategy>
+    var toDate: Date
+    
+    @SchedulableDecodable
+    var schedulable: Schedulable
 }
 
-extension Feed {
-    var behavior: FeedBehavior? {
-        if let infoBody = self.infoBody {
-            return .info(body: infoBody)
-        } else if let externalLinkUrl = self.externalLinkUrl {
-            return .externalLink(url: externalLinkUrl)
-        } else if let taskId = self.taskId, let taskType = self.taskType {
-            return .task(taskId: taskId, taskType: taskType)
+extension Feed: JSONAPIMappable {
+    static var includeList: String? = """
+schedulable
+"""
+    
+    enum CodingKeys: String, CodingKey {
+        case id
+        case type
+        case fromDate = "from"
+        case toDate = "to"
+        case schedulable
+    }
+}
+
+enum FeedError: Error {
+    case invalidSchedulable
+}
+
+@propertyWrapper
+struct SchedulableDecodable: Decodable {
+    
+    var wrappedValue: Schedulable
+    
+    init(wrappedValue: Schedulable) {
+        self.wrappedValue = wrappedValue
+    }
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        
+        if let activity = try? container.decode(Activity.self), Schedulable.activity(activity: activity).schedulableType == activity.type {
+            self.wrappedValue = .activity(activity: activity)
         } else {
-            return nil
+            // TODO: Add all expected cases
+            throw FeedError.invalidSchedulable
         }
     }
 }

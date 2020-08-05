@@ -162,6 +162,12 @@ class NetworkApiGateway: ApiGateway {
             .handleMapError()
     }
     
+    func send<T: JSONAPIMappable, E: Mappable>(request: ApiRequest, errorType: E.Type) -> Single<ExcludeInvalid<T>> {
+        self.sendShared(request: request, errorType: errorType)
+            .mapCodableJSONAPI(includeList: T.includeList, keyPath: T.keyPath)
+            .handleMapError()
+    }
+    
     // MARK: - Private Methods
     
     private func sendShared<E: Mappable>(request: ApiRequest, errorType: E.Type) -> Single<Response> {
@@ -295,6 +301,8 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         case .sendAnswer(let answer, _):
             return "v1/questions/\(answer.question.id)/answer"
         // Task
+        case .getTasks:
+            return "v1/tasks"
         case .sendTaskResultData(let taskId, _):
             return "v1/tasks/\(taskId)"
         case .sendTaskResultFile(let taskId, _):
@@ -313,7 +321,8 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
              .getConsentSection,
              .getOptInSection,
              .getUserConsentSection,
-             .getWearablesSection:
+             .getWearablesSection,
+             .getTasks:
             return .get
         case .submitPhoneNumber,
              .verifyPhoneNumber,
@@ -362,6 +371,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         // Answers
         case .sendAnswer: return "{}".utf8Encoded
         // Task
+        case .getTasks: return Bundle.getTestData(from: "TestGetTasks")
         case .sendTaskResultData: return "{}".utf8Encoded
         case .sendTaskResultFile: return "{}".utf8Encoded
         }
@@ -376,7 +386,8 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
              .getOptInSection,
              .getUserConsentSection,
              .resendConfirmationEmail,
-             .getWearablesSection:
+             .getWearablesSection,
+             .getTasks:
             return .requestPlain
         case .submitPhoneNumber(let phoneNumber):
             var params: [String: Any] = [:]
@@ -447,6 +458,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
              .resendConfirmationEmail,
              .getWearablesSection,
              .sendAnswer,
+             .getTasks,
              .sendTaskResultData,
              .sendTaskResultFile:
             return .bearer

@@ -40,6 +40,7 @@ enum DefaultService {
     // Answer
     case sendAnswer(answer: Answer, context: ApiContext?)
     // Task
+    case getTasks
     case sendTaskResultData(taskId: String, resultData: TaskNetworkResultData)
     case sendTaskResultFile(taskId: String, resultFileString: TaskNetworkResultFile)
 }
@@ -78,6 +79,7 @@ protocol ApiGateway {
     func send<T: JSONAPIMappable, E: Mappable>(request: ApiRequest, errorType: E.Type) -> Single<T>
     func send<T: JSONAPIMappable, E: Mappable>(request: ApiRequest, errorType: E.Type) -> Single<T?>
     func send<T: JSONAPIMappable, E: Mappable>(request: ApiRequest, errorType: E.Type) -> Single<[T]>
+    func send<T: JSONAPIMappable, E: Mappable>(request: ApiRequest, errorType: E.Type) -> Single<ExcludeInvalid<T>>
     
     var accessToken: String? { get }
     func isLoggedIn() -> Bool
@@ -116,6 +118,10 @@ extension ApiGateway {
     }
     
     func send<T: JSONAPIMappable>(request: ApiRequest) -> Single<[T]> {
+        return self.send(request: request, errorType: ResponseError.self)
+    }
+    
+    func send<T: JSONAPIMappable>(request: ApiRequest) -> Single<ExcludeInvalid<T>> {
         return self.send(request: request, errorType: ResponseError.self)
     }
 }

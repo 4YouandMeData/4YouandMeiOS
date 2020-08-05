@@ -14,6 +14,11 @@ protocol FeedItem {
 
 struct FeedContent {
     let feedItems: [FeedItem]
+    
+    init(withFeeds feeds: [Feed]) {
+        // TODO: Separate quick activities in a specific array
+        self.feedItems = feeds
+    }
 }
 
 protocol FeedListManagerDelegate: class {
@@ -164,10 +169,12 @@ extension FeedListManager: UITableViewDataSource {
                 assertionFailure("FeedTableViewCell not registered")
                 return UITableViewCell()
             }
-            cell.display(data: feed, buttonPressedCallback: { [weak self] in
+            switch feed.schedulable {
+            case .activity(let activity):
+                cell.display(data: activity, buttonPressedCallback: { [weak self] in
                 guard let self = self else { return }
                 guard let delegate = self.delegate else { return }
-                guard let feedBehavior = feed.behavior else {
+                guard let feedBehavior = activity.behavior else {
                     assertionFailure("Missing behavior for FeedTableViewCell button callback")
                     return
                 }
@@ -181,15 +188,16 @@ extension FeedListManager: UITableViewDataSource {
                     // TODO: Show external link
                     print("TODO: Show external link with url '\(url)'")
                     delegate.presenter.showAlert(withTitle: "External Link", message: "Work in progress", dismissButtonText: "OK")
-                case .task(let taskId, let taskType):
+                case .task(let taskType):
                     // TODO: Provide task options if expected by API design
-                    self.navigator.startTaskSection(taskIdentifier: taskId,
+                    self.navigator.startTaskSection(taskIdentifier: feed.id,
                                                     taskType: taskType,
                                                     taskOptions: nil,
                                                     presenter: delegate.presenter)
                 }
             })
             return cell
+            }
         } else {
             assertionFailure("Unhandled FeedItem")
             return UITableViewCell()
@@ -252,5 +260,5 @@ fileprivate extension Date {
 }
 
 extension Feed: FeedItem {
-    var date: Date { self.creationDate }
+    var date: Date { self.fromDate }
 }
