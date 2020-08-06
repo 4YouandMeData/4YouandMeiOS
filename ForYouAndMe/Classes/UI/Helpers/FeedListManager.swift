@@ -172,29 +172,13 @@ extension FeedListManager: UITableViewDataSource {
             switch feed.schedulable {
             case .activity(let activity):
                 cell.display(data: activity, buttonPressedCallback: { [weak self] in
-                guard let self = self else { return }
-                guard let delegate = self.delegate else { return }
-                guard let feedBehavior = activity.behavior else {
-                    assertionFailure("Missing behavior for FeedTableViewCell button callback")
-                    return
-                }
-                
-                switch feedBehavior {
-                case .info(let body):
-                    // TODO: Show content page
-                    print("TODO: Show content page with body '\(body)'")
-                    delegate.presenter.showAlert(withTitle: "Info page", message: "Work in progress", dismissButtonText: "OK")
-                case .externalLink(let url):
-                    // TODO: Show external link
-                    print("TODO: Show external link with url '\(url)'")
-                    delegate.presenter.showAlert(withTitle: "External Link", message: "Work in progress", dismissButtonText: "OK")
-                case .task(let taskType):
-                    // TODO: Provide task options if expected by API design
+                    guard let self = self else { return }
+                    guard let delegate = self.delegate else { return }
+                    guard let taskType = activity.taskType else { return }
                     self.navigator.startTaskSection(taskIdentifier: feed.id,
                                                     taskType: taskType,
                                                     taskOptions: nil,
                                                     presenter: delegate.presenter)
-                }
             })
             return cell
             }

@@ -11,15 +11,11 @@ import ResearchKit
 // MARK: - TaskType
 
 enum TaskType: String, CaseIterable {
-    case reactionTime
-    case trailMaking
-    case walk
-    case gait
-    case tremor
-    
-    var identifier: String {
-        return self.rawValue
-    }
+    case reactionTime = "reaction_time_task"
+    case trailMaking = "trail_making_task"
+    case walk = "walk_task"
+    case gait = "gait_task"
+    case tremor = "tremor_task"
 }
 
 extension TaskType {

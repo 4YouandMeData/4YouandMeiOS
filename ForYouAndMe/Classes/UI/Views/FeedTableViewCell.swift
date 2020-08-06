@@ -118,10 +118,12 @@ class FeedTableViewCell: UITableViewCell {
             self.taskDescriptionLabel.isHidden = true
         }
         
-        if let buttonText = data.buttonText, nil != data.behavior {
+        if nil != data.taskType {
+            let buttonText = data.buttonText ?? StringsProvider.string(forKey: .activityButtonDefault)
             self.buttonView.isHidden = false
             self.buttonView.setButtonText(buttonText)
         } else {
+            assert(data.buttonText == nil, "Existing button text for activity without activity type")
             self.buttonView.isHidden = true
         }
     }
