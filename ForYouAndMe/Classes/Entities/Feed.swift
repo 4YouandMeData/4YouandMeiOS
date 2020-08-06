@@ -9,10 +9,12 @@ import Foundation
 
 enum Schedulable {
     case activity(activity: Activity)
+    case quickActivity(quickActivity: QuickActivity)
     
     var schedulableType: String {
         switch self {
         case .activity: return "activity"
+        case .quickActivity: return "quick_activity"
         }
     }
 }
@@ -32,7 +34,8 @@ struct Feed {
 
 extension Feed: JSONAPIMappable {
     static var includeList: String? = """
-schedulable
+schedulable,\
+schedulable.quick_activity_options
 """
     
     enum CodingKeys: String, CodingKey {
@@ -60,8 +63,12 @@ struct SchedulableDecodable: Decodable {
     init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
         
-        if let activity = try? container.decode(Activity.self), Schedulable.activity(activity: activity).schedulableType == activity.type {
+        if let activity = try? container.decode(Activity.self),
+            Schedulable.activity(activity: activity).schedulableType == activity.type {
             self.wrappedValue = .activity(activity: activity)
+        } else if let quickActivity = try? container.decode(QuickActivity.self),
+            Schedulable.quickActivity(quickActivity: quickActivity).schedulableType == quickActivity.type {
+            self.wrappedValue = .quickActivity(quickActivity: quickActivity)
         } else {
             // TODO: Add all expected cases
             throw FeedError.invalidSchedulable

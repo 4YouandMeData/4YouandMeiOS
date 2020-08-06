@@ -8,16 +8,26 @@
 import UIKit
 import RxSwift
 
+fileprivate extension Schedulable {
+    var isQuickActivity: Bool {
+        switch self {
+        case .quickActivity: return true
+        default: return false
+        }
+    }
+}
+
 protocol FeedItem {
     var date: Date { get }
 }
 
 struct FeedContent {
+    let quickActivities: [Feed]
     let feedItems: [FeedItem]
     
     init(withFeeds feeds: [Feed]) {
-        // TODO: Separate quick activities in a specific array
-        self.feedItems = feeds
+        self.quickActivities = feeds.filter { $0.schedulable.isQuickActivity }
+        self.feedItems = feeds.filter { false == $0.schedulable.isQuickActivity }
     }
 }
 
@@ -170,6 +180,8 @@ extension FeedListManager: UITableViewDataSource {
                 return UITableViewCell()
             }
             switch feed.schedulable {
+            case .quickActivity:
+                assertionFailure("Unexpected quick activity as schedulable type")
             case .activity(let activity):
                 cell.display(data: activity, buttonPressedCallback: { [weak self] in
                     guard let self = self else { return }
@@ -179,9 +191,9 @@ extension FeedListManager: UITableViewDataSource {
                                                     taskType: taskType,
                                                     taskOptions: nil,
                                                     presenter: delegate.presenter)
-            })
-            return cell
+                })
             }
+            return cell
         } else {
             assertionFailure("Unhandled FeedItem")
             return UITableViewCell()
