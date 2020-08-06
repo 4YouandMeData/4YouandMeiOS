@@ -17,13 +17,9 @@ fileprivate extension Schedulable {
     }
 }
 
-protocol FeedItem {
-    var date: Date { get }
-}
-
 struct FeedContent {
     let quickActivities: [Feed]
-    let feedItems: [FeedItem]
+    let feedItems: [Feed]
     
     init(withFeeds feeds: [Feed]) {
         self.quickActivities = feeds.filter { $0.schedulable.isQuickActivity }
@@ -37,9 +33,24 @@ protocol FeedListManagerDelegate: class {
     func getDataProviderSingle(repository: Repository) -> Single<FeedContent>
 }
 
-private struct FeedSection {
+protocol FeedListSection {
+    var numberOfRows: Int { get }
+    var sectionText: String? { get }
+}
+
+private struct FeedSection: FeedListSection {
     let dateString: String
-    let feedItems: [FeedItem]
+    let feedItems: [Feed]
+    
+    var numberOfRows: Int { self.feedItems.count }
+    var sectionText: String? { self.dateString }
+}
+
+private struct QuickActivitySection: FeedListSection {
+    let quickActivies: [QuickActivityItem]
+    
+    var numberOfRows: Int { 1 }
+    var sectionText: String? { nil }
 }
 
 class FeedListManager: NSObject {
@@ -48,8 +59,10 @@ class FeedListManager: NSObject {
     private let navigator: AppNavigator
     private weak var delegate: FeedListManagerDelegate?
     
-    private var sections: [FeedSection] = []
+    private var sections: [FeedListSection] = []
     private var currentRequestDisposable: Disposable?
+    
+    private var quickActivitySelections: [QuickActivityItem: QuickActivityOption] = [:]
     
     final let disposeBag: DisposeBag = DisposeBag()
     
@@ -69,6 +82,7 @@ class FeedListManager: NSObject {
         self.tableView.dataSource = self
         self.tableView.delegate = self
         self.tableView.registerCellsWithClass(FeedTableViewCell.self)
+        self.tableView.registerCellsWithClass(QuickActivityListTableViewCell.self)
         self.tableView.registerHeaderFooterViewWithClass(FeedListSectionHeader.self)
         self.tableView.tableFooterView = UIView()
         self.tableView.separatorStyle = .none
@@ -138,7 +152,6 @@ class FeedListManager: NSObject {
     }
     
     private func reloadTableView() {
-        // TODO: Update show logic when quick activities are added
         let showEmptyView = self.sections.count == 0
         self.delegate?.handleEmptyList(show: showEmptyView)
         self.tableView.reloadData()
@@ -163,18 +176,34 @@ class FeedListManager: NSObject {
 extension FeedListManager: UITableViewDataSource {
     
     func numberOfSections(in tableView: UITableView) -> Int {
-        // TODO: Update show logic when quick activities are added
         return self.sections.count
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        // TODO: Update show logic when quick activities are added
-        return self.sections[section].feedItems.count
+        return self.sections[section].numberOfRows
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let item = self.sections[indexPath.section].feedItems[indexPath.row]
-        if let feed = item as? Feed {
+        let section = self.sections[indexPath.section]
+        if let quickActivitySection = section as? QuickActivitySection {
+            guard let cell = tableView.dequeueReusableCellOfType(type: QuickActivityListTableViewCell.self, forIndexPath: indexPath) else {
+                assertionFailure("FeedTableViewCell not registered")
+                return UITableViewCell()
+            }
+            cell.display(items: quickActivitySection.quickActivies,
+                         selections: self.quickActivitySelections,
+                         confirmCallback: { [weak self] item in
+                            guard let self = self else { return }
+                            guard let delegate = self.delegate else { return }
+                            // TODO: Send chosen option to server
+            },
+                         selectionCallback: { [weak self] (item, option) in
+                            guard let self = self else { return }
+                            self.quickActivitySelections[item] = option
+            })
+            return cell
+        } else if let feedSection = section as? FeedSection {
+            let feed = feedSection.feedItems[indexPath.row]
             guard let cell = tableView.dequeueReusableCellOfType(type: FeedTableViewCell.self, forIndexPath: indexPath) else {
                 assertionFailure("FeedTableViewCell not registered")
                 return UITableViewCell()
@@ -199,7 +228,7 @@ extension FeedListManager: UITableViewDataSource {
             }
             return cell
         } else {
-            assertionFailure("Unhandled FeedItem")
+            assertionFailure("Unhandled Feed")
             return UITableViewCell()
         }
     }
@@ -208,11 +237,14 @@ extension FeedListManager: UITableViewDataSource {
 extension FeedListManager: UITableViewDelegate {
     
     func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
+        guard let sectionText = self.sections[section].sectionText else {
+            return nil
+        }
         guard let cell = tableView.dequeueReusableHeaderFooterViewOfType(type: FeedListSectionHeader.self) else {
             assertionFailure("FeedListSectionHeader not registered")
             return UIView()
         }
-        cell.display(text: self.sections[section].dateString)
+        cell.display(text: sectionText)
         return cell
     }
     
@@ -227,12 +259,22 @@ extension FeedListManager: UITableViewDelegate {
 }
 
 fileprivate extension FeedContent {
-    var sections: [FeedSection] {
-        self.feedItems
+    var sections: [FeedListSection] {
+        var quickActivitySections: [QuickActivitySection] = []
+        if self.quickActivities.count > 0 {
+            let items: [QuickActivityItem] = self.quickActivities.compactMap { feed in
+                switch feed.schedulable {
+                case .quickActivity(let quickActivity): return QuickActivityItem(taskId: feed.id, quickActivity: quickActivity)
+                default: return nil
+                }
+            }
+            quickActivitySections.append(QuickActivitySection(quickActivies: items))
+        }
+        let feedSections: [FeedSection] = self.feedItems
             // This sorts the items within the section
-            .sorted { $0.date > $1.date }
-            .reduce([:]) { (result, item) -> [String: [FeedItem]] in
-                let dateString = item.date.sectionDateString
+            .sorted { $0.fromDate > $1.fromDate }
+            .reduce([:]) { (result, item) -> [String: [Feed]] in
+                let dateString = item.fromDate.sectionDateString
                 var items = result[dateString] ?? []
                 items.append(item)
                 var currentResult = result
@@ -242,11 +284,12 @@ fileprivate extension FeedContent {
         .map { FeedSection(dateString: $0.key, feedItems: $0.value) }
         // This sorts the sections
         .sorted { (sectionA, sectionB) -> Bool in
-            guard let dateA = sectionA.feedItems.first?.date, let dateB = sectionB.feedItems.first?.date else {
+            guard let dateA = sectionA.feedItems.first?.fromDate, let dateB = sectionB.feedItems.first?.fromDate else {
                 return true
             }
             return dateA > dateB
         }
+        return quickActivitySections + feedSections
     }
 }
 
@@ -257,8 +300,4 @@ fileprivate extension Date {
         dateFormatter.dateStyle = .long
         return dateFormatter.string(from: self)
     }
-}
-
-extension Feed: FeedItem {
-    var date: Date { self.fromDate }
 }

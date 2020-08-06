@@ -9,8 +9,6 @@ import UIKit
 
 class FeedTableViewCell: UITableViewCell {
     
-    fileprivate static let optionWidth: CGFloat = 50.0
-    
     private let gradientView: GradientView = {
         return GradientView(colors: [UIColor.white, UIColor.white],
                             locations: [0.0, 1.0],

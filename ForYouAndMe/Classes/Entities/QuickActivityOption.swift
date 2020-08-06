@@ -28,3 +28,9 @@ extension QuickActivityOption: JSONAPIMappable {
         case selectedImage = "selected_image"
     }
 }
+
+extension QuickActivityOption: Equatable {
+    static func == (lhs: QuickActivityOption, rhs: QuickActivityOption) -> Bool {
+        return lhs.id == rhs.id
+    }
+}

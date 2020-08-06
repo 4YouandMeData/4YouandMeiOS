@@ -1286,6 +1286,9 @@
 		8929755FBC22C565EF083B0C8F10B0D6 /* SectionedViewDataSourceType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9EDBDEC8320857EC75BE0FBC55D6CE0B /* SectionedViewDataSourceType.swift */; };
 		892F567BF4D68BB3C3AE4687AE25BE8C /* FIRCLSDownloadAndSaveSettingsOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 6E9BC5D75C32562237899142CC482AF4 /* FIRCLSDownloadAndSaveSettingsOperation.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
 		8941802D24DC02630052C395 /* QuickActivityOption.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8941802C24DC02630052C395 /* QuickActivityOption.swift */; };
+		8941802F24DC2AA70052C395 /* QuickActivityOptionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8941802E24DC2AA70052C395 /* QuickActivityOptionView.swift */; };
+		8941803124DC34DB0052C395 /* QuickActivityView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8941803024DC34DB0052C395 /* QuickActivityView.swift */; };
+		8941803324DC473E0052C395 /* QuickActivityListTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8941803224DC473E0052C395 /* QuickActivityListTableViewCell.swift */; };
 		89419F6DA745C9EB2B494B0BF12289E9 /* ORKStepNavigationRule_Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = EFB388DDEEB876759CFB1CAF398A0FB7 /* ORKStepNavigationRule_Internal.h */; settings = {ATTRIBUTES = (Project, ); }; };
 		8959EA6A08FD2FBDEC0661DA718B415F /* ORKPageStep.h in Headers */ = {isa = PBXBuildFile; fileRef = FD9B804EFD6044D365E445C9047E1886 /* ORKPageStep.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		895CE133386CDA2B4B271287050A9BBB /* GULKeychainStorage.h in Headers */ = {isa = PBXBuildFile; fileRef = 9FA38FFFC79805DA3A4B9DC5AF3E83EE /* GULKeychainStorage.h */; settings = {ATTRIBUTES = (Private, ); }; };
@@ -4421,6 +4424,9 @@
 		8916EFA2479240FD5F24BC322C2BA928 /* ORKHeightPicker.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = ORKHeightPicker.m; path = ResearchKit/Common/ORKHeightPicker.m; sourceTree = "<group>"; };
 		8932C669E6F75E0DE8C600177A7D241F /* ControlProperty+Driver.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = "ControlProperty+Driver.swift"; path = "RxCocoa/Traits/Driver/ControlProperty+Driver.swift"; sourceTree = "<group>"; };
 		8941802C24DC02630052C395 /* QuickActivityOption.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickActivityOption.swift; sourceTree = "<group>"; };
+		8941802E24DC2AA70052C395 /* QuickActivityOptionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickActivityOptionView.swift; sourceTree = "<group>"; };
+		8941803024DC34DB0052C395 /* QuickActivityView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickActivityView.swift; sourceTree = "<group>"; };
+		8941803224DC473E0052C395 /* QuickActivityListTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickActivityListTableViewCell.swift; sourceTree = "<group>"; };
 		8941D94988A246A6BAF3005915C40F8B /* ignoreErrors.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ignoreErrors.swift; path = Source/RxSwift/ignoreErrors.swift; sourceTree = "<group>"; };
 		89745E5DA4C986A9FD5C508E6E30DEB3 /* UIButton+Rx.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = "UIButton+Rx.swift"; path = "RxCocoa/iOS/UIButton+Rx.swift"; sourceTree = "<group>"; };
 		897AEC78E9804B80B32BF01C7A9B199E /* FIRCLSFile.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = FIRCLSFile.h; path = Crashlytics/Crashlytics/Helpers/FIRCLSFile.h; sourceTree = "<group>"; };
@@ -7314,6 +7320,9 @@
 				01015057C45EFE4609B009BC400A609A /* SingleTextHeaderView.swift */,
 				4B94C93A582B30F34ACF0BA5D2C97E6F /* StudyInfoHeaderView.swift */,
 				033F045A8AD2C4E4AB6BE915FA2397A4 /* TaskEmptyView.swift */,
+				8941802E24DC2AA70052C395 /* QuickActivityOptionView.swift */,
+				8941803024DC34DB0052C395 /* QuickActivityView.swift */,
+				8941803224DC473E0052C395 /* QuickActivityListTableViewCell.swift */,
 				0CC00FEE6DC28ABE843B4930F25449AB /* PhoneVerification */,
 			);
 			path = Views;
@@ -11714,6 +11723,7 @@
 				65B465FF429DA6D95E7F058A80B22C48 /* ApiGateway.swift in Sources */,
 				6A074DF2583F5CE1CD689FC100AD199C /* AppNavigator.swift in Sources */,
 				8788EB106FD07FA1BE0EB240026038F4 /* AttributedTextStyle.swift in Sources */,
+				8941803124DC34DB0052C395 /* QuickActivityView.swift in Sources */,
 				85D576CA7BECDEC1992B2010FA880A9E /* BooleanQuestionsViewController.swift in Sources */,
 				9DB61FEBF2711104685158B9197D71FC /* Bundle+Extensions.swift in Sources */,
 				87BB814EABAD4A5A9529DFF2C0F93477 /* ButtonStyles.swift in Sources */,
@@ -11740,6 +11750,7 @@
 				1796C363CD55166060832940FD3F24BA /* FontPalette.swift in Sources */,
 				17D5398B073E00EE2BDAAD127DACB1C2 /* ForYouAndMe-dummy.m in Sources */,
 				F3032660950EF7DC63E85CD67E7B764F /* FYAMManager.swift in Sources */,
+				8941802F24DC2AA70052C395 /* QuickActivityOptionView.swift in Sources */,
 				C447FEC777B7F06651B2D6A798A5E23F /* GaitTask.swift in Sources */,
 				18ACF1727B6FB50A48135B052632A96E /* GenericButtonView.swift in Sources */,
 				AF93085A46382FC09A02B66DDEF6B436 /* GenericCheckboxView.swift in Sources */,
@@ -11787,6 +11798,7 @@
 				AF9A9547AE12428CB1812D21219EA522 /* PropertyWrappers.swift in Sources */,
 				9A306EE22F40A91B95226619C90A8812 /* Question.swift in Sources */,
 				FF4A0D1C4CC770BB72E7940894FCF6D5 /* QuestionBooleanTableViewCell.swift in Sources */,
+				8941803324DC473E0052C395 /* QuickActivityListTableViewCell.swift in Sources */,
 				76E2019D5726126B1B7B546374E437B2 /* QuestionViewController.swift in Sources */,
 				F2919BA1B1E228D3C2DBC66F842553A4 /* QuickActivity.swift in Sources */,
 				988273C5E6A24AE0BE0E9AC13B65E183 /* ReachabilityManager.swift in Sources */,

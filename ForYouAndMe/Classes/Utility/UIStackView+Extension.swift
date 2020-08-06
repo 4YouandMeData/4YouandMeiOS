@@ -183,6 +183,13 @@ public extension UIStackView {
         label.numberOfLines = numberOfLines
         return label
     }
+    
+    static func create(withAxis axis: NSLayoutConstraint.Axis, spacing: CGFloat = 0) -> UIStackView {
+        let stackView = UIStackView()
+        stackView.axis = axis
+        stackView.spacing = spacing
+        return stackView
+    }
 }
 
 fileprivate extension UIView {

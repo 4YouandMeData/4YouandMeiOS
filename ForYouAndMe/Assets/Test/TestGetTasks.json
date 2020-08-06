@@ -146,8 +146,8 @@
       "id": "1",
       "type": "quick_activity",
       "attributes": {
-        "title": "Mood Quick Activity",
-        "description": "Please Assess Your Mood",
+        "title": "Mood Quick Activity\nHi!",
+        "description": "Please Assess Your Mood and read this very long explanation... very very long and detailed explanation",
         "repeat_every": 1,
         "created_at": "2020-07-29T13:15:07.906Z",
         "updated_at": "2020-07-30T13:33:40.479Z"
@@ -237,7 +237,7 @@
       "id": "6",
       "type": "quick_activity_option",
       "attributes": {
-        "label": "No answer",
+        "label": "No answer, with long long long text",
         "position": 6,
         "created_at": "2020-07-30T13:31:07.322Z",
         "updated_at": "2020-07-30T13:31:07.322Z"
@@ -249,6 +249,9 @@
       "attributes": {
         "title": "Energy Quick Activity",
         "description": "Please Assess Your Current Energy Level",
+        "task_action_button_label": "SUBMIT NOW",
+        "start_color": "#FA8886",
+        "end_color": "#F57286",
         "repeat_every": 1,
         "created_at": "2020-07-30T13:32:06.354Z",
         "updated_at": "2020-07-30T13:33:16.816Z"

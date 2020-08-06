@@ -37,3 +37,13 @@ extension QuickActivity: JSONAPIMappable {
         case endColor = "end_color"
     }
 }
+
+extension QuickActivity: Hashable, Equatable {
+    static func == (lhs: QuickActivity, rhs: QuickActivity) -> Bool {
+        return lhs.id == rhs.id
+    }
+    
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(self.id)
+    }
+}
