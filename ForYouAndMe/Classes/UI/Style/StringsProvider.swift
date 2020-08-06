@@ -89,6 +89,8 @@ enum StringKey: String, CaseIterable, CodingKey {
     case activityButtonDefault = "ACTIVITY_BUTTON_DEFAULT"
     // Quick Activity
     case quickActivityButtonDefault = "QUICK_ACTIVITY_BUTTON_DEFAULT"
+    // Survey
+    case surveyButtonDefault = "SURVEY_BUTTON_DEFAULT"
     // Generic
     case genericInfoTitle = "GENERIC_INFO_TITLE"
     // Errors

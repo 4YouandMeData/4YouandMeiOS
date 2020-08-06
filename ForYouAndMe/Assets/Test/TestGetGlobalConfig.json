@@ -90,7 +90,8 @@
       "TAB_TASK_EMPTY_SUBTITLE": "Start a new task!",
       "TAB_TASK_EMPTY_BUTTON": "Go!",
       "ACTIVITY_BUTTON_DEFAULT": "START NOW",
-      "QUICK_ACTIVITY_BUTTON_DEFAULT": "SUBMIT"
+      "QUICK_ACTIVITY_BUTTON_DEFAULT": "SUBMIT",
+      "SURVEY_BUTTON_DEFAULT": "START NOW"
     },
     "country_codes": ["US", "GB", "IT"]
 }

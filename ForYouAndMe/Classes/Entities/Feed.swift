@@ -8,13 +8,15 @@
 import Foundation
 
 enum Schedulable {
-    case activity(activity: Activity)
     case quickActivity(quickActivity: QuickActivity)
+    case activity(activity: Activity)
+    case survey(survey: Survey)
     
     var schedulableType: String {
         switch self {
-        case .activity: return "activity"
         case .quickActivity: return "quick_activity"
+        case .activity: return "activity"
+        case .survey: return "survey"
         }
     }
 }
@@ -69,6 +71,9 @@ struct SchedulableDecodable: Decodable {
         } else if let quickActivity = try? container.decode(QuickActivity.self),
             Schedulable.quickActivity(quickActivity: quickActivity).schedulableType == quickActivity.type {
             self.wrappedValue = .quickActivity(quickActivity: quickActivity)
+        } else if let survey = try? container.decode(Survey.self),
+            Schedulable.survey(survey: survey).schedulableType == survey.type {
+            self.wrappedValue = .survey(survey: survey)
         } else {
             // TODO: Add all expected cases
             throw FeedError.invalidSchedulable

@@ -192,6 +192,10 @@ extension FeedListManager: UITableViewDataSource {
                                                     taskOptions: nil,
                                                     presenter: delegate.presenter)
                 })
+            case .survey(let survey):
+                cell.display(data: survey, buttonPressedCallback: { () in
+                    // TODO: Navigate to survey
+                })
             }
             return cell
         } else {

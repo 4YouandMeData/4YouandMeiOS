@@ -18,20 +18,20 @@ class FeedTableViewCell: UITableViewCell {
                             endPoint: CGPoint(x: 0.5, y: 1.0))
     }()
     
-    private lazy var taskImageView: UIImageView = {
+    private lazy var feedImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.contentMode = .scaleAspectFit
         imageView.autoSetDimension(.height, toSize: 56.0)
         return imageView
     }()
     
-    private lazy var taskTitleLabel: UILabel = {
+    private lazy var feedTitleLabel: UILabel = {
         let label = UILabel()
         label.numberOfLines = 0
         return label
     }()
     
-    private lazy var taskDescriptionLabel: UILabel = {
+    private lazy var feedDescriptionLabel: UILabel = {
         let label = UILabel()
         label.numberOfLines = 0
         return label
@@ -74,11 +74,11 @@ class FeedTableViewCell: UITableViewCell {
         stackView.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets(top: 30.0, left: 16.0, bottom: 30.0, right: 16.0))
         
         // Content
-        stackView.addArrangedSubview(self.taskImageView)
+        stackView.addArrangedSubview(self.feedImageView)
         stackView.addBlankSpace(space: 18.0)
-        stackView.addArrangedSubview(self.taskTitleLabel)
+        stackView.addArrangedSubview(self.feedTitleLabel)
         stackView.addBlankSpace(space: 12.0)
-        stackView.addArrangedSubview(self.taskDescriptionLabel)
+        stackView.addArrangedSubview(self.feedDescriptionLabel)
         stackView.addArrangedSubview(self.buttonView)
     }
     
@@ -93,33 +93,32 @@ class FeedTableViewCell: UITableViewCell {
         self.gradientView.updateParameters(colors: [data.startColor ?? ColorPalette.color(withType: .primary),
                                                     data.endColor ?? ColorPalette.color(withType: .gradientPrimaryEnd)])
         
-        if let image = data.image {
-            self.taskImageView.isHidden = false
-            self.taskImageView.image = image
-        } else {
-            self.taskImageView.isHidden = true
-        }
-        
-        if let title = data.title {
-            self.taskTitleLabel.isHidden = false
-            self.taskTitleLabel.attributedText = NSAttributedString.create(withText: title,
-                                                                           fontStyle: .header2,
-                                                                           colorType: .secondaryText)
-        } else {
-            self.taskTitleLabel.isHidden = true
-        }
-        
-        if let body = data.body {
-            self.taskDescriptionLabel.isHidden = false
-            self.taskDescriptionLabel.attributedText = NSAttributedString.create(withText: body,
-                                                                                 fontStyle: .paragraph,
-                                                                                 colorType: .secondaryText)
-        } else {
-            self.taskDescriptionLabel.isHidden = true
-        }
+        self.setFeedImage(image: data.image)
+        self.setFeedTitle(text: data.title)
+        self.setFeedDescription(text: data.body)
         
         if nil != data.taskType {
             let buttonText = data.buttonText ?? StringsProvider.string(forKey: .activityButtonDefault)
+            self.buttonView.isHidden = false
+            self.buttonView.setButtonText(buttonText)
+        } else {
+            assert(data.buttonText == nil, "Existing button text for activity without activity type")
+            self.buttonView.isHidden = true
+        }
+    }
+    
+    public func display(data: Survey, buttonPressedCallback: @escaping NotificationCallback) {
+        self.buttonPressedCallback = buttonPressedCallback
+        self.gradientView.updateParameters(colors: [data.startColor ?? ColorPalette.color(withType: .primary),
+                                                    data.endColor ?? ColorPalette.color(withType: .gradientPrimaryEnd)])
+        
+        self.setFeedImage(image: data.image)
+        self.setFeedTitle(text: data.title)
+        self.setFeedDescription(text: data.body)
+        
+        let existCallToAction: Bool = false // TODO: check against final call to action format
+        if existCallToAction {
+            let buttonText = data.buttonText ?? StringsProvider.string(forKey: .surveyButtonDefault)
             self.buttonView.isHidden = false
             self.buttonView.setButtonText(buttonText)
         } else {
@@ -132,5 +131,38 @@ class FeedTableViewCell: UITableViewCell {
     
     @objc private func buttonPressed() {
         self.buttonPressedCallback?()
+    }
+    
+    // MARK: - Private Methods
+    
+    private func setFeedTitle(text: String?) {
+        if let title = text {
+            self.feedTitleLabel.isHidden = false
+            self.feedTitleLabel.attributedText = NSAttributedString.create(withText: title,
+                                                                           fontStyle: .header2,
+                                                                           colorType: .secondaryText)
+        } else {
+            self.feedTitleLabel.isHidden = true
+        }
+    }
+    
+    private func setFeedDescription(text: String?) {
+        if let body = text {
+            self.feedDescriptionLabel.isHidden = false
+            self.feedDescriptionLabel.attributedText = NSAttributedString.create(withText: body,
+                                                                                 fontStyle: .paragraph,
+                                                                                 colorType: .secondaryText)
+        } else {
+            self.feedDescriptionLabel.isHidden = true
+        }
+    }
+    
+    private func setFeedImage(image: UIImage?) {
+        if let image = image {
+            self.feedImageView.isHidden = false
+            self.feedImageView.image = image
+        } else {
+            self.feedImageView.isHidden = true
+        }
     }
 }
