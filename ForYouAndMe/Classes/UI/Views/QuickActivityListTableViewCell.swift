@@ -179,6 +179,6 @@ extension QuickActivityListTableViewCell: UICollectionViewDelegateFlowLayout {
 extension UIScrollView {
     var currentPage: Int {
         let frameWidth = self.frame.width
-        return (frameWidth > 0) ? Int((self.contentOffset.x + (0.5 * frameWidth)) / frameWidth) + 1 : 0
+        return (frameWidth > 0) ? Int((self.contentOffset.x + (0.5 * frameWidth)) / frameWidth) + 1 : 1
     }
 }
