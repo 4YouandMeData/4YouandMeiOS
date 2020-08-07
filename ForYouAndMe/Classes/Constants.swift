@@ -21,7 +21,7 @@ struct Constants {
     struct Test {
         static let NetworkStubsEnabled = false
         static let NetworkStubsDelay = 0.3
-        static let NetworkLogVerbose = false
+        static let NetworkLogVerbose = true
         
         static let Section: TestSection? = nil//.wearablesSection
         static let OnboardingCompleted: Bool? = true

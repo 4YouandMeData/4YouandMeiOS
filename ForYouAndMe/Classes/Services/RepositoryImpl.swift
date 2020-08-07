@@ -193,8 +193,9 @@ extension RepositoryImpl: Repository {
     }
     
     func sendQuickActivityResult(quickActivityTaskId: String, quickActivityOption: QuickActivityOption) -> Single<()> {
+        let resultData = quickActivityOption.networkResultData.data
         return self.api.send(request: ApiRequest(serviceRequest: .sendTaskResultData(taskId: quickActivityTaskId,
-                                                                                     resultData: quickActivityOption.networkResultData.data)))
+                                                                                     resultData: resultData)))
             .handleError()
     }
     
