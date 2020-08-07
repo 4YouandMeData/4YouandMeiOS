@@ -132,17 +132,24 @@ class QuickActivityView: UIView {
         let buttonText = item.buttonText ?? StringsProvider.string(forKey: .quickActivityButtonDefault)
         self.confirmButtonView.setButtonText(buttonText)
         
+        var confirmButtonEnabled = false
         self.optionsViews.enumerated().forEach { (index, optionView) in
             optionView.resetContent()
+            
             if index < item.options.count {
                 let option = item.options[index]
+                let isSelected = selectedOption == option
+                if isSelected {
+                    confirmButtonEnabled = true
+                }
                 optionView.display(item: option,
-                                   isSelected: selectedOption == option,
+                                   isSelected: isSelected,
                                    tapCallback: { [weak self] in
                                     self?.selectionCallback?(option)
                 })
             }
         }
+        self.confirmButtonView.setButtonEnabled(enabled: confirmButtonEnabled)
     }
     
     // MARK: - Actions

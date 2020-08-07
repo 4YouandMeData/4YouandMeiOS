@@ -343,6 +343,8 @@
       "attributes": {
         "label": "No answer",
         "position": 11,
+        "image": "iVBORw0KGgoAAAANSUhEUgAAADwAAAA8CAYAAAA6/NlyAAAAAXNSR0IArs4c6QAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAPKADAAQAAAABAAAAPAAAAACoF8tmAAAEZElEQVRoBeWbgXHbRhBFzTQgdpDrIOgg10HQgdWBmQrMDqxUQHYQpgKiA9EVkKnAcAXK+9RRDsHbw4EUQGC8M38O2Nv7+z9wgESONPvQY7y8vPwBfRFa+DDO/5fbcVyHfBXG3Ww2+yccj3vAoAMfwd/g1hDHR+BG5xpRHmxBX7GF2N/duEQAiRkqtjQ6PSLD+aeptu4K3CtWNHaDOKZRCb6Be4c0lF1Nz7osoMEn6p86rPlO7QYcQAUUNW/hnQ7gKxjmOiY8cKAEDyA3FvD9lVucXYe4FciJA0VPwGeTNwq1NnCIKydWDYrrT+k2B88ZXWtqltd3iq8UJxB3W0jjabfEydqyIgBtZo9Gb26WEBN05Bh/TtC0T9FoBVKhLafncJBQL9C2za/b3hAvQCp2TN62ha64TOoJ1DsVi07UMJUpNubWnQh7KJaGFo1lVltIHNDPOCvubvZkBIEp0/LgTrXm2EKyMxfeaQK9qe29TspisQdWHJgY/JlNCmZSmoC0WVGYHKzYGqtq8vZCk3GYCWkD0hiLbVQFlam7u4wuGlES/cuY25DzF1KZ2BoLdOVGt5WbBqQR5N1lCh2wYtkkH+s5BlJ32b3ppvDRcHt4K5rIAT4OhpdHWfgl+CjD2Bw2zcQEzi3NPzwaV0RpPwGDZxKl2fJzLGSyNArqM6YJneDHenmV2tKF4cXaGkb5qNKW9uL0DMfUHmLJieRM7TLsDROVkZ9C2tLuU3d4CsY6a5ThX41Vk31p4cfS/jDTGzpmmK8+O32FG+O4Z87y9VNu6X9jd4Ir5GL5KeTQXhg6v+oOH4xJZ+SnkJ4bIuufckvvjKthbQujfFRpb6ipdIdrY3LKhp3h6fglmPXh4Zu5aOQTvLSsr5nLo3T9zDLCj9zbhTx8JD8enl5a1l/NvF6RC9pRJyzNPzxyVayvePajthYRh5c9iMXjWzmzLlYRcsu3wpEfoHeZ8OHO5FNYGcV6AczPikd4Io3AellVF5Ip9sCK5cWCkSUQnrq7PiqXRam7XEQXjSCJ7sK6U/JkSmxZuGd+dFtbmoC1lZkyP0i8XgcK1qoy4ra/oTAv9fUT6Hw2tCq9bmWmyIFa1UasWkkGKkDfytCotDy4LCkUllqRiLuaRpe28SqhT1PWLyDxa8CCRQuhttLgz7R6gtQ2luxF3FVLloWp51nEe1C00LzbtHqB1AuK6YznNqUIgp1YEiEBn0Fvd1vcoQdDMnYpL1lz0KtZm2mpOBrPIu1QBO/nwM2QDGl8v4sOWdv2PqnZc/AF/N7B11mp1gaOPWNOrM8IEiedvnum8wKuLwm+5lRNYgMOoAKK740/H354TX/wjA6UYA5y40/4nnKLO9dhugR1zmXvuUYadHH6Dxrpl5PcLd6Hb/V2/TttdKBpAao+HBmc6lU0ZAx/iggP+jQubj+8s5aOiHLgEWzArSEOcbmWtp2mO72lOzFTjFi9VE5b0If1c8bfwvFXxjocV2HUv+JtwvG7D/8B4AN/IQumTdUAAAAASUVORK5CYII=",
+        "selected_image": "iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAACNiR0NAAAAAXNSR0IArs4c6QAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAFKADAAQAAAABAAAAFAAAAACRFdLHAAABP0lEQVQ4Ea2VjXHCMAyFSSfIJvUG9QZ4FDZIN2hGgQ2yAd6kbJB+L0iHzblJm1Z3D8V6P1G4HHSHb2qe5wT1CiIIQJXBpN513YW+XQQFcAVbJY3fqB2M4L1IyXaO9N6ga2nEeQ3NNNgybGyKbIhWNxg9kX6q9AxCQaaKXDngSYXv8fgMsxGrm7Wy8fmm14Vn4HfJLcPWDH8PfKH0gsFXPW+ZWzyvz425e4MCowkn63uae+OBdW9A1e9JkkfeJWGeP7Xhf1anwGyJ4Q/J7s0KnCwoWt/T3DuVGx73fI/mOdoW96dl6O/R+Nv18I5AdQ9TAIewjO4f6aehyFPhC5UPovxx+ODcV4LiIA5I43Uq6MclbBmq37sBvAEFCLoegDivdpjHogogu3qlS1M/JiGdBz13xImZDNE6rfoLOGvwXF+ELLothaepYgAAAABJRU5ErkJggg==",
         "created_at": "2020-07-30T13:32:06.359Z",
         "updated_at": "2020-07-30T13:33:01.311Z"
       }
@@ -353,7 +355,7 @@
       "attributes": {
         "title": "Walk test",
         "description": "",
-        "activity_type": "walk",
+        "activity_type": "walk_task",
         "repeat_every": 1,
         "created_at": "2020-07-29T13:38:19.878Z",
         "updated_at": "2020-07-29T13:40:00.404Z",
@@ -392,7 +394,7 @@
       "attributes": {
         "title": "Trail Making",
         "description": "Test description Test description Test description Test description Test description Test description Test description Test description",
-        "activity_type": "trail_making",
+        "activity_type": "trail_making_task",
         "repeat_every": 1,
         "start_color": "#FA8886",
         "end_color": "#F57286",

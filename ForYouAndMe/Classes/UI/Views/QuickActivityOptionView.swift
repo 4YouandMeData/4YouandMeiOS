@@ -9,12 +9,11 @@ import UIKit
 
 class QuickActivityOptionView: UIView {
     
-    private static let imageHeight: CGFloat = 44.0
+    private static let maxImageHeight: CGFloat = 44.0
     
     private lazy var imageView: UIImageView = {
         let imageView = UIImageView()
         imageView.contentMode = .scaleAspectFit
-        imageView.autoSetDimension(.height, toSize: Self.imageHeight)
         return imageView
     }()
     
@@ -33,7 +32,17 @@ class QuickActivityOptionView: UIView {
         self.addSubview(stackView)
         stackView.autoPinEdgesToSuperviewEdges(with: .zero, excludingEdge: .bottom)
         stackView.autoPinEdge(toSuperviewEdge: .bottom, withInset: 0.0, relation: .greaterThanOrEqual)
-        stackView.addArrangedSubview(self.imageView)
+        
+        let imageContainerView = UIView()
+        imageContainerView.autoSetDimension(.height, toSize: Self.maxImageHeight)
+        imageContainerView.addSubview(self.imageView)
+        self.imageView.autoCenterInSuperview()
+        self.imageView.autoPinEdge(toSuperviewEdge: .top, withInset: 0.0, relation: .greaterThanOrEqual)
+        self.imageView.autoPinEdge(toSuperviewEdge: .bottom, withInset: 0.0, relation: .greaterThanOrEqual)
+        self.imageView.autoPinEdge(toSuperviewEdge: .leading, withInset: 0.0, relation: .greaterThanOrEqual)
+        self.imageView.autoPinEdge(toSuperviewEdge: .trailing, withInset: 0.0, relation: .greaterThanOrEqual)
+        stackView.addArrangedSubview(imageContainerView)
+        
         stackView.addArrangedSubview(self.textLabel)
         
         let button = UIButton()

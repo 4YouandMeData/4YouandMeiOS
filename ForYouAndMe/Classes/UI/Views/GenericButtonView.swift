@@ -135,9 +135,9 @@ class GenericButtonView: UIView {
     private func sharedSetup() {
         self.buttonEnabledObserver = self.button.observe(\UIButton.isEnabled, changeHandler: { button, _ in
             if button.isEnabled {
-                self.button.backgroundColor = self.button.backgroundColor?.applyAlpha(1.0)
+                self.button.alpha = 1.0
             } else {
-                self.button.backgroundColor = self.button.backgroundColor?.applyAlpha(0.5)
+                self.button.alpha = 0.5
             }
         })
     }

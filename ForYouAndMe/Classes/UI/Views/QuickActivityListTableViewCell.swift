@@ -54,6 +54,7 @@ class QuickActivityListTableViewCell: UITableViewCell {
         collectionView.isPagingEnabled = true
         collectionView.dataSource = self
         collectionView.delegate = self
+        collectionView.allowsSelection = false
         collectionView.backgroundColor = .clear
         collectionView.showsHorizontalScrollIndicator = false
         collectionView.showsVerticalScrollIndicator = false
@@ -126,7 +127,6 @@ class QuickActivityListTableViewCell: UITableViewCell {
         let pageControlAttributedText = NSMutableAttributedString(attributedString: currentPageAttributedText)
         pageControlAttributedText.append(totalPageAttributedText)
         self.pageControlLabel.attributedText = pageControlAttributedText
-        
     }
 }
 
@@ -146,7 +146,7 @@ extension QuickActivityListTableViewCell: UICollectionViewDataSource {
             }, selectionCallback: { [weak self] selectedOption in
                 self?.selections[item] = selectedOption
                 self?.selectionCallback?(item, selectedOption)
-                self?.collectionView.reloadData()
+                self?.collectionView.reloadItems(at: [indexPath])
             })
             return cell
         } else {
