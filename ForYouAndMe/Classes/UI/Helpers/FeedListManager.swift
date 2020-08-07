@@ -166,6 +166,27 @@ class FeedListManager: NSObject {
         self.tableView.scrollRectToVisible(CGRect(x: 0, y: 0, width: 1, height: 1), animated: false)
     }
     
+    private func sendQuickActiviyOption(_ option: QuickActivityOption, forTaskId taskId: String) {
+        guard let delegate = self.delegate else {
+            assertionFailure("FeedListManager - Missing delegate")
+            return
+        }
+        
+        self.navigator.pushProgressHUD()
+        self.repository.sendQuickActivityResult(quickActivityTaskId: taskId,
+                                                quickActivityOption: option)
+            .do(onSuccess: { [weak self] _ in self?.navigator.popProgressHUD() },
+                onError: { [weak self] _ in self?.navigator.popProgressHUD() },
+                onDispose: { [weak self] in self?.navigator.popProgressHUD() })
+            .subscribe(onSuccess: { [weak self] in
+                guard let self = self else { return }
+                self.loadItems()
+                }, onError: { [weak self] error in
+                    guard let self = self else { return }
+                    self.navigator.handleError(error: error, presenter: delegate.presenter)
+            }).disposed(by: self.disposeBag)
+    }
+    
     // MARK: - Actions
     
     @objc private func refreshControlPulled() {
@@ -187,15 +208,18 @@ extension FeedListManager: UITableViewDataSource {
         let section = self.sections[indexPath.section]
         if let quickActivitySection = section as? QuickActivitySection {
             guard let cell = tableView.dequeueReusableCellOfType(type: QuickActivityListTableViewCell.self, forIndexPath: indexPath) else {
-                assertionFailure("FeedTableViewCell not registered")
+                assertionFailure("QuickActivityListTableViewCell not registered")
                 return UITableViewCell()
             }
             cell.display(items: quickActivitySection.quickActivies,
                          selections: self.quickActivitySelections,
                          confirmCallback: { [weak self] item in
                             guard let self = self else { return }
-                            guard let delegate = self.delegate else { return }
-                            // TODO: Send chosen option to server
+                            guard let selectedOption = self.quickActivitySelections[item] else {
+                                assertionFailure("Missing selected quick activity option")
+                                return
+                            }
+                            self.sendQuickActiviyOption(selectedOption, forTaskId: item.taskId)
             },
                          selectionCallback: { [weak self] (item, option) in
                             guard let self = self else { return }
@@ -223,6 +247,7 @@ extension FeedListManager: UITableViewDataSource {
                 })
             case .survey(let survey):
                 cell.display(data: survey, buttonPressedCallback: { () in
+                    print("// TODO: Navigate to survey")
                     // TODO: Navigate to survey
                 })
             }
