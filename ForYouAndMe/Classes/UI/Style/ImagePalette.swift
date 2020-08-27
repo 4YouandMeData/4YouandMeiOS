@@ -21,6 +21,8 @@ enum ImageName: String, CaseIterable {
     case clearButton = "clear_button"
     case checkmark = "checkmark"
     case edit = "edit"
+    case videoDiaryIntro = "video_diary_intro"
+    case videoDiarySuccess = "video_diary_success"
 }
 
 enum TemplateImageName: String, CaseIterable {

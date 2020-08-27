@@ -1285,6 +1285,8 @@
 		8921310819048EEE2E4F243A141999B2 /* ORKRequestPermissionsStepViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 814F8B287D3A5969F5115714B454E489 /* ORKRequestPermissionsStepViewController.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
 		8929755FBC22C565EF083B0C8F10B0D6 /* SectionedViewDataSourceType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9EDBDEC8320857EC75BE0FBC55D6CE0B /* SectionedViewDataSourceType.swift */; };
 		892F567BF4D68BB3C3AE4687AE25BE8C /* FIRCLSDownloadAndSaveSettingsOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 6E9BC5D75C32562237899142CC482AF4 /* FIRCLSDownloadAndSaveSettingsOperation.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
+		893FF27E24F7B53F00FDE193 /* VideoDiaryIntroViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893FF27D24F7B53F00FDE193 /* VideoDiaryIntroViewController.swift */; };
+		893FF28024F7BF1900FDE193 /* VideoDiaryCompleteViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893FF27F24F7BF1900FDE193 /* VideoDiaryCompleteViewController.swift */; };
 		8941802D24DC02630052C395 /* QuickActivityOption.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8941802C24DC02630052C395 /* QuickActivityOption.swift */; };
 		8941802F24DC2AA70052C395 /* QuickActivityOptionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8941802E24DC2AA70052C395 /* QuickActivityOptionView.swift */; };
 		8941803124DC34DB0052C395 /* QuickActivityView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8941803024DC34DB0052C395 /* QuickActivityView.swift */; };
@@ -1292,6 +1294,7 @@
 		89419F6DA745C9EB2B494B0BF12289E9 /* ORKStepNavigationRule_Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = EFB388DDEEB876759CFB1CAF398A0FB7 /* ORKStepNavigationRule_Internal.h */; settings = {ATTRIBUTES = (Project, ); }; };
 		8959EA6A08FD2FBDEC0661DA718B415F /* ORKPageStep.h in Headers */ = {isa = PBXBuildFile; fileRef = FD9B804EFD6044D365E445C9047E1886 /* ORKPageStep.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		895CE133386CDA2B4B271287050A9BBB /* GULKeychainStorage.h in Headers */ = {isa = PBXBuildFile; fileRef = 9FA38FFFC79805DA3A4B9DC5AF3E83EE /* GULKeychainStorage.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		89679BEF24F6B952001C5BEF /* VideoDiarySectionCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89679BEE24F6B952001C5BEF /* VideoDiarySectionCoordinator.swift */; };
 		899AFC7DB0CA4B9B6117637697522333 /* ORKUSDZModelManagerResult.m in Sources */ = {isa = PBXBuildFile; fileRef = 69290C3CA9575A49E48D347F0A9D6403 /* ORKUSDZModelManagerResult.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
 		899FCC8017786183BECB69DD2331AA36 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3F41D851DA5BFD4D5C6C4DDE13BC170A /* Foundation.framework */; };
 		8A270906AF32357A39B0573670033769 /* ORKTouchAbilitySwipeTrial.h in Headers */ = {isa = PBXBuildFile; fileRef = E82471106264EBF9DE68E139CA14C406 /* ORKTouchAbilitySwipeTrial.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -4423,11 +4426,14 @@
 		88DB1E02F7230B657A1E474FAFC1ABC1 /* RxTarget.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = RxTarget.swift; path = RxCocoa/Common/RxTarget.swift; sourceTree = "<group>"; };
 		8916EFA2479240FD5F24BC322C2BA928 /* ORKHeightPicker.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = ORKHeightPicker.m; path = ResearchKit/Common/ORKHeightPicker.m; sourceTree = "<group>"; };
 		8932C669E6F75E0DE8C600177A7D241F /* ControlProperty+Driver.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = "ControlProperty+Driver.swift"; path = "RxCocoa/Traits/Driver/ControlProperty+Driver.swift"; sourceTree = "<group>"; };
+		893FF27D24F7B53F00FDE193 /* VideoDiaryIntroViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoDiaryIntroViewController.swift; sourceTree = "<group>"; };
+		893FF27F24F7BF1900FDE193 /* VideoDiaryCompleteViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoDiaryCompleteViewController.swift; sourceTree = "<group>"; };
 		8941802C24DC02630052C395 /* QuickActivityOption.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickActivityOption.swift; sourceTree = "<group>"; };
 		8941802E24DC2AA70052C395 /* QuickActivityOptionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickActivityOptionView.swift; sourceTree = "<group>"; };
 		8941803024DC34DB0052C395 /* QuickActivityView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickActivityView.swift; sourceTree = "<group>"; };
 		8941803224DC473E0052C395 /* QuickActivityListTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickActivityListTableViewCell.swift; sourceTree = "<group>"; };
 		8941D94988A246A6BAF3005915C40F8B /* ignoreErrors.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ignoreErrors.swift; path = Source/RxSwift/ignoreErrors.swift; sourceTree = "<group>"; };
+		89679BEE24F6B952001C5BEF /* VideoDiarySectionCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoDiarySectionCoordinator.swift; sourceTree = "<group>"; };
 		89745E5DA4C986A9FD5C508E6E30DEB3 /* UIButton+Rx.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = "UIButton+Rx.swift"; path = "RxCocoa/iOS/UIButton+Rx.swift"; sourceTree = "<group>"; };
 		897AEC78E9804B80B32BF01C7A9B199E /* FIRCLSFile.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = FIRCLSFile.h; path = Crashlytics/Crashlytics/Helpers/FIRCLSFile.h; sourceTree = "<group>"; };
 		89A1874217C3C1A6A837A9BFA888AF42 /* ORKSpeechRecognitionResult.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = ORKSpeechRecognitionResult.m; path = ResearchKit/ActiveTasks/ORKSpeechRecognitionResult.m; sourceTree = "<group>"; };
@@ -7275,6 +7281,7 @@
 				E7F39F3067B70EDCAAF647CB4AE5CFC6 /* PopupViewController.swift */,
 				BF096782CDC352946CB41E10E141F2D1 /* QuestionViewController.swift */,
 				839CBE986CAC0917CACC44F98ABA0A56 /* WebViewViewController.swift */,
+				893FF27C24F7B52200FDE193 /* VideoDiary */,
 				163F79524464E74E1C8D51C249AE48A0 /* Main */,
 				283B623A8C696109B1FDEEF8F02518A9 /* Onboarding */,
 			);
@@ -8049,6 +8056,15 @@
 			path = RxSwift;
 			sourceTree = "<group>";
 		};
+		893FF27C24F7B52200FDE193 /* VideoDiary */ = {
+			isa = PBXGroup;
+			children = (
+				893FF27D24F7B53F00FDE193 /* VideoDiaryIntroViewController.swift */,
+				893FF27F24F7BF1900FDE193 /* VideoDiaryCompleteViewController.swift */,
+			);
+			path = VideoDiary;
+			sourceTree = "<group>";
+		};
 		8C6E62434B160F1A8CC356B50E967096 /* Moya-ModelMapper */ = {
 			isa = PBXGroup;
 			children = (
@@ -8208,6 +8224,7 @@
 				7F6D3244B4A201E84C4B99ECE68FD18D /* ScreeningSectionCoordinator.swift */,
 				828A6058752D6A019564D110F914A0B6 /* TaskSectionCoordinator.swift */,
 				ACEA878D38EE672933CD9B2BD063E3FE /* WearablesSectionCoordinator.swift */,
+				89679BEE24F6B952001C5BEF /* VideoDiarySectionCoordinator.swift */,
 			);
 			path = Navigator;
 			sourceTree = "<group>";
@@ -11752,6 +11769,7 @@
 				F3032660950EF7DC63E85CD67E7B764F /* FYAMManager.swift in Sources */,
 				8941802F24DC2AA70052C395 /* QuickActivityOptionView.swift in Sources */,
 				C447FEC777B7F06651B2D6A798A5E23F /* GaitTask.swift in Sources */,
+				893FF27E24F7B53F00FDE193 /* VideoDiaryIntroViewController.swift in Sources */,
 				18ACF1727B6FB50A48135B052632A96E /* GenericButtonView.swift in Sources */,
 				AF93085A46382FC09A02B66DDEF6B436 /* GenericCheckboxView.swift in Sources */,
 				E81AAB3377102BD340924C4F2772544C /* GenericTextCheckboxView.swift in Sources */,
@@ -11782,6 +11800,7 @@
 				7B9E3382E94ED9CBCC42C1E5351B3AE4 /* OptInPermission.swift in Sources */,
 				1224734CB6F0877542F36125D37CB6C9 /* OptInPermissionViewController.swift in Sources */,
 				0802FE0BB63A1BAD1CE8A3143D2933BA /* OptInSection.swift in Sources */,
+				893FF28024F7BF1900FDE193 /* VideoDiaryCompleteViewController.swift in Sources */,
 				D6C20FA3BD5AB66CCC8689B739415C08 /* OptInSectionCoordinator.swift in Sources */,
 				721DE8CD9315EA3769272D877C516B04 /* Page+Wearable.swift in Sources */,
 				C73753AB4D6D45AC9EF55FCA824F802D /* Page.swift in Sources */,
@@ -11824,6 +11843,7 @@
 				368F74B1C3EA8DDA0BC96E9D51A0580F /* StyleCategory.swift in Sources */,
 				4DCA5AFF514F7ADB2C05D6F18BE5C4F5 /* Survey.swift in Sources */,
 				27951124219E55FB4855DA3F48C30020 /* TaskEmptyView.swift in Sources */,
+				89679BEF24F6B952001C5BEF /* VideoDiarySectionCoordinator.swift in Sources */,
 				11201B814FEBBDA90FF45A25928C3E25 /* TaskSectionCoordinator.swift in Sources */,
 				9BEA15B6ADCE8904FDCA9BC031428564 /* TaskType.swift in Sources */,
 				CE40A7B36E4E217CB93FDD35D556819D /* TaskViewController.swift in Sources */,

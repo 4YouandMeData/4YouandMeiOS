@@ -121,6 +121,26 @@
       }
     },
     {
+      "id": "627",
+      "type": "task",
+      "attributes": {
+        "from": "2020-08-05T00:00:00.000Z",
+        "to": "2020-08-05T23:59:59.999Z",
+        "result": null,
+        "created_at": "2020-08-05T00:05:04.672Z",
+        "updated_at": "2020-08-05T00:05:04.672Z",
+        "attachments": []
+      },
+      "relationships": {
+        "schedulable": {
+          "data": {
+            "id": "5",
+            "type": "activity"
+          }
+        }
+      }
+    },
+    {
       "id": "228",
       "type": "task",
       "attributes": {
@@ -413,6 +433,19 @@
         "repeat_every": 1,
         "created_at": "2020-07-30T13:37:00.815Z",
         "updated_at": "2020-07-30T13:37:00.815Z",
+        "image": null
+      }
+    },
+    {
+      "id": "5",
+      "type": "activity",
+      "attributes": {
+        "title": "Video Diary",
+        "description": "",
+        "activity_type": "video_diary",
+        "repeat_every": 1,
+        "created_at": "2020-07-29T13:38:19.878Z",
+        "updated_at": "2020-07-29T13:40:00.404Z",
         "image": null
       }
     }

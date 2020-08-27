@@ -91,7 +91,17 @@
       "TAB_TASK_EMPTY_BUTTON": "Go!",
       "ACTIVITY_BUTTON_DEFAULT": "START NOW",
       "QUICK_ACTIVITY_BUTTON_DEFAULT": "SUBMIT",
-      "SURVEY_BUTTON_DEFAULT": "START NOW"
+      "SURVEY_BUTTON_DEFAULT": "START NOW",
+      "VIDEO_DIARY_INTRO_TITLE": "Video Diaries",
+      "VIDEO_DIARY_INTRO_BUTTON": "Let’s Start",
+      "VIDEO_DIARY_INTRO_PARAGRAPH_TITLE_A": "About this activity",
+      "VIDEO_DIARY_INTRO_PARAGRAPH_BODY_A": "Every two weeks, we’ll ask you to spend a couple of minutes telling us about your symptoms. Hold your phone so that your face is visible in the recording.",
+      "VIDEO_DIARY_INTRO_PARAGRAPH_TITLE_B": "Why this activity",
+      "VIDEO_DIARY_INTRO_PARAGRAPH_BODY_B": "In addition to what you tell us in these videos, we’ll study your face and learn more about any swelling or fatigue you’re experiencing - two of the pregnancy symptoms we’re trying to better understand.",
+      "VIDEO_DIARY_INTRO_PARAGRAPH_TITLE_C": "Note",
+      "VIDEO_DIARY_INTRO_PARAGRAPH_BODY_C": "Please remember that the video diaries are only for the purpose of research. We will analyze the videos after the study is over. If you need medical care, please talk to your physician.",
+      "VIDEO_DIARY_SUCCESS_TITLE": "Thank you!",
+      "VIDEO_DIARY_SUCCESS_BUTTON": "Done"
     },
     "country_codes": ["US", "GB", "IT"]
 }

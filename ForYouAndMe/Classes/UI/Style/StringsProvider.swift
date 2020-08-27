@@ -91,6 +91,17 @@ enum StringKey: String, CaseIterable, CodingKey {
     case quickActivityButtonDefault = "QUICK_ACTIVITY_BUTTON_DEFAULT"
     // Survey
     case surveyButtonDefault = "SURVEY_BUTTON_DEFAULT"
+    // Video Diary
+    case videoDiaryIntroTitle = "VIDEO_DIARY_INTRO_TITLE"
+    case videoDiaryIntroButton = "VIDEO_DIARY_INTRO_BUTTON"
+    case videoDiaryIntroParagraphTitleA = "VIDEO_DIARY_INTRO_PARAGRAPH_TITLE_A"
+    case videoDiaryIntroParagraphBodyA = "VIDEO_DIARY_INTRO_PARAGRAPH_BODY_A"
+    case videoDiaryIntroParagraphTitleB = "VIDEO_DIARY_INTRO_PARAGRAPH_TITLE_B"
+    case videoDiaryIntroParagraphBodyB = "VIDEO_DIARY_INTRO_PARAGRAPH_BODY_B"
+    case videoDiaryIntroParagraphTitleC = "VIDEO_DIARY_INTRO_PARAGRAPH_TITLE_C"
+    case videoDiaryIntroParagraphBodyC = "VIDEO_DIARY_INTRO_PARAGRAPH_BODY_C"
+    case videoDiarySuccessTitle = "VIDEO_DIARY_SUCCESS_TITLE"
+    case videoDiarySuccessButton = "VIDEO_DIARY_SUCCESS_BUTTON"
     // Generic
     case genericInfoTitle = "GENERIC_INFO_TITLE"
     // Errors

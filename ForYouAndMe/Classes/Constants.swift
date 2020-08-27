@@ -19,7 +19,7 @@ enum TestSection {
 
 struct Constants {
     struct Test {
-        static let NetworkStubsEnabled = false
+        static let NetworkStubsEnabled = true
         static let NetworkStubsDelay = 0.3
         static let NetworkLogVerbose = true
         
@@ -59,8 +59,20 @@ struct Constants {
         static let taskResultURL: URL = {
             let documentsDirectoryString = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)[0]
             var resultDirectory = URL(fileURLWithPath: documentsDirectoryString, isDirectory: true)
-            resultDirectory.appendPathComponent("TaskResult")
+            resultDirectory.appendPathComponent(FilePath.taskResult.rawValue)
+            return resultDirectory
+        }()
+        
+        static let videoResultURL: URL = {
+            let documentsDirectoryString = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)[0]
+            var resultDirectory = URL(fileURLWithPath: documentsDirectoryString, isDirectory: true)
+            resultDirectory.appendPathComponent(FilePath.videoResult.rawValue)
             return resultDirectory
         }()
     }
+}
+
+enum FilePath: String {
+    case taskResult = "TaskResult"
+    case videoResult = "VideoResult"
 }

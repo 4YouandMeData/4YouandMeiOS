@@ -9,7 +9,7 @@ import Foundation
 import ResearchKit
 import RxSwift
 
-class TaskSectionCoordinator: NSObject {
+class TaskSectionCoordinator: NSObject, ActivitySectionCoordinator {
     
     private let taskIdentifier: String
     private let taskType: TaskType
@@ -38,10 +38,13 @@ class TaskSectionCoordinator: NSObject {
     
     // MARK: - Public Methods
     
-    public func getStartingPage() -> UIViewController {
-        let task = self.taskType.createTask(withIdentifier: self.taskIdentifier,
-                                            options: self.taskOptions,
-                                            locationAuthorised: self.locationService.locationAuthorized)
+    public func getStartingPage() -> UIViewController? {
+        guard let task = self.taskType.createTask(withIdentifier: self.taskIdentifier,
+                                                  options: self.taskOptions,
+                                                  locationAuthorised: self.locationService.locationAuthorized) else {
+                                                    assertionFailure("Couldn't find ORKTask for given task")
+                                                    return nil
+        }
         let taskViewController = ORKTaskViewController(task: task, taskRun: nil)
         taskViewController.delegate = self
         taskViewController.outputDirectory = Constants.Task.taskResultURL

@@ -9,6 +9,10 @@
 import UIKit
 import SVProgressHUD
 
+protocol ActivitySectionCoordinator: class {
+    func getStartingPage() -> UIViewController?
+}
+
 class AppNavigator {
     
     private var progressHudCount = 0
@@ -16,7 +20,7 @@ class AppNavigator {
     private let repository: Repository
     private let window: UIWindow
     
-    private var currentTaskCoordinator: TaskSectionCoordinator?
+    private var currentActivityCoordinator: ActivitySectionCoordinator?
     
     init(withRepository repository: Repository, window: UIWindow) {
         self.repository = repository
@@ -335,16 +339,27 @@ class AppNavigator {
         let completionCallback: NotificationCallback = { [weak self] in
             guard let self = self else { return }
             presenter.dismiss(animated: true, completion: nil)
-            self.currentTaskCoordinator = nil
+            self.currentActivityCoordinator = nil
         }
-        let coordinator = TaskSectionCoordinator(withTaskIdentifier: taskIdentifier,
-                                                 taskType: taskType,
-                                                 taskOptions: taskOptions,
-                                                 completionCallback: completionCallback)
-        let startingPage = coordinator.getStartingPage()
+        let coordinator: ActivitySectionCoordinator = {
+            switch taskType {
+            case .videoDiary:
+                return VideoDiarySectionCoordinator(withTaskIdentifier: taskIdentifier,
+                                                    completionCallback: completionCallback)
+            default:
+                return TaskSectionCoordinator(withTaskIdentifier: taskIdentifier,
+                                              taskType: taskType,
+                                              taskOptions: taskOptions,
+                                              completionCallback: completionCallback)
+            }
+        }()
+        guard let startingPage = coordinator.getStartingPage() else {
+            assertionFailure("Couldn't get starting view controller for current task type")
+            return
+        }
         startingPage.modalPresentationStyle = .fullScreen
         presenter.present(startingPage, animated: true, completion: nil)
-        self.currentTaskCoordinator = coordinator
+        self.currentActivityCoordinator = coordinator
     }
     
     // MARK: Progress HUD

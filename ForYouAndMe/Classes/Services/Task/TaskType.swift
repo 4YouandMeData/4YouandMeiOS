@@ -16,11 +16,12 @@ enum TaskType: String, CaseIterable {
     case walk = "walk_task"
     case gait = "gait_task"
     case tremor = "tremor_task"
+    case videoDiary = "video_diary"
 }
 
 extension TaskType {
     
-    func createTask(withIdentifier identifier: String, options: TaskOptions?, locationAuthorised: Bool) -> ORKTask {
+    func createTask(withIdentifier identifier: String, options: TaskOptions?, locationAuthorised: Bool) -> ORKTask? {
         switch self {
         case .reactionTime:
             return ReactionTimeTask.createTask(withIdentifier: identifier, options: options, locationAuthorised: locationAuthorised)
@@ -32,6 +33,8 @@ extension TaskType {
             return GaitTask.createTask(withIdentifier: identifier, options: options, locationAuthorised: locationAuthorised)
         case .tremor:
             return TremorTask.createTask(withIdentifier: identifier, options: options, locationAuthorised: locationAuthorised)
+        case .videoDiary:
+            return nil
         }
     }
     
@@ -42,6 +45,7 @@ extension TaskType {
         case .walk: return WalkTask.getNetworkResultData(taskResult: taskResult)
         case .gait: return GaitTask.getNetworkResultData(taskResult: taskResult)
         case .tremor: return TremorTask.getNetworkResultData(taskResult: taskResult)
+        case .videoDiary: return nil
         }
     }
 }
