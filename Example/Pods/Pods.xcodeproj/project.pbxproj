@@ -1287,6 +1287,9 @@
 		892F567BF4D68BB3C3AE4687AE25BE8C /* FIRCLSDownloadAndSaveSettingsOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 6E9BC5D75C32562237899142CC482AF4 /* FIRCLSDownloadAndSaveSettingsOperation.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
 		893FF27E24F7B53F00FDE193 /* VideoDiaryIntroViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893FF27D24F7B53F00FDE193 /* VideoDiaryIntroViewController.swift */; };
 		893FF28024F7BF1900FDE193 /* VideoDiaryCompleteViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893FF27F24F7BF1900FDE193 /* VideoDiaryCompleteViewController.swift */; };
+		893FF28324F7E9B300FDE193 /* VideoDiaryPlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893FF28224F7E9B300FDE193 /* VideoDiaryPlayerView.swift */; };
+		893FF28524F7EB7B00FDE193 /* VideoDiaryRecorderViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893FF28424F7EB7B00FDE193 /* VideoDiaryRecorderViewController.swift */; };
+		893FF28724F803BB00FDE193 /* UILabel+Internal.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893FF28624F803BB00FDE193 /* UILabel+Internal.swift */; };
 		8941802D24DC02630052C395 /* QuickActivityOption.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8941802C24DC02630052C395 /* QuickActivityOption.swift */; };
 		8941802F24DC2AA70052C395 /* QuickActivityOptionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8941802E24DC2AA70052C395 /* QuickActivityOptionView.swift */; };
 		8941803124DC34DB0052C395 /* QuickActivityView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8941803024DC34DB0052C395 /* QuickActivityView.swift */; };
@@ -4428,6 +4431,9 @@
 		8932C669E6F75E0DE8C600177A7D241F /* ControlProperty+Driver.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = "ControlProperty+Driver.swift"; path = "RxCocoa/Traits/Driver/ControlProperty+Driver.swift"; sourceTree = "<group>"; };
 		893FF27D24F7B53F00FDE193 /* VideoDiaryIntroViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoDiaryIntroViewController.swift; sourceTree = "<group>"; };
 		893FF27F24F7BF1900FDE193 /* VideoDiaryCompleteViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoDiaryCompleteViewController.swift; sourceTree = "<group>"; };
+		893FF28224F7E9B300FDE193 /* VideoDiaryPlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoDiaryPlayerView.swift; sourceTree = "<group>"; };
+		893FF28424F7EB7B00FDE193 /* VideoDiaryRecorderViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoDiaryRecorderViewController.swift; sourceTree = "<group>"; };
+		893FF28624F803BB00FDE193 /* UILabel+Internal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UILabel+Internal.swift"; sourceTree = "<group>"; };
 		8941802C24DC02630052C395 /* QuickActivityOption.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickActivityOption.swift; sourceTree = "<group>"; };
 		8941802E24DC2AA70052C395 /* QuickActivityOptionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickActivityOptionView.swift; sourceTree = "<group>"; };
 		8941803024DC34DB0052C395 /* QuickActivityView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickActivityView.swift; sourceTree = "<group>"; };
@@ -7330,6 +7336,7 @@
 				8941802E24DC2AA70052C395 /* QuickActivityOptionView.swift */,
 				8941803024DC34DB0052C395 /* QuickActivityView.swift */,
 				8941803224DC473E0052C395 /* QuickActivityListTableViewCell.swift */,
+				893FF28124F7E94A00FDE193 /* VideoDiary */,
 				0CC00FEE6DC28ABE843B4930F25449AB /* PhoneVerification */,
 			);
 			path = Views;
@@ -8060,7 +8067,16 @@
 			isa = PBXGroup;
 			children = (
 				893FF27D24F7B53F00FDE193 /* VideoDiaryIntroViewController.swift */,
+				893FF28424F7EB7B00FDE193 /* VideoDiaryRecorderViewController.swift */,
 				893FF27F24F7BF1900FDE193 /* VideoDiaryCompleteViewController.swift */,
+			);
+			path = VideoDiary;
+			sourceTree = "<group>";
+		};
+		893FF28124F7E94A00FDE193 /* VideoDiary */ = {
+			isa = PBXGroup;
+			children = (
+				893FF28224F7E9B300FDE193 /* VideoDiaryPlayerView.swift */,
 			);
 			path = VideoDiary;
 			sourceTree = "<group>";
@@ -9066,6 +9082,7 @@
 				AF1979E61C971CF1F9AE45F045F9F001 /* Page+Wearable.swift */,
 				016B7E66C0CFEF7EE019C99B035695A7 /* UINavigationController+Internal.swift */,
 				69F4D46A0CA42B65CE98748E42F2AA94 /* UIViewController+Internal.swift */,
+				893FF28624F803BB00FDE193 /* UILabel+Internal.swift */,
 			);
 			name = UtilityInternal;
 			path = ForYouAndMe/Classes/UtilityInternal;
@@ -11732,6 +11749,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				7FE2CEBAF6AB15461A1170BA691F55FD /* AcceptanceViewController.swift in Sources */,
+				893FF28724F803BB00FDE193 /* UILabel+Internal.swift in Sources */,
 				6A55A2D3E2D04E2207074EB187AB791B /* Activity.swift in Sources */,
 				1E62AA6274465060706FE931C7448D43 /* AnalyticsManager.swift in Sources */,
 				D0C9D729FAC2B6AFD15EF1CB6CD230ED /* AnalyticsService.swift in Sources */,
@@ -11749,6 +11767,7 @@
 				E2688B3BC4579A26D53E1AE8B8744775 /* CodableDictionary.swift in Sources */,
 				CE3179E75765318695A56FE56C91984A /* CodeValidationViewController.swift in Sources */,
 				76C09EB0C7564F847923099912B69B78 /* ColorPalette.swift in Sources */,
+				893FF28324F7E9B300FDE193 /* VideoDiaryPlayerView.swift in Sources */,
 				370EC91C0E3464A8EE21C2430C69E3A1 /* ConsentSection.swift in Sources */,
 				A750A09F40383BE9924CE381B8C69C34 /* ConsentSectionCoordinator.swift in Sources */,
 				475510FFA7CFF89CDB776A6C2DEF4B16 /* ConsentUserDataSection.swift in Sources */,
@@ -11792,6 +11811,7 @@
 				50ECFE3B3FE5BB9419C906EB61F630C7 /* LocationManager.swift in Sources */,
 				F7A54BACD64A473031A1340F1C852532 /* LocationService.swift in Sources */,
 				83BDD9D61EE58993CB15E3E74F6EBF3F /* Mapper+Extensions.swift in Sources */,
+				893FF28524F7EB7B00FDE193 /* VideoDiaryRecorderViewController.swift in Sources */,
 				DEA04827BBDCCEB6187998DF10D41BB2 /* NavigationBarStyles.swift in Sources */,
 				4A0E089BDFE63A7B965E1F34FE91AFAA /* NetworkApiGateway.swift in Sources */,
 				E7AB32FCA39FE37016509C018E4B2A06 /* NetworkUtility.swift in Sources */,

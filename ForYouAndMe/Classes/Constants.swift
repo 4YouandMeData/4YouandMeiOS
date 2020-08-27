@@ -44,6 +44,7 @@ struct Constants {
         static let EnableGlobalConfigCache = false
         static let PhoneValidationCodeDigitCount: Int = 6
         static let EmailValidationCodeDigitCount: Int = 6
+        static let VideoDiaryMaxDurationSeconds: Int = 120
     }
     
     struct Url {

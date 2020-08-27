@@ -51,28 +51,19 @@ class VideoDiarySectionCoordinator: NSObject, ActivitySectionCoordinator {
     }
     
     public func onIntroPageCompleted() {
-        self.showSuccessPage() // Test purpose
-        // TODO: Show Record page
-//        guard let navigationController = self.navigationController else {
-//            assertionFailure("Missing expected navigation controller")
-//            return
-//        }
+        self.showRecordPage()
     }
     
     public func onRecordCompleted() {
-        // TODO: Show Review page
-//        guard let navigationController = self.navigationController else {
-//            assertionFailure("Missing expected navigation controller")
-//            return
-//        }
-    }
-    
-    public func onReviewCompleted(presenter: UIViewController) {
-        self.sendResult(presenter: presenter)
+        self.showSuccessPage()
     }
     
     public func onSuccessCompleted() {
         self.completionCallback()
+    }
+    
+    public func onDiscardedRecord(presenter: UIViewController) {
+        presenter.navigationController?.dismiss(animated: true)
     }
     
     // MARK: - Private Methods
@@ -80,6 +71,16 @@ class VideoDiarySectionCoordinator: NSObject, ActivitySectionCoordinator {
     private func cancelTask() {
         try? FileManager.default.removeItem(atPath: Constants.Task.videoResultURL.path)
         self.completionCallback()
+    }
+    
+    private func showRecordPage() {
+        guard let navigationController = self.navigationController else {
+            assertionFailure("Missing expected navigation controller")
+            return
+        }
+        let recordViewController = VideoDiaryRecorderViewController(taskIdentifier: self.taskIdentifier,
+                                                                     coordinator: self)
+        navigationController.pushViewController(recordViewController, animated: true)
     }
     
     private func showSuccessPage() {
@@ -92,36 +93,5 @@ class VideoDiarySectionCoordinator: NSObject, ActivitySectionCoordinator {
                                                 buttonText: StringsProvider.string(forKey: .videoDiarySuccessButton))
         let successViewController = VideoDiaryCompleteViewController(withData: pageData, coordinator: self)
         navigationController.pushViewController(successViewController, animated: true)
-    }
-    
-    private func sendResult(presenter: UIViewController) {
-        self.navigator.pushProgressHUD()
-        guard let videoData = try? Data.init(contentsOf: Constants.Task.videoResultURL) else {
-            assertionFailure("Couldn't transform result data to expected network representation")
-            self.navigator.handleError(error: nil, presenter: presenter, onDismiss: { [weak self] in
-                self?.cancelTask()
-            })
-            return
-        }
-        let videoDataStream: String = videoData.base64EncodedString(options: NSData.Base64EncodingOptions.init(rawValue: 0))
-        let taskNetworkResult = TaskNetworkResult(data: [:], attachedFile: videoDataStream)
-        self.repository.sendTaskResult(taskId: self.taskIdentifier, taskResult: taskNetworkResult)
-            .subscribe(onSuccess: { [weak self] in
-                guard let self = self else { return }
-                self.navigator.popProgressHUD()
-                try? FileManager.default.removeItem(atPath: Constants.Task.videoResultURL.path)
-                self.showSuccessPage()
-                }, onError: { [weak self] error in
-                    guard let self = self else { return }
-                    self.navigator.popProgressHUD()
-                    self.navigator.handleError(error: error,
-                                               presenter: presenter,
-                                               onDismiss: { [weak self] in
-                                                self?.cancelTask()
-                        },
-                                               onRetry: { [weak self] in
-                                                self?.sendResult(presenter: presenter)
-                        }, dismissStyle: .destructive)
-            }).disposed(by: self.diposeBag)
     }
 }

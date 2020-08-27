@@ -21,7 +21,15 @@ enum ImageName: String, CaseIterable {
     case clearButton = "clear_button"
     case checkmark = "checkmark"
     case edit = "edit"
+    case closeCircleButton = "close_circle_button"
     case videoDiaryIntro = "video_diary_intro"
+    case videoCalendar = "video_calendar"
+    case videoPause = "video_pause"
+    case videoPlay = "video_play"
+    case videoRecord = "video_record"
+    case videoRecordResume = "video_resume_record"
+    case videoRecordedFeedback = "video_recorded_feedback"
+    case videoTime = "video_time"
     case videoDiarySuccess = "video_diary_success"
 }
 
