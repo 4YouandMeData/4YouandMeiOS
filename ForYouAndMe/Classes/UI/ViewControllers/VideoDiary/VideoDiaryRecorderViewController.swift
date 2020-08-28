@@ -31,6 +31,12 @@ public class VideoDiaryRecorderViewController: UIViewController {
         return view
     }()
     
+    private lazy var playerView: EHPlayerView = {
+        let view = EHPlayerView()
+        view.delegate = self
+        return view
+    }()
+    
     private var mergedFileSize: UInt64 = 0
     private var recordDurationSeconds: Int = 0
     private var noOfPauses: Int = 0
@@ -124,6 +130,9 @@ public class VideoDiaryRecorderViewController: UIViewController {
         self.view.addSubview(self.cameraView)
         self.cameraView.autoPinEdgesToSuperviewEdges()
         
+        self.view.addSubview(self.playerView)
+        self.playerView.autoPinEdgesToSuperviewEdges()
+        
         let stackView = UIStackView.create(withAxis: .vertical)
         self.view.addSubview(stackView)
         stackView.autoPinEdgesToSuperviewSafeArea(with: .zero, excludingEdge: .bottom)
@@ -153,19 +162,25 @@ public class VideoDiaryRecorderViewController: UIViewController {
         
         switch self.currentState {
         case .record(let currentTime, let isRecording):
+            self.cameraView.isHidden = false
+            self.playerView.isHidden = true
             self.updateToolbar(currentTime: currentTime, isRunning: isRecording, isRecordState: true)
             self.updatePlayerButton(isRunning: isRecording, isRecordState: true)
         case .review(let currentTime, let isPlaying):
+            self.cameraView.isHidden = true
+            self.playerView.isHidden = false
             self.updateToolbar(currentTime: currentTime, isRunning: isPlaying, isRecordState: false)
             self.updatePlayerButton(isRunning: isPlaying, isRecordState: false)
         case .submitted(let currentTime, _, let isPlaying):
+            self.cameraView.isHidden = true
+            self.playerView.isHidden = false
             self.updateToolbar(currentTime: currentTime, isRunning: isPlaying, isRecordState: false)
             self.updatePlayerButton(isRunning: isPlaying, isRecordState: false)
         }
     }
     
     private func updateToolbar(currentTime: Int, isRunning: Bool, isRecordState: Bool) {
-        self.updateTimeLabel(currentTime: currentTime, isRunning: isRunning)
+        self.updateTimeLabel(currentTime: currentTime, isRunning: isRunning, isRecordState: isRecordState)
         if isRecordState {
             self.updateLightButton()
             // Switch camera during recording throw error 11818 from AVFoundation callback
@@ -176,8 +191,8 @@ public class VideoDiaryRecorderViewController: UIViewController {
         }
     }
     
-    private func updateTimeLabel(currentTime: Int, isRunning: Bool) {
-        if isRunning {
+    private func updateTimeLabel(currentTime: Int, isRunning: Bool, isRecordState: Bool) {
+        if isRunning, isRecordState {
             self.timeLabel.setTime(currentTime: currentTime,
                                    totalTime: Constants.Misc.VideoDiaryMaxDurationSeconds,
                                    attributedTextStyle: self.timeLabelAttributedTextStyle)
@@ -301,9 +316,6 @@ public class VideoDiaryRecorderViewController: UIViewController {
     // MARK: - Actions
     
     @objc private func playerButtonPressed() {
-        // TODO: Replace with player current time
-        let playerCurrentTime: Int = 32
-        
         switch self.currentState {
         case .record(_, let isRecording):
             if isRecording {
@@ -312,9 +324,19 @@ public class VideoDiaryRecorderViewController: UIViewController {
                 self.startRecording()
             }
         case .review(_, let isPlaying):
-            self.currentState = .review(currentTime: playerCurrentTime, isPlaying: !isPlaying)
+            if isPlaying {
+                self.playerView.pauseVideo()
+            } else {
+                self.playerView.playVideo()
+            }
+            self.currentState = .review(currentTime: self.recordDurationSeconds, isPlaying: !isPlaying)
         case .submitted(_, let submitDate, let isPlaying):
-            self.currentState = .submitted(currentTime: playerCurrentTime, submitDate: submitDate, isPlaying: !isPlaying)
+            if isPlaying {
+                self.playerView.pauseVideo()
+            } else {
+                self.playerView.playVideo()
+            }
+            self.currentState = .submitted(currentTime: self.recordDurationSeconds, submitDate: submitDate, isPlaying: !isPlaying)
         }
     }
     
@@ -363,13 +385,6 @@ extension VideoDiaryRecorderViewController: VideoDiaryPlayerViewDelegate {
         case .submitted:
             self.coordinator.onRecordCompleted()
         }
-    }
-    
-    func recordButtonPressed() {
-        // TODO: Replace with player current time
-        let playerCurrentTime: Int = 32
-        
-        self.currentState = .record(currentTime: playerCurrentTime, isRecording: true)
     }
     
     func discardButtonPressed() {
@@ -435,7 +450,7 @@ extension VideoDiaryRecorderViewController: EHCameraViewDelegate {
     func didFinishMergingVideo(mergedVideoURL: URL?) {
         guard let mergedVideoURL = mergedVideoURL else { return }
         
-//        playerView.videoURL = mergedVideoURL
+        self.playerView.videoURL = mergedVideoURL
         
 //        var mergedVideoFileURL = mergedVideoURL
 //        mergedVideoFileURL.disableiCloudSync()
@@ -471,5 +486,30 @@ extension VideoDiaryRecorderViewController: EHCameraViewDelegate {
             self.navigator.popProgressHUD()
             self.navigator.handleError(error: error, presenter: self)
         }
+    }
+}
+
+extension VideoDiaryRecorderViewController: EHPlayerViewDelegate {
+    func hasFinishedPlaying() {
+        switch self.currentState {
+        case .record:
+            assertionFailure("Unexpected record state")
+        case .review(let currentTime, _):
+            self.currentState = .review(currentTime: currentTime, isPlaying: false)
+        case .submitted(let currentTime, let submitDate, _):
+            self.currentState = .submitted(currentTime: currentTime, submitDate: submitDate, isPlaying: false)
+        }
+    }
+    
+    func tapGestureDidStart() {
+//        self.playerButton.isHidden = false
+    }
+    
+    func tapGestureWillEnd() {
+//        self.playerButton.isHidden = (currentState == .playing ? true : false)
+    }
+    
+    func sliderValueDidChange() {
+//        self.playerButton.isHidden = true
     }
 }

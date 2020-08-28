@@ -34,6 +34,8 @@ enum ImageName: String, CaseIterable {
     case cameraSwitch = "camera_switch"
     case flashOff = "flash_off"
     case flashOn = "flash_on"
+    case circular = "circular"
+    case clearCircular = "clear_circular"
 }
 
 enum TemplateImageName: String, CaseIterable {

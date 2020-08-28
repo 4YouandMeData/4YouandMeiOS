@@ -1287,6 +1287,7 @@
 		892F567BF4D68BB3C3AE4687AE25BE8C /* FIRCLSDownloadAndSaveSettingsOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 6E9BC5D75C32562237899142CC482AF4 /* FIRCLSDownloadAndSaveSettingsOperation.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
 		893C252E24F912F400641C31 /* EHCameraView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893C252D24F912F400641C31 /* EHCameraView.swift */; };
 		893C253024F915D000641C31 /* URL+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893C252F24F915D000641C31 /* URL+Extensions.swift */; };
+		893C253224F95E7C00641C31 /* EHPlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893C253124F95E7C00641C31 /* EHPlayerView.swift */; };
 		893FF27E24F7B53F00FDE193 /* VideoDiaryIntroViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893FF27D24F7B53F00FDE193 /* VideoDiaryIntroViewController.swift */; };
 		893FF28024F7BF1900FDE193 /* VideoDiaryCompleteViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893FF27F24F7BF1900FDE193 /* VideoDiaryCompleteViewController.swift */; };
 		893FF28324F7E9B300FDE193 /* VideoDiaryPlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893FF28224F7E9B300FDE193 /* VideoDiaryPlayerView.swift */; };
@@ -4433,6 +4434,7 @@
 		8932C669E6F75E0DE8C600177A7D241F /* ControlProperty+Driver.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = "ControlProperty+Driver.swift"; path = "RxCocoa/Traits/Driver/ControlProperty+Driver.swift"; sourceTree = "<group>"; };
 		893C252D24F912F400641C31 /* EHCameraView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EHCameraView.swift; sourceTree = "<group>"; };
 		893C252F24F915D000641C31 /* URL+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "URL+Extensions.swift"; sourceTree = "<group>"; };
+		893C253124F95E7C00641C31 /* EHPlayerView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EHPlayerView.swift; sourceTree = "<group>"; };
 		893FF27D24F7B53F00FDE193 /* VideoDiaryIntroViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoDiaryIntroViewController.swift; sourceTree = "<group>"; };
 		893FF27F24F7BF1900FDE193 /* VideoDiaryCompleteViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoDiaryCompleteViewController.swift; sourceTree = "<group>"; };
 		893FF28224F7E9B300FDE193 /* VideoDiaryPlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoDiaryPlayerView.swift; sourceTree = "<group>"; };
@@ -8082,6 +8084,7 @@
 			children = (
 				893FF28224F7E9B300FDE193 /* VideoDiaryPlayerView.swift */,
 				893C252D24F912F400641C31 /* EHCameraView.swift */,
+				893C253124F95E7C00641C31 /* EHPlayerView.swift */,
 			);
 			path = VideoDiary;
 			sourceTree = "<group>";
@@ -11900,6 +11903,7 @@
 				42B8DFB0D3FEB4A3D09A40CED4455BED /* UserEmailViewController.swift in Sources */,
 				8941802D24DC02630052C395 /* QuickActivityOption.swift in Sources */,
 				4224D482D93E70481D6CBE191CB2460D /* UserNameViewController.swift in Sources */,
+				893C253224F95E7C00641C31 /* EHPlayerView.swift in Sources */,
 				2ABA6B9920BB1683764944F8FF54E17C /* UserSignatureViewController.swift in Sources */,
 				15BB7AD079D063C4FAFB298A59FF4831 /* WalkTask.swift in Sources */,
 				BC7A30A4E108942272F624336C2556C4 /* WearableApp.swift in Sources */,
