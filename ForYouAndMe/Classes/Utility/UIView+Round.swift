@@ -23,6 +23,7 @@ public extension UIView {
     }
     
     func roundCorners(corners: UIRectCorner, radius: CGFloat) {
+        // Note: to get correct mask frame size, call this in layoutSubviews() or viewDidLayoutSubviews()
         let path = UIBezierPath(roundedRect: self.bounds, byRoundingCorners: corners, cornerRadii: CGSize(width: radius, height: radius))
         let mask = CAShapeLayer()
         mask.frame = self.bounds

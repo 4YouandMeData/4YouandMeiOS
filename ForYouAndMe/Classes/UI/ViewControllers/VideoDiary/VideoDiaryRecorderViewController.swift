@@ -66,15 +66,19 @@ public class VideoDiaryRecorderViewController: UIViewController {
         
         self.view.backgroundColor = UIColor.black
         
-        self.view.addSubview(self.playerButton)
+        let stackView = UIStackView.create(withAxis: .vertical)
+        self.view.addSubview(stackView)
+        stackView.autoPinEdgesToSuperviewSafeArea(with: .zero, excludingEdge: .bottom)
+        stackView.autoPinEdge(toSuperviewEdge: .bottom)
+        
+        let playerButtonContainerView = UIView()
+        playerButtonContainerView.addSubview(self.playerButton)
         self.playerButton.autoCenterInSuperview()
         
-        self.view.addSubview(self.videoDiaryPlayerView)
-        self.videoDiaryPlayerView.autoPinEdgesToSuperviewEdges(with: .zero, excludingEdge: .top)
-        
-        self.view.addSubview(self.timeLabel)
-        self.timeLabel.autoPinEdgesToSuperviewSafeArea(with: UIEdgeInsets(top: 16.0, left: 20.0, bottom: 0.0, right: 20.0),
-                                                       excludingEdge: .bottom)
+        stackView.addBlankSpace(space: 16.0)
+        stackView.addArrangedSubview(self.timeLabel)
+        stackView.addArrangedSubview(playerButtonContainerView)
+        stackView.addArrangedSubview(self.videoDiaryPlayerView)
         
         self.updateUI()
     }
@@ -93,11 +97,14 @@ public class VideoDiaryRecorderViewController: UIViewController {
         switch self.currentState {
         case .record(let currentTime, let isRecording):
             self.updateTimeLabel(currentTime: currentTime, isPlaying: isRecording)
-            self.playerButton.isHidden = (false == isRecording)
             self.playerButton.setImage(ImagePalette.image(withName: .videoPause), for: .normal)
+            if isRecording {
+                self.playerButton.setImage(ImagePalette.image(withName: .videoPause), for: .normal)
+            } else {
+                self.playerButton.setImage(ImagePalette.image(withName: .videoRecordResume), for: .normal)
+            }
         case .review(let currentTime, let isPlaying):
             self.updateTimeLabel(currentTime: currentTime, isPlaying: isPlaying)
-            self.playerButton.isHidden = false
             if isPlaying {
                 self.playerButton.setImage(ImagePalette.image(withName: .videoPause), for: .normal)
             } else {
@@ -105,7 +112,6 @@ public class VideoDiaryRecorderViewController: UIViewController {
             }
         case .sumitted(let currentTime, _, let isPlaying):
             self.updateTimeLabel(currentTime: currentTime, isPlaying: isPlaying)
-            self.playerButton.isHidden = false
             if isPlaying {
                 self.playerButton.setImage(ImagePalette.image(withName: .videoPause), for: .normal)
             } else {
@@ -158,6 +164,18 @@ public class VideoDiaryRecorderViewController: UIViewController {
             }).disposed(by: self.disposeBag)
     }
     
+    // TODO: Test purpose. Remove
+    private func fakeSendResult() {
+        self.navigator.pushProgressHUD()
+        let closure: (() -> Void) = {
+            self.navigator.popProgressHUD()
+            self.currentState = .sumitted(currentTime: 0, submitDate: Date(), isPlaying: false)
+        }
+        let delayTime = DispatchTime.now() + 2.0
+        let dispatchWorkItem = DispatchWorkItem(block: closure)
+        DispatchQueue.main.asyncAfter(deadline: delayTime, execute: dispatchWorkItem)
+    }
+    
     // MARK: - Actions
     
     @objc private func playerButtonPressed() {
@@ -181,7 +199,8 @@ extension VideoDiaryRecorderViewController: VideoDiaryPlayerViewDelegate {
         case .record:
             self.currentState = .review(currentTime: 0, isPlaying: false)
         case .review:
-            self.sendResult()
+//            self.sendResult()
+            self.fakeSendResult()
         case .sumitted:
             self.coordinator.onRecordCompleted()
         }

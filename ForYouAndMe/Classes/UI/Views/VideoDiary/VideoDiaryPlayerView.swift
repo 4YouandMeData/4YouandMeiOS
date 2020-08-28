@@ -9,7 +9,6 @@ import UIKit
 
 protocol VideoDiaryPlayerViewDelegate: class {
     func mainButtonPressed()
-    func recordButtonPressed()
     func discardButtonPressed()
 }
 
@@ -32,8 +31,6 @@ class VideoDiaryPlayerView: UIView {
     }()
     
     private lazy var recordView: UIView = {
-        let horizontalStackView = UIStackView.create(withAxis: .horizontal, spacing: 4.0)
-        
         let verticalStackView = UIStackView.create(withAxis: .vertical, spacing: 16.0)
         
         verticalStackView.addArrangedSubview(self.instructionLabel)
@@ -56,21 +53,13 @@ class VideoDiaryPlayerView: UIView {
         timerStackView.addArrangedSubview(timeLabelContainerView)
         verticalStackView.addArrangedSubview(timerStackView)
         
-        horizontalStackView.addArrangedSubview(verticalStackView)
-        
-        let recordButton = UIButton()
-        recordButton.setImage(ImagePalette.image(withName: .videoRecord), for: .normal)
-        recordButton.addTarget(self, action: #selector(self.recordButtonPressed), for: .touchUpInside)
-        
-        horizontalStackView.addArrangedSubview(recordButton)
-        
-        return horizontalStackView
+        return verticalStackView
     }()
     
     private let progressBarBackgroundView: UIView = {
         let view = UIView()
         view.autoSetDimension(.height, toSize: 4.0)
-        view.backgroundColor = ColorPalette.color(withType: .active)
+        view.backgroundColor = ColorPalette.color(withType: .inactive)
         view.round(radius: 2.0)
         view.clipsToBounds = true
         return view
@@ -88,10 +77,12 @@ class VideoDiaryPlayerView: UIView {
         let verticalStackView = UIStackView.create(withAxis: .vertical, spacing: 16.0)
         verticalStackView.addLabel(withText: StringsProvider.string(forKey: .videoDiaryRecorderInfoTitle),
                                    fontStyle: .paragraph,
-                                   colorType: .fourthText)
+                                   colorType: .fourthText,
+                                   textAlignment: .left)
         verticalStackView.addLabel(withText: StringsProvider.string(forKey: .videoDiaryRecorderInfoBody),
                                    fontStyle: .paragraph,
-                                   colorType: .primaryText)
+                                   colorType: .primaryText,
+                                   textAlignment: .left)
         return verticalStackView
     }()
     
@@ -103,9 +94,10 @@ class VideoDiaryPlayerView: UIView {
         let view = UIView()
         let button = UIButton()
         button.setImage(ImagePalette.image(withName: .closeCircleButton), for: .normal)
+        button.imageView?.contentMode = .scaleAspectFit
         button.addTarget(self, action: #selector(self.discardButtonPressed), for: .touchUpInside)
         button.contentEdgeInsets = UIEdgeInsets(top: 4.0, left: 4.0, bottom: 4.0, right: 4.0)
-        button.autoSetDimension(.height, toSize: 32.0)
+        button.autoSetDimension(.height, toSize: 40.0)
         view.addSubview(button)
         button.autoPinEdgesToSuperviewEdges(with: .zero, excludingEdge: .leading)
         return view
@@ -127,7 +119,7 @@ class VideoDiaryPlayerView: UIView {
     
     private lazy var recordedVideoFeedback: UIView = {
         let view = UIView()
-        let horizontalStackView = UIStackView.create(withAxis: .horizontal, spacing: 4.0)
+        let horizontalStackView = UIStackView.create(withAxis: .horizontal, spacing: 10.0)
         view.addSubview(horizontalStackView)
         horizontalStackView.autoPinEdge(toSuperviewEdge: .top)
         horizontalStackView.autoPinEdge(toSuperviewEdge: .bottom)
@@ -140,7 +132,7 @@ class VideoDiaryPlayerView: UIView {
         imageView.contentMode = .scaleAspectFit
         horizontalStackView.addArrangedSubview(imageView)
         
-        let verticalStackView = UIStackView.create(withAxis: .vertical, spacing: 4.0)
+        let verticalStackView = UIStackView.create(withAxis: .vertical, spacing: 2.0)
         verticalStackView.addLabel(withText: StringsProvider.string(forKey: .videoDiaryRecorderSubmitFeedback),
                                    fontStyle: .header3,
                                    colorType: .fourthText,
@@ -166,18 +158,23 @@ class VideoDiaryPlayerView: UIView {
     
     // MARK: - AttributedTextStyles
     
-    private let instructionLabelAttributedTextStyle = AttributedTextStyle(fontStyle: .title, colorType: .primaryText)
-    private let currentTimeLabelAttributedTextStyle = AttributedTextStyle(fontStyle: .header3, colorType: .primaryText)
-    private let totalTimeLabelAttributedTextStyle = AttributedTextStyle(fontStyle: .header3, colorType: .fourthText)
-    private let singleTimeLabelAttributedTextStyle = AttributedTextStyle(fontStyle: .title, colorType: .primaryText)
+    private let instructionLabelAttributedTextStyle = AttributedTextStyle(fontStyle: .title,
+                                                                          colorType: .primaryText,
+                                                                          textAlignment: .left)
+    private let currentTimeLabelAttributedTextStyle = AttributedTextStyle(fontStyle: .header3,
+                                                                          colorType: .primaryText,
+                                                                          textAlignment: .left)
+    private let totalTimeLabelAttributedTextStyle = AttributedTextStyle(fontStyle: .header3,
+                                                                        colorType: .fourthText,
+                                                                        textAlignment: .left)
+    private let singleTimeLabelAttributedTextStyle = AttributedTextStyle(fontStyle: .title,
+                                                                         colorType: .primaryText)
     
     init(delegate: VideoDiaryPlayerViewDelegate) {
         self.delegate = delegate
         super.init(frame: .zero)
         
         self.backgroundColor = ColorPalette.color(withType: .secondary)
-//        self.roundCorners(corners: [.topLeft, .topRight], radius: 30.0)
-        self.round(radius: 30.0) // TODO: Fix this!!
         
         let stackView = UIStackView.create(withAxis: .vertical, spacing: 16.0)
         self.addSubview(stackView)
@@ -196,17 +193,25 @@ class VideoDiaryPlayerView: UIView {
         fatalError("init(coder:) has not been implemented")
     }
     
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        
+        self.roundCorners(corners: [.topLeft, .topRight], radius: 30.0)
+    }
+    
     // MARK: - Public Methods
     
     public func updateState(newState: VideoDiaryState) {
         
-        self.isHidden = false
         self.buttonView.setButtonEnabled(enabled: true)
+        
+        self.isHidden = false
+        self.recordView.isHidden = true
+        self.progressBarBackgroundView.isHidden = true
+        self.infoView.isHidden = true
         self.discardButtonView.isHidden = true
         self.singleTimeLabel.isHidden = true
         self.recordedVideoFeedback.isHidden = true
-        self.progressBarBackgroundView.isHidden = true
-        self.recordView.isHidden = true
         
         let totalTime = Constants.Misc.VideoDiaryMaxDurationSeconds
         
@@ -215,9 +220,9 @@ class VideoDiaryPlayerView: UIView {
             if isRecording {
                 self.isHidden = true
             } else {
-                self.buttonView.setButtonEnabled(enabled: false)
                 self.buttonView.setButtonText(StringsProvider.string(forKey: .videoDiaryRecorderReviewButton))
                 self.recordView.isHidden = false
+                self.infoView.isHidden = false
                 self.progressBarBackgroundView.isHidden = false
                 self.updateProgressBar(newFillPercentage: CGFloat(currentTime) / CGFloat(totalTime))
                 self.timeLabel.setTime(currentTime: currentTime,
@@ -231,6 +236,7 @@ class VideoDiaryPlayerView: UIView {
                     self.instructionLabel.attributedText = NSAttributedString.create(withText: instructionText,
                                                                                      attributedTextStyle: attributedTextStyle)
                 } else {
+                    self.buttonView.setButtonEnabled(enabled: false)
                     let instructionText = StringsProvider.string(forKey: .videoDiaryRecorderStartRecordingDescription)
                     let attributedTextStyle = self.instructionLabelAttributedTextStyle
                     self.instructionLabel.attributedText = NSAttributedString.create(withText: instructionText,
@@ -283,10 +289,6 @@ class VideoDiaryPlayerView: UIView {
     
     @objc private func mainButtonPressed() {
         self.delegate?.mainButtonPressed()
-    }
-    
-    @objc private func recordButtonPressed() {
-        self.delegate?.recordButtonPressed()
     }
     
     @objc private func discardButtonPressed() {
