@@ -254,7 +254,7 @@ class VideoDiaryPlayerView: UIView {
                                              totalTime: totalTime,
                                              attributedTextStyle: self.singleTimeLabelAttributedTextStyle)
             }
-        case .sumitted(let currentTime, let submitDate, let isPlaying):
+        case .submitted(let currentTime, let submitDate, let isPlaying):
             if isPlaying {
                 self.isHidden = true
             } else {

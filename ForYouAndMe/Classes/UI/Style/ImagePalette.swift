@@ -31,6 +31,9 @@ enum ImageName: String, CaseIterable {
     case videoRecordedFeedback = "video_recorded_feedback"
     case videoTime = "video_time"
     case videoDiarySuccess = "video_diary_success"
+    case cameraSwitch = "camera_switch"
+    case flashOff = "flash_off"
+    case flashOn = "flash_on"
 }
 
 enum TemplateImageName: String, CaseIterable {

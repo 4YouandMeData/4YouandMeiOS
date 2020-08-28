@@ -95,4 +95,8 @@ public class VideoDiaryIntroViewController: UIViewController {
     @objc private func buttonPressed() {
         self.coordinator.onIntroPageCompleted()
     }
+    
+    @objc override func customCloseButtonPressed() {
+        self.coordinator.onCancelTask()
+    }
 }

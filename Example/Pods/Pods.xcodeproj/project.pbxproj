@@ -1285,6 +1285,8 @@
 		8921310819048EEE2E4F243A141999B2 /* ORKRequestPermissionsStepViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 814F8B287D3A5969F5115714B454E489 /* ORKRequestPermissionsStepViewController.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
 		8929755FBC22C565EF083B0C8F10B0D6 /* SectionedViewDataSourceType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9EDBDEC8320857EC75BE0FBC55D6CE0B /* SectionedViewDataSourceType.swift */; };
 		892F567BF4D68BB3C3AE4687AE25BE8C /* FIRCLSDownloadAndSaveSettingsOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 6E9BC5D75C32562237899142CC482AF4 /* FIRCLSDownloadAndSaveSettingsOperation.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
+		893C252E24F912F400641C31 /* EHCameraView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893C252D24F912F400641C31 /* EHCameraView.swift */; };
+		893C253024F915D000641C31 /* URL+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893C252F24F915D000641C31 /* URL+Extensions.swift */; };
 		893FF27E24F7B53F00FDE193 /* VideoDiaryIntroViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893FF27D24F7B53F00FDE193 /* VideoDiaryIntroViewController.swift */; };
 		893FF28024F7BF1900FDE193 /* VideoDiaryCompleteViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893FF27F24F7BF1900FDE193 /* VideoDiaryCompleteViewController.swift */; };
 		893FF28324F7E9B300FDE193 /* VideoDiaryPlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893FF28224F7E9B300FDE193 /* VideoDiaryPlayerView.swift */; };
@@ -4429,6 +4431,8 @@
 		88DB1E02F7230B657A1E474FAFC1ABC1 /* RxTarget.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = RxTarget.swift; path = RxCocoa/Common/RxTarget.swift; sourceTree = "<group>"; };
 		8916EFA2479240FD5F24BC322C2BA928 /* ORKHeightPicker.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = ORKHeightPicker.m; path = ResearchKit/Common/ORKHeightPicker.m; sourceTree = "<group>"; };
 		8932C669E6F75E0DE8C600177A7D241F /* ControlProperty+Driver.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = "ControlProperty+Driver.swift"; path = "RxCocoa/Traits/Driver/ControlProperty+Driver.swift"; sourceTree = "<group>"; };
+		893C252D24F912F400641C31 /* EHCameraView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EHCameraView.swift; sourceTree = "<group>"; };
+		893C252F24F915D000641C31 /* URL+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "URL+Extensions.swift"; sourceTree = "<group>"; };
 		893FF27D24F7B53F00FDE193 /* VideoDiaryIntroViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoDiaryIntroViewController.swift; sourceTree = "<group>"; };
 		893FF27F24F7BF1900FDE193 /* VideoDiaryCompleteViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoDiaryCompleteViewController.swift; sourceTree = "<group>"; };
 		893FF28224F7E9B300FDE193 /* VideoDiaryPlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoDiaryPlayerView.swift; sourceTree = "<group>"; };
@@ -8077,6 +8081,7 @@
 			isa = PBXGroup;
 			children = (
 				893FF28224F7E9B300FDE193 /* VideoDiaryPlayerView.swift */,
+				893C252D24F912F400641C31 /* EHCameraView.swift */,
 			);
 			path = VideoDiary;
 			sourceTree = "<group>";
@@ -8478,6 +8483,7 @@
 				0AFCB8B987B98DAC90E8A3F14C255F6C /* UIView+Shadow.swift */,
 				6DBBEA2472D0F517661B9F6730278AE1 /* UIViewController+Alert.swift */,
 				456010E069C74143F56C4B9931287109 /* UIViewController+Extensions.swift */,
+				893C252F24F915D000641C31 /* URL+Extensions.swift */,
 			);
 			name = Utility;
 			path = ForYouAndMe/Classes/Utility;
@@ -11865,6 +11871,7 @@
 				27951124219E55FB4855DA3F48C30020 /* TaskEmptyView.swift in Sources */,
 				89679BEF24F6B952001C5BEF /* VideoDiarySectionCoordinator.swift in Sources */,
 				11201B814FEBBDA90FF45A25928C3E25 /* TaskSectionCoordinator.swift in Sources */,
+				893C253024F915D000641C31 /* URL+Extensions.swift in Sources */,
 				9BEA15B6ADCE8904FDCA9BC031428564 /* TaskType.swift in Sources */,
 				CE40A7B36E4E217CB93FDD35D556819D /* TaskViewController.swift in Sources */,
 				1803E114AB31A1F161B69AC850CD278E /* TestNetworkApiGateway.swift in Sources */,
@@ -11884,6 +11891,7 @@
 				7207CC3E71C50E8BE98C5DB7D3A855A5 /* UIView+Round.swift in Sources */,
 				9978E9457ABEEECC7F3B01CB1FCA22D6 /* UIView+Shadow.swift in Sources */,
 				8FD0DD7EE3C39D912DEE083D04E204FA /* UIView+ShadowPalette.swift in Sources */,
+				893C252E24F912F400641C31 /* EHCameraView.swift in Sources */,
 				13987AFDFAF7FA6FEBD804C24A9E3491 /* UIViewController+Alert.swift in Sources */,
 				9E1CFB9E16851F24EF50914A0737CD52 /* UIViewController+Extensions.swift in Sources */,
 				404B618C9C0E94301E5AF55B38AA2ED5 /* UIViewController+Internal.swift in Sources */,

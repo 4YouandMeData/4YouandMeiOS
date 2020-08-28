@@ -29,6 +29,10 @@ class VideoDiarySectionCoordinator: NSObject, ActivitySectionCoordinator {
         super.init()
     }
     
+    deinit {
+        self.deleteVideoResult()
+    }
+    
     // MARK: - Public Methods
     
     public func getStartingPage() -> UIViewController? {
@@ -55,6 +59,7 @@ class VideoDiarySectionCoordinator: NSObject, ActivitySectionCoordinator {
     }
     
     public func onRecordCompleted() {
+        self.deleteVideoResult()
         self.showSuccessPage()
     }
     
@@ -62,14 +67,17 @@ class VideoDiarySectionCoordinator: NSObject, ActivitySectionCoordinator {
         self.completionCallback()
     }
     
-    public func onDiscardedRecord(presenter: UIViewController) {
-        presenter.navigationController?.dismiss(animated: true)
+    public func onCancelTask() {
+        self.completionCallback()
     }
     
     // MARK: - Private Methods
     
+    private func deleteVideoResult() {
+       try? FileManager.default.removeItem(atPath: Constants.Task.videoResultURL.path)
+    }
+    
     private func cancelTask() {
-        try? FileManager.default.removeItem(atPath: Constants.Task.videoResultURL.path)
         self.completionCallback()
     }
     

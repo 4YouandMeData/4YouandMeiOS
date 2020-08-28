@@ -54,6 +54,7 @@ class TaskSectionCoordinator: NSObject, ActivitySectionCoordinator {
     // MARK: - Private Methods
     
     private func cancelTask() {
+        self.deleteTaskResult(path: Constants.Task.taskResultURL)
         self.completionCallback()
     }
     

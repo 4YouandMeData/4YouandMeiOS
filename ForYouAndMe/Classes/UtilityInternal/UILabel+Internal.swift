@@ -27,8 +27,9 @@ extension UILabel {
             totalTimeText = String(format: "%0.1d:", totalHours) + totalTimeText
         }
         
+        let currentTimeAttributedTextStyle = currentTimeAttributedTextStyle ?? attributedTextStyle
         let currentTimeAttributedString = NSAttributedString.create(withText: currentTimeText,
-                                                                    attributedTextStyle: currentTimeAttributedTextStyle ?? attributedTextStyle)
+                                                                    attributedTextStyle: currentTimeAttributedTextStyle)
         let totalTimeAttributedString = NSAttributedString.create(withText: " / \(totalTimeText)",
             attributedTextStyle: attributedTextStyle)
         
