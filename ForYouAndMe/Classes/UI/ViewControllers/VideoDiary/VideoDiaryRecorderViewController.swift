@@ -47,6 +47,11 @@ public class VideoDiaryRecorderViewController: UIViewController {
     
     private let disposeBag = DisposeBag()
     
+    let stackView: UIStackView = {
+        let stackView = UIStackView.create(withAxis: .vertical)
+        return stackView
+    }()
+    
     private lazy var videoDiaryPlayerView: VideoDiaryPlayerView = {
         let view = VideoDiaryPlayerView(delegate: self)
         return view
@@ -133,19 +138,23 @@ public class VideoDiaryRecorderViewController: UIViewController {
         self.view.addSubview(self.playerView)
         self.playerView.autoPinEdgesToSuperviewEdges()
         
-        let stackView = UIStackView.create(withAxis: .vertical)
-        self.view.addSubview(stackView)
-        stackView.autoPinEdgesToSuperviewSafeArea(with: .zero, excludingEdge: .bottom)
-        stackView.autoPinEdge(toSuperviewEdge: .bottom)
+        self.view.addSubview(self.stackView)
+        self.stackView.autoPinEdgesToSuperviewSafeArea(with: .zero, excludingEdge: .bottom)
+        self.stackView.autoPinEdge(toSuperviewEdge: .bottom)
         
-        let playerButtonContainerView = UIView()
-        playerButtonContainerView.addSubview(self.playerButton)
-        self.playerButton.autoCenterInSuperview()
+        let playerButtonReferenceView = UIView()
         
-        stackView.addBlankSpace(space: 16.0)
-        stackView.addArrangedSubview(self.toolbar)
-        stackView.addArrangedSubview(playerButtonContainerView)
-        stackView.addArrangedSubview(self.videoDiaryPlayerView)
+        self.stackView.addBlankSpace(space: 16.0)
+        self.stackView.addArrangedSubview(self.toolbar)
+        self.stackView.addArrangedSubview(playerButtonReferenceView)
+        self.stackView.addArrangedSubview(self.videoDiaryPlayerView)
+        
+        // Cannot simply add playerButton as subview of playerButtonReferenceView, because isUserInteractionEnabled would be inherited.
+        // PlayerButtonReferenceView.isUserInteractionEnabled will be set to switched based on the playerView state
+        // to allow tap on playerView
+        self.view.addSubview(self.playerButton)
+        self.playerButton.autoAlignAxis(.vertical, toSameAxisOf: playerButtonReferenceView)
+        self.playerButton.autoAlignAxis(.horizontal, toSameAxisOf: playerButtonReferenceView)
         
         self.updateUI()
     }
@@ -159,19 +168,21 @@ public class VideoDiaryRecorderViewController: UIViewController {
     
     private func updateUI() {
         self.videoDiaryPlayerView.updateState(newState: self.currentState)
-        
         switch self.currentState {
         case .record(let currentTime, let isRecording):
+            self.stackView.isUserInteractionEnabled = !isRecording
             self.cameraView.isHidden = false
             self.playerView.isHidden = true
             self.updateToolbar(currentTime: currentTime, isRunning: isRecording, isRecordState: true)
             self.updatePlayerButton(isRunning: isRecording, isRecordState: true)
         case .review(let currentTime, let isPlaying):
+            self.stackView.isUserInteractionEnabled = !isPlaying // Needed to allow tap on playerView
             self.cameraView.isHidden = true
             self.playerView.isHidden = false
             self.updateToolbar(currentTime: currentTime, isRunning: isPlaying, isRecordState: false)
             self.updatePlayerButton(isRunning: isPlaying, isRecordState: false)
         case .submitted(let currentTime, _, let isPlaying):
+            self.stackView.isUserInteractionEnabled = !isPlaying // Needed to allow tap on playerView
             self.cameraView.isHidden = true
             self.playerView.isHidden = false
             self.updateToolbar(currentTime: currentTime, isRunning: isPlaying, isRecordState: false)
