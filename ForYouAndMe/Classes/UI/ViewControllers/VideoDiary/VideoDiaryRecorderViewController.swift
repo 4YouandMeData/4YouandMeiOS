@@ -240,7 +240,7 @@ public class VideoDiaryRecorderViewController: UIViewController {
     
     private func sendResult() {
         self.navigator.pushProgressHUD()
-        guard let videoData = try? Data.init(contentsOf: Constants.Task.videoResultURL) else {
+        guard let videoUrl = self.playerView.videoURL, let videoData = try? Data.init(contentsOf: videoUrl) else {
             assertionFailure("Couldn't transform result data to expected network representation")
             self.navigator.handleError(error: nil, presenter: self, onDismiss: { [weak self] in
                 self?.coordinator.onCancelTask()
@@ -259,13 +259,7 @@ public class VideoDiaryRecorderViewController: UIViewController {
                     guard let self = self else { return }
                     self.navigator.popProgressHUD()
                     self.navigator.handleError(error: error,
-                                               presenter: self,
-                                               onDismiss: { [weak self] in
-                                                self?.coordinator.onCancelTask()
-                        },
-                                               onRetry: { [weak self] in
-                                                self?.sendResult()
-                        }, dismissStyle: .destructive)
+                                               presenter: self)
             }).disposed(by: self.disposeBag)
     }
     
@@ -309,18 +303,6 @@ public class VideoDiaryRecorderViewController: UIViewController {
         }
         let fileURL = Constants.Task.videoResultURL.appendingPathComponent(outputFileName).appendingPathExtension(self.videoExtension)
         return fileURL
-    }
-    
-    // TODO: Test purpose. Remove
-    private func fakeSendResult() {
-        self.navigator.pushProgressHUD()
-        let closure: (() -> Void) = {
-            self.navigator.popProgressHUD()
-            self.currentState = .submitted(submitDate: Date(), isPlaying: false)
-        }
-        let delayTime = DispatchTime.now() + 2.0
-        let dispatchWorkItem = DispatchWorkItem(block: closure)
-        DispatchQueue.main.asyncAfter(deadline: delayTime, execute: dispatchWorkItem)
     }
     
     private func handleCompleteRecording() {
@@ -391,8 +373,7 @@ extension VideoDiaryRecorderViewController: VideoDiaryPlayerViewDelegate {
         case .record:
             self.handleCompleteRecording()
         case .review:
-//            self.sendResult()
-            self.fakeSendResult()
+            self.sendResult()
         case .submitted:
             self.coordinator.onRecordCompleted()
         }
