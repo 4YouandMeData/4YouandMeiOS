@@ -201,7 +201,7 @@ class VideoDiaryPlayerView: UIView {
     
     // MARK: - Public Methods
     
-    public func updateState(newState: VideoDiaryState) {
+    public func updateState(newState: VideoDiaryState, recordDurationTime: TimeInterval) {
         
         self.buttonView.setButtonEnabled(enabled: true)
         
@@ -216,7 +216,7 @@ class VideoDiaryPlayerView: UIView {
         let totalTime = Constants.Misc.VideoDiaryMaxDurationSeconds
         
         switch newState {
-        case .record(let currentTime, let isRecording):
+        case .record(let isRecording):
             if isRecording {
                 self.isHidden = true
             } else {
@@ -224,13 +224,13 @@ class VideoDiaryPlayerView: UIView {
                 self.recordView.isHidden = false
                 self.infoView.isHidden = false
                 self.progressBarBackgroundView.isHidden = false
-                self.updateProgressBar(newFillPercentage: CGFloat(currentTime) / CGFloat(totalTime))
-                self.timeLabel.setTime(currentTime: currentTime,
-                                       totalTime: totalTime,
+                self.updateProgressBar(newFillPercentage: CGFloat(recordDurationTime) / CGFloat(totalTime))
+                self.timeLabel.setTime(currentTime: Int(recordDurationTime),
+                                       totalTime: Int(totalTime),
                                        attributedTextStyle: self.totalTimeLabelAttributedTextStyle,
                                        currentTimeAttributedTextStyle: self.currentTimeLabelAttributedTextStyle)
                 
-                if currentTime > 0 {
+                if recordDurationTime > 0.0 {
                     let instructionText = StringsProvider.string(forKey: .videoDiaryRecorderResumeRecordingDescription)
                     let attributedTextStyle = self.instructionLabelAttributedTextStyle
                     self.instructionLabel.attributedText = NSAttributedString.create(withText: instructionText,
@@ -243,25 +243,25 @@ class VideoDiaryPlayerView: UIView {
                                                                                      attributedTextStyle: attributedTextStyle)
                 }
             }
-        case .review(let currentTime, let isPlaying):
+        case .review(let isPlaying):
             if isPlaying {
                 self.isHidden = true
             } else {
                 self.buttonView.setButtonText(StringsProvider.string(forKey: .videoDiaryRecorderSubmitButton))
                 self.discardButtonView.isHidden = false
                 self.singleTimeLabel.isHidden = false
-                self.singleTimeLabel.setTime(currentTime: currentTime,
-                                             totalTime: totalTime,
+                self.singleTimeLabel.setTime(currentTime: Int(recordDurationTime),
+                                             totalTime: Int(totalTime),
                                              attributedTextStyle: self.singleTimeLabelAttributedTextStyle)
             }
-        case .submitted(let currentTime, let submitDate, let isPlaying):
+        case .submitted(let submitDate, let isPlaying):
             if isPlaying {
                 self.isHidden = true
             } else {
                 self.buttonView.setButtonText(StringsProvider.string(forKey: .videoDiaryRecorderCloseButton))
                 self.singleTimeLabel.isHidden = false
-                self.singleTimeLabel.setTime(currentTime: currentTime,
-                                             totalTime: totalTime,
+                self.singleTimeLabel.setTime(currentTime: Int(recordDurationTime),
+                                             totalTime: Int(totalTime),
                                              attributedTextStyle: self.singleTimeLabelAttributedTextStyle)
                 self.recordedVideoFeedback.isHidden = false
                 let dateFormatter = DateFormatter()

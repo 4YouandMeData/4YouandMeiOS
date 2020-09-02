@@ -9,14 +9,14 @@ import UIKit
 import RxSwift
 
 enum VideoDiaryState {
-    case record(currentTime: Int, isRecording: Bool)
-    case review(currentTime: Int, isPlaying: Bool)
-    case submitted(currentTime: Int, submitDate: Date, isPlaying: Bool)
+    case record(isRecording: Bool)
+    case review(isPlaying: Bool)
+    case submitted(submitDate: Date, isPlaying: Bool)
 }
 
 public class VideoDiaryRecorderViewController: UIViewController {
     
-    private static let PlayerUpdateIntervalMilliseconds: Int = 100
+    private static let PlayerUpdateTime: TimeInterval = 0.1
     
     private let taskIdentifier: String
     private let coordinator: VideoDiarySectionCoordinator
@@ -38,7 +38,7 @@ public class VideoDiaryRecorderViewController: UIViewController {
     }()
     
     private var mergedFileSize: UInt64 = 0
-    private var recordDurationSeconds: Int = 0
+    private var recordDurationTime: TimeInterval = 0.0
     private var noOfPauses: Int = 0
     private let videoExtension = "mov"
     private var videoOutputExtension = "mp4"
@@ -107,7 +107,7 @@ public class VideoDiaryRecorderViewController: UIViewController {
         return view
     }
     
-    private var currentState: VideoDiaryState = .record(currentTime: 0, isRecording: false) {
+    private var currentState: VideoDiaryState = .record(isRecording: false) {
         didSet {
             self.updateUI()
         }
@@ -167,25 +167,25 @@ public class VideoDiaryRecorderViewController: UIViewController {
     // MARK: - Private Methods
     
     private func updateUI() {
-        self.videoDiaryPlayerView.updateState(newState: self.currentState)
+        self.videoDiaryPlayerView.updateState(newState: self.currentState, recordDurationTime: self.recordDurationTime)
         switch self.currentState {
-        case .record(let currentTime, let isRecording):
+        case .record(let isRecording):
             self.stackView.isUserInteractionEnabled = !isRecording
             self.cameraView.isHidden = false
             self.playerView.isHidden = true
-            self.updateToolbar(currentTime: currentTime, isRunning: isRecording, isRecordState: true)
+            self.updateToolbar(currentTime: Int(self.recordDurationTime), isRunning: isRecording, isRecordState: true)
             self.updatePlayerButton(isRunning: isRecording, isRecordState: true)
-        case .review(let currentTime, let isPlaying):
+        case .review(let isPlaying):
             self.stackView.isUserInteractionEnabled = !isPlaying // Needed to allow tap on playerView
             self.cameraView.isHidden = true
             self.playerView.isHidden = false
-            self.updateToolbar(currentTime: currentTime, isRunning: isPlaying, isRecordState: false)
+            self.updateToolbar(currentTime: Int(self.recordDurationTime), isRunning: isPlaying, isRecordState: false)
             self.updatePlayerButton(isRunning: isPlaying, isRecordState: false)
-        case .submitted(let currentTime, _, let isPlaying):
+        case .submitted(_, let isPlaying):
             self.stackView.isUserInteractionEnabled = !isPlaying // Needed to allow tap on playerView
             self.cameraView.isHidden = true
             self.playerView.isHidden = false
-            self.updateToolbar(currentTime: currentTime, isRunning: isPlaying, isRecordState: false)
+            self.updateToolbar(currentTime: Int(self.recordDurationTime), isRunning: isPlaying, isRecordState: false)
             self.updatePlayerButton(isRunning: isPlaying, isRecordState: false)
         }
     }
@@ -205,7 +205,7 @@ public class VideoDiaryRecorderViewController: UIViewController {
     private func updateTimeLabel(currentTime: Int, isRunning: Bool, isRecordState: Bool) {
         if isRunning, isRecordState {
             self.timeLabel.setTime(currentTime: currentTime,
-                                   totalTime: Constants.Misc.VideoDiaryMaxDurationSeconds,
+                                   totalTime: Int(Constants.Misc.VideoDiaryMaxDurationSeconds),
                                    attributedTextStyle: self.timeLabelAttributedTextStyle)
         } else {
             self.timeLabel.attributedText = NSAttributedString.create(withText: StringsProvider.string(forKey: .videoDiaryRecorderTitle),
@@ -254,7 +254,7 @@ public class VideoDiaryRecorderViewController: UIViewController {
                 guard let self = self else { return }
                 self.navigator.popProgressHUD()
                 try? FileManager.default.removeItem(atPath: Constants.Task.videoResultURL.path)
-                self.currentState = .submitted(currentTime: 0, submitDate: Date(), isPlaying: false)
+                self.currentState = .submitted(submitDate: Date(), isPlaying: false)
                 }, onError: { [weak self] error in
                     guard let self = self else { return }
                     self.navigator.popProgressHUD()
@@ -275,12 +275,12 @@ public class VideoDiaryRecorderViewController: UIViewController {
             self.cameraView.recordedVideoExtension = self.videoExtension
             try self.cameraView.setOutputFileURL(fileURL: outputFileURL)
             self.isTimerRunning = true
-            self.timer = Timer.scheduledTimer(timeInterval: 1,
+            self.timer = Timer.scheduledTimer(timeInterval: Self.PlayerUpdateTime,
                                               target: self,
                                               selector: #selector(self.fireTimer),
                                               userInfo: nil,
                                               repeats: true)
-            self.currentState = .record(currentTime: self.recordDurationSeconds, isRecording: true)
+            self.currentState = .record(isRecording: true)
             self.cameraView.startRecording()
         } catch {
             self.navigator.handleError(error: error, presenter: self)
@@ -290,7 +290,7 @@ public class VideoDiaryRecorderViewController: UIViewController {
     private func stopRecording() {
         self.isTimerRunning = false
         self.timer?.invalidate()
-        self.currentState = .record(currentTime: self.recordDurationSeconds, isRecording: false)
+        self.currentState = .record(isRecording: false)
         self.cameraView.stopRecording()
         self.noOfPauses += 1
     }
@@ -308,7 +308,7 @@ public class VideoDiaryRecorderViewController: UIViewController {
                 print(error)
             }
         }
-        let fileURL = Constants.Task.videoResultURL.appendingPathComponent(outputFileName).appendingPathExtension(videoExtension)
+        let fileURL = Constants.Task.videoResultURL.appendingPathComponent(outputFileName).appendingPathExtension(self.videoExtension)
         return fileURL
     }
     
@@ -317,7 +317,7 @@ public class VideoDiaryRecorderViewController: UIViewController {
         self.navigator.pushProgressHUD()
         let closure: (() -> Void) = {
             self.navigator.popProgressHUD()
-            self.currentState = .submitted(currentTime: 0, submitDate: Date(), isPlaying: false)
+            self.currentState = .submitted(submitDate: Date(), isPlaying: false)
         }
         let delayTime = DispatchTime.now() + 2.0
         let dispatchWorkItem = DispatchWorkItem(block: closure)
@@ -328,26 +328,26 @@ public class VideoDiaryRecorderViewController: UIViewController {
     
     @objc private func playerButtonPressed() {
         switch self.currentState {
-        case .record(_, let isRecording):
+        case .record(let isRecording):
             if isRecording {
                 self.stopRecording()
             } else {
                 self.startRecording()
             }
-        case .review(_, let isPlaying):
+        case .review(let isPlaying):
             if isPlaying {
                 self.playerView.pauseVideo()
             } else {
                 self.playerView.playVideo()
             }
-            self.currentState = .review(currentTime: self.recordDurationSeconds, isPlaying: !isPlaying)
-        case .submitted(_, let submitDate, let isPlaying):
+            self.currentState = .review(isPlaying: !isPlaying)
+        case .submitted(let submitDate, let isPlaying):
             if isPlaying {
                 self.playerView.pauseVideo()
             } else {
                 self.playerView.playVideo()
             }
-            self.currentState = .submitted(currentTime: self.recordDurationSeconds, submitDate: submitDate, isPlaying: !isPlaying)
+            self.currentState = .submitted(submitDate: submitDate, isPlaying: !isPlaying)
         }
     }
     
@@ -370,17 +370,17 @@ public class VideoDiaryRecorderViewController: UIViewController {
     }
     
     @objc private func fireTimer() {
-        self.recordDurationSeconds += 1
-        if self.recordDurationSeconds == Constants.Misc.VideoDiaryMaxDurationSeconds {
+        self.recordDurationTime += Self.PlayerUpdateTime
+        if self.recordDurationTime >= Constants.Misc.VideoDiaryMaxDurationSeconds {
             self.isTimerRunning = false
             self.timer?.invalidate()
             self.cameraView.stopRecording()
             // Adding Progress HUD here so that the user interaction is disabled until the video is saved to documents directory
             self.navigator.pushProgressHUD()
-            self.currentState = .review(currentTime: 0, isPlaying: false)
+            self.currentState = .review(isPlaying: false)
             return
         }
-        self.currentState = .record(currentTime: self.recordDurationSeconds, isRecording: true)
+        self.currentState = .record(isRecording: true)
     }
 }
 
@@ -479,7 +479,7 @@ extension VideoDiaryRecorderViewController: EHCameraViewDelegate {
         self.mergedFileSize = mergedVideoURL.sizeInBytes
         self.navigator.popProgressHUD()
         
-        self.currentState = .review(currentTime: 0, isPlaying: false)
+        self.currentState = .review(isPlaying: false)
         
 //        dismissPopUpView { [weak self] _ in
 //            guard let self = self else { return }
@@ -516,10 +516,10 @@ extension VideoDiaryRecorderViewController: EHPlayerViewDelegate {
         switch self.currentState {
         case .record:
             assertionFailure("Unexpected record state")
-        case .review(let currentTime, _):
-            self.currentState = .review(currentTime: currentTime, isPlaying: false)
-        case .submitted(let currentTime, let submitDate, _):
-            self.currentState = .submitted(currentTime: currentTime, submitDate: submitDate, isPlaying: false)
+        case .review:
+            self.currentState = .review(isPlaying: false)
+        case .submitted(let submitDate, _):
+            self.currentState = .submitted(submitDate: submitDate, isPlaying: false)
         }
     }
     
