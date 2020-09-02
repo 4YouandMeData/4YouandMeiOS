@@ -20,6 +20,8 @@ protocol EHPlayerViewDelegate: class {
 /// Subclass of UIView that supports video playing from local and remote URL, pausing and seeking.
 class EHPlayerView: UIView {
     
+    static let hideSliderThumbWithDelay: Bool = false
+    
     private let layerView: UIView = {
         let view = UIView()
         return view
@@ -115,12 +117,15 @@ class EHPlayerView: UIView {
     
     /// Method to handle the tap action.
     @objc func handleTapGesture(_ sender: UITapGestureRecognizer) {
-        delegate?.tapGestureDidStart()
-        slider.setThumbImage(ImagePalette.image(withName: .circular), for: .normal)
-        slider.setThumbImage(ImagePalette.image(withName: .circular), for: .highlighted)
-        slider.isUserInteractionEnabled = true
-        timer?.invalidate()
-        timer = Timer.scheduledTimer(timeInterval: 2, target: self, selector: #selector(hideSlider), userInfo: nil, repeats: false)
+        self.delegate?.tapGestureDidStart()
+        if Self.hideSliderThumbWithDelay {
+            self.slider.setThumbImage(ImagePalette.image(withName: .circular), for: .normal)
+            self.slider.setThumbImage(ImagePalette.image(withName: .circular), for: .highlighted)
+            self.slider.isUserInteractionEnabled = true
+            self.timer?.invalidate()
+            self.timer = Timer.scheduledTimer(timeInterval: 2, target: self, selector: #selector(self.hideSlider), userInfo: nil, repeats: false)
+        }
+        
     }
     
     /// Method to handle the slider value changed action.
@@ -173,7 +178,7 @@ class EHPlayerView: UIView {
         layerView.layer.addSublayer(playerLayer)
         slider.isHidden = false
         durationLabel.isHidden = false
-        addTapGesture()
+        self.addTapGesture()
     }
     
     /// Method to add an observer to update the progress bar for the video.
@@ -190,6 +195,11 @@ class EHPlayerView: UIView {
         }
     }
     
+    private func scheduleSliderHide() {
+        self.timer?.invalidate()
+        self.timer = Timer.scheduledTimer(timeInterval: 2, target: self, selector: #selector(self.hideSlider), userInfo: nil, repeats: false)
+    }
+    
     // MARK: - Public Methods
     
     /// Method to play the video.
@@ -197,8 +207,9 @@ class EHPlayerView: UIView {
         guard let player = player else { return }
         
         player.play()
-        timer?.invalidate()
-        timer = Timer.scheduledTimer(timeInterval: 2, target: self, selector: #selector(hideSlider), userInfo: nil, repeats: false)
+        if Self.hideSliderThumbWithDelay {
+            self.scheduleSliderHide()
+        }
     }
     
     /// Method to pause the video.
