@@ -16,7 +16,7 @@ enum VideoDiaryState {
 
 public class VideoDiaryRecorderViewController: UIViewController {
     
-    private static let PlayerUpdateTime: TimeInterval = 0.1
+    private static let RecordTrackingTimeInterval: TimeInterval = 0.1
     
     private let taskIdentifier: String
     private let coordinator: VideoDiarySectionCoordinator
@@ -42,8 +42,8 @@ public class VideoDiaryRecorderViewController: UIViewController {
     private var noOfPauses: Int = 0
     private let videoExtension = "mov"
     private var videoOutputExtension = "mp4"
-    private var timer: Timer?
-    private var isTimerRunning = false
+    private var recordTrackingTimer: Timer?
+    private var videoMergeQueued: Bool = false
     
     private let disposeBag = DisposeBag()
     
@@ -274,8 +274,7 @@ public class VideoDiaryRecorderViewController: UIViewController {
             let outputFileURL = try self.setOutputFileURL()
             self.cameraView.recordedVideoExtension = self.videoExtension
             try self.cameraView.setOutputFileURL(fileURL: outputFileURL)
-            self.isTimerRunning = true
-            self.timer = Timer.scheduledTimer(timeInterval: Self.PlayerUpdateTime,
+            self.recordTrackingTimer = Timer.scheduledTimer(timeInterval: Self.RecordTrackingTimeInterval,
                                               target: self,
                                               selector: #selector(self.fireTimer),
                                               userInfo: nil,
@@ -288,8 +287,8 @@ public class VideoDiaryRecorderViewController: UIViewController {
     }
     
     private func stopRecording() {
-        self.isTimerRunning = false
-        self.timer?.invalidate()
+        self.navigator.pushProgressHUD()
+        self.recordTrackingTimer?.invalidate()
         self.currentState = .record(isRecording: false)
         self.cameraView.stopRecording()
         self.noOfPauses += 1
@@ -322,6 +321,12 @@ public class VideoDiaryRecorderViewController: UIViewController {
         let delayTime = DispatchTime.now() + 2.0
         let dispatchWorkItem = DispatchWorkItem(block: closure)
         DispatchQueue.main.asyncAfter(deadline: delayTime, execute: dispatchWorkItem)
+    }
+    
+    private func handleCompleteRecording() {
+        // Adding Progress HUD here so that the user interaction is disabled until the video is saved to documents directory
+        self.navigator.pushProgressHUD()
+        self.cameraView.mergeRecordedVideos()
     }
     
     // MARK: - Actions
@@ -370,14 +375,10 @@ public class VideoDiaryRecorderViewController: UIViewController {
     }
     
     @objc private func fireTimer() {
-        self.recordDurationTime += Self.PlayerUpdateTime
+        self.recordDurationTime += Self.RecordTrackingTimeInterval
         if self.recordDurationTime >= Constants.Misc.VideoDiaryMaxDurationSeconds {
-            self.isTimerRunning = false
-            self.timer?.invalidate()
-            self.cameraView.stopRecording()
-            // Adding Progress HUD here so that the user interaction is disabled until the video is saved to documents directory
-            self.navigator.pushProgressHUD()
-            self.currentState = .review(isPlaying: false)
+            self.videoMergeQueued = true
+            self.stopRecording()
             return
         }
         self.currentState = .record(isRecording: true)
@@ -388,8 +389,7 @@ extension VideoDiaryRecorderViewController: VideoDiaryPlayerViewDelegate {
     func mainButtonPressed() {
         switch self.currentState {
         case .record:
-            self.cameraView.mergeRecordedVideos()
-            self.navigator.pushProgressHUD()
+            self.handleCompleteRecording()
         case .review:
 //            self.sendResult()
             self.fakeSendResult()
@@ -446,24 +446,21 @@ extension VideoDiaryRecorderViewController: EHCameraViewDelegate {
     ///     - fileURL: URL of the video file recorded
     ///     - error: Error occured while recording the video
     func hasFinishedRecording(fileURL: URL?, error: Error?) {
+        self.navigator.popProgressHUD()
+        
         guard error == nil else {
-            // Removing the HUD to display the error
-            self.navigator.popProgressHUD()
             self.navigator.handleError(error: error, presenter: self)
             return
         }
         
         guard nil != fileURL else {
-            // Removing the HUD to display the error
-            self.navigator.popProgressHUD()
+            self.navigator.handleError(error: nil, presenter: self)
             return
         }
-        
-//        var videoFileURL = fileURL
-//        videoFileURL.disableiCloudSync()
-        
-        // Removing the HUD after the file has saved successfully
-        self.navigator.popProgressHUD()
+        if self.videoMergeQueued {
+            self.videoMergeQueued = false
+            self.handleCompleteRecording()
+        }
     }
     
     /// Method to assign the URL of the merged video to the player view and move to the submitRecording state
