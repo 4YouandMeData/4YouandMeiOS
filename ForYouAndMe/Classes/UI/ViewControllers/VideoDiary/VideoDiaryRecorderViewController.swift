@@ -388,7 +388,18 @@ extension VideoDiaryRecorderViewController: VideoDiaryPlayerViewDelegate {
     }
     
     func discardButtonPressed() {
-        self.coordinator.onCancelTask()
+        let actions: [UIAlertAction] = [
+            UIAlertAction(title: StringsProvider.string(forKey: .videoDiaryDiscardCancel),
+                          style: .default,
+                          handler: nil),
+            UIAlertAction(title: StringsProvider.string(forKey: .videoDiaryDiscardConfirm),
+                          style: .destructive,
+                          handler: { [weak self] _ in self?.coordinator.onCancelTask() })
+        ]
+        self.showAlert(withTitle: StringsProvider.string(forKey: .videoDiaryDiscardTitle),
+                       message: StringsProvider.string(forKey: .videoDiaryDiscardBody),
+                       actions: actions,
+                       tintColor: ColorPalette.color(withType: .primary))
     }
 }
 

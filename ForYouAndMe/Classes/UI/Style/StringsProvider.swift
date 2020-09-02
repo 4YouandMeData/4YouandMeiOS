@@ -111,6 +111,10 @@ enum StringKey: String, CaseIterable, CodingKey {
     case videoDiaryRecorderCloseButton = "VIDEO_DIARY_RECORDER_CLOSE_BUTTON"
     case videoDiarySuccessTitle = "VIDEO_DIARY_SUCCESS_TITLE"
     case videoDiarySuccessButton = "VIDEO_DIARY_SUCCESS_BUTTON"
+    case videoDiaryDiscardTitle = "VIDEO_DIARY_DISCARD_TITLE"
+    case videoDiaryDiscardBody = "VIDEO_DIARY_DISCARD_BODY"
+    case videoDiaryDiscardConfirm = "VIDEO_DIARY_DISCARD_CONFIRM"
+    case videoDiaryDiscardCancel = "VIDEO_DIARY_DISCARD_CANCEL"
     // Generic
     case genericInfoTitle = "GENERIC_INFO_TITLE"
     // Errors

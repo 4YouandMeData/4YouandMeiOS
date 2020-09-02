@@ -110,7 +110,11 @@
       "VIDEO_DIARY_RECORDER_SUBMIT_FEEDBACK": "Video Recorded",
       "VIDEO_DIARY_RECORDER_CLOSE_BUTTON": "Finish",
       "VIDEO_DIARY_SUCCESS_TITLE": "Thank you!",
-      "VIDEO_DIARY_SUCCESS_BUTTON": "Done"
+      "VIDEO_DIARY_SUCCESS_BUTTON": "Done",
+      "VIDEO_DIARY_DISCARD_TITLE": "Are you sure?",
+      "VIDEO_DIARY_DISCARD_BODY": "Your recorded progress will be erased",
+      "VIDEO_DIARY_DISCARD_CONFIRM": "Yes",
+      "VIDEO_DIARY_DISCARD_CANCEL": "No"
     },
     "country_codes": ["US", "GB", "IT"]
 }
