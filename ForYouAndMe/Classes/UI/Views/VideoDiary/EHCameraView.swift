@@ -192,8 +192,14 @@ class EHCameraView: UIView {
     // MARK: - Private Methods
     
     private func addObservers() {
-        NotificationCenter.default.addObserver(self, selector: #selector(willEnterForeground), name: UIApplication.willEnterForegroundNotification, object: nil)
-        NotificationCenter.default.addObserver(self, selector: #selector(didEnterBackground), name: UIApplication.didEnterBackgroundNotification, object: nil)
+        NotificationCenter.default.addObserver(self,
+                                               selector: #selector(self.willEnterForeground),
+                                               name: UIApplication.willEnterForegroundNotification,
+                                               object: nil)
+        NotificationCenter.default.addObserver(self,
+                                               selector: #selector(self.didEnterBackground),
+                                               name: UIApplication.didEnterBackgroundNotification,
+                                               object: nil)
     }
     
     /// Method to initialize the camera view.
@@ -431,7 +437,7 @@ class EHCameraView: UIView {
     }
     
     @objc private func didEnterBackground() {
-        stopSession()
+        self.stopSession()
     }
     
     // MARK: - Public Methods

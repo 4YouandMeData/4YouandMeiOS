@@ -155,6 +155,9 @@ public class VideoDiaryRecorderViewController: UIViewController {
         self.playerButton.autoAlignAxis(.vertical, toSameAxisOf: playerButtonReferenceView)
         self.playerButton.autoAlignAxis(.horizontal, toSameAxisOf: playerButtonReferenceView)
         
+        self.addApplicationWillResignObserver()
+        self.addApplicationDidBecomeActiveObserver()
+        
         self.updateUI()
     }
     
@@ -316,6 +319,51 @@ public class VideoDiaryRecorderViewController: UIViewController {
                           handler: { [weak self] _ in self?.coordinator.onCancelTask() })
         ]
         self.showAlert(withTitle: title, message: message, actions: actions, tintColor: ColorPalette.color(withType: .primary))
+    }
+    
+    private func addApplicationWillResignObserver() {
+        NotificationCenter.default.addObserver(self,
+                                               selector: #selector(self.applicationWillResign),
+                                               name: UIApplication.willResignActiveNotification,
+                                               object: nil)
+    }
+    
+    internal func addApplicationDidBecomeActiveObserver() {
+        NotificationCenter.default.addObserver(self,
+                                               selector: #selector(self.applicationDidBecomeActive),
+                                               name: UIApplication.didBecomeActiveNotification,
+                                               object: nil)
+    }
+    
+    @objc func applicationDidBecomeActive() {
+        switch currentState {
+        case .record: break
+        case .review(let isPlaying):
+            if isPlaying {
+                self.playerView.playVideo()
+            }
+        case .submitted(_, let isPlaying):
+            if isPlaying {
+                self.playerView.playVideo()
+            }
+        }
+    }
+    
+    @objc private func applicationWillResign() {
+        switch currentState {
+        case .record(let isRecording):
+            if isRecording {
+                self.stopRecording()
+            }
+        case .review(let isPlaying):
+            if isPlaying {
+                self.playerView.pauseVideo()
+            }
+        case .submitted(_, let isPlaying):
+            if isPlaying {
+                self.playerView.pauseVideo()
+            }
+        }
     }
     
     // MARK: - Actions
