@@ -85,7 +85,7 @@ public class VideoDiaryRecorderViewController: UIViewController {
         return button
     }()
     
-    private var toolbar: UIView {
+    private lazy var toolbar: UIView = {
         let view = UIView()
 
         view.addSubview(self.lightButton)
@@ -104,7 +104,13 @@ public class VideoDiaryRecorderViewController: UIViewController {
         self.switchCameraButton.autoPinEdge(.trailing, to: .leading, of: self.timeLabel, withOffset: 16.0, relation: .greaterThanOrEqual)
 
         return view
-    }
+    }()
+    
+    private let overlayView: UIView = {
+        let view = UIView()
+        view.backgroundColor = ColorPalette.overlayColor
+        return view
+    }()
     
     private var currentState: VideoDiaryState = .record(isRecording: false) {
         didSet {
@@ -136,6 +142,10 @@ public class VideoDiaryRecorderViewController: UIViewController {
         
         self.view.addSubview(self.playerView)
         self.playerView.autoPinEdgesToSuperviewEdges()
+        
+        // Overlay
+        self.view.addSubview(self.overlayView)
+        self.overlayView.autoPinEdgesToSuperviewEdges()
         
         self.view.addSubview(self.stackView)
         self.stackView.autoPinEdgesToSuperviewSafeArea(with: .zero, excludingEdge: .bottom)
@@ -173,18 +183,21 @@ public class VideoDiaryRecorderViewController: UIViewController {
         switch self.currentState {
         case .record(let isRecording):
             self.stackView.isUserInteractionEnabled = !isRecording
+            self.overlayView.isHidden = isRecording
             self.cameraView.isHidden = false
             self.playerView.isHidden = true
             self.updateToolbar(currentTime: Int(self.recordDurationTime), isRunning: isRecording, isRecordState: true)
             self.updatePlayerButton(isRunning: isRecording, isRecordState: true)
         case .review(let isPlaying):
             self.stackView.isUserInteractionEnabled = !isPlaying // Needed to allow tap on playerView
+            self.overlayView.isHidden = isPlaying
             self.cameraView.isHidden = true
             self.playerView.isHidden = false
             self.updateToolbar(currentTime: Int(self.recordDurationTime), isRunning: isPlaying, isRecordState: false)
             self.updatePlayerButton(isRunning: isPlaying, isRecordState: false)
         case .submitted(_, let isPlaying):
             self.stackView.isUserInteractionEnabled = !isPlaying // Needed to allow tap on playerView
+            self.overlayView.isHidden = isPlaying
             self.cameraView.isHidden = true
             self.playerView.isHidden = false
             self.updateToolbar(currentTime: Int(self.recordDurationTime), isRunning: isPlaying, isRecordState: false)
