@@ -37,11 +37,10 @@ public class VideoDiaryRecorderViewController: UIViewController {
         return view
     }()
     
-    private var mergedFileSize: UInt64 = 0
     private var recordDurationTime: TimeInterval = 0.0
     private var noOfPauses: Int = 0
-    private let videoExtension = "mov"
-    private var videoOutputExtension = "mp4"
+    private let videoExtension = "mov" // Extension of each video part
+    private var videoOutputExtension = "mp4" // Extension of the merged video
     private var recordTrackingTimer: Timer?
     private var videoMergeQueued: Bool = false
     
@@ -276,7 +275,7 @@ public class VideoDiaryRecorderViewController: UIViewController {
             self.currentState = .record(isRecording: true)
             self.cameraView.startRecording()
         } catch {
-            self.navigator.handleError(error: error, presenter: self)
+            self.navigator.handleError(error: nil, presenter: self)
         }
     }
     
@@ -293,13 +292,9 @@ public class VideoDiaryRecorderViewController: UIViewController {
         var isDir: ObjCBool = false
         let fileManager = FileManager.default
         if !fileManager.fileExists(atPath: Constants.Task.videoResultURL.path, isDirectory: &isDir) {
-            do {
-                try fileManager.createDirectory(atPath: Constants.Task.videoResultURL.path,
-                                                withIntermediateDirectories: false,
-                                                attributes: nil)
-            } catch let error {
-                print(error)
-            }
+            try fileManager.createDirectory(atPath: Constants.Task.videoResultURL.path,
+                                            withIntermediateDirectories: false,
+                                            attributes: nil)
         }
         let fileURL = Constants.Task.videoResultURL.appendingPathComponent(outputFileName).appendingPathExtension(self.videoExtension)
         return fileURL
@@ -309,6 +304,18 @@ public class VideoDiaryRecorderViewController: UIViewController {
         // Adding Progress HUD here so that the user interaction is disabled until the video is saved to documents directory
         self.navigator.pushProgressHUD()
         self.cameraView.mergeRecordedVideos()
+    }
+    
+    private func showPermissionAlert(withTitle title: String, message: String) {
+        let actions: [UIAlertAction] = [
+            UIAlertAction(title: StringsProvider.string(forKey: .videoDiaryMissingPermissionSettings),
+                          style: .default,
+                          handler: { [weak self] _ in self?.navigator.openSettings() }),
+            UIAlertAction(title: StringsProvider.string(forKey: .videoDiaryMissingPermissionDiscard),
+                          style: .destructive,
+                          handler: { [weak self] _ in self?.coordinator.onCancelTask() })
+        ]
+        self.showAlert(withTitle: title, message: message, actions: actions, tintColor: ColorPalette.color(withType: .primary))
     }
     
     // MARK: - Actions
@@ -400,25 +407,21 @@ extension VideoDiaryRecorderViewController: EHCameraViewDelegate {
         // Alert will not be displayed because the view has not appeared yet. That's why using Async with delay.
         Async.mainQueueWithDelay(1, closure: { [weak self] in
             guard let self = self else { return }
-            
-            self.navigator.handleError(error: error, presenter: self)
-            // TODO: Handle .cameraNotAuthorized, .micNotAuthorized
-//            self.showInfoAlert(error.localizedDescription) { _ in
-//                switch error {
-//                case .cameraNotAuthorized, .micNotAuthorized:
-//                    if let settings = URL(string: UIApplication.openSettingsURLString) {
-//                        UIApplication.shared.open(settings)
-//                    }
-//                default:
-//                    break
-//                }
-//            }
+            switch error {
+            case .cameraNotAuthorized:
+                self.showPermissionAlert(withTitle: StringsProvider.string(forKey: .videoDiaryMissingPermissionTitleCamera),
+                                         message: StringsProvider.string(forKey: .videoDiaryMissingPermissionBodyCamera))
+            case .micNotAuthorized:
+                self.showPermissionAlert(withTitle: StringsProvider.string(forKey: .videoDiaryMissingPermissionTitleMic),
+                                         message: StringsProvider.string(forKey: .videoDiaryMissingPermissionBodyMic))
+            default:
+                self.navigator.handleError(error: error, presenter: self)
+            }
         })
     }
     
     func hasCaptureOutputErrorOccurred(error: CaptureOutputError) {
         self.navigator.handleError(error: error, presenter: self)
-//        showInfoAlert(error.localizedDescription)
     }
     
     /// Method to disable iCloud sync for the video file recorded or show alert if some error occurred
@@ -430,7 +433,8 @@ extension VideoDiaryRecorderViewController: EHCameraViewDelegate {
         self.navigator.popProgressHUD()
         
         guard error == nil else {
-            self.navigator.handleError(error: error, presenter: self)
+            print("VideoDiaryRecorderViewController - Error while writing video on file: \(String(describing: error))")
+            self.navigator.handleError(error: nil, presenter: self)
             return
         }
         
@@ -451,33 +455,9 @@ extension VideoDiaryRecorderViewController: EHCameraViewDelegate {
         guard let mergedVideoURL = mergedVideoURL else { return }
         
         self.playerView.videoURL = mergedVideoURL
-        
-//        var mergedVideoFileURL = mergedVideoURL
-//        mergedVideoFileURL.disableiCloudSync()
-        self.mergedFileSize = mergedVideoURL.sizeInBytes
         self.navigator.popProgressHUD()
         
         self.currentState = .review(isPlaying: false)
-        
-//        dismissPopUpView { [weak self] _ in
-//            guard let self = self else { return }
-//
-//            self.st
-//
-//            self.setIdentityTransformForRecordButton()
-//            self.reviewRecordingView.removeFromSuperview()
-//            self.configureSubmitRecordingView()
-//            self.popupContainerViewHeight = self.submitRecordingViewCalculatedHeight
-//            self.configurePopUpContainerView(subview: self.submitRecordingView)
-//            self.view.layoutIfNeeded()
-//            // Delay is given to load the new pop up view
-//            Async.mainQueueWithDelay(0.5) { [weak self] in
-//                guard let self = self else { return }
-//
-//                self.currentState = .submitRecording
-//                self.handleCurrentState()
-//            }
-//        }
     }
     
     func hasVideoMergingErrorOccurred(error: VideoMergingError) {

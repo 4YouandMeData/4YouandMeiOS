@@ -115,6 +115,12 @@ enum StringKey: String, CaseIterable, CodingKey {
     case videoDiaryDiscardBody = "VIDEO_DIARY_DISCARD_BODY"
     case videoDiaryDiscardConfirm = "VIDEO_DIARY_DISCARD_CONFIRM"
     case videoDiaryDiscardCancel = "VIDEO_DIARY_DISCARD_CANCEL"
+    case videoDiaryMissingPermissionTitleCamera = "VIDEO_DIARY_MISSING_PERMISSION_TITLE_CAMERA"
+    case videoDiaryMissingPermissionTitleMic = "VIDEO_DIARY_MISSING_PERMISSION_TITLE_MIC"
+    case videoDiaryMissingPermissionBodyCamera = "VIDEO_DIARY_MISSING_PERMISSION_BODY_CAMERA"
+    case videoDiaryMissingPermissionBodyMic = "VIDEO_DIARY_MISSING_PERMISSION_BODY_MIC"
+    case videoDiaryMissingPermissionSettings = "VIDEO_DIARY_MISSING_PERMISSION_SETTINGS"
+    case videoDiaryMissingPermissionDiscard = "VIDEO_DIARY_MISSING_PERMISSION_DISCARD"
     // Generic
     case genericInfoTitle = "GENERIC_INFO_TITLE"
     // Errors

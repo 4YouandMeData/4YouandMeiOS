@@ -114,7 +114,13 @@
       "VIDEO_DIARY_DISCARD_TITLE": "Are you sure?",
       "VIDEO_DIARY_DISCARD_BODY": "Your recorded progress will be erased",
       "VIDEO_DIARY_DISCARD_CONFIRM": "Yes",
-      "VIDEO_DIARY_DISCARD_CANCEL": "No"
+      "VIDEO_DIARY_DISCARD_CANCEL": "No",
+      "VIDEO_DIARY_MISSING_PERMISSION_TITLE_CAMERA": "Camera permission required",
+      "VIDEO_DIARY_MISSING_PERMISSION_TITLE_MIC": "Microphone permission required",
+      "VIDEO_DIARY_MISSING_PERMISSION_BODY_CAMERA": "Please enable it in the Settings to continue",
+      "VIDEO_DIARY_MISSING_PERMISSION_BODY_MIC": "Please enable it in the Settings to continue",
+      "VIDEO_DIARY_MISSING_PERMISSION_SETTINGS": "Settings",
+      "VIDEO_DIARY_MISSING_PERMISSION_DISCARD": "Cancel task"
     },
     "country_codes": ["US", "GB", "IT"]
 }

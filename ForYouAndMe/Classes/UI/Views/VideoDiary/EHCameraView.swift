@@ -107,27 +107,11 @@ public extension Array where Element: Equatable {
 
 /// Enum with possible capture session errors
 enum CaptureSessionError: Error {
-    case captureSessionAlreadyRunning
     case captureSessionIsMissing
-    case inputsAreInvalid
     case invalidOperation
     case noCamerasAvailable
     case cameraNotAuthorized
     case micNotAuthorized
-    case unknown(error: Error)
-    
-    var localizedDescription: String {
-        switch self {
-        case .cameraNotAuthorized:
-            return "Camera not authorized"// TODO: Return error string
-        case .micNotAuthorized:
-            return "Microphone not authorized"// TODO: Return error string
-        case .unknown(let error):
-            return error.localizedDescription
-        default:
-            return "Camera setup failed"// TODO: Return error string
-        }
-    }
 }
 
 /// Enum with possible flash modes for the back camera

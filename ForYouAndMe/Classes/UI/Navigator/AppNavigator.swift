@@ -391,6 +391,12 @@ class AppNavigator {
         return UIApplication.shared.canOpenURL(url)
     }
     
+    public func openSettings() {
+        if let settings = URL(string: UIApplication.openSettingsURLString) {
+            UIApplication.shared.open(settings)
+        }
+    }
+    
     public func openExternalUrl(_ url: URL) {
         guard self.canOpenExternalUrl(url) else {
             print("Cannot open given url: \(url)")
@@ -416,14 +422,14 @@ class AppNavigator {
             presenter.showAlert(forError: nil, onDismiss: onDismiss, onRetry: onRetry, dismissStyle: dismissStyle)
             return
         }
-        guard let repositoryError = error as? RepositoryError else {
+        guard let alertError = error as? AlertError else {
             assertionFailure("Unexpected error type")
             presenter.showAlert(forError: nil, onDismiss: onDismiss, onRetry: onRetry, dismissStyle: dismissStyle)
             return
         }
         
         if false == self.handleUserNotLoggedError(error: error) {
-            presenter.showAlert(forError: repositoryError, onDismiss: onDismiss, onRetry: onRetry, dismissStyle: dismissStyle)
+            presenter.showAlert(forError: alertError, onDismiss: onDismiss, onRetry: onRetry, dismissStyle: dismissStyle)
         }
     }
     
