@@ -1288,9 +1288,9 @@
 		893C042E2500E16A00F528D0 /* Repository+AlertError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893C042D2500E16A00F528D0 /* Repository+AlertError.swift */; };
 		893C04302500E1B700F528D0 /* AlertError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893C042F2500E1B700F528D0 /* AlertError.swift */; };
 		893C04322500E20600F528D0 /* Video+AlertError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893C04312500E20600F528D0 /* Video+AlertError.swift */; };
-		893C252E24F912F400641C31 /* EHCameraView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893C252D24F912F400641C31 /* EHCameraView.swift */; };
+		893C252E24F912F400641C31 /* CameraView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893C252D24F912F400641C31 /* CameraView.swift */; };
 		893C253024F915D000641C31 /* URL+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893C252F24F915D000641C31 /* URL+Extensions.swift */; };
-		893C253224F95E7C00641C31 /* EHPlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893C253124F95E7C00641C31 /* EHPlayerView.swift */; };
+		893C253224F95E7C00641C31 /* PlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893C253124F95E7C00641C31 /* PlayerView.swift */; };
 		893FF27E24F7B53F00FDE193 /* VideoDiaryIntroViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893FF27D24F7B53F00FDE193 /* VideoDiaryIntroViewController.swift */; };
 		893FF28024F7BF1900FDE193 /* VideoDiaryCompleteViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893FF27F24F7BF1900FDE193 /* VideoDiaryCompleteViewController.swift */; };
 		893FF28324F7E9B300FDE193 /* VideoDiaryPlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893FF28224F7E9B300FDE193 /* VideoDiaryPlayerView.swift */; };
@@ -1306,6 +1306,8 @@
 		89679BEF24F6B952001C5BEF /* VideoDiarySectionCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89679BEE24F6B952001C5BEF /* VideoDiarySectionCoordinator.swift */; };
 		899AFC7DB0CA4B9B6117637697522333 /* ORKUSDZModelManagerResult.m in Sources */ = {isa = PBXBuildFile; fileRef = 69290C3CA9575A49E48D347F0A9D6403 /* ORKUSDZModelManagerResult.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
 		899FCC8017786183BECB69DD2331AA36 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3F41D851DA5BFD4D5C6C4DDE13BC170A /* Foundation.framework */; };
+		89FBD80D25012A7300FC67D5 /* Async.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89FBD80C25012A7300FC67D5 /* Async.swift */; };
+		89FBD80F25012B7100FC67D5 /* Foundation+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89FBD80E25012B7100FC67D5 /* Foundation+Extensions.swift */; };
 		8A270906AF32357A39B0573670033769 /* ORKTouchAbilitySwipeTrial.h in Headers */ = {isa = PBXBuildFile; fileRef = E82471106264EBF9DE68E139CA14C406 /* ORKTouchAbilitySwipeTrial.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		8A7D57F3A37743830187CB54229B332E /* RxSwift.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 61F190454981D1C3BCFDB57A31AB476E /* RxSwift.framework */; };
 		8A805C40933280C1645685BDABDE390F /* ORKCheckmarkView.h in Headers */ = {isa = PBXBuildFile; fileRef = 90B40B18BFE966F0B4723338E2E1A9EE /* ORKCheckmarkView.h */; settings = {ATTRIBUTES = (Project, ); }; };
@@ -4438,9 +4440,9 @@
 		893C042D2500E16A00F528D0 /* Repository+AlertError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Repository+AlertError.swift"; sourceTree = "<group>"; };
 		893C042F2500E1B700F528D0 /* AlertError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlertError.swift; sourceTree = "<group>"; };
 		893C04312500E20600F528D0 /* Video+AlertError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Video+AlertError.swift"; sourceTree = "<group>"; };
-		893C252D24F912F400641C31 /* EHCameraView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EHCameraView.swift; sourceTree = "<group>"; };
+		893C252D24F912F400641C31 /* CameraView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CameraView.swift; sourceTree = "<group>"; };
 		893C252F24F915D000641C31 /* URL+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "URL+Extensions.swift"; sourceTree = "<group>"; };
-		893C253124F95E7C00641C31 /* EHPlayerView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EHPlayerView.swift; sourceTree = "<group>"; };
+		893C253124F95E7C00641C31 /* PlayerView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PlayerView.swift; sourceTree = "<group>"; };
 		893FF27D24F7B53F00FDE193 /* VideoDiaryIntroViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoDiaryIntroViewController.swift; sourceTree = "<group>"; };
 		893FF27F24F7BF1900FDE193 /* VideoDiaryCompleteViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoDiaryCompleteViewController.swift; sourceTree = "<group>"; };
 		893FF28224F7E9B300FDE193 /* VideoDiaryPlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoDiaryPlayerView.swift; sourceTree = "<group>"; };
@@ -4457,6 +4459,8 @@
 		89A1874217C3C1A6A837A9BFA888AF42 /* ORKSpeechRecognitionResult.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = ORKSpeechRecognitionResult.m; path = ResearchKit/ActiveTasks/ORKSpeechRecognitionResult.m; sourceTree = "<group>"; };
 		89A892D5132F03DB547B714A2C153395 /* DoubleButtonHorizontalView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DoubleButtonHorizontalView.swift; sourceTree = "<group>"; };
 		89F3BEC046C681D9EF3E195FEF74533B /* CountryPickerView.modulemap */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.module; path = CountryPickerView.modulemap; sourceTree = "<group>"; };
+		89FBD80C25012A7300FC67D5 /* Async.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Async.swift; sourceTree = "<group>"; };
+		89FBD80E25012B7100FC67D5 /* Foundation+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Foundation+Extensions.swift"; sourceTree = "<group>"; };
 		8A1F593633C0F3D409A51834F1CDC958 /* ORKPasscodeStepView.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = ORKPasscodeStepView.h; path = ResearchKit/Common/ORKPasscodeStepView.h; sourceTree = "<group>"; };
 		8A38A84673DDCFC69B49F48E2DCAA932 /* ALView+PureLayout.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = "ALView+PureLayout.h"; path = "PureLayout/PureLayout/ALView+PureLayout.h"; sourceTree = "<group>"; };
 		8A409D05A7A2EB44FB6FFF91292A8E71 /* FIRCLSReportManager.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = FIRCLSReportManager.h; path = Crashlytics/Crashlytics/Controllers/FIRCLSReportManager.h; sourceTree = "<group>"; };
@@ -8100,8 +8104,8 @@
 			isa = PBXGroup;
 			children = (
 				893FF28224F7E9B300FDE193 /* VideoDiaryPlayerView.swift */,
-				893C252D24F912F400641C31 /* EHCameraView.swift */,
-				893C253124F95E7C00641C31 /* EHPlayerView.swift */,
+				893C252D24F912F400641C31 /* CameraView.swift */,
+				893C253124F95E7C00641C31 /* PlayerView.swift */,
 			);
 			path = VideoDiary;
 			sourceTree = "<group>";
@@ -8504,6 +8508,8 @@
 				6DBBEA2472D0F517661B9F6730278AE1 /* UIViewController+Alert.swift */,
 				456010E069C74143F56C4B9931287109 /* UIViewController+Extensions.swift */,
 				893C252F24F915D000641C31 /* URL+Extensions.swift */,
+				89FBD80C25012A7300FC67D5 /* Async.swift */,
+				89FBD80E25012B7100FC67D5 /* Foundation+Extensions.swift */,
 			);
 			name = Utility;
 			path = ForYouAndMe/Classes/Utility;
@@ -11842,6 +11848,7 @@
 				893FF28524F7EB7B00FDE193 /* VideoDiaryRecorderViewController.swift in Sources */,
 				DEA04827BBDCCEB6187998DF10D41BB2 /* NavigationBarStyles.swift in Sources */,
 				4A0E089BDFE63A7B965E1F34FE91AFAA /* NetworkApiGateway.swift in Sources */,
+				89FBD80D25012A7300FC67D5 /* Async.swift in Sources */,
 				E7AB32FCA39FE37016509C018E4B2A06 /* NetworkUtility.swift in Sources */,
 				F3281275316B00DB7DD8F9A91194FE34 /* NSAttributedString+Extensions.swift in Sources */,
 				98C9A9F97666CC1AD4CE0A05745F34BC /* NSAttributedString+Palette.swift in Sources */,
@@ -11903,6 +11910,7 @@
 				EF72D8A9444C7622C67D9A716C96E7B2 /* TremorTask.swift in Sources */,
 				3F5E0E67F8E0166A034C31F80FB0F51E /* TypeAliases.swift in Sources */,
 				05C609D94D98981D191796F0D998328B /* UIColor+Extension.swift in Sources */,
+				89FBD80F25012B7100FC67D5 /* Foundation+Extensions.swift in Sources */,
 				0D255477D80139C8162FA205CE04C864 /* UILabelInteractionManager.swift in Sources */,
 				FC01FC0CD14466027D74BEF5B0AC9C5B /* UINavigationController+Extensions.swift in Sources */,
 				C2A741CED7C95E3DDB2951F493ECE401 /* UINavigationController+Internal.swift in Sources */,
@@ -11914,7 +11922,7 @@
 				7207CC3E71C50E8BE98C5DB7D3A855A5 /* UIView+Round.swift in Sources */,
 				9978E9457ABEEECC7F3B01CB1FCA22D6 /* UIView+Shadow.swift in Sources */,
 				8FD0DD7EE3C39D912DEE083D04E204FA /* UIView+ShadowPalette.swift in Sources */,
-				893C252E24F912F400641C31 /* EHCameraView.swift in Sources */,
+				893C252E24F912F400641C31 /* CameraView.swift in Sources */,
 				13987AFDFAF7FA6FEBD804C24A9E3491 /* UIViewController+Alert.swift in Sources */,
 				9E1CFB9E16851F24EF50914A0737CD52 /* UIViewController+Extensions.swift in Sources */,
 				404B618C9C0E94301E5AF55B38AA2ED5 /* UIViewController+Internal.swift in Sources */,
@@ -11923,7 +11931,7 @@
 				42B8DFB0D3FEB4A3D09A40CED4455BED /* UserEmailViewController.swift in Sources */,
 				8941802D24DC02630052C395 /* QuickActivityOption.swift in Sources */,
 				4224D482D93E70481D6CBE191CB2460D /* UserNameViewController.swift in Sources */,
-				893C253224F95E7C00641C31 /* EHPlayerView.swift in Sources */,
+				893C253224F95E7C00641C31 /* PlayerView.swift in Sources */,
 				2ABA6B9920BB1683764944F8FF54E17C /* UserSignatureViewController.swift in Sources */,
 				15BB7AD079D063C4FAFB298A59FF4831 /* WalkTask.swift in Sources */,
 				BC7A30A4E108942272F624336C2556C4 /* WearableApp.swift in Sources */,

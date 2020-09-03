@@ -20,6 +20,10 @@ public extension Date {
         }
         return dateFormatter.string(from: self)
     }
+    
+    static func currentDateInMilliSeconds() -> Double {
+        return round(Date().timeIntervalSince1970 * 1000)
+    }
 }
 
 public extension String {

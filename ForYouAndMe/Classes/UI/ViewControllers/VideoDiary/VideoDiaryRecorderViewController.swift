@@ -24,16 +24,14 @@ public class VideoDiaryRecorderViewController: UIViewController {
     private let repository: Repository
     private let navigator: AppNavigator
     
-    private lazy var cameraView: EHCameraView = {
-        let view = EHCameraView()
+    private lazy var cameraView: CameraView = {
+        let view = CameraView()
         view.delegate = self
-        view.mergedFileExtension = self.videoOutputExtension
-        view.configureTheCameraAttributes()
         return view
     }()
     
-    private lazy var playerView: EHPlayerView = {
-        let view = EHPlayerView()
+    private lazy var playerView: PlayerView = {
+        let view = PlayerView()
         view.delegate = self
         return view
     }()
@@ -41,7 +39,6 @@ public class VideoDiaryRecorderViewController: UIViewController {
     private var recordDurationTime: TimeInterval = 0.0
     private var noOfPauses: Int = 0
     private let videoExtension = "mov" // Extension of each video part
-    private var videoOutputExtension = "mp4" // Extension of the merged video
     private var recordTrackingTimer: Timer?
     private var hidePlayButtonTimer: Timer?
     private var videoMergeQueued: Bool = false
@@ -310,7 +307,7 @@ public class VideoDiaryRecorderViewController: UIViewController {
     }
     
     private func setOutputFileURL() throws -> URL {
-        let outputFileName = "Video\(self.noOfPauses)"
+        let outputFileName = "\(CameraView.videoFilenamePrefix)\(self.noOfPauses)"
         var isDir: ObjCBool = false
         let fileManager = FileManager.default
         if !fileManager.fileExists(atPath: Constants.Task.videoResultURL.path, isDirectory: &isDir) {
@@ -479,7 +476,7 @@ extension VideoDiaryRecorderViewController: VideoDiaryPlayerViewDelegate {
     }
 }
 
-extension VideoDiaryRecorderViewController: EHCameraViewDelegate {
+extension VideoDiaryRecorderViewController: CameraViewDelegate {
     func hasCaptureSessionErrorOccurred(error: CaptureSessionError) {
         // Alert will not be displayed because the view has not appeared yet. That's why using Async with delay.
         Async.mainQueueWithDelay(1, closure: { [weak self] in
@@ -501,11 +498,6 @@ extension VideoDiaryRecorderViewController: EHCameraViewDelegate {
         self.navigator.handleError(error: error, presenter: self)
     }
     
-    /// Method to disable iCloud sync for the video file recorded or show alert if some error occurred
-    ///
-    /// - Parameters:
-    ///     - fileURL: URL of the video file recorded
-    ///     - error: Error occured while recording the video
     func hasFinishedRecording(fileURL: URL?, error: Error?) {
         self.navigator.popProgressHUD()
         
@@ -525,9 +517,6 @@ extension VideoDiaryRecorderViewController: EHCameraViewDelegate {
         }
     }
     
-    /// Method to assign the URL of the merged video to the player view and move to the submitRecording state
-    ///
-    /// - Parameter mergedVideoURL: URL of the merged video
     func didFinishMergingVideo(mergedVideoURL: URL?) {
         guard let mergedVideoURL = mergedVideoURL else { return }
         
@@ -546,7 +535,7 @@ extension VideoDiaryRecorderViewController: EHCameraViewDelegate {
     }
 }
 
-extension VideoDiaryRecorderViewController: EHPlayerViewDelegate {
+extension VideoDiaryRecorderViewController: PlayerViewDelegate {
     func hasFinishedPlaying() {
         switch self.currentState {
         case .record:
@@ -570,11 +559,7 @@ extension VideoDiaryRecorderViewController: EHPlayerViewDelegate {
         }
     }
     
-    func tapGestureWillEnd() {
-//        self.playerButton.isHidden = (currentState == .playing ? true : false)
-    }
+    func tapGestureWillEnd() {}
     
-    func sliderValueDidChange() {
-//        self.playerButton.isHidden = true
-    }
+    func sliderValueDidChange() {}
 }
