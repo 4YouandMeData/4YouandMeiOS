@@ -16,6 +16,7 @@ enum VideoDiaryState {
 
 public class VideoDiaryRecorderViewController: UIViewController {
     
+    private static let HidePlayerButtonDelay: TimeInterval = 2.0
     private static let RecordTrackingTimeInterval: TimeInterval = 0.1
     
     private let taskIdentifier: String
@@ -42,6 +43,7 @@ public class VideoDiaryRecorderViewController: UIViewController {
     private let videoExtension = "mov" // Extension of each video part
     private var videoOutputExtension = "mp4" // Extension of the merged video
     private var recordTrackingTimer: Timer?
+    private var hidePlayButtonTimer: Timer?
     private var videoMergeQueued: Bool = false
     
     private let disposeBag = DisposeBag()
@@ -179,10 +181,12 @@ public class VideoDiaryRecorderViewController: UIViewController {
     // MARK: - Private Methods
     
     private func updateUI() {
+        self.invalidatedHidePlayerButtonTimer()
         self.videoDiaryPlayerView.updateState(newState: self.currentState, recordDurationTime: self.recordDurationTime)
         switch self.currentState {
         case .record(let isRecording):
             self.stackView.isUserInteractionEnabled = !isRecording
+            self.playerButton.isHidden = false
             self.overlayView.isHidden = isRecording
             self.cameraView.isHidden = false
             self.playerView.isHidden = true
@@ -191,6 +195,7 @@ public class VideoDiaryRecorderViewController: UIViewController {
         case .review(let isPlaying):
             self.stackView.isUserInteractionEnabled = !isPlaying // Needed to allow tap on playerView
             self.overlayView.isHidden = isPlaying
+            self.playerButton.isHidden = isPlaying
             self.cameraView.isHidden = true
             self.playerView.isHidden = false
             self.updateToolbar(currentTime: Int(self.recordDurationTime), isRunning: isPlaying, isRecordState: false)
@@ -198,6 +203,7 @@ public class VideoDiaryRecorderViewController: UIViewController {
         case .submitted(_, let isPlaying):
             self.stackView.isUserInteractionEnabled = !isPlaying // Needed to allow tap on playerView
             self.overlayView.isHidden = isPlaying
+            self.playerButton.isHidden = isPlaying
             self.cameraView.isHidden = true
             self.playerView.isHidden = false
             self.updateToolbar(currentTime: Int(self.recordDurationTime), isRunning: isPlaying, isRecordState: false)
@@ -348,35 +354,9 @@ public class VideoDiaryRecorderViewController: UIViewController {
                                                object: nil)
     }
     
-    @objc func applicationDidBecomeActive() {
-        switch currentState {
-        case .record: break
-        case .review(let isPlaying):
-            if isPlaying {
-                self.playerView.playVideo()
-            }
-        case .submitted(_, let isPlaying):
-            if isPlaying {
-                self.playerView.playVideo()
-            }
-        }
-    }
-    
-    @objc private func applicationWillResign() {
-        switch currentState {
-        case .record(let isRecording):
-            if isRecording {
-                self.stopRecording()
-            }
-        case .review(let isPlaying):
-            if isPlaying {
-                self.playerView.pauseVideo()
-            }
-        case .submitted(_, let isPlaying):
-            if isPlaying {
-                self.playerView.pauseVideo()
-            }
-        }
+    private func invalidatedHidePlayerButtonTimer() {
+        self.hidePlayButtonTimer?.invalidate()
+        self.hidePlayButtonTimer = nil
     }
     
     // MARK: - Actions
@@ -432,6 +412,42 @@ public class VideoDiaryRecorderViewController: UIViewController {
             return
         }
         self.currentState = .record(isRecording: true)
+    }
+    
+    @objc private func hidePlayButton() {
+        self.playerButton.isHidden = true
+        self.hidePlayButtonTimer = nil
+    }
+    
+    @objc func applicationDidBecomeActive() {
+        switch currentState {
+        case .record: break
+        case .review(let isPlaying):
+            if isPlaying {
+                self.playerView.playVideo()
+            }
+        case .submitted(_, let isPlaying):
+            if isPlaying {
+                self.playerView.playVideo()
+            }
+        }
+    }
+    
+    @objc private func applicationWillResign() {
+        switch currentState {
+        case .record(let isRecording):
+            if isRecording {
+                self.stopRecording()
+            }
+        case .review(let isPlaying):
+            if isPlaying {
+                self.playerView.pauseVideo()
+            }
+        case .submitted(_, let isPlaying):
+            if isPlaying {
+                self.playerView.pauseVideo()
+            }
+        }
     }
 }
 
@@ -543,7 +559,15 @@ extension VideoDiaryRecorderViewController: EHPlayerViewDelegate {
     }
     
     func tapGestureDidStart() {
-//        self.playerButton.isHidden = false
+        self.playerButton.isHidden = !self.playerButton.isHidden
+        self.invalidatedHidePlayerButtonTimer()
+        if !self.playerButton.isHidden {
+            self.hidePlayButtonTimer = Timer.scheduledTimer(timeInterval: Self.HidePlayerButtonDelay,
+                                                            target: self,
+                                                            selector: #selector(self.hidePlayButton),
+                                                            userInfo: nil,
+                                                            repeats: false)
+        }
     }
     
     func tapGestureWillEnd() {

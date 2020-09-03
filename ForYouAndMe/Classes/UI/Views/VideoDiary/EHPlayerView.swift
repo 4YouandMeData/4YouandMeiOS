@@ -125,7 +125,6 @@ class EHPlayerView: UIView {
             self.timer?.invalidate()
             self.timer = Timer.scheduledTimer(timeInterval: 2, target: self, selector: #selector(self.hideSlider), userInfo: nil, repeats: false)
         }
-        
     }
     
     /// Method to handle the slider value changed action.
