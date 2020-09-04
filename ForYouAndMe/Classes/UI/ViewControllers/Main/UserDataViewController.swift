@@ -153,5 +153,17 @@ class UserDataViewController: UIViewController {
     
     private func refreshCharts() {
         // TODO: Implement chart refresh
+        self.chartStackView.arrangedSubviews.forEach{ view in
+            self.chartStackView.removeArrangedSubview(view)
+        }
+        let testChartView1 = UserDataChartView(title: "Your Weight")
+        self.chartStackView.addArrangedSubview(testChartView1)
+        let testChartView2 = UserDataChartView(title: "Your Daily Steps")
+        self.chartStackView.addArrangedSubview(testChartView2)
+        let testChartView3 = UserDataChartView(title: "Your Self-Assed Mood")
+        self.chartStackView.addArrangedSubview(testChartView3)
+        let testChartView4 = UserDataChartView(title: "Your Self-Assessed Energy")
+        self.chartStackView.addArrangedSubview(testChartView4)
+        
     }
 }
