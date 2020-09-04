@@ -1301,6 +1301,7 @@
 		8941803124DC34DB0052C395 /* QuickActivityView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8941803024DC34DB0052C395 /* QuickActivityView.swift */; };
 		8941803324DC473E0052C395 /* QuickActivityListTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8941803224DC473E0052C395 /* QuickActivityListTableViewCell.swift */; };
 		89419F6DA745C9EB2B494B0BF12289E9 /* ORKStepNavigationRule_Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = EFB388DDEEB876759CFB1CAF398A0FB7 /* ORKStepNavigationRule_Internal.h */; settings = {ATTRIBUTES = (Project, ); }; };
+		8948701F25023C5200B3B160 /* FileDataExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8948701E25023C5200B3B160 /* FileDataExtension.swift */; };
 		8959EA6A08FD2FBDEC0661DA718B415F /* ORKPageStep.h in Headers */ = {isa = PBXBuildFile; fileRef = FD9B804EFD6044D365E445C9047E1886 /* ORKPageStep.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		895CE133386CDA2B4B271287050A9BBB /* GULKeychainStorage.h in Headers */ = {isa = PBXBuildFile; fileRef = 9FA38FFFC79805DA3A4B9DC5AF3E83EE /* GULKeychainStorage.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		89679BEF24F6B952001C5BEF /* VideoDiarySectionCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89679BEE24F6B952001C5BEF /* VideoDiarySectionCoordinator.swift */; };
@@ -4453,6 +4454,7 @@
 		8941803024DC34DB0052C395 /* QuickActivityView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickActivityView.swift; sourceTree = "<group>"; };
 		8941803224DC473E0052C395 /* QuickActivityListTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickActivityListTableViewCell.swift; sourceTree = "<group>"; };
 		8941D94988A246A6BAF3005915C40F8B /* ignoreErrors.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ignoreErrors.swift; path = Source/RxSwift/ignoreErrors.swift; sourceTree = "<group>"; };
+		8948701E25023C5200B3B160 /* FileDataExtension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileDataExtension.swift; sourceTree = "<group>"; };
 		89679BEE24F6B952001C5BEF /* VideoDiarySectionCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoDiarySectionCoordinator.swift; sourceTree = "<group>"; };
 		89745E5DA4C986A9FD5C508E6E30DEB3 /* UIButton+Rx.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = "UIButton+Rx.swift"; path = "RxCocoa/iOS/UIButton+Rx.swift"; sourceTree = "<group>"; };
 		897AEC78E9804B80B32BF01C7A9B199E /* FIRCLSFile.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = FIRCLSFile.h; path = Crashlytics/Crashlytics/Helpers/FIRCLSFile.h; sourceTree = "<group>"; };
@@ -8252,6 +8254,7 @@
 				4BD82DC40327210305A3480B1E2BBD76 /* ResponseError.swift */,
 				9B9D272438B642CC9F8F222F5B4EBB7A /* ServerErrors.swift */,
 				C6E476E66725DD1EFCF4E47EBA8F1239 /* TestNetworkApiGateway.swift */,
+				8948701E25023C5200B3B160 /* FileDataExtension.swift */,
 				7161E588255C11DA46E60446DCB47DA3 /* Mapping */,
 			);
 			path = Network;
@@ -11865,6 +11868,7 @@
 				0351CF9BD164B283EF708B5A2D3A57DB /* PageRef.swift in Sources */,
 				502CF10EB18D90503AD64CC83DB6A669 /* PhoneNumberView.swift in Sources */,
 				7085E2BAC0A095F4A21D974D32947966 /* PhoneVerificationViewController.swift in Sources */,
+				8948701F25023C5200B3B160 /* FileDataExtension.swift in Sources */,
 				D9EA61C79A7E9B496A4F7D5536122BC9 /* PodUtils.swift in Sources */,
 				92315B076A629F9258B694796E113BFB /* PopupViewController.swift in Sources */,
 				249897C214918F75F39E55BA8FA3B3C3 /* PossibleAnswer.swift in Sources */,

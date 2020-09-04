@@ -7,6 +7,7 @@
 
 import UIKit
 import RxSwift
+import AVFoundation
 
 enum VideoDiaryState {
     case record(isRecording: Bool)
@@ -26,6 +27,7 @@ public class VideoDiaryRecorderViewController: UIViewController {
     
     private lazy var cameraView: CameraView = {
         let view = CameraView()
+        view.mergedFileType = self.mergedVideoExtension.avFileType
         view.delegate = self
         return view
     }()
@@ -39,6 +41,7 @@ public class VideoDiaryRecorderViewController: UIViewController {
     private var recordDurationTime: TimeInterval = 0.0
     private var noOfPauses: Int = 0
     private let videoExtension = "mov" // Extension of each video part
+    private let mergedVideoExtension: FileDataExtension = .mp4
     private var recordTrackingTimer: Timer?
     private var hidePlayButtonTimer: Timer?
     private var videoMergeQueued: Bool = false
@@ -277,8 +280,8 @@ public class VideoDiaryRecorderViewController: UIViewController {
             })
             return
         }
-        let videoDataStream: String = videoData.base64EncodedString(options: NSData.Base64EncodingOptions.init(rawValue: 0))
-        let taskNetworkResult = TaskNetworkResult(data: [:], attachedFile: videoDataStream)
+        let videoResultFile = TaskNetworkResultFile(data: videoData, fileExtension: self.mergedVideoExtension)
+        let taskNetworkResult = TaskNetworkResult(data: [:], attachedFile: videoResultFile)
         self.repository.sendTaskResult(taskId: self.taskIdentifier, taskResult: taskNetworkResult)
             .subscribe(onSuccess: { [weak self] in
                 guard let self = self else { return }
@@ -576,4 +579,12 @@ extension VideoDiaryRecorderViewController: PlayerViewDelegate {
     func tapGestureWillEnd() {}
     
     func sliderValueDidChange() {}
+}
+
+fileprivate extension FileDataExtension {
+    var avFileType: AVFileType {
+        switch self {
+        case .mp4: return .mp4
+        }
+    }
 }

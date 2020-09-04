@@ -429,10 +429,22 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             var params: [String: Any] = [:]
             params["result"] = resultData
             return .requestParameters(parameters: ["task": params], encoding: JSONEncoding.default)
-        case .sendTaskResultFile(_, let resultFileString):
-            var params: [String: Any] = [:]
-            params["attachment_base64"] = resultFileString
-            return .requestParameters(parameters: ["task": params], encoding: JSONEncoding.default)
+        case .sendTaskResultFile:
+            return .uploadMultipart(self.multipartBody)
+        }
+    }
+    
+    var multipartBody: [MultipartFormData] {
+        switch self {
+        case .sendTaskResultFile(_, let file):
+            // TODO: Replace name and fileName with the ones expected from server
+            let imageDataProvider = MultipartFormData(provider: MultipartFormData.FormDataProvider.data(file.data),
+                                                      name: "result",
+                                                      fileName: "VideoDiary.\(file.fileExtension.name)",
+                mimeType: file.fileExtension.mimeType)
+            return [imageDataProvider]
+        default:
+            return []
         }
     }
     
@@ -503,5 +515,18 @@ fileprivate extension Dictionary where Key == String, Value == Any {
     mutating func addContext(_ optionalContext: ApiContext?) {
         let context = optionalContext ?? ApiContext()
         self["batch_code"] = context.batchIdentifier
+    }
+}
+
+fileprivate extension FileDataExtension {
+    var name: String {
+        switch self {
+        case .mp4: return "mp4"
+        }
+    }
+    var mimeType: String {
+        switch self {
+        case .mp4: return "video/mp4"
+        }
     }
 }

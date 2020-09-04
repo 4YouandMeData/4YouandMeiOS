@@ -12,7 +12,10 @@ import Mapper
 import Japx
 
 typealias TaskNetworkResultData = [String: Any]
-typealias TaskNetworkResultFile = String // Base 64 String representation of the attached file
+struct TaskNetworkResultFile {
+    let data: Data
+    let fileExtension: FileDataExtension
+}
 
 enum DefaultService {
     // Misc
@@ -42,7 +45,7 @@ enum DefaultService {
     // Task
     case getTasks
     case sendTaskResultData(taskId: String, resultData: TaskNetworkResultData)
-    case sendTaskResultFile(taskId: String, resultFileString: TaskNetworkResultFile)
+    case sendTaskResultFile(taskId: String, resultFile: TaskNetworkResultFile)
 }
 
 struct ApiRequest {

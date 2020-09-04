@@ -205,7 +205,7 @@ extension RepositoryImpl: Repository {
             .handleError()
         if let taskResultFile = taskResult.attachedFile {
             sendRequest = sendRequest.flatMap {
-                self.api.send(request: ApiRequest(serviceRequest: .sendTaskResultFile(taskId: taskId, resultFileString: taskResultFile)))
+                self.api.send(request: ApiRequest(serviceRequest: .sendTaskResultFile(taskId: taskId, resultFile: taskResultFile)))
                 .handleError()
             }
         }

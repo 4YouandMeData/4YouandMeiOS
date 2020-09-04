@@ -47,7 +47,6 @@ extension AVFileType {
     var extensionName: String? {
         switch self {
         case .mp4: return "mp4"
-        case .mov: return "mov"
         default: return nil
         }
     }
