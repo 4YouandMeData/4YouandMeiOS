@@ -15,6 +15,7 @@ enum ColorType: String, CaseIterable, CodingKey {
     case primary = "primary_color_start"
     case secondary = "secondary_color"
     case tertiary = "tertiary_color_start"
+    case fourth = "fourth_color"
     case primaryText = "primary_text_color"
     case secondaryText = "secondary_text_color"
     case tertiaryText = "tertiary_text_color"
@@ -31,6 +32,7 @@ enum ColorType: String, CaseIterable, CodingKey {
         case .primary: return UIColor(hexRGB: 0x140F26)
         case .secondary: return UIColor(hexRGB: 0xFFFFFF)
         case .tertiary: return UIColor(hexRGB: 0x34CBD9)
+        case .fourth: return UIColor(hexRGB: 0xF5F5F5)
         case .primaryText: return UIColor(hexRGB: 0x303740)
         case .secondaryText: return UIColor(hexRGB: 0xFFFFFF)
         case .tertiaryText: return UIColor(hexRGB: 0x25AEC2)

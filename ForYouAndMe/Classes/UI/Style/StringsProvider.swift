@@ -85,6 +85,7 @@ enum StringKey: String, CaseIterable, CodingKey {
     case tabTaskEmptyTitle = "TAB_TASK_EMPTY_TITLE"
     case tabTaskEmptySubtitle = "TAB_TASK_EMPTY_SUBTITLE"
     case tabTaskEmptyButton = "TAB_TASK_EMPTY_BUTTON"
+    case tabUserDataPeriodTitle = "TAB_USER_DATA_PERIOD_TITLE"
     // Activity
     case activityButtonDefault = "ACTIVITY_BUTTON_DEFAULT"
     // Quick Activity
