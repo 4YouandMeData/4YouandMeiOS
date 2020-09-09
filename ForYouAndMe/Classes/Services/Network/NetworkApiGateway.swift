@@ -439,7 +439,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         case .sendTaskResultFile(_, let file):
             // TODO: Replace name and fileName with the ones expected from server
             let imageDataProvider = MultipartFormData(provider: MultipartFormData.FormDataProvider.data(file.data),
-                                                      name: "result",
+                                                      name: "task[attachment]",
                                                       fileName: "VideoDiary.\(file.fileExtension.name)",
                 mimeType: file.fileExtension.mimeType)
             return [imageDataProvider]

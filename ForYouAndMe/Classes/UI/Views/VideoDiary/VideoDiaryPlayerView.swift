@@ -32,8 +32,29 @@ class VideoDiaryPlayerView: UIView {
     
     private lazy var recordView: UIView = {
         let verticalStackView = UIStackView.create(withAxis: .vertical, spacing: 16.0)
-        
-        verticalStackView.addArrangedSubview(self.instructionLabel)
+
+        let horizontalStackView = UIStackView.create(withAxis: .horizontal, spacing: 16.0)
+
+        let discardButtonContainerView = UIView()
+        let discardButton = UIButton()
+        discardButton.setImage(ImagePalette.image(withName: .closeCircleButton), for: .normal)
+        discardButton.imageView?.contentMode = .scaleAspectFit
+        discardButton.addTarget(self, action: #selector(self.discardButtonPressed), for: .touchUpInside)
+        discardButton.contentEdgeInsets = UIEdgeInsets(top: 4.0, left: 4.0, bottom: 4.0, right: 4.0)
+        discardButtonContainerView.addSubview(discardButton)
+        discardButton.autoPinEdge(toSuperviewEdge: .leading)
+        discardButton.autoPinEdge(toSuperviewEdge: .trailing)
+        discardButton.autoPinEdge(toSuperviewEdge: .top, withInset: 0, relation: .greaterThanOrEqual)
+        discardButton.autoPinEdge(toSuperviewEdge: .bottom, withInset: 0, relation: .greaterThanOrEqual)
+        discardButton.autoAlignAxis(toSuperviewAxis: .horizontal)
+
+        horizontalStackView.addArrangedSubview(self.instructionLabel)
+        self.instructionLabel.setContentHuggingPriority(UILayoutPriority(rawValue: 200), for: .horizontal)
+        self.instructionLabel.setContentCompressionResistancePriority(UILayoutPriority(rawValue: 200), for: .horizontal)
+        self.instructionLabel.adjustsFontSizeToFitWidth = true
+        horizontalStackView.addArrangedSubview(discardButtonContainerView)
+
+        verticalStackView.addArrangedSubview(horizontalStackView)
         
         let timerStackView = UIStackView.create(withAxis: .horizontal, spacing: 12.0)
         
@@ -178,12 +199,12 @@ class VideoDiaryPlayerView: UIView {
         
         let stackView = UIStackView.create(withAxis: .vertical, spacing: 16.0)
         self.addSubview(stackView)
-        stackView.autoPinEdgesToSuperviewSafeArea(with: UIEdgeInsets(top: 30.0, left: 20.0, bottom: 0.0, right: 20.0))
+        stackView.autoPinEdgesToSuperviewSafeArea(with: UIEdgeInsets(top: 30.0, left: 20.0, bottom: 20.0, right: 20.0))
         
+        stackView.addArrangedSubview(self.discardButtonView)
         stackView.addArrangedSubview(self.recordView)
         stackView.addArrangedSubview(self.progressBarBackgroundView)
         stackView.addArrangedSubview(self.infoView)
-        stackView.addArrangedSubview(self.discardButtonView)
         stackView.addArrangedSubview(self.singleTimeLabel)
         stackView.addArrangedSubview(self.recordedVideoFeedback)
         stackView.addArrangedSubview(self.buttonView)

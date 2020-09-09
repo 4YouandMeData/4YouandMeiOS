@@ -259,18 +259,6 @@ public class VideoDiaryRecorderViewController: UIViewController {
         }
     }
     
-    // TODO: Test purpose. Remove
-    private func demoSendResult() {
-        self.navigator.pushProgressHUD()
-        let closure: (() -> Void) = {
-            self.navigator.popProgressHUD()
-            self.currentState = .submitted(submitDate: Date(), isPlaying: false)
-        }
-        let delayTime = DispatchTime.now() + 2.0
-        let dispatchWorkItem = DispatchWorkItem(block: closure)
-        DispatchQueue.main.asyncAfter(deadline: delayTime, execute: dispatchWorkItem)
-    }
-    
     private func sendResult() {
         self.navigator.pushProgressHUD()
         guard let videoUrl = self.playerView.videoURL, let videoData = try? Data.init(contentsOf: videoUrl) else {
@@ -469,27 +457,29 @@ extension VideoDiaryRecorderViewController: VideoDiaryPlayerViewDelegate {
         case .record:
             self.handleCompleteRecording()
         case .review:
-            // TODO: Demo purpose. Replace with correct send method
-            self.demoSendResult()
-//            self.sendResult()
+            self.sendResult()
         case .submitted:
             self.coordinator.onRecordCompleted()
         }
     }
     
     func discardButtonPressed() {
-        let actions: [UIAlertAction] = [
-            UIAlertAction(title: StringsProvider.string(forKey: .videoDiaryDiscardCancel),
-                          style: .default,
-                          handler: nil),
-            UIAlertAction(title: StringsProvider.string(forKey: .videoDiaryDiscardConfirm),
-                          style: .destructive,
-                          handler: { [weak self] _ in self?.coordinator.onCancelTask() })
-        ]
-        self.showAlert(withTitle: StringsProvider.string(forKey: .videoDiaryDiscardTitle),
-                       message: StringsProvider.string(forKey: .videoDiaryDiscardBody),
-                       actions: actions,
-                       tintColor: ColorPalette.color(withType: .primary))
+        if self.recordDurationTime > 0.0 {
+            let actions: [UIAlertAction] = [
+                UIAlertAction(title: StringsProvider.string(forKey: .videoDiaryDiscardCancel),
+                              style: .default,
+                              handler: nil),
+                UIAlertAction(title: StringsProvider.string(forKey: .videoDiaryDiscardConfirm),
+                              style: .destructive,
+                              handler: { [weak self] _ in self?.coordinator.onCancelTask() })
+            ]
+            self.showAlert(withTitle: StringsProvider.string(forKey: .videoDiaryDiscardTitle),
+                           message: StringsProvider.string(forKey: .videoDiaryDiscardBody),
+                           actions: actions,
+                           tintColor: ColorPalette.color(withType: .primary))
+        } else {
+            self.coordinator.onCancelTask()
+        }
     }
 }
 
