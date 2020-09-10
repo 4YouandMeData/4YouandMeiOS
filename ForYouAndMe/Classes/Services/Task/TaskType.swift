@@ -13,9 +13,10 @@ import ResearchKit
 enum TaskType: String, CaseIterable {
     case reactionTime = "reaction_time_task"
     case trailMaking = "trail_making_task"
-    case walk = "walk_task"
+    case walk = "timed_walk_task"
     case gait = "gait_task"
     case tremor = "tremor_task"
+    case fitness = "walk_task"
     case videoDiary = "video_diary"
 }
 
@@ -33,6 +34,8 @@ extension TaskType {
             return GaitTask.createTask(withIdentifier: identifier, options: options, locationAuthorised: locationAuthorised)
         case .tremor:
             return TremorTask.createTask(withIdentifier: identifier, options: options, locationAuthorised: locationAuthorised)
+        case .fitness:
+            return FitnessTask.createTask(withIdentifier: identifier, options: options, locationAuthorised: locationAuthorised)
         case .videoDiary:
             return nil
         }
@@ -45,6 +48,7 @@ extension TaskType {
         case .walk: return WalkTask.getNetworkResultData(taskResult: taskResult)
         case .gait: return GaitTask.getNetworkResultData(taskResult: taskResult)
         case .tremor: return TremorTask.getNetworkResultData(taskResult: taskResult)
+        case .fitness: return FitnessTask.getNetworkResultData(taskResult: taskResult)
         case .videoDiary: return nil
         }
     }
@@ -64,6 +68,7 @@ enum TaskRecorderIdentifier: String {
     case accelerometer
     case pedometer
     case location
+    case heartRate
     // TODO: Remove these ones when Tremor task has been fixed on ResearchKit
     case accelerometerAltSuffix = "_acc"
     case deviceMotionAltSuffix = "_motion"
@@ -81,6 +86,7 @@ enum TaskNetworkParameter: String {
     case accelerometerInfo = "accelerometer_info"
     case locationInfo = "location_info"
     case pedometerInfo = "pedometer_info"
+    case heartRate = "heart_rate"
     case startTime = "start_time"
     case endTime = "end_time"
     case startDate = "start_date"
@@ -105,6 +111,8 @@ enum TaskNetworkParameter: String {
     case tremorHandBendArm = "tremor_hand_bend_arm"
     case tremorHandTouchNose = "tremor_hand_touch_nose"
     case tremorHandTurnWrist = "tremor_hand_turn_wrist"
+    case fitnessWalk = "fitness_walk"
+    case fitnessRest = "fitness_rest"
 }
 
 // MARK: - TaskOptions
@@ -137,6 +145,9 @@ struct TaskOptions {
     // Tremor
     let activeStepDuration: Double?
     let tramorTaskOptions: [TaskTremorOption]?
+    
+    // Fitness
+    let walkDuration: Double?
 }
 
 // MARK: - TrailType
@@ -248,6 +259,8 @@ extension Array where Element == ORKFileResult {
                 result[TaskNetworkParameter.pedometerInfo.rawValue] = value
             case TaskRecorderIdentifier.location.rawValue:
                 result[TaskNetworkParameter.locationInfo.rawValue] = value
+            case TaskRecorderIdentifier.heartRate.rawValue:
+                result[TaskNetworkParameter.heartRate.rawValue] = value
             // TODO: Remove these ones when Tremor task has been fixed on ResearchKit
             case _ where fileResult.identifier.hasSuffix(TaskRecorderIdentifier.accelerometerAltSuffix.rawValue):
                 result[TaskNetworkParameter.accelerometerInfo.rawValue] = value

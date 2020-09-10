@@ -1367,6 +1367,7 @@
 		891CD84AF0219FEF94EDEE1C3ED9088B /* BehaviorRelay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8187BDF5BA2F95DC80D57204C4A5AE53 /* BehaviorRelay.swift */; };
 		8921310819048EEE2E4F243A141999B2 /* ORKRequestPermissionsStepViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 1EF52843E9BE6AACBC7A1CEF6CB4DBA7 /* ORKRequestPermissionsStepViewController.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
 		892F567BF4D68BB3C3AE4687AE25BE8C /* FIRCLSDownloadAndSaveSettingsOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 1D97D53E6AA8C1BC04328860EF274C49 /* FIRCLSDownloadAndSaveSettingsOperation.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
+		893A6B58250A3258008457B7 /* FitnessTask.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893A6B57250A3258008457B7 /* FitnessTask.swift */; };
 		89419F6DA745C9EB2B494B0BF12289E9 /* ORKStepNavigationRule_Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = E1B462B360C1AE7D0A8C3A249F4AD183 /* ORKStepNavigationRule_Internal.h */; settings = {ATTRIBUTES = (Project, ); }; };
 		8948702525029EE200B3B160 /* UserDataChartView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8948702425029EE100B3B160 /* UserDataChartView.swift */; };
 		8959EA6A08FD2FBDEC0661DA718B415F /* ORKPageStep.h in Headers */ = {isa = PBXBuildFile; fileRef = 938E420ED55432343A5F252504CC9386 /* ORKPageStep.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -4645,6 +4646,7 @@
 		88A3F6A48D40F212AD07F2137F018EAA /* SatisfyAllOf.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = SatisfyAllOf.swift; path = Sources/Nimble/Matchers/SatisfyAllOf.swift; sourceTree = "<group>"; };
 		88D025F7FF6094E2A407D0B20DDB5BA1 /* ValidationRule.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ValidationRule.swift; path = Validator/Sources/Rules/ValidationRule.swift; sourceTree = "<group>"; };
 		8905665E9D815BE0E624DEFB8DB43D7C /* TrailMakingTask.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TrailMakingTask.swift; sourceTree = "<group>"; };
+		893A6B57250A3258008457B7 /* FitnessTask.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FitnessTask.swift; sourceTree = "<group>"; };
 		89432B13AC3C17E78C1AD73460567477 /* ORKResult.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = ORKResult.m; path = ResearchKit/Common/ORKResult.m; sourceTree = "<group>"; };
 		89465154303E8C3F03CBBA4F310DFEB1 /* GoogleDataTransport-Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = "GoogleDataTransport-Info.plist"; sourceTree = "<group>"; };
 		8948702425029EE100B3B160 /* UserDataChartView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserDataChartView.swift; sourceTree = "<group>"; };
@@ -7431,6 +7433,7 @@
 				8905665E9D815BE0E624DEFB8DB43D7C /* TrailMakingTask.swift */,
 				AA3C97F81DACFC7A500E941E90A10D54 /* TremorTask.swift */,
 				3F176D779F57C9513C1941E5ED9DBD56 /* WalkTask.swift */,
+				893A6B57250A3258008457B7 /* FitnessTask.swift */,
 			);
 			path = Task;
 			sourceTree = "<group>";
@@ -13851,6 +13854,7 @@
 				99EBD7E44EB7B6910A03B2F05AE429F3 /* TrailMakingTask.swift in Sources */,
 				22581A037F8F85D7CE3F6577A4C0CE17 /* TremorTask.swift in Sources */,
 				1953BA927BF5BEEB7C072151EAA99EB1 /* TypeAliases.swift in Sources */,
+				893A6B58250A3258008457B7 /* FitnessTask.swift in Sources */,
 				FF327718D13ABCB944498AAE9140F410 /* UIColor+Extension.swift in Sources */,
 				D9559391B2D3D3D473C95FC93154F4D5 /* UILabel+Internal.swift in Sources */,
 				9B2EC9440F784C6C905D4F7BF072850A /* UILabelInteractionManager.swift in Sources */,
