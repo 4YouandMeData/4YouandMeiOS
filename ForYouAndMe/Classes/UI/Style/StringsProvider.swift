@@ -125,6 +125,10 @@ enum StringKey: String, CaseIterable, CodingKey {
     case videoDiaryMissingPermissionBodyMic = "VIDEO_DIARY_MISSING_PERMISSION_BODY_MIC"
     case videoDiaryMissingPermissionSettings = "VIDEO_DIARY_MISSING_PERMISSION_SETTINGS"
     case videoDiaryMissingPermissionDiscard = "VIDEO_DIARY_MISSING_PERMISSION_DISCARD"
+//    //Study Info
+//    case studyInfoContactItem = "STUDY_INFO_CONTACT_ITEM"
+//    case studyInfoRewardsItem = "STUDY_INFO_REWARDS_ITEM"
+//    case studyInfoFaqItem = "STUDY_INFO_FAQ_ITEM"
     // Generic
     case genericInfoTitle = "GENERIC_INFO_TITLE"
     // Errors

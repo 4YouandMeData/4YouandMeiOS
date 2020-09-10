@@ -41,4 +41,16 @@ extension UIStackView {
                       numberOfLines: numberOfLines,
                       horizontalInset: horizontalInset)
     }
+    
+    func addImage(withImage image: UIImage,
+                  color: UIColor,
+                  sizeDimension: CGFloat,
+                  horizontalInset: CGFloat = 0) {
+        
+        let imageView = UIImageView(image: image)
+        imageView.tintColor = color
+        imageView.contentMode = .scaleAspectFit
+        imageView.autoSetDimension(.width, toSize: sizeDimension)
+        self.addArrangedSubview(imageView, horizontalInset: horizontalInset)
+    }
 }

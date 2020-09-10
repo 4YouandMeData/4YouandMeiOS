@@ -389,6 +389,7 @@
 		209E2DDAF58CEC9E26D41FAB29ED3561 /* UIBezierPath+WeightedPoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8785E5B59D2C20F315E8E0809B509CB1 /* UIBezierPath+WeightedPoint.swift */; };
 		20A32C56122DE73FEC6149E4A4AB472E /* ORKEnvironmentSPLMeterStepViewController.h in Headers */ = {isa = PBXBuildFile; fileRef = 3D95CB15F2BE25543089B933C4A92DAE /* ORKEnvironmentSPLMeterStepViewController.h */; settings = {ATTRIBUTES = (Project, ); }; };
 		20B9E66952F74DEE308904B53F1B8389 /* Rx.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF18F7C7390972198506EE8CC7F0885E /* Rx.swift */; };
+		20C05DD7250A756B006EF7E6 /* GenericListItemView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20C05DD5250A74DC006EF7E6 /* GenericListItemView.swift */; };
 		211AEFF065F3E11F2C984B578A49CCB8 /* QuickSpec.m in Sources */ = {isa = PBXBuildFile; fileRef = CCB5EC293D3FC44ACE34E0B456930399 /* QuickSpec.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
 		212EDC48B68107BEA9247F3464CE696E /* StringEncoding+Alamofire.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39D66E1F66627C90C7B73CCD9F236A39 /* StringEncoding+Alamofire.swift */; };
 		217230E614D3D4B9BAC1836C9D7D258C /* ORKDeviceMotionRecorder.m in Sources */ = {isa = PBXBuildFile; fileRef = E291CF3FAD47D07972F6E7BCCECA8E9A /* ORKDeviceMotionRecorder.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
@@ -3565,6 +3566,7 @@
 		2079A117921DBE672EFAE70D1AADEE4A /* Alamofire-Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = "Alamofire-Info.plist"; sourceTree = "<group>"; };
 		20A1FAF7F8F24F2430417D90087F85ED /* ORKStroopStep.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = ORKStroopStep.h; path = ResearchKit/ActiveTasks/ORKStroopStep.h; sourceTree = "<group>"; };
 		20B2DDBD1400A840F681AA954060977F /* ORKAnswerFormat.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = ORKAnswerFormat.h; path = ResearchKit/Common/ORKAnswerFormat.h; sourceTree = "<group>"; };
+		20C05DD5250A74DC006EF7E6 /* GenericListItemView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GenericListItemView.swift; sourceTree = "<group>"; };
 		20C4305E1BDC9983D8FEDFAFF5077670 /* ORKAnswerTextView.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = ORKAnswerTextView.h; path = ResearchKit/Common/ORKAnswerTextView.h; sourceTree = "<group>"; };
 		212A3CBAD6F0CC4A9ABB5997AEB7D000 /* ORKPasscodeViewController.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = ORKPasscodeViewController.m; path = ResearchKit/Common/ORKPasscodeViewController.m; sourceTree = "<group>"; };
 		216788B2829B92472ADA68B06F5A2D2D /* UberSignature-Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = "UberSignature-Info.plist"; sourceTree = "<group>"; };
@@ -9093,6 +9095,7 @@
 				042D6CF9C0396CC4C333FABF64D6D2CB /* DoubleButtonHorizontalView.swift */,
 				D858873D9F4A243614413719AE8C35B4 /* DoubleButtonVerticalView.swift */,
 				1F34E21FEA84566C63E64BDDFE7B29B4 /* FeedEmptyView.swift */,
+				20C05DD5250A74DC006EF7E6 /* GenericListItemView.swift */,
 				B2251B8BD0314CB7CAF70C453F54431F /* FeedListSectionHeader.swift */,
 				F0F9D81EDDAD396F448A1EE00EC431B6 /* FeedTableViewCell.swift */,
 				893A6B5D250A87D4008457B7 /* FeedHeaderView.swift */,
@@ -13879,6 +13882,7 @@
 				2F030AD14E09C79B846CAC616D40F034 /* UIView+Round.swift in Sources */,
 				4762A07EB0D0924757F385117872472F /* UIView+Shadow.swift in Sources */,
 				5A4079BE079D56A7E8B84C2A82CA22EB /* UIView+ShadowPalette.swift in Sources */,
+				20C05DD7250A756B006EF7E6 /* GenericListItemView.swift in Sources */,
 				5A29B9863C0ACB3EEDFB1ECA7530C18A /* UIViewController+Alert.swift in Sources */,
 				B8BF209361B931B1D3C85D97A493FFE0 /* UIViewController+Extensions.swift in Sources */,
 				4E70E9B7167E2E2B12703B9033303368 /* UIViewController+Internal.swift in Sources */,

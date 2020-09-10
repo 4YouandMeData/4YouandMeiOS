@@ -49,6 +49,10 @@ enum TemplateImageName: String, CaseIterable {
     case tabTask = "tab_task"
     case tabUserData = "tab_user_data"
     case tabStudyInfo = "tab_study_info"
+    case studyInfoContact = "contact_icon"
+    case studyInfoRewards = "rewards_icon"
+    case studyInfoFAQ = "faq_icon"
+    case arrowRight = "arrow_right"
 }
 
 public class ImagePalette {

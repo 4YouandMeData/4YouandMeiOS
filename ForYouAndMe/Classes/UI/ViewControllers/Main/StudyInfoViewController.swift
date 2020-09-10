@@ -11,6 +11,11 @@ import UIKit
 
 class StudyInfoViewController: UIViewController {
     
+    private lazy var scrollStackView: ScrollStackView = {
+        let scrollStackView = ScrollStackView(axis: .vertical, horizontalInset: 0.0)
+        return scrollStackView
+    }()
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -21,14 +26,28 @@ class StudyInfoViewController: UIViewController {
         self.view.addSubview(headerView)
         headerView.autoPinEdgesToSuperviewEdges(with: .zero, excludingEdge: .bottom)
         
-        let comingSoonLabel = UILabel()
-        self.view.addSubview(comingSoonLabel)
-        comingSoonLabel.attributedText = NSAttributedString.create(withText: "Work in progress",
-                                                                   fontStyle: .header2,
-                                                                   colorType: .primaryText)
-        comingSoonLabel.autoPinEdge(toSuperviewEdge: .leading)
-        comingSoonLabel.autoPinEdge(toSuperviewEdge: .trailing)
-        comingSoonLabel.autoPinEdge(.top, to: .bottom, of: headerView, withOffset: 80.0)
+        // ScrollStackView
+        self.view.addSubview(self.scrollStackView)
+        self.scrollStackView.autoPinEdgesToSuperviewEdges(with: .zero, excludingEdge: .top)
+        self.scrollStackView.autoPinEdge(.top, to: .bottom, of: headerView)
+        
+        let contactInformation = GenericListItemView(withTopOffset: 20,
+                                                     title: "Contact Information"/*StringsProvider.string(forKey: .studyInfoContactItem)*/,
+                                                     templateImageName: .studyInfoContact,
+                                                     colorType: .primary)
+        self.scrollStackView.stackView.addArrangedSubview(contactInformation)
+        
+        let rewardsView = GenericListItemView(withTopOffset: 20,
+                                                        title: "Rewards"/*StringsProvider.string(forKey: .studyInfoRewardsItem)*/,
+                                                        templateImageName: .studyInfoRewards,
+                                                        colorType: .primary)
+        self.scrollStackView.stackView.addArrangedSubview(rewardsView)
+        
+        let faqView = GenericListItemView(withTopOffset: 20,
+                                          title: "FAQ Page"/*StringsProvider.string(forKey: .studyInfoFaqItem)*/,
+                                            templateImageName: .studyInfoFAQ,
+                                            colorType: .primary)
+        self.scrollStackView.stackView.addArrangedSubview(faqView)
     }
     
     override func viewWillAppear(_ animated: Bool) {
