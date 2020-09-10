@@ -1369,6 +1369,7 @@
 		892F567BF4D68BB3C3AE4687AE25BE8C /* FIRCLSDownloadAndSaveSettingsOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 1D97D53E6AA8C1BC04328860EF274C49 /* FIRCLSDownloadAndSaveSettingsOperation.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
 		893A6B58250A3258008457B7 /* FitnessTask.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893A6B57250A3258008457B7 /* FitnessTask.swift */; };
 		893A6B5C250A76BD008457B7 /* InfoDetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893A6B5B250A76BD008457B7 /* InfoDetailViewController.swift */; };
+		893A6B5E250A87D4008457B7 /* FeedHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893A6B5D250A87D4008457B7 /* FeedHeaderView.swift */; };
 		89419F6DA745C9EB2B494B0BF12289E9 /* ORKStepNavigationRule_Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = E1B462B360C1AE7D0A8C3A249F4AD183 /* ORKStepNavigationRule_Internal.h */; settings = {ATTRIBUTES = (Project, ); }; };
 		8948702525029EE200B3B160 /* UserDataChartView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8948702425029EE100B3B160 /* UserDataChartView.swift */; };
 		8959EA6A08FD2FBDEC0661DA718B415F /* ORKPageStep.h in Headers */ = {isa = PBXBuildFile; fileRef = 938E420ED55432343A5F252504CC9386 /* ORKPageStep.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -4649,6 +4650,7 @@
 		8905665E9D815BE0E624DEFB8DB43D7C /* TrailMakingTask.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TrailMakingTask.swift; sourceTree = "<group>"; };
 		893A6B57250A3258008457B7 /* FitnessTask.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FitnessTask.swift; sourceTree = "<group>"; };
 		893A6B5B250A76BD008457B7 /* InfoDetailViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InfoDetailViewController.swift; sourceTree = "<group>"; };
+		893A6B5D250A87D4008457B7 /* FeedHeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedHeaderView.swift; sourceTree = "<group>"; };
 		89432B13AC3C17E78C1AD73460567477 /* ORKResult.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = ORKResult.m; path = ResearchKit/Common/ORKResult.m; sourceTree = "<group>"; };
 		89465154303E8C3F03CBBA4F310DFEB1 /* GoogleDataTransport-Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = "GoogleDataTransport-Info.plist"; sourceTree = "<group>"; };
 		8948702425029EE100B3B160 /* UserDataChartView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserDataChartView.swift; sourceTree = "<group>"; };
@@ -9091,6 +9093,7 @@
 				1F34E21FEA84566C63E64BDDFE7B29B4 /* FeedEmptyView.swift */,
 				B2251B8BD0314CB7CAF70C453F54431F /* FeedListSectionHeader.swift */,
 				F0F9D81EDDAD396F448A1EE00EC431B6 /* FeedTableViewCell.swift */,
+				893A6B5D250A87D4008457B7 /* FeedHeaderView.swift */,
 				60A7E1EC35EB2CC378A2D1B71FABCF59 /* GenericButtonView.swift */,
 				C9A0BEF7F37724806D6C3363E9D9A383 /* GenericCheckboxView.swift */,
 				3142E33A0A5639EA741BBC9E31B1F168 /* GenericTextCheckboxView.swift */,
@@ -13791,6 +13794,7 @@
 				9172D13A7CA52CA33CD9418586F54A71 /* JSONAPIMappable.swift in Sources */,
 				D30ACB20BC0C1C71FDD3EB9E20684F73 /* KeyboardNotificationProvider.swift in Sources */,
 				8C447E4F2F3C9013040EAD3AC624926A /* LoadingViewController.swift in Sources */,
+				893A6B5E250A87D4008457B7 /* FeedHeaderView.swift in Sources */,
 				E2D4F010F4C81CF5D50DC6FF77EED2D5 /* LocationManager.swift in Sources */,
 				FB1667600DB9CDB711C2FF3D10BF3987 /* LocationService.swift in Sources */,
 				1ED62B28502C59402A39E8E92737CDE1 /* Mapper+Extensions.swift in Sources */,

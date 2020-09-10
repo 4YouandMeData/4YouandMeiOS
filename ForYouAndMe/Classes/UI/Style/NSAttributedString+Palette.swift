@@ -11,9 +11,10 @@ extension NSAttributedString {
     
     class func create(withText text: String,
                       attributedTextStyle: AttributedTextStyle) -> NSAttributedString {
+        let textColor = ColorPalette.color(withType: attributedTextStyle.colorType).applyAlpha(attributedTextStyle.alpha)
         return NSAttributedString.create(withText: text,
                                          fontStyle: attributedTextStyle.fontStyle,
-                                         colorType: attributedTextStyle.colorType,
+                                         color: textColor,
                                          textAlignment: attributedTextStyle.textAlignment,
                                          underlined: attributedTextStyle.underlined)
     }

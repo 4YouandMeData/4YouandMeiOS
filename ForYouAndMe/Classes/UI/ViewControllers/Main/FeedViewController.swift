@@ -20,18 +20,29 @@ class FeedViewController: UIViewController {
                                     pullToRefresh: true)
     }()
     
-    private lazy var headerView: UIView = {
-        // TODO: Replace with FeedHeaderView
-        let view = SingleTextHeaderView()
-        view.setTitleText(StringsProvider.string(forKey: .tabFeed))
+    private lazy var headerView: FeedHeaderView = {
+        let view = FeedHeaderView(profileButtonPressed: { [weak self] in
+            self?.showProfile()
+        }, notificationButtonPressed: { [weak self] in
+            self?.showNotification()
+        })
+        view.setTitleText("")
+        view.setSubtitleText("")
         return view
     }()
     
     private lazy var tableViewHeaderView: UIView = {
         // TODO: Replace with FeedTableViewHeader
         let view = UIView()
+        
+        let backgroundView = UIView()
+        backgroundView.addGradientView(GradientView(type: .primaryBackground))
+        view.addSubview(backgroundView)
+        backgroundView.autoSetDimension(.height, toSize: UIScreen.main.bounds.height)
+        backgroundView.autoPinEdgesToSuperviewEdges(with: .zero, excludingEdge: .top)
+        
         view.autoSetDimension(.height, toSize: Self.tableViewHeaderHeight)
-        view.addGradientView(GradientView(type: .primaryBackground))
+//        view.addGradientView(GradientView(type: .primaryBackground))
         return view
     }()
     
@@ -84,11 +95,26 @@ class FeedViewController: UIViewController {
         self.navigationController?.navigationBar.apply(style: NavigationBarStyleCategory.primary(hidden: true).style)
         
         self.listManager.viewWillAppear()
+        
+        self.headerView.setTitleText("2ND TRIMESTER")
+        self.headerView.setSubtitleText("Week 12")
     }
     
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         self.listManager.viewDidLayoutSubviews()
+    }
+    
+    // MARK: - Private Methods
+    
+    private func showProfile() {
+        // TODO: Show Profile
+        print("TODO: Show Profile")
+    }
+    
+    private func showNotification() {
+        // TODO: Show Notification
+        print("TODO: Show Notification")
     }
 }
 

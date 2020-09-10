@@ -313,7 +313,7 @@ class CameraView: UIView {
     
     private func createCaptureSession() {
         self.captureSession = AVCaptureSession()
-        self.captureSession?.sessionPreset = .hd1280x720
+        self.captureSession?.sessionPreset = .vga640x480
     }
     
     private func configureCaptureDevices() throws {
