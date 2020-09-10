@@ -1368,6 +1368,7 @@
 		8921310819048EEE2E4F243A141999B2 /* ORKRequestPermissionsStepViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 1EF52843E9BE6AACBC7A1CEF6CB4DBA7 /* ORKRequestPermissionsStepViewController.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
 		892F567BF4D68BB3C3AE4687AE25BE8C /* FIRCLSDownloadAndSaveSettingsOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 1D97D53E6AA8C1BC04328860EF274C49 /* FIRCLSDownloadAndSaveSettingsOperation.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
 		893A6B58250A3258008457B7 /* FitnessTask.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893A6B57250A3258008457B7 /* FitnessTask.swift */; };
+		893A6B5C250A76BD008457B7 /* InfoDetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893A6B5B250A76BD008457B7 /* InfoDetailViewController.swift */; };
 		89419F6DA745C9EB2B494B0BF12289E9 /* ORKStepNavigationRule_Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = E1B462B360C1AE7D0A8C3A249F4AD183 /* ORKStepNavigationRule_Internal.h */; settings = {ATTRIBUTES = (Project, ); }; };
 		8948702525029EE200B3B160 /* UserDataChartView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8948702425029EE100B3B160 /* UserDataChartView.swift */; };
 		8959EA6A08FD2FBDEC0661DA718B415F /* ORKPageStep.h in Headers */ = {isa = PBXBuildFile; fileRef = 938E420ED55432343A5F252504CC9386 /* ORKPageStep.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -4647,6 +4648,7 @@
 		88D025F7FF6094E2A407D0B20DDB5BA1 /* ValidationRule.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ValidationRule.swift; path = Validator/Sources/Rules/ValidationRule.swift; sourceTree = "<group>"; };
 		8905665E9D815BE0E624DEFB8DB43D7C /* TrailMakingTask.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TrailMakingTask.swift; sourceTree = "<group>"; };
 		893A6B57250A3258008457B7 /* FitnessTask.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FitnessTask.swift; sourceTree = "<group>"; };
+		893A6B5B250A76BD008457B7 /* InfoDetailViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InfoDetailViewController.swift; sourceTree = "<group>"; };
 		89432B13AC3C17E78C1AD73460567477 /* ORKResult.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = ORKResult.m; path = ResearchKit/Common/ORKResult.m; sourceTree = "<group>"; };
 		89465154303E8C3F03CBBA4F310DFEB1 /* GoogleDataTransport-Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = "GoogleDataTransport-Info.plist"; sourceTree = "<group>"; };
 		8948702425029EE100B3B160 /* UserDataChartView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserDataChartView.swift; sourceTree = "<group>"; };
@@ -6739,6 +6741,7 @@
 				D22DEB34C8B2BC209D3ED30991578D14 /* AcceptanceViewController.swift */,
 				B730438E0EA2A5DE9567AF3B03CAEEF9 /* BooleanQuestionsViewController.swift */,
 				6EE2C3FA536C2666EC3F05B705CB3347 /* InfoPageViewController.swift */,
+				893A6B5B250A76BD008457B7 /* InfoDetailViewController.swift */,
 				B228B50B2E9150E142C8BC075DB61593 /* LoadingViewController.swift */,
 				1B1D2CED9AFC6EB883CD67FCEE224179 /* PageProtocols.swift */,
 				47F10AAC7929A1036D5635736E8E9A36 /* PopupViewController.swift */,
@@ -13874,6 +13877,7 @@
 				640B58E2CD2F67C0DE201F75151BE44C /* URL+Extensions.swift in Sources */,
 				ABC4B37380150F71CFAF4C3E75CCE64D /* UserDataViewController.swift in Sources */,
 				E153B30021F824648ABB0725E52388D0 /* UserEmailVerificationViewController.swift in Sources */,
+				893A6B5C250A76BD008457B7 /* InfoDetailViewController.swift in Sources */,
 				884091BD247F95A111EA78705920DF8F /* UserEmailViewController.swift in Sources */,
 				87CD612993590CEF9D98C1BB57A8E6CF /* UserNameViewController.swift in Sources */,
 				01A4B68A71ED4A90F924853E140D8E6E /* UserSignatureViewController.swift in Sources */,

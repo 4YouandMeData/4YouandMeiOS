@@ -22,6 +22,9 @@ struct Page {
     @FailableDecodable
     var externalLinkUrl: URL?
     @NilIfEmptyString
+    var linkModalLabel: String?
+    var linkModalPage: PageRef?
+    @NilIfEmptyString
     var specialLinkLabel: String?
     @NilIfEmptyString
     var specialLinkValue: String?
@@ -44,6 +47,8 @@ extension Page: JSONAPIMappable {
         case body
         case externalLinkLabel = "external_link_label"
         case externalLinkUrl = "external_link_url"
+        case linkModalLabel = "link_modal_label"
+        case linkModalPage = "link_modal"
         case specialLinkLabel = "special_link_label"
         case specialLinkValue = "special_link_data"
         case specialLinkType = "special_link_type"
@@ -71,6 +76,8 @@ extension Page {
         self.body = body
         self.externalLinkLabel = nil
         self.externalLinkUrl = nil
+        self.linkModalLabel = nil
+        self.linkModalPage = nil
         self.specialLinkLabel = nil
         self.specialLinkValue = nil
         self.specialLinkType = nil

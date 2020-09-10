@@ -19,6 +19,7 @@ extension ConsentUserDataSection: JSONAPIMappable {
     static var includeList: String? = """
 pages.link_1,\
 pages.link_2,\
+pages.link_modal,\
 success_page.link_1,\
 success_page.link_2
 """

@@ -13,6 +13,7 @@ protocol PagedSectionCoordinator: PageCoordinator {
     
     func showPage(_ page: Page, isOnboarding: Bool)
     func showLinkedPage(forPageRef pageRef: PageRef, isOnboarding: Bool)
+    func showModalPage(forPageRef pageRef: PageRef)
     
     func performCustomPrimaryButtonNavigation(page: Page) -> Bool
     func onUnhandledPrimaryButtonNavigation(page: Page)
@@ -47,6 +48,18 @@ extension PagedSectionCoordinator {
             }
             self.showPage(nextPage, isOnboarding: isOnboarding)
         }
+    }
+    
+    func showModalPage(forPageRef pageRef: PageRef) {
+        guard let modalPage = self.pages.getPage(forPageRef: pageRef) else {
+            assertionFailure("Missing page for page ref")
+            return
+        }
+        let infoDetailPageData = InfoDetailPageData(page: modalPage, isModal: true)
+        let viewController = InfoDetailPageViewController(withPageData: infoDetailPageData)
+        let navigationViewController = UINavigationController(rootViewController: viewController)
+        navigationViewController.preventPopWithSwipe()
+        self.navigationController.present(navigationViewController, animated: true)
     }
     
     func performCustomPrimaryButtonNavigation(page: Page) -> Bool {
@@ -87,5 +100,9 @@ extension PagedSectionCoordinator {
                 self.onUnhandledSecondaryButtonNavigation(page: page)
             }
         }
+    }
+    
+    func onLinkedPageButtonPressed(modalPageRef: PageRef) {
+        self.showModalPage(forPageRef: modalPageRef)
     }
 }

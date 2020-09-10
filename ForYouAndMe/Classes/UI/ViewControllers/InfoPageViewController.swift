@@ -97,6 +97,12 @@ public class InfoPageViewController: UIViewController, PageProvider {
                                                             action: #selector(self.externalLinkButtonPressed),
                                                             text: externalLinkLabel)
         }
+        if nil != self.pageData.page.linkModalPage, let linkModalLabel = self.pageData.page.linkModalLabel {
+            scrollStackView.stackView.addBlankSpace(space: 40.0)
+            scrollStackView.stackView.addExternalLinkButton(self,
+                                                            action: #selector(self.modalLinkButtonPressed),
+                                                            text: linkModalLabel)
+        }
         scrollStackView.stackView.addBlankSpace(space: 40.0)
         
         // Bottom View
@@ -159,6 +165,14 @@ public class InfoPageViewController: UIViewController, PageProvider {
             return
         }
         self.navigator.openWebView(withTitle: "", url: url, presenter: self)
+    }
+    
+    @objc private func modalLinkButtonPressed() {
+        guard let linkedPageRef = self.pageData.page.linkModalPage else {
+            assertionFailure("Missing expected modal link page ref")
+            return
+        }
+        self.coordinator.onLinkedPageButtonPressed(modalPageRef: linkedPageRef)
     }
 }
 

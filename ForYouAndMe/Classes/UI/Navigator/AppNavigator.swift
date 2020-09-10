@@ -406,8 +406,8 @@ class AppNavigator {
     }
     
     public func openWebView(withTitle title: String, url: URL, presenter: UIViewController) {
-        let wevViewViewController = WebViewViewController(withTitle: title, allowNavigation: true, url: url)
-        let navigationViewController = UINavigationController(rootViewController: wevViewViewController)
+        let webViewViewController = WebViewViewController(withTitle: title, allowNavigation: true, url: url)
+        let navigationViewController = UINavigationController(rootViewController: webViewViewController)
         navigationViewController.preventPopWithSwipe()
         presenter.present(navigationViewController, animated: true)
     }
