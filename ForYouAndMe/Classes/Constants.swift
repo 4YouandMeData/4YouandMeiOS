@@ -7,7 +7,6 @@
 //
 
 import Foundation
-import AVFoundation
 
 enum TestSection {
     case screeningSection
@@ -28,8 +27,6 @@ struct Constants {
         static let OnboardingCompleted: Bool? = true
         
         static let InformedConsentWithoutQuestions: Bool = false
-        static let CheckGlobalStrings: Bool = true
-        static let CheckGlobalColors: Bool = true
     }
     struct Network {
         static let ApiBaseUrlStr = "https://api-4youandme-staging.balzo.eu/api"
@@ -49,6 +46,7 @@ struct Constants {
         static let EmailValidationCodeDigitCount: Int = 6
         static let VideoDiaryMaxDurationSeconds: TimeInterval = 120.0
         static let VideoDiaryCaptureSessionPreset: AVCaptureSession.Preset = .hd1280x720
+        static let LoremIpsum = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce a convallis metus, et semper ex. Integer eros est, porttitor eget pulvinar at, molestie at tellus. Phasellus et velit dapibus, molestie erat a, gravida ligula. Proin pharetra ante nec ante egestas, sed dignissim leo sodales. Etiam rutrum nibh enim, non feugiat magna efficitur id. Praesent varius eleifend ante pretium vestibulum. Sed arcu ex, interdum in neque in, bibendum maximus justo. Duis vel efficitur metus. \nPellentesque at elit turpis. Mauris augue odio, dictum convallis turpis eget, viverra vulputate augue. Suspendisse sit amet ex mauris. Nam eget nisi eu urna congue commodo sit amet semper ex. Quisque fermentum libero vel nunc maximus ultrices. Vestibulum blandit eget erat in finibus. Quisque rutrum libero nulla, non dignissim quam eleifend in. Ut pellentesque lectus et leo viverra semper. Vestibulum diam nunc, blandit sit amet lorem a, scelerisque eleifend odio. In euismod nunc tincidunt lectus imperdiet dapibus."
     }
     
     struct Url {

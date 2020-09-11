@@ -359,6 +359,7 @@ class AppNavigator {
         tabBarController.selectedIndex = feedViewControllerIndex
     }
     
+    
     // MARK: Task
     
     public func startTaskSection(taskIdentifier: String, taskType: TaskType, taskOptions: TaskOptions?, presenter: UIViewController) {
@@ -472,6 +473,22 @@ class AppNavigator {
         } else {
             return false
         }
+    }
+    
+    // MARK: Study Info
+    public func showInfoPage(presenter: UIViewController, page: Page, isModal: Bool) {
+        guard let navController = presenter.navigationController else {
+                   assertionFailure("Missing UINavigationController")
+                   return
+               }
+        
+        let pageData = InfoDetailPageData(page: page, isModal: isModal)
+        let pageViewController = InfoDetailPageViewController(withPageData: pageData)
+        if isModal {
+            presenter.modalPresentationStyle = .overFullScreen
+        }
+        pageViewController.hidesBottomBarWhenPushed = true
+        navController.pushViewController(pageViewController, animated: true)
     }
 }
 
