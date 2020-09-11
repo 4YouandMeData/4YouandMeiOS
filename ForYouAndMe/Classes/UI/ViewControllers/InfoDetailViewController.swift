@@ -36,24 +36,11 @@ public class InfoDetailPageViewController: UIViewController, PageProvider {
         
         self.view.backgroundColor = ColorPalette.color(withType: .secondary)
         
-        // ScrollStackView
-        let scrollStackView = ScrollStackView(axis: .vertical, horizontalInset: Constants.Style.DefaultHorizontalMargins)
-        self.view.addSubview(scrollStackView)
-        scrollStackView.autoPinEdgesToSuperviewSafeArea(with: .zero)
-        
-        scrollStackView.stackView.addBlankSpace(space: 16.0)
-        // Title
-        scrollStackView.stackView.addLabel(withText: self.pageData.page.title,
-                                           fontStyle: .title,
-                                           colorType: .primaryText)
-        
-        scrollStackView.stackView.addBlankSpace(space: 40.0)
-        // Body
-        scrollStackView.stackView.addLabel(withText: self.pageData.page.body,
-                                           fontStyle: .paragraph,
-                                           colorType: .primaryText,
-                                           textAlignment: .left)
-        scrollStackView.stackView.addBlankSpace(space: 40.0)
+        if self.pageData.isModal {
+            self.loadModalPage()
+        } else {
+            self.loadPushPage()
+        }
     }
     
     public override func viewWillAppear(_ animated: Bool) {
@@ -63,8 +50,50 @@ public class InfoDetailPageViewController: UIViewController, PageProvider {
         if self.pageData.isModal {
             self.addCustomCloseButton()
         } else {
-            self.addCustomBackButton()
+            self.navigationController?.navigationBar.apply(style: NavigationBarStyleCategory.primary(hidden: true).style)
         }
+    }
+    
+    private func loadModalPage() {
+        // ScrollStackView
+        let scrollStackView = ScrollStackView(axis: .vertical, horizontalInset: Constants.Style.DefaultHorizontalMargins)
+        self.view.addSubview(scrollStackView)
+        scrollStackView.autoPinEdgesToSuperviewSafeArea(with: .zero)
+        
+        scrollStackView.stackView.addBlankSpace(space: 16.0)
+        
+        // Title
+         scrollStackView.stackView.addLabel(withText: self.pageData.page.title,
+                                            fontStyle: .title,
+                                            colorType: .primaryText)
+         
+         scrollStackView.stackView.addBlankSpace(space: 40.0)
+         // Body
+         scrollStackView.stackView.addLabel(withText: self.pageData.page.body,
+                                            fontStyle: .paragraph,
+                                            colorType: .primaryText,
+                                            textAlignment: .left)
+         scrollStackView.stackView.addBlankSpace(space: 40.0)
+    }
+    
+    private func loadPushPage() {
+        // Header View
+        let headerView = InfoDetailHeaderView(withTitle: self.pageData.page.title)
+        self.view.addSubview(headerView)
+        headerView.autoPinEdgesToSuperviewEdges(with: .zero, excludingEdge: .bottom)
+        headerView.backButton.addTarget(self, action: #selector(self.backButtonPressed), for: .touchUpInside)
+        // ScrollStackView
+        let scrollStackView = ScrollStackView(axis: .vertical, horizontalInset: Constants.Style.DefaultHorizontalMargins)
+        self.view.addSubview(scrollStackView)
+        scrollStackView.autoPinEdgesToSuperviewEdges(with: .zero, excludingEdge: .top)
+        scrollStackView.autoPinEdge(.top, to: .bottom, of: headerView, withOffset: 30)
+        
+        // Body
+        scrollStackView.stackView.addLabel(withText: self.pageData.page.body,
+                                           fontStyle: .paragraph,
+                                           colorType: .primaryText,
+                                           textAlignment: .left)
+        scrollStackView.stackView.addBlankSpace(space: 40.0)
     }
     
     // MARK: Actions
