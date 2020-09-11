@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import AVFoundation
 
 enum TestSection {
     case screeningSection
@@ -27,6 +28,8 @@ struct Constants {
         static let OnboardingCompleted: Bool? = true
         
         static let InformedConsentWithoutQuestions: Bool = false
+        static let CheckGlobalStrings: Bool = true
+        static let CheckGlobalColors: Bool = true
     }
     struct Network {
         static let ApiBaseUrlStr = "https://api-4youandme-staging.balzo.eu/api"
@@ -45,6 +48,7 @@ struct Constants {
         static let PhoneValidationCodeDigitCount: Int = 6
         static let EmailValidationCodeDigitCount: Int = 6
         static let VideoDiaryMaxDurationSeconds: TimeInterval = 120.0
+        static let VideoDiaryCaptureSessionPreset: AVCaptureSession.Preset = .hd1280x720
     }
     
     struct Url {

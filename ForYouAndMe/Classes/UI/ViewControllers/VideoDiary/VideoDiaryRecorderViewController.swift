@@ -153,19 +153,28 @@ public class VideoDiaryRecorderViewController: UIViewController {
         self.stackView.autoPinEdgesToSuperviewSafeArea(with: .zero, excludingEdge: .bottom)
         self.stackView.autoPinEdge(toSuperviewEdge: .bottom)
         
+        let toolbarReferenceView = UIView()
         let playerButtonReferenceView = UIView()
         
         self.stackView.addBlankSpace(space: 16.0)
-        self.stackView.addArrangedSubview(self.toolbar)
+        self.stackView.addArrangedSubview(toolbarReferenceView)
         self.stackView.addArrangedSubview(playerButtonReferenceView)
         self.stackView.addArrangedSubview(self.videoDiaryPlayerView)
         
-        // Cannot simply add playerButton as subview of playerButtonReferenceView, because isUserInteractionEnabled would be inherited.
+        // Cannot simply add playerButton as subview of the stackView, because isUserInteractionEnabled would be inherited.
         // PlayerButtonReferenceView.isUserInteractionEnabled will be set to switched based on the playerView state
         // to allow tap on playerView
         self.view.addSubview(self.playerButton)
         self.playerButton.autoAlignAxis(.vertical, toSameAxisOf: playerButtonReferenceView)
         self.playerButton.autoAlignAxis(.horizontal, toSameAxisOf: playerButtonReferenceView)
+        
+        // Cannot simply add the toolbar as subview of the stackView, because isUserInteractionEnabled would be inherited
+        // and would prevent tap on playerView
+        self.view.addSubview(self.toolbar)
+        self.toolbar.autoPinEdge(.leading, to: .leading, of: toolbarReferenceView)
+        self.toolbar.autoPinEdge(.trailing, to: .trailing, of: toolbarReferenceView)
+        self.toolbar.autoPinEdge(.top, to: .top, of: toolbarReferenceView)
+        self.toolbar.autoPinEdge(.bottom, to: .bottom, of: toolbarReferenceView)
         
         self.addApplicationWillResignObserver()
         self.addApplicationDidBecomeActiveObserver()

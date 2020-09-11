@@ -32,10 +32,16 @@ extension Mapper {
             return result
         }
         
-        let keys = colorMap.keys
-        try ColorType.allCases.forEach { colorType in
-            if false == keys.contains(colorType) {
-                throw MapperError.customError(field: field, message: "Color '\(colorType)' is missing in global config")
+        var check = true
+        #if DEBUG
+        check = Constants.Test.CheckGlobalColors
+        #endif
+        if check {
+            let keys = colorMap.keys
+            try ColorType.allCases.forEach { colorType in
+                if false == keys.contains(colorType) {
+                    throw MapperError.customError(field: field, message: "Color '\(colorType)' is missing in global config")
+                }
             }
         }
         
@@ -53,10 +59,16 @@ extension Mapper {
             return result
         }
         
-        let keys = stringMap.keys
-        try StringKey.allCases.forEach { stringKey in
-            if false == keys.contains(stringKey) {
-                throw MapperError.customError(field: field, message: "String '\(stringKey)' is missing in global config")
+        var check = true
+        #if DEBUG
+        check = Constants.Test.CheckGlobalStrings
+        #endif
+        if check {
+            let keys = stringMap.keys
+            try StringKey.allCases.forEach { stringKey in
+                if false == keys.contains(stringKey) {
+                    throw MapperError.customError(field: field, message: "String '\(stringKey)' is missing in global config")
+                }
             }
         }
         
