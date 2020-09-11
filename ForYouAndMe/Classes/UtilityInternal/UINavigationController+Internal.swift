@@ -16,6 +16,10 @@ extension UINavigationController {
     }
     
     func loadViewForRequest<T>(_ requestSingle: Single<T>, viewForData: @escaping ((T) -> UIViewController)) {
+        self.loadViewForRequest(requestSingle, hidesBottomBarWhenPushed: false, viewForData: viewForData)
+    }
+    
+    func loadViewForRequest<T>(_ requestSingle: Single<T>, hidesBottomBarWhenPushed: Bool, viewForData: @escaping ((T) -> UIViewController)) {
         let loadingInfo = LoadingInfo(requestSingle: requestSingle,
                                       completionCallback: { [weak self] loadedData in
                                         guard let self = self else { return }
@@ -28,6 +32,7 @@ extension UINavigationController {
                                         })
         })
         let loadingViewController = LoadingViewController(loadingMode: .genericLoad(loadingInfo: loadingInfo))
+        loadingViewController.hidesBottomBarWhenPushed = hidesBottomBarWhenPushed
         self.pushViewController(loadingViewController, animated: true)
     }
 }

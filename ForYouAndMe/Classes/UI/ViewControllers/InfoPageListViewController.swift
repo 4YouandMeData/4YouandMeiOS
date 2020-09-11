@@ -1,5 +1,5 @@
 //
-//  AcceptanceViewController.swift
+//  InfoPageListViewController.swift
 //  ForYouAndMe
 //
 //  Created by Leonardo Passeri on 18/06/2020.
@@ -8,28 +8,31 @@
 import Foundation
 import PureLayout
 
+enum InfoPageListMode {
+    case acceptance(coordinator: AcceptanceCoordinator)
+    case view
+}
+
 protocol AcceptanceCoordinator {
     func onAgreeButtonPressed()
     func onDisagreeButtonPressed()
 }
 
-struct AcceptanceData {
+struct InfoPageListData {
     let title: String
     let subtitle: String?
     let body: String
     let startingPage: Page
     let pages: [Page]
+    let mode: InfoPageListMode
 }
 
-public class AcceptanceViewController: UIViewController {
+class InfoPageListViewController: UIViewController {
     
-    private let data: AcceptanceData
+    private let data: InfoPageListData
     
-    private let coordinator: AcceptanceCoordinator
-    
-    init(withData data: AcceptanceData, coordinator: AcceptanceCoordinator) {
+    init(withData data: InfoPageListData) {
         self.data = data
-        self.coordinator = coordinator
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -37,15 +40,18 @@ public class AcceptanceViewController: UIViewController {
         fatalError("init(coder:) has not been implemented")
     }
     
-    public override func viewDidLoad() {
+    override func viewDidLoad() {
         super.viewDidLoad()
         
         self.view.backgroundColor = ColorPalette.color(withType: .secondary)
         
+        let rootStackView = UIStackView.create(withAxis: .vertical)
+        self.view.addSubview(rootStackView)
+        rootStackView.autoPinEdgesToSuperviewSafeArea()
+        
         // ScrollStackView
         let scrollStackView = ScrollStackView(axis: .vertical, horizontalInset: Constants.Style.DefaultHorizontalMargins)
-        self.view.addSubview(scrollStackView)
-        scrollStackView.autoPinEdgesToSuperviewSafeArea(with: .zero, excludingEdge: .bottom)
+        rootStackView.addArrangedSubview(scrollStackView)
         
         scrollStackView.stackView.addBlankSpace(space: 50.0)
         
@@ -76,33 +82,52 @@ public class AcceptanceViewController: UIViewController {
         }
         
         // Bottom View
-        let bottomView = DoubleButtonHorizontalView(styleCategory: .secondaryBackground(firstButtonPrimary: false,
-                                                                                        secondButtonPrimary: true))
-        
-        bottomView.setFirstButtonText(StringsProvider.string(forKey: .onboardingDisagreeButton))
-        bottomView.addTargetToFirstButton(target: self, action: #selector(self.disagreeButtonPressed))
-        
-        bottomView.setSecondButtonText(StringsProvider.string(forKey: .onboardingAgreeButton))
-        bottomView.addTargetToSecondButton(target: self, action: #selector(self.agreenButtonPressed))
-                
-        self.view.addSubview(bottomView)
-        bottomView.autoPinEdgesToSuperviewSafeArea(with: UIEdgeInsets.zero, excludingEdge: .top)
-        scrollStackView.scrollView.autoPinEdge(.bottom, to: .top, of: bottomView)
+        switch self.data.mode {
+        case .acceptance:
+            let bottomView = DoubleButtonHorizontalView(styleCategory: .secondaryBackground(firstButtonPrimary: false,
+                                                                                            secondButtonPrimary: true))
+            
+            bottomView.setFirstButtonText(StringsProvider.string(forKey: .onboardingDisagreeButton))
+            bottomView.addTargetToFirstButton(target: self, action: #selector(self.disagreeButtonPressed))
+            
+            bottomView.setSecondButtonText(StringsProvider.string(forKey: .onboardingAgreeButton))
+            bottomView.addTargetToSecondButton(target: self, action: #selector(self.agreenButtonPressed))
+                    
+            rootStackView.addArrangedSubview(bottomView)
+        case .view:
+            break
+        }
     }
     
-    public override func viewWillAppear(_ animated: Bool) {
+    override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        self.navigationController?.navigationBar.apply(style: NavigationBarStyleCategory.secondary(hidden: true).style)
+        switch self.data.mode {
+        case .acceptance:
+            self.navigationController?.navigationBar.apply(style: NavigationBarStyleCategory.secondary(hidden: true).style)
+        case .view:
+            self.navigationController?.navigationBar.apply(style: NavigationBarStyleCategory.secondary(hidden: false).style)
+            self.addCustomBackButton()
+        }
     }
     
-    // MARK: Actions
+    // MARK: - Actions
     
     @objc private func agreenButtonPressed() {
-        self.coordinator.onAgreeButtonPressed()
+        switch self.data.mode {
+        case .acceptance(let coordinator):
+            coordinator.onAgreeButtonPressed()
+        case .view:
+            break
+        }
     }
     
     @objc private func disagreeButtonPressed() {
-        self.coordinator.onDisagreeButtonPressed()
+        switch self.data.mode {
+        case .acceptance(let coordinator):
+            coordinator.onDisagreeButtonPressed()
+        case .view:
+            break
+        }
     }
 }
 

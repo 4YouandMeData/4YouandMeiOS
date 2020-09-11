@@ -754,7 +754,7 @@
 		4920A2823B019BCC7AB3C8F12D7F2786 /* ORKTableStep.h in Headers */ = {isa = PBXBuildFile; fileRef = 2468935EC4124AFDB0DB02138B8E65FF /* ORKTableStep.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		4950AB52780BFFDC285F360F8D501F4E /* ORKDateTimePicker.m in Sources */ = {isa = PBXBuildFile; fileRef = 64CFCCFD4E4496609F02F58A72D60BF1 /* ORKDateTimePicker.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
 		4975CACC893A427910F64270C28E7275 /* RadarChartData.swift in Sources */ = {isa = PBXBuildFile; fileRef = D392E23ACD8C86103E0BB02D52A32349 /* RadarChartData.swift */; };
-		4991D7A38314710595448B35D4E20072 /* AcceptanceViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D22DEB34C8B2BC209D3ED30991578D14 /* AcceptanceViewController.swift */; };
+		4991D7A38314710595448B35D4E20072 /* InfoPageListViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D22DEB34C8B2BC209D3ED30991578D14 /* InfoPageListViewController.swift */; };
 		4994E7B2E69CF616E8E7ECD19014CAE0 /* CandleChartDataSet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 440904E1BEA07CF1311CA01C05544D78 /* CandleChartDataSet.swift */; };
 		499C37F5E5199D08F0B9B0E30424948B /* pb_encode.c in Sources */ = {isa = PBXBuildFile; fileRef = 364215983B976AC0980745B8B25FD88A /* pb_encode.c */; settings = {COMPILER_FLAGS = "-fno-objc-arc -w -Xanalyzer -analyzer-disable-all-checks -fno-objc-arc -w -Xanalyzer -analyzer-disable-all-checks"; }; };
 		49B8F4E92D5874F9687E0B552B1EC152 /* RxSwift.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 61F190454981D1C3BCFDB57A31AB476E /* RxSwift.framework */; };
@@ -5362,7 +5362,7 @@
 		D20F192F56B43E18E153111169939082 /* FBLPromise+Validate.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = "FBLPromise+Validate.h"; path = "Sources/FBLPromises/include/FBLPromise+Validate.h"; sourceTree = "<group>"; };
 		D210092293553BB550E2CFBF10E51AEC /* consent_04@3x.m4v */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = file; name = "consent_04@3x.m4v"; path = "ResearchKit/Animations/phone@3x/consent_04@3x.m4v"; sourceTree = "<group>"; };
 		D21DF801FD1386D16AD33B09E80D8213 /* ORKNavigationContainerView.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = ORKNavigationContainerView.h; path = ResearchKit/Common/ORKNavigationContainerView.h; sourceTree = "<group>"; };
-		D22DEB34C8B2BC209D3ED30991578D14 /* AcceptanceViewController.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AcceptanceViewController.swift; sourceTree = "<group>"; };
+		D22DEB34C8B2BC209D3ED30991578D14 /* InfoPageListViewController.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = InfoPageListViewController.swift; sourceTree = "<group>"; };
 		D245A57147AAF0C129A5CDD4BCB249AD /* FIRBundleUtil.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = FIRBundleUtil.m; path = FirebaseCore/Sources/FIRBundleUtil.m; sourceTree = "<group>"; };
 		D24B1092186F1B408D26FF82E40C90D6 /* nl.lproj */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = folder; name = nl.lproj; path = ResearchKit/Localized/nl.lproj; sourceTree = "<group>"; };
 		D2A6E4A329F390514D0019C2262516C6 /* HTTPMethod.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = HTTPMethod.swift; path = Source/HTTPMethod.swift; sourceTree = "<group>"; };
@@ -6742,7 +6742,7 @@
 		25D1DC02579D576369CFA8DD98CE3BA1 /* ViewControllers */ = {
 			isa = PBXGroup;
 			children = (
-				D22DEB34C8B2BC209D3ED30991578D14 /* AcceptanceViewController.swift */,
+				D22DEB34C8B2BC209D3ED30991578D14 /* InfoPageListViewController.swift */,
 				B730438E0EA2A5DE9567AF3B03CAEEF9 /* BooleanQuestionsViewController.swift */,
 				6EE2C3FA536C2666EC3F05B705CB3347 /* InfoPageViewController.swift */,
 				893A6B5B250A76BD008457B7 /* InfoDetailViewController.swift */,
@@ -13736,7 +13736,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				4991D7A38314710595448B35D4E20072 /* AcceptanceViewController.swift in Sources */,
+				4991D7A38314710595448B35D4E20072 /* InfoPageListViewController.swift in Sources */,
 				DC1E9C16033BABE6015555E29720EE0F /* Activity.swift in Sources */,
 				6CC78343ADEDCF589C87A27F659E4A59 /* AlertError.swift in Sources */,
 				C9445D48998ED56263D24EE732BAB6EA /* AnalyticsManager.swift in Sources */,
