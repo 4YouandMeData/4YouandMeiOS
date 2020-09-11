@@ -476,7 +476,7 @@ class AppNavigator {
     }
     
     // MARK: Study Info
-    public func showInfoPage(presenter: UIViewController, page: Page, isModal: Bool) {
+    public func showInfoDetailPage(presenter: UIViewController, page: Page, isModal: Bool) {
         guard let navController = presenter.navigationController else {
                    assertionFailure("Missing UINavigationController")
                    return

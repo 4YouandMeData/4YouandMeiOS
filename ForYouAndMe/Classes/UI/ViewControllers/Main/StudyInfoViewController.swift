@@ -46,7 +46,7 @@ class StudyInfoViewController: UIViewController {
             templateImageName: .studyInfoContact,
             colorType: .primary,
             gestureCallback: { [weak self] in
-                let page = Page(id: "contact", title: "Contact", body: Constants.Misc.LoremIpsum)
+                let page = Page(id: "contact", title: "Contact", body: Constants.Test.LoremIpsum)
                 self?.showPage(page: page, isModal: false)
         })
         self.scrollStackView.stackView.addArrangedSubview(contactInformation)
@@ -55,7 +55,7 @@ class StudyInfoViewController: UIViewController {
             templateImageName: .studyInfoRewards,
             colorType: .primary,
             gestureCallback: { [weak self] in
-                let page = Page(id: "rewards", title: "Rewards", body: Constants.Misc.LoremIpsum)
+                let page = Page(id: "rewards", title: "Rewards", body: Constants.Test.LoremIpsum)
                 self?.showPage(page: page, isModal: false)
         })
         self.scrollStackView.stackView.addArrangedSubview(rewardsView)
@@ -64,7 +64,7 @@ class StudyInfoViewController: UIViewController {
             templateImageName: .studyInfoFAQ,
             colorType: .primary,
             gestureCallback: { [weak self] in
-                let page = Page(id: "faq", title: "FAQ", body: Constants.Misc.LoremIpsum)
+                let page = Page(id: "faq", title: "FAQ", body: Constants.Test.LoremIpsum)
                 self?.showPage(page: page, isModal: false)
         })
         self.scrollStackView.stackView.addArrangedSubview(faqView)
@@ -77,6 +77,6 @@ class StudyInfoViewController: UIViewController {
     }
     
     private func showPage(page: Page, isModal: Bool) {
-        self.navigator.showInfoPage(presenter: self, page: page, isModal: isModal)
+        self.navigator.showInfoDetailPage(presenter: self, page: page, isModal: isModal)
     }
 }

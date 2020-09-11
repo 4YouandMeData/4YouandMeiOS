@@ -7,16 +7,16 @@
 
 import UIKit
 
-typealias GestureCallback = () -> Void
+typealias GenericListItemViewCallback = () -> Void
 
 class GenericListItemView: UIView {
     
-    private var gestureCallback: GestureCallback?
+    private var gestureCallback: GenericListItemViewCallback?
     
     init(withTitle title: String,
          templateImageName: TemplateImageName,
          colorType: ColorType,
-         gestureCallback: @escaping GestureCallback) {
+         gestureCallback: @escaping GenericListItemViewCallback) {
         
         super.init(frame: .zero)
         

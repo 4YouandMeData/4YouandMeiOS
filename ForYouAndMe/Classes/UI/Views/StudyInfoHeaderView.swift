@@ -7,6 +7,7 @@
 
 import UIKit
 
+
 class StudyInfoHeaderView: UIView {
     
     init() {
