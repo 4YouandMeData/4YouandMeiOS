@@ -99,8 +99,7 @@ class FeedViewController: UIViewController {
     // MARK: - Private Methods
     
     private func showProfile() {
-        // TODO: Show Profile
-        print("TODO: Show Profile")
+        self.navigator.showAboutYouPage(presenter: self)
     }
     
     private func showNotification() {

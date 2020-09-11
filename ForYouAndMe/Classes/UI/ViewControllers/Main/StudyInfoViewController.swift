@@ -5,8 +5,6 @@
 //  Created by Leonardo Passeri on 22/07/2020.
 //
 
-import Foundation
-
 import UIKit
 
 class StudyInfoViewController: UIViewController {

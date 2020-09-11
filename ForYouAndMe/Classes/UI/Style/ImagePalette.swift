@@ -53,6 +53,11 @@ enum TemplateImageName: String, CaseIterable {
     case studyInfoRewards = "rewards_icon"
     case studyInfoFAQ = "faq_icon"
     case arrowRight = "arrow_right"
+    case closeButtonTemplate = "close_button_template"
+    case pregnancyIcon = "pregnancy_icon"
+    case devicesIcon = "devices_icon"
+    case reviewConsentIcon = "review_consent_icon"
+    case permissionIcon = "permission_icon"
 }
 
 public class ImagePalette {

@@ -389,6 +389,17 @@ class AppNavigator {
         self.currentActivityCoordinator = coordinator
     }
     
+    // MARK: About You
+    
+    public func showAboutYouPage(presenter: UIViewController) {
+        
+        // TODO: Load From Server
+        let aboutYouViewController = AboutYouViewController()
+        let navigationController = UINavigationController(rootViewController: aboutYouViewController)
+        navigationController.modalPresentationStyle = .overFullScreen
+        presenter.present(navigationController, animated: true, completion: nil)
+    }
+    
     // MARK: Progress HUD
     
     public func pushProgressHUD() {

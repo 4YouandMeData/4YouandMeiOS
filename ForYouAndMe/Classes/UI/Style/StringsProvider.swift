@@ -89,6 +89,7 @@ enum StringKey: String, CaseIterable, CodingKey {
     case tabFeedHeaderTitle = "TAB_FEED_HEADER_TITLE"
     case tabFeedHeaderSubtitle = "TAB_FEED_HEADER_SUBTITLE"
     case tabFeedHeaderPoints = "TAB_FEED_HEADER_POINTS"
+    case profileTitle = "PROFILE_TITLE"
     // Activity
     case activityButtonDefault = "ACTIVITY_BUTTON_DEFAULT"
     // Quick Activity

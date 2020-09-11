@@ -135,6 +135,32 @@ public extension UIStackView {
         self.addArrangedSubview(stackView, horizontalInset: horizontalInset)
     }
     
+    func addLineSeparator(lineColor: UIColor,
+                          horizontalInset: CGFloat = 0) {
+        
+        self.addBlankSpace(space: 8)
+        
+        let lineViewBuilder: (() -> UIView) = {
+            let lineContainerView = UIView()
+            lineContainerView.backgroundColor = UIColor.clear
+            let lineView = UIView()
+            lineView.backgroundColor = lineColor
+            lineView.autoSetDimension(.height, toSize: 1.0)
+            lineContainerView.addSubview(lineView)
+            lineView.autoPinEdge(toSuperviewEdge: .top)
+            lineView.autoPinEdge(toSuperviewEdge: .bottom)
+            lineView.autoAlignAxis(toSuperviewAxis: .horizontal)
+            lineView.autoPinEdge(toSuperviewEdge: .leading, withInset: horizontalInset, relation: .equal)
+            lineView.autoPinEdge(toSuperviewEdge: .trailing, withInset: horizontalInset, relation: .equal)
+
+            return lineContainerView
+        }
+        
+        self.addArrangedSubview(lineViewBuilder())
+        
+        self.addBlankSpace(space: 8)
+    }
+    
     private func getLabel(text: String,
                           font: UIFont,
                           textColor: UIColor,

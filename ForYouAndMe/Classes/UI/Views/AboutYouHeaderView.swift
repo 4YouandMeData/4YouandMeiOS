@@ -5,4 +5,47 @@
 //  Created by Giuseppe Lapenta on 11/09/2020.
 //
 
-import Foundation
+import UIKit
+
+class AboutYouHeaderView: UIView {
+    
+    let closeButton: UIButton = {
+        let button = UIButton()
+        button.setImage(ImagePalette.templateImage(withName: .closeButtonTemplate), for: .normal)
+        button.tintColor = ColorPalette.color(withType: .secondaryText)
+        button.autoSetDimension(.width, toSize: 32)
+        button.imageView?.contentMode = .scaleAspectFit
+        return button
+    }()
+    
+    init() {
+        super.init(frame: .zero)
+        
+        self.addGradientView(GradientView(type: .primaryBackground))
+        
+        let stackView = UIStackView()
+        stackView.axis = .vertical
+        stackView.spacing = 39
+        
+        // Close button
+        let closeButtonContainerView = UIView()
+        closeButtonContainerView.addSubview(self.closeButton)
+        closeButton.autoPinEdgesToSuperviewEdges(with: .zero, excludingEdge: .trailing)
+        stackView.addArrangedSubview(closeButtonContainerView)
+
+        stackView.addHeaderImage(image: ImagePalette.image(withName: .mainLogo), height: 100.0)
+        stackView.addLabel(withText: StringsProvider.string(forKey: .profileTitle),
+                           fontStyle: .title,
+                           colorType: .secondaryText)
+        
+        self.addSubview(stackView)
+        stackView.autoPinEdgesToSuperviewSafeArea(with: UIEdgeInsets(top: 20,
+                                                                     left: Constants.Style.DefaultHorizontalMargins,
+                                                                     bottom: 30.0,
+                                                                     right: Constants.Style.DefaultHorizontalMargins))
+    }
+    
+    required init?(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+}
