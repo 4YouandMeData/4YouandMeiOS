@@ -90,12 +90,12 @@ class AppNavigator {
                                          style: .cancel,
                                          handler: nil)
         let confirmAction = UIAlertAction(title: StringsProvider.string(forKey: .onboardingAbortConfirm),
-                                        style: .destructive,
-                                        handler: { [weak self] _ in self?.abortOnboarding() })
+                                          style: .destructive,
+                                          handler: { [weak self] _ in self?.abortOnboarding() })
         presenter.showAlert(withTitle: StringsProvider.string(forKey: .onboardingAbortTitle),
-                       message: StringsProvider.string(forKey: .onboardingAbortMessage),
-                       actions: [cancelAction, confirmAction],
-                       tintColor: ColorPalette.color(withType: .primary))
+                            message: StringsProvider.string(forKey: .onboardingAbortMessage),
+                            actions: [cancelAction, confirmAction],
+                            tintColor: ColorPalette.color(withType: .primary))
     }
     
     public func abortOnboarding() {
@@ -203,8 +203,8 @@ class AppNavigator {
                 self?.startConsentSection(navigationController: navigationController)
             }
             let coordinator = InformedConsentSectionCoordinator(withSectionData: section,
-                                                                  navigationController: navigationController,
-                                                                  completionCallback: completionCallback)
+                                                                navigationController: navigationController,
+                                                                completionCallback: completionCallback)
             return coordinator.getStartingPage()
         }
     }
@@ -226,13 +226,13 @@ class AppNavigator {
     public func showReviewConsent(navigationController: UINavigationController) {
         navigationController.loadViewForRequest(self.repository.getConsentSection(),
                                                 hidesBottomBarWhenPushed: true) { section -> UIViewController in
-            let data = InfoPageListData(title: section.title,
-                                      subtitle: section.subtitle,
-                                      body: section.body,
-                                      startingPage: section.welcomePage,
-                                      pages: section.pages,
-                                      mode: .view)
-            return InfoPageListViewController(withData: data)
+                                                    let data = InfoPageListData(title: section.title,
+                                                                                subtitle: section.subtitle,
+                                                                                body: section.body,
+                                                                                startingPage: section.welcomePage,
+                                                                                pages: section.pages,
+                                                                                mode: .view)
+                                                    return InfoPageListViewController(withData: data)
         }
     }
     
@@ -272,8 +272,8 @@ class AppNavigator {
                 self?.goHome()
             }
             let coordinator = WearablesSectionCoordinator(withSectionData: section,
-                                                         navigationController: navigationController,
-                                                         completionCallback: completionCallback)
+                                                          navigationController: navigationController,
+                                                          completionCallback: completionCallback)
             return coordinator.getStartingPage()
         }
     }
@@ -359,7 +359,6 @@ class AppNavigator {
         tabBarController.selectedIndex = feedViewControllerIndex
     }
     
-    
     // MARK: Task
     
     public func startTaskSection(taskIdentifier: String, taskType: TaskType, taskOptions: TaskOptions?, presenter: UIViewController) {
@@ -398,6 +397,12 @@ class AppNavigator {
         let navigationController = UINavigationController(rootViewController: aboutYouViewController)
         navigationController.modalPresentationStyle = .overFullScreen
         presenter.present(navigationController, animated: true, completion: nil)
+    }
+    
+    public func showAppsAndDevices(navigationController: UINavigationController, title: String) {
+        // TODO: Load From Server
+        let devicesViewController = DevicesIntegrationViewController(withTitle: title)
+        navigationController.pushViewController(devicesViewController, animated: true)
     }
     
     // MARK: Progress HUD
@@ -489,9 +494,9 @@ class AppNavigator {
     // MARK: Study Info
     public func showInfoDetailPage(presenter: UIViewController, page: Page, isModal: Bool) {
         guard let navController = presenter.navigationController else {
-                   assertionFailure("Missing UINavigationController")
-                   return
-               }
+            assertionFailure("Missing UINavigationController")
+            return
+        }
         
         let pageData = InfoDetailPageData(page: page, isModal: isModal)
         let pageViewController = InfoDetailPageViewController(withPageData: pageData)
@@ -512,8 +517,8 @@ extension UIViewController {
                    dismissStyle: UIAlertAction.Style = .cancel) {
         var actions: [UIAlertAction] = []
         let dismissAction = UIAlertAction(title: StringsProvider.string(forKey: .errorButtonClose),
-                                         style: dismissStyle,
-                                         handler: { _ in onDismiss() })
+                                          style: dismissStyle,
+                                          handler: { _ in onDismiss() })
         actions.append(dismissAction)
         if let onRetry = onRetry {
             let retryAction = UIAlertAction(title: StringsProvider.string(forKey: .errorButtonRetry),
@@ -532,8 +537,8 @@ extension UIViewController {
                    dismissButtonText: String,
                    onDismiss: @escaping NotificationCallback = {}) {
         let dismissAction = UIAlertAction(title: dismissButtonText,
-                                         style: .default,
-                                         handler: { _ in onDismiss() })
+                                          style: .default,
+                                          handler: { _ in onDismiss() })
         self.showAlert(withTitle: title,
                        message: message,
                        actions: [dismissAction],

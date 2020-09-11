@@ -63,17 +63,17 @@ public class InfoDetailPageViewController: UIViewController, PageProvider {
         scrollStackView.stackView.addBlankSpace(space: 16.0)
         
         // Title
-         scrollStackView.stackView.addLabel(withText: self.pageData.page.title,
-                                            fontStyle: .title,
-                                            colorType: .primaryText)
-         
-         scrollStackView.stackView.addBlankSpace(space: 40.0)
-         // Body
-         scrollStackView.stackView.addLabel(withText: self.pageData.page.body,
-                                            fontStyle: .paragraph,
-                                            colorType: .primaryText,
-                                            textAlignment: .left)
-         scrollStackView.stackView.addBlankSpace(space: 40.0)
+        scrollStackView.stackView.addLabel(withText: self.pageData.page.title,
+                                           fontStyle: .title,
+                                           colorType: .primaryText)
+        
+        scrollStackView.stackView.addBlankSpace(space: 40.0)
+        // Body
+        scrollStackView.stackView.addLabel(withText: self.pageData.page.body,
+                                           fontStyle: .paragraph,
+                                           colorType: .primaryText,
+                                           textAlignment: .left)
+        scrollStackView.stackView.addBlankSpace(space: 40.0)
     }
     
     private func loadPushPage() {

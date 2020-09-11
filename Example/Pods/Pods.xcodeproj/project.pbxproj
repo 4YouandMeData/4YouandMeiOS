@@ -393,6 +393,7 @@
 		20C05DDD250BE205006EF7E6 /* InfoDetailHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20C05DDC250BE205006EF7E6 /* InfoDetailHeaderView.swift */; };
 		20C05DDF250BE664006EF7E6 /* AboutYouViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20C05DDE250BE664006EF7E6 /* AboutYouViewController.swift */; };
 		20C05DE1250BE983006EF7E6 /* AboutYouHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20C05DE0250BE982006EF7E6 /* AboutYouHeaderView.swift */; };
+		20C05DE3250C0C31006EF7E6 /* DevicesIntegrationViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20C05DE2250C0C31006EF7E6 /* DevicesIntegrationViewController.swift */; };
 		211AEFF065F3E11F2C984B578A49CCB8 /* QuickSpec.m in Sources */ = {isa = PBXBuildFile; fileRef = CCB5EC293D3FC44ACE34E0B456930399 /* QuickSpec.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
 		212EDC48B68107BEA9247F3464CE696E /* StringEncoding+Alamofire.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39D66E1F66627C90C7B73CCD9F236A39 /* StringEncoding+Alamofire.swift */; };
 		217230E614D3D4B9BAC1836C9D7D258C /* ORKDeviceMotionRecorder.m in Sources */ = {isa = PBXBuildFile; fileRef = E291CF3FAD47D07972F6E7BCCECA8E9A /* ORKDeviceMotionRecorder.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
@@ -3573,6 +3574,7 @@
 		20C05DDC250BE205006EF7E6 /* InfoDetailHeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InfoDetailHeaderView.swift; sourceTree = "<group>"; };
 		20C05DDE250BE664006EF7E6 /* AboutYouViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutYouViewController.swift; sourceTree = "<group>"; };
 		20C05DE0250BE982006EF7E6 /* AboutYouHeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutYouHeaderView.swift; sourceTree = "<group>"; };
+		20C05DE2250C0C31006EF7E6 /* DevicesIntegrationViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DevicesIntegrationViewController.swift; sourceTree = "<group>"; };
 		20C4305E1BDC9983D8FEDFAFF5077670 /* ORKAnswerTextView.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = ORKAnswerTextView.h; path = ResearchKit/Common/ORKAnswerTextView.h; sourceTree = "<group>"; };
 		212A3CBAD6F0CC4A9ABB5997AEB7D000 /* ORKPasscodeViewController.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = ORKPasscodeViewController.m; path = ResearchKit/Common/ORKPasscodeViewController.m; sourceTree = "<group>"; };
 		216788B2829B92472ADA68B06F5A2D2D /* UberSignature-Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = "UberSignature-Info.plist"; sourceTree = "<group>"; };
@@ -6762,6 +6764,7 @@
 				75CBB3432019F20FB98067E700B66AC6 /* Main */,
 				1D40EC3905DF274BED7443CC0A924158 /* Onboarding */,
 				5931A5178AAE3DB3F48D6A7F0D3E5CCB /* VideoDiary */,
+				20C05DE2250C0C31006EF7E6 /* DevicesIntegrationViewController.swift */,
 			);
 			path = ViewControllers;
 			sourceTree = "<group>";
@@ -13779,6 +13782,7 @@
 				61163AFD0EFD98A0DA5E215462E39077 /* DoubleButtonVerticalView.swift in Sources */,
 				0B87BD19C61364C76021C5FB6239BC36 /* Feed.swift in Sources */,
 				83789660E83B67199988B25DD507D388 /* FeedEmptyView.swift in Sources */,
+				20C05DE3250C0C31006EF7E6 /* DevicesIntegrationViewController.swift in Sources */,
 				86B4508FB22224524A371B44F55298EC /* FeedListManager.swift in Sources */,
 				D9DBC227828E072D17608B176B4E6EEE /* FeedListSectionHeader.swift in Sources */,
 				40AE73C82FE18D9547C5DA3ACF409990 /* FeedTableViewCell.swift in Sources */,

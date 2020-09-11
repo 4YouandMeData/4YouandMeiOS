@@ -10,19 +10,19 @@ import UIKit
 class AboutYouViewController: UIViewController {
     
     private let navigator: AppNavigator
-
+    
     private lazy var scrollStackView: ScrollStackView = {
         let scrollStackView = ScrollStackView(axis: .vertical, horizontalInset: 0.0)
         return scrollStackView
     }()
     
     init() {
-       self.navigator = Services.shared.navigator
-       super.init(nibName: nil, bundle: nil)
+        self.navigator = Services.shared.navigator
+        super.init(nibName: nil, bundle: nil)
     }
     
     required init?(coder: NSCoder) {
-           fatalError("init(coder:) has not been implemented")
+        fatalError("init(coder:) has not been implemented")
     }
     
     override func viewDidLoad() {
@@ -53,8 +53,8 @@ class AboutYouViewController: UIViewController {
             templateImageName: .devicesIcon,
             colorType: .primary,
             gestureCallback: { [weak self] in
-                let page = Page(id: "rewards", title: "Rewards", body: Constants.Test.LoremIpsum)
-                self?.showPage(page: page, isModal: false)
+                self?.navigator.showAppsAndDevices(navigationController: self?.navigationController ?? UINavigationController(),
+                                                   title: "Your Apps & Devices")
         })
         self.scrollStackView.stackView.addArrangedSubview(appsAndDevices)
         
@@ -70,13 +70,13 @@ class AboutYouViewController: UIViewController {
         self.scrollStackView.stackView.addArrangedSubview(reviewConsent)
         
         let permissions = GenericListItemView(withTitle: "Permissions"/*StringsProvider.string(forKey: .studyInfoFaqItem)*/,
-                   templateImageName: .permissionIcon,
-                   colorType: .primary,
-                   gestureCallback: { [weak self] in
-                       let page = Page(id: "faq", title: "FAQ", body: Constants.Test.LoremIpsum)
-                       self?.showPage(page: page, isModal: false)
-               })
-               self.scrollStackView.stackView.addArrangedSubview(permissions)
+            templateImageName: .permissionIcon,
+            colorType: .primary,
+            gestureCallback: { [weak self] in
+                let page = Page(id: "faq", title: "FAQ", body: Constants.Test.LoremIpsum)
+                self?.showPage(page: page, isModal: false)
+        })
+        self.scrollStackView.stackView.addArrangedSubview(permissions)
         
         self.scrollStackView.stackView.addBlankSpace(space: 57)
         self.scrollStackView.stackView.addLabel(withText: "You are currently participating in the BUMP pregnancy research study. If for any reason you no longer wish to continue participating in the study, you can elect to leave this study by contacting the study team.",
