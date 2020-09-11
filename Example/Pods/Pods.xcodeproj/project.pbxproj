@@ -394,6 +394,7 @@
 		20C05DDF250BE664006EF7E6 /* AboutYouViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20C05DDE250BE664006EF7E6 /* AboutYouViewController.swift */; };
 		20C05DE1250BE983006EF7E6 /* AboutYouHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20C05DE0250BE982006EF7E6 /* AboutYouHeaderView.swift */; };
 		20C05DE3250C0C31006EF7E6 /* DevicesIntegrationViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20C05DE2250C0C31006EF7E6 /* DevicesIntegrationViewController.swift */; };
+		20C05DE5250C13D0006EF7E6 /* DeviceItemView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20C05DE4250C13D0006EF7E6 /* DeviceItemView.swift */; };
 		211AEFF065F3E11F2C984B578A49CCB8 /* QuickSpec.m in Sources */ = {isa = PBXBuildFile; fileRef = CCB5EC293D3FC44ACE34E0B456930399 /* QuickSpec.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
 		212EDC48B68107BEA9247F3464CE696E /* StringEncoding+Alamofire.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39D66E1F66627C90C7B73CCD9F236A39 /* StringEncoding+Alamofire.swift */; };
 		217230E614D3D4B9BAC1836C9D7D258C /* ORKDeviceMotionRecorder.m in Sources */ = {isa = PBXBuildFile; fileRef = E291CF3FAD47D07972F6E7BCCECA8E9A /* ORKDeviceMotionRecorder.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
@@ -3575,6 +3576,7 @@
 		20C05DDE250BE664006EF7E6 /* AboutYouViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutYouViewController.swift; sourceTree = "<group>"; };
 		20C05DE0250BE982006EF7E6 /* AboutYouHeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutYouHeaderView.swift; sourceTree = "<group>"; };
 		20C05DE2250C0C31006EF7E6 /* DevicesIntegrationViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DevicesIntegrationViewController.swift; sourceTree = "<group>"; };
+		20C05DE4250C13D0006EF7E6 /* DeviceItemView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceItemView.swift; sourceTree = "<group>"; };
 		20C4305E1BDC9983D8FEDFAFF5077670 /* ORKAnswerTextView.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = ORKAnswerTextView.h; path = ResearchKit/Common/ORKAnswerTextView.h; sourceTree = "<group>"; };
 		212A3CBAD6F0CC4A9ABB5997AEB7D000 /* ORKPasscodeViewController.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = ORKPasscodeViewController.m; path = ResearchKit/Common/ORKPasscodeViewController.m; sourceTree = "<group>"; };
 		216788B2829B92472ADA68B06F5A2D2D /* UberSignature-Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = "UberSignature-Info.plist"; sourceTree = "<group>"; };
@@ -9127,6 +9129,7 @@
 				059F8350657C0E094C5FE24E418ECE33 /* VideoDiary */,
 				20C05DDC250BE205006EF7E6 /* InfoDetailHeaderView.swift */,
 				20C05DE0250BE982006EF7E6 /* AboutYouHeaderView.swift */,
+				20C05DE4250C13D0006EF7E6 /* DeviceItemView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -13849,6 +13852,7 @@
 				EDDB358D1286DC0F46D1454AED7CD8E2 /* QuickActivityOption.swift in Sources */,
 				C1E3C7E9620A70B19D502BDE136BA894 /* QuickActivityOptionView.swift in Sources */,
 				3DD9894127245804CA82E28EEE1107A9 /* QuickActivityView.swift in Sources */,
+				20C05DE5250C13D0006EF7E6 /* DeviceItemView.swift in Sources */,
 				E015884063F9E58763459F086FEA5B19 /* ReachabilityManager.swift in Sources */,
 				861EE04F0D5680C2A0D4C488FD7083A2 /* ReachabilityService.swift in Sources */,
 				AAD494E54E7CDEAAA03CD9A1FD8E3A94 /* ReactionTimeTask.swift in Sources */,

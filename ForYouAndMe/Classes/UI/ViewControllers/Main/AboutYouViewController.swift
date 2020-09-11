@@ -59,7 +59,8 @@ class AboutYouViewController: UIViewController {
         self.scrollStackView.stackView.addArrangedSubview(appsAndDevices)
         
         self.scrollStackView.stackView.addLineSeparator(lineColor: ColorPalette.color(withType: .inactive),
-                                                        horizontalInset: 21)
+                                                        inset: 21,
+                                                        isVertical: false)
         
         let reviewConsent = GenericListItemView(withTitle: "Review Consent"/*StringsProvider.string(forKey: .studyInfoFaqItem)*/,
             templateImageName: .reviewConsentIcon,

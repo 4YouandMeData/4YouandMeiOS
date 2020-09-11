@@ -42,12 +42,24 @@ public class DevicesIntegrationViewController: UIViewController {
         self.view.addSubview(scrollStackView)
         self.scrollStackView.autoPinEdgesToSuperviewEdges(with: .zero, excludingEdge: .top)
         self.scrollStackView.autoPinEdge(.top, to: .bottom, of: headerView, withOffset: 30)
+        self.scrollStackView.stackView.spacing = 30
         
-        // Body
-        self.scrollStackView.stackView.addLabel(withText: "test",
-                                           fontStyle: .paragraph,
-                                           colorType: .primaryText,
-                                           textAlignment: .left)
+        let garminItem = DeviceItemView(withTitle: "Garmin"/*StringsProvider.string(forKey: .studyInfoRewardsItem)*/,
+            imageName: .fitbitIcon,
+            gestureCallback: { [weak self] in
+                self?.navigator.showWearableLogin(loginUrl: URL(string: "https://admin-4youandme-staging.balzo.eu/users/integration_oauth/garmin")!,
+                                                  navigationController: self?.navigationController ?? UINavigationController())
+        })
+        self.scrollStackView.stackView.addArrangedSubview(garminItem)
+        
+        let ouraItem = DeviceItemView(withTitle: "Oura"/*StringsProvider.string(forKey: .studyInfoRewardsItem)*/,
+            imageName: .ouraIcon,
+            gestureCallback: { [weak self] in
+                self?.navigator.showWearableLogin(loginUrl: URL(string: "https://admin-4youandme-staging.balzo.eu/users/integration_oauth/oura")!,
+                                                  navigationController: self?.navigationController ?? UINavigationController())
+        })
+        self.scrollStackView.stackView.addArrangedSubview(ouraItem)
+        
         self.scrollStackView.stackView.addBlankSpace(space: 40.0)
     }
     

@@ -136,29 +136,30 @@ public extension UIStackView {
     }
     
     func addLineSeparator(lineColor: UIColor,
-                          horizontalInset: CGFloat = 0) {
+                          inset: CGFloat = 0,
+                          isVertical: Bool) {
         
-        self.addBlankSpace(space: 8)
+        self.addBlankSpace(space: 16)
         
         let lineViewBuilder: (() -> UIView) = {
             let lineContainerView = UIView()
             lineContainerView.backgroundColor = UIColor.clear
             let lineView = UIView()
             lineView.backgroundColor = lineColor
-            lineView.autoSetDimension(.height, toSize: 1.0)
+            lineView.autoSetDimension((isVertical) ? .width : .height, toSize: 1.0)
             lineContainerView.addSubview(lineView)
-            lineView.autoPinEdge(toSuperviewEdge: .top)
-            lineView.autoPinEdge(toSuperviewEdge: .bottom)
+            lineView.autoPinEdge(toSuperviewEdge: (isVertical) ? .leading : .top)
+            lineView.autoPinEdge(toSuperviewEdge: (isVertical) ? .trailing : .bottom)
             lineView.autoAlignAxis(toSuperviewAxis: .horizontal)
-            lineView.autoPinEdge(toSuperviewEdge: .leading, withInset: horizontalInset, relation: .equal)
-            lineView.autoPinEdge(toSuperviewEdge: .trailing, withInset: horizontalInset, relation: .equal)
+            lineView.autoPinEdge(toSuperviewEdge: (isVertical) ? .top : .leading, withInset: inset, relation: .equal)
+            lineView.autoPinEdge(toSuperviewEdge: (isVertical) ? .bottom : .trailing, withInset: inset, relation: .equal)
 
             return lineContainerView
         }
         
         self.addArrangedSubview(lineViewBuilder())
         
-        self.addBlankSpace(space: 8)
+        self.addBlankSpace(space: 16)
     }
     
     private func getLabel(text: String,
