@@ -278,6 +278,19 @@ class AppNavigator {
         }
     }
     
+    public func showWearableLogin(loginUrl: URL, navigationController: UINavigationController) {
+        let viewController = WearableLoginViewController(withTitle: "",
+                                                         url: loginUrl,
+                                                         onLoginSuccessCallback: { _ in
+                                                            navigationController.popViewController(animated: true)
+        },
+                                                         onLoginFailureCallback: { _ in
+                                                            navigationController.popViewController(animated: true)
+        })
+        viewController.hidesBottomBarWhenPushed = true
+        navigationController.pushViewController(viewController, animated: true)
+    }
+    
     // MARK: Home
     
     public func goHome() {

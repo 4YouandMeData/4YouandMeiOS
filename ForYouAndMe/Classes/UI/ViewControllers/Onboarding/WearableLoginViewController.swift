@@ -34,6 +34,10 @@ class WearableLoginViewController: UIViewController {
     
     private var progressObserver: NSKeyValueObservation?
     
+    private var isModal: Bool {
+        return self.navigationController?.viewControllers.first == self
+    }
+    
     init(withTitle title: String,
          url: URL,
          onLoginSuccessCallback: @escaping ViewControllerCallback,
@@ -123,7 +127,12 @@ class WearableLoginViewController: UIViewController {
         super.viewWillAppear(animated)
         
         self.navigationController?.navigationBar.apply(style: NavigationBarStyleCategory.primary(hidden: false).style)
-        self.addCustomCloseButton()
+        
+        if self.isModal {
+            self.addCustomCloseButton()
+        } else {
+            self.addCustomBackButton()
+        }
     }
     
     // MARK: - Private Methods
