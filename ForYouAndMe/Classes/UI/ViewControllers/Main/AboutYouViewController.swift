@@ -65,8 +65,7 @@ class AboutYouViewController: UIViewController {
             templateImageName: .reviewConsentIcon,
             colorType: .primary,
             gestureCallback: { [weak self] in
-                let page = Page(id: "faq", title: "FAQ", body: Constants.Test.LoremIpsum)
-                self?.showPage(page: page, isModal: false)
+                self?.navigator.showReviewConsent(navigationController: self?.navigationController ?? UINavigationController())
         })
         self.scrollStackView.stackView.addArrangedSubview(reviewConsent)
         
