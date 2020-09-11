@@ -1371,6 +1371,7 @@
 		893A6B5C250A76BD008457B7 /* InfoDetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893A6B5B250A76BD008457B7 /* InfoDetailViewController.swift */; };
 		893A6B5E250A87D4008457B7 /* FeedHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893A6B5D250A87D4008457B7 /* FeedHeaderView.swift */; };
 		89419F6DA745C9EB2B494B0BF12289E9 /* ORKStepNavigationRule_Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = E1B462B360C1AE7D0A8C3A249F4AD183 /* ORKStepNavigationRule_Internal.h */; settings = {ATTRIBUTES = (Project, ); }; };
+		8945DB84250B5DB400D82F8E /* FeedTableViewHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8945DB83250B5DB400D82F8E /* FeedTableViewHeader.swift */; };
 		8948702525029EE200B3B160 /* UserDataChartView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8948702425029EE100B3B160 /* UserDataChartView.swift */; };
 		8959EA6A08FD2FBDEC0661DA718B415F /* ORKPageStep.h in Headers */ = {isa = PBXBuildFile; fileRef = 938E420ED55432343A5F252504CC9386 /* ORKPageStep.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		895CE133386CDA2B4B271287050A9BBB /* GULKeychainStorage.h in Headers */ = {isa = PBXBuildFile; fileRef = 92433596146DB5098961FAC002CF3347 /* GULKeychainStorage.h */; settings = {ATTRIBUTES = (Private, ); }; };
@@ -4652,6 +4653,7 @@
 		893A6B5B250A76BD008457B7 /* InfoDetailViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InfoDetailViewController.swift; sourceTree = "<group>"; };
 		893A6B5D250A87D4008457B7 /* FeedHeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedHeaderView.swift; sourceTree = "<group>"; };
 		89432B13AC3C17E78C1AD73460567477 /* ORKResult.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = ORKResult.m; path = ResearchKit/Common/ORKResult.m; sourceTree = "<group>"; };
+		8945DB83250B5DB400D82F8E /* FeedTableViewHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedTableViewHeader.swift; sourceTree = "<group>"; };
 		89465154303E8C3F03CBBA4F310DFEB1 /* GoogleDataTransport-Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = "GoogleDataTransport-Info.plist"; sourceTree = "<group>"; };
 		8948702425029EE100B3B160 /* UserDataChartView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserDataChartView.swift; sourceTree = "<group>"; };
 		89559CA6F35B083F74AFBFC67111DC31 /* RxCocoa.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = RxCocoa.debug.xcconfig; sourceTree = "<group>"; };
@@ -9094,6 +9096,7 @@
 				B2251B8BD0314CB7CAF70C453F54431F /* FeedListSectionHeader.swift */,
 				F0F9D81EDDAD396F448A1EE00EC431B6 /* FeedTableViewCell.swift */,
 				893A6B5D250A87D4008457B7 /* FeedHeaderView.swift */,
+				8945DB83250B5DB400D82F8E /* FeedTableViewHeader.swift */,
 				60A7E1EC35EB2CC378A2D1B71FABCF59 /* GenericButtonView.swift */,
 				C9A0BEF7F37724806D6C3363E9D9A383 /* GenericCheckboxView.swift */,
 				3142E33A0A5639EA741BBC9E31B1F168 /* GenericTextCheckboxView.swift */,
@@ -13868,6 +13871,7 @@
 				E15670AD55BB14F12390012482E4A8BD /* UINavigationController+Extensions.swift in Sources */,
 				5D76B5A81BDFAC11F655B90D2A429D5F /* UINavigationController+Internal.swift in Sources */,
 				BCC6CD63A6A9628E98E6AC6DFC1D28A0 /* UIStackView+Extension.swift in Sources */,
+				8945DB84250B5DB400D82F8E /* FeedTableViewHeader.swift in Sources */,
 				6620AAC1A165FE8687B491A40525F152 /* UIStackView+Palette.swift in Sources */,
 				3DF1231711633066A35BF602377806D0 /* UITableView+Extensions.swift in Sources */,
 				96DFFFB3256E7DED7BCA565B1DE55112 /* UIView+BorderLine.swift in Sources */,

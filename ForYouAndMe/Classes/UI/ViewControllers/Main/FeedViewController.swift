@@ -10,8 +10,6 @@ import RxSwift
 
 class FeedViewController: UIViewController {
     
-    private static let tableViewHeaderHeight: CGFloat = 100.0
-    
     private lazy var listManager: FeedListManager = {
         return FeedListManager(repository: self.repository,
                                     navigator: self.navigator,
@@ -31,18 +29,9 @@ class FeedViewController: UIViewController {
         return view
     }()
     
-    private lazy var tableViewHeaderView: UIView = {
-        // TODO: Replace with FeedTableViewHeader
-        let view = UIView()
-        
-        let backgroundView = UIView()
-        backgroundView.addGradientView(GradientView(type: .primaryBackground))
-        view.addSubview(backgroundView)
-        backgroundView.autoSetDimension(.height, toSize: UIScreen.main.bounds.height)
-        backgroundView.autoPinEdgesToSuperviewEdges(with: .zero, excludingEdge: .top)
-        
-        view.autoSetDimension(.height, toSize: Self.tableViewHeaderHeight)
-//        view.addGradientView(GradientView(type: .primaryBackground))
+    private lazy var tableViewHeaderView: FeedTableViewHeader = {
+        let view = FeedTableViewHeader()
+        view.setPoints(0)
         return view
     }()
     
@@ -58,7 +47,7 @@ class FeedViewController: UIViewController {
         return tableView
     }()
     
-    private lazy var emptyView = FeedEmptyView(withTopOffset: Self.tableViewHeaderHeight)
+    private lazy var emptyView = FeedEmptyView(withTopOffset: FeedTableViewHeader.height)
     
     private let navigator: AppNavigator
     private let repository: Repository
@@ -96,8 +85,10 @@ class FeedViewController: UIViewController {
         
         self.listManager.viewWillAppear()
         
+        // TODO: Refresh UI with data from API
         self.headerView.setTitleText("2ND TRIMESTER")
         self.headerView.setSubtitleText("Week 12")
+        self.tableViewHeaderView.setPoints(7)
     }
     
     override func viewDidLayoutSubviews() {

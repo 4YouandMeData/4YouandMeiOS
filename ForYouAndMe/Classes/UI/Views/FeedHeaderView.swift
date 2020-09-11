@@ -60,11 +60,16 @@ class FeedHeaderView: UIView {
         self.notificationButtonPressed = notificationButtonPressed
         super.init(frame: .zero)
         
+        self.autoSetDimension(.height, toSize: Self.height)
+        
         self.addGradientView(GradientView(type: .primaryBackground))
         
         let stackView = UIStackView.create(withAxis: .horizontal, spacing: 16.0)
         self.addSubview(stackView)
-        stackView.autoPinEdgesToSuperviewSafeArea(with: UIEdgeInsets(top: 20.0, left: 20.0, bottom: 20.0, right: 20.0))
+        stackView.autoPinEdgesToSuperviewSafeArea(with: UIEdgeInsets(top: 24.0,
+                                                                     left: Constants.Style.DefaultHorizontalMargins,
+                                                                     bottom: 24.0,
+                                                                     right: Constants.Style.DefaultHorizontalMargins))
         
         let textStackView = UIStackView.create(withAxis: .vertical, spacing: 10.0)
         textStackView.addArrangedSubview(self.titleLabel)
@@ -80,6 +85,8 @@ class FeedHeaderView: UIView {
     required init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
+    
+    // MARK: - Public Methods
     
     public func setTitleText(_ title: String) {
         self.titleLabel.attributedText = NSAttributedString.create(withText: title,
