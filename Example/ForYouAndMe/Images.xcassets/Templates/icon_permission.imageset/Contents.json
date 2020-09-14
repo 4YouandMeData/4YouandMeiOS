@@ -1,17 +1,17 @@
 {
   "images" : [
     {
-      "filename" : "Tracciato 2065.png",
+      "filename" : "icon_permission.png",
       "idiom" : "universal",
       "scale" : "1x"
     },
     {
-      "filename" : "Tracciato 2065@2x.png",
+      "filename" : "icon_permission@2x.png",
       "idiom" : "universal",
       "scale" : "2x"
     },
     {
-      "filename" : "Tracciato 2065@3x.png",
+      "filename" : "icon_permission@3x.png",
       "idiom" : "universal",
       "scale" : "3x"
     }
