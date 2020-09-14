@@ -13,6 +13,7 @@ class DeviceItemView: UIView {
     
     init(withTitle title: String,
          imageName: ImageName,
+         connected: Bool,
          gestureCallback: @escaping DeviceItemViewCallback) {
         
         super.init(frame: .zero)
@@ -45,11 +46,11 @@ class DeviceItemView: UIView {
         label.numberOfLines = 0
         label.setContentHuggingPriority(UILayoutPriority(100), for: .horizontal)
         
-        stackView.addArrangedSubview(label, horizontalInset: 16)
+        stackView.addArrangedSubview(label, horizontalInset: 8)
         
         attributedString = NSAttributedString.create(withText: "Connect",
                                                      fontStyle: .paragraph,
-                                                     colorType: .secondaryText,
+                                                     colorType: (connected) ? .gradientPrimaryEnd : .secondaryText,
                                                      textAlignment: .left,
                                                      underlined: false)
         
@@ -60,12 +61,14 @@ class DeviceItemView: UIView {
         
         stackView.addArrangedSubview(connectLabel, horizontalInset: 16)
         
-        stackView.addImage(withImage: ImagePalette.image(withName: .nextButtonSecondary) ?? UIImage(),
-                           color: ColorPalette.color(withType: .primaryText),
+        stackView.addImage(withImage: ImagePalette.image(withName: (connected) ? .nextButtonSecondaryDisabled : .nextButtonSecondary) ?? UIImage(),
+                           color: ColorPalette.color(withType: .gradientPrimaryEnd),
                            sizeDimension: 32)
         
-        let tap = UITapGestureRecognizer(target: self, action: #selector(viewDidPressed))
-        self.addGestureRecognizer(tap)
+        if connected == false {
+            let tap = UITapGestureRecognizer(target: self, action: #selector(viewDidPressed))
+            self.addGestureRecognizer(tap)
+        }
     }
     
     required init?(coder aDecoder: NSCoder) {

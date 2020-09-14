@@ -46,19 +46,23 @@ public class DevicesIntegrationViewController: UIViewController {
         
         let garminItem = DeviceItemView(withTitle: "Garmin"/*StringsProvider.string(forKey: .studyInfoRewardsItem)*/,
             imageName: .fitbitIcon,
+            connected: true,
             gestureCallback: { [weak self] in
                 self?.navigator.showWearableLogin(loginUrl: URL(string: "https://admin-4youandme-staging.balzo.eu/users/integration_oauth/garmin")!,
                                                   navigationController: self?.navigationController ?? UINavigationController())
         })
         self.scrollStackView.stackView.addArrangedSubview(garminItem)
+        garminItem.autoSetDimension(.height, toSize: 72)
         
         let ouraItem = DeviceItemView(withTitle: "Oura"/*StringsProvider.string(forKey: .studyInfoRewardsItem)*/,
             imageName: .ouraIcon,
+            connected: false,
             gestureCallback: { [weak self] in
                 self?.navigator.showWearableLogin(loginUrl: URL(string: "https://admin-4youandme-staging.balzo.eu/users/integration_oauth/oura")!,
                                                   navigationController: self?.navigationController ?? UINavigationController())
         })
         self.scrollStackView.stackView.addArrangedSubview(ouraItem)
+        ouraItem.autoSetDimension(.height, toSize: 72)
         
         self.scrollStackView.stackView.addBlankSpace(space: 40.0)
     }
