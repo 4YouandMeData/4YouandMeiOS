@@ -423,6 +423,12 @@ class AppNavigator {
         navigationController.pushViewController(userInfoViewController, animated: true)
     }
     
+    public func showPermissions(navigationController: UINavigationController, title: String) {
+        // TODO: Load From Server
+        let permissionViewController = PermissionViewController(withTitle: title)
+        navigationController.pushViewController(permissionViewController, animated: true)
+    }
+    
     // MARK: Progress HUD
     
     public func pushProgressHUD() {

@@ -24,15 +24,22 @@ public extension UIStackView {
         self.addArrangedSubview(view)
     }
     
-    func addArrangedSubview(_ view: UIView, horizontalInset: CGFloat) {
-        self.addArrangedSubview(view, leftInset: horizontalInset, rightInset: horizontalInset)
+    func addArrangedSubview(_ view: UIView, horizontalInset: CGFloat, verticalInset: CGFloat = 0) {
+        self.addArrangedSubview(view, leftInset: horizontalInset,
+                                rightInset: horizontalInset,
+                                topInset: verticalInset,
+                                bottomInset: verticalInset)
     }
     
-    func addArrangedSubview(_ view: UIView, leftInset: CGFloat, rightInset: CGFloat) {
-        if leftInset > 0.0 || rightInset > 0.0 {
-            let containerView = view.embedInView(withInsets: UIEdgeInsets(top: 0.0,
+    func addArrangedSubview(_ view: UIView, leftInset: CGFloat,
+                            rightInset: CGFloat,
+                            topInset: CGFloat = 0,
+                            bottomInset: CGFloat = 0) {
+        
+        if leftInset > 0.0 || rightInset > 0.0 || topInset > 0.0 || bottomInset > 0.0 {
+            let containerView = view.embedInView(withInsets: UIEdgeInsets(top: topInset,
                                                                           left: leftInset,
-                                                                          bottom: 0.0,
+                                                                          bottom: bottomInset,
                                                                           right: rightInset))
             self.addArrangedSubview(containerView)
         } else {
@@ -153,7 +160,7 @@ public extension UIStackView {
             lineView.autoAlignAxis(toSuperviewAxis: .horizontal)
             lineView.autoPinEdge(toSuperviewEdge: (isVertical) ? .top : .leading, withInset: inset, relation: .equal)
             lineView.autoPinEdge(toSuperviewEdge: (isVertical) ? .bottom : .trailing, withInset: inset, relation: .equal)
-
+            
             return lineContainerView
         }
         

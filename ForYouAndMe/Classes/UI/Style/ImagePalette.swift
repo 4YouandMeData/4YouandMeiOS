@@ -39,6 +39,8 @@ enum ImageName: String, CaseIterable {
     case clearCircular = "clear_circular"
     case fitbitIcon = "fitbit_icon"
     case ouraIcon = "oura_icon"
+    case pushNotificationIcon = "push_notification_icon"
+    case locationIcon = "location_icon"
 }
 
 enum TemplateImageName: String, CaseIterable {

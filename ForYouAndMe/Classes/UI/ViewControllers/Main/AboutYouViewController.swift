@@ -104,8 +104,8 @@ class AboutYouViewController: UIViewController {
             templateImageName: .permissionIcon,
             colorType: .primary,
             gestureCallback: { [weak self] in
-                let page = Page(id: "faq", title: "FAQ", body: Constants.Test.LoremIpsum)
-                self?.showPage(page: page, isModal: false)
+                self?.navigator.showPermissions(navigationController: self?.navigationController ?? UINavigationController(),
+                title: "Permissions")
         })
         self.scrollStackView.stackView.addArrangedSubview(permissions)
         
