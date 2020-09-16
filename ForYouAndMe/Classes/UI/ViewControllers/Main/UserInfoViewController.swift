@@ -11,11 +11,11 @@ import RxCocoa
 
 class UserInfoViewController: UIViewController {
     
-    private enum PageState { case read, edit }
+    fileprivate enum PageState { case read, edit }
     
-    private lazy var scrollStackView: ScrollStackView = {
-        let scrollStackView = ScrollStackView(axis: .vertical, horizontalInset: 0.0)
-        return scrollStackView
+    private lazy var textFieldStackView: UIStackView = {
+        let stackView = UIStackView.create(withAxis: .vertical)
+        return stackView
     }()
     
     private let pageTitle: String
@@ -42,17 +42,28 @@ class UserInfoViewController: UIViewController {
         
         self.view.backgroundColor = ColorPalette.color(withType: .secondary)
         
-        // ScrollStackView
-        self.view.addSubview(self.scrollStackView)
-        self.scrollStackView.autoPinEdgesToSuperviewSafeArea()
+        // ScrollView
+        let scrollStackView = ScrollStackView(axis: .vertical, horizontalInset: 0)
+        self.view.addSubview(scrollStackView)
+        scrollStackView.autoPinEdgesToSuperviewSafeArea()
         
         // Header View
         let headerView = UserInfoHeaderView()
         headerView.setTitle(self.pageTitle)
-        self.scrollStackView.stackView.addArrangedSubview(headerView)
+        scrollStackView.stackView.addArrangedSubview(headerView)
+        scrollStackView.stackView.addArrangedSubview(self.textFieldStackView,
+                                                     horizontalInset: Constants.Style.DefaultHorizontalMargins)
+        
+        self.textFieldStackView.addBlankSpace(space: 16.0)
+        self.userInfoParameters.forEach { parameter in
+            self.textFieldStackView.addBlankSpace(space: 4.0)
+            self.textFieldStackView.addTextFieldView(forUserInfoParameter: parameter)
+        }
         
         self.pageState.subscribe(onNext: { [weak self] newPageState in
             self?.updateEditButton(pageState: newPageState)
+            self?.updateTextFields(pageState: newPageState)
+            self?.view.endEditing(true)
         }).disposed(by: self.diposeBag)
     }
     
@@ -62,6 +73,8 @@ class UserInfoViewController: UIViewController {
         self.navigationController?.navigationBar.apply(style: NavigationBarStyleCategory.primary(hidden: false).style)
         self.addCustomBackButton()
     }
+    
+    // MARK: - Private Methods
     
     private func updateEditButton(pageState: PageState) {
         let button = UIButton()
@@ -84,8 +97,12 @@ class UserInfoViewController: UIViewController {
         self.navigationItem.rightBarButtonItem = UIBarButtonItem(customView: button)
     }
     
-    private func showPage(page: Page, isModal: Bool) {
-        self.navigator.showInfoDetailPage(presenter: self, page: page, isModal: isModal)
+    private func updateTextFields(pageState: PageState) {
+        self.textFieldStackView.arrangedSubviews.forEach { view in
+            if let textFieldView = view as? GenericTextFieldView {
+                textFieldView.update(withPageState: pageState)
+            }
+        }
     }
     
     // MARK: - Actions
@@ -97,5 +114,30 @@ class UserInfoViewController: UIViewController {
     @objc private func submitButtonPressed() {
         // TODO: Submit new data to server before changing state
         self.pageState.accept(.read)
+    }
+}
+
+private extension UIStackView {
+    func addTextFieldView(forUserInfoParameter parameter: UserInfoParameter) {
+        self.addLabel(withText: parameter.name,
+                           fontStyle: .paragraph,
+                           colorType: .fourthText,
+                           textAlignment: .left)
+        self.addBlankSpace(space: 8.0)
+        let textFieldView = GenericTextFieldView(keyboardType: .default, styleCategory: .primary)
+        textFieldView.text = parameter.value
+        self.addArrangedSubview(textFieldView)
+    }
+}
+
+private extension GenericTextFieldView {
+    func update(withPageState pageState: UserInfoViewController.PageState) {
+        switch pageState {
+        case .edit:
+            self.overrideValidIconShowLogic(isValid: false)
+            self.textField.isEnabled = true
+        case .read: self.overrideValidIconShowLogic(isValid: true)
+            self.textField.isEnabled = false
+        }
     }
 }

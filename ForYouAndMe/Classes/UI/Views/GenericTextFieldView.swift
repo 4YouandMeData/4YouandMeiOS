@@ -95,6 +95,8 @@ class GenericTextFieldView: UIView {
         return label
     }()
     
+    private var iconValidShowLogicOverridden: Bool = false
+    
     private let disposeBag = DisposeBag()
     
     init(keyboardType: UIKeyboardType, styleCategory: GenericTextFieldStyleCategory) {
@@ -132,7 +134,7 @@ class GenericTextFieldView: UIView {
         
         self.isValid.subscribe(onNext: { [weak self] isValid in
             guard let self = self else { return }
-            self.self.updateUI(phoneValid: isValid)
+            self.updateUI(isValid: isValid)
         }).disposed(by: self.disposeBag)
         
         self.clearError(clearErrorText: true)
@@ -166,6 +168,17 @@ class GenericTextFieldView: UIView {
         self.isValid.accept(isValid)
     }
     
+    public func overrideValidIconShowLogic(isValid: Bool) {
+        self.iconValidShowLogicOverridden = true
+        self.textFieldCheckmarkButton.isHidden = false == isValid
+        self.textFieldEditButton.isHidden = isValid
+    }
+    
+    public func resetValidIconShowLogic() {
+        self.iconValidShowLogicOverridden = false
+        self.checkValidation()
+    }
+    
     // MARK: Actions
     
     @objc private func textFieldEditButtonPressed() {
@@ -179,9 +192,11 @@ class GenericTextFieldView: UIView {
     
     // MARK: Private Methods
     
-    private func updateUI(phoneValid: Bool) {
-        self.textFieldCheckmarkButton.isHidden = false == phoneValid
-        self.textFieldEditButton.isHidden = phoneValid
+    private func updateUI(isValid: Bool) {
+        if false == self.iconValidShowLogicOverridden {
+            self.textFieldCheckmarkButton.isHidden = false == isValid
+            self.textFieldEditButton.isHidden = isValid
+        }
     }
 }
 
