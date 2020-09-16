@@ -1,0 +1,47 @@
+//
+//  ContactsPermission.swift
+//  ForYouAndMe
+//
+//  Created by Giuseppe Lapenta on 16/09/2020.
+//
+
+import Contacts
+import AddressBook
+
+struct ContactsPermission: PermissionProtocol {
+    
+    var isAuthorized: Bool {
+        if #available(iOS 9.0, *) {
+            return CNContactStore.authorizationStatus(for: .contacts) == .authorized
+        } else {
+            return ABAddressBookGetAuthorizationStatus() == .authorized
+        }
+    }
+    
+    var isDenied: Bool {
+        if #available(iOS 9.0, *) {
+            return CNContactStore.authorizationStatus(for: .contacts) == .denied
+        } else {
+            return ABAddressBookGetAuthorizationStatus() == .denied
+        }
+    }
+    
+    func request(completion: @escaping () -> Void?) {
+        if #available(iOS 9.0, *) {
+            let store = CNContactStore()
+            store.requestAccess(for: .contacts, completionHandler: { (granted, error) in
+                DispatchQueue.main.async {
+                    completion()
+                }
+            })
+        } else {
+            let addressBookRef: ABAddressBook = ABAddressBookCreateWithOptions(nil, nil).takeRetainedValue()
+            ABAddressBookRequestAccessWithCompletion(addressBookRef) {
+                (granted: Bool, error: CFError?) in
+                DispatchQueue.main.async() {
+                    completion()
+                }
+            }
+        }
+    }
+}
