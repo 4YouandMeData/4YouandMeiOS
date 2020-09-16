@@ -14,6 +14,7 @@ enum ButtonTextStyleCategory: StyleCategory {
     case secondaryBackground(customHeight: CGFloat?)
     case loadingErrorStyle
     case feed
+    case edit
     
     var style: Style<UIButton> {
         switch self {
@@ -52,6 +53,16 @@ enum ButtonTextStyleCategory: StyleCategory {
             button.setTitleColor(ColorPalette.color(withType: .primaryText), for: .normal)
             button.titleLabel?.font = FontPalette.fontStyleData(forStyle: .header2).font
             button.addShadowButton()
+            }
+        case .edit: return Style<UIButton> { button in
+            let buttonHeight = Constants.Style.EditButtonHeight
+            button.heightConstraintValue = buttonHeight
+            button.layer.cornerRadius = buttonHeight / 2.0
+            button.backgroundColor = .clear
+            button.setTitleColor(ColorPalette.color(withType: .secondaryText), for: .normal)
+            button.titleLabel?.font = FontPalette.fontStyleData(forStyle: .header3).font
+            button.layer.borderWidth = 2.0
+            button.layer.borderColor = ColorPalette.color(withType: .secondaryText).cgColor
             }
         }
     }

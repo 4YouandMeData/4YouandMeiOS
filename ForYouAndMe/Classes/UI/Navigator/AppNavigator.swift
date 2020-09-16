@@ -405,6 +405,13 @@ class AppNavigator {
         navigationController.pushViewController(devicesViewController, animated: true)
     }
     
+    public func showUserInfoPage(navigationController: UINavigationController,
+                                 title: String,
+                                 userInfoParameters: [UserInfoParameter]) {
+        let userInfoViewController = UserInfoViewController(withTitle: title, userInfoParameters: userInfoParameters)
+        navigationController.pushViewController(userInfoViewController, animated: true)
+    }
+    
     // MARK: Progress HUD
     
     public func pushProgressHUD() {

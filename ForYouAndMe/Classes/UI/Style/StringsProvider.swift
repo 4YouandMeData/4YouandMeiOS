@@ -130,6 +130,9 @@ enum StringKey: String, CaseIterable, CodingKey {
 //    case studyInfoContactItem = "STUDY_INFO_CONTACT_ITEM"
 //    case studyInfoRewardsItem = "STUDY_INFO_REWARDS_ITEM"
 //    case studyInfoFaqItem = "STUDY_INFO_FAQ_ITEM"
+    // User Info
+    case userInfoButtonEdit = "PROFILE_USER_INFO_BUTTON_EDIT"
+    case userInfoButtonSubmit = "PROFILE_USER_INFO_BUTTON_SUBMIT"
     // Generic
     case genericInfoTitle = "GENERIC_INFO_TITLE"
     // Errors

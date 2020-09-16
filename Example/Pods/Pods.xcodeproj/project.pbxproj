@@ -1376,6 +1376,10 @@
 		893A6B58250A3258008457B7 /* FitnessTask.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893A6B57250A3258008457B7 /* FitnessTask.swift */; };
 		893A6B5C250A76BD008457B7 /* InfoDetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893A6B5B250A76BD008457B7 /* InfoDetailViewController.swift */; };
 		893A6B5E250A87D4008457B7 /* FeedHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893A6B5D250A87D4008457B7 /* FeedHeaderView.swift */; };
+		893F79612512418700DD0153 /* UserInfoViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893F79602512418700DD0153 /* UserInfoViewController.swift */; };
+		893F796325124E1100DD0153 /* UIButton+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893F796225124E1100DD0153 /* UIButton+Extensions.swift */; };
+		893F79652512691400DD0153 /* UserInfoHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893F79642512691400DD0153 /* UserInfoHeaderView.swift */; };
+		893F79672512694B00DD0153 /* UserInfoParameter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893F79662512694B00DD0153 /* UserInfoParameter.swift */; };
 		89419F6DA745C9EB2B494B0BF12289E9 /* ORKStepNavigationRule_Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = E1B462B360C1AE7D0A8C3A249F4AD183 /* ORKStepNavigationRule_Internal.h */; settings = {ATTRIBUTES = (Project, ); }; };
 		8945DB84250B5DB400D82F8E /* FeedTableViewHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8945DB83250B5DB400D82F8E /* FeedTableViewHeader.swift */; };
 		8948702525029EE200B3B160 /* UserDataChartView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8948702425029EE100B3B160 /* UserDataChartView.swift */; };
@@ -4664,6 +4668,10 @@
 		893A6B57250A3258008457B7 /* FitnessTask.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FitnessTask.swift; sourceTree = "<group>"; };
 		893A6B5B250A76BD008457B7 /* InfoDetailViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InfoDetailViewController.swift; sourceTree = "<group>"; };
 		893A6B5D250A87D4008457B7 /* FeedHeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedHeaderView.swift; sourceTree = "<group>"; };
+		893F79602512418700DD0153 /* UserInfoViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserInfoViewController.swift; sourceTree = "<group>"; };
+		893F796225124E1100DD0153 /* UIButton+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIButton+Extensions.swift"; sourceTree = "<group>"; };
+		893F79642512691400DD0153 /* UserInfoHeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserInfoHeaderView.swift; sourceTree = "<group>"; };
+		893F79662512694B00DD0153 /* UserInfoParameter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserInfoParameter.swift; sourceTree = "<group>"; };
 		89432B13AC3C17E78C1AD73460567477 /* ORKResult.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = ORKResult.m; path = ResearchKit/Common/ORKResult.m; sourceTree = "<group>"; };
 		8945DB83250B5DB400D82F8E /* FeedTableViewHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedTableViewHeader.swift; sourceTree = "<group>"; };
 		89465154303E8C3F03CBBA4F310DFEB1 /* GoogleDataTransport-Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = "GoogleDataTransport-Info.plist"; sourceTree = "<group>"; };
@@ -6846,6 +6854,7 @@
 				462F439A698061962E71ABB26FCCD3AA /* QuickActivityOption.swift */,
 				85D302A9A79C73518B63D5521C859FE6 /* Survey.swift */,
 				47B00CDA486921C67E85BF06B21BAA77 /* WearableApp.swift */,
+				893F79662512694B00DD0153 /* UserInfoParameter.swift */,
 				7F79E3BC85A9171F835441AB33C605D1 /* Sections */,
 			);
 			name = Entities;
@@ -7700,6 +7709,7 @@
 				84E280ADA8E9473C14CBE82B51C239E4 /* StudyInfoViewController.swift */,
 				23B4204ACE553E0617ED306201B2A092 /* TaskViewController.swift */,
 				981E88D551E94B597CCFAFC9CEF72499 /* UserDataViewController.swift */,
+				893F79602512418700DD0153 /* UserInfoViewController.swift */,
 				20C05DDE250BE664006EF7E6 /* AboutYouViewController.swift */,
 			);
 			path = Main;
@@ -9130,6 +9140,7 @@
 				20C05DDC250BE205006EF7E6 /* InfoDetailHeaderView.swift */,
 				20C05DE0250BE982006EF7E6 /* AboutYouHeaderView.swift */,
 				20C05DE4250C13D0006EF7E6 /* DeviceItemView.swift */,
+				893F79642512691400DD0153 /* UserInfoHeaderView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -9787,6 +9798,7 @@
 				94726226FC3623C8F80B9DD35F5A781A /* UIViewController+Alert.swift */,
 				C17822F2DCA482DDD79D8D4BF90B244F /* UIViewController+Extensions.swift */,
 				B08A5145BF1A64684FDA1936EE34A083 /* URL+Extensions.swift */,
+				893F796225124E1100DD0153 /* UIButton+Extensions.swift */,
 			);
 			name = Utility;
 			path = ForYouAndMe/Classes/Utility;
@@ -13788,6 +13800,7 @@
 				20C05DE3250C0C31006EF7E6 /* DevicesIntegrationViewController.swift in Sources */,
 				86B4508FB22224524A371B44F55298EC /* FeedListManager.swift in Sources */,
 				D9DBC227828E072D17608B176B4E6EEE /* FeedListSectionHeader.swift in Sources */,
+				893F79652512691400DD0153 /* UserInfoHeaderView.swift in Sources */,
 				40AE73C82FE18D9547C5DA3ACF409990 /* FeedTableViewCell.swift in Sources */,
 				71A6CE014F93E61EF99A05B340BE649D /* FeedViewController.swift in Sources */,
 				F011304A7DA5B5ED0820434E3A93AF30 /* FileDataExtension.swift in Sources */,
@@ -13797,6 +13810,7 @@
 				12F1DD410C218CB5E4E0B2A70B68CB9D /* FYAMManager.swift in Sources */,
 				B04AF381ABC2D4C874836ADD9401F22B /* GaitTask.swift in Sources */,
 				1ECDC25801AF70ACAC3C0EA3F97AAF82 /* GenericButtonView.swift in Sources */,
+				893F79612512418700DD0153 /* UserInfoViewController.swift in Sources */,
 				8948702525029EE200B3B160 /* UserDataChartView.swift in Sources */,
 				1601972921890B14557203FD9EA2FE2D /* GenericCheckboxView.swift in Sources */,
 				16A51268FAFC116FA9A93CD45C519563 /* GenericTextCheckboxView.swift in Sources */,
@@ -13866,6 +13880,7 @@
 				DA776494CC869EE29526281C5D946AD0 /* ScreeningSectionCoordinator.swift in Sources */,
 				D1F1648297185AECAF1319AB0B86115A /* ScrollStackView.swift in Sources */,
 				EE3B9F48579B4F944A2B3F0C4555D344 /* ServerErrors.swift in Sources */,
+				893F796325124E1100DD0153 /* UIButton+Extensions.swift in Sources */,
 				ABC055590EBF499F631C86C62EE9A627 /* Services.swift in Sources */,
 				F2DE29D19A1CB424E11704F42D321AFB /* SetupLaterViewController.swift in Sources */,
 				8A920AE7FBA91E964F19B85EE51DCE95 /* SingleTextHeaderView.swift in Sources */,
@@ -13878,6 +13893,7 @@
 				75734A75FB93EB60368EBBCFB28A9B06 /* Survey.swift in Sources */,
 				938F94D4E81A3266CC4E88914C0155CA /* TaskEmptyView.swift in Sources */,
 				9A73909D910F91BC17DC9ED6DF9DC9BF /* TaskSectionCoordinator.swift in Sources */,
+				893F79672512694B00DD0153 /* UserInfoParameter.swift in Sources */,
 				E4FF0F09FBF9FF324529E5AA3C46FC07 /* TaskType.swift in Sources */,
 				9233AADC93EAC91B4ECB939E11E1AFF3 /* TaskViewController.swift in Sources */,
 				31D87BBF425D6AF01BCB83E7CB1B632F /* TestNetworkApiGateway.swift in Sources */,

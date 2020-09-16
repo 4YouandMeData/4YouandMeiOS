@@ -44,8 +44,32 @@ class AboutYouViewController: UIViewController {
             templateImageName: .pregnancyIcon,
             colorType: .primary,
             gestureCallback: { [weak self] in
-                let page = Page(id: "contact", title: "Contact", body: Constants.Test.LoremIpsum)
-                self?.showPage(page: page, isModal: false)
+                guard let navigationController = self?.navigationController else {
+                    assertionFailure("Missing expected navigation controller")
+                    return
+                }
+                // TODO: Replace mock data with data from server
+                let title = "Your Pregnancy"/*StringsProvider.string(forKey: .studyInfoContactItem)*/
+                let userInfoParameters: [UserInfoParameter] = [
+                    UserInfoParameter(name: "Your due date",
+                                      value: "2020-06-03T12:59:39.083Z",
+                                      type: .date,
+                                      items: []),
+                    UserInfoParameter(name: "Your baby's gender",
+                                      value: "1",
+                                      type: .items,
+                                      items: [
+                                        UserInfoParameterItem(identifier: "1", value: "It's a Boy!"),
+                                        UserInfoParameterItem(identifier: "2", value: "It's a Girl!")
+                    ]),
+                    UserInfoParameter(name: "Your baby's name",
+                                      value: "Lil'Pea",
+                                      type: .string,
+                                      items: [])
+                ]
+                self?.navigator.showUserInfoPage(navigationController: navigationController,
+                                                 title: title,
+                                                 userInfoParameters: userInfoParameters)
         })
         self.scrollStackView.stackView.addArrangedSubview(yourPregnancy)
         

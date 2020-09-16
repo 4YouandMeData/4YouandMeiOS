@@ -126,7 +126,9 @@
       "VIDEO_DIARY_MISSING_PERMISSION_BODY_MIC": "Please enable it in the Settings to continue",
       "VIDEO_DIARY_MISSING_PERMISSION_SETTINGS": "Settings",
       "VIDEO_DIARY_MISSING_PERMISSION_DISCARD": "Cancel task",
-      "PROFILE_TITLE": "About you"
+      "PROFILE_TITLE": "About you",
+      "PROFILE_USER_INFO_BUTTON_EDIT": "Edit",
+      "PROFILE_USER_INFO_BUTTON_SUBMIT": "Done",
     },
     "country_codes": ["US", "GB", "IT"]
 }
