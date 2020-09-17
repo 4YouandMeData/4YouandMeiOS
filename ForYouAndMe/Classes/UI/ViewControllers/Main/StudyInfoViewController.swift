@@ -40,7 +40,8 @@ class StudyInfoViewController: UIViewController {
         self.scrollStackView.autoPinEdgesToSuperviewEdges(with: .zero, excludingEdge: .top)
         self.scrollStackView.autoPinEdge(.top, to: .bottom, of: headerView, withOffset: 30)
         
-        let contactInformation = GenericListItemView(withTitle: "Contact Information"/*StringsProvider.string(forKey: .studyInfoContactItem)*/,
+        var title = StringsProvider.string(forKey: .studyInfoContactTitle)
+        let contactInformation = GenericListItemView(withTitle: title,
             templateImageName: .studyInfoContact,
             colorType: .primary,
             gestureCallback: { [weak self] in
@@ -49,7 +50,8 @@ class StudyInfoViewController: UIViewController {
         })
         self.scrollStackView.stackView.addArrangedSubview(contactInformation)
         
-        let rewardsView = GenericListItemView(withTitle: "Rewards"/*StringsProvider.string(forKey: .studyInfoRewardsItem)*/,
+        title = StringsProvider.string(forKey: .studyInfoRewardsTitle)
+        let rewardsView = GenericListItemView(withTitle: title,
             templateImageName: .studyInfoRewards,
             colorType: .primary,
             gestureCallback: { [weak self] in
@@ -58,7 +60,8 @@ class StudyInfoViewController: UIViewController {
         })
         self.scrollStackView.stackView.addArrangedSubview(rewardsView)
         
-        let faqView = GenericListItemView(withTitle: "FAQ Page"/*StringsProvider.string(forKey: .studyInfoFaqItem)*/,
+        title = StringsProvider.string(forKey: .studyInfoFaqTitle)
+        let faqView = GenericListItemView(withTitle: title,
             templateImageName: .studyInfoFAQ,
             colorType: .primary,
             gestureCallback: { [weak self] in

@@ -130,7 +130,15 @@
       "PROFILE_USER_INFO_BUTTON_EDIT": "Edit",
       "PROFILE_USER_INFO_BUTTON_SUBMIT": "Done",
       "INTRO_VIDEO_TITLE": "STUDY VIDEO",
-      "INTRO_VIDEO_CONTINUE_BUTTON": "Continue"
+      "INTRO_VIDEO_CONTINUE_BUTTON": "Continue",
+      "STUDY_INFO_CONTACT_INFO": "Contact Information",
+      "STUDY_INFO_REWARDS": "Rewards",
+      "STUDY_INFO_FAQ": "FAQ Page",
+      "ABOUT_YOU_YOUR_PREGNANCY": "Your Pregnancy",
+      "ABOUT_YOU_APPS_AND_DEVICES": "Your Apps & Devices",
+      "ABOUT_YOU_REVIEW_CONSENT": "Review Consent",
+      "ABOUT_YOU_PERMISSIONS": "Permissions",
+      "ABOUT_YOU_DISCLAIMER": "You are currently participating in the BUMP pregnancy research study. If for any reason you no longer wish to continue participating in the study, you can elect to leave this study by contacting the study team."
     },
     "country_codes": ["US", "GB", "IT"]
 }

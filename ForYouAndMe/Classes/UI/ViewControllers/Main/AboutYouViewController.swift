@@ -40,7 +40,8 @@ class AboutYouViewController: UIViewController {
         self.scrollStackView.autoPinEdgesToSuperviewEdges(with: .zero, excludingEdge: .top)
         self.scrollStackView.autoPinEdge(.top, to: .bottom, of: headerView, withOffset: 30)
         
-        let yourPregnancy = GenericListItemView(withTitle: "Your Pregnancy"/*StringsProvider.string(forKey: .studyInfoContactItem)*/,
+        let pregnancyTitle = StringsProvider.string(forKey: .aboutYouYourPregnancy)
+        let yourPregnancy = GenericListItemView(withTitle: pregnancyTitle,
             templateImageName: .pregnancyIcon,
             colorType: .primary,
             gestureCallback: { [weak self] in
@@ -78,13 +79,14 @@ class AboutYouViewController: UIViewController {
                                                  userInfoParameters: userInfoParameters)
         })
         self.scrollStackView.stackView.addArrangedSubview(yourPregnancy)
-        
-        let appsAndDevices = GenericListItemView(withTitle: "Your Apps & Devices"/*StringsProvider.string(forKey: .studyInfoRewardsItem)*/,
+    
+        let appsAndDevicesTitle = StringsProvider.string(forKey: .aboutYouAppsAndDevices)
+        let appsAndDevices = GenericListItemView(withTitle: appsAndDevicesTitle,
             templateImageName: .devicesIcon,
             colorType: .primary,
             gestureCallback: { [weak self] in
                 self?.navigator.showAppsAndDevices(navigationController: self?.navigationController ?? UINavigationController(),
-                                                   title: "Your Apps & Devices")
+                                                   title: appsAndDevicesTitle)
         })
         self.scrollStackView.stackView.addArrangedSubview(appsAndDevices)
         
@@ -92,7 +94,8 @@ class AboutYouViewController: UIViewController {
                                                         inset: 21,
                                                         isVertical: false)
         
-        let reviewConsent = GenericListItemView(withTitle: "Review Consent"/*StringsProvider.string(forKey: .studyInfoFaqItem)*/,
+        let consentTitle = StringsProvider.string(forKey: .aboutYouReviewConsent)
+        let reviewConsent = GenericListItemView(withTitle: consentTitle,
             templateImageName: .reviewConsentIcon,
             colorType: .primary,
             gestureCallback: { [weak self] in
@@ -100,17 +103,19 @@ class AboutYouViewController: UIViewController {
         })
         self.scrollStackView.stackView.addArrangedSubview(reviewConsent)
         
-        let permissions = GenericListItemView(withTitle: "Permissions"/*StringsProvider.string(forKey: .studyInfoFaqItem)*/,
+        let permissionTitle = StringsProvider.string(forKey: .aboutYouPermissions)
+        let permissions = GenericListItemView(withTitle: permissionTitle,
             templateImageName: .permissionIcon,
             colorType: .primary,
             gestureCallback: { [weak self] in
                 self?.navigator.showPermissions(navigationController: self?.navigationController ?? UINavigationController(),
-                title: "Permissions")
+                title: permissionTitle)
         })
         self.scrollStackView.stackView.addArrangedSubview(permissions)
         
         self.scrollStackView.stackView.addBlankSpace(space: 57)
-        self.scrollStackView.stackView.addLabel(withText: "You are currently participating in the BUMP pregnancy research study. If for any reason you no longer wish to continue participating in the study, you can elect to leave this study by contacting the study team.",
+        let disclaimerFooter = StringsProvider.string(forKey: .disclaimerFooter)
+        self.scrollStackView.stackView.addLabel(withText: disclaimerFooter,
                                                 fontStyle: .paragraph,
                                                 colorType: .fourthText,
                                                 textAlignment: .left,
