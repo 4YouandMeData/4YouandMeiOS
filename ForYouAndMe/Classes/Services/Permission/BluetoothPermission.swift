@@ -14,56 +14,35 @@ class BluetoothPermission: NSObject, PermissionProtocol {
     private var manager: CBCentralManager?
     
     var isAuthorized: Bool {
-        if #available(iOS 13.0, *) {
-            return CBCentralManager().authorization == .allowedAlways
-        }
-        return CBPeripheralManager.authorizationStatus() == .authorized
+        return CBCentralManager().authorization == .allowedAlways
     }
     
     var isDenied: Bool {
-        if #available(iOS 13.0, *) {
-            return CBCentralManager().authorization == .denied
-        }
-        return CBPeripheralManager.authorizationStatus() == .denied
+        return CBCentralManager().authorization == .denied
     }
     
     var isRestricted: Bool {
-        if #available(iOS 13.0, *) {
-                   return CBCentralManager().authorization == .restricted
-               }
-        return CBPeripheralManager.authorizationStatus() == .restricted
+        return CBCentralManager().authorization == .restricted
     }
     
     var isNotDetermined: Bool {
-        if #available(iOS 13.0, *) {
-                   return CBCentralManager().authorization == .notDetermined
-               }
-        return CBPeripheralManager.authorizationStatus() == .notDetermined
+        return CBCentralManager().authorization == .notDetermined
     }
     
-    func request(completion: @escaping ()->()?) {
+    func request(completion: @escaping () -> Void?) {
         self.completion = completion
-        self.manager = CBCentralManager(delegate: self, queue: nil, options: [:])
+        self.manager = CBCentralManager.init(delegate: self, queue: nil, options: [:])
     }
 }
 
 extension BluetoothPermission: CBCentralManagerDelegate {
     
     func centralManagerDidUpdateState(_ central: CBCentralManager) {
-        if #available(iOS 13.0, *) {
-            switch central.authorization {
-            case .notDetermined:
-                break
-            default:
-                self.completion?()
-            }
-        } else {
-            switch CBPeripheralManager.authorizationStatus() {
-            case .notDetermined:
-                break
-            default:
-                self.completion?()
-            }
+        switch central.authorization {
+        case .notDetermined:
+            break
+        default:
+            self.completion?()
         }
     }
 }

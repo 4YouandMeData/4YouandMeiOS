@@ -27,8 +27,6 @@
 	</array>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
-	<key>NSCalendarsUsageDescription</key>
-	<string>$(PRODUCT_NAME) will use your location to verify information such as how far you travelled and the speed at which you travelled, as described in the informed consent.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>$(PRODUCT_NAME) captures photos and video during certain tasks.</string>
 	<key>NSHealthShareUsageDescription</key>

@@ -8,7 +8,7 @@
 typealias PermissionItemViewCallback = () -> Void
 
 class PermissionItemView: UIView {
-    
+
     private var gestureCallback: PermissionItemViewCallback?
     
     init(withTitle title: String,
@@ -60,8 +60,10 @@ class PermissionItemView: UIView {
         allowLabel.setContentCompressionResistancePriority(UILayoutPriority(751), for: .horizontal)
         stackView.addArrangedSubview(allowLabel, horizontalInset: 8)
         
-        let tap = UITapGestureRecognizer(target: self, action: #selector(viewDidPressed))
-        self.addGestureRecognizer(tap)
+        if permission.isAuthorized == false{
+            let tap = UITapGestureRecognizer(target: self, action: #selector(viewDidPressed))
+            self.addGestureRecognizer(tap)
+        }
     }
     
     required init?(coder aDecoder: NSCoder) {
