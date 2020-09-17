@@ -138,7 +138,11 @@
       "ABOUT_YOU_APPS_AND_DEVICES": "Your Apps & Devices",
       "ABOUT_YOU_REVIEW_CONSENT": "Review Consent",
       "ABOUT_YOU_PERMISSIONS": "Permissions",
-      "ABOUT_YOU_DISCLAIMER": "You are currently participating in the BUMP pregnancy research study. If for any reason you no longer wish to continue participating in the study, you can elect to leave this study by contacting the study team."
+      "ABOUT_YOU_DISCLAIMER": "You are currently participating in the BUMP pregnancy research study. If for any reason you no longer wish to continue participating in the study, you can elect to leave this study by contacting the study team.",
+      "PERMISSION_DENIED": "Permission denied",
+      "PERMISSION_SETTINGS": "Settings",
+      "PERMISSION_CANCEL": "Cancel",
+      "PERMISSION_MESSAGE": "Please, go to Settings and allow permission."
     },
     "country_codes": ["US", "GB", "IT"]
 }

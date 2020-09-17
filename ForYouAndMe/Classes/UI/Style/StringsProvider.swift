@@ -143,6 +143,12 @@ enum StringKey: String, CaseIterable, CodingKey {
     //User Info
     case userInfoButtonEdit = "PROFILE_USER_INFO_BUTTON_EDIT"
     case userInfoButtonSubmit = "PROFILE_USER_INFO_BUTTON_SUBMIT"
+    // Permissions
+    case permissionDeniedTitle = "PERMISSION_DENIED"
+    case permissionSettings = "PERMISSION_SETTINGS"
+    case permissionCancel = "PERMISSION_CANCEL"
+    case permissionMessage = "PERMISSION_MESSAGE"
+    
     // Generic
     case genericInfoTitle = "GENERIC_INFO_TITLE"
     // Errors

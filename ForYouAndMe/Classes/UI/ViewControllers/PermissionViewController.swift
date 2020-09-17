@@ -109,10 +109,11 @@ public class PermissionViewController: UIViewController {
     }
     
     private func showPermissionDeniedAlert() {
-        self.showAlert(withTitle: "Permission denied",
-                       message: "Please, go to Settings and allow permission.",
-                       actions: [UIAlertAction(title: "Cancel", style: .cancel, handler: nil),
-                                 UIAlertAction(title: "Settings", style: .default, handler: { _ in
+        
+        self.showAlert(withTitle: StringsProvider.string(forKey: .permissionDeniedTitle),
+                       message: StringsProvider.string(forKey: .permissionMessage),
+                       actions: [UIAlertAction(title: StringsProvider.string(forKey: .permissionCancel), style: .cancel, handler: nil),
+                                 UIAlertAction(title: StringsProvider.string(forKey: .permissionSettings), style: .default, handler: { _ in
                                     PermissionsOpener.openSettings()
                                  })])
     }
