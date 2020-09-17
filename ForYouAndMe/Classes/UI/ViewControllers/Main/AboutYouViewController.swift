@@ -51,18 +51,21 @@ class AboutYouViewController: UIViewController {
                 // TODO: Replace mock data with data from server
                 let title = "Your Pregnancy"/*StringsProvider.string(forKey: .studyInfoContactItem)*/
                 let userInfoParameters: [UserInfoParameter] = [
-                    UserInfoParameter(name: "Your due date",
+                    UserInfoParameter(identifier: "1",
+                                      name: "Your due date",
                                       value: "2020-06-03T12:59:39.083Z",
                                       type: .date,
                                       items: []),
-                    UserInfoParameter(name: "Your baby's gender",
-                                      value: "1",
+                    UserInfoParameter(identifier: "2",
+                                      name: "Your baby's gender",
+                                      value: "2",
                                       type: .items,
                                       items: [
                                         UserInfoParameterItem(identifier: "1", value: "It's a Boy!"),
                                         UserInfoParameterItem(identifier: "2", value: "It's a Girl!")
                     ]),
-                    UserInfoParameter(name: "Your baby's name",
+                    UserInfoParameter(identifier: "3",
+                                      name: "Your baby's name",
                                       value: "Lil'Pea",
                                       type: .string,
                                       items: [])

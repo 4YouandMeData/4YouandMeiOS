@@ -1382,6 +1382,7 @@
 		893F79672512694B00DD0153 /* UserInfoParameter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893F79662512694B00DD0153 /* UserInfoParameter.swift */; };
 		89419F6DA745C9EB2B494B0BF12289E9 /* ORKStepNavigationRule_Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = E1B462B360C1AE7D0A8C3A249F4AD183 /* ORKStepNavigationRule_Internal.h */; settings = {ATTRIBUTES = (Project, ); }; };
 		8945DB84250B5DB400D82F8E /* FeedTableViewHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8945DB83250B5DB400D82F8E /* FeedTableViewHeader.swift */; };
+		894683F12513518E00F7184D /* DataPickerHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 894683F02513518E00F7184D /* DataPickerHandler.swift */; };
 		8948702525029EE200B3B160 /* UserDataChartView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8948702425029EE100B3B160 /* UserDataChartView.swift */; };
 		8959EA6A08FD2FBDEC0661DA718B415F /* ORKPageStep.h in Headers */ = {isa = PBXBuildFile; fileRef = 938E420ED55432343A5F252504CC9386 /* ORKPageStep.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		895CE133386CDA2B4B271287050A9BBB /* GULKeychainStorage.h in Headers */ = {isa = PBXBuildFile; fileRef = 92433596146DB5098961FAC002CF3347 /* GULKeychainStorage.h */; settings = {ATTRIBUTES = (Private, ); }; };
@@ -4675,6 +4676,7 @@
 		89432B13AC3C17E78C1AD73460567477 /* ORKResult.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = ORKResult.m; path = ResearchKit/Common/ORKResult.m; sourceTree = "<group>"; };
 		8945DB83250B5DB400D82F8E /* FeedTableViewHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedTableViewHeader.swift; sourceTree = "<group>"; };
 		89465154303E8C3F03CBBA4F310DFEB1 /* GoogleDataTransport-Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = "GoogleDataTransport-Info.plist"; sourceTree = "<group>"; };
+		894683F02513518E00F7184D /* DataPickerHandler.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DataPickerHandler.swift; sourceTree = "<group>"; };
 		8948702425029EE100B3B160 /* UserDataChartView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserDataChartView.swift; sourceTree = "<group>"; };
 		89559CA6F35B083F74AFBFC67111DC31 /* RxCocoa.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = RxCocoa.debug.xcconfig; sourceTree = "<group>"; };
 		89594D41A2EC06CDC2A5A73875B91BDF /* SVProgressHUD-umbrella.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = "SVProgressHUD-umbrella.h"; sourceTree = "<group>"; };
@@ -9799,6 +9801,7 @@
 				C17822F2DCA482DDD79D8D4BF90B244F /* UIViewController+Extensions.swift */,
 				B08A5145BF1A64684FDA1936EE34A083 /* URL+Extensions.swift */,
 				893F796225124E1100DD0153 /* UIButton+Extensions.swift */,
+				894683F02513518E00F7184D /* DataPickerHandler.swift */,
 			);
 			name = Utility;
 			path = ForYouAndMe/Classes/Utility;
@@ -13848,6 +13851,7 @@
 				97659FE5C5A354119D9A627B805A05DA /* Page.swift in Sources */,
 				C6DF33B6285FDD1D8F9BECD659F66FA2 /* PagedSectionCoordinator.swift in Sources */,
 				F114C463E22DCCD1FE31B8222DAED3E4 /* PageProtocols.swift in Sources */,
+				894683F12513518E00F7184D /* DataPickerHandler.swift in Sources */,
 				3B00E5970E8558EBFDC6962912183ABA /* PageRef.swift in Sources */,
 				A7B2426EB46649831F08AB4164F6941E /* PhoneNumberView.swift in Sources */,
 				E9E78249D1D0115FCDCC85C13AF50CF9 /* PhoneVerificationViewController.swift in Sources */,

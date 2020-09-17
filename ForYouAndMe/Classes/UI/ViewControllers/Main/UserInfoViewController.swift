@@ -8,6 +8,7 @@
 import UIKit
 import RxSwift
 import RxCocoa
+import TPKeyboardAvoiding
 
 class UserInfoViewController: UIViewController {
     
@@ -16,6 +17,15 @@ class UserInfoViewController: UIViewController {
     private lazy var textFieldStackView: UIStackView = {
         let stackView = UIStackView.create(withAxis: .vertical)
         return stackView
+    }()
+    
+    private var textFieldDataPickerMap: [UITextField: DataPickerHandler<UserInfoParameterItem>] = [:]
+    private var parameterTextFieldMap: [UserInfoParameter: UITextField] = [:]
+    
+    private lazy var scrollView: TPKeyboardAvoidingScrollView = {
+        let scrollView = TPKeyboardAvoidingScrollView()
+        scrollView.delegate = self
+        return scrollView
     }()
     
     private let pageTitle: String
@@ -43,21 +53,26 @@ class UserInfoViewController: UIViewController {
         self.view.backgroundColor = ColorPalette.color(withType: .secondary)
         
         // ScrollView
-        let scrollStackView = ScrollStackView(axis: .vertical, horizontalInset: 0)
-        self.view.addSubview(scrollStackView)
-        scrollStackView.autoPinEdgesToSuperviewSafeArea()
+        self.view.addSubview(self.scrollView)
+        self.scrollView.autoPinEdgesToSuperviewSafeArea()
+        
+        // Main StackView
+        let stackView = UIStackView.create(withAxis: .vertical)
+        self.scrollView.addSubview(stackView)
+        stackView.autoPinEdgesToSuperviewEdges()
+        stackView.autoAlignAxis(toSuperviewAxis: .vertical)
         
         // Header View
         let headerView = UserInfoHeaderView()
         headerView.setTitle(self.pageTitle)
-        scrollStackView.stackView.addArrangedSubview(headerView)
-        scrollStackView.stackView.addArrangedSubview(self.textFieldStackView,
-                                                     horizontalInset: Constants.Style.DefaultHorizontalMargins)
+        stackView.addArrangedSubview(headerView)
+        stackView.addArrangedSubview(self.textFieldStackView,
+                                     horizontalInset: Constants.Style.DefaultHorizontalMargins)
         
         self.textFieldStackView.addBlankSpace(space: 16.0)
         self.userInfoParameters.forEach { parameter in
             self.textFieldStackView.addBlankSpace(space: 4.0)
-            self.textFieldStackView.addTextFieldView(forUserInfoParameter: parameter)
+            self.addTextFieldView(forUserInfoParameter: parameter)
         }
         
         self.pageState.subscribe(onNext: { [weak self] newPageState in
@@ -75,6 +90,34 @@ class UserInfoViewController: UIViewController {
     }
     
     // MARK: - Private Methods
+    
+    private func addTextFieldView(forUserInfoParameter parameter: UserInfoParameter) {
+        self.textFieldStackView.addLabel(withText: parameter.name,
+                           fontStyle: .paragraph,
+                           colorType: .fourthText,
+                           textAlignment: .left)
+        self.textFieldStackView.addBlankSpace(space: 8.0)
+        let textFieldView = GenericTextFieldView(keyboardType: .default, styleCategory: .primary)
+        textFieldView.text = parameter.value
+        
+        switch parameter.type {
+        case .string:
+            break // Use default keyboard
+        case .items:
+            let dataPicker = DataPickerHandler<UserInfoParameterItem>(textField: textFieldView.textField,
+                                                                      tintColor: ColorPalette.color(withType: .primary))
+            let initialValue = parameter.items.first(where: { $0.identifier == parameter.value })
+            dataPicker.updateData(with: parameter.items, initialValue: initialValue)
+            self.textFieldDataPickerMap[textFieldView.textField] = dataPicker
+        case .date:
+            // TODO: use date picker
+            break
+        }
+        
+        self.textFieldStackView.addArrangedSubview(textFieldView)
+        
+        self.parameterTextFieldMap[parameter] = textFieldView.textField
+    }
     
     private func updateEditButton(pageState: PageState) {
         let button = UIButton()
@@ -117,16 +160,9 @@ class UserInfoViewController: UIViewController {
     }
 }
 
-private extension UIStackView {
-    func addTextFieldView(forUserInfoParameter parameter: UserInfoParameter) {
-        self.addLabel(withText: parameter.name,
-                           fontStyle: .paragraph,
-                           colorType: .fourthText,
-                           textAlignment: .left)
-        self.addBlankSpace(space: 8.0)
-        let textFieldView = GenericTextFieldView(keyboardType: .default, styleCategory: .primary)
-        textFieldView.text = parameter.value
-        self.addArrangedSubview(textFieldView)
+extension UserInfoViewController: UIScrollViewDelegate {
+    func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
+        self.view.endEditing(true)
     }
 }
 
@@ -140,4 +176,8 @@ private extension GenericTextFieldView {
             self.textField.isEnabled = false
         }
     }
+}
+
+extension UserInfoParameterItem: DataPickerItem {
+    var displayText: String { self.value }
 }
