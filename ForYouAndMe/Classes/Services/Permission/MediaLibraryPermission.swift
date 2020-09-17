@@ -17,6 +17,14 @@ struct MediaLibraryPermission: PermissionProtocol {
         return MPMediaLibrary.authorizationStatus() == .denied
     }
     
+    var isNotDetermined: Bool {
+        return MPMediaLibrary.authorizationStatus() == .notDetermined
+    }
+    
+    var isRestricted: Bool {
+        return MPMediaLibrary.authorizationStatus() == .restricted
+    }
+    
     func request(completion: @escaping ()->()?) {
         MPMediaLibrary.requestAuthorization() { status in
             DispatchQueue.main.async {

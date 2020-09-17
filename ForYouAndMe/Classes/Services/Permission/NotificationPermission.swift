@@ -19,6 +19,16 @@ struct NotificationPermission: PermissionProtocol {
         return authorizationStatus == .denied
     }
     
+    var isNotDetermined: Bool {
+        guard let authorizationStatus = fetchAuthorizationStatus() else { return false }
+        return authorizationStatus == .notDetermined
+    }
+    
+    var isRestricted: Bool {
+        guard let authorizationStatus = fetchAuthorizationStatus() else { return false }
+        return false
+    }
+    
     private func fetchAuthorizationStatus() -> UNAuthorizationStatus? {
         var notificationSettings: UNNotificationSettings?
         let semaphore = DispatchSemaphore(value: 0)

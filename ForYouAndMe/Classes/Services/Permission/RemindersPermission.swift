@@ -19,7 +19,15 @@ struct RemindersPermission: PermissionProtocol {
         return EKEventStore.authorizationStatus(for: EKEntityType.reminder) == .denied
     }
     
-    func request(completion: @escaping ()->()?) {
+    var isNotDetermined: Bool {
+        return EKEventStore.authorizationStatus(for: EKEntityType.reminder) == .notDetermined
+    }
+    
+    var isRestricted: Bool {
+        return EKEventStore.authorizationStatus(for: EKEntityType.reminder) == .restricted
+    }
+    
+    func request(completion: @escaping () -> Void?) {
         let eventStore = EKEventStore()
         eventStore.requestAccess(to: EKEntityType.reminder, completion: {
             (accessGranted: Bool, error: Error?) in

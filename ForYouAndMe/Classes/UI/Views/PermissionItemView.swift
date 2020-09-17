@@ -12,8 +12,8 @@ class PermissionItemView: UIView {
     private var gestureCallback: PermissionItemViewCallback?
     
     init(withTitle title: String,
-         imageName: ImageName,
-         allowed: Bool,
+         permission: Permission,
+         iconName: ImageName,
          gestureCallback: @escaping PermissionItemViewCallback) {
         
         super.init(frame: .zero)
@@ -28,7 +28,7 @@ class PermissionItemView: UIView {
         self.addSubview(stackView)
         stackView.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets(top: 0, left: 16.0, bottom: 0, right: 20.0))
         
-        stackView.addImage(withImage: ImagePalette.image(withName: imageName) ?? UIImage(),
+        stackView.addImage(withImage: ImagePalette.image(withName: iconName) ?? UIImage(),
                            color: ColorPalette.color(withType: .secondary),
                            sizeDimension: 32)
         
@@ -49,9 +49,9 @@ class PermissionItemView: UIView {
         stackView.addArrangedSubview(label, horizontalInset: 0, verticalInset: 14)
         
         //Allow
-        attributedString = NSAttributedString.create(withText: (allowed) ? "Allow" : "Allowed",
+        attributedString = NSAttributedString.create(withText: (permission.isAuthorized) ? "Allowed" : "Allow",
                                                      fontStyle: .paragraph,
-                                                     colorType: (allowed) ? .gradientPrimaryEnd : .secondaryText,
+                                                     colorType: (permission.isAuthorized) ? .gradientPrimaryEnd : .secondaryText,
                                                      textAlignment: .left,
                                                      underlined: true)
         let allowLabel = UILabel()

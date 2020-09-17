@@ -23,11 +23,26 @@ struct MotionPermission: PermissionProtocol {
         return false
     }
     
-    func request(completion: @escaping ()->()?) {
+    var isNotDetermined: Bool {
+        if #available(iOS 11.0, *) {
+            return CMMotionActivityManager.authorizationStatus() == .notDetermined
+        }
+        return false
+    }
+    
+    var isRestricted: Bool {
+        if #available(iOS 11.0, *) {
+            return CMMotionActivityManager.authorizationStatus() == .restricted
+        }
+        return false
+    }
+    
+    func request(completion: @escaping () -> Void?) {
         let manager = CMMotionActivityManager()
         let today = Date()
         
-        manager.queryActivityStarting(from: today, to: today, to: OperationQueue.main, withHandler: { (activities: [CMMotionActivity]?, error: Error?) -> () in
+        manager.queryActivityStarting(from: today, to: today, to: OperationQueue.main,
+                                      withHandler: { (activities: [CMMotionActivity]?, error: Error?) -> () in
             completion()
             manager.stopActivityUpdates()
         })

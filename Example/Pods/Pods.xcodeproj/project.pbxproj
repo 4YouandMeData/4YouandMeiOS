@@ -407,6 +407,7 @@
 		203D36F325126BF500949AD9 /* BluetoothPermission.swift in Sources */ = {isa = PBXBuildFile; fileRef = 203D36F225126BF500949AD9 /* BluetoothPermission.swift */; };
 		203D36F525126CB200949AD9 /* NotificationPermission.swift in Sources */ = {isa = PBXBuildFile; fileRef = 203D36F425126CB200949AD9 /* NotificationPermission.swift */; };
 		208AD713DD7C5C66B7D7305FBBA2A820 /* SubjectType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E32E0EF388D58B4B3AC3101509DD2B4 /* SubjectType.swift */; };
+		208F4F8D2512723900CFCE82 /* PermissionOpener.swift in Sources */ = {isa = PBXBuildFile; fileRef = 208F4F8C2512723900CFCE82 /* PermissionOpener.swift */; };
 		209E2DDAF58CEC9E26D41FAB29ED3561 /* UIBezierPath+WeightedPoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8785E5B59D2C20F315E8E0809B509CB1 /* UIBezierPath+WeightedPoint.swift */; };
 		20A32C56122DE73FEC6149E4A4AB472E /* ORKEnvironmentSPLMeterStepViewController.h in Headers */ = {isa = PBXBuildFile; fileRef = 3D95CB15F2BE25543089B933C4A92DAE /* ORKEnvironmentSPLMeterStepViewController.h */; settings = {ATTRIBUTES = (Project, ); }; };
 		20B9E66952F74DEE308904B53F1B8389 /* Rx.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF18F7C7390972198506EE8CC7F0885E /* Rx.swift */; };
@@ -3612,6 +3613,7 @@
 		204DCA51B182DFC88C41A09F830CB714 /* PromisesObjC-dummy.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = "PromisesObjC-dummy.m"; sourceTree = "<group>"; };
 		205BA74B337F867F622C82EECCB83F15 /* Catch.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = Catch.swift; path = RxSwift/Observables/Catch.swift; sourceTree = "<group>"; };
 		2079A117921DBE672EFAE70D1AADEE4A /* Alamofire-Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = "Alamofire-Info.plist"; sourceTree = "<group>"; };
+		208F4F8C2512723900CFCE82 /* PermissionOpener.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionOpener.swift; sourceTree = "<group>"; };
 		20A1FAF7F8F24F2430417D90087F85ED /* ORKStroopStep.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = ORKStroopStep.h; path = ResearchKit/ActiveTasks/ORKStroopStep.h; sourceTree = "<group>"; };
 		20B2DDBD1400A840F681AA954060977F /* ORKAnswerFormat.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = ORKAnswerFormat.h; path = ResearchKit/Common/ORKAnswerFormat.h; sourceTree = "<group>"; };
 		20C05DD5250A74DC006EF7E6 /* GenericListItemView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GenericListItemView.swift; sourceTree = "<group>"; };
@@ -6702,6 +6704,7 @@
 				203D36F025126BB700949AD9 /* MediaLibraryPermission.swift */,
 				203D36F225126BF500949AD9 /* BluetoothPermission.swift */,
 				203D36F425126CB200949AD9 /* NotificationPermission.swift */,
+				208F4F8C2512723900CFCE82 /* PermissionOpener.swift */,
 			);
 			path = Permission;
 			sourceTree = "<group>";
@@ -13932,6 +13935,7 @@
 				0058999D4F67C122E67086A523E823E7 /* Question.swift in Sources */,
 				025BDBDDEA673A0F97267D2A82EEB3FC /* QuestionBooleanTableViewCell.swift in Sources */,
 				668D5EED33F114497F62597328CB4C5D /* QuestionViewController.swift in Sources */,
+				208F4F8D2512723900CFCE82 /* PermissionOpener.swift in Sources */,
 				4330B063DA1B6BDB62A71368E30B31E9 /* QuickActivity.swift in Sources */,
 				6F69225DF19CDC587CFC1A235B92798F /* QuickActivityListTableViewCell.swift in Sources */,
 				EDDB358D1286DC0F46D1454AED7CD8E2 /* QuickActivityOption.swift in Sources */,

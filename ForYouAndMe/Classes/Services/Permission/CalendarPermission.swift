@@ -19,6 +19,14 @@ struct CalendarPermission: PermissionProtocol {
         return EKEventStore.authorizationStatus(for: EKEntityType.event) == .denied
     }
     
+    var isNotDetermined: Bool {
+        return EKEventStore.authorizationStatus(for: EKEntityType.event) == .notDetermined
+    }
+    
+    var isRestricted: Bool {
+        return EKEventStore.authorizationStatus(for: EKEntityType.event) == .restricted
+    }
+    
     func request(completion: @escaping ()->()?) {
         let eventStore = EKEventStore()
         eventStore.requestAccess(to: EKEntityType.event, completion: {

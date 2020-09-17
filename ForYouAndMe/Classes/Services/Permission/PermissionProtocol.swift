@@ -21,6 +21,15 @@ protocol PermissionProtocol {
     var isDenied: Bool { get }
     
     /**
+    Return if permission is not determined.
+    */
+    var isNotDetermined: Bool { get }
+    
+    /**
+    Return if permission is restricted.
+    */
+    var isRestricted: Bool { get }
+    /**
      Request permission.
      
      - parameter complection: Call after permission request complete.

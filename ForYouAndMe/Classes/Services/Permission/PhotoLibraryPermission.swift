@@ -17,6 +17,14 @@ struct PhotoLibraryPermission: PermissionProtocol {
         return PHPhotoLibrary.authorizationStatus() == PHAuthorizationStatus.denied
     }
     
+    var isNotDetermined: Bool {
+        return PHPhotoLibrary.authorizationStatus() == PHAuthorizationStatus.notDetermined
+    }
+    
+    var isRestricted: Bool {
+        return PHPhotoLibrary.authorizationStatus() == PHAuthorizationStatus.restricted
+    }
+    
     func request(completion: @escaping () -> Void?) {
         PHPhotoLibrary.requestAuthorization({ _ in
             DispatchQueue.main.async {

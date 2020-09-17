@@ -17,6 +17,14 @@ struct MicrophonePermission: PermissionProtocol {
         return AVAudioSession.sharedInstance().recordPermission == .denied
     }
     
+    var isNotDetermined: Bool {
+        return AVAudioSession.sharedInstance().recordPermission == .undetermined
+    }
+    
+    var isRestricted: Bool {
+        return false
+    }
+    
     func request(completion: @escaping ()->()?) {
         AVAudioSession.sharedInstance().requestRecordPermission {
             granted in

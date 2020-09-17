@@ -5,6 +5,48 @@
 //  Created by Giuseppe Lapenta on 16/09/2020.
 //
 
+import RxSwift
+
+enum PermissionError: Error {
+    case missingPermissionDescription
+}
+
+enum PermissionImageName {
+    
+    static func iconName(for permission: Permission) -> String {
+        switch permission {
+            #if os(iOS)
+        case .camera:
+            return "camera_icon"
+        case .photoLibrary:
+            return "photo_library_icon"
+        case .microphone:
+            return "microphone_icon"
+        case .calendar:
+            return "calendar_icon"
+        case .contacts:
+            return "contacts_icon"
+        case .reminders:
+            return "reminders_icon"
+        case .speech:
+            return "speech_icon"
+            //        case .locationAlwaysAndWhenInUse:
+            //            return "Location Always"
+        case .motion:
+            return "motion_icon"
+        case .mediaLibrary:
+            return "media_library_icon"
+        case .bluetooth:
+            return "bluetooth_icon"
+            #endif
+        case .notification:
+            return "notification_icon"
+            //        case .locationWhenInUse:
+            //            return "Location When Use"
+        }
+    }
+}
+
 enum PermissionsText {
     
     static func name(for permission: Permission) -> String {
@@ -24,8 +66,8 @@ enum PermissionsText {
             return "Reminders"
         case .speech:
             return "Speech"
-//        case .locationAlwaysAndWhenInUse:
-//            return "Location Always"
+            //        case .locationAlwaysAndWhenInUse:
+            //            return "Location Always"
         case .motion:
             return "Motion"
         case .mediaLibrary:
@@ -35,8 +77,8 @@ enum PermissionsText {
             #endif
         case .notification:
             return "Notification"
-//        case .locationWhenInUse:
-//            return "Location When Use"
+            //        case .locationWhenInUse:
+            //            return "Location When Use"
         }
     }
 }
@@ -51,13 +93,13 @@ enum PermissionsText {
     case contacts = 5
     case reminders = 6
     case speech = 7
-//    case locationAlwaysAndWhenInUse = 10
+    //    case locationAlwaysAndWhenInUse = 10
     case motion = 11
     case mediaLibrary = 12
     case bluetooth = 13
     #endif
     case notification = 2
-//    case locationWhenInUse = 9
+    //    case locationWhenInUse = 9
     
     /**
      Check permission is allowed.
@@ -74,17 +116,34 @@ enum PermissionsText {
     }
     
     /**
+     Check permission is not Determined.
+     */
+    public var isNotDetermined: Bool {
+        return Permission.manager(for: self).isNotDetermined
+    }
+    
+    /**
+     Check permission is restricted. If permission not requested anytime returned `false`.
+     */
+    public var isRestricted: Bool {
+        return Permission.manager(for: self).isRestricted
+    }
+    
+    /**
      Request permission now
      */
-    public func request(completion: @escaping () -> Void) {
-        let manager = Permission.manager(for: self)
-        if let usageDescriptionKey = usageDescriptionKey {
-            guard Bundle.main.object(forInfoDictionaryKey: usageDescriptionKey) != nil else {
-                print("Permissions Warning - \(usageDescriptionKey) for \(name) not found in Info.plist")
-                return
+    public func request() -> Single<()> {
+        return Single.create { singleEvent -> Disposable in
+            let manager = Permission.manager(for: self)
+            if let usageDescriptionKey = self.usageDescriptionKey,
+                Bundle.main.object(forInfoDictionaryKey: usageDescriptionKey) == nil {
+                print("Permissions Warning - \(usageDescriptionKey) for \(self.name) not found in Info.plist")
+                singleEvent(.error(PermissionError.missingPermissionDescription))
+            } else {
+                manager.request(completion: { singleEvent(.success(())) })
             }
+            return Disposables.create()
         }
-        manager.request(completion: { completion() })
     }
     
     /**
@@ -119,8 +178,8 @@ enum PermissionsText {
             #endif
         case .notification:
             return nil
-//        case .locationWhenInUse:
-//            return "NSLocationWhenInUseUsageDescription"
+            //        case .locationWhenInUse:
+            //            return "NSLocationWhenInUseUsageDescription"
         }
     }
 }
@@ -166,7 +225,7 @@ extension Permission {
      Description error about invalid installation.
      */
     fileprivate static func error(_ permission: Permission) -> String {
-        return "Permissions - \(permission.name) not import. Problem NOT with usage description key. I recomend to see installation guide: https://youtu.be/1kR5HGVhJfk. More details in Readme: https://github.com/ivanvorobei/Permissions"
+        return "Permissions - \(permission.name) not import. Problem NOT with usage description key."
     }
     
     /**
@@ -174,5 +233,9 @@ extension Permission {
      */
     public var name: String {
         return PermissionsText.name(for: self)
+    }
+    
+    public var iconName: String {
+        return PermissionImageName.iconName(for: self)
     }
 }

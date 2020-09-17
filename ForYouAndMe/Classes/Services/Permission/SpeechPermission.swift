@@ -17,8 +17,16 @@ struct SpeechPermission: PermissionProtocol {
         return SFSpeechRecognizer.authorizationStatus() == .denied
     }
     
+    var isNotDetermined: Bool {
+        return SFSpeechRecognizer.authorizationStatus() == .notDetermined
+    }
+    
+    var isRestricted: Bool {
+        return SFSpeechRecognizer.authorizationStatus() == .restricted
+    }
+    
     func request(completion: @escaping ()->()?) {
-        SFSpeechRecognizer.requestAuthorization { status in
+        SFSpeechRecognizer.requestAuthorization { _ in
             DispatchQueue.main.async {
                 completion()
             }

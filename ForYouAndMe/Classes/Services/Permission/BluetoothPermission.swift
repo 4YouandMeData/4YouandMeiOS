@@ -27,6 +27,20 @@ class BluetoothPermission: NSObject, PermissionProtocol {
         return CBPeripheralManager.authorizationStatus() == .denied
     }
     
+    var isRestricted: Bool {
+        if #available(iOS 13.0, *) {
+                   return CBCentralManager().authorization == .restricted
+               }
+        return CBPeripheralManager.authorizationStatus() == .restricted
+    }
+    
+    var isNotDetermined: Bool {
+        if #available(iOS 13.0, *) {
+                   return CBCentralManager().authorization == .notDetermined
+               }
+        return CBPeripheralManager.authorizationStatus() == .notDetermined
+    }
+    
     func request(completion: @escaping ()->()?) {
         self.completion = completion
         self.manager = CBCentralManager(delegate: self, queue: nil, options: [:])

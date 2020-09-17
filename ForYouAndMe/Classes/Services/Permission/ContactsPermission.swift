@@ -26,6 +26,22 @@ struct ContactsPermission: PermissionProtocol {
         }
     }
     
+    var isNotDetermined: Bool {
+        if #available(iOS 9.0, *) {
+            return CNContactStore.authorizationStatus(for: .contacts) == .notDetermined
+        } else {
+            return ABAddressBookGetAuthorizationStatus() == .notDetermined
+        }
+    }
+    
+    var isRestricted: Bool {
+        if #available(iOS 9.0, *) {
+            return CNContactStore.authorizationStatus(for: .contacts) == .restricted
+        } else {
+            return ABAddressBookGetAuthorizationStatus() == .restricted
+        }
+    }
+    
     func request(completion: @escaping () -> Void?) {
         if #available(iOS 9.0, *) {
             let store = CNContactStore()

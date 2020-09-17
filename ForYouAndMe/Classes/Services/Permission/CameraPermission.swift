@@ -17,7 +17,15 @@ struct CameraPermission: PermissionProtocol {
         return AVCaptureDevice.authorizationStatus(for: AVMediaType.video) == AVAuthorizationStatus.denied
     }
     
-    func request(completion: @escaping ()->()?) {
+    var isRestricted: Bool {
+        return AVCaptureDevice.authorizationStatus(for: AVMediaType.video) == AVAuthorizationStatus.restricted
+    }
+    
+    var isNotDetermined: Bool {
+        return AVCaptureDevice.authorizationStatus(for: AVMediaType.video) == AVAuthorizationStatus.notDetermined
+    }
+    
+    func request(completion: @escaping () -> Void?) {
         AVCaptureDevice.requestAccess(for: AVMediaType.video, completionHandler: {
             finished in
             DispatchQueue.main.async {

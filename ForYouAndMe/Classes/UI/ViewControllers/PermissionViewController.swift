@@ -6,11 +6,13 @@
 //
 
 import PureLayout
+import RxSwift
 
 public class PermissionViewController: UIViewController {
     
     private var titleString: String
     private let navigator: AppNavigator
+    private let disposeBag: DisposeBag = DisposeBag()
     
     private lazy var scrollStackView: ScrollStackView = {
         let scrollStackView = ScrollStackView(axis: .vertical, horizontalInset: 0.0)
@@ -44,21 +46,36 @@ public class PermissionViewController: UIViewController {
         self.scrollStackView.autoPinEdge(.top, to: .bottom, of: headerView, withOffset: 30)
         self.scrollStackView.stackView.spacing = 30
         
+        let permissionCamera: Permission = .camera
+        let status: Bool = permissionCamera.isNotDetermined
         let locationItem = PermissionItemView(withTitle: "The BUMP app needs access to your phone’s location"/*StringsProvider.string(forKey: .studyInfoRewardsItem)*/,
-            imageName: .locationIcon,
-            allowed: false,
+            permission: permissionCamera,
+            iconName: .locationIcon,
             gestureCallback: { [weak self] in
-                self?.navigator.showWearableLogin(loginUrl: URL(string: "https://admin-4youandme-staging.balzo.eu/users/integration_oauth/garmin")!,
-                                                  navigationController: self?.navigationController ?? UINavigationController())
+                guard let self = self else { return }
+                permissionCamera.request().subscribe(onSuccess: { _ in
+                    //TODO: Check is not first time authorization
+                    if permissionCamera.isDenied, status == false {
+                        self.showAlert(withTitle: "Permission denied", message: "Please, go to Settings and allow permission.",
+                                       actions: [UIAlertAction(title: "Cancel", style: .cancel, handler: nil),
+                                                 UIAlertAction(title: "Settings", style: .default, handler: { _ in
+                                                    PermissionsOpener.openSettings()
+                                                 })])
+                    }
+                }, onError: { error in
+                    self.navigator.handleError(error: error, presenter: self)
+                }).disposed(by: self.disposeBag)
         })
         self.scrollStackView.stackView.addArrangedSubview(locationItem)
         
-        let pushItem = PermissionItemView(withTitle: "Push Notifications"/*StringsProvider.string(forKey: .studyInfoRewardsItem)*/,
-            imageName: .pushNotificationIcon,
-            allowed: false,
+        let permissionMicrophone: Permission = .microphone
+        let pushItem = PermissionItemView(withTitle: "Microphone"/*StringsProvider.string(forKey: .studyInfoRewardsItem)*/,
+            permission: permissionMicrophone,
+            iconName: .pushNotificationIcon,
             gestureCallback: { [weak self] in
-                self?.navigator.showWearableLogin(loginUrl: URL(string: "https://admin-4youandme-staging.balzo.eu/users/integration_oauth/oura")!,
-                                                  navigationController: self?.navigationController ?? UINavigationController())
+                if permissionMicrophone.isDenied {
+                    print("is Denied")
+                }
         })
         pushItem.autoSetDimension(.height, toSize: 72, relation: .greaterThanOrEqual)
         
