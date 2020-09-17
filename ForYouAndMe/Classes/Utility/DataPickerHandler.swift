@@ -19,8 +19,6 @@ protocol DataPickerItem: Equatable {
 }
 
 class DataPickerHandler<T: DataPickerItem>: NSObject, UIPickerViewDelegate, UIPickerViewDataSource, UITextFieldDelegate {
-
-    typealias DisplayLabelCallback = ((T) -> String)
     
     public weak var delegate: DataPickerHandlerDelegate?
     
@@ -46,6 +44,7 @@ class DataPickerHandler<T: DataPickerItem>: NSObject, UIPickerViewDelegate, UIPi
         self.pickerView.dataSource = self
         self.textField.inputView = self.pickerView
         self.textField.delegate = self
+        self.textField.tintColor = .clear // Remove cursor
         
         self.setupToolbar(tintColor: tintColor)
     }

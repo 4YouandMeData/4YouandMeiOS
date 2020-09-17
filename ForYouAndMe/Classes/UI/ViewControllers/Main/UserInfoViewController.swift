@@ -20,6 +20,7 @@ class UserInfoViewController: UIViewController {
     }()
     
     private var textFieldDataPickerMap: [UITextField: DataPickerHandler<UserInfoParameterItem>] = [:]
+    private var textFieldDatePickerMap: [UITextField: DatePickerHandler] = [:]
     private var parameterTextFieldMap: [UserInfoParameter: UITextField] = [:]
     
     private lazy var scrollView: TPKeyboardAvoidingScrollView = {
@@ -98,20 +99,26 @@ class UserInfoViewController: UIViewController {
                            textAlignment: .left)
         self.textFieldStackView.addBlankSpace(space: 8.0)
         let textFieldView = GenericTextFieldView(keyboardType: .default, styleCategory: .primary)
-        textFieldView.text = parameter.value
+        textFieldView.delegate = self
         
         switch parameter.type {
         case .string:
-            break // Use default keyboard
+            textFieldView.text = parameter.currentStringValue
         case .items:
             let dataPicker = DataPickerHandler<UserInfoParameterItem>(textField: textFieldView.textField,
                                                                       tintColor: ColorPalette.color(withType: .primary))
-            let initialValue = parameter.items.first(where: { $0.identifier == parameter.value })
+            let initialValue = parameter.items.first(where: { $0.identifier == parameter.currentItemIdentifier })
             dataPicker.updateData(with: parameter.items, initialValue: initialValue)
             self.textFieldDataPickerMap[textFieldView.textField] = dataPicker
         case .date:
-            // TODO: use date picker
-            break
+            let dateFormatter = DateFormatter()
+            dateFormatter.dateStyle = .full
+            let datePicker = DatePickerHandler(textField: textFieldView.textField,
+                                               tintColor: ColorPalette.color(withType: .primary),
+                                               dateFormatter: dateFormatter,
+                                               datePickerMode: .date)
+            datePicker.update(withMinDate: nil, maxDate: nil, initialDate: parameter.currentDate)
+            self.textFieldDatePickerMap[textFieldView.textField] = datePicker
         }
         
         self.textFieldStackView.addArrangedSubview(textFieldView)
@@ -162,6 +169,12 @@ class UserInfoViewController: UIViewController {
 
 extension UserInfoViewController: UIScrollViewDelegate {
     func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
+        self.view.endEditing(true)
+    }
+}
+
+extension UserInfoViewController: GenericTextFieldViewDelegate {
+    func genericTextFieldShouldReturn(textField: GenericTextFieldView) -> Bool {
         self.view.endEditing(true)
     }
 }

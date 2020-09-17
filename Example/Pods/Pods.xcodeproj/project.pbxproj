@@ -1383,6 +1383,7 @@
 		89419F6DA745C9EB2B494B0BF12289E9 /* ORKStepNavigationRule_Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = E1B462B360C1AE7D0A8C3A249F4AD183 /* ORKStepNavigationRule_Internal.h */; settings = {ATTRIBUTES = (Project, ); }; };
 		8945DB84250B5DB400D82F8E /* FeedTableViewHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8945DB83250B5DB400D82F8E /* FeedTableViewHeader.swift */; };
 		894683F12513518E00F7184D /* DataPickerHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 894683F02513518E00F7184D /* DataPickerHandler.swift */; };
+		894683F32513731B00F7184D /* DatePickerHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 894683F22513731B00F7184D /* DatePickerHandler.swift */; };
 		8948702525029EE200B3B160 /* UserDataChartView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8948702425029EE100B3B160 /* UserDataChartView.swift */; };
 		8959EA6A08FD2FBDEC0661DA718B415F /* ORKPageStep.h in Headers */ = {isa = PBXBuildFile; fileRef = 938E420ED55432343A5F252504CC9386 /* ORKPageStep.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		895CE133386CDA2B4B271287050A9BBB /* GULKeychainStorage.h in Headers */ = {isa = PBXBuildFile; fileRef = 92433596146DB5098961FAC002CF3347 /* GULKeychainStorage.h */; settings = {ATTRIBUTES = (Private, ); }; };
@@ -4677,6 +4678,7 @@
 		8945DB83250B5DB400D82F8E /* FeedTableViewHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedTableViewHeader.swift; sourceTree = "<group>"; };
 		89465154303E8C3F03CBBA4F310DFEB1 /* GoogleDataTransport-Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = "GoogleDataTransport-Info.plist"; sourceTree = "<group>"; };
 		894683F02513518E00F7184D /* DataPickerHandler.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DataPickerHandler.swift; sourceTree = "<group>"; };
+		894683F22513731B00F7184D /* DatePickerHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DatePickerHandler.swift; sourceTree = "<group>"; };
 		8948702425029EE100B3B160 /* UserDataChartView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserDataChartView.swift; sourceTree = "<group>"; };
 		89559CA6F35B083F74AFBFC67111DC31 /* RxCocoa.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = RxCocoa.debug.xcconfig; sourceTree = "<group>"; };
 		89594D41A2EC06CDC2A5A73875B91BDF /* SVProgressHUD-umbrella.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = "SVProgressHUD-umbrella.h"; sourceTree = "<group>"; };
@@ -9802,6 +9804,7 @@
 				B08A5145BF1A64684FDA1936EE34A083 /* URL+Extensions.swift */,
 				893F796225124E1100DD0153 /* UIButton+Extensions.swift */,
 				894683F02513518E00F7184D /* DataPickerHandler.swift */,
+				894683F22513731B00F7184D /* DatePickerHandler.swift */,
 			);
 			name = Utility;
 			path = ForYouAndMe/Classes/Utility;
@@ -13918,6 +13921,7 @@
 				3DF1231711633066A35BF602377806D0 /* UITableView+Extensions.swift in Sources */,
 				96DFFFB3256E7DED7BCA565B1DE55112 /* UIView+BorderLine.swift in Sources */,
 				E0AD3494DC1E0272B714F7C7BAD01A2A /* UIView+Constraints.swift in Sources */,
+				894683F32513731B00F7184D /* DatePickerHandler.swift in Sources */,
 				20C05DDD250BE205006EF7E6 /* InfoDetailHeaderView.swift in Sources */,
 				2F030AD14E09C79B846CAC616D40F034 /* UIView+Round.swift in Sources */,
 				4762A07EB0D0924757F385117872472F /* UIView+Shadow.swift in Sources */,

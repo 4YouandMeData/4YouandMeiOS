@@ -24,6 +24,10 @@ struct UserInfoParameter {
     let value: String
     let type: UserInfoParameterType
     let items: [UserInfoParameterItem]
+    
+    var currentStringValue: String { self.value }
+    var currentItemIdentifier: String { self.value }
+    var currentDate: Date? { ISO8601Strategy.dateFormatter.date(from: self.value) }
 }
 
 extension UserInfoParameter: Hashable, Equatable {
