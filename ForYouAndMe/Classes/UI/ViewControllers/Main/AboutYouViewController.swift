@@ -53,11 +53,13 @@ class AboutYouViewController: UIViewController {
                 let userInfoParameters: [UserInfoParameter] = [
                     UserInfoParameter(identifier: "1",
                                       name: "Your due date",
+//                                      value: "",
                                       value: "2020-06-03T12:59:39.083Z",
                                       type: .date,
                                       items: []),
                     UserInfoParameter(identifier: "2",
                                       name: "Your baby's gender",
+//                                      value: "",
                                       value: "2",
                                       type: .items,
                                       items: [
@@ -66,6 +68,7 @@ class AboutYouViewController: UIViewController {
                     ]),
                     UserInfoParameter(identifier: "3",
                                       name: "Your baby's name",
+//                                      value: "",
                                       value: "Lil'Pea",
                                       type: .string,
                                       items: [])

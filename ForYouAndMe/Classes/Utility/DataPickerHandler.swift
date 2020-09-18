@@ -49,23 +49,7 @@ class DataPickerHandler<T: DataPickerItem>: NSObject, UIPickerViewDelegate, UIPi
         self.setupToolbar(tintColor: tintColor)
     }
     
-    private func setupToolbar(tintColor: UIColor? = nil) {
-        
-        let toolBar = UIToolbar()
-        toolBar.barStyle = .default
-        toolBar.isTranslucent = true
-        if let tintColor = tintColor {
-            toolBar.tintColor = tintColor
-        }
-        toolBar.sizeToFit()
-        
-        let cancelButton = UIBarButtonItem(barButtonSystemItem: .cancel, target: self, action: #selector(self.cancelPicker))
-        let doneButton = UIBarButtonItem(barButtonSystemItem: .done, target: self, action: #selector(self.donePicker))
-        let spaceButton = UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil)
-        
-        toolBar.setItems([cancelButton, spaceButton, doneButton], animated: false)
-        self.textField.inputAccessoryView = toolBar
-    }
+    // MARK: - Public Methods
     
     public func hasData() -> Bool {
         return !self.pickerData.isEmpty
@@ -103,9 +87,42 @@ class DataPickerHandler<T: DataPickerItem>: NSObject, UIPickerViewDelegate, UIPi
         self.updateTextField()
     }
     
+    // MARK: - Private Methods
+    
+    private func setupToolbar(tintColor: UIColor? = nil) {
+        
+        let toolBar = UIToolbar()
+        toolBar.barStyle = .default
+        toolBar.isTranslucent = true
+        if let tintColor = tintColor {
+            toolBar.tintColor = tintColor
+        }
+        toolBar.sizeToFit()
+        
+        let cancelButton = UIBarButtonItem(barButtonSystemItem: .cancel, target: self, action: #selector(self.cancelPicker))
+        let doneButton = UIBarButtonItem(barButtonSystemItem: .done, target: self, action: #selector(self.donePicker))
+        let spaceButton = UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil)
+        
+        toolBar.setItems([cancelButton, spaceButton, doneButton], animated: false)
+        self.textField.inputAccessoryView = toolBar
+    }
+    
+    private func updateTextField() {
+        var newValue: String?
+        if 0 <= self.selectedRow && self.selectedRow < self.pickerData.count {
+            newValue = self.pickerData[self.selectedRow].displayText
+        } else {
+            newValue = nil
+        }
+        if newValue != self.textField.text {
+            self.textField.text = newValue
+            self.delegate?.dataPickerTextFieldValueChanged?(_:textField)
+        }
+    }
+    
     // MARK: Actions
     
-    @objc func cancelPicker() {
+    @objc private func cancelPicker() {
         
         self.selectedRow = self.lastSelectedRow
         if self.pickerData.count > 0 {
@@ -116,7 +133,7 @@ class DataPickerHandler<T: DataPickerItem>: NSObject, UIPickerViewDelegate, UIPi
         self.textField.resignFirstResponder()
     }
     
-    @objc func donePicker() {
+    @objc private func donePicker() {
         self.textField.resignFirstResponder()
         self.delegate?.dataPickerTextFieldDoneButton?(self.textField)
     }
@@ -168,20 +185,5 @@ class DataPickerHandler<T: DataPickerItem>: NSObject, UIPickerViewDelegate, UIPi
     
     func textFieldDidEndEditing(_ textField: UITextField) {
         self.lastSelectedRow = self.selectedRow
-    }
-    
-    // MARK: Private
-    
-    private func updateTextField() {
-        var newValue: String?
-        if 0 <= self.selectedRow && self.selectedRow < self.pickerData.count {
-            newValue = self.pickerData[self.selectedRow].displayText
-        } else {
-            newValue = nil
-        }
-        if newValue != self.textField.text {
-            self.textField.text = newValue
-            self.delegate?.dataPickerTextFieldValueChanged?(_:textField)
-        }
     }
 }

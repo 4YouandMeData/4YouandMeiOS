@@ -46,6 +46,8 @@ enum DefaultService {
     case getTasks
     case sendTaskResultData(taskId: String, resultData: TaskNetworkResultData)
     case sendTaskResultFile(taskId: String, resultFile: TaskNetworkResultFile)
+    // User
+    case sendUserInfoParameters(paramenters: [UserInfoParameterRequest])
 }
 
 struct ApiRequest {

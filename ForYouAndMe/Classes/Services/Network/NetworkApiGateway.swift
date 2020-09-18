@@ -307,6 +307,9 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             return "v1/tasks/\(taskId)"
         case .sendTaskResultFile(let taskId, _):
             return "v1/tasks/\(taskId)/attach"
+        // User
+        case .sendUserInfoParameters:
+            return "v1/user" // TODO: Check against final API specs
         }
     }
     
@@ -334,7 +337,8 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
              .resendConfirmationEmail,
              .updateUserConsent,
              .sendTaskResultData,
-             .sendTaskResultFile:
+             .sendTaskResultFile,
+             .sendUserInfoParameters: // TODO: Check against final API specs
             return .patch
         }
     }
@@ -374,6 +378,8 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         case .getTasks: return Bundle.getTestData(from: "TestGetTasks")
         case .sendTaskResultData: return "{}".utf8Encoded
         case .sendTaskResultFile: return "{}".utf8Encoded
+        // User
+        case .sendUserInfoParameters: return "{}".utf8Encoded
         }
     }
     
@@ -418,7 +424,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             var params: [String: Any] = [:]
             params["agree"] = granted
             params.addContext(context)
-            return .requestParameters(parameters: ["user_permission": params], encoding: JSONEncoding.default)
+            return .requestParameters(parameters    : ["user_permission": params], encoding: JSONEncoding.default)
         case .sendAnswer(let answer, let context):
             var params: [String: Any] = [:]
             params["answer_text"] = answer.possibleAnswer.text
@@ -431,13 +437,23 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             return .requestParameters(parameters: ["task": params], encoding: JSONEncoding.default)
         case .sendTaskResultFile:
             return .uploadMultipart(self.multipartBody)
+        case .sendUserInfoParameters(let userParameters):
+            // TODO: Update request encoding according to API specs
+            let params: [[String: Any]] = userParameters.reduce([]) { (result, parameter) in
+                var result = result
+                var userParameter: [String: Any] = [:]
+                userParameter["id"] = parameter.identifier
+                userParameter["value"] = parameter.value ?? ""
+                result.append(userParameter)
+                return result
+            }
+            return .requestParameters(parameters: ["parameters": params], encoding: JSONEncoding.default)
         }
     }
     
     var multipartBody: [MultipartFormData] {
         switch self {
         case .sendTaskResultFile(_, let file):
-            // TODO: Replace name and fileName with the ones expected from server
             let imageDataProvider = MultipartFormData(provider: MultipartFormData.FormDataProvider.data(file.data),
                                                       name: "task[attachment]",
                                                       fileName: "VideoDiary.\(file.fileExtension.name)",
@@ -472,7 +488,8 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
              .sendAnswer,
              .getTasks,
              .sendTaskResultData,
-             .sendTaskResultFile:
+             .sendTaskResultFile,
+             .sendUserInfoParameters:
             return .bearer
         }
     }

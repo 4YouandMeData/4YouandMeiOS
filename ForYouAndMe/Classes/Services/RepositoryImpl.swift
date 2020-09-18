@@ -211,6 +211,13 @@ extension RepositoryImpl: Repository {
         }
         return sendRequest
     }
+    
+    // MARK: - User
+    
+    func sendUserInfoParameters(userParameterRequests: [UserInfoParameterRequest]) -> Single<()> {
+        return self.api.send(request: ApiRequest(serviceRequest: .sendUserInfoParameters(paramenters: userParameterRequests)))
+            .handleError()
+    }
 }
 
 // MARK: - Extension(PrimitiveSequence)

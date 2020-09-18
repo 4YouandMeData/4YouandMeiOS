@@ -17,7 +17,7 @@ class DatePickerHandler: NSObject, UITextFieldDelegate {
     
     public weak var delegate: DatePickerHandlerDelegate?
     
-    public var selectedDate: Date { self.pickerView.date }
+    public private(set) var selectedDate: Date?
     
     private let pickerView: UIDatePicker
     private let dateFormatter: DateFormatter
@@ -55,6 +55,7 @@ class DatePickerHandler: NSObject, UITextFieldDelegate {
         self.pickerView.maximumDate = maxDate
         if let initialDate = initialDate {
             self.pickerView.date = initialDate
+            self.selectedDate = initialDate
             self.lastSelectedDate = initialDate
         }
         self.updateTextField()
@@ -81,7 +82,10 @@ class DatePickerHandler: NSObject, UITextFieldDelegate {
     }
     
     private func updateTextField() {
-        let dateText = self.dateFormatter.string(from: self.pickerView.date)
+        var dateText = ""
+        if let selectedDate = self.selectedDate {
+            dateText = self.dateFormatter.string(from: selectedDate)
+        }
         if dateText != self.textField.text {
             self.textField.text = dateText
             self.delegate?.datePickerTextFieldValueChanged?(_: self.textField)
@@ -90,11 +94,13 @@ class DatePickerHandler: NSObject, UITextFieldDelegate {
     
     // MARK: Actions
     
-    @objc func dateDidChanged() {
+    @objc private func dateDidChanged() {
+        self.selectedDate = self.pickerView.date
         self.updateTextField()
     }
     
-    @objc func cancelPicker() {
+    @objc private func cancelPicker() {
+        self.selectedDate = self.lastSelectedDate
         if let lastSelectedDate = self.lastSelectedDate {
             self.pickerView.date = lastSelectedDate
         }
@@ -102,7 +108,7 @@ class DatePickerHandler: NSObject, UITextFieldDelegate {
         self.updateTextField()
     }
     
-    @objc func donePicker() {
+    @objc private func donePicker() {
         self.textField.resignFirstResponder()
         self.delegate?.datePickerTextFieldDoneButton?(self.textField)
         self.updateTextField()
@@ -111,6 +117,7 @@ class DatePickerHandler: NSObject, UITextFieldDelegate {
     // MARK: UITextField Delegate
     
     func textFieldDidBeginEditing(_ textField: UITextField) {
+        self.selectedDate = self.pickerView.date
         self.updateTextField()
     }
     
@@ -124,7 +131,7 @@ class DatePickerHandler: NSObject, UITextFieldDelegate {
     }
     
     func textFieldDidEndEditing(_ textField: UITextField) {
-        self.lastSelectedDate = self.pickerView.date
+        self.lastSelectedDate = self.selectedDate
         self.updateTextField()
     }
 }

@@ -34,11 +34,13 @@ class UserInfoViewController: UIViewController {
     
     private let pageState: BehaviorRelay<PageState> = BehaviorRelay<PageState>(value: .read)
     private let navigator: AppNavigator
+    private let repository: Repository
     
-    private let diposeBag = DisposeBag()
+    private let disposeBag = DisposeBag()
     
     init(withTitle title: String, userInfoParameters: [UserInfoParameter]) {
         self.navigator = Services.shared.navigator
+        self.repository = Services.shared.repository
         self.pageTitle = title
         self.userInfoParameters = userInfoParameters
         super.init(nibName: nil, bundle: nil)
@@ -80,7 +82,7 @@ class UserInfoViewController: UIViewController {
             self?.updateEditButton(pageState: newPageState)
             self?.updateTextFields(pageState: newPageState)
             self?.view.endEditing(true)
-        }).disposed(by: self.diposeBag)
+        }).disposed(by: self.disposeBag)
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -112,7 +114,7 @@ class UserInfoViewController: UIViewController {
             self.textFieldDataPickerMap[textFieldView.textField] = dataPicker
         case .date:
             let dateFormatter = DateFormatter()
-            dateFormatter.dateStyle = .full
+            dateFormatter.dateStyle = .long
             let datePicker = DatePickerHandler(textField: textFieldView.textField,
                                                tintColor: ColorPalette.color(withType: .primary),
                                                dateFormatter: dateFormatter,
@@ -162,8 +164,33 @@ class UserInfoViewController: UIViewController {
     }
     
     @objc private func submitButtonPressed() {
-        // TODO: Submit new data to server before changing state
-        self.pageState.accept(.read)
+        
+        let userInfoParameterRequests: [UserInfoParameterRequest] = self.parameterTextFieldMap.keys.compactMap { parameter in
+            guard let textField = self.parameterTextFieldMap[parameter] else { return nil }
+            var value: String?
+            if let dataPicker = self.textFieldDataPickerMap[textField] {
+                value = dataPicker.getSelectedData()?.identifier
+            } else if let datePicker = self.textFieldDatePickerMap[textField] {
+                if let selectedDate = datePicker.selectedDate {
+                    value = ISO8601Strategy.dateFormatter.string(from: selectedDate)
+                }
+            } else {
+                value = textField.text
+            }
+            return UserInfoParameterRequest(identifier: parameter.identifier, value: value)
+        }
+        
+        self.navigator.pushProgressHUD()
+        self.repository.sendUserInfoParameters(userParameterRequests: userInfoParameterRequests)
+            .subscribe(onSuccess: { [weak self] in
+                guard let self = self else { return }
+                self.navigator.popProgressHUD()
+                self.pageState.accept(.read)
+                }, onError: { [weak self] error in
+                    guard let self = self else { return }
+                    self.navigator.popProgressHUD()
+                    self.navigator.handleError(error: error, presenter: self)
+            }).disposed(by: self.disposeBag)
     }
 }
 

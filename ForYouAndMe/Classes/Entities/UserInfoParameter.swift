@@ -30,6 +30,11 @@ struct UserInfoParameter {
     var currentDate: Date? { ISO8601Strategy.dateFormatter.date(from: self.value) }
 }
 
+struct UserInfoParameterRequest {
+    let identifier: String
+    let value: String?
+}
+
 extension UserInfoParameter: Hashable, Equatable {
     static func == (lhs: UserInfoParameter, rhs: UserInfoParameter) -> Bool {
         return lhs.identifier == rhs.identifier
