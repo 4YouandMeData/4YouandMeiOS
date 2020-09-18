@@ -63,7 +63,7 @@ public class PermissionViewController: UIViewController {
         
         self.scrollStackView.stackView.arrangedSubviews.forEach({ $0.removeFromSuperview() })
         
-        let permissionCamera: Permission = .camera
+        let permissionCamera: Permission = .locationWhenInUse
         let remindersStatus: Bool = permissionCamera.isNotDetermined
         let locationTitle = "The BUMP app needs access to your phone’s location"/*StringsProvider.string(forKey: .studyInfoRewardsItem)*/
         let locationItem = PermissionItemView(withTitle: locationTitle,
@@ -84,9 +84,9 @@ public class PermissionViewController: UIViewController {
         })
         self.scrollStackView.stackView.addArrangedSubview(locationItem)
         
-        let permissionMicrophone: Permission = .microphone
+        let permissionMicrophone: Permission = .notification
         let microphoneStatus: Bool = permissionMicrophone.isNotDetermined
-        let microphoneTitle = "Microphone"/*StringsProvider.string(forKey: .studyInfoRewardsItem)*/
+        let microphoneTitle = "Push Notification"/*StringsProvider.string(forKey: .studyInfoRewardsItem)*/
         let pushItem = PermissionItemView(withTitle: microphoneTitle,
                                           permission: permissionMicrophone,
                                           iconName: .pushNotificationIcon,

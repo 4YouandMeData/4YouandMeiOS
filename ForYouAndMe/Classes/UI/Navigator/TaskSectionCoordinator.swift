@@ -16,7 +16,6 @@ class TaskSectionCoordinator: NSObject, ActivitySectionCoordinator {
     private let taskOptions: TaskOptions?
     private let completionCallback: NotificationCallback
     
-    private let locationService: LocationService
     private let navigator: AppNavigator
     private let repository: Repository
     
@@ -30,7 +29,6 @@ class TaskSectionCoordinator: NSObject, ActivitySectionCoordinator {
         self.taskType = taskType
         self.taskOptions = taskOptions
         self.completionCallback = completionCallback
-        self.locationService = Services.shared.locationService
         self.navigator = Services.shared.navigator
         self.repository = Services.shared.repository
         super.init()
@@ -41,7 +39,7 @@ class TaskSectionCoordinator: NSObject, ActivitySectionCoordinator {
     public func getStartingPage() -> UIViewController? {
         guard let task = self.taskType.createTask(withIdentifier: self.taskIdentifier,
                                                   options: self.taskOptions,
-                                                  locationAuthorised: self.locationService.locationAuthorized) else {
+                                                  locationAuthorised: getLocationAuthorized()) else {
                                                     assertionFailure("Couldn't find ORKTask for given task")
                                                     return nil
         }

@@ -23,7 +23,6 @@ class Services {
     private(set) var repository: Repository!
     private(set) var navigator: AppNavigator!
     private(set) var healthService: HealthService!
-    private(set) var locationService: LocationService!
     private(set) var analyticsService: AnalyticsService!
     
     private var window: UIWindow?
@@ -38,9 +37,6 @@ class Services {
         
         let healthService = HealthManager()
         services.append(healthService)
-        
-        let locationService = LocationManager()
-        services.append(locationService)
         
         let reachabilityService = ReachabilityManager()
         self.services.append(reachabilityService)
@@ -69,7 +65,6 @@ class Services {
         self.repository = repository
         self.navigator = navigator
         self.healthService = healthService
-        self.locationService = locationService
         self.analyticsService = analyticsService
         
         self.navigator.showSetupScreen()

@@ -30,8 +30,8 @@ enum PermissionImageName {
             return "reminders_icon"
         case .speech:
             return "speech_icon"
-            //        case .locationAlwaysAndWhenInUse:
-            //            return "Location Always"
+        case .locationAlwaysAndWhenInUse:
+            return "Location Always"
         case .motion:
             return "motion_icon"
         case .mediaLibrary:
@@ -41,8 +41,8 @@ enum PermissionImageName {
             #endif
         case .notification:
             return "notification_icon"
-            //        case .locationWhenInUse:
-            //            return "Location When Use"
+        case .locationWhenInUse:
+            return "Location When Use"
         }
     }
 }
@@ -66,8 +66,8 @@ enum PermissionsText {
             return "Reminders"
         case .speech:
             return "Speech"
-            //        case .locationAlwaysAndWhenInUse:
-            //            return "Location Always"
+        case .locationAlwaysAndWhenInUse:
+            return "Location Always"
         case .motion:
             return "Motion"
         case .mediaLibrary:
@@ -77,8 +77,8 @@ enum PermissionsText {
             #endif
         case .notification:
             return "Notification"
-            //        case .locationWhenInUse:
-            //            return "Location When Use"
+        case .locationWhenInUse:
+            return "Location When Use"
         }
     }
 }
@@ -93,13 +93,13 @@ enum PermissionsText {
     case contacts = 5
     case reminders = 6
     case speech = 7
-    //    case locationAlwaysAndWhenInUse = 10
+    case locationAlwaysAndWhenInUse = 10
     case motion = 11
     case mediaLibrary = 12
     case bluetooth = 13
     #endif
     case notification = 2
-    //    case locationWhenInUse = 9
+    case locationWhenInUse = 9
     
     /**
      Check permission is allowed.
@@ -167,8 +167,8 @@ enum PermissionsText {
             return "NSRemindersUsageDescription"
         case .speech:
             return "NSSpeechRecognitionUsageDescription"
-            //        case .locationAlwaysAndWhenInUse:
-            //            return "NSLocationAlwaysAndWhenInUseUsageDescription"
+        case .locationAlwaysAndWhenInUse:
+            return "NSLocationAlwaysAndWhenInUseUsageDescription"
         case .motion:
             return "NSMotionUsageDescription"
         case .mediaLibrary:
@@ -178,8 +178,8 @@ enum PermissionsText {
             #endif
         case .notification:
             return nil
-            //        case .locationWhenInUse:
-            //            return "NSLocationWhenInUseUsageDescription"
+        case .locationWhenInUse:
+            return "NSLocationWhenInUseUsageDescription"
         }
     }
 }
@@ -205,8 +205,8 @@ extension Permission {
             return RemindersPermission()
         case .speech:
             return SpeechPermission()
-            //        case .locationAlwaysAndWhenInUse:
-            //            return LocationPermission(type: LocationPermission.LocationType.AlwaysAndWhenInUse)
+        case .locationAlwaysAndWhenInUse:
+            return LocationPermission(type: LocationPermission.LocationType.alwaysAndWhenInUse)
         case .motion:
             return MotionPermission()
         case .mediaLibrary:
@@ -216,8 +216,8 @@ extension Permission {
             #endif
         case .notification:
             return NotificationPermission()
-            //        case .locationWhenInUse:
-            //            return LocationPermission(type: LocationPermission.LocationType.WhenInUse)
+        case .locationWhenInUse:
+            return LocationPermission(type: LocationPermission.LocationType.whenInUse)
         }
     }
     
@@ -239,3 +239,12 @@ extension Permission {
         return PermissionImageName.iconName(for: self)
     }
 }
+
+
+func getLocationAuthorized() -> Bool {
+    let whenInUse: Permission = .locationWhenInUse
+    let always: Permission = .locationAlwaysAndWhenInUse
+    
+    return whenInUse.isAuthorized || always.isAuthorized
+}
+
