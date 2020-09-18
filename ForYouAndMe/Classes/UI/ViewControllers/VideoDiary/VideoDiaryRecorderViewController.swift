@@ -39,12 +39,13 @@ public class VideoDiaryRecorderViewController: UIViewController {
     }()
     
     private var recordDurationTime: TimeInterval = 0.0
+    private var lastSuccessfulRecordDurationTime: TimeInterval = 0.0
     private var noOfPauses: Int = 0
     private let videoExtension = "mov" // Extension of each video part
     private let mergedVideoExtension: FileDataExtension = .mp4
     private var recordTrackingTimer: Timer?
     private var hidePlayButtonTimer: Timer?
-    private var videoMergeQueued: Bool = false
+    private var recordMaxTimeExceeded: Bool { self.recordDurationTime >= Constants.Misc.VideoDiaryMaxDurationSeconds }
     
     private let disposeBag = DisposeBag()
     
@@ -415,8 +416,7 @@ public class VideoDiaryRecorderViewController: UIViewController {
     
     @objc private func fireTimer() {
         self.recordDurationTime += Self.RecordTrackingTimeInterval
-        if self.recordDurationTime >= Constants.Misc.VideoDiaryMaxDurationSeconds {
-            self.videoMergeQueued = true
+        if self.recordMaxTimeExceeded {
             self.stopRecording()
             return
         }
@@ -511,24 +511,25 @@ extension VideoDiaryRecorderViewController: CameraViewDelegate {
     }
     
     func hasCaptureOutputErrorOccurred(error: CaptureOutputError) {
+        self.recordDurationTime = self.lastSuccessfulRecordDurationTime
+        self.recordTrackingTimer?.invalidate()
+        self.currentState = .record(isRecording: false)
         self.navigator.handleError(error: error, presenter: self)
     }
     
     func hasFinishedRecording(fileURL: URL?, error: Error?) {
         self.navigator.popProgressHUD()
         
-        guard error == nil else {
+        guard nil == error, nil != fileURL else {
             print("VideoDiaryRecorderViewController - Error while writing video on file: \(String(describing: error))")
             self.navigator.handleError(error: nil, presenter: self)
+            self.recordDurationTime = self.lastSuccessfulRecordDurationTime
+            self.currentState = .record(isRecording: false)
             return
         }
         
-        guard nil != fileURL else {
-            self.navigator.handleError(error: nil, presenter: self)
-            return
-        }
-        if self.videoMergeQueued {
-            self.videoMergeQueued = false
+        self.lastSuccessfulRecordDurationTime = self.recordDurationTime
+        if self.recordMaxTimeExceeded {
             self.handleCompleteRecording()
         }
     }

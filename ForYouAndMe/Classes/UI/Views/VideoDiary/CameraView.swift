@@ -76,8 +76,6 @@ class CameraView: UIView {
     
     private var mergedFileName = ""
     
-    private var isRecordingStopped = false
-    
     init() {
         super.init(frame: .zero)
         self.prepareCameraView()
@@ -121,7 +119,6 @@ class CameraView: UIView {
     }
     
     func startRecording() {
-        self.isRecordingStopped = false
         guard let movieFileOutput = self.captureOutput else {
             self.delegate?.hasCaptureOutputErrorOccurred(error: CaptureOutputError.noCaptureOutputDetected)
             return
@@ -138,12 +135,11 @@ class CameraView: UIView {
     }
     
     func stopRecording() {
-        self.isRecordingStopped = true
         guard let movieFileOutput = self.captureOutput else {
             self.delegate?.hasCaptureOutputErrorOccurred(error: CaptureOutputError.noCaptureOutputDetected)
             return
         }
-        
+
         if movieFileOutput.isRecording {
             movieFileOutput.stopRecording()
         }
@@ -508,10 +504,12 @@ extension CameraView: AVCaptureFileOutputRecordingDelegate {
                     didFinishRecordingTo outputFileURL: URL,
                     from connections: [AVCaptureConnection],
                     error: Error?) {
-        // If an error occurs, remove this video URL from the array so that the merging does not fail
-        if error != nil {
-            self.allVideoURLs.removeObject(outputFileURL)
+        Async.mainQueue {
+            // If an error occurs, remove this video URL from the array so that the merging does not fail
+            if error != nil {
+                self.allVideoURLs.removeObject(outputFileURL)
+            }
+            self.delegate?.hasFinishedRecording(fileURL: outputFileURL, error: error)
         }
-        self.delegate?.hasFinishedRecording(fileURL: outputFileURL, error: self.isRecordingStopped ? nil : error)
     }
 }
