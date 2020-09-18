@@ -27,8 +27,18 @@
 	</array>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSAppleMusicUsageDescription</key>
+	<string>$(PRODUCT_NAME) uses Media Library during certain tasks.</string>
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>$(PRODUCT_NAME) uses Bluetooth to connect with wearables.</string>
+	<key>NSBluetoothPeripheralUsageDescription</key>
+	<string>$(PRODUCT_NAME) uses Bluetooth to connect with wearables.</string>
+	<key>NSCalendarsUsageDescription</key>
+	<string>$(PRODUCT_NAME) uses Calendar during certain tasks.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>$(PRODUCT_NAME) captures photos and video during certain tasks.</string>
+	<key>NSContactsUsageDescription</key>
+	<string>$(PRODUCT_NAME) uses Contacts during certain tasks.</string>
 	<key>NSHealthShareUsageDescription</key>
 	<string>$(PRODUCT_NAME) will use your health data for your active tasks.</string>
 	<key>NSHealthUpdateUsageDescription</key>
