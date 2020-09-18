@@ -19,7 +19,9 @@ extension UINavigationController {
         self.loadViewForRequest(requestSingle, hidesBottomBarWhenPushed: false, viewForData: viewForData)
     }
     
-    func loadViewForRequest<T>(_ requestSingle: Single<T>, hidesBottomBarWhenPushed: Bool, viewForData: @escaping ((T) -> UIViewController)) {
+    func loadViewForRequest<T>(_ requestSingle: Single<T>,
+                               hidesBottomBarWhenPushed: Bool,
+                               viewForData: @escaping ((T) -> UIViewController)) {
         let loadingInfo = LoadingInfo(requestSingle: requestSingle,
                                       completionCallback: { [weak self] loadedData in
                                         guard let self = self else { return }

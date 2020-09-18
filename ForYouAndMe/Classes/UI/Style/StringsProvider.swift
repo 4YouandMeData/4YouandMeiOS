@@ -38,6 +38,9 @@ enum StringKey: String, CaseIterable, CodingKey {
     case phoneVerificationCodeResend = "PHONE_VERIFICATION_CODE_RESEND"
     case phoneVerificationErrorWrongCode = "PHONE_VERIFICATION_ERROR_WRONG_CODE"
     case phoneVerificationErrorMissingNumber = "PHONE_VERIFICATION_ERROR_MISSING_NUMBER"
+    // Setup Later
+    case introVideoTitle = "INTRO_VIDEO_TITLE"
+    case introVideoContinueButton = "INTRO_VIDEO_CONTINUE_BUTTON"
     // Onboarding
     case onboardingAbortButton = "ONBOARDING_ABORT_BUTTON"
     case onboardingAbortTitle = "ONBOARDING_ABORT_TITLE"

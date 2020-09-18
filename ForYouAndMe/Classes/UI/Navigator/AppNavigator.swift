@@ -54,6 +54,7 @@ class AppNavigator {
             self.window.rootViewController = testNavigationViewController
             
             switch testSection {
+            case .introVideo: self.showIntroVideo(navigationController: testNavigationViewController)
             case .screeningSection: self.startScreeningSection(navigationController: testNavigationViewController)
             case .informedConsentSection: self.startInformedConsentSection(navigationController: testNavigationViewController)
             case .consentSection: self.startConsentSection(navigationController: testNavigationViewController)
@@ -169,11 +170,21 @@ class AppNavigator {
         self.openWebView(withTitle: "", url: url, presenter: presenter)
     }
     
+    public func onLoginCompleted(presenter: UIViewController) {
+        guard let navigationController = presenter.navigationController else {
+            assertionFailure("Missing UINavigationController")
+            return
+        }
+        self.showIntroVideo(navigationController: navigationController)
+    }
+    
     // MARK: Intro Video
     
-    public func showIntroVideo(presenter: UIViewController) {
-        // TODO: Show intro video
-        print("TODO: Show intro video")
+    public func showIntroVideo(navigationController: UINavigationController) {
+        navigationController.pushViewController(IntroVideoViewController(), animated: true)
+    }
+    
+    public func onIntroVideoCompleted(presenter: UIViewController) {
         guard let navigationController = presenter.navigationController else {
             assertionFailure("Missing UINavigationController")
             return

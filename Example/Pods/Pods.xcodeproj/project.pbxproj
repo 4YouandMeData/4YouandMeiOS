@@ -1389,6 +1389,7 @@
 		895CE133386CDA2B4B271287050A9BBB /* GULKeychainStorage.h in Headers */ = {isa = PBXBuildFile; fileRef = 92433596146DB5098961FAC002CF3347 /* GULKeychainStorage.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		89742D3E66FE2C671D247E7C854738AA /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F01578AB006E6083822E1AB1BC7E32A /* Constants.swift */; };
 		899AFC7DB0CA4B9B6117637697522333 /* ORKUSDZModelManagerResult.m in Sources */ = {isa = PBXBuildFile; fileRef = 0C38355FCC687009F71D1145C2E762EB /* ORKUSDZModelManagerResult.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
+		89A4FDC12514BFA0001D8BC3 /* IntroVideoViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89A4FDC02514BFA0001D8BC3 /* IntroVideoViewController.swift */; };
 		89EEED821C9675DD066AD1801A2FE355 /* WKWebView+Rx.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8894A8D193DC750227AF5D906A5CFDA1 /* WKWebView+Rx.swift */; };
 		89F272295872610A2CFE4B228680C6C7 /* NetworkActivityPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45922E36C13528B67F0CE9ED93A1B07D /* NetworkActivityPlugin.swift */; };
 		8A270906AF32357A39B0573670033769 /* ORKTouchAbilitySwipeTrial.h in Headers */ = {isa = PBXBuildFile; fileRef = BAD7B910B766D1BB2AFA6EC03ACCD4A3 /* ORKTouchAbilitySwipeTrial.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -4684,6 +4685,7 @@
 		89594D41A2EC06CDC2A5A73875B91BDF /* SVProgressHUD-umbrella.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = "SVProgressHUD-umbrella.h"; sourceTree = "<group>"; };
 		896C252379F02F758E82BC98E23DA1D5 /* FIRCLSdSYM.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = FIRCLSdSYM.m; path = Crashlytics/Shared/FIRCLSMachO/FIRCLSdSYM.m; sourceTree = "<group>"; };
 		899EB992FAA6B816BAD8570D973C7DB3 /* FIRCLSUnwind.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = FIRCLSUnwind.h; path = Crashlytics/Crashlytics/Unwind/FIRCLSUnwind.h; sourceTree = "<group>"; };
+		89A4FDC02514BFA0001D8BC3 /* IntroVideoViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntroVideoViewController.swift; sourceTree = "<group>"; };
 		89A66F5D0759BD1B565F54EA106D9D7E /* NSLayoutConstraint+PureLayout.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = "NSLayoutConstraint+PureLayout.h"; path = "PureLayout/PureLayout/NSLayoutConstraint+PureLayout.h"; sourceTree = "<group>"; };
 		89BA7611582003DBB8029AA63FF62DB6 /* FIRCLSDataCollectionToken.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = FIRCLSDataCollectionToken.m; path = Crashlytics/Crashlytics/DataCollection/FIRCLSDataCollectionToken.m; sourceTree = "<group>"; };
 		8A1F1A67DA7941A0CF867491578FAAFB /* ofType.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ofType.swift; path = Source/RxSwift/ofType.swift; sourceTree = "<group>"; };
@@ -6644,6 +6646,7 @@
 				4ACDF58EF1F30E37FC1754D030CC86FB /* OptInPermissionViewController.swift */,
 				ED7508EEA4D8D9390BD668120BBE466F /* WearableLoginViewController.swift */,
 				83987E7789A451A5009C37C9B85DE82F /* WearablePageViewController.swift */,
+				89A4FDC02514BFA0001D8BC3 /* IntroVideoViewController.swift */,
 				3DC91CCE966B0C34C415A07CEBE2A941 /* PhoneVerification */,
 				EBEB88B9D6428060534D8D73C60E1A9B /* UserConsentData */,
 				6AD728B1ED87245B34D49449DCBE3402 /* Welcome */,
@@ -13799,6 +13802,7 @@
 				4A0A3339D54CC52A1F45728E44821C66 /* Constants.swift in Sources */,
 				EEE6DD74E7897C408E373B14B1441DF3 /* CountryCodeProvider.swift in Sources */,
 				3FB61AC7C2AA7F1548BBBD20DDF1E6CE /* Date+Extensions.swift in Sources */,
+				89A4FDC12514BFA0001D8BC3 /* IntroVideoViewController.swift in Sources */,
 				2340B993DE575CA4D3168ECCF9AA2144 /* DoubleButtonHorizontalView.swift in Sources */,
 				61163AFD0EFD98A0DA5E215462E39077 /* DoubleButtonVerticalView.swift in Sources */,
 				0B87BD19C61364C76021C5FB6239BC36 /* Feed.swift in Sources */,

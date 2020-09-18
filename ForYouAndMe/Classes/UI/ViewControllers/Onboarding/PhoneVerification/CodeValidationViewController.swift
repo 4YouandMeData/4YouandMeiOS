@@ -166,7 +166,7 @@ public class CodeValidationViewController: UIViewController {
             self.navigator.popProgressHUD()
             self.codeTextFieldView.clearError(clearErrorText: true)
             self.view.endEditing(true)
-            self.navigator.showIntroVideo(presenter: self)
+            self.navigator.onLoginCompleted(presenter: self)
         }, onError: { [weak self] error in
             guard let self = self else { return }
             self.navigator.popProgressHUD()

@@ -10,6 +10,7 @@ import Foundation
 import AVFoundation
 
 enum TestSection {
+    case introVideo
     case screeningSection
     case informedConsentSection
     case consentSection
@@ -24,7 +25,7 @@ struct Constants {
         static let NetworkStubsDelay = 0.3
         static let NetworkLogVerbose = true
         
-        static let Section: TestSection? = nil//.wearablesSection
+        static let Section: TestSection? = .introVideo
         static let OnboardingCompleted: Bool? = true
         
         static let InformedConsentWithoutQuestions: Bool = false
@@ -45,6 +46,13 @@ struct Constants {
     }
     struct Resources {
         static let DefaultBundleName: String = "ForYouAndMe"
+        static let IntroVideoUrl: URL? = {
+            guard let videoPathString = Bundle.main.path(forResource: "StudyVideo", ofType: "mp4") else {
+                assertionFailure("Missing Study Video File")
+                return nil
+            }
+            return URL(fileURLWithPath: videoPathString)
+        }()
     }
     struct Misc {
         static let EnableGlobalConfigCache = false
