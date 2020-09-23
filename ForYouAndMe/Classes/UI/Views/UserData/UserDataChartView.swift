@@ -31,13 +31,13 @@ enum StudyPeriod: Int, CaseIterable {
     var periodString: String {
         switch self {
         case .day:
-            return periodString()
+            return periodString(formatter: "EEEE, MMM d, yyyy")
         case .week:
             return periodString()
         case .month:
-            return periodString()
+            return periodString(formatter: "MMMM yyyy")
         case .year:
-            return periodString()
+            return periodString(formatter: "MMMM yyyy")
         }
     }
     
@@ -45,7 +45,13 @@ enum StudyPeriod: Int, CaseIterable {
         let dates = getStartAndEndData()
         let startDate = dates.startDate.string(withFormat: formatter)
         let endDate = dates.endDate.string(withFormat: formatter)
-        return "\(startDate)" + " - " + "\(endDate)"
+        switch self {
+        case .day:
+            return "\(startDate)"
+        case .week, .month, .year:
+            return "\(startDate)" + " - " + "\(endDate)"
+
+        }
     }
     
     func getStartAndEndData() -> (startDate: Date, endDate: Date) {
@@ -55,7 +61,7 @@ enum StudyPeriod: Int, CaseIterable {
         case .day:
             startDate = startDate.getDate(for: -1)
         case .month:
-            startDate = startDate.getDate(for: -28)
+            startDate = startDate.getDate(for: -30)
         case .week:
             startDate = startDate.getDate(for: -7)
         case .year:
@@ -67,7 +73,7 @@ enum StudyPeriod: Int, CaseIterable {
     func getInterval() -> Int {
         switch self {
         case .day:
-            return 3
+            return 1
         case .month:
             return 4
         case .week:
@@ -83,7 +89,7 @@ enum StudyPeriod: Int, CaseIterable {
         
         switch self {
         case .day:
-            return startDate.getDates(for: self.getInterval(), interval: 24, format: dayTime)
+            return startDate.getDates(for: self.getInterval(), interval: 1, format: dayTime)
         case .week:
             return startDate.getDates(for: self.getInterval(), interval: 6, format: dayShort)
         case .month:
@@ -153,12 +159,15 @@ class UserDataChartView: UIView {
         self.chartView.leftAxis.drawGridLinesEnabled = false
         self.chartView.drawGridBackgroundEnabled = false
         self.chartView.extraBottomOffset = 20
+        self.chartView.extraLeftOffset = 25
+        self.chartView.extraTopOffset = 20
         self.chartView.clipsToBounds = false
-        
+    
         //Legend
         self.chartView.legend.form = .line
         self.chartView.legend.textColor = self.plotColor
         self.chartView.legend.font = FontPalette.fontStyleData(forStyle: .paragraph).font
+        self.chartView.legend.xOffset = -10
 
 //        self.chartView.legend.yOffset = 20
         
@@ -196,7 +205,7 @@ class UserDataChartView: UIView {
             return ChartDataEntry(x: Double(index), y: val, icon: ImagePalette.image(withName: .circular))
         }
         
-        let set1 = LineChartDataSet(entries: values, label: studyPeriod.periodString())
+        let set1 = LineChartDataSet(entries: values, label: studyPeriod.periodString)
         set1.drawIconsEnabled = false
         set1.drawValuesEnabled = false
         set1.drawCirclesEnabled = true
@@ -225,14 +234,13 @@ class UserDataChartView: UIView {
         self.chartView.xAxis.labelTextColor = UIColor(hexString: "#505050")!
         self.chartView.xAxis.labelFont = FontPalette.fontStyleData(forStyle: .header3).font
         self.chartView.xAxis.wordWrapEnabled = true
-        self.chartView.xAxis.centerAxisLabelsEnabled = true
+        self.chartView.xAxis.yOffset = 10
+//        self.chartView.xAxis.centerAxisLabelsEnabled = true
         
         let range = self.getXAxisRange(periodType: self.studyPeriod)
         self.chartView.xAxis.labelCount = range.interval
         self.chartView.xAxis.axisMinimum = range.min
         self.chartView.xAxis.axisMaximum = range.max
-        self.chartView.xAxis.yOffset = 10
-        self.chartView.xAxis.xOffset = (self.studyPeriod == .week) ? 100 : 50
     }
     
     fileprivate func configureYAxis() {
@@ -245,17 +253,17 @@ class UserDataChartView: UIView {
         rightAxis.labelFont = FontPalette.fontStyleData(forStyle: .header3).font
         rightAxis.drawGridLinesEnabled = false
         rightAxis.drawLimitLinesBehindDataEnabled = true
-        rightAxis.yOffset = 10
+        rightAxis.drawZeroLineEnabled = true
     }
     
     fileprivate func getXAxisRange(periodType: StudyPeriod) -> (min: Double, max: Double, interval: Int) {
         var value: (min: Double, max: Double, interval: Int)!
         if periodType == .week {
-            value = (min: 0, max: 6, interval: 7)
+            value = (min: 0, max: 6, interval: 6)
         } else if periodType == .day {
-            value = (min: 0, max: 4, interval: 5)
+            value = (min: 0, max: 4, interval: 4)
         } else {
-            value = (min: 0, max: 3, interval: 4)
+            value = (min: 0, max: 3, interval: 3)
         }
         return value
     }
