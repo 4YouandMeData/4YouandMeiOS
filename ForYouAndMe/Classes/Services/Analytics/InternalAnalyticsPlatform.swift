@@ -25,6 +25,7 @@ class InternalAnalyticsPlatform: AnalyticsPlatform {
             self.sendAnwsers(answers: answers)
         case .informedConsentQuizCompleted(let answers):
             self.sendAnwsers(answers: answers)
+        default: break
         }
     }
     

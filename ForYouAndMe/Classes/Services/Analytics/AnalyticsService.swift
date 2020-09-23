@@ -12,6 +12,8 @@ enum AnalyticsEvent {
     case screeningQuizCompleted(answers: [Answer])
     // Informed Consent
     case informedConsentQuizCompleted(answers: [Answer])
+    // TODO: Remove!!
+    case testFirebaseEvent(sampleParameter: Int)
 }
 
 protocol AnalyticsService {

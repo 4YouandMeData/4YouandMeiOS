@@ -52,9 +52,12 @@ class FeedViewController: UIViewController {
     private let navigator: AppNavigator
     private let repository: Repository
     
+    private let analyticsService: AnalyticsService
+    
     init() {
         self.navigator = Services.shared.navigator
         self.repository = Services.shared.repository
+        self.analyticsService = Services.shared.analyticsService
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -76,6 +79,9 @@ class FeedViewController: UIViewController {
         self.view.addSubview(self.tableView)
         self.tableView.autoPinEdgesToSuperviewEdges(with: .zero, excludingEdge: .top)
         self.tableView.autoPinEdge(.top, to: .bottom, of: self.headerView)
+        
+        // TODO: Remove (just for demo purpose)
+        self.analyticsService.track(event: .testFirebaseEvent(sampleParameter: 666))
     }
     
     override func viewWillAppear(_ animated: Bool) {

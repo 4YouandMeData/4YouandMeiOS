@@ -16,7 +16,7 @@ class AnalyticsManager: AnalyticsService {
     private let platforms: [AnalyticsPlatform]
     
     init(api: ApiGateway) {
-        self.platforms = [InternalAnalyticsPlatform(api: api)]
+        self.platforms = [InternalAnalyticsPlatform(api: api), FirebaseAnalyticsPlatform()]
     }
     
     func track(event: AnalyticsEvent) {
