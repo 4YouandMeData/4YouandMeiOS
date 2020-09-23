@@ -408,6 +408,7 @@
 		203D36F125126BB700949AD9 /* MediaLibraryPermission.swift in Sources */ = {isa = PBXBuildFile; fileRef = 203D36F025126BB700949AD9 /* MediaLibraryPermission.swift */; };
 		203D36F325126BF500949AD9 /* BluetoothPermission.swift in Sources */ = {isa = PBXBuildFile; fileRef = 203D36F225126BF500949AD9 /* BluetoothPermission.swift */; };
 		203D36F525126CB200949AD9 /* NotificationPermission.swift in Sources */ = {isa = PBXBuildFile; fileRef = 203D36F425126CB200949AD9 /* NotificationPermission.swift */; };
+		20700838251AE3510060153F /* Int+Custom.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20700837251AE3510060153F /* Int+Custom.swift */; };
 		208AD713DD7C5C66B7D7305FBBA2A820 /* SubjectType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E32E0EF388D58B4B3AC3101509DD2B4 /* SubjectType.swift */; };
 		208F4F8D2512723900CFCE82 /* PermissionOpener.swift in Sources */ = {isa = PBXBuildFile; fileRef = 208F4F8C2512723900CFCE82 /* PermissionOpener.swift */; };
 		209E2DDAF58CEC9E26D41FAB29ED3561 /* UIBezierPath+WeightedPoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8785E5B59D2C20F315E8E0809B509CB1 /* UIBezierPath+WeightedPoint.swift */; };
@@ -3615,6 +3616,7 @@
 		2042BFAB7812D1A5AD9903A6D025D677 /* ORKConsentSceneViewController_Internal.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = ORKConsentSceneViewController_Internal.h; path = ResearchKit/Consent/ORKConsentSceneViewController_Internal.h; sourceTree = "<group>"; };
 		204DCA51B182DFC88C41A09F830CB714 /* PromisesObjC-dummy.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = "PromisesObjC-dummy.m"; sourceTree = "<group>"; };
 		205BA74B337F867F622C82EECCB83F15 /* Catch.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = Catch.swift; path = RxSwift/Observables/Catch.swift; sourceTree = "<group>"; };
+		20700837251AE3510060153F /* Int+Custom.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Int+Custom.swift"; sourceTree = "<group>"; };
 		2079A117921DBE672EFAE70D1AADEE4A /* Alamofire-Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = "Alamofire-Info.plist"; sourceTree = "<group>"; };
 		208F4F8C2512723900CFCE82 /* PermissionOpener.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionOpener.swift; sourceTree = "<group>"; };
 		20A1FAF7F8F24F2430417D90087F85ED /* ORKStroopStep.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = ORKStroopStep.h; path = ResearchKit/ActiveTasks/ORKStroopStep.h; sourceTree = "<group>"; };
@@ -6712,6 +6714,14 @@
 			path = Permission;
 			sourceTree = "<group>";
 		};
+		207006CC2518F70F0060153F /* UserData */ = {
+			isa = PBXGroup;
+			children = (
+				8948702425029EE100B3B160 /* UserDataChartView.swift */,
+			);
+			path = UserData;
+			sourceTree = "<group>";
+		};
 		2143D8A4AC6E0B18CCC5DE4B8F3368EA /* Support Files */ = {
 			isa = PBXGroup;
 			children = (
@@ -9180,6 +9190,7 @@
 		B501D967A004EAD63459837B81D1D838 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				207006CC2518F70F0060153F /* UserData */,
 				20189760251515C7003CFD17 /* UserInfoHeaderView.swift */,
 				042D6CF9C0396CC4C333FABF64D6D2CB /* DoubleButtonHorizontalView.swift */,
 				D858873D9F4A243614413719AE8C35B4 /* DoubleButtonVerticalView.swift */,
@@ -9201,7 +9212,6 @@
 				8D9B47B03C44F1691A2A84B1DF959A38 /* SingleTextHeaderView.swift */,
 				4F1BC5BF3790F39D0DE5C135BD9FFC50 /* StudyInfoHeaderView.swift */,
 				54BCE0064ED978D6B54CF8142EFEAE80 /* TaskEmptyView.swift */,
-				8948702425029EE100B3B160 /* UserDataChartView.swift */,
 				28F6CEBFF7F5B49751F46456EB1FF3B6 /* PhoneVerification */,
 				059F8350657C0E094C5FE24E418ECE33 /* VideoDiary */,
 				20C05DDC250BE205006EF7E6 /* InfoDetailHeaderView.swift */,
@@ -9859,6 +9869,7 @@
 				94726226FC3623C8F80B9DD35F5A781A /* UIViewController+Alert.swift */,
 				C17822F2DCA482DDD79D8D4BF90B244F /* UIViewController+Extensions.swift */,
 				B08A5145BF1A64684FDA1936EE34A083 /* URL+Extensions.swift */,
+				20700837251AE3510060153F /* Int+Custom.swift */,
 			);
 			name = Utility;
 			path = ForYouAndMe/Classes/Utility;
@@ -13960,6 +13971,7 @@
 				0FF3C50E9BE3AAB6E199513D487999DF /* StringsProvider.swift in Sources */,
 				68177D7B22175658E321FBED072EDD90 /* StudyInfoHeaderView.swift in Sources */,
 				F1EB3C2A594423F242D9C005F5152337 /* StudyInfoViewController.swift in Sources */,
+				20700838251AE3510060153F /* Int+Custom.swift in Sources */,
 				3D47589B1609718F55650CAA361B27D6 /* Style.swift in Sources */,
 				203D36DD251268D600949AD9 /* PermissionProtocol.swift in Sources */,
 				A5B59FB6AF29978EA408F5C84DA4FFD0 /* StyleCategory.swift in Sources */,

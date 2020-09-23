@@ -155,16 +155,25 @@ class UserDataViewController: UIViewController {
         // TODO: Implement chart refresh
         self.chartStackView.arrangedSubviews.forEach({ $0.removeFromSuperview() })
 
-//        self.chartStackView.arrangedSubviews.forEach{ view in
-//            self.chartStackView.removeArrangedSubview(view)
-//        }
-        let testChartView1 = UserDataChartView(title: "Your Weight")
+        let testChartView1 = UserDataChartView(title: "Your Weight",
+                                               plotColor: UIColor(hexString: "#F57286")!,
+                                               values: ["Test"],
+                                               studyPeriod: .week)
         self.chartStackView.addArrangedSubview(testChartView1)
-        let testChartView2 = UserDataChartView(title: "Your Daily Steps")
+        let testChartView2 = UserDataChartView(title: "Your Daily Steps",
+                                               plotColor: UIColor(hexString: "#54C788")!,
+                                               values: ["Test"],
+                                               studyPeriod: .month)
         self.chartStackView.addArrangedSubview(testChartView2)
-        let testChartView3 = UserDataChartView(title: "Your Self-Assed Mood")
+        let testChartView3 = UserDataChartView(title: "Your Self-Assed Mood",
+                                               plotColor: UIColor(hexString: "#E167AC")!,
+                                               values: ["Test"],
+                                               studyPeriod: .year)
         self.chartStackView.addArrangedSubview(testChartView3)
-        let testChartView4 = UserDataChartView(title: "Your Self-Assessed Energy")
+        let testChartView4 = UserDataChartView(title: "Your Self-Assessed Energy",
+                                               plotColor: UIColor(hexString: "#34CBD9")!,
+                                               values: ["Test"],
+                                               studyPeriod: .day)
         self.chartStackView.addArrangedSubview(testChartView4)
         
     }
