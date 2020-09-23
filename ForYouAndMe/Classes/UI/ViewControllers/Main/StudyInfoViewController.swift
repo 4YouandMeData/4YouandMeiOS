@@ -40,7 +40,20 @@ class StudyInfoViewController: UIViewController {
         self.scrollStackView.autoPinEdgesToSuperviewEdges(with: .zero, excludingEdge: .top)
         self.scrollStackView.autoPinEdge(.top, to: .bottom, of: headerView, withOffset: 30)
         
-        var title = StringsProvider.string(forKey: .studyInfoContactTitle)
+        var title = StringsProvider.string(forKey: .studyInfoAboutYou)
+        let aboutYou = GenericListItemView(withTitle: title,
+                                           templateImageName: .pregnancyIcon,
+                                           colorType: .primary,
+                                           gestureCallback: { [weak self] in
+                                            self?.navigator.showAboutYouPage(presenter: self!)
+                                           })
+        self.scrollStackView.stackView.addArrangedSubview(aboutYou)
+        
+        self.scrollStackView.stackView.addLineSeparator(lineColor: ColorPalette.color(withType: .inactive),
+                                                        inset: 21,
+                                                        isVertical: false)
+
+        title = StringsProvider.string(forKey: .studyInfoContactTitle)
         let contactInformation = GenericListItemView(withTitle: title,
             templateImageName: .studyInfoContact,
             colorType: .primary,
