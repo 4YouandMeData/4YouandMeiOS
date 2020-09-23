@@ -9,7 +9,7 @@ import Foundation
 
 import UIKit
 
-class UserDataViewController: UIViewController {
+class UserDataViewController: UIViewController, CustomSegmentViewDelegate {
     
     // MARK: - AttributedTextStyles
     
@@ -65,7 +65,12 @@ class UserDataViewController: UIViewController {
                            fontStyle: .paragraph,
                            colorType: .primaryText,
                            textAlignment: .left)
-        // TODO: Add period selector
+        
+        let segmentProperties = CustomSegmentViewProperties.init(switchTexts: [.day, .week, .month, .year])
+        let segmentView = CustomSegmentView(frame: .zero, switchProperties: segmentProperties)
+        stackView.addArrangedSubview(segmentView)
+        segmentView.autoSetDimension(.height, toSize: 47)
+        segmentView.switchDelegate = self
         stackView.addArrangedSubview(self.chartStackView)
         return view
     }()
@@ -176,5 +181,15 @@ class UserDataViewController: UIViewController {
                                                studyPeriod: .day)
         self.chartStackView.addArrangedSubview(testChartView4)
         
+    }
+    
+    //Delegate Methods
+    func segmentWillChange(_ studyPeriod: StudyPeriod) {
+        // TODO: handle change of index
+        print("will change")
+    }
+    func segmentDidChanged(_ studyPeriod: StudyPeriod) {
+        // TODO: handle change of index
+        print("did change")
     }
 }

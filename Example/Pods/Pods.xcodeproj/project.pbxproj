@@ -409,6 +409,7 @@
 		203D36F325126BF500949AD9 /* BluetoothPermission.swift in Sources */ = {isa = PBXBuildFile; fileRef = 203D36F225126BF500949AD9 /* BluetoothPermission.swift */; };
 		203D36F525126CB200949AD9 /* NotificationPermission.swift in Sources */ = {isa = PBXBuildFile; fileRef = 203D36F425126CB200949AD9 /* NotificationPermission.swift */; };
 		20700838251AE3510060153F /* Int+Custom.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20700837251AE3510060153F /* Int+Custom.swift */; };
+		20700898251BA94E0060153F /* CustomSegmentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20700897251BA94E0060153F /* CustomSegmentView.swift */; };
 		208AD713DD7C5C66B7D7305FBBA2A820 /* SubjectType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E32E0EF388D58B4B3AC3101509DD2B4 /* SubjectType.swift */; };
 		208F4F8D2512723900CFCE82 /* PermissionOpener.swift in Sources */ = {isa = PBXBuildFile; fileRef = 208F4F8C2512723900CFCE82 /* PermissionOpener.swift */; };
 		209E2DDAF58CEC9E26D41FAB29ED3561 /* UIBezierPath+WeightedPoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8785E5B59D2C20F315E8E0809B509CB1 /* UIBezierPath+WeightedPoint.swift */; };
@@ -3617,6 +3618,7 @@
 		204DCA51B182DFC88C41A09F830CB714 /* PromisesObjC-dummy.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = "PromisesObjC-dummy.m"; sourceTree = "<group>"; };
 		205BA74B337F867F622C82EECCB83F15 /* Catch.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = Catch.swift; path = RxSwift/Observables/Catch.swift; sourceTree = "<group>"; };
 		20700837251AE3510060153F /* Int+Custom.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Int+Custom.swift"; sourceTree = "<group>"; };
+		20700897251BA94E0060153F /* CustomSegmentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomSegmentView.swift; sourceTree = "<group>"; };
 		2079A117921DBE672EFAE70D1AADEE4A /* Alamofire-Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = "Alamofire-Info.plist"; sourceTree = "<group>"; };
 		208F4F8C2512723900CFCE82 /* PermissionOpener.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionOpener.swift; sourceTree = "<group>"; };
 		20A1FAF7F8F24F2430417D90087F85ED /* ORKStroopStep.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = ORKStroopStep.h; path = ResearchKit/ActiveTasks/ORKStroopStep.h; sourceTree = "<group>"; };
@@ -9218,6 +9220,7 @@
 				20C05DE0250BE982006EF7E6 /* AboutYouHeaderView.swift */,
 				20C05DE4250C13D0006EF7E6 /* DeviceItemView.swift */,
 				203D3676250FC3A000949AD9 /* PermissionItemView.swift */,
+				20700897251BA94E0060153F /* CustomSegmentView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -14034,6 +14037,7 @@
 				10D3BD4F0A6025BA5DAE8A5E46EFF950 /* WearablesSection.swift in Sources */,
 				29E3325DEFB355A42810207D0EC537D0 /* WearablesSectionCoordinator.swift in Sources */,
 				1BD2950984F2E091FAE9523D3CA1AFE8 /* WebViewViewController.swift in Sources */,
+				20700898251BA94E0060153F /* CustomSegmentView.swift in Sources */,
 				C3F678704BFB014E5FE804BD6CAA7DA4 /* WelcomeViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
