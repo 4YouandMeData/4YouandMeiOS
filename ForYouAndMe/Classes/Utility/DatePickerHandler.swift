@@ -33,6 +33,9 @@ class DatePickerHandler: NSObject, UITextFieldDelegate {
         self.textField = textField
         
         self.pickerView = UIDatePicker()
+        if #available(iOS 13.4, *) {
+            self.pickerView.preferredDatePickerStyle = .wheels
+        }
         self.dateFormatter = dateFormatter
         
         super.init()
