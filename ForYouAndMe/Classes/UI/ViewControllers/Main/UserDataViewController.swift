@@ -44,7 +44,18 @@ class UserDataViewController: UIViewController, CustomSegmentViewDelegate {
         stackView.addArrangedSubview(self.titleLabel)
         stackView.addBlankSpace(space: 20.0)
         stackView.addArrangedSubview(self.subtitleLabel)
+        stackView.addBlankSpace(space: 30.0)
         // TODO: Add stars view
+        let starView = StarRatingView(frame: .zero)
+        starView.editable = false
+        starView.emptyImage = ImagePalette.image(withName: .starEmpty)
+        starView.fullImage = ImagePalette.image(withName: .starFill)
+        starView.minImageSize = CGSize(width: 22, height: 22)
+        starView.type = .floatRatings
+        starView.rating = 4.3
+        stackView.addArrangedSubview(starView)
+        starView.autoSetDimension(.height, toSize: 22)
+        
         return view
     }()
     
@@ -117,9 +128,7 @@ class UserDataViewController: UIViewController, CustomSegmentViewDelegate {
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        
         self.navigationController?.navigationBar.apply(style: NavigationBarStyleCategory.primary(hidden: true).style)
-        
         self.refreshUI()
     }
     

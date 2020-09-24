@@ -393,6 +393,7 @@
 		20189793251515D6003CFD17 /* DatePickerHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20189790251515D5003CFD17 /* DatePickerHandler.swift */; };
 		201898462515178B003CFD17 /* PermissionLocationHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 201898442515178A003CFD17 /* PermissionLocationHandler.swift */; };
 		201898472515178B003CFD17 /* LocationPermission.swift in Sources */ = {isa = PBXBuildFile; fileRef = 201898452515178B003CFD17 /* LocationPermission.swift */; };
+		20306EB0251BD7C30072EEB3 /* StarRatingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20306EAF251BD7C30072EEB3 /* StarRatingView.swift */; };
 		203D3677250FC3A000949AD9 /* PermissionItemView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 203D3676250FC3A000949AD9 /* PermissionItemView.swift */; };
 		203D3679250FC49D00949AD9 /* PermissionViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 203D3678250FC49D00949AD9 /* PermissionViewController.swift */; };
 		203D36DB2512639300949AD9 /* Permission.swift in Sources */ = {isa = PBXBuildFile; fileRef = 203D36DA2512639300949AD9 /* Permission.swift */; };
@@ -3598,6 +3599,7 @@
 		201898442515178A003CFD17 /* PermissionLocationHandler.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PermissionLocationHandler.swift; sourceTree = "<group>"; };
 		201898452515178B003CFD17 /* LocationPermission.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LocationPermission.swift; sourceTree = "<group>"; };
 		202039F33B22F1BFD8AEFBC620F299FB /* FBLPromise+Async.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = "FBLPromise+Async.m"; path = "Sources/FBLPromises/FBLPromise+Async.m"; sourceTree = "<group>"; };
+		20306EAF251BD7C30072EEB3 /* StarRatingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StarRatingView.swift; sourceTree = "<group>"; };
 		20382BAE47B476AFF5606BD17EB001C5 /* OAuthSwiftURLHandlerType.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = OAuthSwiftURLHandlerType.swift; path = Sources/OAuthSwiftURLHandlerType.swift; sourceTree = "<group>"; };
 		203D3676250FC3A000949AD9 /* PermissionItemView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionItemView.swift; sourceTree = "<group>"; };
 		203D3678250FC49D00949AD9 /* PermissionViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionViewController.swift; sourceTree = "<group>"; };
@@ -9221,6 +9223,7 @@
 				20C05DE4250C13D0006EF7E6 /* DeviceItemView.swift */,
 				203D3676250FC3A000949AD9 /* PermissionItemView.swift */,
 				20700897251BA94E0060153F /* CustomSegmentView.swift */,
+				20306EAF251BD7C30072EEB3 /* StarRatingView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -13913,6 +13916,7 @@
 				9172D13A7CA52CA33CD9418586F54A71 /* JSONAPIMappable.swift in Sources */,
 				D30ACB20BC0C1C71FDD3EB9E20684F73 /* KeyboardNotificationProvider.swift in Sources */,
 				8C447E4F2F3C9013040EAD3AC624926A /* LoadingViewController.swift in Sources */,
+				20306EB0251BD7C30072EEB3 /* StarRatingView.swift in Sources */,
 				893A6B5E250A87D4008457B7 /* FeedHeaderView.swift in Sources */,
 				20189792251515D6003CFD17 /* DataPickerHandler.swift in Sources */,
 				1ED62B28502C59402A39E8E92737CDE1 /* Mapper+Extensions.swift in Sources */,
