@@ -127,9 +127,9 @@ extension CustomSegmentViewDelegate {
             outerLabels.append(outerLabel)
         }
         
-        let panGesture: UIPanGestureRecognizer = UIPanGestureRecognizer(target: self,
-                                                                        action: #selector(CustomSegmentView.handlePanGesture(_:)))
-        sliderView.addGestureRecognizer(panGesture)
+//        let panGesture: UIPanGestureRecognizer = UIPanGestureRecognizer(target: self,
+//                                                                        action: #selector(CustomSegmentView.handlePanGesture(_:)))
+//        sliderView.addGestureRecognizer(panGesture)
         changeTheLayoutAttributes()
     }
     
@@ -158,9 +158,9 @@ extension CustomSegmentViewDelegate {
         
         backgroundView.frame = convert(frame, from: superview)
         if properties.switchTexts.isEmpty == false {
-            let sliderWidth: Int = Int(frame.size.width) / properties.switchTexts.count
+            let sliderWidth: CGFloat = frame.size.width / CGFloat(properties.switchTexts.count)
             let sliderOffset = properties.sliderOffset
-            sliderView.frame = CGRect(x: CGFloat((sliderWidth * selectedIndex)) + sliderOffset,
+            sliderView.frame = CGRect(x: CGFloat(sliderWidth * CGFloat(selectedIndex)) + sliderOffset,
                                       y: backgroundView.frame.origin.y + sliderOffset,
                                       width: CGFloat(sliderWidth),
                                       height: backgroundView.frame.height)
@@ -169,9 +169,9 @@ extension CustomSegmentViewDelegate {
             let yOffset: CGFloat = -2
             for index in 0..<innerLabels.count {
                 let label = innerLabels[index]
-                label.frame = CGRect(x: index * sliderWidth + 1,
+                label.frame = CGRect(x: index * Int(sliderWidth) + 1,
                                      y: Int(yOffset),
-                                     width: sliderWidth - 1,
+                                     width: Int(sliderWidth) - 1,
                                      height: Int(backgroundView.frame.height + 2))
                 label.font = properties.font
                 label.backgroundColor = .white
@@ -180,7 +180,7 @@ extension CustomSegmentViewDelegate {
             
             for index in 0..<outerLabels.count {
                 let label = outerLabels[index]
-                let xPos = sliderView.convert(CGPoint(x: index * sliderWidth, y: 0), from: backgroundView).x
+                let xPos = sliderView.convert(CGPoint(x: index * Int(sliderWidth), y: 0), from: backgroundView).x
                 label.frame = CGRect(x: xPos, y: -properties.sliderOffset + yOffset,
                                      width: CGFloat(sliderWidth - 1),
                                      height: backgroundView.frame.height + 2)

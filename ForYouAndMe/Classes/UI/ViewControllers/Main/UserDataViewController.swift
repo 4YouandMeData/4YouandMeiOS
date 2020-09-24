@@ -45,7 +45,7 @@ class UserDataViewController: UIViewController, CustomSegmentViewDelegate {
         stackView.addBlankSpace(space: 20.0)
         stackView.addArrangedSubview(self.subtitleLabel)
         stackView.addBlankSpace(space: 30.0)
-        // TODO: Add stars view
+        // TODO: Set dynamic rating on StarView
         let starView = StarRatingView(frame: .zero)
         starView.editable = false
         starView.emptyImage = ImagePalette.image(withName: .starEmpty)
@@ -77,7 +77,8 @@ class UserDataViewController: UIViewController, CustomSegmentViewDelegate {
                            colorType: .primaryText,
                            textAlignment: .left)
         
-        let segmentProperties = CustomSegmentViewProperties.init(switchTexts: [.day, .week, .month, .year])
+        var segmentProperties = CustomSegmentViewProperties.init(switchTexts: [.day, .week, .month, .year])
+        segmentProperties.sliderOffset = 0
         let segmentView = CustomSegmentView(frame: .zero, switchProperties: segmentProperties)
         stackView.addArrangedSubview(segmentView)
         segmentView.autoSetDimension(.height, toSize: 47)
