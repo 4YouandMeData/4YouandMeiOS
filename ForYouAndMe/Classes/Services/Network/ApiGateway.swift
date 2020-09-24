@@ -48,6 +48,9 @@ enum DefaultService {
     case sendTaskResultFile(taskId: String, resultFile: TaskNetworkResultFile)
     // User
     case sendUserInfoParameters(paramenters: [UserInfoParameterRequest])
+    // Survey
+    case getSurvey(surveyId: String)
+    case sendSurveyTaskResultData(surveyTaskId: String, results: [SurveyResult])
 }
 
 struct ApiRequest {
@@ -70,6 +73,8 @@ enum ApiError: Error {
     case userUnauthorized
 }
 
+protocol PlainDecodable: Decodable {}
+
 protocol ApiGateway {
     
     func send<E: Mappable>(request: ApiRequest, errorType: E.Type) -> Single<()>
@@ -85,6 +90,9 @@ protocol ApiGateway {
     func send<T: JSONAPIMappable, E: Mappable>(request: ApiRequest, errorType: E.Type) -> Single<T?>
     func send<T: JSONAPIMappable, E: Mappable>(request: ApiRequest, errorType: E.Type) -> Single<[T]>
     func send<T: JSONAPIMappable, E: Mappable>(request: ApiRequest, errorType: E.Type) -> Single<ExcludeInvalid<T>>
+    
+    // Decodable entities
+    func send<T: PlainDecodable, E: Mappable>(request: ApiRequest, errorType: E.Type) -> Single<T>
     
     var accessToken: String? { get }
     func isLoggedIn() -> Bool
@@ -127,6 +135,11 @@ extension ApiGateway {
     }
     
     func send<T: JSONAPIMappable>(request: ApiRequest) -> Single<ExcludeInvalid<T>> {
+        return self.send(request: request, errorType: ResponseError.self)
+    }
+    
+    // Decodable entities
+    func send<T: PlainDecodable>(request: ApiRequest) -> Single<T> {
         return self.send(request: request, errorType: ResponseError.self)
     }
 }

@@ -59,4 +59,7 @@ protocol Repository: class {
     func sendTaskResult(taskId: String, taskResult: TaskNetworkResult) -> Single<()>
     // User
     func sendUserInfoParameters(userParameterRequests: [UserInfoParameterRequest]) -> Single<()>
+    // Survey
+    func getSurvey(surveyId: String) -> Single<SurveyGroup>
+    func sendSurveyTaskResult(surveyTaskId: String, results: [SurveyResult]) -> Single<()>
 }

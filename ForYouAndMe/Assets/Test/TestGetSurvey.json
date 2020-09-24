@@ -1,0 +1,146 @@
+{
+  "surveys": [
+    {
+      "id": "1",
+      "questions": [
+          {
+            "id": "1",
+            "image": "base_64_image_data",
+            "body": "Choose a number",
+            "question_type": "numerical",
+            "min": 2,
+            "max": 10,
+            "min_display": "Less than 2",
+            "max_display": "More than 10",
+            "targets": [
+              {
+                "criteria": "range",
+                "min": 2,
+                "max": 6,
+                "question_id": "3"
+              }
+            ]
+          },
+          {
+            "id": "2",
+            "image": "base_64_image_data",
+            "body": "Choose one of the 10 following questions",
+            "question_type": "pick-one",
+            "options": [
+              {
+                "id": "1",
+                "value": "I understand binary",
+                "targets": [
+                {
+                  "question_id": "4"
+                }
+                ]
+              },
+              {
+                "id": "2",
+                "value": "I don't understand binary"
+              }
+            ]
+          },
+          {
+            "id": "3",
+            "image": "base_64_image_data",
+            "body": "Tell us your favorite book genres",
+            "question_type": "pick-many",
+            "options": [
+              {
+                "id": "1",
+                "value": "Fantasy",
+                "targets": [ {
+                  "question_id": "exit"
+                }
+                ]
+              },
+              {
+                "id": "2",
+                "value": "Crime"
+              },
+              {
+                "id": "3",
+                "value": "Horror"
+              },
+              {
+                "id": "4",
+                "value": "Biografy"
+              }
+            ]
+          },
+          {
+            "id": "4",
+            "image": "base_64_image_data",
+            "body": "Describe how you feel",
+            "question_type": "text-input",
+            "placeholder": "Enter your answer",
+            "max_characters": 200
+          }
+      ]
+    },
+    {
+      "id": "2",
+      "questions": [
+          {
+            "id": "5",
+            "image": "base_64_image_data",
+            "body": "Choose a number",
+            "question_type": "scale",
+            "min": 2,
+            "max": 10,
+            "interval": 1,
+            "targets": [
+              {
+                "criteria": "range",
+                "min": 2,
+                "max": 6,
+                "question_id": "exit"
+              }
+            ]
+          },
+          {
+            "id": "6",
+            "image": "base_64_image_data",
+            "body": "Choose a date",
+            "question_type": "date-input",
+            "min_date": "1919-01-01",
+            "max_date": "2001-01-01"
+          }
+      ]
+    },
+    {
+      "id": "3",
+      "questions": [
+          {
+            "id": "7",
+            "image": "base_64_image_data",
+            "body": "Choose a range",
+            "question_type": "range",
+            "min": 0,
+            "max": 100,
+            "min_label": "0% likely",
+            "max_label": "100% likely",
+            "interval": 1,
+            "targets": [
+              {
+                "criteria": "range",
+                "min": 2,
+                "max": 6,
+                "question_id": "exit"
+              }
+            ]
+          },
+          {
+            "id": "8",
+            "image": "base_64_image_data",
+            "body": "Describe how you feel",
+            "question_type": "text-input",
+            "placeholder": "Enter your answer",
+            "max_characters": 200
+          }
+      ]
+    }
+  ]
+}

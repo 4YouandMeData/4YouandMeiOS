@@ -174,10 +174,57 @@ public struct DateValue<Formatter: DateValueCodableStrategy>: Codable {
     }
 }
 
+@propertyWrapper
+public struct FailableDateValue<Formatter: DateValueCodableStrategy>: Codable, OptionalCodingWrapper {
+    private let value: Formatter.RawValue?
+    public var wrappedValue: Date?
+
+    public init(wrappedValue: Date?) {
+        self.wrappedValue = wrappedValue
+        if let wrappedValue = wrappedValue {
+            self.value = Formatter.encode(wrappedValue)
+        } else {
+            self.value = nil
+        }
+    }
+    
+    public init(from decoder: Decoder) {
+        self.value = try? Formatter.RawValue(from: decoder)
+        if let value = self.value {
+            self.wrappedValue = try? Formatter.decode(value)
+        } else {
+            self.wrappedValue = nil
+        }
+    }
+    
+    public func encode(to encoder: Encoder) {
+        try? self.value?.encode(to: encoder)
+    }
+}
+
 public struct ISO8601Strategy: DateValueCodableStrategy {
     static let dateFormatter: ISO8601DateFormatter = {
         let dateFormatter = ISO8601DateFormatter()
         dateFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return dateFormatter
+    }()
+    
+    public static func decode(_ value: String) throws -> Date {
+        guard let date = Self.dateFormatter.date(from: value) else {
+            throw DateCodableError.invalidString
+        }
+        return date
+    }
+    
+    public static func encode(_ date: Date) -> String {
+        return Self.dateFormatter.string(from: date)
+    }
+}
+
+public struct DateStrategy: DateValueCodableStrategy {
+    static let dateFormatter: DateFormatter = {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd"
         return dateFormatter
     }()
     

@@ -168,6 +168,15 @@ class NetworkApiGateway: ApiGateway {
             .handleMapError()
     }
     
+    func send<T: PlainDecodable, E: Mappable>(request: ApiRequest, errorType: E.Type) -> Single<T> {
+        self.sendShared(request: request, errorType: errorType)
+            .map { response in
+                let decoder = JSONDecoder()
+                return try decoder.decode(T.self, from: response.data)
+            }
+            .handleMapError()
+    }
+    
     // MARK: - Private Methods
     
     private func sendShared<E: Mappable>(request: ApiRequest, errorType: E.Type) -> Single<Response> {
@@ -310,6 +319,11 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         // User
         case .sendUserInfoParameters:
             return "v1/user" // TODO: Check against final API specs
+        // Survey
+        case .getSurvey(let surveyId):
+            return "v1/survey_group/\(surveyId)"  // TODO: Check against final API specs
+        case .sendSurveyTaskResultData(let surveyTaskId, _):
+            return "v1/survey/\(surveyTaskId)"  // TODO: Check against final API specs
         }
     }
     
@@ -325,7 +339,8 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
              .getOptInSection,
              .getUserConsentSection,
              .getWearablesSection,
-             .getTasks:
+             .getTasks,
+             .getSurvey: // TODO: Check against final API specs
             return .get
         case .submitPhoneNumber,
              .verifyPhoneNumber,
@@ -338,7 +353,8 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
              .updateUserConsent,
              .sendTaskResultData,
              .sendTaskResultFile,
-             .sendUserInfoParameters: // TODO: Check against final API specs
+             .sendUserInfoParameters, // TODO: Check against final API specs
+             .sendSurveyTaskResultData: // TODO: Check against final API specs
             return .patch
         }
     }
@@ -380,6 +396,9 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         case .sendTaskResultFile: return "{}".utf8Encoded
         // User
         case .sendUserInfoParameters: return "{}".utf8Encoded
+        // Survey
+        case .getSurvey: return Bundle.getTestData(from: "TestGetSurvey")
+        case .sendSurveyTaskResultData: return "{}".utf8Encoded
         }
     }
     
@@ -393,7 +412,8 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
              .getUserConsentSection,
              .resendConfirmationEmail,
              .getWearablesSection,
-             .getTasks:
+             .getTasks,
+             .getSurvey:
             return .requestPlain
         case .submitPhoneNumber(let phoneNumber):
             var params: [String: Any] = [:]
@@ -448,6 +468,17 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
                 return result
             }
             return .requestParameters(parameters: ["parameters": params], encoding: JSONEncoding.default)
+        case .sendSurveyTaskResultData(_, let results):
+            // TODO: Update request encoding according to API specs
+            let params: [[String: Any]] = results.reduce([]) { (result, parameter) in
+                var result = result
+                var userParameter: [String: Any] = [:]
+                userParameter["question_id"] = parameter.questionId
+                userParameter["answer"] = parameter.answer
+                result.append(userParameter)
+                return result
+            }
+            return .requestParameters(parameters: ["answers": params], encoding: JSONEncoding.default)
         }
     }
     
@@ -489,7 +520,9 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
              .getTasks,
              .sendTaskResultData,
              .sendTaskResultFile,
-             .sendUserInfoParameters:
+             .sendUserInfoParameters,
+             .getSurvey,
+             .sendSurveyTaskResultData:
             return .bearer
         }
     }

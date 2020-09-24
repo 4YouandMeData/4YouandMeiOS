@@ -114,15 +114,9 @@ class FeedTableViewCell: UITableViewCell {
         self.setFeedTitle(text: data.title)
         self.setFeedDescription(text: data.body)
         
-        let existCallToAction: Bool = false // TODO: check against final call to action format
-        if existCallToAction {
-            let buttonText = data.buttonText ?? StringsProvider.string(forKey: .surveyButtonDefault)
-            self.buttonView.isHidden = false
-            self.buttonView.setButtonText(buttonText)
-        } else {
-            assert(data.buttonText == nil, "Existing button text for activity without activity type")
-            self.buttonView.isHidden = true
-        }
+        let buttonText = data.buttonText ?? StringsProvider.string(forKey: .surveyButtonDefault)
+        self.buttonView.isHidden = false
+        self.buttonView.setButtonText(buttonText)
     }
     
     // MARK: - Actions

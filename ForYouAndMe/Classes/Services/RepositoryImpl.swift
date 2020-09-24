@@ -218,6 +218,18 @@ extension RepositoryImpl: Repository {
         return self.api.send(request: ApiRequest(serviceRequest: .sendUserInfoParameters(paramenters: userParameterRequests)))
             .handleError()
     }
+    
+    // MARK: - Survey
+    
+    func getSurvey(surveyId: String) -> Single<SurveyGroup> {
+        return self.api.send(request: ApiRequest(serviceRequest: .getSurvey(surveyId: surveyId)))
+            .handleError()
+    }
+    
+    func sendSurveyTaskResult(surveyTaskId: String, results: [SurveyResult]) -> Single<()> {
+        return self.api.send(request: ApiRequest(serviceRequest: .sendSurveyTaskResultData(surveyTaskId: surveyTaskId, results: results)))
+            .handleError()
+    }
 }
 
 // MARK: - Extension(PrimitiveSequence)

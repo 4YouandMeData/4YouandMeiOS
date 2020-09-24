@@ -247,8 +247,19 @@ extension FeedListManager: UITableViewDataSource {
                 })
             case .survey(let survey):
                 cell.display(data: survey, buttonPressedCallback: { () in
-                    print("// TODO: Navigate to survey")
-                    // TODO: Navigate to survey
+                    self.navigator.pushProgressHUD()
+                    self.repository.getSurvey(surveyId: feed.id)
+                        .subscribe(onSuccess: { [weak self] surveyGroup in
+                            guard let self = self else { return }
+                            self.navigator.popProgressHUD()
+                            // TODO: Show Survey Group
+                            print("TODO: Show Survey Group")
+                        }, onError: { [weak self] error in
+                            guard let self = self else { return }
+                            guard let delegate = self.delegate else { return }
+                            self.navigator.popProgressHUD()
+                            self.navigator.handleError(error: error, presenter: delegate.presenter)
+                        }).disposed(by: self.disposeBag)
                 })
             }
             return cell
