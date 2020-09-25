@@ -23,7 +23,7 @@ class Services {
     private(set) var repository: Repository!
     private(set) var navigator: AppNavigator!
     private(set) var healthService: HealthService!
-    private(set) var analyticsService: AnalyticsService!
+    private(set) var analytics: AnalyticsService!
     
     private var window: UIWindow?
     
@@ -55,17 +55,17 @@ class Services {
                                         storage: storage)
         self.services.append(repository)
         
-        let analyticsService = AnalyticsManager(api: networkApiGateway)
-        self.services.append(analyticsService)
+        let analytics = AnalyticsManager(api: networkApiGateway)
+        self.services.append(analytics)
         
-        let navigator = AppNavigator(withRepository: repository, window: window)
+        let navigator = AppNavigator(withRepository: repository, analytics: analytics, window: window)
         self.services.append(navigator)
         
         // Assign concreate services
         self.repository = repository
         self.navigator = navigator
         self.healthService = healthService
-        self.analyticsService = analyticsService
+        self.analytics = analytics
         
         self.navigator.showSetupScreen()
     }

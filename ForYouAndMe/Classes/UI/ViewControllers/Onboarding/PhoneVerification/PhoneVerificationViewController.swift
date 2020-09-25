@@ -100,7 +100,7 @@ public class PhoneVerificationViewController: UIViewController {
     init() {
         self.navigator = Services.shared.navigator
         self.repository = Services.shared.repository
-        self.analytics = Services.shared.analyticsService
+        self.analytics = Services.shared.analytics
         super.init(nibName: nil, bundle: nil)
     }
     

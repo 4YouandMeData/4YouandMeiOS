@@ -21,7 +21,7 @@ public class DevicesIntegrationViewController: UIViewController {
     init(withTitle title: String) {
         self.titleString = title
         self.navigator = Services.shared.navigator
-        self.analytics = Services.shared.analyticsService
+        self.analytics = Services.shared.analytics
         super.init(nibName: nil, bundle: nil)
     }
     

@@ -53,7 +53,7 @@ class WebViewViewController: UIViewController {
         self.url = url
         self.htmlString = htmlString
         self.navigator = Services.shared.navigator
-        self.analytics = Services.shared.analyticsService
+        self.analytics = Services.shared.analytics
         super.init(nibName: nil, bundle: nil)
         self.title = title
     }

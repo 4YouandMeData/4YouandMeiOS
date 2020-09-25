@@ -49,7 +49,7 @@ class TaskViewController: UIViewController {
     init() {
         self.navigator = Services.shared.navigator
         self.repository = Services.shared.repository
-        self.analyticsService = Services.shared.analyticsService
+        self.analyticsService = Services.shared.analytics
         super.init(nibName: nil, bundle: nil)
     }
     

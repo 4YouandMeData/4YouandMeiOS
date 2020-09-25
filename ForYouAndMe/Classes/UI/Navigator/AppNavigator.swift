@@ -18,12 +18,14 @@ class AppNavigator {
     private var progressHudCount = 0
     
     private let repository: Repository
+    private let analytics: AnalyticsService
     private let window: UIWindow
     
     private var currentActivityCoordinator: ActivitySectionCoordinator?
     
-    init(withRepository repository: Repository, window: UIWindow) {
+    init(withRepository repository: Repository, analytics: AnalyticsService, window: UIWindow) {
         self.repository = repository
+        self.analytics = analytics
         self.window = window
         
         // Needed to block user interaction!! :S
@@ -394,6 +396,9 @@ class AppNavigator {
             assertionFailure("Couldn't get starting view controller for current task type")
             return
         }
+        self.analytics.track(event: .recordScreen(screenName: taskIdentifier,
+                                                         screenClass: String(describing: type(of: self))))
+
         startingPage.modalPresentationStyle = .fullScreen
         presenter.present(startingPage, animated: true, completion: nil)
         self.currentActivityCoordinator = coordinator

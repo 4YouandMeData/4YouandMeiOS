@@ -68,7 +68,7 @@ public class UserEmailViewController: UIViewController {
     init(coordinator: UserEmailCoordinator) {
         self.navigator = Services.shared.navigator
         self.repository = Services.shared.repository
-        self.analytics = Services.shared.analyticsService
+        self.analytics = Services.shared.analytics
         self.coordinator = coordinator
         
         super.init(nibName: nil, bundle: nil)

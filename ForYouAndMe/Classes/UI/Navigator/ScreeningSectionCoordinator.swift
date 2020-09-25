@@ -21,7 +21,7 @@ class ScreeningSectionCoordinator {
         self.sectionData = sectionData
         self.navigationController = navigationController
         self.completionCallback = completionCallback
-        self.analyticsService = Services.shared.analyticsService
+        self.analyticsService = Services.shared.analytics
     }
     
     // MARK: - Public Methods

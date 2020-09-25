@@ -30,7 +30,7 @@ public class VideoDiaryIntroViewController: UIViewController {
     init(withData data: VideoDiaryIntroData, coordinator: VideoDiarySectionCoordinator) {
         self.data = data
         self.coordinator = coordinator
-        self.analytics = Services.shared.analyticsService
+        self.analytics = Services.shared.analytics
         super.init(nibName: nil, bundle: nil)
     }
     

@@ -55,7 +55,7 @@ public class UserNameViewController: UIViewController {
     
     init(coordinator: UserNameCoordinator) {
         self.coordinator = coordinator
-        self.analytics = Services.shared.analyticsService
+        self.analytics = Services.shared.analytics
         super.init(nibName: nil, bundle: nil)
     }
     

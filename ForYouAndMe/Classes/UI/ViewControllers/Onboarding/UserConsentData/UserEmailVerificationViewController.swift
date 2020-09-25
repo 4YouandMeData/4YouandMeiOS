@@ -71,7 +71,7 @@ public class UserEmailVerificationViewController: UIViewController {
     init(email: String, coordinator: UserEmailVerificationCoordinator) {
         self.navigator = Services.shared.navigator
         self.repository = Services.shared.repository
-        self.analytics = Services.shared.analyticsService
+        self.analytics = Services.shared.analytics
         self.coordinator = coordinator
         super.init(nibName: nil, bundle: nil)
         self.emailFieldView.text = email

@@ -56,7 +56,7 @@ class OptInPermissionViewController: UIViewController {
         self.optInPermission = optInPermission
         self.coordinator = coordinator
         self.navigator = Services.shared.navigator
-        self.analytics = Services.shared.analyticsService
+        self.analytics = Services.shared.analytics
         super.init(nibName: nil, bundle: nil)
     }
     

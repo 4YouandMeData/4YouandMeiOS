@@ -25,7 +25,7 @@ public class WearablePageViewController: UIViewController, PageProvider {
         self.page = page
         self.coordinator = coordinator
         self.backwardNavigation = backwardNavigation
-        self.analytics = Services.shared.analyticsService
+        self.analytics = Services.shared.analytics
         super.init(nibName: nil, bundle: nil)
     }
     

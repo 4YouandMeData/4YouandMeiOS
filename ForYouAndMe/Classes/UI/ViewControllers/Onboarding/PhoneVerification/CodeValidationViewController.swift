@@ -68,7 +68,7 @@ public class CodeValidationViewController: UIViewController {
     init(countryCode: String, phoneNumber: String) {
         self.navigator = Services.shared.navigator
         self.repository = Services.shared.repository
-        self.analytics = Services.shared.analyticsService
+        self.analytics = Services.shared.analytics
         super.init(nibName: nil, bundle: nil)
         self.phoneNumberView.countryCode = countryCode
         self.phoneNumberView.text = phoneNumber

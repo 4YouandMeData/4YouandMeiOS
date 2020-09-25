@@ -31,11 +31,11 @@ class InfoPageListViewController: UIViewController {
     
     private let data: InfoPageListData
     
-    private let analyticsService: AnalyticsService
+    private let analytics: AnalyticsService
     
     init(withData data: InfoPageListData) {
         self.data = data
-        self.analyticsService = Services.shared.analyticsService
+        self.analytics = Services.shared.analytics
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -116,7 +116,7 @@ class InfoPageListViewController: UIViewController {
             self.navigationController?.navigationBar.apply(style: NavigationBarStyleCategory.primary(hidden: false).style)
             self.addCustomBackButton()
         }
-        self.analyticsService.track(event: .recordScreen(screenName: self.data.title,
+        self.analytics.track(event: .recordScreen(screenName: self.data.title,
                                                          screenClass: String(describing: type(of: self))))
     }
     
