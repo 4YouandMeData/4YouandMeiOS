@@ -98,6 +98,7 @@
       "QUICK_ACTIVITY_BUTTON_DEFAULT": "SUBMIT",
       "SURVEY_BUTTON_DEFAULT": "START NOW",
       "SURVEY_BUTTON_SKIP": "Skip",
+      "SURVEY_STEPS_COUNT": "Step {0} of {1}",
       "VIDEO_DIARY_INTRO_TITLE": "Video Diaries",
       "VIDEO_DIARY_INTRO_BUTTON": "Let’s Start",
       "VIDEO_DIARY_INTRO_PARAGRAPH_TITLE_A": "About this activity",

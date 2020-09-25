@@ -100,6 +100,7 @@ enum StringKey: String, CaseIterable, CodingKey {
     // Survey
     case surveyButtonDefault = "SURVEY_BUTTON_DEFAULT"
     case surveyButtonSkip = "SURVEY_BUTTON_SKIP"
+    case surveyStepsCount = "SURVEY_STEPS_COUNT"
     // Video Diary
     case videoDiaryIntroTitle = "VIDEO_DIARY_INTRO_TITLE"
     case videoDiaryIntroButton = "VIDEO_DIARY_INTRO_BUTTON"
@@ -192,7 +193,12 @@ class StringsProvider {
         self.stringMap = stringMap
     }
     
-    static func string(forKey key: StringKey) -> String {
-        return self.stringMap[key] ?? key.defaultValue
+    static func string(forKey key: StringKey, withParameters parameters: [String] = []) -> String {
+        let string = self.stringMap[key] ?? key.defaultValue
+        var formattedString = string
+        for (index, element) in parameters.enumerated() {
+            formattedString = formattedString.replacingOccurrences(of: "{\(index)}", with: element)
+        }
+        return formattedString
     }
 }

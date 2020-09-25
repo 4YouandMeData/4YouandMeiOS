@@ -7,6 +7,12 @@
 
 import UIKit
 
+struct SurveyQuestionPageData {
+    let question: SurveyQuestion
+    let questionNumber: Int
+    let totalQuestions: Int
+}
+
 protocol SurveyQuestionViewCoordinator {
     func onSurveyQuestionAnsweredSuccess(answer: SurveyResult)
     func onSurveyQuestionSkipped(questionId: String)
@@ -14,7 +20,7 @@ protocol SurveyQuestionViewCoordinator {
 
 class SurveyQuestionViewController: UIViewController {
     
-    private let question: SurveyQuestion
+    private let pageData: SurveyQuestionPageData
     private let coordinator: SurveyQuestionViewCoordinator
     
     private lazy var confirmButtonView: GenericButtonView = {
@@ -29,8 +35,8 @@ class SurveyQuestionViewController: UIViewController {
         }
     }
     
-    init(withQuestion question: SurveyQuestion, coordinator: SurveyQuestionViewCoordinator) {
-        self.question = question
+    init(withPageData pageData: SurveyQuestionPageData, coordinator: SurveyQuestionViewCoordinator) {
+        self.pageData = pageData
         self.coordinator = coordinator
         super.init(nibName: nil, bundle: nil)
     }
@@ -44,6 +50,10 @@ class SurveyQuestionViewController: UIViewController {
         
         self.view.backgroundColor = ColorPalette.color(withType: .secondary)
         
+        self.title = StringsProvider.string(forKey: .surveyStepsCount,
+                                            withParameters: ["\(self.pageData.questionNumber)",
+                                                             "\(self.pageData.totalQuestions)"])
+        
         // ScrollStackView
         let scrollStackView = ScrollStackView(axis: .vertical, horizontalInset: Constants.Style.DefaultHorizontalMargins)
         self.view.addSubview(scrollStackView)
@@ -51,10 +61,10 @@ class SurveyQuestionViewController: UIViewController {
         
         scrollStackView.stackView.addBlankSpace(space: 50.0)
         // Image
-        scrollStackView.stackView.addHeaderImage(image: self.question.image, height: 54.0)
+        scrollStackView.stackView.addHeaderImage(image: self.pageData.question.image, height: 54.0)
         scrollStackView.stackView.addBlankSpace(space: 40.0)
         // Title
-        scrollStackView.stackView.addLabel(withText: self.question.body,
+        scrollStackView.stackView.addLabel(withText: self.pageData.question.body,
                                            fontStyle: .title,
                                            colorType: .primaryText)
         scrollStackView.stackView.addBlankSpace(space: 40.0)
@@ -78,9 +88,6 @@ class SurveyQuestionViewController: UIViewController {
         super.viewWillAppear(animated)
         self.navigationController?.navigationBar.apply(style: NavigationBarStyleCategory.secondary(hidden: false).style)
         self.addCustomBackButton()
-        
-        // TODO: Add question count
-        
         self.addSkipButton()
     }
     
@@ -91,12 +98,12 @@ class SurveyQuestionViewController: UIViewController {
             assertionFailure("Missing selected possible answer")
             return
         }
-        let result = SurveyResult(questionId: self.question.id, answer: answer)
+        let result = SurveyResult(questionId: self.pageData.question.id, answer: answer)
         self.coordinator.onSurveyQuestionAnsweredSuccess(answer: result)
     }
     
     @objc private func skipButtonPressed() {
-        self.coordinator.onSurveyQuestionSkipped(questionId: self.question.id)
+        self.coordinator.onSurveyQuestionSkipped(questionId: self.pageData.question.id)
     }
     
     // MARK: - Private Methods

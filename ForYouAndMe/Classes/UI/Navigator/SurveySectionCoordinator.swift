@@ -55,7 +55,14 @@ class SurveySectionCoordinator {
     }
     
     private func showQuestion(_ question: SurveyQuestion) {
-        let viewController = SurveyQuestionViewController(withQuestion: question, coordinator: self)
+        guard let questionIndex = self.sectionData.questions.firstIndex(where: { $0.id == question.id }) else {
+            assertionFailure("Missing question in question array")
+            return
+        }
+        let pageData = SurveyQuestionPageData(question: question,
+                                              questionNumber: questionIndex + 1,
+                                              totalQuestions: self.sectionData.questions.count)
+        let viewController = SurveyQuestionViewController(withPageData: pageData, coordinator: self)
         self.navigationController.pushViewController(viewController, animated: true)
     }
     
