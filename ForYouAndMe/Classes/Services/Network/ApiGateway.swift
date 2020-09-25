@@ -42,6 +42,8 @@ enum DefaultService {
     case getWearablesSection
     // Answer
     case sendAnswer(answer: Answer, context: ApiContext?)
+    // Feed
+    case getFeeds
     // Task
     case getTasks
     case sendTaskResultData(taskId: String, resultData: TaskNetworkResultData)

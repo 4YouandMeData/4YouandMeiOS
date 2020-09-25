@@ -55,6 +55,7 @@ protocol Repository: class {
     func getWearablesSection() -> Single<WearablesSection>
     // Tasks
     func getFeeds() -> Single<[Feed]>
+    func getTasks() -> Single<[Feed]>
     func sendQuickActivityResult(quickActivityTaskId: String, quickActivityOption: QuickActivityOption) -> Single<()>
     func sendTaskResult(taskId: String, taskResult: TaskNetworkResult) -> Single<()>
     // User

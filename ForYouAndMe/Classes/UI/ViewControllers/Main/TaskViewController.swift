@@ -103,6 +103,6 @@ extension TaskViewController: FeedListManagerDelegate {
     }
     
     func getDataProviderSingle(repository: Repository) -> Single<FeedContent> {
-        return self.repository.getFeeds().map { FeedContent(withFeeds: $0) }
+        return self.repository.getTasks().map { FeedContent(withFeeds: $0) }
     }
 }

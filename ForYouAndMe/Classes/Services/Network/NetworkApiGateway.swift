@@ -309,6 +309,9 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         // Answers
         case .sendAnswer(let answer, _):
             return "v1/questions/\(answer.question.id)/answer"
+        // Feeds
+        case .getFeeds:
+            return "v1/feeds"
         // Task
         case .getTasks:
             return "v1/tasks"
@@ -339,6 +342,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
              .getOptInSection,
              .getUserConsentSection,
              .getWearablesSection,
+             .getFeeds,
              .getTasks,
              .getSurvey: // TODO: Check against final API specs
             return .get
@@ -391,7 +395,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         // Answers
         case .sendAnswer: return "{}".utf8Encoded
         // Task
-        case .getTasks: return Bundle.getTestData(from: "TestGetTasks")
+        case .getFeeds, .getTasks: return Bundle.getTestData(from: "TestGetTasks") // TODO add feeds test to bundle
         case .sendTaskResultData: return "{}".utf8Encoded
         case .sendTaskResultFile: return "{}".utf8Encoded
         // User
@@ -412,6 +416,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
              .getUserConsentSection,
              .resendConfirmationEmail,
              .getWearablesSection,
+             .getFeeds,
              .getTasks,
              .getSurvey:
             return .requestPlain
@@ -517,6 +522,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
              .resendConfirmationEmail,
              .getWearablesSection,
              .sendAnswer,
+             .getFeeds,
              .getTasks,
              .sendTaskResultData,
              .sendTaskResultFile,
