@@ -99,6 +99,7 @@ enum StringKey: String, CaseIterable, CodingKey {
     case quickActivityButtonDefault = "QUICK_ACTIVITY_BUTTON_DEFAULT"
     // Survey
     case surveyButtonDefault = "SURVEY_BUTTON_DEFAULT"
+    case surveyButtonSkip = "SURVEY_BUTTON_SKIP"
     // Video Diary
     case videoDiaryIntroTitle = "VIDEO_DIARY_INTRO_TITLE"
     case videoDiaryIntroButton = "VIDEO_DIARY_INTRO_BUTTON"

@@ -40,6 +40,7 @@ class OptInSectionCoordinator {
     public func getStartingPage() -> UIViewController {
         let infoPageData = InfoPageData(page: self.sectionData.welcomePage,
                                         addAbortOnboardingButton: false,
+                                        addCloseButton: false,
                                         allowBackwardNavigation: false,
                                         bodyTextAlignment: .center,
                                         bottomViewStyle: .singleButton)

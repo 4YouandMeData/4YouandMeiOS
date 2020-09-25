@@ -415,6 +415,8 @@ class AppNavigator {
             }
         }()
         guard let startingPage = coordinator.getStartingPage() else {
+            self.currentActivityCoordinator = nil
+            self.handleError(error: nil, presenter: presenter)
             assertionFailure("Couldn't get starting view controller for current task type")
             return
         }
@@ -423,6 +425,27 @@ class AppNavigator {
         
         startingPage.modalPresentationStyle = .fullScreen
         presenter.present(startingPage, animated: true, completion: nil)
+        self.currentActivityCoordinator = coordinator
+    }
+    
+    public func startSurveySection(surveyGroup: SurveyGroup, presenter: UIViewController) {
+        let completionCallback: NotificationCallback = { [weak self] in
+            guard let self = self else { return }
+            presenter.dismiss(animated: true, completion: nil)
+            self.currentActivityCoordinator = nil
+        }
+        
+        let coordinator = SurveyGroupSectionCoordinator(withSectionData: surveyGroup,
+                                                        navigationController: nil,
+                                                        completionCallback: completionCallback)
+        guard let startingPage = coordinator.getStartingPage() else {
+            self.currentActivityCoordinator = nil
+            self.handleError(error: nil, presenter: presenter)
+            return
+        }
+        startingPage.modalPresentationStyle = .fullScreen
+        presenter.present(startingPage, animated: true, completion: nil)
+        
         self.currentActivityCoordinator = coordinator
     }
     

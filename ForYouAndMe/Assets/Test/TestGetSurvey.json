@@ -1,146 +1,204 @@
 {
+  "id": "1",
+  "type": "survey_group",
   "surveys": [
     {
       "id": "1",
+      "type": "survey",
+      "welcome_page": {
+        "id": "1",
+        "type": "page",
+        "title": "Test Survey 1",
+        "body": "Test Survey 1 Body",
+        "link_1_label": "Start survey 1"
+      },
       "questions": [
-          {
-            "id": "1",
-            "image": "base_64_image_data",
-            "body": "Choose a number",
-            "question_type": "numerical",
-            "min": 2,
-            "max": 10,
-            "min_display": "Less than 2",
-            "max_display": "More than 10",
-            "targets": [
-              {
-                "criteria": "range",
-                "min": 2,
-                "max": 6,
-                "question_id": "3"
-              }
-            ]
-          },
-          {
-            "id": "2",
-            "image": "base_64_image_data",
-            "body": "Choose one of the 10 following questions",
-            "question_type": "pick-one",
-            "options": [
-              {
-                "id": "1",
-                "value": "I understand binary",
-                "targets": [
+        {
+          "id": "1",
+          "type": "survey_question",
+          "image": "base_64_image_data",
+          "body": "Choose a number",
+          "question_type": "numerical",
+          "min": 2,
+          "max": 10,
+          "min_display": "Less than 2",
+          "max_display": "More than 10",
+          "targets": [
+            {
+              "id": "1",
+              "type": "survey_target",
+              "criteria": "range",
+              "min": 2,
+              "max": 6,
+              "question_id": "3"
+            }
+          ]
+        },
+        {
+          "id": "2",
+          "type": "survey_question",
+          "image": "base_64_image_data",
+          "body": "Choose one of the 10 following questions",
+          "question_type": "pick-one",
+          "options": [
+            {
+              "id": "1",
+              "type": "survey_question_option",
+              "value": "I understand binary",
+              "targets": [
                 {
+                  "id": "2",
+                  "type": "survey_target",
                   "question_id": "4"
                 }
-                ]
-              },
-              {
-                "id": "2",
-                "value": "I don't understand binary"
-              }
-            ]
-          },
-          {
-            "id": "3",
-            "image": "base_64_image_data",
-            "body": "Tell us your favorite book genres",
-            "question_type": "pick-many",
-            "options": [
-              {
-                "id": "1",
-                "value": "Fantasy",
-                "targets": [ {
+              ]
+            },
+            {
+              "id": "2",
+              "type": "survey_question_option",
+              "value": "I don't understand binary"
+            }
+          ]
+        },
+        {
+          "id": "3",
+          "type": "survey_question",
+          "image": "base_64_image_data",
+          "body": "Tell us your favorite book genres",
+          "question_type": "pick-many",
+          "options": [
+            {
+              "id": "1",
+              "type": "survey_question_option",
+              "value": "Fantasy",
+              "targets": [
+                {
+                  "id": "3",
+                  "type": "survey_target",
                   "question_id": "exit"
                 }
-                ]
-              },
-              {
-                "id": "2",
-                "value": "Crime"
-              },
-              {
-                "id": "3",
-                "value": "Horror"
-              },
-              {
-                "id": "4",
-                "value": "Biografy"
-              }
-            ]
-          },
-          {
-            "id": "4",
-            "image": "base_64_image_data",
-            "body": "Describe how you feel",
-            "question_type": "text-input",
-            "placeholder": "Enter your answer",
-            "max_characters": 200
-          }
+              ]
+            },
+            {
+              "id": "2",
+              "type": "survey_question_option",
+              "value": "Crime"
+            },
+            {
+              "id": "3",
+              "type": "survey_question_option",
+              "value": "Horror"
+            },
+            {
+              "id": "4",
+              "type": "survey_question_option",
+              "value": "Biografy"
+            }
+          ]
+        },
+        {
+          "id": "4",
+          "type": "survey_question",
+          "image": "base_64_image_data",
+          "body": "Describe how you feel",
+          "question_type": "text-input",
+          "placeholder": "Enter your answer",
+          "max_characters": 200
+        }
       ]
     },
     {
       "id": "2",
+      "type": "survey",
+      "welcome_page": {
+        "id": "2",
+        "type": "page",
+        "title": "Test Survey 2",
+        "body": "Test Survey 2 Body",
+        "link_1_label": "Start survey 2"
+      },
       "questions": [
-          {
-            "id": "5",
-            "image": "base_64_image_data",
-            "body": "Choose a number",
-            "question_type": "scale",
-            "min": 2,
-            "max": 10,
-            "interval": 1,
-            "targets": [
-              {
-                "criteria": "range",
-                "min": 2,
-                "max": 6,
-                "question_id": "exit"
-              }
-            ]
-          },
-          {
-            "id": "6",
-            "image": "base_64_image_data",
-            "body": "Choose a date",
-            "question_type": "date-input",
-            "min_date": "1919-01-01",
-            "max_date": "2001-01-01"
-          }
+        {
+          "id": "5",
+          "type": "survey_question",
+          "image": "base_64_image_data",
+          "body": "Choose a number",
+          "question_type": "scale",
+          "min": 2,
+          "max": 10,
+          "interval": 1,
+          "targets": [
+            {
+              "id": "4",
+              "type": "survey_target",
+              "criteria": "range",
+              "min": 2,
+              "max": 6,
+              "question_id": "exit"
+            }
+          ]
+        },
+        {
+          "id": "6",
+          "type": "survey_question",
+          "image": "base_64_image_data",
+          "body": "Choose a date",
+          "question_type": "date-input",
+          "min_date": "1919-01-01",
+          "max_date": "2001-01-01"
+        }
       ]
     },
     {
       "id": "3",
+      "type": "survey",
+      "welcome_page": {
+        "id": "3",
+        "type": "page",
+        "title": "Test Survey 3",
+        "body": "Test Survey 3 Body",
+        "link_1_label": "Start survey 3"
+      },
       "questions": [
-          {
-            "id": "7",
-            "image": "base_64_image_data",
-            "body": "Choose a range",
-            "question_type": "range",
-            "min": 0,
-            "max": 100,
-            "min_label": "0% likely",
-            "max_label": "100% likely",
-            "interval": 1,
-            "targets": [
-              {
-                "criteria": "range",
-                "min": 2,
-                "max": 6,
-                "question_id": "exit"
-              }
-            ]
-          },
-          {
-            "id": "8",
-            "image": "base_64_image_data",
-            "body": "Describe how you feel",
-            "question_type": "text-input",
-            "placeholder": "Enter your answer",
-            "max_characters": 200
-          }
-      ]
+        {
+          "id": "7",
+          "type": "survey_question",
+          "image": "base_64_image_data",
+          "body": "Choose a range",
+          "question_type": "range",
+          "min": 0,
+          "max": 100,
+          "min_label": "0% likely",
+          "max_label": "100% likely",
+          "interval": 1,
+          "targets": [
+            {
+              "id": "5",
+              "type": "survey_target",
+              "criteria": "range",
+              "min": 2,
+              "max": 6,
+              "question_id": "exit"
+            }
+          ]
+        },
+        {
+          "id": "8",
+          "type": "survey_question",
+          "image": "base_64_image_data",
+          "body": "Describe how you feel",
+          "question_type": "text-input",
+          "placeholder": "Enter your answer",
+          "max_characters": 200
+        }
+      ],
+      "success_page": {
+        "id": "4",
+        "type": "page",
+        "title": "Congratulations",
+        "body": "Test survey completed",
+        "link_1_label": "Finish"
+      }
     }
   ]
 }

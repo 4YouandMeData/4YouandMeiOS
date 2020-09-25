@@ -19,7 +19,7 @@ enum SurveyQuestionType: String {
 
 struct SurveyQuestion {
     let id: String
-//    let type: String
+    let type: String
     
     @EnumStringDecodable
     var questionType: SurveyQuestionType?
@@ -57,7 +57,7 @@ struct SurveyQuestion {
 extension SurveyQuestion: Decodable {
     enum CodingKeys: String, CodingKey {
         case id
-//        case type
+        case type
         case questionType = "question_type"
         case body
         case image

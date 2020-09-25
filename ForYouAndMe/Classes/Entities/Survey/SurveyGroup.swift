@@ -8,16 +8,16 @@
 import Foundation
 
 struct SurveyGroup {
-//    let id: String
-//    let type: String
+    let id: String
+    let type: String
     
     let surveys: [SurveyTask]
 }
 
 extension SurveyGroup: PlainDecodable {
     enum CodingKeys: String, CodingKey {
-//        case id
-//        case type
+        case id
+        case type
         case surveys
     }
 }

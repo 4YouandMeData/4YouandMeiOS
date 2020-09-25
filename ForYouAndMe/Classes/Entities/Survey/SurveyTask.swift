@@ -9,19 +9,33 @@ import Foundation
 
 struct SurveyTask {
     let id: String
-//    let type: String
+    let type: String
     
-    let welcomePage: Page?
+    let welcomePage: Page
     let questions: [SurveyQuestion]
     let successPage: Page?
+    
+    var pages: [Page] {
+        return [self.welcomePage, self.successPage].compactMap { $0 }
+    }
 }
 
 extension SurveyTask: Decodable {
     enum CodingKeys: String, CodingKey {
         case id
-//        case type
+        case type
         case welcomePage = "welcome_page"
         case questions
         case successPage = "success_page"
+    }
+}
+
+extension SurveyTask: Hashable, Equatable {
+    static func == (lhs: SurveyTask, rhs: SurveyTask) -> Bool {
+        return lhs.id == rhs.id
+    }
+    
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(self.id)
     }
 }

@@ -16,13 +16,15 @@ enum InfoPageBottomViewStyle {
 struct InfoPageData {
     let page: Page
     let addAbortOnboardingButton: Bool
+    let addCloseButton: Bool
     let allowBackwardNavigation: Bool
     let bodyTextAlignment: NSTextAlignment
     let bottomViewStyle: InfoPageBottomViewStyle
     
-    static func createWelcomePageData(withPage page: Page) -> InfoPageData {
+    static func createWelcomePageData(withPage page: Page, showCloseButton: Bool = false) -> InfoPageData {
         return InfoPageData(page: page,
                             addAbortOnboardingButton: false,
+                            addCloseButton: showCloseButton,
                             allowBackwardNavigation: false,
                             bodyTextAlignment: .left,
                             bottomViewStyle: .singleButton)
@@ -31,6 +33,7 @@ struct InfoPageData {
     static func createInfoPageData(withPage page: Page, isOnboarding: Bool) -> InfoPageData {
         return InfoPageData(page: page,
                             addAbortOnboardingButton: isOnboarding,
+                            addCloseButton: false,
                             allowBackwardNavigation: true,
                             bodyTextAlignment: .left,
                             bottomViewStyle: .singleButton)
@@ -39,6 +42,7 @@ struct InfoPageData {
     static func createResultPageData(withPage page: Page) -> InfoPageData {
         return InfoPageData(page: page,
                             addAbortOnboardingButton: false,
+                            addCloseButton: false,
                             allowBackwardNavigation: false,
                             bodyTextAlignment: .center,
                             bottomViewStyle: .singleButton)
@@ -143,6 +147,8 @@ public class InfoPageViewController: UIViewController, PageProvider {
         self.navigationController?.navigationBar.apply(style: NavigationBarStyleCategory.secondary(hidden: false).style)
         if self.pageData.allowBackwardNavigation {
             self.addCustomBackButton()
+        } else if self.pageData.addCloseButton {
+            self.addCustomCloseButton()
         } else {
             self.navigationItem.hidesBackButton = true
         }

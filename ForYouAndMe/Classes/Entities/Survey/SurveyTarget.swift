@@ -12,8 +12,8 @@ enum SurveyTargetCriteria: String {
 }
 
 struct SurveyTarget {
-//    let id: String
-//    let type: String
+    let id: String
+    let type: String
     
     @EnumStringDecodable
     var criteria: SurveyTargetCriteria?
@@ -24,8 +24,8 @@ struct SurveyTarget {
 
 extension SurveyTarget: Decodable {
     enum CodingKeys: String, CodingKey {
-//        case id
-//        case type
+        case id
+        case type
         case criteria
         case minimum = "min"
         case maximum = "max"

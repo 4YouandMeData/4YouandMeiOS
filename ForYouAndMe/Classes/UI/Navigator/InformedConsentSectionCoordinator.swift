@@ -54,6 +54,7 @@ class InformedConsentSectionCoordinator {
         }
         let infoPageData = InfoPageData(page: failurePage,
                                         addAbortOnboardingButton: false,
+                                        addCloseButton: false,
                                         allowBackwardNavigation: false,
                                         bodyTextAlignment: .center,
                                         bottomViewStyle: .vertical(backButton: true))

@@ -9,7 +9,7 @@ import Foundation
 
 struct SurveyQuestionOption {
     let id: String
-//    let type: String
+    let type: String
     
     let value: String
     let targets: [SurveyTarget]?
@@ -18,7 +18,7 @@ struct SurveyQuestionOption {
 extension SurveyQuestionOption: Decodable {
     enum CodingKeys: String, CodingKey {
         case id
-//        case type
+        case type
         case value
         case targets
     }

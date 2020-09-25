@@ -254,9 +254,9 @@ extension FeedListManager: UITableViewDataSource {
                     self.repository.getSurvey(surveyId: feed.id)
                         .subscribe(onSuccess: { [weak self] surveyGroup in
                             guard let self = self else { return }
+                            guard let delegate = self.delegate else { return }
                             self.navigator.popProgressHUD()
-                            // TODO: Show Survey Group
-                            print("TODO: Show Survey Group")
+                            self.navigator.startSurveySection(surveyGroup: surveyGroup, presenter: delegate.presenter)
                         }, onError: { [weak self] error in
                             guard let self = self else { return }
                             guard let delegate = self.delegate else { return }
