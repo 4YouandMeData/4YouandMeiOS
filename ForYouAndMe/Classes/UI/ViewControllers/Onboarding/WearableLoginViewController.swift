@@ -127,7 +127,7 @@ class WearableLoginViewController: UIViewController {
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        self.analytics.track(event: .recordScreen(screenName: self.title ?? AnalyticsScreens.oAuth.rawValue,
+        self.analytics.track(event: .recordScreen(screenName: self.title ?? "" + "_" + AnalyticsScreens.oAuth.rawValue,
                                                   screenClass: String(describing: type(of: self))))
         self.navigationController?.navigationBar.apply(style: NavigationBarStyleCategory.primary(hidden: false).style)
         

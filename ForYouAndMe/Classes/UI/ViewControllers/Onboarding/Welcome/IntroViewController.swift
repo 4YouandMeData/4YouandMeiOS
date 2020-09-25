@@ -86,7 +86,7 @@ public class IntroViewController: UIViewController {
     
     public override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        self.analytics.track(event: .recordScreen(screenName: AnalyticsScreens.intro.rawValue,
+        self.analytics.track(event: .recordScreen(screenName: AnalyticsScreens.requestSetUp.rawValue,
                                                   screenClass: String(describing: type(of: self))))
         self.navigationController?.navigationBar.apply(style: NavigationBarStyleCategory.primary(hidden: false).style)
         self.addCustomBackButton()

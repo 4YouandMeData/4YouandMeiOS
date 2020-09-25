@@ -161,6 +161,8 @@ class AppNavigator {
             assertionFailure("Invalid Url for privacy policy")
             return
         }
+        self.analytics.track(event: .recordScreen(screenName: AnalyticsScreens.privacyPolicy.rawValue,
+                                                  screenClass: String(describing: type(of: presenter))))
         self.openWebView(withTitle: "", url: url, presenter: presenter)
     }
     
@@ -169,6 +171,8 @@ class AppNavigator {
             assertionFailure("Invalid Url for terms of service")
             return
         }
+        self.analytics.track(event: .recordScreen(screenName: AnalyticsScreens.termsOfService.rawValue,
+                                                  screenClass: String(describing: type(of: presenter))))
         self.openWebView(withTitle: "", url: url, presenter: presenter)
     }
     

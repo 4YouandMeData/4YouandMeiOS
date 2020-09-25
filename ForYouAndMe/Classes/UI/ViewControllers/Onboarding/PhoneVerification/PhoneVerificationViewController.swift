@@ -168,7 +168,7 @@ public class PhoneVerificationViewController: UIViewController {
     
     public override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        self.analytics.track(event: .recordScreen(screenName: AnalyticsScreens.requestSetUp.rawValue,
+        self.analytics.track(event: .recordScreen(screenName: AnalyticsScreens.userRegistration.rawValue,
                                                   screenClass: String(describing: type(of: self))))
         self.navigationController?.navigationBar.apply(style: NavigationBarStyleCategory.primary(hidden: false).style)
         self.addCustomBackButton()

@@ -13,7 +13,6 @@ enum AnalyticsScreens: String {
     case setupLater = "SetupLater"
     case requestSetUp = "RequestAccountSetup"
     case userRegistration = "UserRegistration"
-    case userInfo = "UserInfo"
     case otpValidation = "ValidateOTP"
     case studyVideo = "StudyVideo"
     case videoDiary = "VideoDiary"
