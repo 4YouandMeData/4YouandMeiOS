@@ -5,7 +5,7 @@
     "attributes": {
       "title": "Review",
       "body": "Review the consent document below, and tap Agree if you're ready to continue.",
-      "subtitle": "Consent",
+      "pages_subtitle": "Consent",
       "disagree_modal_body": "Are you sure? You cannot partecipate in this study if you don't agree to the consent.\r\nIf you'd like to talk about it, you can contact the research team at 212.241.8100 or help@4youandme.org.",
       "disagree_modal_button": "I'll not partecipate in this study",
       "created_at": "2020-06-09T12:09:55.132Z",

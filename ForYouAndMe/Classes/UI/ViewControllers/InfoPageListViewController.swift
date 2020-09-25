@@ -53,17 +53,22 @@ class InfoPageListViewController: UIViewController {
         let scrollStackView = ScrollStackView(axis: .vertical, horizontalInset: Constants.Style.DefaultHorizontalMargins)
         rootStackView.addArrangedSubview(scrollStackView)
         
-        scrollStackView.stackView.addBlankSpace(space: 50.0)
+        switch self.data.mode {
+        case .acceptance:
+            scrollStackView.stackView.addBlankSpace(space: 50.0)
+            scrollStackView.stackView.addLabel(withText: self.data.title,
+                                               fontStyle: .title,
+                                               colorType: .primaryText,
+                                               textAlignment: .left)
+            scrollStackView.stackView.addBlankSpace(space: 21.0)
+            scrollStackView.stackView.addLabel(withText: self.data.body,
+                                               fontStyle: .paragraph,
+                                               colorType: .fourthText,
+                                               textAlignment: .left)
+        case .view:
+            break
+        }
         
-        scrollStackView.stackView.addLabel(withText: self.data.title,
-                                           fontStyle: .title,
-                                           colorType: .primaryText,
-                                           textAlignment: .left)
-        scrollStackView.stackView.addBlankSpace(space: 21.0)
-        scrollStackView.stackView.addLabel(withText: self.data.body,
-                                           fontStyle: .paragraph,
-                                           colorType: .fourthText,
-                                           textAlignment: .left)
         if let subtitle = self.data.subtitle, false == subtitle.isEmpty {
             scrollStackView.stackView.addBlankSpace(space: 45.0)
             scrollStackView.stackView.addLabel(withText: subtitle,
@@ -105,7 +110,7 @@ class InfoPageListViewController: UIViewController {
         case .acceptance:
             self.navigationController?.navigationBar.apply(style: NavigationBarStyleCategory.secondary(hidden: true).style)
         case .view:
-            self.navigationController?.navigationBar.apply(style: NavigationBarStyleCategory.secondary(hidden: false).style)
+            self.navigationController?.navigationBar.apply(style: NavigationBarStyleCategory.primary(hidden: false).style)
             self.addCustomBackButton()
         }
     }
