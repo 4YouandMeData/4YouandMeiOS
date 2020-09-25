@@ -18,6 +18,7 @@ class OptInPermissionViewController: UIViewController {
     let optInPermission: OptInPermission
     
     private let navigator: AppNavigator
+    private let analytics: AnalyticsService
     private let coordinator: OptInPermissionCoordinator
     private let disposeBag = DisposeBag()
     
@@ -55,6 +56,7 @@ class OptInPermissionViewController: UIViewController {
         self.optInPermission = optInPermission
         self.coordinator = coordinator
         self.navigator = Services.shared.navigator
+        self.analytics = Services.shared.analyticsService
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -128,7 +130,8 @@ class OptInPermissionViewController: UIViewController {
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        
+        self.analytics.track(event: .recordScreen(screenName: self.optInPermission.type,
+                                                  screenClass: String(describing: type(of: self))))
         self.navigationController?.navigationBar.apply(style: NavigationBarStyleCategory.secondary(hidden: true).style)
         self.navigationItem.hidesBackButton = true
     }

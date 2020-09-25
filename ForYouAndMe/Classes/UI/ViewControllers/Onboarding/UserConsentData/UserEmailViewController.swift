@@ -23,6 +23,7 @@ public class UserEmailViewController: UIViewController {
     
     private let navigator: AppNavigator
     private let repository: Repository
+    private let analytics: AnalyticsService
     private let coordinator: UserEmailCoordinator
     
     private let disposeBag = DisposeBag()
@@ -67,7 +68,9 @@ public class UserEmailViewController: UIViewController {
     init(coordinator: UserEmailCoordinator) {
         self.navigator = Services.shared.navigator
         self.repository = Services.shared.repository
+        self.analytics = Services.shared.analyticsService
         self.coordinator = coordinator
+        
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -122,7 +125,8 @@ public class UserEmailViewController: UIViewController {
     
     public override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        
+        self.analytics.track(event: .recordScreen(screenName: AnalyticsScreens.emailInsert.rawValue,
+                                                  screenClass: String(describing: type(of: self))))
         self.navigationController?.navigationBar.apply(style: NavigationBarStyleCategory.secondary(hidden: false).style)
         self.addCustomBackButton()
     }

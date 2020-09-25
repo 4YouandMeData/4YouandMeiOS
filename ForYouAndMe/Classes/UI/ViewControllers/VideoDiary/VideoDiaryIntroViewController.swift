@@ -25,10 +25,12 @@ public class VideoDiaryIntroViewController: UIViewController {
     private let data: VideoDiaryIntroData
     
     private let coordinator: VideoDiarySectionCoordinator
+    private let analytics: AnalyticsService
     
     init(withData data: VideoDiaryIntroData, coordinator: VideoDiarySectionCoordinator) {
         self.data = data
         self.coordinator = coordinator
+        self.analytics = Services.shared.analyticsService
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -85,7 +87,8 @@ public class VideoDiaryIntroViewController: UIViewController {
     
     public override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        
+        self.analytics.track(event: .recordScreen(screenName: AnalyticsScreens.videoDiary.rawValue,
+                                                  screenClass: String(describing: type(of: self))))
         self.navigationController?.navigationBar.apply(style: NavigationBarStyleCategory.secondary(hidden: false).style)
         self.addCustomCloseButton()
     }

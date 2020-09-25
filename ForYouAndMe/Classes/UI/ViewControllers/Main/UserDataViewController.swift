@@ -98,10 +98,13 @@ class UserDataViewController: UIViewController, CustomSegmentViewDelegate {
     
     private let navigator: AppNavigator
     private let repository: Repository
+    private let analytics: AnalyticsService
     
     init() {
         self.navigator = Services.shared.navigator
         self.repository = Services.shared.repository
+        self.analytics = Services.shared.analyticsService
+        
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -129,6 +132,8 @@ class UserDataViewController: UIViewController, CustomSegmentViewDelegate {
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        self.analytics.track(event: .recordScreen(screenName: AnalyticsScreens.yourData.rawValue,
+                                                  screenClass: String(describing: type(of: self))))
         self.navigationController?.navigationBar.apply(style: NavigationBarStyleCategory.primary(hidden: true).style)
         self.refreshUI()
     }

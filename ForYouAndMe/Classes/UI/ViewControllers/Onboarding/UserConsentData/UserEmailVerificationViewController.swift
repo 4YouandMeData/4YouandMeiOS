@@ -19,6 +19,7 @@ public class UserEmailVerificationViewController: UIViewController {
     
     private let navigator: AppNavigator
     private let repository: Repository
+    private let analytics: AnalyticsService
     private let coordinator: UserEmailVerificationCoordinator
     
     private let disposeBag = DisposeBag()
@@ -70,6 +71,7 @@ public class UserEmailVerificationViewController: UIViewController {
     init(email: String, coordinator: UserEmailVerificationCoordinator) {
         self.navigator = Services.shared.navigator
         self.repository = Services.shared.repository
+        self.analytics = Services.shared.analyticsService
         self.coordinator = coordinator
         super.init(nibName: nil, bundle: nil)
         self.emailFieldView.text = email
@@ -141,7 +143,8 @@ public class UserEmailVerificationViewController: UIViewController {
     
     public override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        
+        self.analytics.track(event: .recordScreen(screenName: AnalyticsScreens.emailVerification.rawValue,
+                                                  screenClass: String(describing: type(of: self))))
         self.navigationController?.navigationBar.apply(style: NavigationBarStyleCategory.active(hidden: false).style)
         self.addCustomBackButton()
     }

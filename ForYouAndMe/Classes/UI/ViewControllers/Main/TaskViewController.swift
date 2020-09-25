@@ -44,10 +44,12 @@ class TaskViewController: UIViewController {
     
     private let navigator: AppNavigator
     private let repository: Repository
+    private let analyticsService: AnalyticsService
     
     init() {
         self.navigator = Services.shared.navigator
         self.repository = Services.shared.repository
+        self.analyticsService = Services.shared.analyticsService
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -80,6 +82,8 @@ class TaskViewController: UIViewController {
         super.viewWillAppear(animated)
         
         self.navigationController?.navigationBar.apply(style: NavigationBarStyleCategory.primary(hidden: true).style)
+        self.analyticsService.track(event: .recordScreen(screenName: AnalyticsScreens.task.rawValue,
+                                                         screenClass: String(describing: type(of: self))))
         
         self.listManager.viewWillAppear()
     }

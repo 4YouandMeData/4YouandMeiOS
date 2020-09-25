@@ -18,12 +18,14 @@ public class WearablePageViewController: UIViewController, PageProvider {
     var page: Page
     
     private let coordinator: WearablePageCoordinator
+    private let analytics: AnalyticsService
     private let backwardNavigation: Bool
     
     init(withPage page: Page, coordinator: WearablePageCoordinator, backwardNavigation: Bool) {
         self.page = page
         self.coordinator = coordinator
         self.backwardNavigation = backwardNavigation
+        self.analytics = Services.shared.analyticsService
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -94,7 +96,8 @@ public class WearablePageViewController: UIViewController, PageProvider {
     
     public override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        
+        self.analytics.track(event: .recordScreen(screenName: self.page.type,
+                                                  screenClass: String(describing: type(of: self))))
         self.navigationController?.navigationBar.apply(style: NavigationBarStyleCategory.secondary(hidden: false).style)
         if self.backwardNavigation {
             self.addCustomBackButton()

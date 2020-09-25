@@ -15,6 +15,7 @@ public class CodeValidationViewController: UIViewController {
     
     private let navigator: AppNavigator
     private let repository: Repository
+    private let analytics: AnalyticsService
     private let disposeBag = DisposeBag()
     
     private lazy var scrollView: UIScrollView = {
@@ -67,6 +68,7 @@ public class CodeValidationViewController: UIViewController {
     init(countryCode: String, phoneNumber: String) {
         self.navigator = Services.shared.navigator
         self.repository = Services.shared.repository
+        self.analytics = Services.shared.analyticsService
         super.init(nibName: nil, bundle: nil)
         self.phoneNumberView.countryCode = countryCode
         self.phoneNumberView.text = phoneNumber
@@ -138,7 +140,8 @@ public class CodeValidationViewController: UIViewController {
     
     public override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        
+        self.analytics.track(event: .recordScreen(screenName: AnalyticsScreens.otpValidation.rawValue,
+                                                  screenClass: String(describing: type(of: self))))
         self.navigationController?.navigationBar.apply(style: NavigationBarStyleCategory.active(hidden: false).style)
         self.addCustomBackButton()
     }

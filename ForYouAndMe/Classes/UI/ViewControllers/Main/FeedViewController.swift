@@ -79,16 +79,15 @@ class FeedViewController: UIViewController {
         self.view.addSubview(self.tableView)
         self.tableView.autoPinEdgesToSuperviewEdges(with: .zero, excludingEdge: .top)
         self.tableView.autoPinEdge(.top, to: .bottom, of: self.headerView)
-        
-        // TODO: Remove (just for demo purpose)
-        self.analyticsService.track(event: .testFirebaseEvent(sampleParameter: 666))
     }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         
         self.navigationController?.navigationBar.apply(style: NavigationBarStyleCategory.primary(hidden: true).style)
-        
+        self.analyticsService.track(event: .recordScreen(screenName: AnalyticsScreens.feed.rawValue,
+                                                         screenClass: String(describing: type(of: self))))
+
         self.listManager.viewWillAppear()
         
         // TODO: Refresh UI with data from API

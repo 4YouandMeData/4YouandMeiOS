@@ -31,6 +31,7 @@ class WearableLoginViewController: UIViewController {
     private let onLoginFailureCallback: ViewControllerCallback
     private let navigator: AppNavigator
     private let repository: Repository
+    private let analytics: AnalyticsService
     
     private var progressObserver: NSKeyValueObservation?
     
@@ -48,6 +49,7 @@ class WearableLoginViewController: UIViewController {
         self.onLoginFailureCallback = onLoginFailureCallback
         self.navigator = Services.shared.navigator
         self.repository = Services.shared.repository
+        self.analytics = Services.shared.analyticsService
         super.init(nibName: nil, bundle: nil)
         self.title = title
     }
@@ -125,7 +127,8 @@ class WearableLoginViewController: UIViewController {
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        
+        self.analytics.track(event: .recordScreen(screenName: self.title ?? AnalyticsScreens.oAuth.rawValue,
+                                                  screenClass: String(describing: type(of: self))))
         self.navigationController?.navigationBar.apply(style: NavigationBarStyleCategory.primary(hidden: false).style)
         
         if self.isModal {

@@ -12,6 +12,7 @@ public class PermissionViewController: UIViewController {
     
     private var titleString: String
     private let navigator: AppNavigator
+    private let analytics: AnalyticsService
     private let disposeBag: DisposeBag = DisposeBag()
     
     private lazy var scrollStackView: ScrollStackView = {
@@ -22,6 +23,7 @@ public class PermissionViewController: UIViewController {
     init(withTitle title: String) {
         self.titleString = title
         self.navigator = Services.shared.navigator
+        self.analytics = Services.shared.analyticsService
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -51,6 +53,8 @@ public class PermissionViewController: UIViewController {
     
     public override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        self.analytics.track(event: .recordScreen(screenName: AnalyticsScreens.openPermissions.rawValue,
+                                                  screenClass: String(describing: type(of: self))))
         self.navigationController?.navigationBar.apply(style: NavigationBarStyleCategory.primary(hidden: true).style)
     }
     

@@ -18,10 +18,12 @@ public class VideoDiaryCompleteViewController: UIViewController {
     private let data: VideoDiaryCompleteData
     
     private let coordinator: VideoDiarySectionCoordinator
+    private let analytics: AnalyticsService
     
     init(withData data: VideoDiaryCompleteData, coordinator: VideoDiarySectionCoordinator) {
         self.data = data
         self.coordinator = coordinator
+        self.analytics = Services.shared.analyticsService
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -60,7 +62,8 @@ public class VideoDiaryCompleteViewController: UIViewController {
     
     public override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        
+        self.analytics.track(event: .recordScreen(screenName: AnalyticsScreens.videoDiaryComplete.rawValue,
+                                                  screenClass: String(describing: type(of: self))))
         self.navigationController?.navigationBar.apply(style: NavigationBarStyleCategory.secondary(hidden: false).style)
         self.navigationItem.hidesBackButton = true
     }

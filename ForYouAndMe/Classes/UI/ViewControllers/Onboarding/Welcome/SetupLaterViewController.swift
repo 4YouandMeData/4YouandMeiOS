@@ -12,6 +12,7 @@ import PureLayout
 public class SetupLaterViewController: UIViewController {
     
     private let navigator: AppNavigator
+    private let analytics: AnalyticsService
     
     private lazy var confirmButtonView: GenericButtonView = {
         let view = GenericButtonView(withTextStyleCategory: .primaryBackground(), height: IntroViewController.bottomViewHeight)
@@ -22,6 +23,7 @@ public class SetupLaterViewController: UIViewController {
     
     init() {
         self.navigator = Services.shared.navigator
+        self.analytics = Services.shared.analyticsService
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -54,7 +56,8 @@ public class SetupLaterViewController: UIViewController {
     
     public override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        
+        self.analytics.track(event: .recordScreen(screenName: AnalyticsScreens.setupLater.rawValue,
+                                                  screenClass: String(describing: type(of: self))))
         self.navigationController?.navigationBar.apply(style: NavigationBarStyleCategory.primary(hidden: false).style)
         self.addCustomBackButton()
     }

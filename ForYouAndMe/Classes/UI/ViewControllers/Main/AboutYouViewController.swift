@@ -10,6 +10,7 @@ import UIKit
 class AboutYouViewController: UIViewController {
     
     private let navigator: AppNavigator
+    private let analytics: AnalyticsService
     
     private lazy var scrollStackView: ScrollStackView = {
         let scrollStackView = ScrollStackView(axis: .vertical, horizontalInset: 0.0)
@@ -18,6 +19,7 @@ class AboutYouViewController: UIViewController {
     
     init() {
         self.navigator = Services.shared.navigator
+        self.analytics = Services.shared.analyticsService
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -124,7 +126,8 @@ class AboutYouViewController: UIViewController {
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        
+        self.analytics.track(event: .recordScreen(screenName: AnalyticsScreens.aboutYou.rawValue,
+                                                  screenClass: String(describing: type(of: self))))
         self.navigationController?.navigationBar.apply(style: NavigationBarStyleCategory.primary(hidden: true).style)
     }
     

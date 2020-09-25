@@ -23,6 +23,7 @@ class WebViewViewController: UIViewController {
     private let htmlString: String?
     
     private let navigator: AppNavigator
+    private let analytics: AnalyticsService
     
     private var progressObserver: NSKeyValueObservation?
     
@@ -52,6 +53,7 @@ class WebViewViewController: UIViewController {
         self.url = url
         self.htmlString = htmlString
         self.navigator = Services.shared.navigator
+        self.analytics = Services.shared.analyticsService
         super.init(nibName: nil, bundle: nil)
         self.title = title
     }
@@ -99,7 +101,8 @@ class WebViewViewController: UIViewController {
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        
+        self.analytics.track(event: .recordScreen(screenName: AnalyticsScreens.browser.rawValue,
+                                                  screenClass: String(describing: type(of: self))))
         self.navigationController?.navigationBar.apply(style: NavigationBarStyleCategory.secondary(hidden: false).style)
         self.addCustomCloseButton()
     }

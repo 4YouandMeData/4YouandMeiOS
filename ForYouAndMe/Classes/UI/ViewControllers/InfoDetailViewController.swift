@@ -20,10 +20,12 @@ public class InfoDetailPageViewController: UIViewController, PageProvider {
     private let pageData: InfoDetailPageData
     
     private let navigator: AppNavigator
+    private let analytics: AnalyticsService
     
     init(withPageData pageData: InfoDetailPageData) {
         self.pageData = pageData
         self.navigator = Services.shared.navigator
+        self.analytics = Services.shared.analyticsService
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -45,7 +47,8 @@ public class InfoDetailPageViewController: UIViewController, PageProvider {
     
     public override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        
+        self.analytics.track(event: .recordScreen(screenName: self.page.title,
+                                                  screenClass: String(describing: type(of: self))))
         self.navigationController?.navigationBar.apply(style: NavigationBarStyleCategory.secondary(hidden: false).style)
         if self.pageData.isModal {
             self.addCustomCloseButton()
