@@ -86,6 +86,12 @@ struct Constants {
             return resultDirectory
         }()
     }
+    
+    struct Survey {
+        static let TargetQuit: String = "exit"
+        static let NumericTypeMinValue: String = "min_display"
+        static let NumericTypeMaxValue: String = "max_display"
+    }
 }
 
 enum FilePath: String {

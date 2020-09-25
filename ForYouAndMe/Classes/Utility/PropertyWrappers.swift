@@ -125,7 +125,26 @@ struct ColorDecodable: Decodable, OptionalCodingWrapper {
 }
 
 @propertyWrapper
-struct EnumStringDecodable<T>: Decodable, OptionalCodingWrapper where T: RawRepresentable, T.RawValue == String {
+struct EnumStringDecodable<T>: Decodable where T: RawRepresentable, T.RawValue == String {
+    
+    var wrappedValue: T
+    
+    init(wrappedValue: T) {
+        self.wrappedValue = wrappedValue
+    }
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        let dataString = try container.decode(String.self)
+        guard let value = T(rawValue: dataString) else {
+            throw EnumCodableError.invalidString
+        }
+        self.wrappedValue = value
+    }
+}
+
+@propertyWrapper
+struct FailableEnumStringDecodable<T>: Decodable, OptionalCodingWrapper where T: RawRepresentable, T.RawValue == String {
     
     var wrappedValue: T?
     
@@ -144,6 +163,10 @@ struct EnumStringDecodable<T>: Decodable, OptionalCodingWrapper where T: RawRepr
 }
 
 enum DateCodableError: Error {
+    case invalidString
+}
+
+enum EnumCodableError: Error {
     case invalidString
 }
 

@@ -14,7 +14,7 @@ struct SurveyQuestionPageData {
 }
 
 protocol SurveyQuestionViewCoordinator {
-    func onSurveyQuestionAnsweredSuccess(answer: SurveyResult)
+    func onSurveyQuestionAnsweredSuccess(result: SurveyResult)
     func onSurveyQuestionSkipped(questionId: String)
 }
 
@@ -54,32 +54,47 @@ class SurveyQuestionViewController: UIViewController {
                                             withParameters: ["\(self.pageData.questionNumber)",
                                                              "\(self.pageData.totalQuestions)"])
         
-        // ScrollStackView
-        let scrollStackView = ScrollStackView(axis: .vertical, horizontalInset: Constants.Style.DefaultHorizontalMargins)
-        self.view.addSubview(scrollStackView)
-        scrollStackView.autoPinEdgesToSuperviewSafeArea(with: .zero, excludingEdge: .bottom)
+        // StackView
+        let stackView = UIStackView.create(withAxis: .vertical)
+        self.view.addSubview(stackView)
+        stackView.autoPinEdgesToSuperviewSafeArea(with: UIEdgeInsets(top: 0,
+                                                                     left: Constants.Style.DefaultHorizontalMargins,
+                                                                     bottom: 0,
+                                                                     right: Constants.Style.DefaultHorizontalMargins),
+                                                  excludingEdge: .bottom)
         
-        scrollStackView.stackView.addBlankSpace(space: 50.0)
+        stackView.addBlankSpace(space: 50.0)
         // Image
-        scrollStackView.stackView.addHeaderImage(image: self.pageData.question.image, height: 54.0)
-        scrollStackView.stackView.addBlankSpace(space: 40.0)
+        stackView.addHeaderImage(image: self.pageData.question.image, height: 54.0)
+        stackView.addBlankSpace(space: 40.0)
         // Title
-        scrollStackView.stackView.addLabel(withText: self.pageData.question.body,
+        stackView.addLabel(withText: self.pageData.question.body,
                                            fontStyle: .title,
                                            colorType: .primaryText)
-        scrollStackView.stackView.addBlankSpace(space: 40.0)
+        let flexibleView = UIView()
+        flexibleView.setContentHuggingPriority(UILayoutPriority(100), for: .vertical)
+        stackView.addArrangedSubview(flexibleView)
+        stackView.addBlankSpace(space: 40.0)
+        
+        // TODO: Survey picker view
         
         // Bottom View
         let bottomView = GenericButtonView(withImageStyleCategory: .secondaryBackground)
         bottomView.addTarget(target: self, action: #selector(self.confirmButtonPressed))
         self.view.addSubview(bottomView)
         bottomView.autoPinEdgesToSuperviewSafeArea(with: UIEdgeInsets.zero, excludingEdge: .top)
-        scrollStackView.scrollView.autoPinEdge(.bottom, to: .top, of: bottomView)
-        
-        // TODO: Survey picker view
+        stackView.autoPinEdge(.bottom, to: .top, of: bottomView)
         
         // TODO: Remove (Test Purpose)
-        self.answer = 2
+        switch self.pageData.question.questionType {
+        case .numerical: self.answer = "2"
+        case .pickOne: self.answer = "1"
+        case .pickMany: self.answer = ["3", "1"]
+        case .textInput: self.answer = "Ok"
+        case .dateInput: self.answer = "2001-03-01"
+        case .scale: self.answer = 3.0
+        case .range: self.answer = [2.0, 5.0]
+        }
         
         self.updateConfirmButton()
     }
@@ -98,8 +113,8 @@ class SurveyQuestionViewController: UIViewController {
             assertionFailure("Missing selected possible answer")
             return
         }
-        let result = SurveyResult(questionId: self.pageData.question.id, answer: answer)
-        self.coordinator.onSurveyQuestionAnsweredSuccess(answer: result)
+        let result = SurveyResult(question: self.pageData.question, answer: answer)
+        self.coordinator.onSurveyQuestionAnsweredSuccess(result: result)
     }
     
     @objc private func skipButtonPressed() {

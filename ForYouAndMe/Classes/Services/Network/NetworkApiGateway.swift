@@ -478,7 +478,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             let params: [[String: Any]] = results.reduce([]) { (result, parameter) in
                 var result = result
                 var userParameter: [String: Any] = [:]
-                userParameter["question_id"] = parameter.questionId
+                userParameter["question_id"] = parameter.question.id
                 userParameter["answer"] = parameter.answer
                 result.append(userParameter)
                 return result

@@ -8,6 +8,6 @@
 import Foundation
 
 struct SurveyResult {
-    let questionId: String
+    let question: SurveyQuestion
     let answer: Any
 }

@@ -22,7 +22,7 @@ struct SurveyQuestion {
     let type: String
     
     @EnumStringDecodable
-    var questionType: SurveyQuestionType?
+    var questionType: SurveyQuestionType
     
     let body: String
     @ImageDecodable
@@ -74,5 +74,15 @@ extension SurveyQuestion: Decodable {
         case maximumDate = "max_date"
         case options
         case targets
+    }
+}
+
+extension SurveyQuestion: Hashable, Equatable {
+    static func == (lhs: SurveyQuestion, rhs: SurveyQuestion) -> Bool {
+        return lhs.id == rhs.id
+    }
+    
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(self.id)
     }
 }

@@ -19,7 +19,7 @@ struct Activity {
     var image: UIImage?
     @NilIfEmptyString
     var buttonText: String?
-    @EnumStringDecodable
+    @FailableEnumStringDecodable
     var taskType: TaskType?
     
     @ColorDecodable
