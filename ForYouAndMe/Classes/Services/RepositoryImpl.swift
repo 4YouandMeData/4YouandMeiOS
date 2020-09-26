@@ -81,11 +81,11 @@ extension RepositoryImpl: Repository {
             })
     }
     
-    func verifyPhoneNumber(phoneNumber: String, validationCode: String) -> Single<()> {
+    func verifyPhoneNumber(phoneNumber: String, validationCode: String) -> Single<User> {
         return self.api.send(request: ApiRequest(serviceRequest: .verifyPhoneNumber(phoneNumber: phoneNumber,
                                                                                     validationCode: validationCode)))
             .handleError()
-            .catchError({ error -> Single<()> in
+            .catchError({ (error)-> Single<(User)> in
                 enum ErrorCode: Int, CaseIterable { case wrongValidationCode = 401 }
                 if let errorCodeNumber = error.getFirstServerError(forExpectedStatusCodes: ErrorCode.allCases.map { $0.rawValue }),
                     let errorCode = ErrorCode(rawValue: errorCodeNumber) {

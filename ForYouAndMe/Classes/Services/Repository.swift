@@ -35,7 +35,7 @@ protocol Repository: class {
     var isLoggedIn: Bool { get }
     func logOut()
     func submitPhoneNumber(phoneNumber: String) -> Single<()>
-    func verifyPhoneNumber(phoneNumber: String, validationCode: String) -> Single<()>
+    func verifyPhoneNumber(phoneNumber: String, validationCode: String) -> Single<User>
     // Screening Section
     func getScreeningSection() -> Single<ScreeningSection>
     // Informed Consent Section

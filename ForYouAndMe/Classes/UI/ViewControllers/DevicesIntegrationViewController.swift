@@ -48,7 +48,7 @@ public class DevicesIntegrationViewController: UIViewController {
         
         let garminItem = DeviceItemView(withTitle: "Garmin"/*StringsProvider.string(forKey: .studyInfoRewardsItem)*/,
             imageName: .fitbitIcon,
-            connected: true,
+            connected: false,
             gestureCallback: { [weak self] in
                 self?.navigator.showWearableLogin(loginUrl: URL(string: "https://admin-4youandme-staging.balzo.eu/users/integration_oauth/garmin")!,
                                                   navigationController: self?.navigationController ?? UINavigationController())

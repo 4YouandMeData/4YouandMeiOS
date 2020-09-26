@@ -46,6 +46,8 @@ enum AnalyticsEvent {
     case informedConsentQuizCompleted(answers: [Answer])
     //Record Page
     case recordScreen(screenName: String, screenClass: String)
+    // Set UserID
+    case setUserID(_ userID: String)
 }
 
 protocol AnalyticsService {

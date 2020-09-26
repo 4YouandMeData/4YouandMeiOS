@@ -164,8 +164,9 @@ public class CodeValidationViewController: UIViewController {
     @objc private func confirmButtonPressed() {
         self.navigator.pushProgressHUD()
         self.repository.verifyPhoneNumber(phoneNumber: self.phoneNumberView.fullNumber, validationCode: self.codeTextFieldView.text)
-        .subscribe(onSuccess: { [weak self] in
+        .subscribe(onSuccess: { [weak self] user in
             guard let self = self else { return }
+            self.analytics.track(event: .setUserID("\(user.id)"))
             self.navigator.popProgressHUD()
             self.codeTextFieldView.clearError(clearErrorText: true)
             self.view.endEditing(true)
