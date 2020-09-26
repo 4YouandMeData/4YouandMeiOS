@@ -395,6 +395,8 @@
 		1FF17AE878FC8A03C3B5AE3B93CC3D02 /* ORKChoiceViewCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 980D63C23005E1E9F3BF48C9F36DD759 /* ORKChoiceViewCell.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
 		2009004286D6B8665831644825244A0F /* he.lproj in Resources */ = {isa = PBXBuildFile; fileRef = F103DD22D97CE9EE92BE4FEB0FEF2369 /* he.lproj */; };
 		200968DB251E5E1F00F13641 /* User.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200968DA251E5E1F00F13641 /* User.swift */; };
+		2009697D251F31FE00F13641 /* User+Mappable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2009697C251F31FD00F13641 /* User+Mappable.swift */; };
+		200969AD251F46D500F13641 /* CacheService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200969AC251F46D500F13641 /* CacheService.swift */; };
 		2038A6B6BEB979ED805C6D3242A2A32F /* Take.swift in Sources */ = {isa = PBXBuildFile; fileRef = 006F3809602F21E899AB28AB5A0BFF58 /* Take.swift */; };
 		20428D163D2BBD42F8453AA5C2E6DD97 /* FIRAEvent.h in Headers */ = {isa = PBXBuildFile; fileRef = 86F0B0B0280FD353D3D4E5B0B7BE3119 /* FIRAEvent.h */; settings = {ATTRIBUTES = (Project, ); }; };
 		2065DCFE5EF2550991FE0E15270BFF7D /* FIRCLSURLSessionConfiguration.m in Sources */ = {isa = PBXBuildFile; fileRef = 82F5070CAF9D5DDF3EA5865649EE4490 /* FIRCLSURLSessionConfiguration.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
@@ -3608,6 +3610,8 @@
 		1FCD047E7F7BB6DF3D9851BE6EF88A08 /* ORKSubheadlineLabel.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = ORKSubheadlineLabel.m; path = ResearchKit/Common/ORKSubheadlineLabel.m; sourceTree = "<group>"; };
 		1FFD379696D35E131751477FEFEBACF6 /* FIRCLSMachOSlice.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = FIRCLSMachOSlice.h; path = Crashlytics/Shared/FIRCLSMachO/FIRCLSMachOSlice.h; sourceTree = "<group>"; };
 		200968DA251E5E1F00F13641 /* User.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = User.swift; sourceTree = "<group>"; };
+		2009697C251F31FD00F13641 /* User+Mappable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "User+Mappable.swift"; sourceTree = "<group>"; };
+		200969AC251F46D500F13641 /* CacheService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CacheService.swift; sourceTree = "<group>"; };
 		200B9F4C84970124A9D993AACE995EEC /* FIRCLSURLSessionTask.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = FIRCLSURLSessionTask.h; path = Crashlytics/Crashlytics/FIRCLSURLSession/Tasks/FIRCLSURLSessionTask.h; sourceTree = "<group>"; };
 		200C69156FF12093E2F7953EC5A4743D /* Convertible.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = Convertible.swift; path = Sources/Convertible.swift; sourceTree = "<group>"; };
 		202039F33B22F1BFD8AEFBC620F299FB /* FBLPromise+Async.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = "FBLPromise+Async.m"; path = "Sources/FBLPromises/FBLPromise+Async.m"; sourceTree = "<group>"; };
@@ -7263,6 +7267,7 @@
 			isa = PBXGroup;
 			children = (
 				A52A435E59D639CD761587E3B9E69260 /* CacheManager.swift */,
+				200969AC251F46D500F13641 /* CacheService.swift */,
 			);
 			path = Cache;
 			sourceTree = "<group>";
@@ -9883,6 +9888,7 @@
 				82273005063E3B797FC456CE3595B1D8 /* JSONAPIMappable.swift */,
 				1CC344ED02CC584BB4E207DABE569BB3 /* Mapper+Extensions.swift */,
 				1DEC7AAA33D12A6FEE0D2512C69168A7 /* ResponseError+Mappable.swift */,
+				2009697C251F31FD00F13641 /* User+Mappable.swift */,
 			);
 			path = Mapping;
 			sourceTree = "<group>";
@@ -13747,6 +13753,7 @@
 				9EC14C28DF0F49ADA9F866DD73F093DD /* PermissionViewController.swift in Sources */,
 				9A40A5B9576A85F65349184270E45464 /* PhoneNumberView.swift in Sources */,
 				6736D148F2673C088C7F6BBA9073EDC9 /* PhoneVerificationViewController.swift in Sources */,
+				200969AD251F46D500F13641 /* CacheService.swift in Sources */,
 				40CE39025203A51BAC0E27682EF326C6 /* PhotoLibraryPermission.swift in Sources */,
 				2307F75A13B3E7671CCC8AE0C4ABDFD3 /* PlayerView.swift in Sources */,
 				FF230B855C6ECF62725C8DADC0922C81 /* PodUtils.swift in Sources */,
@@ -13792,6 +13799,7 @@
 				4B4E74944BC6F7A889F2D107E23375D7 /* SurveyGroup.swift in Sources */,
 				D847228CB8A50E48F80DAA01F2E3DD4E /* SurveyQuestion.swift in Sources */,
 				5EDB7EEF7845992C11102E21884C2445 /* SurveyQuestionOption.swift in Sources */,
+				2009697D251F31FE00F13641 /* User+Mappable.swift in Sources */,
 				1AA82C31F4EBD523E62A437777D5E27B /* SurveyResult.swift in Sources */,
 				8482A13950B89EBE6CDD9BBF1CDB9B00 /* SurveyTarget.swift in Sources */,
 				E2769BB0C725BC712DF6C0C51E357060 /* SurveyTask.swift in Sources */,

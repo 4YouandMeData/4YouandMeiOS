@@ -82,6 +82,8 @@ public class IntroViewController: UIViewController {
         bottomView.autoPinEdgesToSuperviewSafeArea(with: UIEdgeInsets.zero, excludingEdge: .top)
         
         scrollView.autoPinEdge(.bottom, to: .top, of: bottomView)
+        
+        self.analytics.track(event: .setUserPropertyString(Services.shared.storageServices.deviceUDID))
     }
     
     public override func viewWillAppear(_ animated: Bool) {

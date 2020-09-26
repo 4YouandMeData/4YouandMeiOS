@@ -16,12 +16,28 @@ struct User {
     var email: String?
 }
 
-extension User: Mappable {
+extension User: Codable {
     
-    init(map: Mapper) throws {
-        try self.id = map.from("id")
-        try self.studyId = map.from("study_id")
-        try self.phoneNumber = map.from("phone_number")
-        self.email = map.optionalFrom("email")
+    private enum CodingKeys: String, CodingKey {
+        case id
+        case studyId
+        case phoneNumber
+        case email
+    }
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.id = try container.decode(Int.self, forKey: .id)
+        self.studyId = try container.decode(Int.self, forKey: .studyId)
+        self.phoneNumber = try container.decode(String.self, forKey: .phoneNumber)
+        self.email = try container.decode(String.self, forKey: .email)
+    }
+    
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(self.id, forKey: .id)
+        try container.encode(self.studyId, forKey: .studyId)
+        try container.encode(self.phoneNumber, forKey: .phoneNumber)
+        try container.encode(self.email, forKey: .email)
     }
 }

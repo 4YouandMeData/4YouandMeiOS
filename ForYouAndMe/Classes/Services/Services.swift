@@ -24,6 +24,7 @@ class Services {
     private(set) var navigator: AppNavigator!
     private(set) var healthService: HealthService!
     private(set) var analytics: AnalyticsService!
+    private(set) var storageServices: CacheService!
     
     private var window: UIWindow?
     
@@ -66,7 +67,7 @@ class Services {
         self.navigator = navigator
         self.healthService = healthService
         self.analytics = analytics
-        
+        self.storageServices = storage
         self.navigator.showSetupScreen()
     }
     

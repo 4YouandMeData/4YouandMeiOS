@@ -81,6 +81,8 @@ class FirebaseAnalyticsPlatform: AnalyticsPlatform {
 //            self.sendTestFirebaseEvent(sampleParameter: sampleParameter)
         case .setUserID(let userID):
             self.setUserID(userID)
+        case .setUserPropertyString(let value):
+            self.setUserPropertyString(value)
         case .recordScreen(let screenName, let screenClass):
             self.sendRecordScreen(screenName: screenName, screenClass: screenClass)
         default:
@@ -94,9 +96,17 @@ class FirebaseAnalyticsPlatform: AnalyticsPlatform {
 //        self.sendEvent(withEventName: FirebaseEventCustomName.testFirebaseEvent.rawValue,
 //                       parameters: [FirebaseEventCustomParameter.sampleParameter.rawValue: sampleParameter])
 //    }
+    
+    //User
     private func setUserID(_ userID: String) {
         Analytics.setUserID(userID)
     }
+    
+    func setUserPropertyString(_ value: String?) {
+        Analytics.setUserProperty(value, forName: FirebaseEventCustomParameter.deviceId.rawValue)
+    }
+    
+    //Screens
     
     private func sendRecordScreen(screenName: String, screenClass: String) {
         Analytics.setScreenName(screenName, screenClass: screenClass)

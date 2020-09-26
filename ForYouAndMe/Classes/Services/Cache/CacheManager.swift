@@ -8,15 +8,39 @@
 
 import Foundation
 
-class CacheManager {
+class CacheManager: CacheService {
     
     enum CacheManagerKey: String {
         case globalConfig
         case accessToken
+        case deviceUDID
+        case userKey
     }
     
     private let mainUserDefaults = UserDefaults.standard
     
+    //Protocol
+    var user: User? {
+        get {return self.load(forKey: CacheManagerKey.userKey.rawValue)}
+        set {self.save(encodable: newValue, forKey: CacheManagerKey.userKey.rawValue)}
+    }
+    
+    var deviceUDID: String? {
+        get {
+            var UDID = self.getString(forKey: CacheManagerKey.deviceUDID.rawValue)
+            if UDID == nil || UDID?.isEmpty == true {
+                UDID = UIDevice.current.identifierForVendor?.uuidString
+                if let deviceUDID = UDID {
+                    self.saveString(deviceUDID, forKey: CacheManagerKey.deviceUDID.rawValue)
+                }
+            }
+            return UDID ?? ""
+        }
+        set {
+            self.saveString(newValue, forKey: CacheManagerKey.deviceUDID.rawValue)
+        }
+    }
+        
     // MARK: - Private methods
     
     private func save<T>(encodable: T?, forKey key: String) where T: Encodable {
