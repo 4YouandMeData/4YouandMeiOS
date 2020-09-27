@@ -68,7 +68,7 @@ class FirebaseAnalyticsPlatform: AnalyticsPlatform {
     
     // MARK: - Private Methods
     
-    //MARK: User
+    // MARK: User
     private func setUserID(_ userID: String) {
         Analytics.setUserID(userID)
     }
@@ -82,7 +82,7 @@ class FirebaseAnalyticsPlatform: AnalyticsPlatform {
                        parameters: [AnalyticsParameter.accountType.rawValue: accountType])
     }
     
-    //MARK: Onboarding
+    // MARK: Onboarding
     func startStudyAction(_ actionType: String) {
         self.sendEvent(withEventName: FirebaseEventCustomName.startStudyAction.rawValue,
                        parameters: [AnalyticsParameter.action.rawValue: actionType])
@@ -111,7 +111,7 @@ class FirebaseAnalyticsPlatform: AnalyticsPlatform {
         self.sendEvent(withEventName: FirebaseEventCustomName.consentAgreed.rawValue)
     }
 
-    //MARK: Main App
+    // MARK: Main App
     func switchTab(_ tabName: String) {
         self.sendEvent(withEventName: FirebaseEventCustomName.switchTab.rawValue,
                        parameters: [AnalyticsParameter.tab.rawValue: tabName])
@@ -128,7 +128,7 @@ class FirebaseAnalyticsPlatform: AnalyticsPlatform {
                        parameters: [AnalyticsParameter.dataPeriod.rawValue: period])
     }
     
-    //MARK: Task
+    // MARK: Task
 
     func videoDiaryAction(_ actionType: String) {
         self.sendEvent(withEventName: FirebaseEventCustomName.videoDiaryAction.rawValue,
@@ -147,7 +147,7 @@ class FirebaseAnalyticsPlatform: AnalyticsPlatform {
                        parameters: [AnalyticsParameter.status.rawValue: allow])
     }
     
-    //MARK: Screens
+    // MARK: Screens
     
     private func sendRecordScreen(screenName: String, screenClass: String) {
         Analytics.setScreenName(screenName, screenClass: screenClass)
