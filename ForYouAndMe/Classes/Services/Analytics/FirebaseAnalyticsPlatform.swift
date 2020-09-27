@@ -59,6 +59,8 @@ class FirebaseAnalyticsPlatform: AnalyticsPlatform {
             self.locationPermissionChanged(status)
         case .notificationPermissionChanged(let status):
             self.notificationPermissionChanged(status)
+        case .videoDiaryAction(let action):
+            self.videoDiaryAction(action)
         default:
             break
         }
@@ -66,7 +68,7 @@ class FirebaseAnalyticsPlatform: AnalyticsPlatform {
     
     // MARK: - Private Methods
     
-    //User
+    //MARK: User
     private func setUserID(_ userID: String) {
         Analytics.setUserID(userID)
     }
@@ -80,7 +82,7 @@ class FirebaseAnalyticsPlatform: AnalyticsPlatform {
                        parameters: [AnalyticsParameter.accountType.rawValue: accountType])
     }
     
-    //Onboarding
+    //MARK: Onboarding
     func startStudyAction(_ actionType: String) {
         self.sendEvent(withEventName: FirebaseEventCustomName.startStudyAction.rawValue,
                        parameters: [AnalyticsParameter.action.rawValue: actionType])
@@ -109,7 +111,7 @@ class FirebaseAnalyticsPlatform: AnalyticsPlatform {
         self.sendEvent(withEventName: FirebaseEventCustomName.consentAgreed.rawValue)
     }
 
-    //Main App
+    //MARK: Main App
     func switchTab(_ tabName: String) {
         self.sendEvent(withEventName: FirebaseEventCustomName.switchTab.rawValue,
                        parameters: [AnalyticsParameter.tab.rawValue: tabName])
@@ -125,13 +127,16 @@ class FirebaseAnalyticsPlatform: AnalyticsPlatform {
         self.sendEvent(withEventName: FirebaseEventCustomName.yourDataSelectDataPeriod.rawValue,
                        parameters: [AnalyticsParameter.dataPeriod.rawValue: period])
     }
+    
+    //MARK: Task
 
-//    func videoDiaryAction(_ actionType: String) {
-//        self.sendEvent(withEventName: FirebaseEventCustomName.videoDiaryAction.rawValue,
-//                       parameters: [AnalyticsParameter.action.rawValue: actionType])
-//    }
+    func videoDiaryAction(_ actionType: String) {
+        self.sendEvent(withEventName: FirebaseEventCustomName.videoDiaryAction.rawValue,
+                       parameters: [AnalyticsParameter.action.rawValue: actionType])
+    }
+    
+    // MARK: Permission
 
-//
     func locationPermissionChanged(_ allow: String) {
         self.sendEvent(withEventName: FirebaseEventCustomName.locationPermissionChanged.rawValue,
                        parameters: [AnalyticsParameter.status.rawValue: allow])
@@ -142,7 +147,7 @@ class FirebaseAnalyticsPlatform: AnalyticsPlatform {
                        parameters: [AnalyticsParameter.status.rawValue: allow])
     }
     
-    //Screens
+    //MARK: Screens
     
     private func sendRecordScreen(screenName: String, screenClass: String) {
         Analytics.setScreenName(screenName, screenClass: screenClass)

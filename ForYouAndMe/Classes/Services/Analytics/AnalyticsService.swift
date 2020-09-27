@@ -106,6 +106,9 @@ enum AnalyticsEvent {
     case quickActivity(_ quickActivityID: String, option: String)
     case yourDataSelectionPeriod(_ period: String)
     
+    //Task
+    case videoDiaryAction(_ action: String)
+    
     //Permission
     case locationPermissionChanged(_ status: String)
     case notificationPermissionChanged(_ status: String)

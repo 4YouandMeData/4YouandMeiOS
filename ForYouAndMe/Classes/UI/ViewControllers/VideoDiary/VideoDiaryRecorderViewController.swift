@@ -24,6 +24,7 @@ public class VideoDiaryRecorderViewController: UIViewController {
     private let coordinator: VideoDiarySectionCoordinator
     private let repository: Repository
     private let navigator: AppNavigator
+    private let analytics: AnalyticsService
     
     private lazy var cameraView: CameraView = {
         let view = CameraView()
@@ -128,6 +129,7 @@ public class VideoDiaryRecorderViewController: UIViewController {
         self.coordinator = coordinator
         self.repository = Services.shared.repository
         self.navigator = Services.shared.navigator
+        self.analytics = Services.shared.analytics
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -305,6 +307,10 @@ public class VideoDiaryRecorderViewController: UIViewController {
                                               userInfo: nil,
                                               repeats: true)
             self.currentState = .record(isRecording: true)
+            self.analytics.track(event: .videoDiaryAction(self.noOfPauses > 0 ?
+                                                            AnalyticsParameter.contact.rawValue :
+                                                            AnalyticsParameter.recordingStarted.rawValue))
+            
             self.cameraView.startRecording()
         } catch {
             self.navigator.handleError(error: nil, presenter: self)
@@ -334,6 +340,7 @@ public class VideoDiaryRecorderViewController: UIViewController {
     
     private func handleCompleteRecording() {
         // Adding Progress HUD here so that the user interaction is disabled until the video is saved to documents directory
+        self.analytics.track(event: .videoDiaryAction(AnalyticsParameter.recordingPaused.rawValue))
         self.navigator.pushProgressHUD()
         self.cameraView.mergeRecordedVideos()
     }
