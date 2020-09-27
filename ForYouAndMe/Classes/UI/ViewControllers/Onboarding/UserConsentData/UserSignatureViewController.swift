@@ -16,6 +16,7 @@ protocol UserSignatureCoordinator {
 class UserSignatureViewController: UIViewController {
     
     private let coordinator: UserSignatureCoordinator
+    private let analytics: AnalyticsService
     
     private lazy var signatureViewController: SignatureDrawingViewController = {
         let controller = SignatureDrawingViewController()
@@ -104,6 +105,7 @@ class UserSignatureViewController: UIViewController {
     
     init(coordinator: UserSignatureCoordinator) {
         self.coordinator = coordinator
+        self.analytics = Services.shared.analytics
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -158,7 +160,8 @@ class UserSignatureViewController: UIViewController {
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        
+        self.analytics.track(event: .recordScreen(screenName: AnalyticsScreens.consentSignature.rawValue,
+                                                  screenClass: String(describing: type(of: self))))
         self.navigationController?.navigationBar.apply(style: NavigationBarStyleCategory.secondary(hidden: false).style)
         self.addCustomBackButton()
     }

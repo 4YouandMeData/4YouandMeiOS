@@ -53,11 +53,13 @@ public class InfoPageViewController: UIViewController, PageProvider {
     
     private let navigator: AppNavigator
     private let coordinator: PageCoordinator
+    private let analytics: AnalyticsService
     
     init(withPageData pageData: InfoPageData, coordinator: PageCoordinator) {
         self.pageData = pageData
         self.coordinator = coordinator
         self.navigator = Services.shared.navigator
+        self.analytics = Services.shared.analytics
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -164,6 +166,9 @@ public class InfoPageViewController: UIViewController, PageProvider {
             assertionFailure("Missing expected external link url")
             return
         }
+        
+        self.analytics.track(event: .recordScreen(screenName: AnalyticsScreens.learnMore.rawValue,
+                                                  screenClass: String(describing: type(of: self))))
         self.navigator.openWebView(withTitle: "", url: url, presenter: self)
     }
     

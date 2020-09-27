@@ -83,7 +83,8 @@ public class IntroViewController: UIViewController {
         
         scrollView.autoPinEdge(.bottom, to: .top, of: bottomView)
         
-        self.analytics.track(event: .setUserPropertyString(Services.shared.storageServices.deviceUDID))
+        self.analytics.track(event: .setUserPropertyString(Services.shared.storageServices.deviceUDID,
+                                                           forName: AnalyticsParameter.deviceId.rawValue))
     }
     
     public override func viewWillAppear(_ animated: Bool) {
