@@ -167,6 +167,7 @@ public class CodeValidationViewController: UIViewController {
         .subscribe(onSuccess: { [weak self] user in
             guard let self = self else { return }
             self.analytics.track(event: .setUserID("\(user.id)"))
+            self.analytics.track(event: .userRegistration(self.phoneNumberView.countryCode))
             self.navigator.popProgressHUD()
             self.codeTextFieldView.clearError(clearErrorText: true)
             self.view.endEditing(true)

@@ -12,12 +12,8 @@ private enum FirebaseEventCustomName: String {
     case userRegistration = "user_registration"
     case startStudyAction = "study_video_action"
     case cancelDuringScreeningQuestions = "screening_questions_cancelled"
-    case cancelDuringConsentSummary = "consent_summary_cancelled"
-    case cancelDuringConsent = "full_consent_cancelled"
-    case cancelDuringAppsAndDevices = "apps_and_devices_cancelled"
-    case cancelDuringComprehension = "comprehension_cancelled"
-    case cancelDuringOptin = "optin_cancelled"
-    case consentScreenLearnMore = "learn_more_clicked"
+    case cancelDuringInformedConsent = "informed_consent_cancelled"
+    case cancelDuringComprehension = "comprehension_quiz_cancelled"
     case consentDisagreed = "consent_disagreed"
     case consentAgreed = "consent_agreed"
     case clickFeedTile = "feed_tile_clicked"
@@ -29,62 +25,30 @@ private enum FirebaseEventCustomName: String {
     case pushNotificationsPermissionChanged = "pushnotifications_permission_changed"
 }
 
-private enum FirebaseEventCustomParameter: String {
-    case userId
-    case start
-    case pause
-    case close
-    case screenId = "screen_id"
-    case tileId = "tile_id"
-    case type
-    case mood
-    case energy
-    case stress
-    case action
-    case submit
-    case tab
-    case feed
-    case tasks
-    case yourdata = "your_data"
-    case studyInfo = "study_info"
-    case dataPeriod = "data_period"
-    case week
-    case month
-    case year
-    case page
-    case contact
-    case faq
-    case points
-    case privacyPolicy
-    case termsOfService
-    case deviceId = "device_id"
-    case accountType = "account_type"
-    case uk = "UK"
-    case us = "US"
-    case option
-    case recordingStarted = "start_recording"
-    case recordingPaused = "pause_recording"
-    case startPlaying = "start_playing"
-    case pausePlaying = "pause_playing"
-    case startOver = "start_over"
-    case continueRecording = "continue_recording"
-    case status
-    case allow
-    case revoke
-}
-
 class FirebaseAnalyticsPlatform: AnalyticsPlatform {
     
     func track(event: AnalyticsEvent) {
         switch event {
-//        case .testFirebaseEvent(let sampleParameter):
-//            self.sendTestFirebaseEvent(sampleParameter: sampleParameter)
         case .setUserID(let userID):
             self.setUserID(userID)
         case .setUserPropertyString(let value, let name):
             self.setUserPropertyString(value, forName: name)
         case .recordScreen(let screenName, let screenClass):
             self.sendRecordScreen(screenName: screenName, screenClass: screenClass)
+        case .userRegistration(let accountType):
+            self.userRegistration(accountType)
+        case .startStudyAction(let actionType):
+            self.startStudyAction(actionType)
+        case .cancelDuringScreeningQuestion(let questionID):
+            self.cancelDuringScreeningQuestion(questionID)
+        case .cancelDuringInformedConsent(let pageID):
+            self.cancelDuringInformedConsent(pageID)
+        case .cancelDuringComprehensionQuiz(let question):
+            self.cancelDuringComprehension(question)
+        case .consentAgreed:
+            self.consentAgreed()
+        case .consentDisagreed:
+            self.consentDisagreed()
         default:
             break
         }
@@ -105,6 +69,80 @@ class FirebaseAnalyticsPlatform: AnalyticsPlatform {
     func setUserPropertyString(_ value: String?, forName: String) {
         Analytics.setUserProperty(value, forName: forName)
     }
+    
+    func userRegistration(_ accountType: String) {
+        self.sendEvent(withEventName: FirebaseEventCustomName.userRegistration.rawValue,
+                       parameters: [AnalyticsParameter.accountType.rawValue: accountType])
+    }
+    
+    //Onboarding
+    func startStudyAction(_ actionType: String) {
+        self.sendEvent(withEventName: FirebaseEventCustomName.startStudyAction.rawValue,
+                       parameters: [AnalyticsParameter.action.rawValue: actionType])
+    }
+    
+    func cancelDuringScreeningQuestion(_ questionID: String? = nil) {
+        self.sendEvent(withEventName: FirebaseEventCustomName.cancelDuringScreeningQuestions.rawValue,
+                       parameters: [AnalyticsParameter.screenId.rawValue: questionID ?? ""])
+    }
+    
+    func cancelDuringInformedConsent(_ pageID: String) {
+        self.sendEvent(withEventName: FirebaseEventCustomName.cancelDuringInformedConsent.rawValue,
+                       parameters: [AnalyticsParameter.screenId.rawValue: pageID])
+    }
+    
+    func cancelDuringComprehension(_ questionID: String) {
+        self.sendEvent(withEventName: FirebaseEventCustomName.cancelDuringComprehension.rawValue,
+                       parameters: [AnalyticsParameter.screenId.rawValue: questionID])
+    }
+    
+    func consentDisagreed() {
+        self.sendEvent(withEventName: FirebaseEventCustomName.consentDisagreed.rawValue)
+    }
+    
+    func consentAgreed() {
+        self.sendEvent(withEventName: FirebaseEventCustomName.consentAgreed.rawValue)
+    }
+    
+//
+//    func cancelDuringAppsAndDevices(_ questionID: String) {
+//        self.sendEvent(withEventName: FirebaseEventCustomName.cancelDuringAppsAndDevices.rawValue,
+//                       parameters: [AnalyticsParameter.screenId.rawValue: questionID])
+//    }
+//
+//
+//
+//
+//    //Main App
+//
+//    func quickActivityCLicked(_ parameters: [String: Any]? = nil) {
+//        self.sendEvent(withEventName: FirebaseEventCustomName.quickActivity.rawValue, parameters: parameters)
+//    }
+//
+//    func switchTab(_ tabName: String) {
+//        self.sendEvent(withEventName: FirebaseEventCustomName.switchTab.rawValue,
+//                       parameters: [AnalyticsParameter.tab.rawValue: tabName])
+//    }
+//
+//    func videoDiaryAction(_ actionType: String) {
+//        self.sendEvent(withEventName: FirebaseEventCustomName.videoDiaryAction.rawValue,
+//                       parameters: [AnalyticsParameter.action.rawValue: actionType])
+//    }
+//
+//    func yurDataSelectPeriod(_ period: String) {
+//        self.sendEvent(withEventName: FirebaseEventCustomName.yourDataSelectDataPeriod.rawValue,
+//                       parameters: [AnalyticsParameter.dataPeriod.rawValue: period])
+//    }
+//
+//    func locationPermissionChanged(_ allow: String) {
+//        self.sendEvent(withEventName: FirebaseEventCustomName.locationPermissionChanged.rawValue,
+//                       parameters: [AnalyticsParameter.status.rawValue: allow])
+//    }
+//
+//    func notificationPermissionChanged(_ allow: String) {
+//        self.sendEvent(withEventName: FirebaseEventCustomName.pushNotificationsPermissionChanged.rawValue,
+//                       parameters: [AnalyticsParameter.status.rawValue: allow])
+//    }
     
     //Screens
     

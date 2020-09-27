@@ -15,6 +15,8 @@ class InformedConsentSectionCoordinator {
     private let completionCallback: NavigationControllerCallback
     private let analytics: AnalyticsService
     
+    var currentPage: Page?
+    var currentQuestion: Question?
     var answers: [Answer] = []
     
     init(withSectionData sectionData: InformedConsentSection,
@@ -60,6 +62,8 @@ class InformedConsentSectionCoordinator {
     }
     
     private func showQuestion(_ question: Question) {
+        self.currentPage = nil
+        self.currentQuestion = question
         let viewController = QuestionViewController(withQuestion: question, coordinator: self)
         self.navigationController.pushViewController(viewController, animated: true)
     }
@@ -70,6 +74,8 @@ extension InformedConsentSectionCoordinator: PagedSectionCoordinator {
     var pages: [Page] { self.sectionData.pages }
     
     func performCustomPrimaryButtonNavigation(page: Page) -> Bool {
+        self.currentPage = page
+        self.currentQuestion = nil
         if self.sectionData.successPage?.id == page.id {
             self.completionCallback(self.navigationController)
             return true
@@ -78,6 +84,8 @@ extension InformedConsentSectionCoordinator: PagedSectionCoordinator {
     }
     
     func onUnhandledPrimaryButtonNavigation(page: Page) {
+        self.currentPage = page
+        self.currentQuestion = nil
         if let firstQuestion = self.sectionData.questions.first {
             self.showQuestion(firstQuestion)
         } else {

@@ -188,9 +188,11 @@ class IntroVideoViewController: UIViewController {
                                     : ImagePalette.image(withName: .videoPlay),
                                  for: .normal)
         if !self.isVideoPlaying {
+            self.analytics.track(event: .startStudyAction(AnalyticsParameter.pause.rawValue))
             self.player?.pause()
             self.playButton.isHidden = false
         } else {
+            self.analytics.track(event: .startStudyAction(AnalyticsParameter.start.rawValue))
             self.player?.play()
             self.timer?.invalidate()
             self.timer = Timer.scheduledTimer(timeInterval: 2,
@@ -321,6 +323,7 @@ class IntroVideoViewController: UIViewController {
     
     private func navigateForward() {
         self.removePlayer()
+        self.analytics.track(event: .startStudyAction(AnalyticsParameter.close.rawValue))
         self.slider.value = 1.0
         self.navigator.onIntroVideoCompleted(presenter: self)
     }

@@ -21,6 +21,7 @@ class AppNavigator {
     private let analytics: AnalyticsService
     private let window: UIWindow
     
+    private var currentCoordinator: Any?
     private var currentActivityCoordinator: ActivitySectionCoordinator?
     
     init(withRepository repository: Repository, analytics: AnalyticsService, window: UIWindow) {
@@ -102,6 +103,18 @@ class AppNavigator {
     }
     
     public func abortOnboarding() {
+        
+        if (self.currentCoordinator as? ScreeningSectionCoordinator) != nil {
+            self.analytics.track(event: .cancelDuringScreeningQuestion(""))
+        } else if let coordinator = self.currentCoordinator as? InformedConsentSectionCoordinator {
+            if (coordinator.currentPage != nil) {
+                self.analytics.track(event: .cancelDuringInformedConsent(coordinator.currentPage?.id ?? ""))
+            }else if (coordinator.currentQuestion != nil){
+                self.analytics.track(event: .cancelDuringComprehensionQuiz(coordinator.currentQuestion?.id ?? ""))
+            }
+        } else if (self.currentCoordinator as? ConsentSectionCoordinator) != nil {
+            self.analytics.track(event: .consentDisagreed)
+        }
         self.goToWelcome()
     }
     
@@ -208,6 +221,7 @@ class AppNavigator {
             let coordinator = ScreeningSectionCoordinator(withSectionData: section,
                                                           navigationController: navigationController,
                                                           completionCallback: completionCallback)
+            self.currentCoordinator = coordinator
             return coordinator.getStartingPage()
         }
     }
@@ -222,6 +236,7 @@ class AppNavigator {
             let coordinator = InformedConsentSectionCoordinator(withSectionData: section,
                                                                 navigationController: navigationController,
                                                                 completionCallback: completionCallback)
+            self.currentCoordinator = coordinator
             return coordinator.getStartingPage()
         }
     }
@@ -231,11 +246,13 @@ class AppNavigator {
     public func startConsentSection(navigationController: UINavigationController) {
         navigationController.loadViewForRequest(self.repository.getConsentSection()) { section -> UIViewController in
             let completionCallback: NavigationControllerCallback = { [weak self] navigationController in
+                self?.analytics.track(event: .consentAgreed)
                 self?.startOptInSection(navigationController: navigationController)
             }
             let coordinator = ConsentSectionCoordinator(withSectionData: section,
                                                         navigationController: navigationController,
                                                         completionCallback: completionCallback)
+            self.currentCoordinator = coordinator
             return coordinator.getStartingPage()
         }
     }
@@ -243,13 +260,13 @@ class AppNavigator {
     public func showReviewConsent(navigationController: UINavigationController) {
         navigationController.loadViewForRequest(self.repository.getConsentSection(),
                                                 hidesBottomBarWhenPushed: true) { section -> UIViewController in
-                                                    let data = InfoPageListData(title: section.title,
-                                                                                subtitle: section.subtitle,
-                                                                                body: section.body,
-                                                                                startingPage: section.welcomePage,
-                                                                                pages: section.pages,
-                                                                                mode: .view)
-                                                    return InfoPageListViewController(withData: data)
+            let data = InfoPageListData(title: section.title,
+                                        subtitle: section.subtitle,
+                                        body: section.body,
+                                        startingPage: section.welcomePage,
+                                        pages: section.pages,
+                                        mode: .view)
+            return InfoPageListViewController(withData: data)
         }
     }
     
@@ -300,10 +317,10 @@ class AppNavigator {
                                                          url: loginUrl,
                                                          onLoginSuccessCallback: { _ in
                                                             navigationController.popViewController(animated: true)
-        },
+                                                         },
                                                          onLoginFailureCallback: { _ in
                                                             navigationController.popViewController(animated: true)
-        })
+                                                         })
         viewController.hidesBottomBarWhenPushed = true
         navigationController.pushViewController(viewController, animated: true)
     }
@@ -401,8 +418,8 @@ class AppNavigator {
             return
         }
         self.analytics.track(event: .recordScreen(screenName: taskIdentifier,
-                                                         screenClass: String(describing: type(of: self))))
-
+                                                  screenClass: String(describing: type(of: self))))
+        
         startingPage.modalPresentationStyle = .fullScreen
         presenter.present(startingPage, animated: true, completion: nil)
         self.currentActivityCoordinator = coordinator

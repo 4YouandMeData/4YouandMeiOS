@@ -369,7 +369,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         case .getGlobalConfig: return Bundle.getTestData(from: "TestGetGlobalConfig")
         // Login
         case .submitPhoneNumber: return "{}".utf8Encoded
-        case .verifyPhoneNumber: return "{}".utf8Encoded
+        case .verifyPhoneNumber: return Bundle.getTestData(from: "TestGetVerifyPhoneNumber")
         // Screening Section
         case .getScreeningSection: return Bundle.getTestData(from: "TestGetScreeningSection")
         // Informed Consent Section

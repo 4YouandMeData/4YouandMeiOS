@@ -7,12 +7,13 @@
 
 import Foundation
 
- enum AnalyticsParameter: String {
+enum AnalyticsParameter: String {
     case userId
     case start
     case pause
     case close
     case screenId = "screen_id"
+    case questionId = "question_id"
     case tileId = "tile_id"
     case type
     case mood
@@ -37,8 +38,6 @@ import Foundation
     case termsOfService
     case deviceId = "device_id"
     case accountType = "account_type"
-    case uk = "UK"
-    case us = "US"
     case option
     case recordingStarted = "start_recording"
     case recordingPaused = "pause_recording"
@@ -69,9 +68,9 @@ enum AnalyticsScreens: String {
     case emailInsert = "Email"
     case emailVerification = "EmailVerification"
     case oAuth = "OAuth"
-//    case faq = "FAQ"
-//    case contact = "Contact"
-//    case points = "Points"
+    //    case faq = "FAQ"
+    //    case contact = "Contact"
+    //    case points = "Points"
     case browser = "Browser"
     case learnMore = "LearnMore"
     case feed = "Feed"
@@ -92,6 +91,15 @@ enum AnalyticsEvent {
     // User
     case setUserID(_ userID: String)
     case setUserPropertyString(_ value: String?, forName: String)
+    case userRegistration(_ accountType: String)
+    
+    //Onboarding
+    case startStudyAction(_ actionType: String)
+    case cancelDuringScreeningQuestion(_ questionID: String?)
+    case cancelDuringInformedConsent(_ pageID: String)
+    case cancelDuringComprehensionQuiz(_ questionID: String)
+    case consentAgreed
+    case consentDisagreed
 }
 
 protocol AnalyticsService {
