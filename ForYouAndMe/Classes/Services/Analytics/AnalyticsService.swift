@@ -102,6 +102,7 @@ enum AnalyticsEvent {
     case consentDisagreed
     
     //Main App
+    case switchTab(_ tabName: String)
     case quickActivity(_ quickActivityID: String, option: String)
 }
 

@@ -49,6 +49,8 @@ class FirebaseAnalyticsPlatform: AnalyticsPlatform {
             self.consentAgreed()
         case .consentDisagreed:
             self.consentDisagreed()
+        case .switchTab(let tabName):
+            self.switchTab(tabName)
         case .quickActivity(let quickActivityID, let option):
             self.quickActivityCLicked(quickActivityID, option: option)
         default:
@@ -107,7 +109,10 @@ class FirebaseAnalyticsPlatform: AnalyticsPlatform {
     }
 
     //Main App
-
+    func switchTab(_ tabName: String) {
+        self.sendEvent(withEventName: FirebaseEventCustomName.switchTab.rawValue,
+                       parameters: [AnalyticsParameter.tab.rawValue : tabName])
+    }
     func quickActivityCLicked(_ activityID: String, option: String) {
         self.sendEvent(withEventName: FirebaseEventCustomName.quickActivity.rawValue,
                        parameters: [AnalyticsParameter.option.rawValue : option,

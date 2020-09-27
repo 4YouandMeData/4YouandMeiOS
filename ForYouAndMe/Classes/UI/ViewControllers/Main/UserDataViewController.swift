@@ -132,6 +132,7 @@ class UserDataViewController: UIViewController, CustomSegmentViewDelegate {
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        self.analytics.track(event: .switchTab(StringsProvider.string(forKey: .tabUserData)))
         self.analytics.track(event: .recordScreen(screenName: AnalyticsScreens.yourData.rawValue,
                                                   screenClass: String(describing: type(of: self))))
         self.navigationController?.navigationBar.apply(style: NavigationBarStyleCategory.primary(hidden: true).style)

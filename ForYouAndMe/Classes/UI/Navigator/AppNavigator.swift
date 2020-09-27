@@ -390,6 +390,7 @@ class AppNavigator {
         guard let feedViewControllerIndex = tabBarController.viewControllers?.firstIndex(where: { viewController in
             (viewController as? UINavigationController)?.viewControllers.first is FeedViewController
         }) else { return }
+        self.analytics.track(event: .switchTab(StringsProvider.string(forKey: .tabFeed)))
         tabBarController.selectedIndex = feedViewControllerIndex
     }
     
