@@ -57,6 +57,7 @@ class FeedListManager: NSObject {
     private let tableView: UITableView
     private let repository: Repository
     private let navigator: AppNavigator
+    private let analytics: AnalyticsService
     private weak var delegate: FeedListManagerDelegate?
     
     private var sections: [FeedListSection] = []
@@ -74,6 +75,7 @@ class FeedListManager: NSObject {
         self.repository = repository
         self.navigator = navigator
         self.tableView = tableView
+        self.analytics = Services.shared.analytics
         self.delegate = delegate
         
         super.init()
@@ -180,6 +182,7 @@ class FeedListManager: NSObject {
                 onDispose: { [weak self] in self?.navigator.popProgressHUD() })
             .subscribe(onSuccess: { [weak self] in
                 guard let self = self else { return }
+                self.analytics.track(event: .quickActivity(taskId, option: option.id))
                 self.loadItems()
                 }, onError: { [weak self] error in
                     guard let self = self else { return }

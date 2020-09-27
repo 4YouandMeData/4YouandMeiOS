@@ -100,6 +100,9 @@ enum AnalyticsEvent {
     case cancelDuringComprehensionQuiz(_ questionID: String)
     case consentAgreed
     case consentDisagreed
+    
+    //Main App
+    case quickActivity(_ quickActivityID: String, option: String)
 }
 
 protocol AnalyticsService {

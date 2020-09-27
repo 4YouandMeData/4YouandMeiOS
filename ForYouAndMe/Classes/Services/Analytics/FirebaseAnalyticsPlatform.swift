@@ -49,6 +49,8 @@ class FirebaseAnalyticsPlatform: AnalyticsPlatform {
             self.consentAgreed()
         case .consentDisagreed:
             self.consentDisagreed()
+        case .quickActivity(let quickActivityID, let option):
+            self.quickActivityCLicked(quickActivityID, option: option)
         default:
             break
         }
@@ -103,21 +105,14 @@ class FirebaseAnalyticsPlatform: AnalyticsPlatform {
     func consentAgreed() {
         self.sendEvent(withEventName: FirebaseEventCustomName.consentAgreed.rawValue)
     }
-    
-//
-//    func cancelDuringAppsAndDevices(_ questionID: String) {
-//        self.sendEvent(withEventName: FirebaseEventCustomName.cancelDuringAppsAndDevices.rawValue,
-//                       parameters: [AnalyticsParameter.screenId.rawValue: questionID])
-//    }
-//
-//
-//
-//
-//    //Main App
-//
-//    func quickActivityCLicked(_ parameters: [String: Any]? = nil) {
-//        self.sendEvent(withEventName: FirebaseEventCustomName.quickActivity.rawValue, parameters: parameters)
-//    }
+
+    //Main App
+
+    func quickActivityCLicked(_ activityID: String, option: String) {
+        self.sendEvent(withEventName: FirebaseEventCustomName.quickActivity.rawValue,
+                       parameters: [AnalyticsParameter.option.rawValue : option,
+                                    AnalyticsParameter.tileId.rawValue : activityID])
+    }
 //
 //    func switchTab(_ tabName: String) {
 //        self.sendEvent(withEventName: FirebaseEventCustomName.switchTab.rawValue,
