@@ -104,6 +104,7 @@ enum AnalyticsEvent {
     //Main App
     case switchTab(_ tabName: String)
     case quickActivity(_ quickActivityID: String, option: String)
+    case yourDataSelectionPeriod(_ period: String)
 }
 
 protocol AnalyticsService {

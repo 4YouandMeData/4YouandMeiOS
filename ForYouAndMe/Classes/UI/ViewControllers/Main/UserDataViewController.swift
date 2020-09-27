@@ -206,6 +206,7 @@ class UserDataViewController: UIViewController, CustomSegmentViewDelegate {
     }
     func segmentDidChanged(_ studyPeriod: StudyPeriod) {
         // TODO: handle change of index
+        self.analytics.track(event: .yourDataSelectionPeriod(studyPeriod.title))
         print("did change")
     }
 }

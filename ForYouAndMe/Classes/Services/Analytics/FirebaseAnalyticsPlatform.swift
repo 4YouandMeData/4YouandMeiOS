@@ -51,6 +51,8 @@ class FirebaseAnalyticsPlatform: AnalyticsPlatform {
             self.consentDisagreed()
         case .switchTab(let tabName):
             self.switchTab(tabName)
+        case .yourDataSelectionPeriod(let period):
+            self.yurDataSelectPeriod(period)
         case .quickActivity(let quickActivityID, let option):
             self.quickActivityCLicked(quickActivityID, option: option)
         default:
@@ -111,28 +113,26 @@ class FirebaseAnalyticsPlatform: AnalyticsPlatform {
     //Main App
     func switchTab(_ tabName: String) {
         self.sendEvent(withEventName: FirebaseEventCustomName.switchTab.rawValue,
-                       parameters: [AnalyticsParameter.tab.rawValue : tabName])
+                       parameters: [AnalyticsParameter.tab.rawValue: tabName])
     }
+    
     func quickActivityCLicked(_ activityID: String, option: String) {
         self.sendEvent(withEventName: FirebaseEventCustomName.quickActivity.rawValue,
-                       parameters: [AnalyticsParameter.option.rawValue : option,
-                                    AnalyticsParameter.tileId.rawValue : activityID])
+                       parameters: [AnalyticsParameter.option.rawValue: option,
+                                    AnalyticsParameter.tileId.rawValue: activityID])
     }
-//
-//    func switchTab(_ tabName: String) {
-//        self.sendEvent(withEventName: FirebaseEventCustomName.switchTab.rawValue,
-//                       parameters: [AnalyticsParameter.tab.rawValue: tabName])
-//    }
-//
+    
+    func yurDataSelectPeriod(_ period: String) {
+        self.sendEvent(withEventName: FirebaseEventCustomName.yourDataSelectDataPeriod.rawValue,
+                       parameters: [AnalyticsParameter.dataPeriod.rawValue: period])
+    }
+
 //    func videoDiaryAction(_ actionType: String) {
 //        self.sendEvent(withEventName: FirebaseEventCustomName.videoDiaryAction.rawValue,
 //                       parameters: [AnalyticsParameter.action.rawValue: actionType])
 //    }
 //
-//    func yurDataSelectPeriod(_ period: String) {
-//        self.sendEvent(withEventName: FirebaseEventCustomName.yourDataSelectDataPeriod.rawValue,
-//                       parameters: [AnalyticsParameter.dataPeriod.rawValue: period])
-//    }
+
 //
 //    func locationPermissionChanged(_ allow: String) {
 //        self.sendEvent(withEventName: FirebaseEventCustomName.locationPermissionChanged.rawValue,
