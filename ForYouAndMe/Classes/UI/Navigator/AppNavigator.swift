@@ -107,9 +107,9 @@ class AppNavigator {
         if (self.currentCoordinator as? ScreeningSectionCoordinator) != nil {
             self.analytics.track(event: .cancelDuringScreeningQuestion(""))
         } else if let coordinator = self.currentCoordinator as? InformedConsentSectionCoordinator {
-            if (coordinator.currentPage != nil) {
+            if coordinator.currentPage != nil {
                 self.analytics.track(event: .cancelDuringInformedConsent(coordinator.currentPage?.id ?? ""))
-            }else if (coordinator.currentQuestion != nil){
+            } else if coordinator.currentQuestion != nil {
                 self.analytics.track(event: .cancelDuringComprehensionQuiz(coordinator.currentQuestion?.id ?? ""))
             }
         } else if (self.currentCoordinator as? ConsentSectionCoordinator) != nil {

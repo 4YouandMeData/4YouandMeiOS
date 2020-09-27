@@ -60,7 +60,7 @@ class PermissionItemView: UIView {
         allowLabel.setContentCompressionResistancePriority(UILayoutPriority(751), for: .horizontal)
         stackView.addArrangedSubview(allowLabel, horizontalInset: 8)
         
-        if permission.isAuthorized == false{
+        if permission.isAuthorized == false {
             let tap = UITapGestureRecognizer(target: self, action: #selector(viewDidPressed))
             self.addGestureRecognizer(tap)
         }
