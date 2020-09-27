@@ -49,7 +49,8 @@ class PermissionItemView: UIView {
         stackView.addArrangedSubview(label, horizontalInset: 0, verticalInset: 14)
         
         //Allow
-        attributedString = NSAttributedString.create(withText: (permission.isAuthorized) ? "Allowed" : "Allow",
+        let titleKey: StringKey = (permission.isAuthorized) ? .allowMessage : .allowedMessage
+        attributedString = NSAttributedString.create(withText: StringsProvider.string(forKey: titleKey),
                                                      fontStyle: .paragraph,
                                                      colorType: (permission.isAuthorized) ? .gradientPrimaryEnd : .secondaryText,
                                                      textAlignment: .left,

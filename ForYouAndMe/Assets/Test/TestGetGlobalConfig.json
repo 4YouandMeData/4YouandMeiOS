@@ -143,7 +143,10 @@
       "PERMISSION_DENIED": "Permission denied",
       "PERMISSION_SETTINGS": "Settings",
       "PERMISSION_CANCEL": "Cancel",
-      "PERMISSION_MESSAGE": "Please, go to Settings and allow permission."
+      "PERMISSION_MESSAGE": "Please, go to Settings and allow permission.",
+      "PERMISSIONS_ALLOW": "Allow",
+      "PERMISSIONS_ALLOWED": "Allowed",
+      "YOUR_APPS_AND_DEVICES_CONNECT": "Connect"
     },
     "country_codes": ["US", "GB", "IT"]
 }

@@ -48,7 +48,7 @@ class DeviceItemView: UIView {
         
         stackView.addArrangedSubview(label, horizontalInset: 8)
         
-        attributedString = NSAttributedString.create(withText: "Connect",
+        attributedString = NSAttributedString.create(withText: StringsProvider.string(forKey: .connectMessage),
                                                      fontStyle: .paragraph,
                                                      colorType: (connected) ? .gradientPrimaryEnd : .secondaryText,
                                                      textAlignment: .left,
