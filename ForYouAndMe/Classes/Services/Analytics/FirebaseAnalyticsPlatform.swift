@@ -55,17 +55,16 @@ class FirebaseAnalyticsPlatform: AnalyticsPlatform {
             self.yurDataSelectPeriod(period)
         case .quickActivity(let quickActivityID, let option):
             self.quickActivityCLicked(quickActivityID, option: option)
+        case .locationPermissionChanged(let status):
+            self.locationPermissionChanged(status)
+        case .notificationPermissionChanged(let status):
+            self.notificationPermissionChanged(status)
         default:
             break
         }
     }
     
     // MARK: - Private Methods
-    
-//    private func sendTestFirebaseEvent(sampleParameter: Int) {
-//        self.sendEvent(withEventName: FirebaseEventCustomName.testFirebaseEvent.rawValue,
-//                       parameters: [FirebaseEventCustomParameter.sampleParameter.rawValue: sampleParameter])
-//    }
     
     //User
     private func setUserID(_ userID: String) {
@@ -131,18 +130,17 @@ class FirebaseAnalyticsPlatform: AnalyticsPlatform {
 //        self.sendEvent(withEventName: FirebaseEventCustomName.videoDiaryAction.rawValue,
 //                       parameters: [AnalyticsParameter.action.rawValue: actionType])
 //    }
-//
 
 //
-//    func locationPermissionChanged(_ allow: String) {
-//        self.sendEvent(withEventName: FirebaseEventCustomName.locationPermissionChanged.rawValue,
-//                       parameters: [AnalyticsParameter.status.rawValue: allow])
-//    }
-//
-//    func notificationPermissionChanged(_ allow: String) {
-//        self.sendEvent(withEventName: FirebaseEventCustomName.pushNotificationsPermissionChanged.rawValue,
-//                       parameters: [AnalyticsParameter.status.rawValue: allow])
-//    }
+    func locationPermissionChanged(_ allow: String) {
+        self.sendEvent(withEventName: FirebaseEventCustomName.locationPermissionChanged.rawValue,
+                       parameters: [AnalyticsParameter.status.rawValue: allow])
+    }
+
+    func notificationPermissionChanged(_ allow: String) {
+        self.sendEvent(withEventName: FirebaseEventCustomName.pushNotificationsPermissionChanged.rawValue,
+                       parameters: [AnalyticsParameter.status.rawValue: allow])
+    }
     
     //Screens
     

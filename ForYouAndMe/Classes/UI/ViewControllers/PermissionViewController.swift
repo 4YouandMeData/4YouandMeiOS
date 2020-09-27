@@ -67,20 +67,25 @@ public class PermissionViewController: UIViewController {
         
         self.scrollStackView.stackView.arrangedSubviews.forEach({ $0.removeFromSuperview() })
         
-        let permissionCamera: Permission = .locationWhenInUse
-        let remindersStatus: Bool = permissionCamera.isNotDetermined
+        let permissionLocation: Permission = .locationWhenInUse
+        let locationStatus: Bool = permissionLocation.isNotDetermined
         let locationTitle = "The BUMP app needs access to your phone’s location"/*StringsProvider.string(forKey: .studyInfoRewardsItem)*/
         let locationItem = PermissionItemView(withTitle: locationTitle,
-                                              permission: permissionCamera,
+                                              permission: permissionLocation,
                                               iconName: .locationIcon,
                                               gestureCallback: { [weak self] in
                                                 guard let self = self else { return }
-                                                permissionCamera.request().subscribe(onSuccess: { _ in
-                                                    if permissionCamera.isDenied, remindersStatus == false {
+                                                permissionLocation.request().subscribe(onSuccess: { _ in
+                                                    if permissionLocation.isDenied, locationStatus == false {
                                                         self.showPermissionDeniedAlert()
                                                     } else {
                                                         self.refreshStatus()
                                                     }
+                                                    let permissionStatus = permissionLocation.isAuthorized ?
+                                                        AnalyticsParameter.allow.rawValue :
+                                                        AnalyticsParameter.revoke.rawValue
+                                                    
+                                                    self.analytics.track(event: .locationPermissionChanged(permissionStatus))
                                                     
                                                 }, onError: { error in
                                                     self.navigator.handleError(error: error, presenter: self)
@@ -88,20 +93,24 @@ public class PermissionViewController: UIViewController {
         })
         self.scrollStackView.stackView.addArrangedSubview(locationItem)
         
-        let permissionMicrophone: Permission = .notification
-        let microphoneStatus: Bool = permissionMicrophone.isNotDetermined
-        let microphoneTitle = "Push Notification"/*StringsProvider.string(forKey: .studyInfoRewardsItem)*/
-        let pushItem = PermissionItemView(withTitle: microphoneTitle,
-                                          permission: permissionMicrophone,
+        let notificationPermission: Permission = .notification
+        let notificationStatus: Bool = notificationPermission.isNotDetermined
+        let notificationTitle = "Push Notification"/*StringsProvider.string(forKey: .studyInfoRewardsItem)*/
+        let pushItem = PermissionItemView(withTitle: notificationTitle,
+                                          permission: notificationPermission,
                                           iconName: .pushNotificationIcon,
                                           gestureCallback: { [weak self] in
                                             guard let self = self else { return }
-                                            permissionMicrophone.request().subscribe(onSuccess: { _ in
-                                                if permissionMicrophone.isDenied, microphoneStatus == false {
+                                            notificationPermission.request().subscribe(onSuccess: { _ in
+                                                if notificationPermission.isDenied, notificationStatus == false {
                                                     self.showPermissionDeniedAlert()
                                                 } else {
                                                     self.refreshStatus()
                                                 }
+                                                let permissionStatus = notificationPermission.isAuthorized ?
+                                                    AnalyticsParameter.allow.rawValue :
+                                                    AnalyticsParameter.revoke.rawValue
+                                                self.analytics.track(event: .notificationPermissionChanged(permissionStatus))
                                             }, onError: { error in
                                                 self.navigator.handleError(error: error, presenter: self)
                                             }).disposed(by: self.disposeBag)
