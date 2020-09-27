@@ -68,15 +68,23 @@ class SurveyQuestionViewController: UIViewController {
         stackView.addHeaderImage(image: self.pageData.question.image, height: 54.0)
         stackView.addBlankSpace(space: 40.0)
         // Title
-        stackView.addLabel(withText: self.pageData.question.body,
-                                           fontStyle: .title,
-                                           colorType: .primaryText)
-        let flexibleView = UIView()
-        flexibleView.setContentHuggingPriority(UILayoutPriority(100), for: .vertical)
-        stackView.addArrangedSubview(flexibleView)
-        stackView.addBlankSpace(space: 40.0)
+        
+        let attributedString = NSAttributedString.create(withText: self.pageData.question.body,
+                                                         fontStyle: .title,
+                                                         colorType: .primaryText)
+        let label = UILabel()
+        label.attributedText = attributedString
+        label.numberOfLines = 0
+        stackView.addArrangedSubview(label)
+        label.setContentHuggingPriority(UILayoutPriority(1000), for: .vertical)
+//        stackView.addLabel(withText: self.pageData.question.body,
+//                                           fontStyle: .title,
+//                                           colorType: .primaryText)
+//        stackView.addBlankSpace(space: 40.0)
         
         // TODO: Survey picker view
+        let questionPicker = SurveyQuestionPickerFactory.getSurveyQuestionPicker(for: self.pageData.question)
+        stackView.addArrangedSubview(questionPicker)
         
         // Bottom View
         let bottomView = GenericButtonView(withImageStyleCategory: .secondaryBackground)

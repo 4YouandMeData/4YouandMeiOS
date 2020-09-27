@@ -240,11 +240,9 @@ extension Permission {
     }
 }
 
-
 func getLocationAuthorized() -> Bool {
     let whenInUse: Permission = .locationWhenInUse
     let always: Permission = .locationAlwaysAndWhenInUse
     
     return whenInUse.isAuthorized || always.isAuthorized
 }
-

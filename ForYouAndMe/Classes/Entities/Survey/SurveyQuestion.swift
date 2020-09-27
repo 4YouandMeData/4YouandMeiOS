@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import RxSwift
 
 enum SurveyQuestionType: String {
     case numerical = "numerical"
