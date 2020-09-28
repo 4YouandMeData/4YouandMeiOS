@@ -30,7 +30,7 @@ class SurveyQuestionNumerical: UIView, SurveyQuestionProtocol, UIPickerViewDeleg
         let pickerView = UIPickerView()
         pickerView.delegate = self
         pickerView.dataSource = self
-        pickerView.clipsToBounds = true
+        pickerView.backgroundColor = .clear
 //        pickerView.tintColor = ColorPalette.color(withType: .primary)
 //        pickerView.subviews[1].backgroundColor = ColorPalette.color(withType: .primary)
         
@@ -63,7 +63,7 @@ class SurveyQuestionNumerical: UIView, SurveyQuestionProtocol, UIPickerViewDeleg
     // MARK: Picker Datasource
     
     func numberOfComponents(in pickerView: UIPickerView) -> Int {
-       return 1
+        return 1
     }
     
     func pickerView(_ pickerView: UIPickerView, numberOfRowsInComponent component: Int) -> Int {
@@ -72,19 +72,20 @@ class SurveyQuestionNumerical: UIView, SurveyQuestionProtocol, UIPickerViewDeleg
     
     // MARK: Picker Delegate
     
-    func pickerView(_ pickerView: UIPickerView, attributedTitleForRow row: Int, forComponent component: Int) -> NSAttributedString? {
-        
-        let color = pickerView.selectedRow(inComponent: component) == row ?
-            ColorPalette.color(withType: .secondaryText) :
-            ColorPalette.color(withType: .primaryText)
-        
-        let attributeString = NSAttributedString.create(withText: self.items[row],
-                                                        fontStyle: .header2,
-                                                        color: color)
-        
-        return attributeString
-        
-    }
+//    func pickerView(_ pickerView: UIPickerView, attributedTitleForRow row: Int, forComponent component: Int) -> NSAttributedString? {
+//
+//        let color = pickerView.selectedRow(inComponent: component) == row ?
+//            ColorPalette.color(withType: .secondaryText) :
+//            ColorPalette.color(withType: .primaryText)
+//
+//        let attributeString = NSAttributedString.create(withText: self.items[row],
+//                                                        fontStyle: .header2,
+//                                                        color: color)
+//
+//        return attributeString
+//
+//    }
+    
     func pickerView(_ pickerView: UIPickerView, titleForRow row: Int, forComponent component: Int) -> String? {
         return self.items[row]
     }
@@ -95,19 +96,43 @@ class SurveyQuestionNumerical: UIView, SurveyQuestionProtocol, UIPickerViewDeleg
 
     func pickerView(_ pickerView: UIPickerView, didSelectRow row: Int, inComponent component: Int) {
         
-        let view = pickerView.view(forRow: row, forComponent: component)
-        view?.backgroundColor = .green
+        let view = pickerView.view(forRow: row, forComponent: component) as? OverlayView
+        let attributeString = NSAttributedString.create(withText: self.items[row],
+                                                        fontStyle: .header2,
+                                                        color: ColorPalette.color(withType: .secondaryText))
+        view?.label.attributedText = attributeString
+        view?.label.layer.backgroundColor = ColorPalette.color(withType: .primary).cgColor
     }
     
-//    func pickerView(_ pickerView: UIPickerView, viewForRow row: Int, forComponent component: Int, reusing view: UIView?) -> UIView {
-//
-//        guard let currentView = view, pickerView.selectedRow(inComponent: component) == row else {
-//            let view = UIView()
-//            view.backgroundColor = .yellow
-//            return view
-//        }
-//
-//        currentView.backgroundColor = .red
-//        return currentView
-//    }
+    func pickerView(_ pickerView: UIPickerView, viewForRow row: Int, forComponent component: Int, reusing view: UIView?) -> UIView {
+        pickerView.subviews[1].isHidden = true
+        
+        let attributeString = NSAttributedString.create(withText: self.items[row],
+                                                        fontStyle: .header2,
+                                                        color: ColorPalette.color(withType: .primaryText))
+        
+        let currentView = (view as? OverlayView) ?? OverlayView(withTitle: attributeString)
+        currentView.label.layer.backgroundColor = UIColor.clear.cgColor
+        currentView.label.attributedText = attributeString
+        return currentView
+    }
+}
+
+class OverlayView: UIView {
+    
+    var label: UILabel = UILabel()
+
+    init(withTitle attributedString: NSAttributedString) {
+        super.init(frame: .zero)
+        self.label.attributedText = attributedString
+        self.addSubview(self.label)
+        self.label.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets(top: 0, left: 10, bottom: 0, right: 10))
+        self.label.autoCenterInSuperview()
+        self.label.layer.cornerRadius = 24
+        self.label.layer.masksToBounds = true
+    }
+    
+    required init?(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
 }
