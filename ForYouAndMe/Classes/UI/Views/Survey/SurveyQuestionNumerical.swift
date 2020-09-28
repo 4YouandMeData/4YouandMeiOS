@@ -22,7 +22,7 @@ class SurveyQuestionNumerical: UIView, SurveyQuestionProtocol, UIPickerViewDeleg
         }
         self.minumum = Int(minimum)
         self.maximum = Int(maximum)
-        self.numberOfItems = self.maximum - self.minumum + 1
+        self.numberOfItems = self.maximum - self.minumum
         super.init(frame: .zero)
         
         self.calculateRange()
@@ -31,7 +31,8 @@ class SurveyQuestionNumerical: UIView, SurveyQuestionProtocol, UIPickerViewDeleg
         pickerView.delegate = self
         pickerView.dataSource = self
         pickerView.clipsToBounds = true
-        pickerView.tintColor = ColorPalette.color(withType: .primary)
+//        pickerView.tintColor = ColorPalette.color(withType: .primary)
+//        pickerView.subviews[1].backgroundColor = ColorPalette.color(withType: .primary)
         
         self.addSubview(pickerView)
         pickerView.autoPinEdgesToSuperviewEdges()
@@ -46,6 +47,17 @@ class SurveyQuestionNumerical: UIView, SurveyQuestionProtocol, UIPickerViewDeleg
         for idx in 0...self.numberOfItems {
             self.items.append("\(self.minumum + idx)")
         }
+        guard let minimum = self.surveyQuestion.minimumDisplay,
+              !(self.surveyQuestion.minimumDisplay ?? "").isEmpty else {
+            return
+        }
+        self.items.insert(minimum, at: 0)
+        
+        guard let maximum = self.surveyQuestion.maximumDisplay,
+              !(self.surveyQuestion.maximumDisplay ?? "").isEmpty else {
+            return
+        }
+        self.items.insert(maximum, at: self.items.count)
     }
     
     // MARK: Picker Datasource
@@ -55,11 +67,24 @@ class SurveyQuestionNumerical: UIView, SurveyQuestionProtocol, UIPickerViewDeleg
     }
     
     func pickerView(_ pickerView: UIPickerView, numberOfRowsInComponent component: Int) -> Int {
-        return self.numberOfItems
+        return self.items.count
     }
     
     // MARK: Picker Delegate
     
+    func pickerView(_ pickerView: UIPickerView, attributedTitleForRow row: Int, forComponent component: Int) -> NSAttributedString? {
+        
+        let color = pickerView.selectedRow(inComponent: component) == row ?
+            ColorPalette.color(withType: .secondaryText) :
+            ColorPalette.color(withType: .primaryText)
+        
+        let attributeString = NSAttributedString.create(withText: self.items[row],
+                                                        fontStyle: .header2,
+                                                        color: color)
+        
+        return attributeString
+        
+    }
     func pickerView(_ pickerView: UIPickerView, titleForRow row: Int, forComponent component: Int) -> String? {
         return self.items[row]
     }
@@ -69,26 +94,20 @@ class SurveyQuestionNumerical: UIView, SurveyQuestionProtocol, UIPickerViewDeleg
     }
 
     func pickerView(_ pickerView: UIPickerView, didSelectRow row: Int, inComponent component: Int) {
-        pickerView.reloadAllComponents()
+        
+        let view = pickerView.view(forRow: row, forComponent: component)
+        view?.backgroundColor = .green
     }
     
-    func pickerView(_ pickerView: UIPickerView, viewForRow row: Int, forComponent component: Int, reusing view: UIView?) -> UIView {
-
-        let label = UILabel()
-        label.layer.masksToBounds = true
-        label.layer.cornerRadius = 10
-        label.text = self.items[row]
-        label.textAlignment = NSTextAlignment.center
-        label.font = FontPalette.fontStyleData(forStyle: .header2).font
-
-        if pickerView.selectedRow(inComponent: component) == row {
-            label.textColor = ColorPalette.color(withType: .secondaryText)
-            label.layer.backgroundColor = ColorPalette.color(withType: .primary).cgColor
-        } else {
-            label.textColor = ColorPalette.color(withType: .primaryText)
-            label.layer.backgroundColor = ColorPalette.color(withType: .secondary).cgColor
-        }
-        
-        return label
-    }
+//    func pickerView(_ pickerView: UIPickerView, viewForRow row: Int, forComponent component: Int, reusing view: UIView?) -> UIView {
+//
+//        guard let currentView = view, pickerView.selectedRow(inComponent: component) == row else {
+//            let view = UIView()
+//            view.backgroundColor = .yellow
+//            return view
+//        }
+//
+//        currentView.backgroundColor = .red
+//        return currentView
+//    }
 }
