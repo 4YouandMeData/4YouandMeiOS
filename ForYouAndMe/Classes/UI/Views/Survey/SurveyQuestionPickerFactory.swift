@@ -12,7 +12,7 @@ struct SurveyQuestionPickerFactory {
         case .numerical:
             return SurveyQuestionNumerical(surveyQuestion: question)
         case .pickOne:
-            return SurveyQuestionNumerical(surveyQuestion: question)
+            return SurveyQuestionPickOne(surveyQuestion: question)
         case .pickMany:
             return SurveyQuestionNumerical(surveyQuestion: question)
         case .textInput:

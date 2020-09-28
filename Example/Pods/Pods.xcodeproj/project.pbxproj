@@ -394,6 +394,7 @@
 		1FD25C299D8A32DA1C1AB195F90285DE /* Mapper+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = F982C9DA0A37E0ECA567C78FF5EEBFE4 /* Mapper+Extensions.swift */; };
 		1FDB8CDEC04FF26A98E3588B1FFC27A4 /* FIRLoggerLevel.h in Headers */ = {isa = PBXBuildFile; fileRef = F013F386DA3BDC147CFF061554231086 /* FIRLoggerLevel.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		1FF17AE878FC8A03C3B5AE3B93CC3D02 /* ORKChoiceViewCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 980D63C23005E1E9F3BF48C9F36DD759 /* ORKChoiceViewCell.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
+		200456A5252272020019BD7F /* SurveyQuestionPickOne.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200456A4252272020019BD7F /* SurveyQuestionPickOne.swift */; };
 		2009004286D6B8665831644825244A0F /* he.lproj in Resources */ = {isa = PBXBuildFile; fileRef = F103DD22D97CE9EE92BE4FEB0FEF2369 /* he.lproj */; };
 		2050DFF718E611D1A29D5BB3440F596A /* Multicast.swift in Sources */ = {isa = PBXBuildFile; fileRef = C152FD1FB4A3CE9CA9F59763DAAC1BB2 /* Multicast.swift */; };
 		20A32C56122DE73FEC6149E4A4AB472E /* ORKEnvironmentSPLMeterStepViewController.h in Headers */ = {isa = PBXBuildFile; fileRef = 3D95CB15F2BE25543089B933C4A92DAE /* ORKEnvironmentSPLMeterStepViewController.h */; settings = {ATTRIBUTES = (Project, ); }; };
@@ -3611,6 +3612,7 @@
 		1FC4051D92352DB5EBFC4D52BF6E004E /* NSButton+Rx.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = "NSButton+Rx.swift"; path = "RxCocoa/macOS/NSButton+Rx.swift"; sourceTree = "<group>"; };
 		1FCD047E7F7BB6DF3D9851BE6EF88A08 /* ORKSubheadlineLabel.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = ORKSubheadlineLabel.m; path = ResearchKit/Common/ORKSubheadlineLabel.m; sourceTree = "<group>"; };
 		1FFD379696D35E131751477FEFEBACF6 /* FIRCLSMachOSlice.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = FIRCLSMachOSlice.h; path = Crashlytics/Shared/FIRCLSMachO/FIRCLSMachOSlice.h; sourceTree = "<group>"; };
+		200456A4252272020019BD7F /* SurveyQuestionPickOne.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SurveyQuestionPickOne.swift; sourceTree = "<group>"; };
 		200B9F4C84970124A9D993AACE995EEC /* FIRCLSURLSessionTask.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = FIRCLSURLSessionTask.h; path = Crashlytics/Crashlytics/FIRCLSURLSession/Tasks/FIRCLSURLSessionTask.h; sourceTree = "<group>"; };
 		200C69156FF12093E2F7953EC5A4743D /* Convertible.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = Convertible.swift; path = Sources/Convertible.swift; sourceTree = "<group>"; };
 		202039F33B22F1BFD8AEFBC620F299FB /* FBLPromise+Async.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = "FBLPromise+Async.m"; path = "Sources/FBLPromises/FBLPromise+Async.m"; sourceTree = "<group>"; };
@@ -6784,6 +6786,7 @@
 				20DB6C622520E4C10006A744 /* SurveyQuestionNumerical.swift */,
 				20DB6CBD2520E7AD0006A744 /* SurveyQuestionPickerFactory.swift */,
 				20DB6CEB2520E7D70006A744 /* SurveyQuestionProtocol.swift */,
+				200456A4252272020019BD7F /* SurveyQuestionPickOne.swift */,
 			);
 			path = Survey;
 			sourceTree = "<group>";
@@ -13909,6 +13912,7 @@
 				28217D475C4CB588C3465AA5000D60BD /* TaskEmptyView.swift in Sources */,
 				AE26A98044325F4314E6F7123251D42C /* TaskSectionCoordinator.swift in Sources */,
 				4169DB2FA695FA2C1E4D4B98EDBFDC2D /* TaskType.swift in Sources */,
+				200456A5252272020019BD7F /* SurveyQuestionPickOne.swift in Sources */,
 				1ECBF619DAEC2A21109B828C688A3A73 /* TaskViewController.swift in Sources */,
 				4018BF5A616173A24E8D96C56FD25798 /* TestNetworkApiGateway.swift in Sources */,
 				E03D5CE76B9861E5CE5C3F7E05218B40 /* TPKeyboardAvoiding+Extensions.swift in Sources */,

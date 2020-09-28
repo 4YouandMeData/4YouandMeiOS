@@ -35,7 +35,9 @@ class SurveyQuestionViewController: UIViewController {
         }
     }
     
-    init(withPageData pageData: SurveyQuestionPageData, coordinator: SurveyQuestionViewCoordinator) {
+    init(withPageData pageData: SurveyQuestionPageData,
+         coordinator: SurveyQuestionViewCoordinator) {
+        
         self.pageData = pageData
         self.coordinator = coordinator
         super.init(nibName: nil, bundle: nil)
