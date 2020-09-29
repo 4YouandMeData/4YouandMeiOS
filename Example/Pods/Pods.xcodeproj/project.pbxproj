@@ -397,6 +397,7 @@
 		200456A5252272020019BD7F /* SurveyQuestionPickOne.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200456A4252272020019BD7F /* SurveyQuestionPickOne.swift */; };
 		2009004286D6B8665831644825244A0F /* he.lproj in Resources */ = {isa = PBXBuildFile; fileRef = F103DD22D97CE9EE92BE4FEB0FEF2369 /* he.lproj */; };
 		2050DFF718E611D1A29D5BB3440F596A /* Multicast.swift in Sources */ = {isa = PBXBuildFile; fileRef = C152FD1FB4A3CE9CA9F59763DAAC1BB2 /* Multicast.swift */; };
+		2067E22D252347CC00A5DC1B /* SurveyQuestionDate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2067E22C252347CC00A5DC1B /* SurveyQuestionDate.swift */; };
 		20A32C56122DE73FEC6149E4A4AB472E /* ORKEnvironmentSPLMeterStepViewController.h in Headers */ = {isa = PBXBuildFile; fileRef = 3D95CB15F2BE25543089B933C4A92DAE /* ORKEnvironmentSPLMeterStepViewController.h */; settings = {ATTRIBUTES = (Project, ); }; };
 		20CD7F806396C05CC503075E98A5ED9E /* bufferWithTrigger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E1300A32AAA58792B2B1EB27B4DBB87 /* bufferWithTrigger.swift */; };
 		20DB6C632520E4C20006A744 /* SurveyQuestionNumerical.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20DB6C622520E4C10006A744 /* SurveyQuestionNumerical.swift */; };
@@ -3622,6 +3623,7 @@
 		2042BFAB7812D1A5AD9903A6D025D677 /* ORKConsentSceneViewController_Internal.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = ORKConsentSceneViewController_Internal.h; path = ResearchKit/Consent/ORKConsentSceneViewController_Internal.h; sourceTree = "<group>"; };
 		204DCA51B182DFC88C41A09F830CB714 /* PromisesObjC-dummy.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = "PromisesObjC-dummy.m"; sourceTree = "<group>"; };
 		205BA74B337F867F622C82EECCB83F15 /* Catch.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = Catch.swift; path = RxSwift/Observables/Catch.swift; sourceTree = "<group>"; };
+		2067E22C252347CC00A5DC1B /* SurveyQuestionDate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SurveyQuestionDate.swift; sourceTree = "<group>"; };
 		2079A117921DBE672EFAE70D1AADEE4A /* Alamofire-Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = "Alamofire-Info.plist"; sourceTree = "<group>"; };
 		20A1FAF7F8F24F2430417D90087F85ED /* ORKStroopStep.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = ORKStroopStep.h; path = ResearchKit/ActiveTasks/ORKStroopStep.h; sourceTree = "<group>"; };
 		20B2DDBD1400A840F681AA954060977F /* ORKAnswerFormat.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = ORKAnswerFormat.h; path = ResearchKit/Common/ORKAnswerFormat.h; sourceTree = "<group>"; };
@@ -6793,6 +6795,7 @@
 				200456A4252272020019BD7F /* SurveyQuestionPickOne.swift */,
 				20E012BE25231353003E41D7 /* SurveyQuestionPickMany.swift */,
 				20E012EC25231FE4003E41D7 /* SurveyQuestionTextinput.swift */,
+				2067E22C252347CC00A5DC1B /* SurveyQuestionDate.swift */,
 			);
 			path = Survey;
 			sourceTree = "<group>";
@@ -13760,6 +13763,7 @@
 				92E6F19702FF50662F5D5ECAF8A1E515 /* AnalyticsManager.swift in Sources */,
 				D597F1C44060E5437C9C9F120847411B /* AnalyticsService.swift in Sources */,
 				91B8443B091B9F79E987113EE2BC3555 /* Answer.swift in Sources */,
+				2067E22D252347CC00A5DC1B /* SurveyQuestionDate.swift in Sources */,
 				4EF9343F478A824859B0A4B0602D5FE3 /* ApiContext.swift in Sources */,
 				3E5344ABB65BFF3985B12D86B380297C /* ApiGateway.swift in Sources */,
 				FA308BAA29F2A9EA8B76DED88468B7B2 /* AppNavigator.swift in Sources */,

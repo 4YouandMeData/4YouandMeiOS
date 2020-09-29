@@ -18,7 +18,7 @@ struct SurveyQuestionPickerFactory {
         case .textInput:
             return SurveyQuestionTextInput(surveyQuestion: question)
         case .dateInput:
-            return SurveyQuestionNumerical(surveyQuestion: question)
+            return SurveyQuestionDate(surveyQuestion: question)
         case .scale:
             return SurveyQuestionNumerical(surveyQuestion: question)
         case .range:

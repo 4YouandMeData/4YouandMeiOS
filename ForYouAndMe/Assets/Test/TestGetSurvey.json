@@ -30,7 +30,7 @@
               "criteria": "range",
               "min": 2,
               "max": 6,
-              "question_id": "4"
+              "question_id": "5"
             }
           ]
         },
@@ -104,6 +104,15 @@
           "question_type": "text-input",
           "placeholder": "Enter your answer",
           "max_characters": 200
+        },
+        {
+          "id": "5",
+          "type": "survey_question",
+          "image": "base_64_image_data",
+          "body": "Choose a date",
+          "question_type": "date-input",
+          "min_date": "1919-01-01",
+          "max_date": "2001-01-01"
         }
       ]
     },
