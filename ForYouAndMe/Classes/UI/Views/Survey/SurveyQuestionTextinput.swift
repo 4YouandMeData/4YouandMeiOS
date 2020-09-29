@@ -37,10 +37,14 @@ class SurveyQuestionTextInput: UIView, UITextViewDelegate {
         self.placeholderLabel.textColor = ColorPalette.color(withType: .inactive)
         self.placeholderLabel.sizeToFit()
         let textView = UITextView()
+        let style = NSMutableParagraphStyle()
+        style.lineSpacing = 8
+        textView.typingAttributes = [.foregroundColor: ColorPalette.color(withType: .primaryText),
+                                     .font: FontPalette.fontStyleData(forStyle: .header3).font,
+                                     .paragraphStyle: style]
         textView.delegate = self
-        textView.tintColor = ColorPalette.color(withType: .primary)
-        textView.font = FontPalette.fontStyleData(forStyle: .header3).font
         textView.layer.borderWidth = 1
+        textView.tintColor = ColorPalette.color(withType: .primary)
         textView.layer.borderColor = ColorPalette.color(withType: .inactive).cgColor
         textView.addSubview(self.placeholderLabel)
         self.placeholderLabel.isHidden = !textView.text.isEmpty
