@@ -95,6 +95,9 @@ class SurveyQuestionViewController: UIViewController {
         bottomView.autoPinEdgesToSuperviewSafeArea(with: UIEdgeInsets.zero, excludingEdge: .top)
         stackView.autoPinEdge(.bottom, to: .top, of: bottomView)
         
+        let tap = UITapGestureRecognizer(target: self, action: #selector(self.tapView))
+        self.view.addGestureRecognizer(tap)
+        
         // TODO: Remove (Test Purpose)
         switch self.pageData.question.questionType {
         case .numerical: self.answer = "2"
@@ -117,6 +120,10 @@ class SurveyQuestionViewController: UIViewController {
     }
     
     // MARK: - Actions
+    
+    @objc private func tapView() {
+        self.view.endEditing(true)
+    }
     
     @objc private func confirmButtonPressed() {
         guard let answer = self.answer else {
