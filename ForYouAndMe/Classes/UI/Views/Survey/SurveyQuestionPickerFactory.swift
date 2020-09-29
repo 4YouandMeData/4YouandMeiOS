@@ -14,7 +14,7 @@ struct SurveyQuestionPickerFactory {
         case .pickOne:
             return SurveyQuestionPickOne(surveyQuestion: question)
         case .pickMany:
-            return SurveyQuestionNumerical(surveyQuestion: question)
+            return SurveyQuestionPickMany(surveyQuestion: question)
         case .textInput:
             return SurveyQuestionNumerical(surveyQuestion: question)
         case .dateInput:
