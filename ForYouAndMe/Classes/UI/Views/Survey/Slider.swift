@@ -64,40 +64,9 @@ class Slider: UISlider {
     
     func setup() {
         let minTrackStartColor = ColorPalette.color(withType: .primary)
-        let minTrackEndColor = ColorPalette.color(withType: .inactive)
         let maxTrackEndColor = ColorPalette.color(withType: .inactive)
         self.setThumbImage(sliderThumbImage, for: .normal)
-//        do {
-//            self.setMinimumTrackImage(try self.gradientImage(
-//                size: self.trackRect(forBounds: self.bounds).size,
-//                colorSet: [minTrackStartColor.cgColor, minTrackEndColor.cgColor]),
-//                                      for: .normal)
-//            self.maximumTrackTintColor = maxTrackEndColor
-//            
-//        } catch {
-//            self.minimumTrackTintColor = minTrackStartColor
-//            self.maximumTrackTintColor = maxTrackEndColor
-//        }
         self.minimumTrackTintColor = minTrackStartColor
         self.maximumTrackTintColor = maxTrackEndColor
     }
-    
-//    func gradientImage(size: CGSize, colorSet: [CGColor]) throws -> UIImage? {
-//        let layer = CAGradientLayer()
-//        layer.frame = CGRect(x: 0, y: 0, width:size.width, height: size.height)
-//        layer.cornerRadius = layer.frame.height / 2
-//        layer.masksToBounds = false
-//        layer.colors = colorSet
-//        layer.startPoint = CGPoint(x:0.0, y:0.5)
-//        layer.endPoint = CGPoint(x:1.0, y:0.5)
-//        UIGraphicsBeginImageContextWithOptions(size, layer.isOpaque, 0.0)
-//        guard let context = UIGraphicsGetCurrentContext() else { return nil }
-//
-//        layer.render(in: context)
-//        let image = UIGraphicsGetImageFromCurrentImageContext()?.resizableImage(withCapInsets:
-//            UIEdgeInsets(top: 0, left: size.height, bottom: 0, right: size.height))
-//        UIGraphicsEndImageContext()
-//        return image ?? UIImage()
-//    }
-    
 }
