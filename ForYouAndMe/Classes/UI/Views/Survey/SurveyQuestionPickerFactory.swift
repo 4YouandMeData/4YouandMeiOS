@@ -22,7 +22,7 @@ struct SurveyQuestionPickerFactory {
         case .scale:
             return SurveyQuestionNumerical(surveyQuestion: question)
         case .range:
-            return SurveyQuestionNumerical(surveyQuestion: question)
+            return SurveyRangePicker(surveyQuestion: question)
         }
     }
 }

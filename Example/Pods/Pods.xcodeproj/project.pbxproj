@@ -398,7 +398,9 @@
 		2009004286D6B8665831644825244A0F /* he.lproj in Resources */ = {isa = PBXBuildFile; fileRef = F103DD22D97CE9EE92BE4FEB0FEF2369 /* he.lproj */; };
 		2050DFF718E611D1A29D5BB3440F596A /* Multicast.swift in Sources */ = {isa = PBXBuildFile; fileRef = C152FD1FB4A3CE9CA9F59763DAAC1BB2 /* Multicast.swift */; };
 		2067E22D252347CC00A5DC1B /* SurveyQuestionDate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2067E22C252347CC00A5DC1B /* SurveyQuestionDate.swift */; };
+		2067E2DB2523A62800A5DC1B /* SurveyRangePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2067E2DA2523A62800A5DC1B /* SurveyRangePicker.swift */; };
 		20A32C56122DE73FEC6149E4A4AB472E /* ORKEnvironmentSPLMeterStepViewController.h in Headers */ = {isa = PBXBuildFile; fileRef = 3D95CB15F2BE25543089B933C4A92DAE /* ORKEnvironmentSPLMeterStepViewController.h */; settings = {ATTRIBUTES = (Project, ); }; };
+		20B68B502523A84300809B8F /* Slider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20B68B4F2523A84300809B8F /* Slider.swift */; };
 		20CD7F806396C05CC503075E98A5ED9E /* bufferWithTrigger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E1300A32AAA58792B2B1EB27B4DBB87 /* bufferWithTrigger.swift */; };
 		20DB6C632520E4C20006A744 /* SurveyQuestionNumerical.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20DB6C622520E4C10006A744 /* SurveyQuestionNumerical.swift */; };
 		20DB6CBE2520E7AD0006A744 /* SurveyQuestionPickerFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20DB6CBD2520E7AD0006A744 /* SurveyQuestionPickerFactory.swift */; };
@@ -3624,9 +3626,11 @@
 		204DCA51B182DFC88C41A09F830CB714 /* PromisesObjC-dummy.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = "PromisesObjC-dummy.m"; sourceTree = "<group>"; };
 		205BA74B337F867F622C82EECCB83F15 /* Catch.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = Catch.swift; path = RxSwift/Observables/Catch.swift; sourceTree = "<group>"; };
 		2067E22C252347CC00A5DC1B /* SurveyQuestionDate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SurveyQuestionDate.swift; sourceTree = "<group>"; };
+		2067E2DA2523A62800A5DC1B /* SurveyRangePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SurveyRangePicker.swift; sourceTree = "<group>"; };
 		2079A117921DBE672EFAE70D1AADEE4A /* Alamofire-Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = "Alamofire-Info.plist"; sourceTree = "<group>"; };
 		20A1FAF7F8F24F2430417D90087F85ED /* ORKStroopStep.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = ORKStroopStep.h; path = ResearchKit/ActiveTasks/ORKStroopStep.h; sourceTree = "<group>"; };
 		20B2DDBD1400A840F681AA954060977F /* ORKAnswerFormat.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = ORKAnswerFormat.h; path = ResearchKit/Common/ORKAnswerFormat.h; sourceTree = "<group>"; };
+		20B68B4F2523A84300809B8F /* Slider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Slider.swift; sourceTree = "<group>"; };
 		20C4305E1BDC9983D8FEDFAFF5077670 /* ORKAnswerTextView.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = ORKAnswerTextView.h; path = ResearchKit/Common/ORKAnswerTextView.h; sourceTree = "<group>"; };
 		20DB6C622520E4C10006A744 /* SurveyQuestionNumerical.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SurveyQuestionNumerical.swift; sourceTree = "<group>"; };
 		20DB6CBD2520E7AD0006A744 /* SurveyQuestionPickerFactory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SurveyQuestionPickerFactory.swift; sourceTree = "<group>"; };
@@ -6789,6 +6793,7 @@
 		20DB6CBC2520E7940006A744 /* Survey */ = {
 			isa = PBXGroup;
 			children = (
+				2067E2DA2523A62800A5DC1B /* SurveyRangePicker.swift */,
 				20DB6C622520E4C10006A744 /* SurveyQuestionNumerical.swift */,
 				20DB6CBD2520E7AD0006A744 /* SurveyQuestionPickerFactory.swift */,
 				20DB6CEB2520E7D70006A744 /* SurveyQuestionProtocol.swift */,
@@ -6796,6 +6801,7 @@
 				20E012BE25231353003E41D7 /* SurveyQuestionPickMany.swift */,
 				20E012EC25231FE4003E41D7 /* SurveyQuestionTextinput.swift */,
 				2067E22C252347CC00A5DC1B /* SurveyQuestionDate.swift */,
+				20B68B4F2523A84300809B8F /* Slider.swift */,
 			);
 			path = Survey;
 			sourceTree = "<group>";
@@ -13775,6 +13781,7 @@
 				6C3AB440B8935E202377594CF23B7A0F /* Bundle+Extensions.swift in Sources */,
 				FC98ED82978918DD30648E2DD9AFFBA6 /* ButtonStyles.swift in Sources */,
 				A6BD0EB97A9A71B8D30D319E72153DA7 /* CacheManager.swift in Sources */,
+				2067E2DB2523A62800A5DC1B /* SurveyRangePicker.swift in Sources */,
 				0FC343A8754244A04418BB956B4700C8 /* CacheService.swift in Sources */,
 				845AADA8D196FC1DCF72EE0985D9D392 /* CalendarPermission.swift in Sources */,
 				C0CE5D90E0C0AD8F40A6459BA01C7D23 /* CameraPermission.swift in Sources */,
@@ -13819,6 +13826,7 @@
 				FE33553921FF6374C5024F016A7AFE82 /* GenericListItemView.swift in Sources */,
 				BB47646A75A62951AC2AF653F5EAB5B5 /* GenericTextCheckboxView.swift in Sources */,
 				9AAD989ED72724235EF9403E4D33FC8C /* GenericTextFieldView.swift in Sources */,
+				20B68B502523A84300809B8F /* Slider.swift in Sources */,
 				D57F232BD314337DF1AFED38686F4BF8 /* GlobalConfig+Mappable.swift in Sources */,
 				0184C30D28DCAFDC0883F61160F1F997 /* GlobalConfig.swift in Sources */,
 				BA3334C2BFBCCB4764594CE5ED0D4E64 /* Gradient+Extension.swift in Sources */,
