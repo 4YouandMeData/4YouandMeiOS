@@ -49,6 +49,8 @@
 #import "ORKHelpers_Internal.h"
 #import "ORKTaskViewController_Internal.h"
 
+#import "ORKSkin.h"
+
 #import <AudioToolbox/AudioToolbox.h>
 #import <LocalAuthentication/LocalAuthentication.h>
 
@@ -324,6 +326,7 @@ static CGFloat const kForgotPasscodeHeight              = 100.0f;
     [alert addAction:[UIAlertAction actionWithTitle:ORKLocalizedString(@"BUTTON_OK", nil)
                                               style:UIAlertActionStyleDefault
                                             handler:nil]];
+    alert.view.tintColor = ORKColor(ORKAlertActionTintColorKey);
     [self presentViewController:alert animated:YES completion:nil];
     
     return YES;
@@ -436,6 +439,7 @@ static CGFloat const kForgotPasscodeHeight              = 100.0f;
                                                                 ORKStrongTypeOf(self) innerStrongSelf = weakSelf;
                                                                 [innerStrongSelf makePasscodeViewBecomeFirstResponder];
                                                             }]];
+                    alert.view.tintColor = ORKColor(ORKAlertActionTintColorKey);
                     [strongSelf presentViewController:alert animated:YES completion:nil];
                 }
                 

@@ -64,6 +64,7 @@
 
 - (void)addAccessoryViewWithDoneButton {
     UIToolbar* accessoryViewWithDoneButton = [[UIToolbar alloc] init];
+    accessoryViewWithDoneButton.tintColor = ORKColor(ORKToolBarTintColorKey);
     [accessoryViewWithDoneButton sizeToFit];
     UIBarButtonItem *flexibleSpace = [[UIBarButtonItem alloc]
                                       initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace

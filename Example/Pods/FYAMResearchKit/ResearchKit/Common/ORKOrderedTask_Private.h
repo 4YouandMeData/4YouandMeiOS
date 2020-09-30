@@ -58,12 +58,29 @@ FOUNDATION_EXPORT NSString *const ORKHolePegTestDominantPlaceStepIdentifier;
 FOUNDATION_EXPORT NSString *const ORKHolePegTestDominantRemoveStepIdentifier;
 FOUNDATION_EXPORT NSString *const ORKHolePegTestNonDominantPlaceStepIdentifier;
 FOUNDATION_EXPORT NSString *const ORKHolePegTestNonDominantRemoveStepIdentifier;
+FOUNDATION_EXPORT NSString *const ORKTrailmakingStepIdentifier;
+FOUNDATION_EXPORT NSString *const ORKTimedWalkFormStepIdentifier;
+FOUNDATION_EXPORT NSString *const ORKTimedWalkFormAFOStepIdentifier;
+FOUNDATION_EXPORT NSString *const ORKTimedWalkFormAssistanceStepIdentifier;
+FOUNDATION_EXPORT NSString *const ORKTimedWalkTrial1StepIdentifier;
+FOUNDATION_EXPORT NSString *const ORKTimedWalkTurnAroundStepIdentifier;
+FOUNDATION_EXPORT NSString *const ORKTimedWalkTrial2StepIdentifier;
+FOUNDATION_EXPORT NSString *const ORKTremorTestInLapStepIdentifier;
+FOUNDATION_EXPORT NSString *const ORKTremorTestExtendArmStepIdentifier;
+FOUNDATION_EXPORT NSString *const ORKTremorTestBendArmStepIdentifier;
+FOUNDATION_EXPORT NSString *const ORKTremorTestTouchNoseStepIdentifier;
+FOUNDATION_EXPORT NSString *const ORKTremorTestTurnWristStepIdentifier;
 FOUNDATION_EXPORT NSString *const ORKAudioRecorderIdentifier;
 FOUNDATION_EXPORT NSString *const ORKAccelerometerRecorderIdentifier;
 FOUNDATION_EXPORT NSString *const ORKPedometerRecorderIdentifier;
 FOUNDATION_EXPORT NSString *const ORKDeviceMotionRecorderIdentifier;
 FOUNDATION_EXPORT NSString *const ORKLocationRecorderIdentifier;
 FOUNDATION_EXPORT NSString *const ORKHeartRateRecorderIdentifier;
+
+FOUNDATION_EXPORT NSString *const ORKActiveTaskLeftHandIdentifier;
+FOUNDATION_EXPORT NSString *const ORKActiveTaskMostAffectedHandIdentifier;
+FOUNDATION_EXPORT NSString *const ORKActiveTaskRightHandIdentifier;
+FOUNDATION_EXPORT NSString *const ORKActiveTaskSkipHandStepIdentifier;
 
 FOUNDATION_EXPORT void ORKStepArrayAddStep(NSMutableArray<ORKStep *> *array, ORKStep *step);
 

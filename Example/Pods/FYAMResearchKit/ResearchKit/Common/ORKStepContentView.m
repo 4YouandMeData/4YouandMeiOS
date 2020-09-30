@@ -36,6 +36,7 @@
 #import "ORKCompletionCheckmarkView.h"
 #import "ORKBodyContainerView.h"
 #import "ORKSkin.h"
+#import "ORKTintedImageView.h"
 
 
 /*
@@ -115,7 +116,7 @@ typedef NS_CLOSED_ENUM(NSInteger, ORKUpdateConstraintSequence) {
     NSArray<NSLayoutConstraint *> *_bodyContainerLeftRightConstraints;
     NSLayoutConstraint *_stepContentBottomConstraint;
     ORKCompletionCheckmarkView *_completionCheckmarkView;
-
+    ORKTintedImageView *_topContentImageView;
 }
 
 - (instancetype)init {
@@ -184,7 +185,8 @@ typedef NS_CLOSED_ENUM(NSInteger, ORKUpdateConstraintSequence) {
 
 - (void)setupTopContentImageView {
     if (!_topContentImageView) {
-        _topContentImageView = [UIImageView new];
+        _topContentImageView = [ORKTintedImageView new];
+        _topContentImageView.shouldApplyTint = YES;
     }
     _topContentImageView.contentMode = UIViewContentModeScaleAspectFit;
     [_topContentImageView setBackgroundColor:ORKColor(ORKTopContentImageViewBackgroundColorKey)];

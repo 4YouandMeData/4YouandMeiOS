@@ -49,7 +49,7 @@ Pod::Spec.new do |s|
   s.dependency 'Japx/RxCodableMoya', '~> 3.0.0'
   s.dependency 'UberSignature', '~> 1.0.3'
   s.dependency 'RxSwiftExt', '~> 5.2.0'
-  s.dependency 'FYAMResearchKit', '~> 2.1.3'
+  s.dependency 'FYAMResearchKit', '~> 2.2.0'
   s.dependency 'Charts', '~> 3.5.0'
   
   s.static_framework = true

@@ -121,7 +121,7 @@
       }
     },
     {
-      "id": "627",
+      "id": "528",
       "type": "task",
       "attributes": {
         "from": "2020-08-05T00:00:00.000Z",
@@ -141,7 +141,87 @@
       }
     },
     {
-      "id": "228",
+      "id": "529",
+      "type": "task",
+      "attributes": {
+        "from": "2020-08-05T00:00:00.000Z",
+        "to": "2020-08-05T23:59:59.999Z",
+        "result": null,
+        "created_at": "2020-08-05T00:05:04.672Z",
+        "updated_at": "2020-08-05T00:05:04.672Z",
+        "attachments": []
+      },
+      "relationships": {
+        "schedulable": {
+          "data": {
+            "id": "6",
+            "type": "activity"
+          }
+        }
+      }
+    },
+    {
+      "id": "530",
+      "type": "task",
+      "attributes": {
+        "from": "2020-08-05T00:00:00.000Z",
+        "to": "2020-08-05T23:59:59.999Z",
+        "result": null,
+        "created_at": "2020-08-05T00:05:04.672Z",
+        "updated_at": "2020-08-05T00:05:04.672Z",
+        "attachments": []
+      },
+      "relationships": {
+        "schedulable": {
+          "data": {
+            "id": "7",
+            "type": "activity"
+          }
+        }
+      }
+    },
+    {
+      "id": "531",
+      "type": "task",
+      "attributes": {
+        "from": "2020-08-05T00:00:00.000Z",
+        "to": "2020-08-05T23:59:59.999Z",
+        "result": null,
+        "created_at": "2020-08-05T00:05:04.672Z",
+        "updated_at": "2020-08-05T00:05:04.672Z",
+        "attachments": []
+      },
+      "relationships": {
+        "schedulable": {
+          "data": {
+            "id": "8",
+            "type": "activity"
+          }
+        }
+      }
+    },
+    {
+      "id": "533",
+      "type": "task",
+      "attributes": {
+        "from": "2020-08-05T00:00:00.000Z",
+        "to": "2020-08-05T23:59:59.999Z",
+        "result": null,
+        "created_at": "2020-08-05T00:05:04.678Z",
+        "updated_at": "2020-08-05T00:05:04.678Z",
+        "attachments": []
+      },
+      "relationships": {
+        "schedulable": {
+          "data": {
+            "id": "9",
+            "type": "activity"
+          }
+        }
+      }
+    },
+    {
+      "id": "532",
       "type": "task",
       "attributes": {
         "from": "2020-08-05T00:00:00.000Z",
@@ -425,19 +505,59 @@
       }
     },
     {
-      "id": "1",
-      "type": "survey",
+      "id": "5",
+      "type": "activity",
       "attributes": {
-        "title": "Test Survey",
+        "title": "Reaction Time test",
         "description": "",
+        "activity_type": "reaction_time_task",
         "repeat_every": 1,
-        "created_at": "2020-07-30T13:37:00.815Z",
-        "updated_at": "2020-07-30T13:37:00.815Z",
+        "created_at": "2020-07-29T13:38:19.878Z",
+        "updated_at": "2020-07-29T13:40:00.404Z",
         "image": null
       }
     },
     {
-      "id": "5",
+      "id": "6",
+      "type": "activity",
+      "attributes": {
+        "title": "Timed Walk Test",
+        "description": "",
+        "activity_type": "timed_walk_task",
+        "repeat_every": 1,
+        "created_at": "2020-07-29T13:38:19.878Z",
+        "updated_at": "2020-07-29T13:40:00.404Z",
+        "image": null
+      }
+    },
+    {
+      "id": "7",
+      "type": "activity",
+      "attributes": {
+        "title": "Gait test",
+        "description": "",
+        "activity_type": "gait_task",
+        "repeat_every": 1,
+        "created_at": "2020-07-29T13:38:19.878Z",
+        "updated_at": "2020-07-29T13:40:00.404Z",
+        "image": null
+      }
+    },
+    {
+      "id": "8",
+      "type": "activity",
+      "attributes": {
+        "title": "Tremor test",
+        "description": "",
+        "activity_type": "tremor_task",
+        "repeat_every": 1,
+        "created_at": "2020-07-29T13:38:19.878Z",
+        "updated_at": "2020-07-29T13:40:00.404Z",
+        "image": null
+      }
+    },
+    {
+      "id": "9",
       "type": "activity",
       "attributes": {
         "title": "Video Diary",
@@ -446,6 +566,18 @@
         "repeat_every": 1,
         "created_at": "2020-07-29T13:38:19.878Z",
         "updated_at": "2020-07-29T13:40:00.404Z",
+        "image": null
+      }
+    },
+    {
+      "id": "1",
+      "type": "survey",
+      "attributes": {
+        "title": "Test Survey",
+        "description": "",
+        "repeat_every": 1,
+        "created_at": "2020-07-30T13:37:00.815Z",
+        "updated_at": "2020-07-30T13:37:00.815Z",
         "image": null
       }
     }

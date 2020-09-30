@@ -666,6 +666,7 @@ typedef void (^_ORKStateHandler)(ORKState *fromState, ORKState *_toState, id con
     [alert addAction:[UIAlertAction actionWithTitle:ORKLocalizedString(@"BUTTON_OK", nil)
                                               style:UIAlertActionStyleDefault
                                             handler:nil]];
+    alert.view.tintColor = ORKColor(ORKAlertActionTintColorKey);
     [self presentViewController:alert animated:YES completion:nil];
 }
 

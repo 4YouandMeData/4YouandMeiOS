@@ -1168,7 +1168,7 @@ static NSString *const _ChildNavigationControllerRestorationKey = @"childNavigat
     [alert addAction:[UIAlertAction actionWithTitle:ORKLocalizedString(@"BUTTON_CANCEL", nil)
                                               style:UIAlertActionStyleCancel
                                             handler:nil]];
-    
+    alert.view.tintColor = ORKColor(ORKAlertActionTintColorKey);
     [self presentViewController:alert animated:YES completion:nil];
 }
 

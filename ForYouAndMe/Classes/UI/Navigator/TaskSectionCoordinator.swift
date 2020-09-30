@@ -37,19 +37,45 @@ class TaskSectionCoordinator: NSObject, ActivitySectionCoordinator {
     // MARK: - Public Methods
     
     public func getStartingPage() -> UIViewController? {
+        
         guard let task = self.taskType.createTask(withIdentifier: self.taskIdentifier,
                                                   options: self.taskOptions,
                                                   locationAuthorised: getLocationAuthorized()) else {
-                                                    assertionFailure("Couldn't find ORKTask for given task")
-                                                    return nil
+            assertionFailure("Couldn't find ORKTask for given task")
+            return nil
         }
+        
+        self.customizeTaskUI()
+        
+        // Create and setup task controller
         let taskViewController = ORKTaskViewController(task: task, taskRun: nil)
+        taskViewController.navigationBar.apply(style: NavigationBarStyleCategory.secondary(hidden: true).style)
         taskViewController.delegate = self
+        taskViewController.view.tintColor = ColorPalette.color(withType: .primary)
         taskViewController.outputDirectory = Constants.Task.taskResultURL
+        
         return taskViewController
     }
     
     // MARK: - Private Methods
+    
+    private func customizeTaskUI() {
+        // Setup Colors
+        ORKColorSetColorForKey(ORKCheckMarkTintColorKey, ColorPalette.color(withType: .primary))
+        ORKColorSetColorForKey(ORKAlertActionTintColorKey, ColorPalette.color(withType: .primary))
+        ORKColorSetColorForKey(ORKBlueHighlightColorKey, ColorPalette.color(withType: .primary))
+        ORKColorSetColorForKey(ORKToolBarTintColorKey, ColorPalette.color(withType: .primary))
+        ORKColorSetColorForKey(ORKBackgroundColorKey, ColorPalette.color(withType: .secondary))
+        ORKColorSetColorForKey(ORKResetDoneButtonKey, ColorPalette.color(withType: .primary))
+        ORKColorSetColorForKey(ORKDoneButtonPressedKey, ColorPalette.color(withType: .primary))
+        ORKColorSetColorForKey(ORKBulletItemTextColorKey, ColorPalette.color(withType: .primary))
+        ORKColorSetColorForKey(ORKAuxiliaryImageTintColorKey, ColorPalette.color(withType: .primary))
+        ORKColorSetColorForKey(ORKTopContentImageViewBackgroundColorKey, ColorPalette.color(withType: .secondary))
+        
+        // Setup Layout
+        ORKBorderedButtonCornerRadius = 25.0
+        ORKBorderedButtonShouldApplyDefaultShadow = true
+    }
     
     private func cancelTask() {
         self.deleteTaskResult(path: Constants.Task.taskResultURL)
@@ -136,7 +162,6 @@ extension TaskSectionCoordinator: ORKTaskViewControllerDelegate {
     
     func taskViewController(_ taskViewController: ORKTaskViewController,
                             stepViewControllerWillAppear stepViewController: ORKStepViewController) {
-        
         // TODO: Check this against all cases
         
         if stepViewController.step?.identifier == "WaitStepIndeterminate" ||

@@ -31,8 +31,8 @@
 
 #import "ORKBorderedButton.h"
 #import "ORKTextButton_Internal.h"
-
-static const CGFloat ORKBorderedButtonCornerRadii = 14.0;
+#import "ORKHelpers_Internal.h"
+#import "ORKSkin.h"
 
 @implementation ORKBorderedButton {
 
@@ -45,10 +45,13 @@ static const CGFloat ORKBorderedButtonCornerRadii = 14.0;
     [self setLayerAndFadeDelay];
     [self setEnabled:YES];
     [self setDefaultTintColors];
+    if (ORKBorderedButtonShouldApplyDefaultShadow) {
+        [self setDefaultShadow];
+    }
 }
 
 - (void)setLayerAndFadeDelay {
-    self.layer.cornerRadius = ORKBorderedButtonCornerRadii;
+    self.layer.cornerRadius = ORKBorderedButtonCornerRadius;
     self.fadeDelay = 0.0;
 }
 
@@ -176,5 +179,15 @@ static const CGFloat ORKBorderedButtonCornerRadii = 14.0;
     [self setDefaultTintColors];
     [self tintColorDidChange];
 }
+
+- (void)setDefaultShadow {
+    UIColor *shadowColor = ORKRGBA(0x303740, 0.16);
+    self.layer.shadowColor = shadowColor.CGColor;
+    self.layer.shadowOffset = CGSizeMake(0.0f, 4.0f);
+    self.layer.shadowOpacity = 1.0f;
+    self.layer.shadowRadius = 4.0f;
+    self.layer.masksToBounds = false;
+}
+
 
 @end

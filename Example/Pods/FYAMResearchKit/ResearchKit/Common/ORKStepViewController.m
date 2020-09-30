@@ -486,6 +486,7 @@ static const CGFloat iPadStepTitleLabelFontSize = 50.0;
                           ]];
         alert.popoverPresentationController.sourceView = sender;
         alert.popoverPresentationController.sourceRect = sender.bounds;
+        alert.view.tintColor = ORKColor(ORKAlertActionTintColorKey);
         [self presentViewController:alert animated:YES completion:nil];
     } else {
         [self skipForward];
@@ -535,7 +536,7 @@ static const CGFloat iPadStepTitleLabelFontSize = 50.0;
     [alert addAction:[UIAlertAction actionWithTitle:ORKLocalizedString(@"BUTTON_CANCEL", nil)
                                               style:UIAlertActionStyleDefault
                                             handler:nil]];
-    
+    alert.view.tintColor = ORKColor(ORKAlertActionTintColorKey);
     _presentingAlert = YES;
     [self presentViewController:alert animated:YES completion:^{
         _presentingAlert = NO;

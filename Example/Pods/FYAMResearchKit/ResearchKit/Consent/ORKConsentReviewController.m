@@ -80,6 +80,7 @@ static const CGFloat iPadStepTitleLabelFontSize = 50.0;
     [super viewDidLoad];
     
     _toolbar = [[UIToolbar alloc] init];
+    _toolbar.tintColor = ORKColor(ORKToolBarTintColorKey);
     
     _toolbar.items = self.toolbarItems;
     
@@ -211,7 +212,7 @@ static const CGFloat iPadStepTitleLabelFontSize = 50.0;
             [self doAck];
         });
     }]];
-    
+    alert.view.tintColor = ORKColor(ORKAlertActionTintColorKey);
     [self presentViewController:alert animated:YES completion:nil];
 }
 
