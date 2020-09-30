@@ -7,22 +7,23 @@
 
 struct SurveyQuestionPickerFactory {
   
-    static func getSurveyQuestionPicker(for question: SurveyQuestion) -> UIView {
+    static func getSurveyQuestionPicker(for question: SurveyQuestion,
+                                        delegate: SurveyQuestionProtocol) -> UIView {
         switch question.questionType {
         case .numerical:
-            return SurveyQuestionNumerical(surveyQuestion: question)
+            return SurveyQuestionNumerical(surveyQuestion: question, delegate: delegate)
         case .pickOne:
-            return SurveyQuestionPickOne(surveyQuestion: question)
+            return SurveyQuestionPickOne(surveyQuestion: question, delegate: delegate)
         case .pickMany:
-            return SurveyQuestionPickMany(surveyQuestion: question)
+            return SurveyQuestionPickMany(surveyQuestion: question, delegate: delegate)
         case .textInput:
-            return SurveyQuestionTextInput(surveyQuestion: question)
+            return SurveyQuestionTextInput(surveyQuestion: question, delegate: delegate)
         case .dateInput:
-            return SurveyQuestionDate(surveyQuestion: question)
+            return SurveyQuestionDate(surveyQuestion: question, delegate: delegate)
         case .scale:
-            return SurveyQuestionScale(surveyQuestion: question)
+            return SurveyQuestionScale(surveyQuestion: question, delegate: delegate)
         case .range:
-            return SurveyRangePicker(surveyQuestion: question)
+            return SurveyRangePicker(surveyQuestion: question, delegate: delegate)
         }
     }
 }

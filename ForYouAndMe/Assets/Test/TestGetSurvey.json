@@ -30,7 +30,7 @@
               "criteria": "range",
               "min": 2,
               "max": 6,
-              "question_id": "6"
+              "question_id": "3"
             }
           ]
         },
@@ -90,7 +90,7 @@
               "value": "Horror"
             },
             {
-              "id": "4",
+              "id": "5",
               "type": "survey_question_option",
               "value": "Biografy"
             }

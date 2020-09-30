@@ -7,10 +7,10 @@
 
 class SurveyQuestionPickOne: UIView {
     
-    var surveyQuestion: SurveyQuestion
-    
-    fileprivate static let optionWidth: CGFloat = 74.0
+    private var surveyQuestion: SurveyQuestion
+    private static let optionWidth: CGFloat = 74.0
     private var currentIndexSelected: Int = 0
+    private weak var delegate: SurveyQuestionProtocol?
     
     private lazy var scrollStackView: ScrollStackView = {
         let scrollStackView = ScrollStackView(axis: .vertical, horizontalInset: 0.0)
@@ -18,10 +18,11 @@ class SurveyQuestionPickOne: UIView {
         return scrollStackView
     }()
     
-    init(surveyQuestion: SurveyQuestion) {
+    init(surveyQuestion: SurveyQuestion, delegate: SurveyQuestionProtocol) {
         guard surveyQuestion.options != nil else {
             fatalError("Pick One question need options")
         }
+        self.delegate = delegate
         self.surveyQuestion = surveyQuestion
         super.init(frame: .zero)
         self.addSubview(self.scrollStackView)
@@ -88,6 +89,7 @@ class SurveyQuestionPickOne: UIView {
     
     @objc func buttonPressed(button: UIButton) {
         self.currentIndexSelected = button.tag
+        self.delegate?.answerDidChange(self.surveyQuestion, answer: "\(self.currentIndexSelected)")
         self.refresh()
     }
 }

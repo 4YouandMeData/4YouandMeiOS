@@ -7,18 +7,21 @@
 
 class SurveyRangePicker: UIView {
     
-    var surveyQuestion: SurveyQuestion
-    var minimumLabel: UILabel = UILabel()
-    var maximumLabel: UILabel = UILabel()
-    var currentValue: UILabel = UILabel()
-    var slider: Slider = Slider()
+    private var surveyQuestion: SurveyQuestion
+    private var minimumLabel: UILabel = UILabel()
+    private var maximumLabel: UILabel = UILabel()
+    private var currentValue: UILabel = UILabel()
+    private var slider: Slider = Slider()
+    private weak var delegate: SurveyQuestionProtocol?
     
-    init(surveyQuestion: SurveyQuestion) {
+    init(surveyQuestion: SurveyQuestion, delegate: SurveyQuestionProtocol) {
         
         guard let minimum = surveyQuestion.minimum, let maximum = surveyQuestion.maximum else {
             fatalError("Minimum and Maximum are required in Range question")
         }
+        
         self.surveyQuestion = surveyQuestion
+        self.delegate = delegate
         self.minimumLabel.text = surveyQuestion.minimumLabel
         self.maximumLabel.text = surveyQuestion.maximumLabel
         
@@ -75,7 +78,9 @@ class SurveyRangePicker: UIView {
     }
     
     @objc private func changeValue(_ sender: UISlider) {
-//        sliderValueChanges?(Int(sender.value))
-        self.currentValue.text = "\(Int(sender.value))"
+        
+        let answer = Int(sender.value)
+        self.currentValue.text = "\(answer)"
+        self.delegate?.answerDidChange(self.surveyQuestion, answer: Int(sender.value))
     }
 }

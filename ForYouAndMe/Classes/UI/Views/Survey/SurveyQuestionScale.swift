@@ -11,6 +11,7 @@ class SurveyQuestionScale: UIView {
     private var surveyQuestion: SurveyQuestion
     private var slider: Slider = Slider()
     private var currentValue: UILabel = UILabel()
+    private weak var delegate: SurveyQuestionProtocol?
     
     private var intervalStackView: UIStackView = {
         let stackView = UIStackView()
@@ -22,13 +23,13 @@ class SurveyQuestionScale: UIView {
         fatalError("init(coder:) has not been implemented")
     }
     
-    init(surveyQuestion: SurveyQuestion) {
+    init(surveyQuestion: SurveyQuestion, delegate: SurveyQuestionProtocol) {
         guard let minimum = surveyQuestion.minimum,
               let maximum = surveyQuestion.maximum,
               let interval = surveyQuestion.interval else {
             fatalError("Minimum, Maximum and interval are required in Scale question")
         }
-        
+        self.delegate = delegate
         self.surveyQuestion = surveyQuestion
         super.init(frame: .zero)
         self.configureSlider(minimum: minimum, maximum: maximum, interval: interval)
@@ -123,5 +124,6 @@ class SurveyQuestionScale: UIView {
         let actualValue = self.values[value - 1]
         self.currentValue.text = "\(actualValue)"
         self.slider.setValue(Float(actualValue), animated: true)
+        self.delegate?.answerDidChange(self.surveyQuestion, answer: actualValue)
     }
 }

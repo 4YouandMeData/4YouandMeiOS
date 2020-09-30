@@ -5,7 +5,7 @@
 //  Created by Giuseppe Lapenta on 27/09/2020.
 //
 
-class SurveyQuestionNumerical: UIView, SurveyQuestionProtocol, UIPickerViewDelegate, UIPickerViewDataSource {
+class SurveyQuestionNumerical: UIView, UIPickerViewDelegate, UIPickerViewDataSource {
     
     var surveyQuestion: SurveyQuestion
     
@@ -13,13 +13,17 @@ class SurveyQuestionNumerical: UIView, SurveyQuestionProtocol, UIPickerViewDeleg
     private let minumum: Int
     private let maximum: Int
     private var items: [String] = [String]()
+    private weak var delegate: SurveyQuestionProtocol?
     
-    init(surveyQuestion: SurveyQuestion) {
+    init(surveyQuestion: SurveyQuestion, delegate: SurveyQuestionProtocol) {
         self.surveyQuestion = surveyQuestion
         
         guard let minimum = self.surveyQuestion.minimum, let maximum = self.surveyQuestion.maximum else {
             fatalError("Minimum and Maximum are required in numerical question")
         }
+        
+        self.delegate = delegate
+        self.surveyQuestion = surveyQuestion
         self.minumum = Int(minimum)
         self.maximum = Int(maximum)
         self.numberOfItems = self.maximum - self.minumum
@@ -31,8 +35,6 @@ class SurveyQuestionNumerical: UIView, SurveyQuestionProtocol, UIPickerViewDeleg
         pickerView.delegate = self
         pickerView.dataSource = self
         pickerView.backgroundColor = .clear
-//        pickerView.tintColor = ColorPalette.color(withType: .primary)
-//        pickerView.subviews[1].backgroundColor = ColorPalette.color(withType: .primary)
         
         self.addSubview(pickerView)
         pickerView.autoPinEdgesToSuperviewEdges()
@@ -72,20 +74,6 @@ class SurveyQuestionNumerical: UIView, SurveyQuestionProtocol, UIPickerViewDeleg
     
     // MARK: Picker Delegate
     
-//    func pickerView(_ pickerView: UIPickerView, attributedTitleForRow row: Int, forComponent component: Int) -> NSAttributedString? {
-//
-//        let color = pickerView.selectedRow(inComponent: component) == row ?
-//            ColorPalette.color(withType: .secondaryText) :
-//            ColorPalette.color(withType: .primaryText)
-//
-//        let attributeString = NSAttributedString.create(withText: self.items[row],
-//                                                        fontStyle: .header2,
-//                                                        color: color)
-//
-//        return attributeString
-//
-//    }
-    
     func pickerView(_ pickerView: UIPickerView, titleForRow row: Int, forComponent component: Int) -> String? {
         return self.items[row]
     }
@@ -102,6 +90,7 @@ class SurveyQuestionNumerical: UIView, SurveyQuestionProtocol, UIPickerViewDeleg
                                                         color: ColorPalette.color(withType: .secondaryText))
         view?.label.attributedText = attributeString
         view?.label.layer.backgroundColor = ColorPalette.color(withType: .primary).cgColor
+        self.delegate?.answerDidChange(self.surveyQuestion, answer: self.items[row])
     }
     
     func pickerView(_ pickerView: UIPickerView, viewForRow row: Int, forComponent component: Int, reusing view: UIView?) -> UIView {

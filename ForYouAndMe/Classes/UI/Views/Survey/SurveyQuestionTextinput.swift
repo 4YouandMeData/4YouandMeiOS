@@ -7,9 +7,9 @@
 
 class SurveyQuestionTextInput: UIView, UITextViewDelegate {
     
-    var surveyQuestion: SurveyQuestion
-    var answer: String = String()
-    var labelLimit: UILabel = {
+    private var surveyQuestion: SurveyQuestion
+    private var answer: String = String()
+    private var labelLimit: UILabel = {
         let label = UILabel()
         label.textAlignment = .right
         label.font = FontPalette.fontStyleData(forStyle: .header3).font
@@ -19,10 +19,13 @@ class SurveyQuestionTextInput: UIView, UITextViewDelegate {
     
     private var placeholderLabel: UILabel!
     private var maxCharacters: Int = 0
-    fileprivate static let optionWidth: CGFloat = 74.0
+    private static let optionWidth: CGFloat = 74.0
+    private weak var delegate: SurveyQuestionProtocol?
     
-    init(surveyQuestion: SurveyQuestion) {
+    init(surveyQuestion: SurveyQuestion, delegate: SurveyQuestionProtocol) {
         self.surveyQuestion = surveyQuestion
+        self.delegate = delegate
+        
         super.init(frame: .zero)
         
         let stackView = UIStackView()
@@ -79,5 +82,7 @@ class SurveyQuestionTextInput: UIView, UITextViewDelegate {
             textView.layer.borderColor = UIColor.red.cgColor
             self.labelLimit.textColor = .red
         }
+        
+        self.delegate?.answerDidChange(self.surveyQuestion, answer: textView.text)
     }
 }

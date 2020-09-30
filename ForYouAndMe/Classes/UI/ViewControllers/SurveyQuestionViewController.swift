@@ -18,7 +18,8 @@ protocol SurveyQuestionViewCoordinator {
     func onSurveyQuestionSkipped(questionId: String)
 }
 
-class SurveyQuestionViewController: UIViewController {
+class SurveyQuestionViewController: UIViewController,
+                                    SurveyQuestionProtocol {
     
     private let pageData: SurveyQuestionPageData
     private let coordinator: SurveyQuestionViewCoordinator
@@ -84,8 +85,8 @@ class SurveyQuestionViewController: UIViewController {
 //                                           colorType: .primaryText)
 //        stackView.addBlankSpace(space: 40.0)
         
-        // TODO: Survey picker view
-        let questionPicker = SurveyQuestionPickerFactory.getSurveyQuestionPicker(for: self.pageData.question)
+        let questionPicker = SurveyQuestionPickerFactory.getSurveyQuestionPicker(for: self.pageData.question, delegate: self)
+        
         stackView.addArrangedSubview(questionPicker)
         
         // Bottom View
@@ -98,16 +99,16 @@ class SurveyQuestionViewController: UIViewController {
         let tap = UITapGestureRecognizer(target: self, action: #selector(self.tapView))
         self.view.addGestureRecognizer(tap)
         
-        // TODO: Remove (Test Purpose)
-        switch self.pageData.question.questionType {
-        case .numerical: self.answer = "2"
-        case .pickOne: self.answer = "1"
-        case .pickMany: self.answer = ["3", "1"]
-        case .textInput: self.answer = "Ok"
-        case .dateInput: self.answer = "2000-03-01"
-        case .scale: self.answer = 3
-        case .range: self.answer = 4
-        }
+//        // TODO: Remove (Test Purpose)
+//        switch self.pageData.question.questionType {
+//        case .numerical: self.answer = "2"
+//        case .pickOne: self.answer = "1"
+//        case .pickMany: self.answer = ["3", "1"]
+//        case .textInput: self.answer = "Ok"
+//        case .dateInput: self.answer = "2000-03-01"
+//        case .scale: self.answer = 3
+//        case .range: self.answer = 4
+//        }
         
         self.updateConfirmButton()
     }
@@ -155,5 +156,20 @@ class SurveyQuestionViewController: UIViewController {
     
     private func updateConfirmButton() {
         self.confirmButtonView.setButtonEnabled(enabled: self.answer != nil)
+    }
+    
+    // MARK: Delegate
+    func answerDidChange(_ surveyQuestion: SurveyQuestion, answer: Any) {
+        print(answer)
+        self.answer = answer
+//        switch self.pageData.question.questionType {
+//        case .numerical: self.answer = "2"
+//        case .pickOne: self.answer = "1"
+//        case .pickMany: self.answer = ["3", "1"]
+//        case .textInput: self.answer = "Ok"
+//        case .dateInput: self.answer = "2000-03-01"
+//        case .scale: self.answer = 3
+//        case .range: self.answer = 4
+//        }
     }
 }

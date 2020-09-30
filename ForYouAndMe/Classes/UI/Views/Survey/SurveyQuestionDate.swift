@@ -7,16 +7,19 @@
 
 class SurveyQuestionDate: UIView {
     
-    var surveyQuestion: SurveyQuestion
-    var minDate: Date
-    var maxDate: Date
+    private var surveyQuestion: SurveyQuestion
+    private var minDate: Date
+    private var maxDate: Date
+    private weak var delegate: SurveyQuestionProtocol?
     
-    init(surveyQuestion: SurveyQuestion) {
-        self.surveyQuestion = surveyQuestion
+    init(surveyQuestion: SurveyQuestion, delegate: SurveyQuestionProtocol) {
         
-        guard let minDate = self.surveyQuestion.minimumDate, let maxDate = self.surveyQuestion.maximumDate else {
-            fatalError("Date requested min and max date")
+        guard let minDate = surveyQuestion.minimumDate, let maxDate = surveyQuestion.maximumDate else {
+            fatalError("Date Picker request min and max date")
         }
+        
+        self.delegate = delegate
+        self.surveyQuestion = surveyQuestion
         self.minDate = minDate
         self.maxDate = maxDate
         super.init(frame: .zero)
@@ -48,5 +51,6 @@ class SurveyQuestionDate: UIView {
 
     @objc func handleDatePicker(_ datePicker: UIDatePicker) {
         print("\(datePicker.date)")
+        self.delegate?.answerDidChange(self.surveyQuestion, answer: datePicker.date.string(withFormat: dateFormat))
     }
 }

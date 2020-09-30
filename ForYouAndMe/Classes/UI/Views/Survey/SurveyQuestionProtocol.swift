@@ -7,6 +7,6 @@
 
 import Foundation
 
-protocol SurveyQuestionProtocol {
-    
+protocol SurveyQuestionProtocol: class {
+    func answerDidChange(_ surveyQuestion: SurveyQuestion, answer: Any)
 }
