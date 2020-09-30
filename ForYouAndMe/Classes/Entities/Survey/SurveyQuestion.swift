@@ -30,9 +30,9 @@ struct SurveyQuestion {
     var image: UIImage?
     
     // Details
-    var minimum: Double?
-    var maximum: Double?
-    var interval: Double?
+    var minimum: Int?
+    var maximum: Int?
+    var interval: Int?
     @NilIfEmptyString
     var minimumDisplay: String?
     @NilIfEmptyString

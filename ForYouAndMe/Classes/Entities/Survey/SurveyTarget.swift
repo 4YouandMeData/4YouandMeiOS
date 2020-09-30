@@ -17,8 +17,8 @@ struct SurveyTarget {
     
     @FailableEnumStringDecodable
     var criteria: SurveyTargetCriteria?
-    let minimum: Double?
-    let maximum: Double?
+    let minimum: Int?
+    let maximum: Int?
     let questionId: String
 }
 

@@ -104,9 +104,9 @@ class SurveyQuestionViewController: UIViewController {
         case .pickOne: self.answer = "1"
         case .pickMany: self.answer = ["3", "1"]
         case .textInput: self.answer = "Ok"
-        case .dateInput: self.answer = "2001-03-01"
-        case .scale: self.answer = 3.0
-        case .range: self.answer = [2.0, 5.0]
+        case .dateInput: self.answer = "2000-03-01"
+        case .scale: self.answer = 3
+        case .range: self.answer = 4
         }
         
         self.updateConfirmButton()
