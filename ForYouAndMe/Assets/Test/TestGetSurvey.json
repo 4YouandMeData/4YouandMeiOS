@@ -30,7 +30,7 @@
               "criteria": "range",
               "min": 2,
               "max": 6,
-              "question_id": "7"
+              "question_id": "6"
             }
           ]
         },
@@ -128,6 +128,26 @@
           "targets": [
             {
               "id": "5",
+              "type": "survey_target",
+              "criteria": "range",
+              "min": 2,
+              "max": 6,
+              "question_id": "exit"
+            }
+          ]
+        },
+        {
+          "id": "6",
+          "type": "survey_question",
+          "image": "base_64_image_data",
+          "body": "Choose a number",
+          "question_type": "scale",
+          "min": 2,
+          "max": 10,
+          "interval": 1,
+          "targets": [
+            {
+              "id": "4",
               "type": "survey_target",
               "criteria": "range",
               "min": 2,

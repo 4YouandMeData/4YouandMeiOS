@@ -35,12 +35,10 @@ class SurveyRangePicker: UIView {
         self.currentValue.font = FontPalette.fontStyleData(forStyle: .title).font
         self.currentValue.textColor = ColorPalette.color(withType: .primaryText)
         self.currentValue.textAlignment = .center
-//        let containerLabel = UIView()
-//        containerLabel.addSubview(self.currentValue)
+
         stackView.addArrangedSubview(self.currentValue)
         self.currentValue.setContentHuggingPriority(UILayoutPriority(251), for: .vertical)
-//        self.currentValue.setContentCompressionResistancePriority(UILayoutPriority(100), for: .vertical)
-//
+
         stackView.addBlankSpace(space: 40)
         
         self.slider.addTarget(self, action: #selector(changeValue(_:)), for: .valueChanged)
@@ -49,8 +47,6 @@ class SurveyRangePicker: UIView {
         self.slider.maximumValue = Float(maximum)
         self.slider.setup()
         stackView.addArrangedSubview(self.slider)
-//        self.slider.setContentHuggingPriority(UILayoutPriority(101), for: .vertical)
-//        self.slider.setContentCompressionResistancePriority(UILayoutPriority(101), for: .vertical)
         
         stackView.addBlankSpace(space: 20)
 
