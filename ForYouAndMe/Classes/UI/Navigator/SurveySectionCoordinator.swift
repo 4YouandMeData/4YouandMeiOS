@@ -139,9 +139,9 @@ extension SurveySectionCoordinator: SurveyQuestionViewCoordinator {
                     .first(where: { optionsIdentifiers.contains($0.id) && $0.targets?.first != nil })?.targets?.first
             }
         case .textInput:
-            self.showNextSurveyQuestion(questionId: result.question.id)
+            break
         case .dateInput:
-            self.showNextSurveyQuestion(questionId: result.question.id)
+            break
         case .scale:
             if let numericValue = result.numericValue {
                 matchingTarget = result.question.targets?.getTargetMatchingCriteria(forNumber: numericValue)
