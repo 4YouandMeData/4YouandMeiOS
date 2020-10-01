@@ -10,8 +10,8 @@ import UIKit
 ///It's a custom switch properties Model structure
 struct CustomSegmentViewProperties {
     var backgroundColor: UIColor = ColorPalette.color(withType: .secondary)
-    var sliderColor: [UIColor] = [ColorPalette.color(withType: .primary)]
-    var sliderInsideTextColor: UIColor = ColorPalette.color(withType: .primaryText)
+    var sliderColor: [UIColor] = [ColorPalette.color(withType: .active)]
+    var sliderInsideTextColor: UIColor = ColorPalette.color(withType: .fourthText)
     var sliderOutsideTextColor: UIColor = ColorPalette.color(withType: .secondaryText)
     var font: UIFont = FontPalette.fontStyleData(forStyle: .header3).font
     var cornerRadius: CGFloat = 0
@@ -42,7 +42,11 @@ extension CustomSegmentViewDelegate {
 @IBDesignable class CustomSegmentView: UIControl {
     // MARK: - ALL PRIVATE PROPERTIES -
     fileprivate var backgroundView: UIView = UIView()
-    fileprivate var sliderView: GradientView = GradientView(type: .primaryBackground)
+    fileprivate var sliderView: UIView = {
+        let view = UIView()
+        view.backgroundColor = ColorPalette.color(withType: .active)
+        return view
+    }()
     fileprivate var properties: CustomSegmentViewProperties!
     fileprivate var innerLabels: [UILabel] = []
     fileprivate var outerLabels: [UILabel] = []
