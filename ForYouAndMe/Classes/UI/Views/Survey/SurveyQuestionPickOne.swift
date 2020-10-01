@@ -50,7 +50,7 @@ class SurveyQuestionPickOne: UIView {
             button.tag = Int(option.id) ?? 0
             if self.currentIndexSelected == button.tag {
                 button.setImage(ImagePalette.templateImage(withName: .radioButtonFilled), for: .normal)
-                button.imageView?.tintColor = ColorPalette.color(withType: .active)
+                button.imageView?.tintColor = ColorPalette.color(withType: .primary)
             } else {
                 button.setImage(ImagePalette.templateImage(withName: .radioButtonOutline), for: .normal)
                 button.imageView?.tintColor = ColorPalette.color(withType: .inactive)
