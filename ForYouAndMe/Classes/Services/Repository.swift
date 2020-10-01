@@ -64,6 +64,9 @@ protocol Repository: class {
     // User
     func refreshUser() -> Single<User>
     func sendUserInfoParameters(userParameterRequests: [UserInfoParameterRequest]) -> Single<()>
+    // User Data
+    func getUserData() -> Single<UserData>
+    func getUserDataAggregation(period: StudyPeriod) -> Single<[UserDataAggregation]>
     // Survey
     func getSurvey(surveyId: String) -> Single<SurveyGroup>
     func sendSurveyTaskResult(surveyTaskId: String, results: [SurveyResult]) -> Single<()>

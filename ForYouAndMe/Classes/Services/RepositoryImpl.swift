@@ -260,6 +260,18 @@ extension RepositoryImpl: Repository {
             .handleError()
     }
     
+    // MARK: - User Data
+    
+    func getUserData() -> Single<UserData> {
+        return self.api.send(request: ApiRequest(serviceRequest: .getUserData))
+            .handleError()
+    }
+    
+    func getUserDataAggregation(period: StudyPeriod) -> Single<[UserDataAggregation]> {
+        return self.api.send(request: ApiRequest(serviceRequest: .getUserDataAggregation(period: period)))
+            .handleError()
+    }
+    
     // MARK: - Survey
     
     func getSurvey(surveyId: String) -> Single<SurveyGroup> {

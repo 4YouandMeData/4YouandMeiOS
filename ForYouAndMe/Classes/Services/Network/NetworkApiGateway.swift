@@ -324,6 +324,11 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             return "v1/users/me"
         case .sendUserInfoParameters:
             return "v1/users" // TODO: Check against final API specs
+        // User Data
+        case .getUserData:
+            return "v1/studies/\(studyId)/your_data"
+        case .getUserDataAggregation(let period):
+            return "v1/studies/\(studyId)/user_data_aggregations/\(period.networkValue)"
         // Survey
         case .getSurvey(let surveyId):
             return "v1/survey_group/\(surveyId)"  // TODO: Check against final API specs
@@ -347,7 +352,9 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
              .getFeeds,
              .getTasks,
              .getSurvey, // TODO: Check against final API specs
-             .getUser:
+             .getUser,
+             .getUserData,
+             .getUserDataAggregation:
             return .get
         case .submitPhoneNumber,
              .verifyPhoneNumber,
@@ -404,6 +411,9 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         // User
         case .getUser: return Bundle.getTestData(from: "TestGetUser")
         case .sendUserInfoParameters: return "{}".utf8Encoded
+        // User Data
+        case .getUserData: return Bundle.getTestData(from: "TestGetUserData")
+        case .getUserDataAggregation: return Bundle.getTestData(from: "TestGetUserDataAggregation")
         // Survey
         case .getSurvey: return Bundle.getTestData(from: "TestGetSurvey")
         case .sendSurveyTaskResultData: return "{}".utf8Encoded
@@ -423,7 +433,9 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
              .getFeeds,
              .getTasks,
              .getSurvey,
-             .getUser:
+             .getUser,
+             .getUserData,
+             .getUserDataAggregation:
             return .requestPlain
         case .submitPhoneNumber(let phoneNumber):
             var params: [String: Any] = [:]
@@ -534,7 +546,9 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
              .sendUserInfoParameters,
              .getSurvey,
              .sendSurveyTaskResultData,
-             .getUser:
+             .getUser,
+             .getUserData,
+             .getUserDataAggregation:
             return .bearer
         }
     }
@@ -589,6 +603,17 @@ fileprivate extension FileDataExtension {
     var mimeType: String {
         switch self {
         case .mp4: return "video/mp4"
+        }
+    }
+}
+
+fileprivate extension StudyPeriod {
+    var networkValue: String {
+        switch self {
+        case .day: return "last_day"
+        case .week: return "last_week"
+        case .month: return "last_month"
+        case .year: return "last_year"
         }
     }
 }

@@ -5,9 +5,8 @@
 //  Created by Leonardo Passeri on 22/07/2020.
 //
 
-import Foundation
-
 import UIKit
+import RxSwift
 
 class UserDataViewController: UIViewController, CustomSegmentViewDelegate {
     
@@ -64,6 +63,15 @@ class UserDataViewController: UIViewController, CustomSegmentViewDelegate {
         return stackView
     }()
     
+    private lazy var periodSegmentView: CustomSegmentView = {
+        var segmentProperties = CustomSegmentViewProperties.init(switchTexts: [.day, .week, .month, .year])
+        segmentProperties.sliderOffset = 0
+        let segmentView = CustomSegmentView(frame: .zero, switchProperties: segmentProperties)
+        segmentView.autoSetDimension(.height, toSize: 47)
+        segmentView.switchDelegate = self
+        return segmentView
+    }()
+    
     private lazy var dataView: UIView = {
         let view = UIView()
         let stackView = UIStackView.create(withAxis: .vertical, spacing: 30.0)
@@ -77,12 +85,7 @@ class UserDataViewController: UIViewController, CustomSegmentViewDelegate {
                            colorType: .primaryText,
                            textAlignment: .left)
         
-        var segmentProperties = CustomSegmentViewProperties.init(switchTexts: [.day, .week, .month, .year])
-        segmentProperties.sliderOffset = 0
-        let segmentView = CustomSegmentView(frame: .zero, switchProperties: segmentProperties)
-        stackView.addArrangedSubview(segmentView)
-        segmentView.autoSetDimension(.height, toSize: 47)
-        segmentView.switchDelegate = self
+        stackView.addArrangedSubview(self.periodSegmentView)
         stackView.addArrangedSubview(self.chartStackView)
         return view
     }()
@@ -99,6 +102,8 @@ class UserDataViewController: UIViewController, CustomSegmentViewDelegate {
     private let navigator: AppNavigator
     private let repository: Repository
     private let analytics: AnalyticsService
+    
+    private let disposeBag = DisposeBag()
     
     init() {
         self.navigator = Services.shared.navigator
@@ -142,6 +147,30 @@ class UserDataViewController: UIViewController, CustomSegmentViewDelegate {
     // MARK: - Private Methods
     
     private func refreshUI() {
+        
+        self.navigator.pushProgressHUD()
+        self.repository.getUserData().subscribe(onSuccess: { userData in
+            self.navigator.popProgressHUD()
+            print("UserViewController - UserData: '\(userData)'")
+        }, onError: { [weak self] error in
+            guard let self = self else { return }
+            print("UserViewController - Error fetching UserData: '\(error)'")
+            self.navigator.popProgressHUD()
+            self.navigator.handleError(error: error, presenter: self)
+        }).disposed(by: self.disposeBag)
+        
+        self.navigator.pushProgressHUD()
+        let startingPeriod = StudyPeriod.allCases[self.periodSegmentView.selectedIndex]
+        self.repository.getUserDataAggregation(period: startingPeriod).subscribe(onSuccess: { userDataAggregation in
+            self.navigator.popProgressHUD()
+            print("UserViewController - UserDataAggregation: '\(userDataAggregation)'")
+        }, onError: { [weak self] error in
+            guard let self = self else { return }
+            print("UserViewController - Error fetching UserDataAggregation: '\(error)'")
+            self.navigator.popProgressHUD()
+            self.navigator.handleError(error: error, presenter: self)
+        }).disposed(by: self.disposeBag)
+
         // TODO: replace this with actual refresh
         self.navigator.pushProgressHUD()
         let closure: (() -> Void) = {

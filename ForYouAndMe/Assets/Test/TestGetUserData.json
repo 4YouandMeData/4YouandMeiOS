@@ -1,0 +1,13 @@
+{
+  "data": {
+    "id": "1",
+    "type": "your_data",
+    "attributes": {
+      "created_at": "2020-10-01T10:48:49.355Z",
+      "updated_at": "2020-10-01T10:48:49.355Z",
+      "title": "Test Title",
+      "body": "Test Body",
+      "stars": 4
+    }
+  }
+}

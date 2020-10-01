@@ -6,7 +6,6 @@
 //
 
 import Foundation
-import Mapper
 
 struct User: Codable {
     let id: String
