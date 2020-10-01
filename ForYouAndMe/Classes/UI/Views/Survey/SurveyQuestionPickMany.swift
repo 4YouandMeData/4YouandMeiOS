@@ -49,7 +49,7 @@ class SurveyQuestionPickMany: UIView {
             checkBox.isCheckedSubject
                 .subscribe(onNext: { check in
                     self.answers.updateValue(check, forKey: "\(checkBox.tag)")
-                    let answers = self.answers.compactMap {$0}.filter({ $1 == true }).map {    $0.key}
+                    let answers = self.answers.filter({ $1 == true }).map { $0.key }
                     self.delegate?.answerDidChange(self.surveyQuestion,
                                                    answer: answers)
                 })
