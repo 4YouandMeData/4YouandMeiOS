@@ -20,17 +20,17 @@ class TremorTask {
     }
     
     static func getNetworkResultData(taskResult: ORKTaskResult) -> TaskNetworkResult? {
-        let leftHandIdentifier = "left"
-        let mostAffectedHandIdentifier = "mostAffected"
-        let rightHandIdentifier = "right"
+        let leftHandIdentifier = ORKActiveTaskLeftHandIdentifier
+        let mostAffectedHandIdentifier = ORKActiveTaskMostAffectedHandIdentifier
+        let rightHandIdentifier = ORKActiveTaskRightHandIdentifier
         
-        let skipHandIdentifier = "skipHand"
+        let skipHandIdentifier = ORKActiveTaskSkipHandStepIdentifier
         
-        let inLapStepIdentifier = "tremor.handInLap"
-        let extendArmStepIdentifier = "tremor.handAtShoulderLength"
-        let bendArmStepIdentifier = "tremor.handAtShoulderLengthWithElbowBent"
-        let touchNoseStepIdentifier = "tremor.handToNose"
-        let turnWristStepIdentifier = "tremor.handQueenWave"
+        let inLapStepIdentifier = ORKTremorTestInLapStepIdentifier
+        let extendArmStepIdentifier = ORKTremorTestExtendArmStepIdentifier
+        let bendArmStepIdentifier = ORKTremorTestBendArmStepIdentifier
+        let touchNoseStepIdentifier = ORKTremorTestTouchNoseStepIdentifier
+        let turnWristStepIdentifier = ORKTremorTestTurnWristStepIdentifier
         
         let skipHandAnswerResultInfo: ORKChoiceQuestionResult? = taskResult.getResult(forIdentifier: skipHandIdentifier)?.first
 

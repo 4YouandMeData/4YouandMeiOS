@@ -261,11 +261,6 @@ extension Array where Element == ORKFileResult {
                 result[TaskNetworkParameter.locationInfo.rawValue] = value
             case TaskRecorderIdentifier.heartRate.rawValue:
                 result[TaskNetworkParameter.heartRate.rawValue] = value
-            // TODO: Remove these ones when Tremor task has been fixed on ResearchKit
-            case _ where fileResult.identifier.hasSuffix(TaskRecorderIdentifier.accelerometerAltSuffix.rawValue):
-                result[TaskNetworkParameter.accelerometerInfo.rawValue] = value
-            case _ where fileResult.identifier.hasSuffix(TaskRecorderIdentifier.deviceMotionAltSuffix.rawValue):
-                result[TaskNetworkParameter.deviceMotionInfo.rawValue] = value
             default:
                 break
             }

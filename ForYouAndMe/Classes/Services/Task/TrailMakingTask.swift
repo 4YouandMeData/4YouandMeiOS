@@ -18,7 +18,7 @@ class TrailMakingTask {
     }
     
     static func getNetworkResultData(taskResult: ORKTaskResult) -> TaskNetworkResult? {
-        let trailMakingIdentifier = "trailmaking" // TODO: Replace with pod identifier when available on FYAMResearchKit
+        let trailMakingIdentifier = ORKTrailmakingStepIdentifier
         guard let trailMakingResult: ORKTrailmakingResult = taskResult.getResult(forIdentifier: trailMakingIdentifier)?.first else {
             assertionFailure("Couldn't find expected result data")
             return nil

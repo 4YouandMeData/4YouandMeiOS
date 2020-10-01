@@ -20,13 +20,13 @@ class WalkTask {
     }
     
     static func getNetworkResultData(taskResult: ORKTaskResult) -> TaskNetworkResult? {
-        let formStepIdentifier = "timed.walk.form"
-        let formAfoStepIdentifier = "timed.walk.form.afo"
-        let formAssitanceStepIdentifier = "timed.walk.form.assistance"
+        let formStepIdentifier = ORKTimedWalkFormStepIdentifier
+        let formAfoStepIdentifier = ORKTimedWalkFormAFOStepIdentifier
+        let formAssitanceStepIdentifier = ORKTimedWalkFormAssistanceStepIdentifier
         
-        let trial1StepIdentifier = "timed.walk.trial1"
-        let turnAroundStepIdentifier = "timed.walk.turn.around"
-        let trial2StepIdentifier = "timed.walk.trial2"
+        let trial1StepIdentifier = ORKTimedWalkTrial1StepIdentifier
+        let turnAroundStepIdentifier = ORKTimedWalkTurnAroundStepIdentifier
+        let trial2StepIdentifier = ORKTimedWalkTrial2StepIdentifier
         
         let formStepResultInfo: [ORKQuestionResult]? = taskResult.getResult(forIdentifier: formStepIdentifier)
         
