@@ -25,7 +25,7 @@ class SurveyQuestionViewController: UIViewController,
     private let coordinator: SurveyQuestionViewCoordinator
     
     private lazy var confirmButtonView: GenericButtonView = {
-        let view = GenericButtonView(withImageStyleCategory: .primaryBackground)
+        let view = GenericButtonView(withImageStyleCategory: .secondaryBackground)
         view.addTarget(target: self, action: #selector(self.confirmButtonPressed))
         return view
     }()
@@ -90,11 +90,9 @@ class SurveyQuestionViewController: UIViewController,
         stackView.addArrangedSubview(questionPicker)
         
         // Bottom View
-        let bottomView = GenericButtonView(withImageStyleCategory: .secondaryBackground)
-        bottomView.addTarget(target: self, action: #selector(self.confirmButtonPressed))
-        self.view.addSubview(bottomView)
-        bottomView.autoPinEdgesToSuperviewSafeArea(with: UIEdgeInsets.zero, excludingEdge: .top)
-        stackView.autoPinEdge(.bottom, to: .top, of: bottomView)
+        self.view.addSubview(self.confirmButtonView)
+        self.confirmButtonView.autoPinEdgesToSuperviewSafeArea(with: UIEdgeInsets.zero, excludingEdge: .top)
+        stackView.autoPinEdge(.bottom, to: .top, of: self.confirmButtonView)
         
         let tap = UITapGestureRecognizer(target: self, action: #selector(self.tapView))
         self.view.addGestureRecognizer(tap)
