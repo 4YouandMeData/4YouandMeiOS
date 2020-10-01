@@ -320,6 +320,8 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         case .sendTaskResultFile(let taskId, _):
             return "v1/tasks/\(taskId)/attach"
         // User
+        case .getUser:
+            return "v1/user" // TODO: Check against final API specs
         case .sendUserInfoParameters:
             return "v1/user" // TODO: Check against final API specs
         // Survey
@@ -344,7 +346,8 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
              .getWearablesSection,
              .getFeeds,
              .getTasks,
-             .getSurvey: // TODO: Check against final API specs
+             .getSurvey, // TODO: Check against final API specs
+             .getUser:
             return .get
         case .submitPhoneNumber,
              .verifyPhoneNumber,
@@ -369,7 +372,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         case .getGlobalConfig: return Bundle.getTestData(from: "TestGetGlobalConfig")
         // Login
         case .submitPhoneNumber: return "{}".utf8Encoded
-        case .verifyPhoneNumber: return Bundle.getTestData(from: "TestGetVerifyPhoneNumber")
+        case .verifyPhoneNumber: return Bundle.getTestData(from: "TestGetUserNoOnboarding")
         // Screening Section
         case .getScreeningSection: return Bundle.getTestData(from: "TestGetScreeningSection")
         // Informed Consent Section
@@ -395,10 +398,11 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         // Answers
         case .sendAnswer: return "{}".utf8Encoded
         // Task
-        case .getFeeds, .getTasks: return Bundle.getTestData(from: "TestGetTasks") // TODO add feeds test to bundle
+        case .getFeeds, .getTasks: return Bundle.getTestData(from: "TestGetTasks")
         case .sendTaskResultData: return "{}".utf8Encoded
         case .sendTaskResultFile: return "{}".utf8Encoded
         // User
+        case .getUser: return Bundle.getTestData(from: "TestGetUser")
         case .sendUserInfoParameters: return "{}".utf8Encoded
         // Survey
         case .getSurvey: return Bundle.getTestData(from: "TestGetSurvey")
@@ -418,7 +422,8 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
              .getWearablesSection,
              .getFeeds,
              .getTasks,
-             .getSurvey:
+             .getSurvey,
+             .getUser:
             return .requestPlain
         case .submitPhoneNumber(let phoneNumber):
             var params: [String: Any] = [:]
@@ -528,7 +533,8 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
              .sendTaskResultFile,
              .sendUserInfoParameters,
              .getSurvey,
-             .sendSurveyTaskResultData:
+             .sendSurveyTaskResultData,
+             .getUser:
             return .bearer
         }
     }

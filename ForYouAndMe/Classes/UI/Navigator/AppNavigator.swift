@@ -70,9 +70,7 @@ class AppNavigator {
         #endif
         
         if self.repository.isLoggedIn {
-            // TODO: Check if onboarding is completed
-            print("TODO: Check if onboarding is completed")
-            var onboardingCompleted = false
+            var onboardingCompleted = self.repository.currentUser?.isOnboardingCompleted ?? false
             #if DEBUG
             if let testOnboardingCompleted = Constants.Test.OnboardingCompleted {
                 onboardingCompleted = testOnboardingCompleted
@@ -190,6 +188,18 @@ class AppNavigator {
     }
     
     public func onLoginCompleted(presenter: UIViewController) {
+        guard let currentUser = self.repository.currentUser else {
+            assertionFailure("Missing current user right after login")
+            return
+        }
+        if currentUser.isOnboardingCompleted {
+            self.goHome()
+        } else {
+            self.startOnboarding(presenter: presenter)
+        }
+    }
+    
+    private func startOnboarding(presenter: UIViewController) {
         guard let navigationController = presenter.navigationController else {
             assertionFailure("Missing UINavigationController")
             return

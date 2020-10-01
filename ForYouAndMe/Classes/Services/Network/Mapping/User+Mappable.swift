@@ -14,5 +14,6 @@ extension User: Mappable {
         try self.studyId = map.from("study_id")
         try self.phoneNumber = map.from("phone_number")
         self.email = map.optionalFrom("email")
+        try self.isOnboardingCompleted = map.from("onboarding_completed")
     }
 }

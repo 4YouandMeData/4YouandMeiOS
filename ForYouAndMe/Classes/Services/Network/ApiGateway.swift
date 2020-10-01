@@ -49,6 +49,7 @@ enum DefaultService {
     case sendTaskResultData(taskId: String, resultData: TaskNetworkResultData)
     case sendTaskResultFile(taskId: String, resultFile: TaskNetworkResultFile)
     // User
+    case getUser
     case sendUserInfoParameters(paramenters: [UserInfoParameterRequest])
     // Survey
     case getSurvey(surveyId: String)

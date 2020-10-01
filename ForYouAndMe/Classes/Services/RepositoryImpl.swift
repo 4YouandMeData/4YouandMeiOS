@@ -11,6 +11,7 @@ import RxSwift
 
 protocol RepositoryStorage {
     var globalConfig: GlobalConfig? { get set }
+    var user: User? { get set }
 }
 
 class RepositoryImpl {
@@ -53,6 +54,10 @@ class RepositoryImpl {
 extension RepositoryImpl: Repository {
     // MARK: - Authentication
     
+    var currentUser: User? {
+        self.storage.user
+    }
+    
     var accessToken: String? {
         self.api.accessToken
     }
@@ -62,6 +67,7 @@ extension RepositoryImpl: Repository {
     }
     
     func logOut() {
+        self.storage.user = nil
         self.api.logOut()
     }
     
@@ -85,6 +91,10 @@ extension RepositoryImpl: Repository {
         return self.api.send(request: ApiRequest(serviceRequest: .verifyPhoneNumber(phoneNumber: phoneNumber,
                                                                                     validationCode: validationCode)))
             .handleError()
+            .do(onSuccess: { (user: User) in
+                print("Current user: \(user)")
+                self.storage.user = user
+            })
             .catchError({ (error)-> Single<(User)> in
                 enum ErrorCode: Int, CaseIterable { case wrongValidationCode = 401 }
                 if let errorCodeNumber = error.getFirstServerError(forExpectedStatusCodes: ErrorCode.allCases.map { $0.rawValue }),
@@ -220,6 +230,15 @@ extension RepositoryImpl: Repository {
     
     // MARK: - User
     
+    func refreshUser() -> Single<User> {
+        return self.api.send(request: ApiRequest(serviceRequest: .getUser))
+            .handleError()
+            .do(onSuccess: { user in
+                print("Current user: \(user)")
+                self.storage.user = user
+            })
+    }
+    
     func sendUserInfoParameters(userParameterRequests: [UserInfoParameterRequest]) -> Single<()> {
         return self.api.send(request: ApiRequest(serviceRequest: .sendUserInfoParameters(paramenters: userParameterRequests)))
             .handleError()
@@ -267,7 +286,18 @@ fileprivate extension PrimitiveSequence where Trait == SingleTrait {
 
 extension RepositoryImpl: InitializableService {
     func initialize() -> Single<()> {
-        return self.fetchGlobalConfig()
+        
+        var requests = self.fetchGlobalConfig()
+        
+        if self.isLoggedIn {
+            requests = requests.flatMap {
+                self.refreshUser()
+                    .toVoid()
+                    .catchErrorJustReturn(())
+            }
+        }
+        
+        return requests
             .do(onSuccess: { self.isInitialized = true })
     }
 }
