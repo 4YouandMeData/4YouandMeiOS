@@ -92,7 +92,7 @@ public class InfoPageViewController: UIViewController, PageProvider {
         
         scrollStackView.stackView.addBlankSpace(space: 40.0)
         // Body
-        scrollStackView.stackView.addHTMLTextView(withText: self.pageData.page.body,
+        scrollStackView.stackView.addHTMLLabel(withText: self.pageData.page.body,
                                            fontStyle: .paragraph,
                                            colorType: .primaryText,
                                            textAlignment: self.pageData.bodyTextAlignment)
