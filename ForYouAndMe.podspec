@@ -52,6 +52,7 @@ Pod::Spec.new do |s|
   s.dependency 'RxSwiftExt', '~> 5.2.0'
   s.dependency 'FYAMResearchKit', '~> 2.2.0'
   s.dependency 'Charts', '~> 3.5.0'
+  s.dependency 'DTCoreText', '~> 1.6.25'
   
   s.static_framework = true
   

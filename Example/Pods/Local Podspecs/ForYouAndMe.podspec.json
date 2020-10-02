@@ -84,6 +84,9 @@
     ],
     "Charts": [
       "~> 3.5.0"
+    ],
+    "DTCoreText": [
+      "~> 1.6.25"
     ]
   },
   "static_framework": true,
