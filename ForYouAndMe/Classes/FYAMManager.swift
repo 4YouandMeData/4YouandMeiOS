@@ -11,7 +11,6 @@ import FirebaseCore
 
 public class FYAMManager {
     
-    
     public static func startup(withStudyId studyId: String,
                                fontStyleMap: FontStyleMap,
                                checkResourcesAvailability: Bool = false) -> UIWindow {
@@ -37,4 +36,3 @@ public class FYAMManager {
         return window
     }
 }
-

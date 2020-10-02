@@ -8,48 +8,40 @@
 import DTCoreText
 
 extension UIStackView {
-    
+        
     func addHTMLLabel(withText text: String,
                       fontStyle: FontStyle,
                       colorType: ColorType,
                       textAlignment: NSTextAlignment = .center,
-                      underlined: Bool = false,
-                      numberOfLines: Int = 0,
                       horizontalInset: CGFloat = 0) {
+
+        guard let htmlString = text.htmlToAttributedString else {
+            self.addLabel(withText: text, fontStyle: fontStyle, colorType: colorType)
+            fatalError("error parsing HTML text")
+        }
         
-        //TO
-        let attributedString = NSAttributedString.create(withText: text,
-                                                         fontStyle: fontStyle,
-                                                         colorType: colorType,
-                                                         textAlignment: textAlignment,
-                                                         underlined: underlined)
-//        let options = [
-//            DTDefaultLineHeightMultiplier: 1.2,
-//            DTDefaultTextColor: ColorPalette.color(withType: colorType),
-//            DTDefaultTextAlignment: NSNumber(value: textAlignment.rawValue)
-//        ] as [String: Any]
-//        let data = text.data(using: .utf8)
-//        let attributedString = NSAttributedString(htmlData: data,
-//                                                  options: nil,
-//                                                  documentAttributes: nil)
-//
-        self.addHTMLLabel(attributedString: text.htmlToAttributedString ?? NSAttributedString(),
-                          numberOfLines: numberOfLines,
+        let attributedString = NSMutableAttributedString(attributedString: htmlString)
+        attributedString.setColor(ColorPalette.color(withType: colorType))
+        attributedString.setFont(FontPalette.fontStyleData(forStyle: fontStyle).font)
+        attributedString.setTextAlignment(textAlignment)
+        
+        self.addHTMLLabel(attributedString: attributedString,
                           horizontalInset: horizontalInset)
     }
     
-    func addHTMLLabel(attributedString: NSAttributedString, numberOfLines: Int = 0, horizontalInset: CGFloat = 0) {
-        let label = self.getHTMLLabel(attributedString: attributedString, numberOfLines: numberOfLines)
+    func addHTMLLabel(attributedString: NSAttributedString, horizontalInset: CGFloat = 0) {
+        let label = self.getHTMLLabel(attributedString: attributedString)
         self.addArrangedSubview(label, horizontalInset: horizontalInset)
     }
     
-    private func getHTMLLabel(attributedString: NSAttributedString, numberOfLines: Int = 0) -> UITextView {
+    private func getHTMLLabel(attributedString: NSAttributedString) -> UITextView {
         let label = UITextView()
         label.attributedText = attributedString
         label.isEditable = false
         label.isUserInteractionEnabled = true
+        label.isScrollEnabled = false
         label.dataDetectorTypes = [.all]
-        label.autoSetDimensions(to: CGSize(width: 50, height: 100))
+        label.backgroundColor = .clear
         return label
     }
 }
