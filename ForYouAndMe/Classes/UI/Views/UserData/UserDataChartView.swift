@@ -17,14 +17,10 @@ enum StudyPeriod: Int, CaseIterable {
     
     var title: String {
         switch self {
-        case .day:
-            return "DAY"
-        case .week:
-            return "WEEK"
-        case .month:
-            return "MONTH"
-        case .year:
-            return "YEAR"
+        case .day: return StringsProvider.string(forKey: .tabUserDataPeriodDay)
+        case .week: return StringsProvider.string(forKey: .tabUserDataPeriodWeek)
+        case .month: return StringsProvider.string(forKey: .tabUserDataPeriodMonth)
+        case .year: return StringsProvider.string(forKey: .tabUserDataPeriodYear)
         }
     }
     

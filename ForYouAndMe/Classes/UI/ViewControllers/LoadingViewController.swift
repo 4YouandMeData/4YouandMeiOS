@@ -30,38 +30,8 @@ class LoadingViewController<T>: UIViewController, LoadingPage {
     
     private let disposeBag = DisposeBag()
     
-    private lazy var errorLabel: UILabel = {
-        let label = UILabel()
-        label.numberOfLines = 0
-        return label
-    }()
-    
-    private lazy var retryButton: UIButton = {
-        let button = UIButton()
-        button.apply(style: ButtonTextStyleCategory.loadingErrorStyle.style)
-        button.setTitle(StringsProvider.string(forKey: .errorButtonRetry), for: .normal)
-        button.addTarget(self, action: #selector(self.retryButtonPressed), for: .touchUpInside)
-        return button
-    }()
-    
-    private lazy var errorView: UIView = {
-        let view = UIView()
-        let stackView = UIStackView()
-        stackView.axis = .vertical
-        stackView.addHeaderImage(image: ImagePalette.image(withName: .setupFailure))
-        stackView.addBlankSpace(space: 44.0)
-        stackView.addLabel(withText: StringsProvider.string(forKey: .setupErrorTitle),
-                           fontStyle: .title,
-                           color: ColorPalette.loadingErrorPrimaryColor)
-        stackView.addBlankSpace(space: 44.0)
-        stackView.addArrangedSubview(self.errorLabel)
-        stackView.addBlankSpace(space: 160.0)
-        stackView.addArrangedSubview(self.retryButton)
-        view.addSubview(stackView)
-        stackView.autoPinEdge(toSuperviewEdge: .leading, withInset: Constants.Style.DefaultHorizontalMargins)
-        stackView.autoPinEdge(toSuperviewEdge: .trailing, withInset: Constants.Style.DefaultHorizontalMargins)
-        stackView.autoCenterInSuperview()
-        return view
+    private lazy var errorView: GenericErrorView = {
+        return GenericErrorView(retryButtonCallback: { [weak self] in self?.startLoading() })
     }()
     
     init(loadingMode: LoadingMode<T>) {
@@ -77,11 +47,11 @@ class LoadingViewController<T>: UIViewController, LoadingPage {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        self.view.backgroundColor = ColorPalette.loadingErrorSecondaryColor
+        self.view.backgroundColor = ColorPalette.errorSecondaryColor
         
         self.view.addSubview(self.errorView)
         self.errorView.autoPinEdgesToSuperviewSafeArea()
-        self.hideError()
+        self.errorView.hideView()
         
         if let navigationController = navigationController {
             navigationController.navigationBar.apply(style: NavigationBarStyleCategory.secondary(hidden: false).style)
@@ -95,16 +65,10 @@ class LoadingViewController<T>: UIViewController, LoadingPage {
         self.startLoading()
     }
     
-    // MARK: - Actions
-    
-    @objc private func retryButtonPressed() {
-        self.startLoading()
-    }
-    
     // MARK: - Private Methods
     
     private func startLoading() {
-        self.hideError()
+        self.errorView.hideView()
         self.navigator.pushProgressHUD()
         
         switch self.loadingMode {
@@ -115,7 +79,7 @@ class LoadingViewController<T>: UIViewController, LoadingPage {
                 }, onError: { [weak self] error in
                     guard let self = self else { return }
                     self.navigator.popProgressHUD()
-                    self.showError(error: error)
+                    self.errorView.showViewWithError(error)
                     }, onCompleted: { [weak self] in
                         guard let self = self else { return }
                         self.navigator.popProgressHUD()
@@ -131,21 +95,9 @@ class LoadingViewController<T>: UIViewController, LoadingPage {
                     guard let self = self else { return }
                     self.navigator.popProgressHUD()
                     if false == self.navigator.handleUserNotLoggedError(error: error) {
-                        self.showError(error: error)
+                        self.errorView.showViewWithError(error)
                     }
             }).disposed(by: self.disposeBag)
         }
-    }
-    
-    private func showError(error: Error) {
-        let repositoryError: RepositoryError = (error as? RepositoryError) ?? .genericError
-        self.errorLabel.attributedText = NSAttributedString.create(withText: repositoryError.localizedDescription,
-                                                                   fontStyle: .paragraph,
-                                                                   color: ColorPalette.loadingErrorPrimaryColor)
-        self.errorView.isHidden = false
-    }
-    
-    private func hideError() {
-        self.errorView.isHidden = true
     }
 }

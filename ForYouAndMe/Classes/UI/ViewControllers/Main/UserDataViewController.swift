@@ -101,6 +101,14 @@ class UserDataViewController: UIViewController, CustomSegmentViewDelegate {
         return self.scrollStackView.stackView.arrangedSubviews.count != 0
     }
     
+    private var currentPeriod: StudyPeriod {
+        return StudyPeriod.allCases[self.periodSegmentView.selectedIndex]
+    }
+    
+    private lazy var errorView: GenericErrorView = {
+        return GenericErrorView(retryButtonCallback: { [weak self] in self?.refreshUI() })
+    }()
+    
     private let navigator: AppNavigator
     private let repository: Repository
     private let analytics: AnalyticsService
@@ -135,6 +143,12 @@ class UserDataViewController: UIViewController, CustomSegmentViewDelegate {
         self.view.addSubview(self.scrollStackView)
         self.scrollStackView.autoPinEdgesToSuperviewEdges(with: .zero, excludingEdge: .top)
         self.scrollStackView.autoPinEdge(.top, to: .bottom, of: headerView)
+        
+        // Error View
+        self.view.addSubview(self.errorView)
+        self.errorView.autoPinEdgesToSuperviewSafeArea(with: .zero, excludingEdge: .top)
+        self.errorView.autoPinEdge(.top, to: .bottom, of: headerView)
+        self.errorView.isHidden = true
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -149,41 +163,44 @@ class UserDataViewController: UIViewController, CustomSegmentViewDelegate {
     // MARK: - Private Methods
     
     private func refreshUI() {
-        if false == self.isViewInitialized {
-            // If the view is not initilized, fetch both UserData and UserDataAggregation, prepare UI and show data on UI
-            let currentPeriod = StudyPeriod.allCases[self.periodSegmentView.selectedIndex]
-            let userDataRequest = self.repository.getUserData()
-            let userDataAggregationRequest = self.repository.getUserDataAggregation(period: currentPeriod)
-            
-            self.navigator.pushProgressHUD()
-            // Fetch both UserData and UserDataAggregation
-            Single.zip(userDataRequest, userDataAggregationRequest).subscribe(onSuccess: { [weak self] (userData, userDataAggregations) in
-                guard let self = self else { return }
-                self.navigator.popProgressHUD()
-                // Prepare UI
+        let userDataRequest = self.repository.getUserData()
+        let userDataAggregationRequest = self.repository.getUserDataAggregation(period: self.currentPeriod)
+        
+        self.navigator.pushProgressHUD()
+        // Fetch both UserData and UserDataAggregation
+        Single.zip(userDataRequest, userDataAggregationRequest).subscribe(onSuccess: { [weak self] (userData, userDataAggregations) in
+            guard let self = self else { return }
+            self.errorView.hideView()
+            self.navigator.popProgressHUD()
+            // Prepare UI if needed
+            if false == self.isViewInitialized {
                 self.scrollStackView.stackView.addArrangedSubview(self.summaryView)
                 self.scrollStackView.stackView.addArrangedSubview(self.dataView)
-                // Show data on UI
-                self.refreshSummary(withUserData: userData)
-                self.refreshCharts(withUserDataAggregations: userDataAggregations)
-            }, onError: { [weak self] error in
-                guard let self = self else { return }
-                self.navigator.popProgressHUD()
-                self.navigator.handleError(error: error, presenter: self)
-            }).disposed(by: self.disposeBag)
-        } else {
-            // If the view is initilized, fetch just UserData and show it on UI
-            self.navigator.pushProgressHUD()
-            self.repository.getUserData().subscribe(onSuccess: { [weak self] userData in
-                guard let self = self else { return }
-                self.navigator.popProgressHUD()
-                self.refreshSummary(withUserData: userData)
-            }, onError: { [weak self] error in
-                guard let self = self else { return }
-                self.navigator.popProgressHUD()
-                self.navigator.handleError(error: error, presenter: self)
-            }).disposed(by: self.disposeBag)
-        }
+            }
+            // Show data on UI
+            self.refreshSummary(withUserData: userData)
+            self.refreshCharts(withUserDataAggregations: userDataAggregations)
+        }, onError: { [weak self] error in
+            guard let self = self else { return }
+            self.navigator.popProgressHUD()
+            self.errorView.showViewWithError(error)
+        }).disposed(by: self.disposeBag)
+    }
+    
+    private func refreshCharts(withStudyPeriod studyPeriod: StudyPeriod) {
+        self.navigator.pushProgressHUD()
+        // Fetch UserDataAggregation
+        self.repository.getUserDataAggregation(period: studyPeriod).subscribe(onSuccess: { [weak self] userDataAggregations in
+            guard let self = self else { return }
+            self.navigator.popProgressHUD()
+            // Show data on UI
+            self.refreshCharts(withUserDataAggregations: userDataAggregations)
+        }, onError: { [weak self] error in
+            guard let self = self else { return }
+            self.navigator.popProgressHUD()
+            // TODO: Show custom UI error
+            self.navigator.handleError(error: error, presenter: self)
+        }).disposed(by: self.disposeBag)
     }
     
     private func refreshSummary(withUserData userData: UserData) {
@@ -198,37 +215,18 @@ class UserDataViewController: UIViewController, CustomSegmentViewDelegate {
         // TODO: Implement chart refresh
         self.chartStackView.arrangedSubviews.forEach({ $0.removeFromSuperview() })
 
-        let testChartView1 = UserDataChartView(title: "Your Weight",
-                                               plotColor: UIColor(hexString: "#F57286")!,
-                                               values: ["Test"],
-                                               studyPeriod: .week)
-        self.chartStackView.addArrangedSubview(testChartView1)
-        let testChartView2 = UserDataChartView(title: "Your Daily Steps",
-                                               plotColor: UIColor(hexString: "#54C788")!,
-                                               values: ["Test"],
-                                               studyPeriod: .month)
-        self.chartStackView.addArrangedSubview(testChartView2)
-        let testChartView3 = UserDataChartView(title: "Your Self-Assed Mood",
-                                               plotColor: UIColor(hexString: "#E167AC")!,
-                                               values: ["Test"],
-                                               studyPeriod: .year)
-        self.chartStackView.addArrangedSubview(testChartView3)
-        let testChartView4 = UserDataChartView(title: "Your Self-Assessed Energy",
-                                               plotColor: UIColor(hexString: "#34CBD9")!,
-                                               values: ["Test"],
-                                               studyPeriod: .day)
-        self.chartStackView.addArrangedSubview(testChartView4)
-        
+        userDataAggregations.forEach { userDataAggragation in
+            let testChartView = UserDataChartView(title: userDataAggragation.title ?? "",
+                                                  plotColor: userDataAggragation.color ?? ColorPalette.color(withType: .primary),
+                                                   values: ["Test"],
+                                                   studyPeriod: self.currentPeriod)
+            self.chartStackView.addArrangedSubview(testChartView)
+        }
     }
     
     //Delegate Methods
-    func segmentWillChange(_ studyPeriod: StudyPeriod) {
-        // TODO: handle change of index
-        print("will change")
-    }
     func segmentDidChanged(_ studyPeriod: StudyPeriod) {
-        // TODO: handle change of index
+        self.refreshCharts(withStudyPeriod: studyPeriod)
         self.analytics.track(event: .yourDataSelectionPeriod(studyPeriod.title))
-        print("did change")
     }
 }

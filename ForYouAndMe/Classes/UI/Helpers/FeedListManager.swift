@@ -65,6 +65,10 @@ class FeedListManager: NSObject {
     
     private var quickActivitySelections: [QuickActivityItem: QuickActivityOption] = [:]
     
+    private lazy var errorView: GenericErrorView = {
+        return GenericErrorView(retryButtonCallback: { [weak self] in self?.refreshItems() })
+    }()
+    
     final let disposeBag: DisposeBag = DisposeBag()
     
     init(repository: Repository,
@@ -97,6 +101,14 @@ class FeedListManager: NSObject {
             refreshControl.addTarget(self, action: #selector(self.refreshControlPulled), for: .valueChanged)
             self.tableView.refreshControl = refreshControl
         }
+        
+        // Error View
+        delegate.presenter.view.addSubview(self.errorView)
+        self.errorView.autoPinEdge(.leading, to: .leading, of: self.tableView)
+        self.errorView.autoPinEdge(.trailing, to: .trailing, of: self.tableView)
+        self.errorView.autoPinEdge(.top, to: .top, of: self.tableView)
+        self.errorView.autoPinEdge(.bottom, to: .bottom, of: self.tableView)
+        self.errorView.isHidden = true
     }
     
     deinit {
@@ -142,6 +154,8 @@ class FeedListManager: NSObject {
                 
                 self.currentRequestDisposable = nil
                 
+                self.errorView.hideView()
+                
                 onCompletion?()
                 
                 }, onError: { [weak self] error in
@@ -149,7 +163,7 @@ class FeedListManager: NSObject {
                     self.tableView.refreshControl?.endRefreshing()
                     
                     self.currentRequestDisposable = nil
-                    self.navigator.handleError(error: error, presenter: delegate.presenter)
+                    self.errorView.showViewWithError(error)
             })
     }
     

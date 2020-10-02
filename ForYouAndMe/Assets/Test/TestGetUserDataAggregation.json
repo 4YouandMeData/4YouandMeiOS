@@ -6,7 +6,7 @@
       "attributes": {
         "title": "Steps",
         "strategy": "garmin_steps_daily",
-        "color": "#000000",
+        "color": "#FF0000",
         "created_at": "2020-10-01T10:48:49.360Z",
         "updated_at": "2020-10-01T10:48:49.360Z",
         "data": {
@@ -22,7 +22,7 @@
       "attributes": {
         "title": "Mood",
         "strategy": "qa_mood_daily",
-        "color": "#000000",
+        "color": "#00FF00",
         "created_at": "2020-10-01T10:53:56.698Z",
         "updated_at": "2020-10-01T10:53:56.698Z",
         "data": {
@@ -38,7 +38,7 @@
       "attributes": {
         "title": "Energy",
         "strategy": "qa_energy_daily",
-        "color": "#000000",
+        "color": "#0000FF",
         "created_at": "2020-10-01T10:53:56.700Z",
         "updated_at": "2020-10-01T10:53:56.700Z",
         "data": {

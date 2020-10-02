@@ -12,7 +12,7 @@ import PureLayout
 enum ButtonTextStyleCategory: StyleCategory {
     case primaryBackground(customHeight: CGFloat?)
     case secondaryBackground(customHeight: CGFloat?)
-    case loadingErrorStyle
+    case genericErrorStyle
     case feed
     case edit
     
@@ -36,12 +36,12 @@ enum ButtonTextStyleCategory: StyleCategory {
             button.titleLabel?.font = FontPalette.fontStyleData(forStyle: .header2).font
             button.addShadowButton()
             }
-        case .loadingErrorStyle: return Style<UIButton> { button in
+        case .genericErrorStyle: return Style<UIButton> { button in
             let buttonHeight = Constants.Style.DefaultTextButtonHeight
             button.heightConstraintValue = buttonHeight
             button.layer.cornerRadius = buttonHeight / 2.0
-            button.backgroundColor = ColorPalette.loadingErrorPrimaryColor
-            button.setTitleColor(ColorPalette.loadingErrorSecondaryColor, for: .normal)
+            button.backgroundColor = ColorPalette.errorPrimaryColor
+            button.setTitleColor(ColorPalette.errorSecondaryColor, for: .normal)
             button.titleLabel?.font = FontPalette.fontStyleData(forStyle: .header2).font
             button.addShadowButton()
             }
