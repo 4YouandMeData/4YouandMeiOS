@@ -71,7 +71,7 @@ public class PopupViewController: UIViewController {
         stackView.addArrangedSubview(closeButtonContainerView)
         
         // Body
-        stackView.addHTMLTextView(withText: self.data.body, fontStyle: .paragraph, colorType: .primaryText)
+        stackView.addHTMLLabel(withText: self.data.body, fontStyle: .paragraph, colorType: .primaryText)
         
         // Confirm Button
         let confirmButton = GenericButtonView(withTextStyleCategory: .secondaryBackground(shadow: false),

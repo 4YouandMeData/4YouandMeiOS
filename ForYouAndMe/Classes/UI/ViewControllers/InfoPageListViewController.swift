@@ -64,7 +64,7 @@ class InfoPageListViewController: UIViewController {
                                                colorType: .primaryText,
                                                textAlignment: .left)
             scrollStackView.stackView.addBlankSpace(space: 21.0)
-            scrollStackView.stackView.addHTMLTextView(withText: self.data.body,
+            scrollStackView.stackView.addHTMLLabel(withText: self.data.body,
                                                fontStyle: .paragraph,
                                                colorType: .fourthText,
                                                textAlignment: .left)
@@ -158,7 +158,7 @@ fileprivate extension UIStackView {
                            colorType: .primaryText,
                            textAlignment: .left)
         stackView.addBlankSpace(space: 21.0)
-        stackView.addHTMLTextView(withText: page.body,
+        stackView.addHTMLLabel(withText: page.body,
                            fontStyle: .paragraph,
                            colorType: .primaryText,
                            textAlignment: .left)
