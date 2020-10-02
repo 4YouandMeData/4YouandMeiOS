@@ -8,7 +8,6 @@
 import DTCoreText
 
 extension UIStackView {
-        
     func addHTMLTextView(withText text: String,
                       fontStyle: FontStyle,
                       colorType: ColorType,
@@ -35,6 +34,7 @@ extension UIStackView {
     }
     
     private func getHTMLTextView(attributedString: NSAttributedString) -> UITextView {
+
         let label = UITextView()
         label.attributedText = attributedString
         label.isEditable = false
@@ -42,6 +42,8 @@ extension UIStackView {
         label.isScrollEnabled = false
         label.dataDetectorTypes = [.all]
         label.backgroundColor = .clear
+        label.dataDetectorTypes = [.all]
+        label.autoSetDimensions(to: CGSize(width: 50, height: 100))
         return label
     }
 }
