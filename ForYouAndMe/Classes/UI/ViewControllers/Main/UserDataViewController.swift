@@ -197,6 +197,7 @@ class UserDataViewController: UIViewController, CustomSegmentViewDelegate {
             self.refreshCharts(withUserDataAggregations: userDataAggregations)
         }, onError: { [weak self] error in
             guard let self = self else { return }
+            print("UserDataViewController - Error Fetching User Data Aggregation: \(error.localizedDescription)")
             self.navigator.popProgressHUD()
             self.showChartsError()
         }).disposed(by: self.disposeBag)
@@ -211,13 +212,14 @@ class UserDataViewController: UIViewController, CustomSegmentViewDelegate {
     }
     
     private func refreshCharts(withUserDataAggregations userDataAggregations: [UserDataAggregation]) {
-        // TODO: Assign chart values
         self.chartStackView.arrangedSubviews.forEach({ $0.removeFromSuperview() })
 
         userDataAggregations.forEach { userDataAggragation in
             let testChartView = UserDataChartView(title: userDataAggragation.title ?? "",
                                                   plotColor: userDataAggragation.color ?? ColorPalette.color(withType: .primary),
-                                                   values: ["Test"],
+                                                  data: userDataAggragation.chartData.data,
+                                                  xLabels: userDataAggragation.chartData.xLabels,
+                                                  yLabels: userDataAggragation.chartData.yLabels,
                                                    studyPeriod: self.currentPeriod)
             self.chartStackView.addArrangedSubview(testChartView)
         }
