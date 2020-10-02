@@ -2,6 +2,8 @@ ${PODS_ROOT}/Target Support Files/Pods-ForYouAndMe_Example/Pods-ForYouAndMe_Exam
 ${BUILT_PRODUCTS_DIR}/Alamofire/Alamofire.framework
 ${BUILT_PRODUCTS_DIR}/Charts/Charts.framework
 ${BUILT_PRODUCTS_DIR}/CountryPickerView/CountryPickerView.framework
+${BUILT_PRODUCTS_DIR}/DTCoreText/DTCoreText.framework
+${BUILT_PRODUCTS_DIR}/DTFoundation/DTFoundation.framework
 ${BUILT_PRODUCTS_DIR}/FYAMResearchKit/ResearchKit.framework
 ${BUILT_PRODUCTS_DIR}/GoogleUtilities/GoogleUtilities.framework
 ${BUILT_PRODUCTS_DIR}/Japx/Japx.framework
