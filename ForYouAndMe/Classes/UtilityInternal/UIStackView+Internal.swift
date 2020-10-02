@@ -23,7 +23,6 @@ extension UIStackView {
         attributedString.setColor(ColorPalette.color(withType: colorType))
         attributedString.setFont(FontPalette.fontStyleData(forStyle: fontStyle).font)
         attributedString.setTextAlignment(textAlignment)
-        
         self.addHTMLTextView(attributedString: attributedString,
                           horizontalInset: horizontalInset)
     }
@@ -34,7 +33,6 @@ extension UIStackView {
     }
     
     private func getHTMLTextView(attributedString: NSAttributedString) -> UITextView {
-
         let label = UITextView()
         label.attributedText = attributedString
         label.isEditable = false
@@ -43,7 +41,7 @@ extension UIStackView {
         label.dataDetectorTypes = [.all]
         label.backgroundColor = .clear
         label.dataDetectorTypes = [.all]
-        label.autoSetDimensions(to: CGSize(width: 50, height: 100))
+        label.backgroundColor = .clear
         return label
     }
 }
