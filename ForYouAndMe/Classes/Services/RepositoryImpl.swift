@@ -71,6 +71,22 @@ extension RepositoryImpl: Repository {
         self.api.logOut()
     }
     
+    func sendFirebaseToken(token: String) -> Single<()> {
+        return self.api.send(request: ApiRequest(serviceRequest: .submitPhoneNumber(phoneNumber: token)))
+            .handleError()
+            .catchError({ error -> Single<()> in
+                enum ErrorCode: Int, CaseIterable { case missingPhoneNumber = 404 }
+                if let errorCodeNumber = error.getFirstServerError(forExpectedStatusCodes: ErrorCode.allCases.map { $0.rawValue }),
+                   let errorCode = ErrorCode(rawValue: errorCodeNumber) {
+                    switch errorCode {
+                    case .missingPhoneNumber: return Single.error(RepositoryError.missingPhoneNumber)
+                    }
+                } else {
+                    return Single.error(error)
+                }
+            })
+    }
+    
     func submitPhoneNumber(phoneNumber: String) -> Single<()> {
         return self.api.send(request: ApiRequest(serviceRequest: .submitPhoneNumber(phoneNumber: phoneNumber)))
             .handleError()

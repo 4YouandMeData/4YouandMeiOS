@@ -6,6 +6,7 @@
 //
 
 import UserNotifications
+import FirebaseMessaging
 
 struct NotificationPermission: PermissionProtocol {
     
@@ -25,7 +26,6 @@ struct NotificationPermission: PermissionProtocol {
     }
     
     var isRestricted: Bool {
-        guard let authorizationStatus = fetchAuthorizationStatus() else { return false }
         return false
     }
     
@@ -45,20 +45,11 @@ struct NotificationPermission: PermissionProtocol {
     }
     
     func request(completion: @escaping () -> Void?) {
-        if #available(iOS 10.0, tvOS 10.0, *) {
-            let center = UNUserNotificationCenter.current()
-            center.requestAuthorization(options: [.badge, .alert, .sound]) { (granted, error) in
-                DispatchQueue.main.async {
-                    completion()
-                }
-            }
-        } else {
-            #if os(iOS)
-            UIApplication.shared.registerUserNotificationSettings(UIUserNotificationSettings(types: [.badge, .sound, .alert],
-                                                                                             categories: nil))
-            #endif
+        let center = UNUserNotificationCenter.current()
+        center.requestAuthorization(options: [.badge, .alert, .sound]) { (granted, error) in
             DispatchQueue.main.async {
                 completion()
+                Messaging.messaging().isAutoInitEnabled = true
             }
         }
         
