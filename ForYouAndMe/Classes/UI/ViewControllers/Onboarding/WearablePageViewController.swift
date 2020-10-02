@@ -51,7 +51,7 @@ public class WearablePageViewController: UIViewController, PageProvider {
                                            textAlignment: .left)
         scrollStackView.stackView.addBlankSpace(space: 40.0)
         // Body
-        scrollStackView.stackView.addHTMLTextView(withText: self.page.body,
+        scrollStackView.stackView.addHTMLLabel(withText: self.page.body,
                                            fontStyle: .paragraph,
                                            colorType: .primaryText,
                                            textAlignment: .left)
