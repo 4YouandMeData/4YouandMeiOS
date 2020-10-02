@@ -332,7 +332,6 @@ class YAxisValueFormatter: NSObject, IAxisValueFormatter {
         guard index >= 0, index < self.yLabels.count else {
             return "\(Int(value))"
         }
-        let label = self.yLabels[index]
-        return label.replacingOccurrences(of: " ", with: "\n")
+        return self.yLabels[index]
     }
 }
