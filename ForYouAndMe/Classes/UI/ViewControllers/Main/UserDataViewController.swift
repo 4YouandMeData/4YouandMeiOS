@@ -31,6 +31,17 @@ class UserDataViewController: UIViewController, CustomSegmentViewDelegate {
         return label
     }()
     
+    private let ratingView: StarRatingView = {
+        let starView = StarRatingView()
+        starView.editable = false
+        starView.emptyImage = ImagePalette.image(withName: .starEmpty)
+        starView.fullImage = ImagePalette.image(withName: .starFill)
+        starView.minImageSize = CGSize(width: 22, height: 22)
+        starView.type = .floatRatings
+        starView.autoSetDimension(.height, toSize: 22)
+        return starView
+    }()
+    
     private lazy var summaryView: UIView = {
         let view = UIView()
         view.backgroundColor = ColorPalette.color(withType: .secondary)
@@ -44,16 +55,7 @@ class UserDataViewController: UIViewController, CustomSegmentViewDelegate {
         stackView.addBlankSpace(space: 20.0)
         stackView.addArrangedSubview(self.subtitleLabel)
         stackView.addBlankSpace(space: 30.0)
-        // TODO: Set dynamic rating on StarView
-        let starView = StarRatingView(frame: .zero)
-        starView.editable = false
-        starView.emptyImage = ImagePalette.image(withName: .starEmpty)
-        starView.fullImage = ImagePalette.image(withName: .starFill)
-        starView.minImageSize = CGSize(width: 22, height: 22)
-        starView.type = .floatRatings
-        starView.rating = 4.3
-        stackView.addArrangedSubview(starView)
-        starView.autoSetDimension(.height, toSize: 22)
+        stackView.addArrangedSubview(self.ratingView)
         
         return view
     }()
@@ -95,7 +97,7 @@ class UserDataViewController: UIViewController, CustomSegmentViewDelegate {
         return scrollStackView
     }()
     
-    private var isViewPrepared: Bool {
+    private var isViewInitialized: Bool {
         return self.scrollStackView.stackView.arrangedSubviews.count != 0
     }
     
@@ -147,61 +149,52 @@ class UserDataViewController: UIViewController, CustomSegmentViewDelegate {
     // MARK: - Private Methods
     
     private func refreshUI() {
-        
-        self.navigator.pushProgressHUD()
-        self.repository.getUserData().subscribe(onSuccess: { userData in
-            self.navigator.popProgressHUD()
-            print("UserViewController - UserData: '\(userData)'")
-        }, onError: { [weak self] error in
-            guard let self = self else { return }
-            print("UserViewController - Error fetching UserData: '\(error)'")
-            self.navigator.popProgressHUD()
-            self.navigator.handleError(error: error, presenter: self)
-        }).disposed(by: self.disposeBag)
-        
-        self.navigator.pushProgressHUD()
-        let startingPeriod = StudyPeriod.allCases[self.periodSegmentView.selectedIndex]
-        self.repository.getUserDataAggregation(period: startingPeriod).subscribe(onSuccess: { userDataAggregation in
-            self.navigator.popProgressHUD()
-            print("UserViewController - UserDataAggregation: '\(userDataAggregation)'")
-        }, onError: { [weak self] error in
-            guard let self = self else { return }
-            print("UserViewController - Error fetching UserDataAggregation: '\(error)'")
-            self.navigator.popProgressHUD()
-            self.navigator.handleError(error: error, presenter: self)
-        }).disposed(by: self.disposeBag)
-
-        // TODO: replace this with actual refresh
-        self.navigator.pushProgressHUD()
-        let closure: (() -> Void) = {
-            self.navigator.popProgressHUD()
-            self.prepareUI()
-            self.refreshSummary(title: "You’ve participated in this study for 67 days so far",
-                                subtitle: "On average, you complete 82% of your weekly assigned tasks - Which makes you a MASTER CONTRIBUTOR to science. Thank you! Keep it up!",
-                                rating: 4)
-            self.refreshCharts()
-        }
-        let delayTime = DispatchTime.now() + 1.0
-        let dispatchWorkItem = DispatchWorkItem(block: closure)
-        DispatchQueue.main.asyncAfter(deadline: delayTime, execute: dispatchWorkItem)
-    }
-    
-    private func prepareUI() {
-        if false == self.isViewPrepared {
-            self.scrollStackView.stackView.addArrangedSubview(self.summaryView)
-            self.scrollStackView.stackView.addArrangedSubview(self.dataView)
+        if false == self.isViewInitialized {
+            // If the view is not initilized, fetch both UserData and UserDataAggregation, prepare UI and show data on UI
+            let currentPeriod = StudyPeriod.allCases[self.periodSegmentView.selectedIndex]
+            let userDataRequest = self.repository.getUserData()
+            let userDataAggregationRequest = self.repository.getUserDataAggregation(period: currentPeriod)
+            
+            self.navigator.pushProgressHUD()
+            // Fetch both UserData and UserDataAggregation
+            Single.zip(userDataRequest, userDataAggregationRequest).subscribe(onSuccess: { [weak self] (userData, userDataAggregations) in
+                guard let self = self else { return }
+                self.navigator.popProgressHUD()
+                // Prepare UI
+                self.scrollStackView.stackView.addArrangedSubview(self.summaryView)
+                self.scrollStackView.stackView.addArrangedSubview(self.dataView)
+                // Show data on UI
+                self.refreshSummary(withUserData: userData)
+                self.refreshCharts(withUserDataAggregations: userDataAggregations)
+            }, onError: { [weak self] error in
+                guard let self = self else { return }
+                self.navigator.popProgressHUD()
+                self.navigator.handleError(error: error, presenter: self)
+            }).disposed(by: self.disposeBag)
+        } else {
+            // If the view is initilized, fetch just UserData and show it on UI
+            self.navigator.pushProgressHUD()
+            self.repository.getUserData().subscribe(onSuccess: { [weak self] userData in
+                guard let self = self else { return }
+                self.navigator.popProgressHUD()
+                self.refreshSummary(withUserData: userData)
+            }, onError: { [weak self] error in
+                guard let self = self else { return }
+                self.navigator.popProgressHUD()
+                self.navigator.handleError(error: error, presenter: self)
+            }).disposed(by: self.disposeBag)
         }
     }
     
-    private func refreshSummary(title: String, subtitle: String, rating: Int) {
-        self.titleLabel.attributedText = NSAttributedString.create(withText: title,
+    private func refreshSummary(withUserData userData: UserData) {
+        self.titleLabel.attributedText = NSAttributedString.create(withText: userData.title ?? "",
                                                                    attributedTextStyle: self.titleLabelAttributedTextStyle)
-        self.subtitleLabel.attributedText = NSAttributedString.create(withText: subtitle,
+        self.subtitleLabel.attributedText = NSAttributedString.create(withText: userData.body ?? "",
                                                                       attributedTextStyle: self.subtitleLabelAttributedTextStyle)
-        // TODO: Refresh rating
+        self.ratingView.rating = userData.stars
     }
     
-    private func refreshCharts() {
+    private func refreshCharts(withUserDataAggregations userDataAggregations: [UserDataAggregation]) {
         // TODO: Implement chart refresh
         self.chartStackView.arrangedSubviews.forEach({ $0.removeFromSuperview() })
 

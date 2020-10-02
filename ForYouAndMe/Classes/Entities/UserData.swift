@@ -15,7 +15,7 @@ struct UserData {
     var title: String?
     @NilIfEmptyString
     var body: String?
-    let stars: Int
+    let stars: Double
 }
 
 extension UserData: JSONAPIMappable {
