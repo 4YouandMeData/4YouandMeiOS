@@ -1561,6 +1561,7 @@
 		8921310819048EEE2E4F243A141999B2 /* ORKRequestPermissionsStepViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = E04C95C7514D00D668BA1D33D044BFCE /* ORKRequestPermissionsStepViewController.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
 		8926CF0221285AF88720A1CDAD86D5DC /* DisposeBag.swift in Sources */ = {isa = PBXBuildFile; fileRef = B857BEE8999BEADC36A7BCED28784EF8 /* DisposeBag.swift */; };
 		893BB38025273D0700B49455 /* GenericErrorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893BB37F25273D0700B49455 /* GenericErrorView.swift */; };
+		893BB3AE252756D400B49455 /* UserDataAggregationErrorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893BB3AD252756D400B49455 /* UserDataAggregationErrorView.swift */; };
 		89419F6DA745C9EB2B494B0BF12289E9 /* ORKStepNavigationRule_Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = E90174F67D92F91C73E19839D5740C38 /* ORKStepNavigationRule_Internal.h */; settings = {ATTRIBUTES = (Project, ); }; };
 		894734C3DEB2D1EDD922D2007AEB6500 /* AnonymousDisposable.swift in Sources */ = {isa = PBXBuildFile; fileRef = E36C88DE0459F3DD0DE1185D3D488234 /* AnonymousDisposable.swift */; };
 		8959EA6A08FD2FBDEC0661DA718B415F /* ORKPageStep.h in Headers */ = {isa = PBXBuildFile; fileRef = D8CEDC28D09C129C9A4FBF203786F743 /* ORKPageStep.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -5204,6 +5205,7 @@
 		88DFAC3545C1D216669745A4211EABCB /* GULSecureCoding.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = GULSecureCoding.h; path = GoogleUtilities/Environment/Private/GULSecureCoding.h; sourceTree = "<group>"; };
 		891F989821E945BD8984CB92B19ED0A5 /* Mappable.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = Mappable.swift; path = Sources/Mappable.swift; sourceTree = "<group>"; };
 		893BB37F25273D0700B49455 /* GenericErrorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GenericErrorView.swift; sourceTree = "<group>"; };
+		893BB3AD252756D400B49455 /* UserDataAggregationErrorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserDataAggregationErrorView.swift; sourceTree = "<group>"; };
 		897B760A007DE19B3CB539EDC77224EF /* HKSample+ORKJSONDictionary.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = "HKSample+ORKJSONDictionary.m"; path = "ResearchKit/ActiveTasks/HKSample+ORKJSONDictionary.m"; sourceTree = "<group>"; };
 		89A8F25984EBF19FF61FF8584FD7BBF8 /* Observable+Bind.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = "Observable+Bind.swift"; path = "RxRelay/Observable+Bind.swift"; sourceTree = "<group>"; };
 		89AAB5DC5E9C9F4F0B5D6E12566E33FA /* ORKCompletionCheckmarkView.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = ORKCompletionCheckmarkView.h; path = ResearchKit/Common/ORKCompletionCheckmarkView.h; sourceTree = "<group>"; };
@@ -10092,6 +10094,7 @@
 				139733B57F76DA023B3227363DCEE670 /* StudyInfoHeaderView.swift */,
 				59E62D6E016B31C119BB9B1EE1F1E94E /* TaskEmptyView.swift */,
 				16331150DA4CE65871A96473214940F6 /* UserInfoHeaderView.swift */,
+				893BB3AD252756D400B49455 /* UserDataAggregationErrorView.swift */,
 				1CE65941B58D60557DC6D12CA7F6C0F1 /* PhoneVerification */,
 				D276719E44D09BC734DADA0B6FE8D590 /* Survey */,
 				06C7FB9A09043205DCA6B4152B1C9E8F /* UserData */,
@@ -14691,6 +14694,7 @@
 				1894C0C4600CFC1D75626EBDBFFC74C5 /* QuickActivityListTableViewCell.swift in Sources */,
 				0E074824B032E52FC35642B3E8DA4BC2 /* QuickActivityOption.swift in Sources */,
 				FD44E0FFFECA83688F883588EA81F079 /* QuickActivityOptionView.swift in Sources */,
+				893BB3AE252756D400B49455 /* UserDataAggregationErrorView.swift in Sources */,
 				F27C70AB3B80240C3785888BEF56135B /* QuickActivityView.swift in Sources */,
 				C70C4C458D99B1DE06ADE80FE655E746 /* ReachabilityManager.swift in Sources */,
 				AF37CA55B5E006484A5DA6FBCAC6C04B /* ReachabilityService.swift in Sources */,

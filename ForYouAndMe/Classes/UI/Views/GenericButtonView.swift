@@ -11,6 +11,7 @@ import UIKit
 enum GenericButtonTextStyleCategory: StyleCategory {
     case primaryBackground(shadow: Bool = true)
     case secondaryBackground(shadow: Bool = true)
+    case transparentBackground(shadow: Bool = true)
     case feed
     
     var style: Style<GenericButtonView> {
@@ -26,6 +27,14 @@ enum GenericButtonTextStyleCategory: StyleCategory {
             }
         case .secondaryBackground(let shadow): return Style<GenericButtonView> { buttonView in
             buttonView.backgroundColor = ColorPalette.color(withType: .secondary)
+            buttonView.button.apply(style: ButtonTextStyleCategory.primaryBackground(customHeight: nil).style)
+            buttonView.buttonAttributedTextStyle = AttributedTextStyle(fontStyle: .header2, colorType: .secondaryText)
+            if shadow {
+                buttonView.addShadowLinear(goingDown: false)
+            }
+            }
+        case .transparentBackground(let shadow): return Style<GenericButtonView> { buttonView in
+            buttonView.backgroundColor = .clear
             buttonView.button.apply(style: ButtonTextStyleCategory.primaryBackground(customHeight: nil).style)
             buttonView.buttonAttributedTextStyle = AttributedTextStyle(fontStyle: .header2, colorType: .secondaryText)
             if shadow {

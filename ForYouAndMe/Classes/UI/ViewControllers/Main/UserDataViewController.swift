@@ -198,8 +198,7 @@ class UserDataViewController: UIViewController, CustomSegmentViewDelegate {
         }, onError: { [weak self] error in
             guard let self = self else { return }
             self.navigator.popProgressHUD()
-            // TODO: Show custom UI error
-            self.navigator.handleError(error: error, presenter: self)
+            self.showChartsError()
         }).disposed(by: self.disposeBag)
     }
     
@@ -212,7 +211,7 @@ class UserDataViewController: UIViewController, CustomSegmentViewDelegate {
     }
     
     private func refreshCharts(withUserDataAggregations userDataAggregations: [UserDataAggregation]) {
-        // TODO: Implement chart refresh
+        // TODO: Assign chart values
         self.chartStackView.arrangedSubviews.forEach({ $0.removeFromSuperview() })
 
         userDataAggregations.forEach { userDataAggragation in
@@ -222,6 +221,15 @@ class UserDataViewController: UIViewController, CustomSegmentViewDelegate {
                                                    studyPeriod: self.currentPeriod)
             self.chartStackView.addArrangedSubview(testChartView)
         }
+    }
+    
+    private func showChartsError() {
+        self.chartStackView.arrangedSubviews.forEach({ $0.removeFromSuperview() })
+        
+        self.chartStackView.addArrangedSubview(UserDataAggregationErrorView(buttonCallback: { [weak self] in
+            guard let self = self else { return }
+            self.refreshCharts(withStudyPeriod: self.currentPeriod)
+        }))
     }
     
     //Delegate Methods
