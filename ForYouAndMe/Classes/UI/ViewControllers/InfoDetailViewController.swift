@@ -72,10 +72,15 @@ public class InfoDetailPageViewController: UIViewController, PageProvider {
         
         scrollStackView.stackView.addBlankSpace(space: 40.0)
         // Body
-        scrollStackView.stackView.addLabel(withText: self.pageData.page.body,
+//        scrollStackView.stackView.addLabel(withText: self.pageData.page.body,
+//                                           fontStyle: .paragraph,
+//                                           colorType: .primaryText,
+//                                           textAlignment: .left)
+        // TODO: Remove Page HTML test
+        scrollStackView.stackView.addHTMLLabel(withText: self.pageData.page.body,
                                            fontStyle: .paragraph,
-                                           colorType: .primaryText,
-                                           textAlignment: .left)
+                                           colorType: .primaryText)
+        
         scrollStackView.stackView.addBlankSpace(space: 40.0)
     }
     
@@ -92,7 +97,7 @@ public class InfoDetailPageViewController: UIViewController, PageProvider {
         scrollStackView.autoPinEdge(.top, to: .bottom, of: headerView, withOffset: 30)
         
         // Body
-        scrollStackView.stackView.addLabel(withText: self.pageData.page.body,
+        scrollStackView.stackView.addHTMLLabel(withText: self.pageData.page.body,
                                            fontStyle: .paragraph,
                                            colorType: .primaryText,
                                            textAlignment: .left)

@@ -111,7 +111,7 @@
       "type": "page",
       "attributes": {
         "title": "Screening Questions",
-        "body": "The following questions will help us ensure this study is right for you. We will confirm the eligibility requirements when you come in for your first study visit.",
+        "body": "<p><strong>The following questions will help us ensure this study is right for you. We will confirm the eligibility requirements when you come in for your first study visit.</strong> <a href=\"tel:+41123456789\">123 456 789</a></p>",
         "link_1_label": "",
         "link_2_label": "",
         "external_link_label": "",
