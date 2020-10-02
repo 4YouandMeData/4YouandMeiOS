@@ -321,9 +321,9 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             return "v1/tasks/\(taskId)/attach"
         // User
         case .getUser:
-            return "v1/user" // TODO: Check against final API specs
+            return "v1/users/me"
         case .sendUserInfoParameters:
-            return "v1/user" // TODO: Check against final API specs
+            return "v1/users" // TODO: Check against final API specs
         // Survey
         case .getSurvey(let surveyId):
             return "v1/survey_group/\(surveyId)"  // TODO: Check against final API specs

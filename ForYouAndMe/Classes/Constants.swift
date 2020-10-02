@@ -26,7 +26,7 @@ struct Constants {
         static let NetworkLogVerbose = true
         
         static let Section: TestSection? = nil //.introVideo
-        static let OnboardingCompleted: Bool? = true
+        static let OnboardingCompleted: Bool? = nil
         
         static let InformedConsentWithoutQuestions: Bool = false
         static let CheckGlobalStrings: Bool = false

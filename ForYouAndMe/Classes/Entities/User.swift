@@ -9,10 +9,21 @@ import Foundation
 import Mapper
 
 struct User: Codable {
-    
-    let id: Int
-    let studyId: Int
+    let id: String
+    let type: String
     let phoneNumber: String
-    let email: String?
+    let email: String
     let isOnboardingCompleted: Bool
+    let daysInStudy: Int
+}
+
+extension User: JSONAPIMappable {
+    enum CodingKeys: String, CodingKey {
+        case id
+        case type
+        case phoneNumber = "phone_number"
+        case email
+        case isOnboardingCompleted = "on_boarding_completed"
+        case daysInStudy = "days_in_study"
+    }
 }
