@@ -24,8 +24,9 @@ struct Constants {
         static let NetworkStubsEnabled = false
         static let NetworkStubsDelay = 0.3
         static let NetworkLogVerbose = true
-        
+    
         static let Section: TestSection? = nil //.screeningSection
+
         static let OnboardingCompleted: Bool? = nil
         
         static let InformedConsentWithoutQuestions: Bool = false
