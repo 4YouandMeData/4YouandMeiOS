@@ -67,7 +67,7 @@ public class VideoDiaryIntroViewController: UIViewController {
                                                textAlignment: .left)
             scrollStackView.stackView.addBlankSpace(space: 16.0)
             // Body
-            scrollStackView.stackView.addHTMLLabel(withText: paragraph.body,
+            scrollStackView.stackView.addHTMLTextView(withText: paragraph.body,
                                                fontStyle: .paragraph,
                                                colorType: .primaryText,
                                                textAlignment: .left)
