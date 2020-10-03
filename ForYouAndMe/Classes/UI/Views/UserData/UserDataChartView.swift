@@ -81,7 +81,7 @@ enum StudyPeriod: Int, CaseIterable {
         
         switch self {
         case .month:
-            startDate = startDate.getDate(for: -30)
+            startDate = startDate.getDate(for: -28)
         case .week:
             startDate = startDate.getDate(for: -7)
         case .year:
@@ -241,9 +241,6 @@ class UserDataChartView: UIView {
         set1.circleRadius = 6
         set1.circleHoleColor = .white
         set1.valueFont = .systemFont(ofSize: 9)
-        //        set1.formLineDashLengths = [5, 2.5]
-        //        set1.formLineWidth = 1
-        //        set1.formSize = 15
         
         let data = LineChartData(dataSet: set1)
         self.chartView.data = data
@@ -258,7 +255,6 @@ class UserDataChartView: UIView {
         self.chartView.xAxis.labelFont = FontPalette.fontStyleData(forStyle: .header3).font
         self.chartView.xAxis.wordWrapEnabled = true
         self.chartView.xAxis.yOffset = 10
-//        self.chartView.xAxis.centerAxisLabelsEnabled = true
         
         let range = self.getXAxisRange(periodType: self.studyPeriod)
         self.chartView.xAxis.labelCount = range.interval
@@ -336,6 +332,7 @@ class YAxisValueFormatter: NSObject, IAxisValueFormatter {
         guard index >= 0, index < self.yLabels.count else {
             return "\(Int(value))"
         }
-        return self.yLabels[index]
+        let label = self.yLabels[index]
+        return label.replacingOccurrences(of: " ", with: "\n")
     }
 }
