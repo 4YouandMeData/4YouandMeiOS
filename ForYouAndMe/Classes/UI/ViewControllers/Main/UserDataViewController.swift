@@ -66,7 +66,7 @@ class UserDataViewController: UIViewController, CustomSegmentViewDelegate {
     }()
     
     private lazy var periodSegmentView: CustomSegmentView = {
-        var segmentProperties = CustomSegmentViewProperties.init(switchTexts: [.day, .week, .month, .year])
+        var segmentProperties = CustomSegmentViewProperties.init(switchTexts: [.week, .month, .year])
         segmentProperties.sliderOffset = 0
         let segmentView = CustomSegmentView(frame: .zero, switchProperties: segmentProperties)
         segmentView.autoSetDimension(.height, toSize: 47)
