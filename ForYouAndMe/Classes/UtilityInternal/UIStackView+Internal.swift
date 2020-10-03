@@ -9,7 +9,7 @@ import DTCoreText
 
 extension UIStackView {
         
-    func addHTMLLabel(withText text: String,
+    func addHTMLTextView(withText text: String,
                       fontStyle: FontStyle,
                       colorType: ColorType,
                       textAlignment: NSTextAlignment = .center,
@@ -25,16 +25,16 @@ extension UIStackView {
         attributedString.setFont(FontPalette.fontStyleData(forStyle: fontStyle).font)
         attributedString.setTextAlignment(textAlignment)
         
-        self.addHTMLLabel(attributedString: attributedString,
+        self.addHTMLTextView(attributedString: attributedString,
                           horizontalInset: horizontalInset)
     }
     
-    func addHTMLLabel(attributedString: NSAttributedString, horizontalInset: CGFloat = 0) {
-        let label = self.getHTMLLabel(attributedString: attributedString)
+    func addHTMLTextView(attributedString: NSAttributedString, horizontalInset: CGFloat = 0) {
+        let label = self.getHTMLTextView(attributedString: attributedString)
         self.addArrangedSubview(label, horizontalInset: horizontalInset)
     }
     
-    private func getHTMLLabel(attributedString: NSAttributedString) -> UITextView {
+    private func getHTMLTextView(attributedString: NSAttributedString) -> UITextView {
         let label = UITextView()
         label.attributedText = attributedString
         label.isEditable = false
