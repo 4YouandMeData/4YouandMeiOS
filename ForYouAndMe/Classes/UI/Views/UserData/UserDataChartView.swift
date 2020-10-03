@@ -10,14 +10,12 @@ import PureLayout
 import Charts
 
 enum StudyPeriod: Int, CaseIterable {
-    case day
     case week
     case month
     case year
     
     var title: String {
         switch self {
-        case .day: return StringsProvider.string(forKey: .tabUserDataPeriodDay)
         case .week: return StringsProvider.string(forKey: .tabUserDataPeriodWeek)
         case .month: return StringsProvider.string(forKey: .tabUserDataPeriodMonth)
         case .year: return StringsProvider.string(forKey: .tabUserDataPeriodYear)
@@ -54,7 +52,6 @@ enum StudyPeriod: Int, CaseIterable {
     
     var dateDecodeFormat: String {
         switch self {
-        case .day: return "dd-MM-yyyy"
         case .week: return "dd-MM-yyyy"
         case .month: return "dd-MM-yyyy"
         case .year: return "MM-yyyy"
@@ -63,7 +60,6 @@ enum StudyPeriod: Int, CaseIterable {
     
     var periodDisplayFormat: String {
         switch self {
-        case .day: return "EEEE, MMM d, yyyy"
         case .week: return "MMM dd, yyyy"
         case .month: return "MMMM yyyy"
         case .year: return "MMMM yyyy"
@@ -74,8 +70,6 @@ enum StudyPeriod: Int, CaseIterable {
         let startDateStr = startDate.string(withFormat: self.periodDisplayFormat)
         let endDateStr = endDate.string(withFormat: self.periodDisplayFormat)
         switch self {
-        case .day:
-            return "\(startDateStr)"
         case .week, .month, .year:
             return "\(startDateStr)" + " - " + "\(endDateStr)"
 
@@ -86,8 +80,6 @@ enum StudyPeriod: Int, CaseIterable {
         var startDate = Date()
         
         switch self {
-        case .day:
-            startDate = startDate.getDate(for: -1)
         case .month:
             startDate = startDate.getDate(for: -30)
         case .week:
@@ -100,8 +92,6 @@ enum StudyPeriod: Int, CaseIterable {
     
     func getInterval() -> Int {
         switch self {
-        case .day:
-            return 1
         case .month:
             return 4
         case .week:
@@ -116,8 +106,6 @@ enum StudyPeriod: Int, CaseIterable {
 //        let startDate = dates.startDate
         
         switch self {
-        case .day:
-            return startDate.getDates(for: self.getInterval(), interval: 1, format: dayTime)
         case .week:
             return startDate.getDates(for: self.getInterval(), interval: 6, format: dayShort)
         case .month:
@@ -295,8 +283,6 @@ class UserDataChartView: UIView {
         var value: (min: Double, max: Double, interval: Int)!
         if periodType == .week {
             value = (min: 0, max: 6, interval: 6)
-        } else if periodType == .day {
-            value = (min: 0, max: 4, interval: 4)
         } else {
             value = (min: 0, max: 3, interval: 3)
         }
@@ -328,7 +314,7 @@ class XAxisValueFormatter: NSObject, IAxisValueFormatter {
         let index = Int(value)
         
         switch self.studyPeriod {
-        case .day, .week, .year, .month:
+        case .week, .year, .month:
             if index >= 0, index < self.studyPeriod.getXAxisRangeValues(startDate: self.startDate).count {
                 return self.studyPeriod.getXAxisRangeValues(startDate: self.startDate)[index]
             } else {
