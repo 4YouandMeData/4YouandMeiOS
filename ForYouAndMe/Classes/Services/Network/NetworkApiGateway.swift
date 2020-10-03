@@ -610,7 +610,6 @@ fileprivate extension FileDataExtension {
 fileprivate extension StudyPeriod {
     var networkValue: String {
         switch self {
-        case .day: return "last_day"
         case .week: return "last_week"
         case .month: return "last_month"
         case .year: return "last_year"
