@@ -8,13 +8,13 @@
 import DTCoreText
 
 extension UIStackView {
-        
+    
     func addHTMLTextView(withText text: String,
-                      fontStyle: FontStyle,
-                      colorType: ColorType,
-                      textAlignment: NSTextAlignment = .center,
-                      horizontalInset: CGFloat = 0) {
-
+                         fontStyle: FontStyle,
+                         colorType: ColorType,
+                         textAlignment: NSTextAlignment = .center,
+                         horizontalInset: CGFloat = 0) {
+        
         guard let htmlString = text.htmlToAttributedString else {
             self.addLabel(withText: text, fontStyle: fontStyle, colorType: colorType)
             fatalError("error parsing HTML text")
@@ -26,7 +26,7 @@ extension UIStackView {
         attributedString.setTextAlignment(textAlignment)
         
         self.addHTMLTextView(attributedString: attributedString,
-                          horizontalInset: horizontalInset)
+                             horizontalInset: horizontalInset)
     }
     
     func addHTMLTextView(attributedString: NSAttributedString, horizontalInset: CGFloat = 0) {
