@@ -46,25 +46,58 @@ public class DevicesIntegrationViewController: UIViewController {
         self.scrollStackView.autoPinEdge(.top, to: .bottom, of: headerView, withOffset: 30)
         self.scrollStackView.stackView.spacing = 30
         
-        let garminItem = DeviceItemView(withTitle: "Garmin"/*StringsProvider.string(forKey: .studyInfoRewardsItem)*/,
+        guard let currentUser = Services.shared.repository.currentUser,
+              let navigationController = self.navigationController else {
+            return
+        }
+        
+        let garminTitle = StringsProvider.string(forKey: .garminOauthTitle).lowercased()
+        let garminItem = DeviceItemView(withTitle: garminTitle.capitalized,
             imageName: .fitbitIcon,
-            connected: false,
+            connected: currentUser.identities.contains(garminTitle),
             gestureCallback: { [weak self] in
-                self?.navigator.showWearableLogin(loginUrl: URL(string: "https://admin-4youandme-staging.balzo.eu/users/integration_oauth/garmin")!,
-                                                  navigationController: self?.navigationController ?? UINavigationController())
+                self?.navigator.showWearableLogin(loginUrl: URL(string: Constants.Network.ApiOAuthWearables + garminTitle)!,
+                                                  navigationController: navigationController)
         })
         self.scrollStackView.stackView.addArrangedSubview(garminItem)
         garminItem.autoSetDimension(.height, toSize: 72)
         
-        let ouraItem = DeviceItemView(withTitle: "Oura"/*StringsProvider.string(forKey: .studyInfoRewardsItem)*/,
+        let ouraTitle = StringsProvider.string(forKey: .ouraOauthTitle).lowercased()
+        let ouraItem = DeviceItemView(withTitle: ouraTitle.capitalized,
             imageName: .ouraIcon,
-            connected: false,
+            connected: currentUser.identities.contains(ouraTitle),
             gestureCallback: { [weak self] in
-                self?.navigator.showWearableLogin(loginUrl: URL(string: "https://admin-4youandme-staging.balzo.eu/users/integration_oauth/oura")!,
-                                                  navigationController: self?.navigationController ?? UINavigationController())
+                self?.navigator.showWearableLogin(loginUrl: URL(string: Constants.Network.ApiOAuthWearables + ouraTitle)!,
+                                                  navigationController: navigationController)
         })
+        
         self.scrollStackView.stackView.addArrangedSubview(ouraItem)
         ouraItem.autoSetDimension(.height, toSize: 72)
+        
+        let twitterTitle = StringsProvider.string(forKey: .twitterOauthTitle).lowercased()
+        let twitterItem = DeviceItemView(withTitle: twitterTitle.capitalized,
+            imageName: .twitterIcon,
+            connected: currentUser.identities.contains(twitterTitle),
+            gestureCallback: { [weak self] in
+                self?.navigator.showWearableLogin(loginUrl: URL(string: Constants.Network.ApiOAuthWearables + twitterTitle)!,
+                                                  navigationController: navigationController)
+        })
+        
+        self.scrollStackView.stackView.addArrangedSubview(twitterItem)
+        twitterItem.autoSetDimension(.height, toSize: 72)
+        
+        let rescueTimeTitle = StringsProvider.string(forKey: .rescueTimeOauthTitle).lowercased()
+        let rescueTimeID = rescueTimeTitle.replacingOccurrences(of: " ", with: "")
+        let rescueTimeItem = DeviceItemView(withTitle: rescueTimeTitle.capitalized,
+            imageName: .rescueTimeIcon,
+            connected: currentUser.identities.contains(rescueTimeTitle),
+            gestureCallback: { [weak self] in
+                self?.navigator.showWearableLogin(loginUrl: URL(string: Constants.Network.ApiOAuthWearables + rescueTimeID)!,
+                                                  navigationController: navigationController)
+        })
+        
+        self.scrollStackView.stackView.addArrangedSubview(rescueTimeItem)
+        rescueTimeItem.autoSetDimension(.height, toSize: 72)
         
         self.scrollStackView.stackView.addBlankSpace(space: 40.0)
     }

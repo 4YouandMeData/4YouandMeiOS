@@ -38,7 +38,7 @@ extension QuickActivityOption: Equatable {
 extension QuickActivityOption {
     var networkResultData: TaskNetworkResult {
         var resultData: [String: Any] = [:]
-        resultData["selected_quick_activity_option_id"] = self.id
+        resultData["selected_quick_activity_option_id"] = Int(self.id)
         return TaskNetworkResult(data: resultData, attachedFile: nil)
     }
 }
