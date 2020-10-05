@@ -36,7 +36,9 @@ struct Constants {
     }
     struct Network {
         static let ApiBaseUrlStr = "https://api-4youandme-staging.balzo.eu/api"
+        static let ApiOAuthWearables = "https://admin-4youandme-staging.balzo.eu/users/integration_oauth/"
     }
+    
     struct Style {
         static let DefaultHorizontalMargins: CGFloat = 24.0
         static let DefaultFooterHeight: CGFloat = 134.0
