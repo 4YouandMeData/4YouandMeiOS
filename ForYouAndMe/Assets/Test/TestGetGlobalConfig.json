@@ -155,7 +155,13 @@
       "PERMISSION_MESSAGE": "Please, go to Settings and allow permission.",
       "PERMISSIONS_ALLOW": "Allow",
       "PERMISSIONS_ALLOWED": "Allowed",
-      "YOUR_APPS_AND_DEVICES_CONNECT": "Connect"
+      "YOUR_APPS_AND_DEVICES_CONNECT": "Connect",
+      "OAUTH_OURA": "Oura",
+      "OAUTH_FITBIT": "Fitbit",
+      "OAUTH_GARMIN": "Garmin",
+      "OAUTH_TWITTER": "Twitter",
+      "OAUTH_INSTAGRAM": "Instagram",
+      "OAUTH_RESCUETIME": "Rescue Time"
     },
     "country_codes": ["US", "GB", "IT"]
 }

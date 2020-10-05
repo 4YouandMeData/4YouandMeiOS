@@ -176,6 +176,14 @@ enum StringKey: String, CaseIterable, CodingKey {
     case urlPrivacyPolicy = "URL_PRIVACY_POLICY"
     case urlTermsOfService = "URL_TERMS_OF_SERVICE"
     
+    //OAUTH
+    case ouraOauthTitle = "OAUTH_OURA"
+    case fitbitOauthTitle = "OAUTH_FITBIT"
+    case garminOauthTitle = "OAUTH_GARMIN"
+    case twitterOauthTitle = "OAUTH_TWITTER"
+    case instagramOauthTitle = "OAUTH_INSTAGRAM"
+    case rescueTimeOauthTitle = "OAUTH_RESCUETIME"
+    
     var defaultValue: String {
         switch self {
         case .setupErrorTitle: return "Uh, oh!"
