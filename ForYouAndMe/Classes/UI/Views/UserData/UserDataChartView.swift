@@ -92,12 +92,12 @@ enum StudyPeriod: Int, CaseIterable {
     
     func getInterval() -> Int {
         switch self {
-        case .month:
-            return 4
         case .week:
-            return 1
+            return 6
+        case .month:
+            return 3
         case .year:
-            return 121
+            return 3
         }
     }
     
@@ -107,11 +107,11 @@ enum StudyPeriod: Int, CaseIterable {
         
         switch self {
         case .week:
-            return startDate.getDates(for: self.getInterval(), interval: 6, format: dayShort)
+            return startDate.getDates(for: 1, interval: self.getInterval(), format: dayShort)
         case .month:
-            return startDate.getDates(for: self.getInterval(), interval: 3, format: shortDate)
+            return startDate.getDates(for: 28, interval: self.getInterval(), format: shortDate)
         case .year:
-            return startDate.getDates(for: self.getInterval(), interval: 3, format: shortDate)
+            return startDate.getDates(for: 121, interval: self.getInterval(), format: shortDate)
         }
     }
 }
@@ -198,8 +198,8 @@ class UserDataChartView: UIView {
         self.configureYAxis()
         
         //X-Axis Formatter
-        if let startDate = self.studyPeriod.getStartDate(fromDateStrings: self.xLabels) {
-            let xAxisFormatter = XAxisValueFormatter(studyPeriod: self.studyPeriod, startDate: startDate)
+        if let endDate = self.studyPeriod.getEndDate(fromDateStrings: self.xLabels) {
+            let xAxisFormatter = XAxisValueFormatter(studyPeriod: self.studyPeriod, endDate: endDate)
             self.chartView.xAxis.valueFormatter = xAxisFormatter
         }
         
@@ -292,8 +292,10 @@ class UserDataChartView: UIView {
     private func getDataEntries() -> [ChartDataEntry] {
         var dataEntries: [ChartDataEntry] = []
         self.xLabels.enumerated().forEach { (index, _) in
-            if index < self.data.count, let val = self.data[index] {
-                dataEntries.append(ChartDataEntry(x: Double(index), y: val, icon: ImagePalette.image(withName: .circular)))
+            if index < self.data.count {
+                dataEntries.append(ChartDataEntry(x: Double(index),
+                                                  y: self.data[index] ?? 0.0,
+                                                  icon: ImagePalette.image(withName: .circular)))
             }
         }
         return dataEntries
@@ -303,11 +305,11 @@ class UserDataChartView: UIView {
 /// Customised x-axis formmater to render the x-axis strings with format based on the study type and period type.
 class XAxisValueFormatter: NSObject, IAxisValueFormatter {
     private let studyPeriod: StudyPeriod
-    private let startDate: Date
+    private let endDate: Date
     
-    init(studyPeriod: StudyPeriod, startDate: Date) {
+    init(studyPeriod: StudyPeriod, endDate: Date) {
         self.studyPeriod = studyPeriod
-        self.startDate = startDate
+        self.endDate = endDate
     }
     
     func stringForValue(_ value: Double, axis: AxisBase?) -> String {
@@ -315,8 +317,8 @@ class XAxisValueFormatter: NSObject, IAxisValueFormatter {
         
         switch self.studyPeriod {
         case .week, .year, .month:
-            if index >= 0, index < self.studyPeriod.getXAxisRangeValues(startDate: self.startDate).count {
-                return self.studyPeriod.getXAxisRangeValues(startDate: self.startDate)[index]
+            if index >= 0, index < self.studyPeriod.getXAxisRangeValues(startDate: self.endDate).count {
+                return self.studyPeriod.getXAxisRangeValues(startDate: self.endDate)[index]
             } else {
                 return "\(value)"
             }

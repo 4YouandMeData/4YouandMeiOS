@@ -42,9 +42,9 @@ public extension Date {
         var arrayOfDates = [String]()
         arrayOfDates.append(self.string(withFormat: format))
         for index in 1...interval {
-            arrayOfDates.append(self.getDate(for: (index * days)).string(withFormat: format))
+            arrayOfDates.append(self.getDate(for: (-index * days)).string(withFormat: format))
         }
-        return arrayOfDates
+        return arrayOfDates.reversed()
     }
 }
 
