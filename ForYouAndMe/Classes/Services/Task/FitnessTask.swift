@@ -14,7 +14,7 @@ class FitnessTask {
                                            intendedUseDescription: options?.intendedUseDescription,
                                            walkDuration: options?.walkDuration ?? 60.0,
                                            restDuration: options?.restDuration ?? 10.0,
-                                           options: [.excludeHeartRate])
+                                           options: [.excludeHeartRate, .excludeLocation])
     }
     
     static func getNetworkResultData(taskResult: ORKTaskResult) -> TaskNetworkResult? {

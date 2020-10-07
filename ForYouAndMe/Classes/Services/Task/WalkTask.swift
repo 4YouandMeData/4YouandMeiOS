@@ -16,7 +16,7 @@ class WalkTask {
                                         timeLimit: options?.timeLimit ?? 180.0,
                                         turnAroundTimeLimit: options?.turnAroundTimeLimit ?? 60.0,
                                         includeAssistiveDeviceForm: options?.includeAssistiveDeviceForm ?? true,
-                                        options: [])
+                                        options: [.excludeLocation])
     }
     
     static func getNetworkResultData(taskResult: ORKTaskResult) -> TaskNetworkResult? {
