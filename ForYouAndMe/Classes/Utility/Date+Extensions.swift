@@ -14,7 +14,8 @@ public let timeFormat = "hh:mm a"
 public let utc = "UTC"
 public let dayTime = "HH"
 public let dayShort = "EEE"
-public let shortDate = "MMM dd\nyyyy"
+public let monthShort = "MMM d"
+public let yearShortDate = "MMM yy"
 
 public extension Date {
     func string(withFormat format: String, timeZone: TimeZone? = nil, locale: Locale? = nil) -> String {
