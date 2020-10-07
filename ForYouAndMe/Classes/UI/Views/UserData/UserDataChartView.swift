@@ -40,7 +40,7 @@ enum StudyPeriod: Int, CaseIterable {
         }
         return dateFormatter.date(from: startDateStr)
     }
-    
+
     func getEndDate(fromDateStrings dateStrings: [String]) -> Date? {
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = self.dateDecodeFormat
@@ -65,7 +65,7 @@ enum StudyPeriod: Int, CaseIterable {
         case .year: return "MMMM yyyy"
         }
     }
-    
+
     func getPeriodString(fromStartDate startDate: Date, endDate: Date) -> String {
         let startDateStr = startDate.string(withFormat: self.periodDisplayFormat)
         let endDateStr = endDate.string(withFormat: self.periodDisplayFormat)
@@ -73,45 +73,6 @@ enum StudyPeriod: Int, CaseIterable {
         case .week, .month, .year:
             return "\(startDateStr)" + " - " + "\(endDateStr)"
 
-        }
-    }
-    
-    func getStartAndEndData() -> (startDate: Date, endDate: Date) {
-        var startDate = Date()
-        
-        switch self {
-        case .month:
-            startDate = startDate.getDate(for: -30)
-        case .week:
-            startDate = startDate.getDate(for: -7)
-        case .year:
-            startDate = startDate.getDate(for: -364)
-        }
-        return (startDate: startDate, endDate: Date().getDate(for: -1))
-    }
-    
-    func getInterval() -> Int {
-        switch self {
-        case .week:
-            return 7
-        case .month:
-            return 30
-        case .year:
-            return 12
-        }
-    }
-    
-    func getXAxisRangeValues(startDate: Date) -> [String] {
-//        let dates = self.getStartAndEndData()
-//        let startDate = dates.startDate
-        
-        switch self {
-        case .week:
-            return startDate.getDates(for: 1, interval: self.getInterval(), format: dayShort)
-        case .month:
-            return startDate.getDates(for: 7, interval: self.getInterval(), format: monthShort)
-        case .year:
-            return startDate.getDates(for: 30, interval: self.getInterval(), format: yearShortDate)
         }
     }
 }
@@ -196,10 +157,8 @@ class UserDataChartView: UIView {
         self.configureYAxis()
         
         //X-Axis Formatter
-        if let endDate = self.studyPeriod.getEndDate(fromDateStrings: self.xLabels) {
-            let xAxisFormatter = XAxisValueFormatter(studyPeriod: self.studyPeriod, xLabels: self.xLabels)
-            self.chartView.xAxis.valueFormatter = xAxisFormatter
-        }
+        let xAxisFormatter = XAxisValueFormatter(studyPeriod: self.studyPeriod, xLabels: self.xLabels)
+        self.chartView.xAxis.valueFormatter = xAxisFormatter
         
         //Y-Axis Formatter
         let yAxisFormatter = YAxisValueFormatter(yLabels: self.yLabels)
@@ -311,23 +270,24 @@ class XAxisValueFormatter: NSObject, IAxisValueFormatter {
     func stringForValue(_ value: Double, axis: AxisBase?) -> String {
         let index = Int(value)
         
-        let currentDateString = self.xLabels[index]
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = studyPeriod.dateDecodeFormat
-        guard let currentDate = dateFormatter.date(from: currentDateString) else { return "\(value)"}
-        
-        switch self.studyPeriod {
-        case .week:
-            return currentDate.string(withFormat: dayShort)
-        case .year:
-            return currentDate.string(withFormat: yearShortDate)
-        case .month:
-            return currentDate.string(withFormat: monthShort)
-//            if index >= 0, index < self.studyPeriod.getXAxisRangeValues(startDate: self.endDate).count {
-//                return self.studyPeriod.getXAxisRangeValues(startDate: self.endDate)[index]
-//            } else {
-//                return "\(value)"
-//            }
+        if index >= 0, index < self.xLabels.count {
+            
+            let currentDateString = self.xLabels[index]
+            
+            let dateFormatter = DateFormatter()
+            dateFormatter.dateFormat = studyPeriod.dateDecodeFormat
+            guard let currentDate = dateFormatter.date(from: currentDateString) else { return "\(value)"}
+            
+            switch self.studyPeriod {
+            case .week:
+                return currentDate.string(withFormat: dayShort)
+            case .year:
+                return currentDate.string(withFormat: yearShortDate)
+            case .month:
+                return currentDate.string(withFormat: monthShort)
+            }
+        } else {
+            return "\(value)"
         }
     }
 }
