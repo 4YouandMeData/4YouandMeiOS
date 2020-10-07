@@ -15,6 +15,7 @@ struct User: Codable {
     let isOnboardingCompleted: Bool
     let daysInStudy: Int
     let identities: [String]
+    let customData: [UserInfoParameter]?
 }
 
 extension User: JSONAPIMappable {
@@ -26,5 +27,6 @@ extension User: JSONAPIMappable {
         case isOnboardingCompleted = "on_boarding_completed"
         case daysInStudy = "days_in_study"
         case identities = "identities"
+        case customData = "custom_data"
     }
 }

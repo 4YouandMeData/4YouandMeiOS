@@ -105,7 +105,7 @@ class UserInfoViewController: UIViewController {
         
         switch parameter.type {
         case .string:
-            textFieldView.text = parameter.currentStringValue
+            textFieldView.text = parameter.currentStringValue ?? ""
         case .items:
             let dataPicker = DataPickerHandler<UserInfoParameterItem>(textField: textFieldView.textField,
                                                                       tintColor: ColorPalette.color(withType: .primary))

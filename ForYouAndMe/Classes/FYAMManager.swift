@@ -13,6 +13,7 @@ public class FYAMManager {
     
     public static func startup(withStudyId studyId: String,
                                fontStyleMap: FontStyleMap,
+                               showDefaultUserInfo: Bool,
                                checkResourcesAvailability: Bool = false) -> UIWindow {
         let window = UIWindow(frame: UIScreen.main.bounds)
         window.makeKeyAndVisible()
@@ -31,7 +32,7 @@ public class FYAMManager {
         #endif
         
         // Prepare Logic
-        Services.shared.setup(withWindow: window, studyId: studyId)
+        Services.shared.setup(withWindow: window, studyId: studyId, showDefaultUserInfo: showDefaultUserInfo)
         
         return window
     }

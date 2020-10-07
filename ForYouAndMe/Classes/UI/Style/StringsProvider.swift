@@ -145,7 +145,7 @@ enum StringKey: String, CaseIterable, CodingKey {
     case studyInfoFaqTitle = "STUDY_INFO_FAQ"
     case studyInfoAboutYou = "STUDY_INFO_ABOUT_YOU"
     //About You
-    case aboutYouYourPregnancy = "ABOUT_YOU_YOUR_PREGNANCY"
+    case aboutYouUserInfo = "ABOUT_YOU_USER_INFO"
     case aboutYouAppsAndDevices = "ABOUT_YOU_APPS_AND_DEVICES"
     case aboutYouReviewConsent = "ABOUT_YOU_REVIEW_CONSENT"
     case aboutYouPermissions = "ABOUT_YOU_PERMISSIONS"

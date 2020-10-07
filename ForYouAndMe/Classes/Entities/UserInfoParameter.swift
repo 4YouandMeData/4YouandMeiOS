@@ -7,27 +7,30 @@
 
 import Foundation
 
-enum UserInfoParameterType {
+enum UserInfoParameterType: String, Codable {
     case string
     case date
     case items
 }
 
-struct UserInfoParameterItem {
+struct UserInfoParameterItem: Codable {
     let identifier: String
     let value: String
 }
 
-struct UserInfoParameter {
+struct UserInfoParameter: Codable {
     let identifier: String
     let name: String
-    let value: String
+    let value: String?
     let type: UserInfoParameterType
     let items: [UserInfoParameterItem]
     
-    var currentStringValue: String { self.value }
-    var currentItemIdentifier: String { self.value }
-    var currentDate: Date? { ISO8601Strategy.dateFormatter.date(from: self.value) }
+    var currentStringValue: String? { self.value }
+    var currentItemIdentifier: String? { self.value }
+    var currentDate: Date? {
+        guard let value = value else { return nil }
+        return ISO8601Strategy.dateFormatter.date(from: value)
+    }
 }
 
 struct UserInfoParameterRequest {

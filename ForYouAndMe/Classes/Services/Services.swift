@@ -30,7 +30,7 @@ class Services {
     
     // MARK: - Public Methods
     
-    func setup(withWindow window: UIWindow, studyId: String) {
+    func setup(withWindow window: UIWindow, studyId: String, showDefaultUserInfo: Bool) {
         self.window = window
         
         let storage = CacheManager()
@@ -53,7 +53,8 @@ class Services {
         self.services.append(networkApiGateway)
         
         let repository = RepositoryImpl(api: networkApiGateway,
-                                        storage: storage)
+                                        storage: storage,
+                                        showDefaultUserInfo: showDefaultUserInfo)
         self.services.append(repository)
         
         let analytics = AnalyticsManager(api: networkApiGateway)

@@ -20,11 +20,14 @@ class RepositoryImpl {
     
     private var storage: RepositoryStorage
     private let api: ApiGateway
+    private let showDefaultUserInfo: Bool
     
     init(api: ApiGateway,
-         storage: RepositoryStorage) {
+         storage: RepositoryStorage,
+         showDefaultUserInfo: Bool) {
         self.api = api
         self.storage = storage
+        self.showDefaultUserInfo = showDefaultUserInfo
     }
     
     // MARK: - Private Methods
@@ -53,10 +56,6 @@ class RepositoryImpl {
 
 extension RepositoryImpl: Repository {
     // MARK: - Authentication
-    
-    var currentUser: User? {
-        self.storage.user
-    }
     
     var accessToken: String? {
         self.api.accessToken
@@ -245,6 +244,18 @@ extension RepositoryImpl: Repository {
     }
     
     // MARK: - User
+    
+    var currentUser: User? {
+        self.storage.user
+    }
+    
+    var userInfoParameters: [UserInfoParameter]? {
+        if self.showDefaultUserInfo {
+            return self.storage.user?.customData ?? Constants.UserInfo.DefaultUserInfoParameters
+        } else {
+            return self.storage.user?.customData ?? Constants.UserInfo.DefaultUserInfoParameters
+        }
+    }
     
     func refreshUser() -> Single<User> {
         return self.api.send(request: ApiRequest(serviceRequest: .getUser))

@@ -37,6 +37,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         }
         self.window = FYAMManager.startup(withStudyId: "bump",
                                           fontStyleMap: fontStyleMap,
+                                          showDefaultUserInfo: true,
                                           checkResourcesAvailability: true)
         Messaging.messaging().delegate = self
         return true

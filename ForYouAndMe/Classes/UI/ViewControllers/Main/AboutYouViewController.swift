@@ -10,6 +10,7 @@ import UIKit
 class AboutYouViewController: UIViewController {
     
     private let navigator: AppNavigator
+    private let repository: Repository
     private let analytics: AnalyticsService
     
     private lazy var scrollStackView: ScrollStackView = {
@@ -19,6 +20,7 @@ class AboutYouViewController: UIViewController {
     
     init() {
         self.navigator = Services.shared.navigator
+        self.repository = Services.shared.repository
         self.analytics = Services.shared.analytics
         super.init(nibName: nil, bundle: nil)
     }
@@ -42,45 +44,24 @@ class AboutYouViewController: UIViewController {
         self.scrollStackView.autoPinEdgesToSuperviewEdges(with: .zero, excludingEdge: .top)
         self.scrollStackView.autoPinEdge(.top, to: .bottom, of: headerView, withOffset: 30)
         
-        let pregnancyTitle = StringsProvider.string(forKey: .aboutYouYourPregnancy)
-        let yourPregnancy = GenericListItemView(withTitle: pregnancyTitle,
-            templateImageName: .pregnancyIcon,
-            colorType: .primary,
-            gestureCallback: { [weak self] in
-                guard let navigationController = self?.navigationController else {
-                    assertionFailure("Missing expected navigation controller")
-                    return
-                }
-                // TODO: Replace mock data with data from server
-                let title = "Your Pregnancy"/*StringsProvider.string(forKey: .studyInfoContactItem)*/
-                let userInfoParameters: [UserInfoParameter] = [
-                    UserInfoParameter(identifier: "1",
-                                      name: "Your due date",
-//                                      value: "",
-                                      value: "2020-06-03T12:59:39.083Z",
-                                      type: .date,
-                                      items: []),
-                    UserInfoParameter(identifier: "2",
-                                      name: "Your baby's gender",
-//                                      value: "",
-                                      value: "2",
-                                      type: .items,
-                                      items: [
-                                        UserInfoParameterItem(identifier: "1", value: "It's a Boy!"),
-                                        UserInfoParameterItem(identifier: "2", value: "It's a Girl!")
-                    ]),
-                    UserInfoParameter(identifier: "3",
-                                      name: "Your baby's name",
-//                                      value: "",
-                                      value: "Lil'Pea",
-                                      type: .string,
-                                      items: [])
-                ]
-                self?.navigator.showUserInfoPage(navigationController: navigationController,
-                                                 title: title,
-                                                 userInfoParameters: userInfoParameters)
-        })
-        self.scrollStackView.stackView.addArrangedSubview(yourPregnancy)
+        if let userInfoParameters = self.repository.userInfoParameters, userInfoParameters.count > 0 {
+            let userInfoTitle = StringsProvider.string(forKey: .aboutYouUserInfo)
+            let userInfo = GenericListItemView(withTitle: userInfoTitle,
+                templateImageName: .userInfoIcon,
+                colorType: .primary,
+                gestureCallback: { [weak self] in
+                    guard let self = self else { return }
+                    guard let navigationController = self.navigationController else {
+                        assertionFailure("Missing expected navigation controller")
+                        return
+                    }
+                    self.navigator.showUserInfoPage(navigationController: navigationController,
+                                                     title: userInfoTitle,
+                                                     userInfoParameters: userInfoParameters)
+                    
+            })
+            self.scrollStackView.stackView.addArrangedSubview(userInfo)
+        }
     
         let appsAndDevicesTitle = StringsProvider.string(forKey: .aboutYouAppsAndDevices)
         let appsAndDevices = GenericListItemView(withTitle: appsAndDevicesTitle,

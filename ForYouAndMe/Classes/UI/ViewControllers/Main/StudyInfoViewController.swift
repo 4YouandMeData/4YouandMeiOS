@@ -44,7 +44,7 @@ class StudyInfoViewController: UIViewController {
         
         var title = StringsProvider.string(forKey: .studyInfoAboutYou)
         let aboutYou = GenericListItemView(withTitle: title,
-                                           templateImageName: .pregnancyIcon,
+                                           templateImageName: .userInfoIcon,
                                            colorType: .primary,
                                            gestureCallback: { [weak self] in
                                             self?.navigator.showAboutYouPage(presenter: self!)

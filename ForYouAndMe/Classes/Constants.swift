@@ -105,6 +105,33 @@ nunc, blandit sit amet lorem a, scelerisque eleifend odio. In euismod nunc tinci
         static let NumericTypeMinValue: String = "min_display"
         static let NumericTypeMaxValue: String = "max_display"
     }
+    
+    struct UserInfo {
+        // TODO: Wipe out this awful thing when the backend is ready for something more generic...
+        static let DefaultUserInfoParameters: [UserInfoParameter] = {
+            let userInfoParameters: [UserInfoParameter] = [
+                UserInfoParameter(identifier: "1",
+                                  name: "Your due date",
+                                  value: nil,
+                                  type: .date,
+                                  items: []),
+                UserInfoParameter(identifier: "2",
+                                  name: "Your baby's gender",
+                                  value: nil,
+                                  type: .items,
+                                  items: [
+                                    UserInfoParameterItem(identifier: "1", value: "It's a Boy!"),
+                                    UserInfoParameterItem(identifier: "2", value: "It's a Girl!")
+                ]),
+                UserInfoParameter(identifier: "3",
+                                  name: "Your baby's name",
+                                  value: nil,
+                                  type: .string,
+                                  items: [])
+            ]
+            return userInfoParameters
+        }()
+    }
 }
 
 enum FilePath: String {

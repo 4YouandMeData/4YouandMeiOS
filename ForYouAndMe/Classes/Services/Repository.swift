@@ -32,7 +32,6 @@ enum RepositoryError: LocalizedError {
 protocol Repository: class {
     // Authentication
     var accessToken: String? { get }
-    var currentUser: User? { get }
     var isLoggedIn: Bool { get }
     func logOut()
     func submitPhoneNumber(phoneNumber: String) -> Single<()>
@@ -62,6 +61,8 @@ protocol Repository: class {
     func sendQuickActivityResult(quickActivityTaskId: String, quickActivityOption: QuickActivityOption) -> Single<()>
     func sendTaskResult(taskId: String, taskResult: TaskNetworkResult) -> Single<()>
     // User
+    var currentUser: User? { get }
+    var userInfoParameters: [UserInfoParameter]? { get }
     func refreshUser() -> Single<User>
     func sendUserInfoParameters(userParameterRequests: [UserInfoParameterRequest]) -> Single<()>
     // User Data
