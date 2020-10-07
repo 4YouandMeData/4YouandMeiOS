@@ -85,6 +85,8 @@
       "TAB_TASK_TITLE": "Tasks",
       "TAB_USER_DATA_TITLE": "Your Data",
       "TAB_STUDY_INFO_TITLE": "Study Info",
+      "TAB_FEED_TITLE": "{0} TRIMESTER",
+      "TAB_FEED_SUBTITLE": "Week {0}",
       "TAB_FEED_EMPTY_TITLE": "No tasks are available yet",
       "TAB_FEED_EMPTY_SUBTITLE": "Wait 24 hours and try again",
       "TAB_TASK_EMPTY_TITLE": "You haven’t started any tasks yet",

@@ -31,10 +31,18 @@ struct UserInfoParameter: Codable {
         guard let value = value else { return nil }
         return ISO8601Strategy.dateFormatter.date(from: value)
     }
+    
+    static func create(fromParameter parameter: UserInfoParameter, withValue value: String?) -> UserInfoParameter {
+        return UserInfoParameter(identifier: parameter.identifier,
+                                 name: parameter.name,
+                                 value: value,
+                                 type: parameter.type,
+                                 items: parameter.items)
+    }
 }
 
 struct UserInfoParameterRequest {
-    let identifier: String
+    let parameter: UserInfoParameter
     let value: String?
 }
 

@@ -49,8 +49,9 @@ class FeedViewController: UIViewController {
     
     private let navigator: AppNavigator
     private let repository: Repository
-    
     private let analytics: AnalyticsService
+    
+    private let disposeBag = DisposeBag()
     
     init() {
         self.navigator = Services.shared.navigator
@@ -89,10 +90,13 @@ class FeedViewController: UIViewController {
 
         self.listManager.viewWillAppear()
         
-        // TODO: Refresh UI with data from API
-        self.headerView.setTitleText("2ND TRIMESTER")
-        self.headerView.setSubtitleText("Week 12")
-        self.tableViewHeaderView.setPoints(7)
+        self.repository.refreshUser().subscribe(onSuccess: { user in
+            self.headerView.setTitleText(user.feedTitle)
+            self.headerView.setSubtitleText(user.feedSubtitle)
+            self.tableViewHeaderView.setPoints(user.points)
+        }, onError: { error in
+            print("FeedViewController - Error refreshing user: \(error.localizedDescription)")
+        }).disposed(by: self.disposeBag)
     }
     
     override func viewDidLayoutSubviews() {

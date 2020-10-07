@@ -323,7 +323,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         case .getUser:
             return "v1/users/me"
         case .sendUserInfoParameters:
-            return "v1/users" // TODO: Check against final API specs
+            return "v1/users/me"
         // User Data
         case .getUserData:
             return "v1/studies/\(studyId)/your_data"
@@ -367,7 +367,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
              .updateUserConsent,
              .sendTaskResultData,
              .sendTaskResultFile,
-             .sendUserInfoParameters, // TODO: Check against final API specs
+             .sendUserInfoParameters,
              .sendSurveyTaskResultData: // TODO: Check against final API specs
             return .patch
         }
@@ -410,7 +410,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         case .sendTaskResultFile: return "{}".utf8Encoded
         // User
         case .getUser: return Bundle.getTestData(from: "TestGetUser")
-        case .sendUserInfoParameters: return "{}".utf8Encoded
+        case .sendUserInfoParameters: return Bundle.getTestData(from: "TestGetUser")
         // User Data
         case .getUserData: return Bundle.getTestData(from: "TestGetUserData")
         case .getUserDataAggregation: return Bundle.getTestData(from: "TestGetUserDataAggregation")
@@ -480,16 +480,18 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         case .sendTaskResultFile:
             return .uploadMultipart(self.multipartBody)
         case .sendUserInfoParameters(let userParameters):
-            // TODO: Update request encoding according to API specs
-            let params: [[String: Any]] = userParameters.reduce([]) { (result, parameter) in
+            let customDataParams: [[String: Any]] = userParameters.reduce([]) { (result, parameter) in
+                let newParameter = UserInfoParameter.create(fromParameter: parameter.parameter, withValue: parameter.value)
                 var result = result
-                var userParameter: [String: Any] = [:]
-                userParameter["id"] = parameter.identifier
-                userParameter["value"] = parameter.value ?? ""
-                result.append(userParameter)
+                if let data = try? JSONEncoder().encode(newParameter),
+                   let dictionary = try? JSONSerialization.jsonObject(with: data, options: .allowFragments) as? [String: Any] {
+                    result.append(dictionary)
+                }
                 return result
             }
-            return .requestParameters(parameters: ["parameters": params], encoding: JSONEncoding.default)
+            var params: [String: Any] = [:]
+            params["custom_data"] = customDataParams
+            return .requestParameters(parameters: ["user": params], encoding: JSONEncoding.default)
         case .sendSurveyTaskResultData(_, let results):
             // TODO: Update request encoding according to API specs
             let params: [[String: Any]] = results.reduce([]) { (result, parameter) in

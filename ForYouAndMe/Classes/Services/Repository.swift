@@ -62,9 +62,8 @@ protocol Repository: class {
     func sendTaskResult(taskId: String, taskResult: TaskNetworkResult) -> Single<()>
     // User
     var currentUser: User? { get }
-    var userInfoParameters: [UserInfoParameter]? { get }
     func refreshUser() -> Single<User>
-    func sendUserInfoParameters(userParameterRequests: [UserInfoParameterRequest]) -> Single<()>
+    func sendUserInfoParameters(userParameterRequests: [UserInfoParameterRequest]) -> Single<User>
     // User Data
     func getUserData() -> Single<UserData>
     func getUserDataAggregation(period: StudyPeriod) -> Single<[UserDataAggregation]>

@@ -44,7 +44,7 @@ class AboutYouViewController: UIViewController {
         self.scrollStackView.autoPinEdgesToSuperviewEdges(with: .zero, excludingEdge: .top)
         self.scrollStackView.autoPinEdge(.top, to: .bottom, of: headerView, withOffset: 30)
         
-        if let userInfoParameters = self.repository.userInfoParameters, userInfoParameters.count > 0 {
+        if let userInfoParameters = self.repository.currentUser?.customData, userInfoParameters.count > 0 {
             let userInfoTitle = StringsProvider.string(forKey: .aboutYouUserInfo)
             let userInfo = GenericListItemView(withTitle: userInfoTitle,
                 templateImageName: .userInfoIcon,

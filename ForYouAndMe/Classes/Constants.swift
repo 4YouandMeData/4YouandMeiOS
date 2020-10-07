@@ -108,9 +108,10 @@ nunc, blandit sit amet lorem a, scelerisque eleifend odio. In euismod nunc tinci
     
     struct UserInfo {
         // TODO: Wipe out this awful thing when the backend is ready for something more generic...
+        static let FeedTitleParameterIdentifier = "1"
         static let DefaultUserInfoParameters: [UserInfoParameter] = {
             let userInfoParameters: [UserInfoParameter] = [
-                UserInfoParameter(identifier: "1",
+                UserInfoParameter(identifier: Self.FeedTitleParameterIdentifier,
                                   name: "Your due date",
                                   value: nil,
                                   type: .date,

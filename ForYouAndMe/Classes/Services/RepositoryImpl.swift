@@ -249,26 +249,18 @@ extension RepositoryImpl: Repository {
         self.storage.user
     }
     
-    var userInfoParameters: [UserInfoParameter]? {
-        if self.showDefaultUserInfo {
-            return self.storage.user?.customData ?? Constants.UserInfo.DefaultUserInfoParameters
-        } else {
-            return self.storage.user?.customData ?? Constants.UserInfo.DefaultUserInfoParameters
-        }
-    }
-    
     func refreshUser() -> Single<User> {
         return self.api.send(request: ApiRequest(serviceRequest: .getUser))
             .handleError()
-            .do(onSuccess: { user in
-                print("Current user: \(user)")
-                self.storage.user = user
-            })
+            .map { self.handleUserInfo($0) }
+            .do(onSuccess: { self.saveUser($0) })
     }
     
-    func sendUserInfoParameters(userParameterRequests: [UserInfoParameterRequest]) -> Single<()> {
+    func sendUserInfoParameters(userParameterRequests: [UserInfoParameterRequest]) -> Single<User> {
         return self.api.send(request: ApiRequest(serviceRequest: .sendUserInfoParameters(paramenters: userParameterRequests)))
             .handleError()
+            .map { self.handleUserInfo($0) }
+            .do(onSuccess: { self.saveUser($0) })
     }
     
     // MARK: - User Data
@@ -293,6 +285,20 @@ extension RepositoryImpl: Repository {
     func sendSurveyTaskResult(surveyTaskId: String, results: [SurveyResult]) -> Single<()> {
         return self.api.send(request: ApiRequest(serviceRequest: .sendSurveyTaskResultData(surveyTaskId: surveyTaskId, results: results)))
             .handleError()
+    }
+    
+    // MARK: - Private Methods
+    
+    func handleUserInfo(_ user: User) -> User {
+        var user = user
+        if self.showDefaultUserInfo && user.customData == nil {
+            user.customData = Constants.UserInfo.DefaultUserInfoParameters
+        }
+        return user
+    }
+    
+    func saveUser(_ user: User) {
+        self.storage.user = user
     }
 }
 

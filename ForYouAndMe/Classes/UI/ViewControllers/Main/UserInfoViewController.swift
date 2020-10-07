@@ -177,12 +177,12 @@ class UserInfoViewController: UIViewController {
             } else {
                 value = textField.text
             }
-            return UserInfoParameterRequest(identifier: parameter.identifier, value: value)
+            return UserInfoParameterRequest(parameter: parameter, value: value)
         }
         
         self.navigator.pushProgressHUD()
         self.repository.sendUserInfoParameters(userParameterRequests: userInfoParameterRequests)
-            .subscribe(onSuccess: { [weak self] in
+            .subscribe(onSuccess: { [weak self] _ in
                 guard let self = self else { return }
                 self.navigator.popProgressHUD()
                 self.pageState.accept(.read)
