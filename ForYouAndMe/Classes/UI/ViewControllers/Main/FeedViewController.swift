@@ -21,8 +21,6 @@ class FeedViewController: UIViewController {
     private lazy var headerView: FeedHeaderView = {
         let view = FeedHeaderView(profileButtonPressed: { [weak self] in
             self?.showProfile()
-        }, notificationButtonPressed: { [weak self] in
-            self?.showNotification()
         })
         view.setTitleText("")
         view.setSubtitleText("")
@@ -106,11 +104,6 @@ class FeedViewController: UIViewController {
     
     private func showProfile() {
         self.navigator.showAboutYouPage(presenter: self)
-    }
-    
-    private func showNotification() {
-        // TODO: Show Notification
-        print("TODO: Show Notification")
     }
 }
 

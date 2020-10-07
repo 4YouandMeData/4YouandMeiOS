@@ -31,16 +31,6 @@ class FeedHeaderView: UIView {
         return button
     }()
     
-    private lazy var notificationButton: UIButton = {
-        let button = UIButton()
-        button.addTarget(self, action: #selector(self.onNotificationButtonPressed), for: .touchUpInside)
-        button.setImage(ImagePalette.templateImage(withName: .notification), for: .normal)
-        button.imageView?.contentMode = .scaleAspectFit
-        button.imageView?.tintColor = ColorPalette.color(withType: .secondary)
-        button.autoSetDimension(.width, toSize: Self.buttonWidth)
-        return button
-    }()
-    
     // MARK: - AttributedTextStyles
     
     private let titleLabelAttributedTextStyle = AttributedTextStyle(fontStyle: .paragraph,
@@ -52,12 +42,9 @@ class FeedHeaderView: UIView {
                                                                        textAlignment: .center)
     
     private let profileButtonPressed: NotificationCallback
-    private let notificationButtonPressed: NotificationCallback
     
-    init(profileButtonPressed: @escaping NotificationCallback,
-         notificationButtonPressed: @escaping NotificationCallback) {
+    init(profileButtonPressed: @escaping NotificationCallback) {
         self.profileButtonPressed = profileButtonPressed
-        self.notificationButtonPressed = notificationButtonPressed
         super.init(frame: .zero)
         
         self.autoSetDimension(.height, toSize: Self.height)
@@ -79,7 +66,9 @@ class FeedHeaderView: UIView {
         
         stackView.addArrangedSubview(self.profileButton)
         stackView.addArrangedSubview(textStackView)
-        stackView.addArrangedSubview(self.notificationButton)
+        let emptySpaceView = UIView()
+        emptySpaceView.autoSetDimension(.width, toSize: Self.buttonWidth)
+        stackView.addArrangedSubview(emptySpaceView)
     }
     
     required init?(coder aDecoder: NSCoder) {
@@ -102,9 +91,5 @@ class FeedHeaderView: UIView {
     
     @objc private func onProfileButtonPressed() {
         self.profileButtonPressed()
-    }
-    
-    @objc private func onNotificationButtonPressed() {
-        self.notificationButtonPressed()
     }
 }
