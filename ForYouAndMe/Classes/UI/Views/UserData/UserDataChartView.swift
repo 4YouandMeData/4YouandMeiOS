@@ -198,6 +198,7 @@ class UserDataChartView: UIView {
         set1.circleRadius = 6
         set1.circleHoleColor = .white
         set1.valueFont = .systemFont(ofSize: 9)
+        set1.axisDependency = .right
         
         let data = LineChartData(dataSet: set1)
         self.chartView.data = data
@@ -211,7 +212,7 @@ class UserDataChartView: UIView {
         self.chartView.xAxis.labelTextColor = ColorPalette.color(withType: .primaryText)
         self.chartView.xAxis.labelFont = FontPalette.fontStyleData(forStyle: .header3).font
         self.chartView.xAxis.wordWrapEnabled = false
-        self.chartView.xAxis.yOffset = 0
+        self.chartView.xAxis.yOffset = 15
         
         if self.studyPeriod == .week {
             let range = self.getXAxisRange(periodType: self.studyPeriod)
@@ -224,7 +225,7 @@ class UserDataChartView: UIView {
     fileprivate func configureYAxis() {
         let rightAxis = chartView.rightAxis
         rightAxis.removeAllLimitLines()
-        rightAxis.centerAxisLabelsEnabled = false
+        rightAxis.centerAxisLabelsEnabled = true
         rightAxis.forceLabelsEnabled = true
         rightAxis.axisLineColor = ColorPalette.color(withType: .primaryText)
         rightAxis.labelTextColor = ColorPalette.color(withType: .primaryText)
@@ -305,6 +306,6 @@ class YAxisValueFormatter: NSObject, IAxisValueFormatter {
             return "\(Int(value))"
         }
         let label = self.yLabels[index]
-        return label.replacingOccurrences(of: " ", with: "\n")
+        return label
     }
 }
