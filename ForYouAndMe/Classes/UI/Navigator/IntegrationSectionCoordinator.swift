@@ -1,5 +1,5 @@
 //
-//  WearablesSectionCoordinator.swift
+//  IntegrationSectionCoordinator.swift
 //  ForYouAndMe
 //
 //  Created by Leonardo Passeri on 03/07/2020.
@@ -7,13 +7,13 @@
 
 import Foundation
 
-enum WearablesSpecialLinkBehaviour: CaseIterable {
-    static var allCases: [WearablesSpecialLinkBehaviour] {
+enum IntegrationSpecialLinkBehaviour: CaseIterable {
+    static var allCases: [IntegrationSpecialLinkBehaviour] {
         return [.download(app: nil), .open(app: nil)]
     }
     
-    case download(app: WearableApp?)
-    case open(app: WearableApp?)
+    case download(app: Integration?)
+    case open(app: Integration?)
     
     var keyword: String {
         switch self {
@@ -23,16 +23,16 @@ enum WearablesSpecialLinkBehaviour: CaseIterable {
     }
 }
 
-class WearablesSectionCoordinator {
+class IntegrationSectionCoordinator {
     
     public unowned var navigationController: UINavigationController
     
     private let navigator: AppNavigator
     
-    private let sectionData: WearablesSection
+    private let sectionData: IntegrationSection
     private let completionCallback: NavigationControllerCallback
     
-    init(withSectionData sectionData: WearablesSection,
+    init(withSectionData sectionData: IntegrationSection,
          navigationController: UINavigationController,
          completionCallback: @escaping NavigationControllerCallback) {
         self.navigator = Services.shared.navigator
@@ -44,16 +44,16 @@ class WearablesSectionCoordinator {
     // MARK: - Public Methods
     
     public func getStartingPage() -> UIViewController {
-        return WearablePageViewController(withPage: self.sectionData.welcomePage, coordinator: self, backwardNavigation: false)
+        return IntegrationPageViewController(withPage: self.sectionData.welcomePage, coordinator: self, backwardNavigation: false)
     }
 }
 
-extension WearablesSectionCoordinator: PagedSectionCoordinator {
+extension IntegrationSectionCoordinator: PagedSectionCoordinator {
     
     var pages: [Page] { self.sectionData.pages }
     
     func showPage(_ page: Page, isOnboarding: Bool) {
-        let viewController = WearablePageViewController(withPage: page, coordinator: self, backwardNavigation: true)
+        let viewController = IntegrationPageViewController(withPage: page, coordinator: self, backwardNavigation: true)
         self.navigationController.pushViewController(viewController, animated: true)
     }
     
@@ -74,13 +74,13 @@ extension WearablesSectionCoordinator: PagedSectionCoordinator {
     }
 }
 
-extension WearablesSectionCoordinator: WearablePageCoordinator {
-    func onWearablePageExternalLinkButtonPressed(page: Page) {
+extension IntegrationSectionCoordinator: IntegrationPageCoordinator {
+    func onIntegrationPageExternalLinkButtonPressed(page: Page) {
         guard let externalLinkUrl = page.externalLinkUrl else {
             assertionFailure("Missing expected external link url")
             return
         }
-        let viewController = WearableLoginViewController(withTitle: "",
+        let viewController = IntegrationLoginViewController(withTitle: "",
                                                          url: externalLinkUrl,
                                                          onLoginSuccessCallback: { loginViewController in
                                                             loginViewController.dismiss(animated: true, completion: { [weak self] in
@@ -95,8 +95,8 @@ extension WearablesSectionCoordinator: WearablePageCoordinator {
         self.navigationController.present(navigationViewController, animated: true, completion: nil)
     }
     
-    func onWearablePageSpecialLinkButtonPressed(page: Page) {
-        guard let specialLinkBehaviour = page.wearablesSpecialLinkBehaviour else {
+    func onIntegrationPageSpecialLinkButtonPressed(page: Page) {
+        guard let specialLinkBehaviour = page.integrationSpecialLinkBehaviour else {
             assertionFailure("Missing expected special link behaviour")
             return
         }

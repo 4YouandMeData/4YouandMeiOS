@@ -303,8 +303,8 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             return "/v1/studies/\(studyId)/user_consent/confirm_email"
         case .resendConfirmationEmail:
             return "/v1/studies/\(studyId)/user_consent/resend_confirmation_email"
-        // Wearables Section
-        case .getWearablesSection:
+        // Integration Section
+        case .getIntegrationSection:
             return "/v1/studies/\(studyId)/integration"
         // Answers
         case .sendAnswer(let answer, _):
@@ -348,7 +348,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
              .getConsentSection,
              .getOptInSection,
              .getUserConsentSection,
-             .getWearablesSection,
+             .getIntegrationSection,
              .getFeeds,
              .getTasks,
              .getSurvey, // TODO: Check against final API specs
@@ -400,8 +400,8 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         case .updateUserConsent: return "{}".utf8Encoded
         case .verifyEmail: return "{}".utf8Encoded
         case .resendConfirmationEmail: return "{}".utf8Encoded
-        // Wearables Section
-        case .getWearablesSection: return Bundle.getTestData(from: "TestGetWearablesSection")
+        // Integration Section
+        case .getIntegrationSection: return Bundle.getTestData(from: "TestGetIntegrationSection")
         // Answers
         case .sendAnswer: return "{}".utf8Encoded
         // Task
@@ -429,7 +429,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
              .getOptInSection,
              .getUserConsentSection,
              .resendConfirmationEmail,
-             .getWearablesSection,
+             .getIntegrationSection,
              .getFeeds,
              .getTasks,
              .getSurvey,
@@ -539,7 +539,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
              .updateUserConsent,
              .verifyEmail,
              .resendConfirmationEmail,
-             .getWearablesSection,
+             .getIntegrationSection,
              .sendAnswer,
              .getFeeds,
              .getTasks,

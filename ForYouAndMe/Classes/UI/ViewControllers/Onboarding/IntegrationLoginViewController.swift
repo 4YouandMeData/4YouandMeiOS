@@ -1,5 +1,5 @@
 //
-//  WearableLoginViewController.swift
+//  IntegrationLoginViewController.swift
 //  ForYouAndMe
 //
 //  Created by Leonardo Passeri on 09/07/2020.
@@ -8,13 +8,13 @@
 import Foundation
 import WebKit
 
-class WearableLoginViewController: UIViewController {
+class IntegrationLoginViewController: UIViewController {
     
-    private enum WearableLoginScriptInterface: String {
+    private enum IntegrationLoginScriptInterface: String {
         case login = "wearableLogin"
     }
     
-    private enum WearableLoginResult: String {
+    private enum IntegrationLoginResult: String {
         case success
         case failure
     }
@@ -67,7 +67,7 @@ class WearableLoginViewController: UIViewController {
         self.view.addSubview(self.webView)
         self.webView.autoPinEdgesToSuperviewSafeArea()
         self.webView.navigationDelegate = self
-        self.webView.configuration.userContentController.add(self, name: WearableLoginScriptInterface.login.rawValue)
+        self.webView.configuration.userContentController.add(self, name: IntegrationLoginScriptInterface.login.rawValue)
         
         // Progress bar
         self.view.addSubview(self.progressView)
@@ -120,7 +120,7 @@ class WearableLoginViewController: UIViewController {
         request.httpShouldHandleCookies = true
         self.webView.configuration.websiteDataStore.httpCookieStore.setCookie(authenticationCookie, completionHandler: { [weak self] in
             guard let self = self else { return }
-            print("WearableLoginViewController - Authentication cookie setup done")
+            print("IntegrationLoginViewController - Authentication cookie setup done")
             self.webView.load(request)
         })
     }
@@ -164,7 +164,7 @@ class WearableLoginViewController: UIViewController {
     }
 }
 
-extension WearableLoginViewController: WKNavigationDelegate {
+extension IntegrationLoginViewController: WKNavigationDelegate {
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
         self.hideProgressView()
     }
@@ -174,26 +174,26 @@ extension WearableLoginViewController: WKNavigationDelegate {
     }
     
     func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
-        print("WearableLoginViewController - Navigation did fail with error: \(error.localizedDescription)")
+        print("IntegrationLoginViewController - Navigation did fail with error: \(error.localizedDescription)")
         self.handleNavigationError(error: error)
     }
     
     func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
-        print("WearableLoginViewController - Navigation did fail provisional navigation with error: \(error.localizedDescription)")
+        print("IntegrationLoginViewController - Navigation did fail provisional navigation with error: \(error.localizedDescription)")
         self.handleNavigationError(error: error)
     }
 }
 
-extension WearableLoginViewController: WKScriptMessageHandler {
+extension IntegrationLoginViewController: WKScriptMessageHandler {
     func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
-        guard let scriptInterface = WearableLoginScriptInterface(rawValue: message.name) else {
-            print("WearableLoginViewController - Unhandled interface for message with name: \(message.name) and body: \(message.body)")
+        guard let scriptInterface = IntegrationLoginScriptInterface(rawValue: message.name) else {
+            print("IntegrationLoginViewController - Unhandled interface for message with name: \(message.name) and body: \(message.body)")
             return
         }
         switch scriptInterface {
         case .login:
-           guard let resultTypeString = message.body as? String, let result = WearableLoginResult(rawValue: resultTypeString) else {
-               print("WearableLoginViewController - Unhandled message with name: \(message.name) and body: \(message.body)")
+           guard let resultTypeString = message.body as? String, let result = IntegrationLoginResult(rawValue: resultTypeString) else {
+               print("IntegrationLoginViewController - Unhandled message with name: \(message.name) and body: \(message.body)")
                return
            }
            switch result {

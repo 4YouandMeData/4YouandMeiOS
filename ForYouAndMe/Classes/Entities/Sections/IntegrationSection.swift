@@ -1,5 +1,5 @@
 //
-//  WearablesSection.swift
+//  IntegrationSection.swift
 //  ForYouAndMe
 //
 //  Created by Leonardo Passeri on 03/07/2020.
@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct WearablesSection {
+struct IntegrationSection {
     let id: String
     let type: String
 
@@ -16,7 +16,7 @@ struct WearablesSection {
     let successPage: Page?
 }
 
-extension WearablesSection: JSONAPIMappable {
+extension IntegrationSection: JSONAPIMappable {
     static var includeList: String? = """
 pages.link_1,\
 pages.link_2,\

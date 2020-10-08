@@ -63,7 +63,7 @@ class AppNavigator {
             case .consentSection: self.startConsentSection(navigationController: testNavigationViewController)
             case .optInSection: self.startOptInSection(navigationController: testNavigationViewController)
             case .consentUserDataSection: self.startUserContentDataSection(navigationController: testNavigationViewController)
-            case .wearablesSection: self.startWearablesSection(navigationController: testNavigationViewController)
+            case .integrationSection: self.startIntegrationSection(navigationController: testNavigationViewController)
             }
             return
         }
@@ -299,7 +299,7 @@ class AppNavigator {
     public func startUserContentDataSection(navigationController: UINavigationController) {
         navigationController.loadViewForRequest(self.repository.getUserConsentSection()) { section -> UIViewController in
             let completionCallback: NavigationControllerCallback = { [weak self] navigationController in
-                self?.startWearablesSection(navigationController: navigationController)
+                self?.startIntegrationSection(navigationController: navigationController)
             }
             let coordinator = ConsentUserDataSectionCoordinator(withSectionData: section,
                                                                 navigationController: navigationController,
@@ -308,29 +308,29 @@ class AppNavigator {
         }
     }
     
-    // MARK: Wearables
+    // MARK: Integration
     
-    public func startWearablesSection(navigationController: UINavigationController) {
-        navigationController.loadViewForRequest(self.repository.getWearablesSection()) { section -> UIViewController in
+    public func startIntegrationSection(navigationController: UINavigationController) {
+        navigationController.loadViewForRequest(self.repository.getIntegrationSection()) { section -> UIViewController in
             let completionCallback: NavigationControllerCallback = { [weak self] navigationController in
                 self?.goHome()
             }
-            let coordinator = WearablesSectionCoordinator(withSectionData: section,
-                                                          navigationController: navigationController,
-                                                          completionCallback: completionCallback)
+            let coordinator = IntegrationSectionCoordinator(withSectionData: section,
+                                                            navigationController: navigationController,
+                                                            completionCallback: completionCallback)
             return coordinator.getStartingPage()
         }
     }
     
-    public func showWearableLogin(loginUrl: URL, navigationController: UINavigationController) {
-        let viewController = WearableLoginViewController(withTitle: "",
-                                                         url: loginUrl,
-                                                         onLoginSuccessCallback: { _ in
-                                                            navigationController.popViewController(animated: true)
-                                                         },
-                                                         onLoginFailureCallback: { _ in
-                                                            navigationController.popViewController(animated: true)
-                                                         })
+    public func showIntegrationLogin(loginUrl: URL, navigationController: UINavigationController) {
+        let viewController = IntegrationLoginViewController(withTitle: "",
+                                                            url: loginUrl,
+                                                            onLoginSuccessCallback: { _ in
+                                                                navigationController.popViewController(animated: true)
+                                                            },
+                                                            onLoginFailureCallback: { _ in
+                                                                navigationController.popViewController(animated: true)
+                                                            })
         viewController.hidesBottomBarWhenPushed = true
         navigationController.pushViewController(viewController, animated: true)
     }

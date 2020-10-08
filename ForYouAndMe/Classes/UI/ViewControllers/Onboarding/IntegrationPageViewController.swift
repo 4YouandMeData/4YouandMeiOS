@@ -1,5 +1,5 @@
 //
-//  WearablePageViewController.swift
+//  IntegrationPageViewController.swift
 //  ForYouAndMe
 //
 //  Created by Leonardo Passeri on 03/07/2020.
@@ -8,20 +8,20 @@
 import Foundation
 import PureLayout
 
-protocol WearablePageCoordinator: PageCoordinator {
-    func onWearablePageExternalLinkButtonPressed(page: Page)
-    func onWearablePageSpecialLinkButtonPressed(page: Page)
+protocol IntegrationPageCoordinator: PageCoordinator {
+    func onIntegrationPageExternalLinkButtonPressed(page: Page)
+    func onIntegrationPageSpecialLinkButtonPressed(page: Page)
 }
 
-public class WearablePageViewController: UIViewController, PageProvider {
+public class IntegrationPageViewController: UIViewController, PageProvider {
     
     var page: Page
     
-    private let coordinator: WearablePageCoordinator
+    private let coordinator: IntegrationPageCoordinator
     private let analytics: AnalyticsService
     private let backwardNavigation: Bool
     
-    init(withPage page: Page, coordinator: WearablePageCoordinator, backwardNavigation: Bool) {
+    init(withPage page: Page, coordinator: IntegrationPageCoordinator, backwardNavigation: Bool) {
         self.page = page
         self.coordinator = coordinator
         self.backwardNavigation = backwardNavigation
@@ -57,28 +57,28 @@ public class WearablePageViewController: UIViewController, PageProvider {
                                            textAlignment: .left)
         // Bottom View
         let bottomView: UIView = {
-            let specialLinkBehavior = self.page.wearablesSpecialLinkBehaviour
+            let specialLinkBehavior = self.page.integrationSpecialLinkBehaviour
             let externalLinkBehavior = self.page.externalLinkUrl
             
             if nil != specialLinkBehavior || nil != externalLinkBehavior {
                 let view = DoubleButtonHorizontalView(styleCategory: .secondaryBackground(firstButtonPrimary: true,
                                                                                           secondButtonPrimary: false))
                 view.addTargetToSecondButton(target: self, action: #selector(self.primaryButtonPressed))
-                let nextButtonText = self.page.buttonSecondlabel ?? StringsProvider.string(forKey: .onboardingWearablesNextButtonDefault)
+                let nextButtonText = self.page.buttonSecondlabel ?? StringsProvider.string(forKey: .onboardingIntegrationNextButtonDefault)
                 view.setSecondButtonText(nextButtonText)
                 
                 if let specialLinkBehavior = specialLinkBehavior {
                     view.addTargetToFirstButton(target: self, action: #selector(self.specialLinkButtonPressed))
                     let defaultText: String = {
                         switch specialLinkBehavior {
-                        case .download: return StringsProvider.string(forKey: .onboardingWearablesDownloadButtonDefault)
-                        case .open: return StringsProvider.string(forKey: .onboardingWearablesOpenAppButtonDefault)
+                        case .download: return StringsProvider.string(forKey: .onboardingIntegrationDownloadButtonDefault)
+                        case .open: return StringsProvider.string(forKey: .onboardingIntegrationOpenAppButtonDefault)
                         }
                     }()
                     view.setFirstButtonText(self.page.specialLinkLabel ?? defaultText)
                 } else {
                     view.addTargetToFirstButton(target: self, action: #selector(self.externalLinkButtonPressed))
-                    let text = self.page.externalLinkLabel ?? StringsProvider.string(forKey: .onboardingWearablesLoginButtonDefault)
+                    let text = self.page.externalLinkLabel ?? StringsProvider.string(forKey: .onboardingIntegrationLoginButtonDefault)
                     view.setFirstButtonText(text)
                 }
                 
@@ -114,10 +114,10 @@ public class WearablePageViewController: UIViewController, PageProvider {
     }
     
     @objc private func externalLinkButtonPressed() {
-        self.coordinator.onWearablePageExternalLinkButtonPressed(page: self.page)
+        self.coordinator.onIntegrationPageExternalLinkButtonPressed(page: self.page)
     }
     
     @objc private func specialLinkButtonPressed() {
-        self.coordinator.onWearablePageSpecialLinkButtonPressed(page: self.page)
+        self.coordinator.onIntegrationPageSpecialLinkButtonPressed(page: self.page)
     }
 }

@@ -56,7 +56,7 @@ public class DevicesIntegrationViewController: UIViewController {
             imageName: .fitbitIcon,
             connected: currentUser.identities.contains(garminTitle),
             gestureCallback: { [weak self] in
-                self?.navigator.showWearableLogin(loginUrl: URL(string: Constants.Network.ApiOAuthWearables + garminTitle)!,
+                self?.navigator.showIntegrationLogin(loginUrl: Integration.garmin.apiOAuthUrl,
                                                   navigationController: navigationController)
         })
         self.scrollStackView.stackView.addArrangedSubview(garminItem)
@@ -67,7 +67,7 @@ public class DevicesIntegrationViewController: UIViewController {
             imageName: .ouraIcon,
             connected: currentUser.identities.contains(ouraTitle),
             gestureCallback: { [weak self] in
-                self?.navigator.showWearableLogin(loginUrl: URL(string: Constants.Network.ApiOAuthWearables + ouraTitle)!,
+                self?.navigator.showIntegrationLogin(loginUrl: Integration.oura.apiOAuthUrl,
                                                   navigationController: navigationController)
         })
         
@@ -79,7 +79,7 @@ public class DevicesIntegrationViewController: UIViewController {
             imageName: .twitterIcon,
             connected: currentUser.identities.contains(twitterTitle),
             gestureCallback: { [weak self] in
-                self?.navigator.showWearableLogin(loginUrl: URL(string: Constants.Network.ApiOAuthWearables + twitterTitle)!,
+                self?.navigator.showIntegrationLogin(loginUrl: Integration.twitter.apiOAuthUrl,
                                                   navigationController: navigationController)
         })
         
@@ -87,13 +87,12 @@ public class DevicesIntegrationViewController: UIViewController {
         twitterItem.autoSetDimension(.height, toSize: 72)
         
         let rescueTimeTitle = StringsProvider.string(forKey: .rescueTimeOauthTitle).lowercased()
-        let rescueTimeID = rescueTimeTitle.replacingOccurrences(of: " ", with: "")
         let rescueTimeItem = DeviceItemView(withTitle: rescueTimeTitle.capitalized,
             imageName: .rescueTimeIcon,
             connected: currentUser.identities.contains(rescueTimeTitle),
             gestureCallback: { [weak self] in
-                self?.navigator.showWearableLogin(loginUrl: URL(string: Constants.Network.ApiOAuthWearables + rescueTimeID)!,
-                                                  navigationController: navigationController)
+                self?.navigator.showIntegrationLogin(loginUrl: Integration.rescueTime.apiOAuthUrl,
+                                                     navigationController: navigationController)
         })
         
         self.scrollStackView.stackView.addArrangedSubview(rescueTimeItem)

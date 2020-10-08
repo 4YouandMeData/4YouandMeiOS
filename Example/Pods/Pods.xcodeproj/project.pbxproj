@@ -213,7 +213,7 @@
 		0E7507CB42DC097D4B30EB7D675D2850 /* FIRComponentType.h in Headers */ = {isa = PBXBuildFile; fileRef = 41A268F2DC985B94456454CF81303D43 /* FIRComponentType.h */; settings = {ATTRIBUTES = (Project, ); }; };
 		0E7DC6451BEFB26E3A47621C0B7F1C16 /* ViewPortJob.swift in Sources */ = {isa = PBXBuildFile; fileRef = 481E996D986E10D710449B611ED842E8 /* ViewPortJob.swift */; };
 		0E8B63999FFD777C8443A129D10D4E52 /* GPBRootObject_PackagePrivate.h in Headers */ = {isa = PBXBuildFile; fileRef = 73EC8C6CF2C93DC82EBFB14D2763DFB4 /* GPBRootObject_PackagePrivate.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		0ED8D29EE90BBEADB615D97D13257BDE /* WearablesSectionCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A82744C3B775DD57811F15765AA6B92 /* WearablesSectionCoordinator.swift */; };
+		0ED8D29EE90BBEADB615D97D13257BDE /* IntegrationSectionCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A82744C3B775DD57811F15765AA6B92 /* IntegrationSectionCoordinator.swift */; };
 		0EEA064C5591618AF02DB72B5F87E203 /* Scan.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F4A4F6FDA0E8A341465899120E81A7D /* Scan.swift */; };
 		0EEF450B2204FBA9C2109592A12440F2 /* ORKPieChartLegendCollectionViewLayout.h in Headers */ = {isa = PBXBuildFile; fileRef = 1BA1D4445EA0F0A14748F370A1125DA1 /* ORKPieChartLegendCollectionViewLayout.h */; settings = {ATTRIBUTES = (Project, ); }; };
 		0F02BDDE1A9A8FA7BF0557581BBA1696 /* GtalkCore.pbobjc.h in Headers */ = {isa = PBXBuildFile; fileRef = CED9C55F7B86832CC98852F0FA6122F4 /* GtalkCore.pbobjc.h */; settings = {ATTRIBUTES = (Project, ); }; };
@@ -269,7 +269,7 @@
 		14C511527597E5846AB2627F791C7D8E /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2962ACA59C2DDE91C7166633E526A784 /* QuartzCore.framework */; };
 		14EBD7206A9FC9B87E601B272B0620F5 /* FIRCLSRecordIdentity.h in Headers */ = {isa = PBXBuildFile; fileRef = 1DABAA08E9354B7D4B6B33205A1181B3 /* FIRCLSRecordIdentity.h */; settings = {ATTRIBUTES = (Project, ); }; };
 		14F44F63DCDC2ABA90FD6B0BEF403DBB /* CurrentTestCaseTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 639C3A2B385C37F6CDAF6243361A2781 /* CurrentTestCaseTracker.swift */; };
-		14FF6A94419A2DACC8C8BF5B0AC6E2A5 /* TestGetWearablesSection.json in Resources */ = {isa = PBXBuildFile; fileRef = 45E294DA0CFD345204F305E1C1DC8FB5 /* TestGetWearablesSection.json */; };
+		14FF6A94419A2DACC8C8BF5B0AC6E2A5 /* TestGetIntegrationSection.json in Resources */ = {isa = PBXBuildFile; fileRef = 45E294DA0CFD345204F305E1C1DC8FB5 /* TestGetIntegrationSection.json */; };
 		1505418F2C45EC0C949038B89285A760 /* FIRCLSdSYM.m in Sources */ = {isa = PBXBuildFile; fileRef = B1A7BB1FA60837E2203362ABD76C56C5 /* FIRCLSdSYM.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
 		150E7B4736099D5E59B9B921EF5211D5 /* GULLogger.h in Headers */ = {isa = PBXBuildFile; fileRef = 10B5C47E9799FE3035FD0670BAF5BB12 /* GULLogger.h */; settings = {ATTRIBUTES = (Project, ); }; };
 		153337DBDB96FE8E41FAC67B8E932146 /* FirebaseCoreInternal.h in Headers */ = {isa = PBXBuildFile; fileRef = 308D320452317321B642D1EB2381D3D9 /* FirebaseCoreInternal.h */; settings = {ATTRIBUTES = (Project, ); }; };
@@ -288,7 +288,7 @@
 		1636EA313DB314EAEA8665A4F9427AD4 /* NSString+C99ExtendedIdentifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18E1E4404CD50688689344BD8F718C1A /* NSString+C99ExtendedIdentifier.swift */; };
 		1662BEDD868AF1CD729C4269E69A3580 /* MatcherFunc.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC1E47B4D609678AF26122549134143B /* MatcherFunc.swift */; settings = {COMPILER_FLAGS = "-DPRODUCT_NAME=Nimble/Nimble"; }; };
 		168067BF015102ABEB53ECB520FD471B /* FeedEmptyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA71C26DD932C097C757302AE058FDEF /* FeedEmptyView.swift */; };
-		168608D0FC90CBB8CC94843A50C70513 /* WearablePageViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 647FDD6428FBD57C87239483D1E265BE /* WearablePageViewController.swift */; };
+		168608D0FC90CBB8CC94843A50C70513 /* IntegrationPageViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 647FDD6428FBD57C87239483D1E265BE /* IntegrationPageViewController.swift */; };
 		16AC6763AF0A8FF4242EDE1B39B8D16D /* Type.pbobjc.h in Headers */ = {isa = PBXBuildFile; fileRef = A4628DCFB375F6EC261EF42F7018C423 /* Type.pbobjc.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		16B1A1F2A5DB94155D3A06A90491A619 /* ORKStepHeaderView_Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 732AC5C5BFDD997B96019663D42945E9 /* ORKStepHeaderView_Internal.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		16BE3DC2E8A052D296C933C933C38F3B /* GULKeychainUtils.h in Headers */ = {isa = PBXBuildFile; fileRef = 32D5D00D1EC7E1CF82AEC2A815AAE65B /* GULKeychainUtils.h */; settings = {ATTRIBUTES = (Project, ); }; };
@@ -319,7 +319,7 @@
 		18B2D267EA74D1BCA5E9342F01E361C2 /* ORKEnvironmentSPLMeterStepViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 798E6B8E961ECB141EC82E2F2FA94074 /* ORKEnvironmentSPLMeterStepViewController.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
 		18B40DDBAFFC858BA46F16CD24BB21F3 /* ORKScaleValueLabel.h in Headers */ = {isa = PBXBuildFile; fileRef = A69BEEE573BDE6F5D54C047E67448AA0 /* ORKScaleValueLabel.h */; settings = {ATTRIBUTES = (Project, ); }; };
 		18D2343DA0EBA7622428D7B73C2FA8BA /* Date+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39552472FB75AF52A559CF1CC1FA9EBC /* Date+Extensions.swift */; };
-		18D458525D99AF5394BB066B079ADC4E /* WearableLoginViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83AB1877EC750BAFF361DF25369C64C6 /* WearableLoginViewController.swift */; };
+		18D458525D99AF5394BB066B079ADC4E /* IntegrationLoginViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83AB1877EC750BAFF361DF25369C64C6 /* IntegrationLoginViewController.swift */; };
 		18D59E1D799E32AF452822B4D2DDA9B7 /* FIRCLSFeatures.h in Headers */ = {isa = PBXBuildFile; fileRef = F1553B7C2054E40FCAAAE7F243F1711D /* FIRCLSFeatures.h */; settings = {ATTRIBUTES = (Project, ); }; };
 		18DC8496E2BB13684C55D25AE9487FE6 /* ORKWeightPicker.h in Headers */ = {isa = PBXBuildFile; fileRef = B47590DBDB45AA0D3FE1716AD111F225 /* ORKWeightPicker.h */; settings = {ATTRIBUTES = (Project, ); }; };
 		190776B74DBAE366BB10BE62CFB81062 /* ORKRequestPermissionsStepContainerView.m in Sources */ = {isa = PBXBuildFile; fileRef = 9C4934F3EEEA5AF2421D95940CCCA8B0 /* ORKRequestPermissionsStepContainerView.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
@@ -545,7 +545,7 @@
 		2CE18F5F4DFA35C9090A201A3C59978F /* GDTCORClock.h in Headers */ = {isa = PBXBuildFile; fileRef = 325BF637265A243369704FDC7E94FB4E /* GDTCORClock.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		2D20492ADA90854014970A8675BFC959 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3F41D851DA5BFD4D5C6C4DDE13BC170A /* Foundation.framework */; };
 		2D3BE726EAB8E6896D34FB4DE1883215 /* ORKContinueButton.h in Headers */ = {isa = PBXBuildFile; fileRef = 7D97F609B4469FE2A1005C41B90E31B2 /* ORKContinueButton.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		2D4B5FC4527C14A33386C63D2E8E8346 /* WearablesSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9655B8B11C86253A478952A04E9B238A /* WearablesSection.swift */; };
+		2D4B5FC4527C14A33386C63D2E8E8346 /* IntegrationSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9655B8B11C86253A478952A04E9B238A /* IntegrationSection.swift */; };
 		2D536D219E19385AF0732D7802A7D4F5 /* XCTestSuite+QuickTestSuiteBuilder.m in Sources */ = {isa = PBXBuildFile; fileRef = A2F18BB238B7D4EA47E68B7F5E49E78F /* XCTestSuite+QuickTestSuiteBuilder.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
 		2D57849BBE4DB509C70D6DC48E6E21B3 /* ToSucceed.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBDA0CD52F09CC3297588944E5446748 /* ToSucceed.swift */; settings = {COMPILER_FLAGS = "-DPRODUCT_NAME=Nimble/Nimble"; }; };
 		2D5970DB1033319F2DEEFDAEFB499F99 /* ORKTappingIntervalStepViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 7F6271EF20E0947625E4CBC3AEA323E5 /* ORKTappingIntervalStepViewController.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
@@ -1982,7 +1982,7 @@
 		B18290220B890F77D34E298B93F9D2B5 /* FIRInstallationsIIDStore.m in Sources */ = {isa = PBXBuildFile; fileRef = 5FDB5026877E48B7BD7FC604B8725735 /* FIRInstallationsIIDStore.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
 		B1AC0A6F1EA3C15F3DC33A30B4D5F369 /* FIRInstanceIDCheckinPreferences.h in Headers */ = {isa = PBXBuildFile; fileRef = F8C8904B6D077C7F9A64DE4F706E429B /* FIRInstanceIDCheckinPreferences.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		B1BF082DA89B72FCE759E27C7D940AA1 /* ForYouAndMe-dummy.m in Sources */ = {isa = PBXBuildFile; fileRef = 36D242FEB222CEE362977E563DC8ADC8 /* ForYouAndMe-dummy.m */; };
-		B1C50F49CCB11201131464AEEF44238F /* Page+Wearable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18113DCC890A5F597549596E22063B0D /* Page+Wearable.swift */; };
+		B1C50F49CCB11201131464AEEF44238F /* Page+Integration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18113DCC890A5F597549596E22063B0D /* Page+Integration.swift */; };
 		B1D1DB370C243C5ECC306755E0B10C54 /* UIBarButtonItem+Rx.swift in Sources */ = {isa = PBXBuildFile; fileRef = 147CF6BCC439DF4399C38DCFC9EC3852 /* UIBarButtonItem+Rx.swift */; };
 		B213397D16A8F7B5C5CC1D584C98BB1C /* consent_02@3x.m4v in Resources */ = {isa = PBXBuildFile; fileRef = AD3300A7F72565F2BA33D85F8522B87A /* consent_02@3x.m4v */; };
 		B2406381131C0D309369832C7F6525DE /* UIStackView+Palette.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6861947BA3183B54C1C03F81CF0AE6FB /* UIStackView+Palette.swift */; };
@@ -2056,7 +2056,7 @@
 		BA5D08DBC45CDD9AEDCBEF8AB7971F2F /* Disposable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8419C4C47A1A98861FA6972077E8BE6B /* Disposable.swift */; };
 		BA71A80FED0B664C2AD6D02E8F6FD188 /* ORKTextButton.h in Headers */ = {isa = PBXBuildFile; fileRef = 82767780CD7CFEC0558130C420269CD6 /* ORKTextButton.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		BA86EEDDCF249BCED8FD5994355ADC43 /* pb_encode.c in Sources */ = {isa = PBXBuildFile; fileRef = 20CF6129383EB46B6163A595DEEB8DB3 /* pb_encode.c */; settings = {COMPILER_FLAGS = "-fno-objc-arc -w -Xanalyzer -analyzer-disable-all-checks -fno-objc-arc -w -Xanalyzer -analyzer-disable-all-checks"; }; };
-		BA87B6F1C54B929925B38A28079E9684 /* WearableApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = F43A2133101410738C460C21A27C1F6D /* WearableApp.swift */; };
+		BA87B6F1C54B929925B38A28079E9684 /* Integration.swift in Sources */ = {isa = PBXBuildFile; fileRef = F43A2133101410738C460C21A27C1F6D /* Integration.swift */; };
 		BAAA135599B37D35CB448239B9049B82 /* FIRCLSNetworkClient.m in Sources */ = {isa = PBXBuildFile; fileRef = DC072A27047415B11920EDE869B8419A /* FIRCLSNetworkClient.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
 		BAAC57744263804C731D1ED18F7762B5 /* GDTCORStorageEventSelector.h in Headers */ = {isa = PBXBuildFile; fileRef = 1761C16426C820F555AE23ACA3BB5A57 /* GDTCORStorageEventSelector.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		BAEAB2ADD34955EE77CBA4B43994B6F7 /* NMBExpectation.swift in Sources */ = {isa = PBXBuildFile; fileRef = F65D085A8D389467236B5C01A6954E15 /* NMBExpectation.swift */; settings = {COMPILER_FLAGS = "-DPRODUCT_NAME=Nimble/Nimble"; }; };
@@ -3908,7 +3908,7 @@
 		1776AA5033FBF8ABA1AE6F6E5CD85139 /* UITouch+ORKJSONDictionary.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = "UITouch+ORKJSONDictionary.m"; path = "ResearchKit/ActiveTasks/UITouch+ORKJSONDictionary.m"; sourceTree = "<group>"; };
 		17FE16F082F17623B5CB5DF00097E1F2 /* FIROptions.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = FIROptions.m; path = FirebaseCore/Sources/FIROptions.m; sourceTree = "<group>"; };
 		18002124EC1E08C66C64D75C15B8D174 /* ORKConsentSharingStepViewController.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = ORKConsentSharingStepViewController.m; path = ResearchKit/Consent/ORKConsentSharingStepViewController.m; sourceTree = "<group>"; };
-		18113DCC890A5F597549596E22063B0D /* Page+Wearable.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = "Page+Wearable.swift"; sourceTree = "<group>"; };
+		18113DCC890A5F597549596E22063B0D /* Page+Integration.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = "Page+Integration.swift"; sourceTree = "<group>"; };
 		181501572001B324E0C29F7BA37A5009 /* CircleSlider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = CircleSlider.swift; path = ResearchKit/ActiveTasks/CircleSlider.swift; sourceTree = "<group>"; };
 		181F7D2C4DDB57098C48A434981C38FC /* ORKSwiftStroopContentView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ORKSwiftStroopContentView.swift; path = ResearchKit/ActiveTasks/ORKSwiftStroopContentView.swift; sourceTree = "<group>"; };
 		1878EFC0C3BCFC9AECD62E563EC0F750 /* ORKCheckmarkView.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = ORKCheckmarkView.m; path = ResearchKit/Common/ORKCheckmarkView.m; sourceTree = "<group>"; };
@@ -4095,7 +4095,7 @@
 		2A3D20810AB7A11FE4D20E52452BC883 /* FIRCLSReportManager_Private.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = FIRCLSReportManager_Private.h; path = Crashlytics/Crashlytics/Controllers/FIRCLSReportManager_Private.h; sourceTree = "<group>"; };
 		2A4521829EDB786CC31200CCC75A4354 /* BinaryDisposable.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = BinaryDisposable.swift; path = RxSwift/Disposables/BinaryDisposable.swift; sourceTree = "<group>"; };
 		2A7CAA7799D189583ED85F151DAA203F /* MultipartUpload.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = MultipartUpload.swift; path = Source/MultipartUpload.swift; sourceTree = "<group>"; };
-		2A82744C3B775DD57811F15765AA6B92 /* WearablesSectionCoordinator.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WearablesSectionCoordinator.swift; sourceTree = "<group>"; };
+		2A82744C3B775DD57811F15765AA6B92 /* IntegrationSectionCoordinator.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = IntegrationSectionCoordinator.swift; sourceTree = "<group>"; };
 		2A83933B215DB9B2E1A0BD58E9D4731B /* GoogleDataTransport.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = GoogleDataTransport.release.xcconfig; sourceTree = "<group>"; };
 		2A966EF12FE5AE49AE2970409AD63014 /* ORKPermissionType.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = ORKPermissionType.m; path = ResearchKit/Common/ORKPermissionType.m; sourceTree = "<group>"; };
 		2ACE1F9EE7ACF081F9FF53CF22C585E3 /* SwiftSupport.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = SwiftSupport.swift; path = FBSnapshotTestCase/SwiftSupport.swift; sourceTree = "<group>"; };
@@ -4443,7 +4443,7 @@
 		45AAC51D934160217BF59482B4D26655 /* Platform+Gestures.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = "Platform+Gestures.swift"; path = "Source/Charts/Utils/Platform+Gestures.swift"; sourceTree = "<group>"; };
 		45BC3014114BEB7AC7FFA0B71CD2DB9D /* ORKAmslerGridStepViewController.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = ORKAmslerGridStepViewController.m; path = ResearchKit/ActiveTasks/ORKAmslerGridStepViewController.m; sourceTree = "<group>"; };
 		45DCE9B90195E89DC8033A68B3C36F5B /* ValidationType.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ValidationType.swift; path = Sources/Moya/ValidationType.swift; sourceTree = "<group>"; };
-		45E294DA0CFD345204F305E1C1DC8FB5 /* TestGetWearablesSection.json */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.json; path = TestGetWearablesSection.json; sourceTree = "<group>"; };
+		45E294DA0CFD345204F305E1C1DC8FB5 /* TestGetIntegrationSection.json */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.json; path = TestGetIntegrationSection.json; sourceTree = "<group>"; };
 		462F0C043A6AA6FC2EE46A41072CC192 /* UberSignature.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = UberSignature.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		463D4FDCAEFB866F0C3822286508079E /* FIRComponentType.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = FIRComponentType.h; path = FirebaseCore/Sources/Private/FIRComponentType.h; sourceTree = "<group>"; };
 		464E43122B2CFC32CB8E59BC5CC71862 /* ORKHolePegTestPlaceHoleView.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = ORKHolePegTestPlaceHoleView.m; path = ResearchKit/ActiveTasks/ORKHolePegTestPlaceHoleView.m; sourceTree = "<group>"; };
@@ -4782,7 +4782,7 @@
 		640027C04C6A7AB7EA657330860BA7DD /* SurveyQuestionPickOne.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SurveyQuestionPickOne.swift; sourceTree = "<group>"; };
 		640E96A3DF6FB9C6FEE19716D646426B /* SVIndefiniteAnimatedView.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = SVIndefiniteAnimatedView.m; path = SVProgressHUD/SVIndefiniteAnimatedView.m; sourceTree = "<group>"; };
 		641C7654824CC83800696DA894D479FF /* CacheManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CacheManager.swift; sourceTree = "<group>"; };
-		647FDD6428FBD57C87239483D1E265BE /* WearablePageViewController.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WearablePageViewController.swift; sourceTree = "<group>"; };
+		647FDD6428FBD57C87239483D1E265BE /* IntegrationPageViewController.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = IntegrationPageViewController.swift; sourceTree = "<group>"; };
 		648244A3A61DCFDC44F3484D9EC16F69 /* ReachabilitySwift-dummy.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = "ReachabilitySwift-dummy.m"; sourceTree = "<group>"; };
 		649522FB4819BFA9404A0DB80497F6C1 /* GULKeychainStorage.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = GULKeychainStorage.h; path = GoogleUtilities/Environment/Private/GULKeychainStorage.h; sourceTree = "<group>"; };
 		64A1042E0C56BF186B59E564CFDFE44D /* consent_05@2x.m4v */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = file; name = "consent_05@2x.m4v"; path = "ResearchKit/Animations/phone@2x/consent_05@2x.m4v"; sourceTree = "<group>"; };
@@ -5157,7 +5157,7 @@
 		83389F9EFBEC640BD5E2F6C43379700B /* ORKPasscodeStep.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = ORKPasscodeStep.m; path = ResearchKit/Common/ORKPasscodeStep.m; sourceTree = "<group>"; };
 		83436A17EFFEE6103E0F88DF97925399 /* IChartDataSet.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = IChartDataSet.swift; path = Source/Charts/Data/Interfaces/IChartDataSet.swift; sourceTree = "<group>"; };
 		8380AD6DE17F64D55B96FE733CF30104 /* ORKActiveStepQuantityView.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = ORKActiveStepQuantityView.h; path = ResearchKit/ActiveTasks/ORKActiveStepQuantityView.h; sourceTree = "<group>"; };
-		83AB1877EC750BAFF361DF25369C64C6 /* WearableLoginViewController.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WearableLoginViewController.swift; sourceTree = "<group>"; };
+		83AB1877EC750BAFF361DF25369C64C6 /* IntegrationLoginViewController.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = IntegrationLoginViewController.swift; sourceTree = "<group>"; };
 		83BA882789556E789EA36F50704F0AE5 /* FIRInstallationsStoredItem.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = FIRInstallationsStoredItem.h; path = FirebaseInstallations/Source/Library/InstallationsStore/FIRInstallationsStoredItem.h; sourceTree = "<group>"; };
 		83C101D21411EF13276833769EA95BC6 /* ConsentSectionCoordinator.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ConsentSectionCoordinator.swift; sourceTree = "<group>"; };
 		83E6C4537A4F64B77D6806745F0217B0 /* FIRVersion.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = FIRVersion.m; path = FirebaseCore/Sources/FIRVersion.m; sourceTree = "<group>"; };
@@ -5367,7 +5367,7 @@
 		9635D42FFB8479E677C29B2550E7EC55 /* Legend.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = Legend.swift; path = Source/Charts/Components/Legend.swift; sourceTree = "<group>"; };
 		9638B75712435410072B4235B019E274 /* ZoomViewJob.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ZoomViewJob.swift; path = Source/Charts/Jobs/ZoomViewJob.swift; sourceTree = "<group>"; };
 		96412AA7948A419E0A0947B27360B2D0 /* GDTCORRegistrar.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = GDTCORRegistrar.m; path = GoogleDataTransport/GDTCORLibrary/GDTCORRegistrar.m; sourceTree = "<group>"; };
-		9655B8B11C86253A478952A04E9B238A /* WearablesSection.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WearablesSection.swift; sourceTree = "<group>"; };
+		9655B8B11C86253A478952A04E9B238A /* IntegrationSection.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = IntegrationSection.swift; sourceTree = "<group>"; };
 		9661A0292959F6A1389E0D005286AF2E /* FileDataExtension.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = FileDataExtension.swift; sourceTree = "<group>"; };
 		966C84E3A556E5966BF1585C7CBE7C4B /* FIRCLSFABAsyncOperation.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = FIRCLSFABAsyncOperation.h; path = Crashlytics/Shared/FIRCLSOperation/FIRCLSFABAsyncOperation.h; sourceTree = "<group>"; };
 		96799B47132332B9492DDF8A988B1999 /* Moya.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = Moya.debug.xcconfig; sourceTree = "<group>"; };
@@ -6409,7 +6409,7 @@
 		F3EEDF4BC6B7A7D76557E7F6FA71F97C /* Japx-dummy.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = "Japx-dummy.m"; sourceTree = "<group>"; };
 		F4052D395D6A2DA60EC9A925D7FA0ECA /* FIRCrashlytics.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = FIRCrashlytics.m; path = Crashlytics/Crashlytics/FIRCrashlytics.m; sourceTree = "<group>"; };
 		F410E01244DF5939B7CE59F307D7E7DC /* YAxisRendererRadarChart.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = YAxisRendererRadarChart.swift; path = Source/Charts/Renderers/YAxisRendererRadarChart.swift; sourceTree = "<group>"; };
-		F43A2133101410738C460C21A27C1F6D /* WearableApp.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WearableApp.swift; sourceTree = "<group>"; };
+		F43A2133101410738C460C21A27C1F6D /* Integration.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Integration.swift; sourceTree = "<group>"; };
 		F457C853E32C7D7DF2A101C36CDC5B96 /* FirebaseCrashlytics.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = FirebaseCrashlytics.h; path = Crashlytics/Crashlytics/Public/FirebaseCrashlytics/FirebaseCrashlytics.h; sourceTree = "<group>"; };
 		F47D57631DBE8A6AB8BFD5D70FFF7757 /* FirebaseCrashlytics-umbrella.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = "FirebaseCrashlytics-umbrella.h"; sourceTree = "<group>"; };
 		F49047BB786811685024C747A7B2F3CA /* FIRCurrentDateProvider.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = FIRCurrentDateProvider.m; path = FirebaseInstallations/Source/Library/InstallationsIDController/FIRCurrentDateProvider.m; sourceTree = "<group>"; };
@@ -7335,7 +7335,7 @@
 				717CFDAA51EFB3C9A3D2F6CAAB4377ED /* SurveySectionCoordinator.swift */,
 				5E67842C9F1D984E7925CD4CAC7230DC /* TaskSectionCoordinator.swift */,
 				908B0B20BDF96FB616503649BBDB5F4A /* VideoDiarySectionCoordinator.swift */,
-				2A82744C3B775DD57811F15765AA6B92 /* WearablesSectionCoordinator.swift */,
+				2A82744C3B775DD57811F15765AA6B92 /* IntegrationSectionCoordinator.swift */,
 			);
 			path = Navigator;
 			sourceTree = "<group>";
@@ -7378,7 +7378,7 @@
 			isa = PBXGroup;
 			children = (
 				DA699026E497F75E84E7B162FACBE92C /* CountryCodeProvider.swift */,
-				18113DCC890A5F597549596E22063B0D /* Page+Wearable.swift */,
+				18113DCC890A5F597549596E22063B0D /* Page+Integration.swift */,
 				AFB17D4628CB675755053A5BA21A2ADD /* UILabel+Internal.swift */,
 				48D7C3F91763742A4183E47A9086A614 /* UINavigationController+Internal.swift */,
 				310F089CCD98184B30037C576E7FC0C0 /* UIStackView+Internal.swift */,
@@ -7438,8 +7438,8 @@
 			children = (
 				CE889F957B86E78B9B5493BA02EDF626 /* IntroVideoViewController.swift */,
 				635FFFBDC4E1689F4F3E2816EBA4DB99 /* OptInPermissionViewController.swift */,
-				83AB1877EC750BAFF361DF25369C64C6 /* WearableLoginViewController.swift */,
-				647FDD6428FBD57C87239483D1E265BE /* WearablePageViewController.swift */,
+				83AB1877EC750BAFF361DF25369C64C6 /* IntegrationLoginViewController.swift */,
+				647FDD6428FBD57C87239483D1E265BE /* IntegrationPageViewController.swift */,
 				2C9E3E452363E486B299107114E2074A /* PhoneVerification */,
 				1E8C7E706650E6C1DCDA751705F7DEEC /* UserConsentData */,
 				D02002C27462AA19156F1831106957A7 /* Welcome */,
@@ -7955,7 +7955,7 @@
 				5E22046F5A9D24644EE679E00BEA8E1E /* InformedConsentSection.swift */,
 				AC468D904FB7B81F1765C87B40681BFF /* OptInSection.swift */,
 				453A2B196967BD2087290FCEC3564966 /* ScreeningSection.swift */,
-				9655B8B11C86253A478952A04E9B238A /* WearablesSection.swift */,
+				9655B8B11C86253A478952A04E9B238A /* IntegrationSection.swift */,
 			);
 			path = Sections;
 			sourceTree = "<group>";
@@ -8678,7 +8678,7 @@
 				2D57E82F539A34577F89B54A6D4ED43E /* TestGetUserData.json */,
 				BA74C0342D7B7F6082DB2EB95D7FDD3C /* TestGetUserDataAggregation.json */,
 				2B494FADCD05DCC14FE8C0CCFC3C850A /* TestGetUserNoOnboarding.json */,
-				45E294DA0CFD345204F305E1C1DC8FB5 /* TestGetWearablesSection.json */,
+				45E294DA0CFD345204F305E1C1DC8FB5 /* TestGetIntegrationSection.json */,
 			);
 			name = Test;
 			path = ForYouAndMe/Assets/Test;
@@ -9669,7 +9669,7 @@
 				BD6502D206999D8971ABF680A6F8418D /* UserData.swift */,
 				6E4325B5CA1C7127902F87BBB3BBEDAB /* UserDataAggregation.swift */,
 				7183CA53934EC4B42FE11474877C79F3 /* UserInfoParameter.swift */,
-				F43A2133101410738C460C21A27C1F6D /* WearableApp.swift */,
+				F43A2133101410738C460C21A27C1F6D /* Integration.swift */,
 				509A5B8DD82599C35DA64DE696D26926 /* Sections */,
 				60792D51D7E094FD79AE81A2D160EFB8 /* Survey */,
 			);
@@ -13532,7 +13532,7 @@
 				3156E37084D7BC56EC4AFB5AB978F3D4 /* TestGetUserData.json in Resources */,
 				D7671F76B7D21E44CE1CB91CFDD5D40F /* TestGetUserDataAggregation.json in Resources */,
 				FB221E3B272C4EC00B41F7E6BAE55D85 /* TestGetUserNoOnboarding.json in Resources */,
-				14FF6A94419A2DACC8C8BF5B0AC6E2A5 /* TestGetWearablesSection.json in Resources */,
+				14FF6A94419A2DACC8C8BF5B0AC6E2A5 /* TestGetIntegrationSection.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -14928,7 +14928,7 @@
 				60583CC09012A3E7D17CE03028BBCBED /* OptInPermissionViewController.swift in Sources */,
 				66BCB9A165751D599558327DA8437F92 /* OptInSection.swift in Sources */,
 				53B5094CA2E44C65CCEAAAC25B8777A9 /* OptInSectionCoordinator.swift in Sources */,
-				B1C50F49CCB11201131464AEEF44238F /* Page+Wearable.swift in Sources */,
+				B1C50F49CCB11201131464AEEF44238F /* Page+Integration.swift in Sources */,
 				37C27C0904E826136FAC1C5D74D97B0C /* Page.swift in Sources */,
 				3A319CBC20E3F2E7F4D8F63C56BA0E58 /* PagedSectionCoordinator.swift in Sources */,
 				C94FDCCAB8104B7878EFDBA01934D4C5 /* PageProtocols.swift in Sources */,
@@ -15052,11 +15052,11 @@
 				8376B9702274B6A02354A54CEA39C25A /* VideoDiaryRecorderViewController.swift in Sources */,
 				D71FCABB1CD1FA83BF8D9583FC6E71FF /* VideoDiarySectionCoordinator.swift in Sources */,
 				DC84D203AC87DC36F9CF732EEC270DBE /* WalkTask.swift in Sources */,
-				BA87B6F1C54B929925B38A28079E9684 /* WearableApp.swift in Sources */,
-				18D458525D99AF5394BB066B079ADC4E /* WearableLoginViewController.swift in Sources */,
-				168608D0FC90CBB8CC94843A50C70513 /* WearablePageViewController.swift in Sources */,
-				2D4B5FC4527C14A33386C63D2E8E8346 /* WearablesSection.swift in Sources */,
-				0ED8D29EE90BBEADB615D97D13257BDE /* WearablesSectionCoordinator.swift in Sources */,
+				BA87B6F1C54B929925B38A28079E9684 /* Integration.swift in Sources */,
+				18D458525D99AF5394BB066B079ADC4E /* IntegrationLoginViewController.swift in Sources */,
+				168608D0FC90CBB8CC94843A50C70513 /* IntegrationPageViewController.swift in Sources */,
+				2D4B5FC4527C14A33386C63D2E8E8346 /* IntegrationSection.swift in Sources */,
+				0ED8D29EE90BBEADB615D97D13257BDE /* IntegrationSectionCoordinator.swift in Sources */,
 				A947D2930F69E9822B164EBBF3FBFA63 /* WebViewViewController.swift in Sources */,
 				C74B551727AFC5333F28DD7E9B162BC1 /* WelcomeViewController.swift in Sources */,
 			);

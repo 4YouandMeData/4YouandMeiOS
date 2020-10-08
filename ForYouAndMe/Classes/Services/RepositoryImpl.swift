@@ -202,10 +202,10 @@ extension RepositoryImpl: Repository {
             .handleError()
     }
     
-    // MARK: - Wearable
+    // MARK: - Integration
     
-    func getWearablesSection() -> Single<WearablesSection> {
-        return self.api.send(request: ApiRequest(serviceRequest: .getWearablesSection))
+    func getIntegrationSection() -> Single<IntegrationSection> {
+        return self.api.send(request: ApiRequest(serviceRequest: .getIntegrationSection))
             .handleError()
     }
     

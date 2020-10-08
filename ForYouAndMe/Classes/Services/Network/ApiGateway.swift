@@ -38,8 +38,8 @@ enum DefaultService {
     case updateUserConsent(email: String?, firstName: String?, lastName: String?, signatureImage: UIImage?)
     case verifyEmail(validationCode: String)
     case resendConfirmationEmail
-    // Wearable Section
-    case getWearablesSection
+    // Integration Section
+    case getIntegrationSection
     // Answer
     case sendAnswer(answer: Answer, context: ApiContext?)
     // Feed
