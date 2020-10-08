@@ -18,10 +18,12 @@ extension UIStackView {
             fatalError("error parsing HTML text")
         }
         
+        let referenceAttributedString = NSAttributedString.create(withText: text,
+                                                                  fontStyle: fontStyle,
+                                                                  colorType: colorType,
+                                                                  textAlignment: textAlignment)
         let attributedString = NSMutableAttributedString(attributedString: htmlString)
-        attributedString.setColor(ColorPalette.color(withType: colorType))
-        attributedString.setFont(FontPalette.fontStyleData(forStyle: fontStyle).font)
-        attributedString.setTextAlignment(textAlignment)
+        attributedString.addAttributes(fromAttributedString: referenceAttributedString)
         
         self.addHTMLTextView(attributedString: attributedString,
                              horizontalInset: horizontalInset)

@@ -70,6 +70,12 @@ extension NSMutableAttributedString {
         self.updateParagraphStyle(withParagraphStyle: paragraphStyle, range: range)
     }
     
+    func addAttributes(fromAttributedString attributedString: NSAttributedString, range: NSRange? = nil) {
+        attributedString.attributes(at: 0, effectiveRange: nil).forEach { attributedData in
+            self.addAttribute(attributedData.key, value: attributedData.value, range: range ?? self.fullRange)
+        }
+    }
+    
     fileprivate func updateParagraphStyle(withParagraphStyle paragraphStyle: NSParagraphStyle, range: NSRange? = nil) {
         self.addAttribute(.paragraphStyle, value: paragraphStyle, range: range ?? self.fullRange)
     }
