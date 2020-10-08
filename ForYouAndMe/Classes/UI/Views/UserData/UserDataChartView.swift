@@ -177,8 +177,9 @@ class UserDataChartView: UIView {
             rightAxis.axisMaximum = Double(self.yLabels.count - 1)
             rightAxis.axisMinimum = 0
         } else {
-            rightAxis.axisMaximum = (data.compactMap { $0 }.max() ?? 0) + 10.0
-            rightAxis.axisMinimum = (data.compactMap { $0 }.min() ?? 0) - 10.0
+            rightAxis.axisMaximum = (data.compactMap { $0 }.max() ?? 0)
+            rightAxis.axisMinimum = (data.compactMap { $0 }.min() ?? 0)
+            self.chartView.extraRightOffset = 20
         }
         rightAxis.drawLimitLinesBehindDataEnabled = true
         
