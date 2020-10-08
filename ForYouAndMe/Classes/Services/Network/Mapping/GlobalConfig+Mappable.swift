@@ -32,7 +32,7 @@ extension Mapper {
             return result
         }
         
-        var check = true
+        var check = false
         #if DEBUG
         check = Constants.Test.CheckGlobalColors
         #endif
@@ -59,7 +59,7 @@ extension Mapper {
             return result
         }
         
-        var check = true
+        var check = false
         #if DEBUG
         check = Constants.Test.CheckGlobalStrings
         #endif
