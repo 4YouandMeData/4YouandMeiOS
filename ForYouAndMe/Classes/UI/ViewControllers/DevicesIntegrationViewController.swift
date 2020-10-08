@@ -9,6 +9,8 @@ import PureLayout
 
 public class DevicesIntegrationViewController: UIViewController {
     
+    private static let IntegrationItemHeight: CGFloat = 72.0
+    
     private var titleString: String
     private let navigator: AppNavigator
     private let analytics: AnalyticsService
@@ -51,52 +53,17 @@ public class DevicesIntegrationViewController: UIViewController {
             return
         }
         
-        let garminTitle = StringsProvider.string(forKey: .garminOauthTitle).lowercased()
-        let garminItem = DeviceItemView(withTitle: garminTitle.capitalized,
-            imageName: .fitbitIcon,
-            connected: currentUser.identities.contains(garminTitle),
-            gestureCallback: { [weak self] in
-                self?.navigator.showIntegrationLogin(loginUrl: Integration.garmin.apiOAuthUrl,
-                                                  navigationController: navigationController)
-        })
-        self.scrollStackView.stackView.addArrangedSubview(garminItem)
-        garminItem.autoSetDimension(.height, toSize: 72)
-        
-        let ouraTitle = StringsProvider.string(forKey: .ouraOauthTitle).lowercased()
-        let ouraItem = DeviceItemView(withTitle: ouraTitle.capitalized,
-            imageName: .ouraIcon,
-            connected: currentUser.identities.contains(ouraTitle),
-            gestureCallback: { [weak self] in
-                self?.navigator.showIntegrationLogin(loginUrl: Integration.oura.apiOAuthUrl,
-                                                  navigationController: navigationController)
-        })
-        
-        self.scrollStackView.stackView.addArrangedSubview(ouraItem)
-        ouraItem.autoSetDimension(.height, toSize: 72)
-        
-        let twitterTitle = StringsProvider.string(forKey: .twitterOauthTitle).lowercased()
-        let twitterItem = DeviceItemView(withTitle: twitterTitle.capitalized,
-            imageName: .twitterIcon,
-            connected: currentUser.identities.contains(twitterTitle),
-            gestureCallback: { [weak self] in
-                self?.navigator.showIntegrationLogin(loginUrl: Integration.twitter.apiOAuthUrl,
-                                                  navigationController: navigationController)
-        })
-        
-        self.scrollStackView.stackView.addArrangedSubview(twitterItem)
-        twitterItem.autoSetDimension(.height, toSize: 72)
-        
-        let rescueTimeTitle = StringsProvider.string(forKey: .rescueTimeOauthTitle).lowercased()
-        let rescueTimeItem = DeviceItemView(withTitle: rescueTimeTitle.capitalized,
-            imageName: .rescueTimeIcon,
-            connected: currentUser.identities.contains(rescueTimeTitle),
-            gestureCallback: { [weak self] in
-                self?.navigator.showIntegrationLogin(loginUrl: Integration.rescueTime.apiOAuthUrl,
-                                                     navigationController: navigationController)
-        })
-        
-        self.scrollStackView.stackView.addArrangedSubview(rescueTimeItem)
-        rescueTimeItem.autoSetDimension(.height, toSize: 72)
+        Integration.availableIntegrations.forEach { integration in
+            let item = DeviceItemView(withTitle: integration.title,
+                imageName: integration.icon,
+                connected: currentUser.identities.contains(integration.rawValue),
+                gestureCallback: { [weak self] in
+                    self?.navigator.showIntegrationLogin(loginUrl: integration.apiOAuthUrl,
+                                                      navigationController: navigationController)
+            })
+            self.scrollStackView.stackView.addArrangedSubview(item)
+            item.autoSetDimension(.height, toSize: Self.IntegrationItemHeight)
+        }
         
         self.scrollStackView.stackView.addBlankSpace(space: 40.0)
     }
@@ -112,5 +79,28 @@ public class DevicesIntegrationViewController: UIViewController {
     
     @objc private func backButtonPressed() {
         self.navigationController?.popViewController(animated: true)
+    }
+}
+
+fileprivate extension Integration {
+    var icon: ImageName {
+        switch self {
+        case .oura: return .ouraIcon
+        case .fitbit: return .fitbitIcon
+        case .garmin: return .garminIcon
+        case .instagram: return .instagramIcon
+        case .rescueTime: return .rescueTimeIcon
+        case .twitter: return .twitterIcon
+        }
+    }
+    var title: String {
+        switch self {
+        case .oura: return StringsProvider.string(forKey: .ouraOauthTitle)
+        case .fitbit: return StringsProvider.string(forKey: .fitbitOauthTitle)
+        case .garmin: return StringsProvider.string(forKey: .garminOauthTitle)
+        case .instagram: return StringsProvider.string(forKey: .instagramOauthTitle)
+        case .rescueTime: return StringsProvider.string(forKey: .rescueTimeOauthTitle)
+        case .twitter: return StringsProvider.string(forKey: .twitterOauthTitle)
+        }
     }
 }

@@ -163,7 +163,8 @@
       "OAUTH_GARMIN": "Garmin",
       "OAUTH_TWITTER": "Twitter",
       "OAUTH_INSTAGRAM": "Instagram",
-      "OAUTH_RESCUETIME": "Rescue Time"
+      "OAUTH_RESCUETIME": "Rescue Time",
+      "OAUTH_AVAILABLE_INTERATIONS": "garmin;oura;instagram;rescuetime;twitter"
     },
     "country_codes": ["US", "GB", "IT"]
 }
