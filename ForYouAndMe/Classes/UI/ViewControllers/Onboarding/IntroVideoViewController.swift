@@ -14,7 +14,7 @@ class IntroVideoViewController: UIViewController {
         let view = UIView()
         return view
     }()
-    
+        
     private let overlayView: UIView = {
         let view = UIView()
         view.backgroundColor = ColorPalette.overlayColor
@@ -70,6 +70,7 @@ class IntroVideoViewController: UIViewController {
     }()
     
     private var player: AVPlayer?
+    private var playerLayer: AVPlayerLayer?
     private var playerEndTimeNotification: NSObjectProtocol?
     private var durationTime: Float64?
     private var isVideoPlaying: Bool = false {
@@ -103,6 +104,9 @@ class IntroVideoViewController: UIViewController {
         self.addTapGestureToContainerView()
         self.updateProgressBar()
         self.configureTheViewElements()
+        NotificationCenter.default.addObserver(self, selector: #selector(rotated),
+                                               name: UIDevice.orientationDidChangeNotification,
+                                               object: nil)
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -121,6 +125,13 @@ class IntroVideoViewController: UIViewController {
     
     deinit {
         self.removeObserver()
+    }
+    
+    @objc func rotated() {
+        if var frame = self.playerLayer?.frame {
+            frame = self.view.bounds
+            self.playerLayer?.frame = frame
+        }
     }
     
     // MARK: - Actions
@@ -203,9 +214,6 @@ class IntroVideoViewController: UIViewController {
     }
     
     @objc private func continueButtonClicked() {
-        let value = UIInterfaceOrientation.portrait.rawValue
-        UIDevice.current.setValue(value, forKey: "orientation")
-        UIViewController.attemptRotationToDeviceOrientation()
         self.navigateForward()
     }
     
@@ -278,12 +286,14 @@ class IntroVideoViewController: UIViewController {
         } catch let error as NSError {
             debugPrint(error.localizedDescription)
         }
+        
         let playerLayer = AVPlayerLayer(player: self.player)
         playerLayer.videoGravity = .resizeAspect
         playerLayer.backgroundColor = UIColor.black.cgColor
-        playerLayer.frame = CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height)
+        playerLayer.frame = self.view.bounds
         self.player?.seek(to: .zero)
         self.layerView.layer.addSublayer(playerLayer)
+        self.playerLayer = playerLayer
     }
     
     private func addObserver() {
@@ -316,6 +326,7 @@ class IntroVideoViewController: UIViewController {
     private func removeObserver() {
         self.removePlayerObserver()
         NotificationCenter.default.removeObserver(self, name: UIApplication.didBecomeActiveNotification, object: nil)
+        NotificationCenter.default.removeObserver(self, name: UIDevice.orientationDidChangeNotification, object: nil)
     }
     
     private func addTapGestureToContainerView() {
@@ -324,6 +335,9 @@ class IntroVideoViewController: UIViewController {
     }
     
     private func navigateForward() {
+        let value = UIInterfaceOrientation.portrait.rawValue
+        UIDevice.current.setValue(value, forKey: "orientation")
+        UIViewController.attemptRotationToDeviceOrientation()
         self.removePlayer()
         self.analytics.track(event: .startStudyAction(AnalyticsParameter.close.rawValue))
         self.slider.value = 1.0
