@@ -42,11 +42,10 @@ extension UIStackView {
                       horizontalInset: horizontalInset)
     }
     
-    func addImage(withImage image: UIImage,
+    func addImage(withImage image: UIImage?,
                   color: UIColor,
                   sizeDimension: CGFloat,
                   horizontalInset: CGFloat = 0) {
-        
         let imageView = UIImageView(image: image)
         imageView.tintColor = color
         imageView.contentMode = .scaleAspectFit

@@ -26,8 +26,7 @@ struct CameraPermission: PermissionProtocol {
     }
     
     func request(completion: @escaping () -> Void?) {
-        AVCaptureDevice.requestAccess(for: AVMediaType.video, completionHandler: {
-            _ in
+        AVCaptureDevice.requestAccess(for: AVMediaType.video, completionHandler: { _ in
             DispatchQueue.main.async {
                 completion()
             }

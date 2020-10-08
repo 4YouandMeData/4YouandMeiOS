@@ -27,10 +27,9 @@ struct CalendarPermission: PermissionProtocol {
         return EKEventStore.authorizationStatus(for: EKEntityType.event) == .restricted
     }
     
-    func request(completion: @escaping ()-> Void?) {
+    func request(completion: @escaping () -> Void?) {
         let eventStore = EKEventStore()
-        eventStore.requestAccess(to: EKEntityType.event, completion: {
-            (accessGranted: Bool, error: Error?) in
+        eventStore.requestAccess(to: EKEntityType.event, completion: { (_, _) in
             DispatchQueue.main.async {
                 completion()
             }

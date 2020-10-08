@@ -46,7 +46,7 @@ struct NotificationPermission: PermissionProtocol {
     
     func request(completion: @escaping () -> Void?) {
         let center = UNUserNotificationCenter.current()
-        center.requestAuthorization(options: [.badge, .alert, .sound]) { (granted, error) in
+        center.requestAuthorization(options: [.badge, .alert, .sound]) { (_, _) in
             DispatchQueue.main.async {
                 completion()
                 Messaging.messaging().isAutoInitEnabled = true

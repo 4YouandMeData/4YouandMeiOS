@@ -25,9 +25,8 @@ struct MicrophonePermission: PermissionProtocol {
         return false
     }
     
-    func request(completion: @escaping ()->()?) {
-        AVAudioSession.sharedInstance().requestRecordPermission {
-            granted in
+    func request(completion: @escaping () -> Void?) {
+        AVAudioSession.sharedInstance().requestRecordPermission { _ in
             DispatchQueue.main.async {
                 completion()
             }

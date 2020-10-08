@@ -25,7 +25,7 @@ struct SpeechPermission: PermissionProtocol {
         return SFSpeechRecognizer.authorizationStatus() == .restricted
     }
     
-    func request(completion: @escaping ()->()?) {
+    func request(completion: @escaping () -> Void?) {
         SFSpeechRecognizer.requestAuthorization { _ in
             DispatchQueue.main.async {
                 completion()

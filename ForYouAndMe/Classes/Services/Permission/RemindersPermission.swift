@@ -29,8 +29,7 @@ struct RemindersPermission: PermissionProtocol {
     
     func request(completion: @escaping () -> Void?) {
         let eventStore = EKEventStore()
-        eventStore.requestAccess(to: EKEntityType.reminder, completion: {
-            (accessGranted: Bool, error: Error?) in
+        eventStore.requestAccess(to: EKEntityType.reminder, completion: { (_, _) in
             DispatchQueue.main.async {
                 completion()
             }

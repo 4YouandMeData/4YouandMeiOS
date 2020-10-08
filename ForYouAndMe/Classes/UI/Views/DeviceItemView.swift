@@ -61,7 +61,8 @@ class DeviceItemView: UIView {
         
         stackView.addArrangedSubview(connectLabel, horizontalInset: 16)
         
-        stackView.addImage(withImage: ImagePalette.image(withName: (connected) ? .nextButtonSecondaryDisabled : .nextButtonSecondary) ?? UIImage(),
+        let image = ImagePalette.image(withName: (connected) ? .nextButtonSecondaryDisabled : .nextButtonSecondary)
+        stackView.addImage(withImage: image,
                            color: ColorPalette.color(withType: .gradientPrimaryEnd),
                            sizeDimension: 32)
         

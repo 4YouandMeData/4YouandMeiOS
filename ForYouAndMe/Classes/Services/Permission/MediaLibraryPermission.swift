@@ -25,8 +25,8 @@ struct MediaLibraryPermission: PermissionProtocol {
         return MPMediaLibrary.authorizationStatus() == .restricted
     }
     
-    func request(completion: @escaping ()->()?) {
-        MPMediaLibrary.requestAuthorization() { status in
+    func request(completion: @escaping () -> Void?) {
+        MPMediaLibrary.requestAuthorization { _ in
             DispatchQueue.main.async {
                 completion()
             }

@@ -45,16 +45,15 @@ struct ContactsPermission: PermissionProtocol {
     func request(completion: @escaping () -> Void?) {
         if #available(iOS 9.0, *) {
             let store = CNContactStore()
-            store.requestAccess(for: .contacts, completionHandler: { (granted, error) in
+            store.requestAccess(for: .contacts, completionHandler: { (_, _) in
                 DispatchQueue.main.async {
                     completion()
                 }
             })
         } else {
             let addressBookRef: ABAddressBook = ABAddressBookCreateWithOptions(nil, nil).takeRetainedValue()
-            ABAddressBookRequestAccessWithCompletion(addressBookRef) {
-                (granted: Bool, error: CFError?) in
-                DispatchQueue.main.async() {
+            ABAddressBookRequestAccessWithCompletion(addressBookRef) { (_, _) in
+                DispatchQueue.main.async {
                     completion()
                 }
             }

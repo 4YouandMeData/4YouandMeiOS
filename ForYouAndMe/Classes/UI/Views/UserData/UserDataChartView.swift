@@ -77,6 +77,12 @@ enum StudyPeriod: Int, CaseIterable {
     }
 }
 
+fileprivate struct RangeAxisX {
+    let min: Double
+    let max: Double
+    let interval: Int
+}
+
 class UserDataChartView: UIView {
     
     private static let chartBackgroundHeight: CGFloat = 280.0
@@ -236,14 +242,12 @@ class UserDataChartView: UIView {
         rightAxis.drawZeroLineEnabled = true
     }
     
-    fileprivate func getXAxisRange(periodType: StudyPeriod) -> (min: Double, max: Double, interval: Int) {
-        var value: (min: Double, max: Double, interval: Int)!
+    fileprivate func getXAxisRange(periodType: StudyPeriod) -> RangeAxisX {
         if periodType == .week {
-            value = (min: 0, max: 6, interval: 6)
+            return RangeAxisX(min: 0, max: 6, interval: 6)
         } else {
-            value = (min: 0, max: 3, interval: 3)
+            return RangeAxisX(min: 0, max: 3, interval: 3)
         }
-        return value
     }
     
     private func getDataEntries() -> [ChartDataEntry] {

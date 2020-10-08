@@ -42,7 +42,7 @@ struct MotionPermission: PermissionProtocol {
         let today = Date()
         
         manager.queryActivityStarting(from: today, to: today, to: OperationQueue.main,
-                                      withHandler: { (activities: [CMMotionActivity]?, error: Error?) -> () in
+                                      withHandler: { (_, _)  in
             completion()
             manager.stopActivityUpdates()
         })

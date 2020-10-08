@@ -83,6 +83,6 @@ class SurveyQuestionTextInput: UIView, UITextViewDelegate {
             self.labelLimit.textColor = .red
         }
         
-        self.delegate?.answerDidChange(self.surveyQuestion, answer: textView.text)
+        self.delegate?.answerDidChange(self.surveyQuestion, answer: textView.text ?? "")
     }
 }
