@@ -37,4 +37,11 @@ extension UINavigationController {
         loadingViewController.hidesBottomBarWhenPushed = hidesBottomBarWhenPushed
         self.pushViewController(loadingViewController, animated: true)
     }
+    
+    override open var shouldAutorotate: Bool {
+        if let visibleVC = visibleViewController, ((visibleVC as? IntroVideoViewController) != nil) {
+            return visibleVC.shouldAutorotate
+        }
+        return false
+    }
 }

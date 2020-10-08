@@ -116,7 +116,6 @@ class IntroVideoViewController: UIViewController {
     
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
-        
         self.removeObserver()
     }
     
@@ -204,6 +203,9 @@ class IntroVideoViewController: UIViewController {
     }
     
     @objc private func continueButtonClicked() {
+        let value = UIInterfaceOrientation.portrait.rawValue
+        UIDevice.current.setValue(value, forKey: "orientation")
+        UIViewController.attemptRotationToDeviceOrientation()
         self.navigateForward()
     }
     
