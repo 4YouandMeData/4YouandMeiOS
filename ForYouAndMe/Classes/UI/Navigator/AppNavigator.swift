@@ -466,7 +466,7 @@ class AppNavigator {
         // TODO: Load From Server
         let aboutYouViewController = AboutYouViewController()
         let navigationController = UINavigationController(rootViewController: aboutYouViewController)
-        navigationController.modalPresentationStyle = .overFullScreen
+        navigationController.modalPresentationStyle = .fullScreen
         presenter.present(navigationController, animated: true, completion: nil)
     }
     
@@ -585,7 +585,7 @@ class AppNavigator {
         let pageData = InfoDetailPageData(page: page, isModal: isModal)
         let pageViewController = InfoDetailPageViewController(withPageData: pageData)
         if isModal {
-            presenter.modalPresentationStyle = .overFullScreen
+            presenter.modalPresentationStyle = .fullScreen
         }
         pageViewController.hidesBottomBarWhenPushed = true
         navController.pushViewController(pageViewController, animated: true)

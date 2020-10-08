@@ -69,9 +69,6 @@ enum TaskRecorderIdentifier: String {
     case pedometer
     case location
     case heartRate
-    // TODO: Remove these ones when Tremor task has been fixed on ResearchKit
-    case accelerometerAltSuffix = "_acc"
-    case deviceMotionAltSuffix = "_motion"
 }
 
 // MARK: - TaskNetworkParameter

@@ -77,7 +77,7 @@ enum StudyPeriod: Int, CaseIterable {
     }
 }
 
-fileprivate struct RangeAxisX {
+private struct RangeAxisX {
     let min: Double
     let max: Double
     let interval: Int

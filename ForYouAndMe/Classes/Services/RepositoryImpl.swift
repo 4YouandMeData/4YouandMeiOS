@@ -291,7 +291,7 @@ extension RepositoryImpl: Repository {
     
     func handleUserInfo(_ user: User) -> User {
         var user = user
-        if self.showDefaultUserInfo && user.customData == nil {
+        if self.showDefaultUserInfo && (user.customData ?? []).count == 0 {
             user.customData = Constants.UserInfo.DefaultUserInfoParameters
         }
         return user

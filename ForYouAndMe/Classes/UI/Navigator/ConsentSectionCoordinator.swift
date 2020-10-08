@@ -44,7 +44,7 @@ extension ConsentSectionCoordinator: AcceptanceCoordinator {
         let data = PopupData(body: self.sectionData.disagreeBody,
                              buttonText: self.sectionData.disagreeButton)
         let popupViewController = PopupViewController(withData: data, coordinator: self)
-        popupViewController.modalPresentationStyle = .overFullScreen
+        popupViewController.modalPresentationStyle = .fullScreen
         self.navigationController.present(popupViewController, animated: false, completion: nil)
     }
 }
