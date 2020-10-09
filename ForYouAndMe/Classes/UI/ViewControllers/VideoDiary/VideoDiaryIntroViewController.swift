@@ -17,7 +17,8 @@ struct VideoDiaryIntroData {
     let image: UIImage?
     let title: String
     let paragraphs: [Paragraph]
-    let buttonText: String
+    let primaryButtonText: String
+    let secondaryButtonText: String
 }
 
 public class VideoDiaryIntroViewController: UIViewController {
@@ -76,9 +77,12 @@ public class VideoDiaryIntroViewController: UIViewController {
         scrollStackView.stackView.addBlankSpace(space: 40.0)
         
         // Bottom View
-        let buttonView = GenericButtonView(withTextStyleCategory: .secondaryBackground())
-        buttonView.setButtonText(self.data.buttonText)
-        buttonView.addTarget(target: self, action: #selector(self.buttonPressed))
+        let buttonView = DoubleButtonHorizontalView(styleCategory: .secondaryBackground(firstButtonPrimary: false,
+                                                                                  secondButtonPrimary: true))
+        buttonView.addTargetToFirstButton(target: self, action: #selector(self.secondaryButtonPressed))
+        buttonView.addTargetToSecondButton(target: self, action: #selector(self.primaryButtonPressed))
+        buttonView.setFirstButtonText(self.data.secondaryButtonText)
+        buttonView.setSecondButtonText(self.data.primaryButtonText)
             
         self.view.addSubview(buttonView)
         buttonView.autoPinEdgesToSuperviewSafeArea(with: UIEdgeInsets.zero, excludingEdge: .top)
@@ -95,8 +99,12 @@ public class VideoDiaryIntroViewController: UIViewController {
     
     // MARK: Actions
     
-    @objc private func buttonPressed() {
-        self.coordinator.onIntroPageCompleted()
+    @objc private func primaryButtonPressed() {
+        self.coordinator.onIntroPagePrimaryButtonPressed()
+    }
+    
+    @objc private func secondaryButtonPressed() {
+        self.coordinator.onIntroPageSecondaryButtonPressed()
     }
     
     @objc override func customCloseButtonPressed() {

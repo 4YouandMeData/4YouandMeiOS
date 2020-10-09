@@ -10,7 +10,14 @@ import RxSwift
 
 class VideoDiarySectionCoordinator: NSObject, ActivitySectionCoordinator {
     
-    private weak var navigationController: UINavigationController?
+    var navigationController: UINavigationController {
+        guard let navigationController = self.internalNavigationController else {
+            assertionFailure("Missing navigation controller")
+            return UINavigationController()
+        }
+        return navigationController
+    }
+    private weak var internalNavigationController: UINavigationController?
     
     private let taskIdentifier: String
     private let completionCallback: NotificationCallback
@@ -47,15 +54,30 @@ class VideoDiarySectionCoordinator: NSObject, ActivitySectionCoordinator {
         let introPageData = VideoDiaryIntroData(image: ImagePalette.image(withName: .videoDiaryIntro),
                                                 title: StringsProvider.string(forKey: .videoDiaryIntroTitle),
                                                 paragraphs: paragraphs,
-                                                buttonText: StringsProvider.string(forKey: .videoDiaryIntroButton))
+                                                primaryButtonText: StringsProvider.string(forKey: .videoDiaryIntroButton),
+                                                secondaryButtonText: StringsProvider.string(forKey: .taskRemindMeLater))
         let introViewController = VideoDiaryIntroViewController(withData: introPageData, coordinator: self)
         let navigationController = UINavigationController(rootViewController: introViewController)
-        self.navigationController = navigationController
+        self.internalNavigationController = navigationController
         return navigationController
     }
     
-    public func onIntroPageCompleted() {
+    public func onIntroPagePrimaryButtonPressed() {
         self.showRecordPage()
+    }
+    
+    public func onIntroPageSecondaryButtonPressed() {
+        self.navigator.pushProgressHUD()
+        self.repository.delayTask(taskId: self.taskIdentifier)
+            .subscribe(onSuccess: { [weak self] in
+                guard let self = self else { return }
+                self.navigator.popProgressHUD()
+                self.completionCallback()
+                }, onError: { [weak self] error in
+                    guard let self = self else { return }
+                    self.navigator.popProgressHUD()
+                    self.navigator.handleError(error: error, presenter: self.navigationController)
+            }).disposed(by: self.diposeBag)
     }
     
     public func onRecordCompleted() {
@@ -82,24 +104,16 @@ class VideoDiarySectionCoordinator: NSObject, ActivitySectionCoordinator {
     }
     
     private func showRecordPage() {
-        guard let navigationController = self.navigationController else {
-            assertionFailure("Missing expected navigation controller")
-            return
-        }
         let recordViewController = VideoDiaryRecorderViewController(taskIdentifier: self.taskIdentifier,
                                                                      coordinator: self)
-        navigationController.pushViewController(recordViewController, animated: true)
+        self.navigationController.pushViewController(recordViewController, animated: true)
     }
     
     private func showSuccessPage() {
-        guard let navigationController = self.navigationController else {
-            assertionFailure("Missing expected navigation controller")
-            return
-        }
         let pageData = VideoDiaryCompleteData(image: ImagePalette.image(withName: .videoDiarySuccess),
                                                 title: StringsProvider.string(forKey: .videoDiarySuccessTitle),
                                                 buttonText: StringsProvider.string(forKey: .videoDiarySuccessButton))
         let successViewController = VideoDiaryCompleteViewController(withData: pageData, coordinator: self)
-        navigationController.pushViewController(successViewController, animated: true)
+        self.navigationController.pushViewController(successViewController, animated: true)
     }
 }
