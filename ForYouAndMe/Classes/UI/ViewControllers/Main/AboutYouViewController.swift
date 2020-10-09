@@ -68,7 +68,10 @@ class AboutYouViewController: UIViewController {
                                                  image: ImagePalette.templateImage(withName: .devicesIcon) ?? UIImage(),
                                                  colorType: .primary,
                                                  gestureCallback: { [weak self] in
-                                                    self?.navigator.showAppsAndDevices(navigationController: self?.navigationController ?? UINavigationController(),
+                                                    guard let navigationController = self?.navigationController else {
+                                                        fatalError("Navigation Controller is not present")
+                                                    }
+                                                    self?.navigator.showAppsAndDevices(navigationController: navigationController,
                                                                                        title: appsAndDevicesTitle)
                                                  })
         self.scrollStackView.stackView.addArrangedSubview(appsAndDevices)
@@ -82,7 +85,10 @@ class AboutYouViewController: UIViewController {
                                                 image: ImagePalette.templateImage(withName: .reviewConsentIcon) ?? UIImage(),
                                                 colorType: .primary,
                                                 gestureCallback: { [weak self] in
-                                                    self?.navigator.showReviewConsent(navigationController: self?.navigationController ?? UINavigationController())
+                                                    guard let navigationController = self?.navigationController else {
+                                                        fatalError("Navigation Controller is not present")
+                                                    }
+                                                    self?.navigator.showReviewConsent(navigationController: navigationController)
                                                 })
         self.scrollStackView.stackView.addArrangedSubview(reviewConsent)
         
@@ -91,7 +97,10 @@ class AboutYouViewController: UIViewController {
                                               image: ImagePalette.templateImage(withName: .permissionIcon) ?? UIImage(),
                                               colorType: .primary,
                                               gestureCallback: { [weak self] in
-                                                self?.navigator.showPermissions(navigationController: self?.navigationController ?? UINavigationController(),
+                                                guard let navigationController = self?.navigationController else {
+                                                    fatalError("Navigation Controller is not present")
+                                                }
+                                                self?.navigator.showPermissions(navigationController: navigationController,
                                                                                 title: permissionTitle)
                                               })
         self.scrollStackView.stackView.addArrangedSubview(permissions)

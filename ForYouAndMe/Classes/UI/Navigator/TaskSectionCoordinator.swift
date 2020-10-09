@@ -140,6 +140,7 @@ class TaskSectionCoordinator: NSObject, ActivitySectionCoordinator {
     }
     
     private func cancelTask() {
+        self.rotateToPortrait()
         self.deleteTaskResult(path: Constants.Task.taskResultURL)
         self.completionCallback()
     }

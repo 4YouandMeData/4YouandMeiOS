@@ -7,6 +7,7 @@
 
 import UIKit
 import RxSwift
+import ResearchKit
 
 extension UINavigationController {
     func clearLoadingViewController() {
@@ -32,8 +33,8 @@ extension UINavigationController {
                                                                 completion: { [weak self] in
                                                                     guard let self = self else { return }
                                                                     self.clearLoadingViewController()
-                                        })
-        })
+                                                                })
+                                      })
         let loadingViewController = LoadingViewController(loadingMode: .genericLoad(loadingInfo: loadingInfo,
                                                                                     allowBack: allowBackwardNavigation))
         loadingViewController.hidesBottomBarWhenPushed = hidesBottomBarWhenPushed
@@ -49,8 +50,30 @@ extension UINavigationController {
 }
 
 extension UITabBarController {
-    
     open override var shouldAutorotate: Bool {
         return false
+    }
+    
+    override open var preferredInterfaceOrientationForPresentation: UIInterfaceOrientation {
+        return .portrait
+    }
+
+    open override var supportedInterfaceOrientations: UIInterfaceOrientationMask {
+        return .portrait
+    }
+    
+}
+
+extension ORKTaskViewController {
+    @objc override open var shouldAutorotate: Bool {
+        return false
+    }
+
+    override open var preferredInterfaceOrientationForPresentation: UIInterfaceOrientation {
+        return .portrait
+    }
+
+    open override var supportedInterfaceOrientations: UIInterfaceOrientationMask {
+        return .portrait
     }
 }
