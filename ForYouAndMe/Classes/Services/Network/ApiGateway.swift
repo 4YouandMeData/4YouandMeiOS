@@ -38,6 +38,8 @@ enum DefaultService {
     case updateUserConsent(email: String?, firstName: String?, lastName: String?, signatureImage: UIImage?)
     case verifyEmail(validationCode: String)
     case resendConfirmationEmail
+    // Study Info Section
+    case getStudyInfoSection
     // Integration Section
     case getIntegrationSection
     // Answer

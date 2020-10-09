@@ -1,0 +1,31 @@
+//
+//  StudyInfoSection.swift
+//  ForYouAndMe
+//
+//  Created by Giuseppe Lapenta on 08/10/2020.
+//
+
+import Foundation
+
+struct StudyInfoSection {
+    let id: String
+    let type: String
+    
+    let pages: [Page]
+    let rewardPage: Page
+    let faqPage: Page
+    let contactsPage: Page
+}
+
+extension StudyInfoSection: JSONAPIMappable {
+    static var includeList: String? = ""
+    
+    enum CodingKeys: String, CodingKey {
+        case id
+        case type
+        case pages
+        case rewardPage = "reward_page"
+        case faqPage = "faq_page"
+        case contactsPage = "contacts_page"
+    }
+}

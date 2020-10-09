@@ -173,6 +173,13 @@ extension RepositoryImpl: Repository {
             .handleError()
     }
     
+    // MARK: - Study Info Section
+    
+    func getStudyInfoSection() -> Single<StudyInfoSection> {
+        return self.api.send(request: ApiRequest(serviceRequest: .getStudyInfoSection))
+            .handleError()
+    }
+    
     func verifyEmail(validationCode: String) -> Single<()> {
         return self.api.send(request: ApiRequest(serviceRequest: .verifyEmail(validationCode: validationCode)))
             .handleError()

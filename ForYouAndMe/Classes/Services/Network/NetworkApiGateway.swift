@@ -306,6 +306,8 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         // Integration Section
         case .getIntegrationSection:
             return "/v1/studies/\(studyId)/integration"
+        case .getStudyInfoSection:
+            return "/v1/studies/\(studyId)/study_info"
         // Answers
         case .sendAnswer(let answer, _):
             return "v1/questions/\(answer.question.id)/answer"
@@ -349,6 +351,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
              .getOptInSection,
              .getUserConsentSection,
              .getIntegrationSection,
+             .getStudyInfoSection,
              .getFeeds,
              .getTasks,
              .getSurvey, // TODO: Check against final API specs
@@ -402,6 +405,8 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         case .resendConfirmationEmail: return "{}".utf8Encoded
         // Integration Section
         case .getIntegrationSection: return Bundle.getTestData(from: "TestGetIntegrationSection")
+        //StudyInfo
+        case .getStudyInfoSection: return "{}".utf8Encoded
         // Answers
         case .sendAnswer: return "{}".utf8Encoded
         // Task
@@ -427,6 +432,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
              .getInformedConsentSection,
              .getConsentSection,
              .getOptInSection,
+             .getStudyInfoSection,
              .getUserConsentSection,
              .resendConfirmationEmail,
              .getIntegrationSection,
@@ -537,6 +543,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
              .getUserConsentSection,
              .createUserConsent,
              .updateUserConsent,
+             .getStudyInfoSection,
              .verifyEmail,
              .resendConfirmationEmail,
              .getIntegrationSection,
