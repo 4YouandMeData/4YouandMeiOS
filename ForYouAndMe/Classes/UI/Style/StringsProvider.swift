@@ -200,6 +200,11 @@ enum StringKey: String, CaseIterable, CodingKey {
     case taskGaitIntroBody = "TASK_GAIT_INTRO_BODY"
     case taskWalkIntroTitle = "TASK_WALK_INTRO_TITLE"
     case taskWalkIntroBody = "TASK_WALK_INTRO_BODY"
+    case taskCompleteButton = "TASK_COMPLETE_BUTTON"
+    case taskGaitCompleteTitle = "TASK_GAIT_COMPLETE_TITLE"
+    case taskGaitCompleteBody = "TASK_GAIT_COMPLETE_BODY"
+    case taskWalkCompleteTitle = "TASK_WALK_COMPLETE_TITLE"
+    case taskWalkCompleteBody = "TASK_WALK_COMPLETE_BODY"
     
     var defaultValue: String {
         switch self {

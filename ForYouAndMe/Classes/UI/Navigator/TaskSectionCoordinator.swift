@@ -24,6 +24,7 @@ class TaskSectionCoordinator: NSObject, ActivitySectionCoordinator {
     private let taskType: TaskType
     private let taskOptions: TaskOptions?
     private let welcomePage: Page?
+    private let successPage: Page?
     private let completionCallback: NotificationCallback
     
     private let navigator: AppNavigator
@@ -35,11 +36,13 @@ class TaskSectionCoordinator: NSObject, ActivitySectionCoordinator {
          taskType: TaskType,
          taskOptions: TaskOptions?,
          welcomePage: Page?,
+         successPage: Page?,
          completionCallback: @escaping NotificationCallback) {
         self.taskIdentifier = taskIdentifier
         self.taskType = taskType
         self.taskOptions = taskOptions
-        self.welcomePage = welcomePage
+        self.welcomePage = welcomePage ?? taskType.welcomePage
+        self.successPage = successPage ?? taskType.successPage
         self.completionCallback = completionCallback
         self.navigator = Services.shared.navigator
         self.repository = Services.shared.repository
@@ -49,17 +52,25 @@ class TaskSectionCoordinator: NSObject, ActivitySectionCoordinator {
     // MARK: - Public Methods
     
     public func getStartingPage() -> UIViewController? {
-        if let welcomeViewController = self.getWelcomeViewController() {
-            return welcomeViewController
-        } else {
-            return self.getTaskViewController(showInstructionPage: true, showConclusionPage: true)
-        }
+        let navigationController: UINavigationController? = {
+            if let welcomeViewController = self.getWelcomeViewController() {
+                return UINavigationController(rootViewController: welcomeViewController)
+            } else if let taskViewController = self.getTaskViewController(showInstructionPage: true, showConclusionPage: true) {
+                let navigationController = UINavigationController(rootViewController: taskViewController)
+                navigationController.navigationBar.apply(style: NavigationBarStyleCategory.secondary(hidden: true).style)
+                return navigationController
+            } else {
+                return nil
+            }
+        }()
+        self.internalNavigationController = navigationController
+        return navigationController
     }
     
     // MARK: - Private Methods
     
     private func getWelcomeViewController() -> UIViewController? {
-        let welcomePage = self.welcomePage ?? self.taskType.welcomePage
+        let welcomePage = self.welcomePage
         guard let page = welcomePage else {
             return nil
         }
@@ -68,11 +79,24 @@ class TaskSectionCoordinator: NSObject, ActivitySectionCoordinator {
                                         addCloseButton: true,
                                         allowBackwardNavigation: false,
                                         bodyTextAlignment: .left,
-                                        bottomViewStyle: .horizontal)
-        let infoPageViewController = InfoPageViewController(withPageData: infoPageData, coordinator: self)
-        let navigationController = UINavigationController(rootViewController: infoPageViewController)
-        self.internalNavigationController = navigationController
-        return navigationController
+                                        bottomViewStyle: .horizontal,
+                                        customImageHeight: nil)
+        return InfoPageViewController(withPageData: infoPageData, coordinator: self)
+    }
+    
+    private func getSuccessViewController() -> UIViewController? {
+        let successPage = self.successPage
+        guard let page = successPage else {
+            return nil
+        }
+        let infoPageData = InfoPageData(page: page,
+                                        addAbortOnboardingButton: false,
+                                        addCloseButton: false,
+                                        allowBackwardNavigation: false,
+                                        bodyTextAlignment: .center,
+                                        bottomViewStyle: .singleButton,
+                                        customImageHeight: 140.0)
+        return InfoPageViewController(withPageData: infoPageData, coordinator: self)
     }
     
     private func getTaskViewController(showInstructionPage: Bool, showConclusionPage: Bool) -> UIViewController? {
@@ -143,7 +167,7 @@ class TaskSectionCoordinator: NSObject, ActivitySectionCoordinator {
                 guard let self = self else { return }
                 self.navigator.popProgressHUD()
                 self.deleteTaskResult(path: Constants.Task.taskResultURL)
-                self.completionCallback()
+                self.showSuccess()
                 }, onError: { [weak self] error in
                     guard let self = self else { return }
                     self.navigator.popProgressHUD()
@@ -156,6 +180,14 @@ class TaskSectionCoordinator: NSObject, ActivitySectionCoordinator {
                                                 self?.sendResult(taskResult: taskResult, presenter: presenter)
                     }, dismissStyle: .destructive)
             }).disposed(by: self.diposeBag)
+    }
+    
+    private func showSuccess() {
+        if let successViewController = self.getSuccessViewController() {
+            self.navigationController.pushViewController(successViewController, animated: true)
+        } else {
+            self.completionCallback()
+        }
     }
     
     private func delay(_ delay: Double, closure: @escaping () -> Void ) {
@@ -219,7 +251,18 @@ extension TaskSectionCoordinator: PagedSectionCoordinator {
         if let welcomePage = self.welcomePage {
             pages.append(welcomePage)
         }
+        if let successPage = self.successPage {
+            pages.append(successPage)
+        }
         return pages
+    }
+    
+    func performCustomPrimaryButtonNavigation(page: Page) -> Bool {
+        if self.successPage?.id == page.id {
+            self.completionCallback()
+            return true
+        }
+        return false
     }
     
     func onUnhandledPrimaryButtonNavigation(page: Page) {

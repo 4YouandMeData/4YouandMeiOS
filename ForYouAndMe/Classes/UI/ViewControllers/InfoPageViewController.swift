@@ -21,6 +21,7 @@ struct InfoPageData {
     let allowBackwardNavigation: Bool
     let bodyTextAlignment: NSTextAlignment
     let bottomViewStyle: InfoPageBottomViewStyle
+    let customImageHeight: CGFloat?
     
     static func createWelcomePageData(withPage page: Page, showCloseButton: Bool = false) -> InfoPageData {
         return InfoPageData(page: page,
@@ -28,7 +29,8 @@ struct InfoPageData {
                             addCloseButton: showCloseButton,
                             allowBackwardNavigation: false,
                             bodyTextAlignment: .left,
-                            bottomViewStyle: .singleButton)
+                            bottomViewStyle: .singleButton,
+                            customImageHeight: nil)
     }
     
     static func createInfoPageData(withPage page: Page, isOnboarding: Bool) -> InfoPageData {
@@ -37,7 +39,8 @@ struct InfoPageData {
                             addCloseButton: false,
                             allowBackwardNavigation: true,
                             bodyTextAlignment: .left,
-                            bottomViewStyle: .singleButton)
+                            bottomViewStyle: .singleButton,
+                            customImageHeight: nil)
     }
     
     static func createResultPageData(withPage page: Page) -> InfoPageData {
@@ -46,7 +49,8 @@ struct InfoPageData {
                             addCloseButton: false,
                             allowBackwardNavigation: false,
                             bodyTextAlignment: .center,
-                            bottomViewStyle: .singleButton)
+                            bottomViewStyle: .singleButton,
+                            customImageHeight: nil)
     }
 }
 
@@ -84,7 +88,7 @@ public class InfoPageViewController: UIViewController, PageProvider {
         
         scrollStackView.stackView.addBlankSpace(space: 50.0)
         // Image
-        scrollStackView.stackView.addHeaderImage(image: self.pageData.page.image, height: 54.0)
+        scrollStackView.stackView.addHeaderImage(image: self.pageData.page.image, height: self.pageData.customImageHeight ?? 54.0)
         scrollStackView.stackView.addBlankSpace(space: 40.0)
         // Title
         scrollStackView.stackView.addLabel(withText: self.pageData.page.title,

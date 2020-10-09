@@ -283,24 +283,52 @@ extension Array where Element == ORKFileResult {
 
 extension TaskType {
     
+    enum DefaultPageIdentifier: String {
+        case welcomePageIdentifier = "1"
+        case successPageIdentifier = "2"
+    }
+    
     var welcomePage: Page? {
         switch self {
         case .reactionTime: return nil
         case .trailMaking: return nil
         case .walk: return nil
-        case .gait: return Page(id: "1",
+        case .gait: return Page(id: DefaultPageIdentifier.welcomePageIdentifier.rawValue,
                                 image: ImagePalette.image(withName: .taskGait),
                                 title: StringsProvider.string(forKey: .taskGaitIntroTitle),
                                 body: StringsProvider.string(forKey: .taskGaitIntroBody),
                                 buttonFirstLabel: StringsProvider.string(forKey: .taskStartButton),
                                 buttonSecondLabel: StringsProvider.string(forKey: .taskRemindMeLater))
         case .tremor: return nil
-        case .fitness: return Page(id: "1",
+        case .fitness: return Page(id: DefaultPageIdentifier.welcomePageIdentifier.rawValue,
                                    image: ImagePalette.image(withName: .taskWalk),
                                    title: StringsProvider.string(forKey: .taskWalkIntroTitle),
                                    body: StringsProvider.string(forKey: .taskWalkIntroBody),
                                    buttonFirstLabel: StringsProvider.string(forKey: .taskStartButton),
                                    buttonSecondLabel: StringsProvider.string(forKey: .taskRemindMeLater))
+        case .camcogEbt, .camcogPvt, .camcogNbx: return nil
+        case .videoDiary: return nil
+        }
+    }
+    
+    var successPage: Page? {
+        switch self {
+        case .reactionTime: return nil
+        case .trailMaking: return nil
+        case .walk: return nil
+        case .gait: return Page(id: DefaultPageIdentifier.successPageIdentifier.rawValue,
+                                image: ImagePalette.image(withName: .taskGaitFinish),
+                                title: StringsProvider.string(forKey: .taskGaitCompleteTitle),
+                                body: StringsProvider.string(forKey: .taskGaitCompleteBody),
+                                buttonFirstLabel: StringsProvider.string(forKey: .taskCompleteButton),
+                                buttonSecondLabel: nil)
+        case .tremor: return nil
+        case .fitness: return Page(id: DefaultPageIdentifier.successPageIdentifier.rawValue,
+                                   image: ImagePalette.image(withName: .taskWalkFinish),
+                                   title: StringsProvider.string(forKey: .taskWalkCompleteTitle),
+                                   body: StringsProvider.string(forKey: .taskWalkCompleteBody),
+                                   buttonFirstLabel: StringsProvider.string(forKey: .taskCompleteButton),
+                                   buttonSecondLabel: nil)
         case .camcogEbt, .camcogPvt, .camcogNbx: return nil
         case .videoDiary: return nil
         }

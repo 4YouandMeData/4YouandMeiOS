@@ -427,6 +427,7 @@ class AppNavigator {
                                               taskType: taskType,
                                               taskOptions: taskOptions,
                                               welcomePage: nil,
+                                              successPage: nil,
                                               completionCallback: completionCallback)
             }
         }()

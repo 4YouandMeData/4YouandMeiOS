@@ -49,7 +49,9 @@ enum ImageName: String, CaseIterable {
     case starEmpty = "star_empty"
     case camcogImage = "camcog_image"
     case taskWalk = "task_walk"
+    case taskWalkFinish = "task_walk_finish"
     case taskGait = "task_gait"
+    case taskGaitFinish = "task_gait_finish"
 }
 
 enum TemplateImageName: String, CaseIterable {

@@ -51,7 +51,8 @@ class CamcogSectionCoordinator: NSObject, ActivitySectionCoordinator {
                                 addCloseButton: true,
                                 allowBackwardNavigation: false,
                                 bodyTextAlignment: .left,
-                                bottomViewStyle: .horizontal)
+                                bottomViewStyle: .horizontal,
+                                customImageHeight: nil)
         
         let welcomeViewController = InfoPageViewController(withPageData: data,
                                                           coordinator: self)
