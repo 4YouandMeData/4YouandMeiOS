@@ -269,7 +269,8 @@ class AppNavigator {
     
     public func showReviewConsent(navigationController: UINavigationController) {
         navigationController.loadViewForRequest(self.repository.getConsentSection(),
-                                                hidesBottomBarWhenPushed: true) { section -> UIViewController in
+                                                hidesBottomBarWhenPushed: true,
+                                                allowBackwardNavigation: true) { section -> UIViewController in
             let data = InfoPageListData(title: section.title,
                                         subtitle: section.subtitle,
                                         body: section.body,

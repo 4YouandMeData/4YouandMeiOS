@@ -13,7 +13,7 @@ protocol LoadingPage {}
 
 enum LoadingMode<T> {
     case initialSetup
-    case genericLoad(loadingInfo: LoadingInfo<T>)
+    case genericLoad(loadingInfo: LoadingInfo<T>, allowBack: Bool)
 }
 
 struct LoadingInfo<T> {
@@ -55,7 +55,17 @@ class LoadingViewController<T>: UIViewController, LoadingPage {
         
         if let navigationController = navigationController {
             navigationController.navigationBar.apply(style: NavigationBarStyleCategory.secondary(hidden: false).style)
-            self.navigationItem.hidesBackButton = true
+            switch self.loadingMode {
+            case .initialSetup:
+                self.navigationItem.hidesBackButton = true
+            case .genericLoad(_, let allowBack):
+                if allowBack {
+                    self.addCustomBackButton()
+                } else {
+                    self.navigationItem.hidesBackButton = true
+                }
+            }
+            
         }
     }
     
@@ -86,7 +96,7 @@ class LoadingViewController<T>: UIViewController, LoadingPage {
                         self.navigator.showSetupCompleted()
                 }).disposed(by: self.disposeBag)
             
-        case .genericLoad(let loadingInfo):
+        case .genericLoad(let loadingInfo, _):
             loadingInfo.requestSingle.subscribe(onSuccess: { [weak self] loadedData in
                 guard let self = self else { return }
                 self.navigator.popProgressHUD()

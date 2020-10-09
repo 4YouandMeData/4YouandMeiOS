@@ -90,13 +90,20 @@ class FeedViewController: UIViewController {
 
         self.listManager.viewWillAppear()
         
-        self.repository.refreshUser().subscribe(onSuccess: { user in
-            self.headerView.setTitleText(user.feedTitle)
-            self.headerView.setSubtitleText(user.feedSubtitle)
-            self.tableViewHeaderView.setPoints(user.points)
-        }, onError: { error in
-            print("FeedViewController - Error refreshing user: \(error.localizedDescription)")
-        }).disposed(by: self.disposeBag)
+        self.repository.refreshUser()
+            .toVoid()
+            .catchErrorJustReturn(())
+            .subscribe(onSuccess: { _ in
+                guard let user = self.repository.currentUser else {
+                    assertionFailure("Missing current user")
+                    return
+                }
+                self.headerView.setTitleText(user.feedTitle)
+                self.headerView.setSubtitleText(user.feedSubtitle)
+                self.tableViewHeaderView.setPoints(user.points)
+            }, onError: { error in
+                print("FeedViewController - Error refreshing user: \(error.localizedDescription)")
+            }).disposed(by: self.disposeBag)
     }
     
     override func viewDidLayoutSubviews() {
