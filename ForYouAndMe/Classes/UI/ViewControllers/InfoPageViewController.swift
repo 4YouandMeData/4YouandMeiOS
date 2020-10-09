@@ -11,6 +11,7 @@ import PureLayout
 enum InfoPageBottomViewStyle {
     case singleButton
     case vertical(backButton: Bool)
+    case horizontal
 }
 
 struct InfoPageData {
@@ -134,6 +135,29 @@ public class InfoPageViewController: UIViewController, PageProvider {
                     view.setSecondaryButtonText(buttonSecondlabel)
                 }
                 return view
+            case .horizontal:
+                if let buttonFirstlabel = self.pageData.page.buttonFirstlabel,
+                   let buttonSecondlabel = self.pageData.page.buttonSecondlabel {
+                    let view = DoubleButtonHorizontalView(styleCategory: .secondaryBackground(firstButtonPrimary: false,
+                                                                                              secondButtonPrimary: true))
+                    view.addTargetToFirstButton(target: self, action: #selector(self.secondaryButtonPressed))
+                    view.addTargetToSecondButton(target: self, action: #selector(self.primaryButtonPressed))
+                    view.setFirstButtonText(buttonSecondlabel)
+                    view.setSecondButtonText(buttonFirstlabel)
+                    return view
+                } else {
+                    let view: GenericButtonView = {
+                        if let confirmButtonText = self.pageData.page.buttonFirstlabel {
+                            let view = GenericButtonView(withTextStyleCategory: .secondaryBackground())
+                            view.setButtonText(confirmButtonText)
+                            return view
+                        } else {
+                            return GenericButtonView(withImageStyleCategory: .secondaryBackground)
+                        }
+                    }()
+                    view.addTarget(target: self, action: #selector(self.primaryButtonPressed))
+                    return view
+                }
             }
         }()
         self.view.addSubview(bottomView)

@@ -250,6 +250,11 @@ extension RepositoryImpl: Repository {
         return sendRequest
     }
     
+    func delayTask(taskId: String) -> Single<()> {
+        return self.api.send(request: ApiRequest(serviceRequest: .delayTask(taskId: taskId)))
+            .handleError()
+    }
+    
     // MARK: - User
     
     var currentUser: User? {

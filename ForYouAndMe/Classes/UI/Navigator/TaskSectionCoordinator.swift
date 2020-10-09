@@ -68,7 +68,7 @@ class TaskSectionCoordinator: NSObject, ActivitySectionCoordinator {
                                         addCloseButton: true,
                                         allowBackwardNavigation: false,
                                         bodyTextAlignment: .left,
-                                        bottomViewStyle: .singleButton)
+                                        bottomViewStyle: .horizontal)
         let infoPageViewController = InfoPageViewController(withPageData: infoPageData, coordinator: self)
         let navigationController = UINavigationController(rootViewController: infoPageViewController)
         self.internalNavigationController = navigationController
@@ -229,5 +229,20 @@ extension TaskSectionCoordinator: PagedSectionCoordinator {
         }
         self.internalNavigationController?.pushViewController(taskViewController, animated: true)
         self.internalNavigationController?.navigationBar.apply(style: NavigationBarStyleCategory.secondary(hidden: true).style)
+    }
+    
+    func onUnhandledSecondaryButtonNavigation(page: Page) {
+        self.navigator.pushProgressHUD()
+        self.repository.delayTask(taskId: self.taskIdentifier)
+            .subscribe(onSuccess: { [weak self] in
+                guard let self = self else { return }
+                self.navigator.popProgressHUD()
+                self.deleteTaskResult(path: Constants.Task.taskResultURL)
+                self.completionCallback()
+                }, onError: { [weak self] error in
+                    guard let self = self else { return }
+                    self.navigator.popProgressHUD()
+                    self.navigator.handleError(error: error, presenter: self.navigationController)
+            }).disposed(by: self.diposeBag)
     }
 }

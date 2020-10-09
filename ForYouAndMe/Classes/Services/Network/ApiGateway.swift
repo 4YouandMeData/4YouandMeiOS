@@ -50,6 +50,7 @@ enum DefaultService {
     case getTasks
     case sendTaskResultData(taskId: String, resultData: TaskNetworkResultData)
     case sendTaskResultFile(taskId: String, resultFile: TaskNetworkResultFile)
+    case delayTask(taskId: String)
     // User
     case getUser
     case sendUserInfoParameters(paramenters: [UserInfoParameterRequest])

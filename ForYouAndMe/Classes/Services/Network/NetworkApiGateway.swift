@@ -321,6 +321,8 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             return "v1/tasks/\(taskId)"
         case .sendTaskResultFile(let taskId, _):
             return "v1/tasks/\(taskId)/attach"
+        case .delayTask(let taskId):
+            return "v1/tasks/\(taskId)/remind"
         // User
         case .getUser:
             return "v1/users/me"
@@ -363,7 +365,8 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
              .verifyPhoneNumber,
              .createUserConsent,
              .sendOptInPermission,
-             .sendAnswer:
+             .sendAnswer,
+             .delayTask:
             return .post
         case .verifyEmail,
              .resendConfirmationEmail,
@@ -413,6 +416,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         case .getFeeds, .getTasks: return Bundle.getTestData(from: "TestGetTasks")
         case .sendTaskResultData: return "{}".utf8Encoded
         case .sendTaskResultFile: return "{}".utf8Encoded
+        case .delayTask: return "{}".utf8Encoded
         // User
         case .getUser: return Bundle.getTestData(from: "TestGetUser")
         case .sendUserInfoParameters: return Bundle.getTestData(from: "TestGetUser")
@@ -441,7 +445,8 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
              .getSurvey,
              .getUser,
              .getUserData,
-             .getUserDataAggregation:
+             .getUserDataAggregation,
+             .delayTask:
             return .requestPlain
         case .submitPhoneNumber(let phoneNumber):
             var params: [String: Any] = [:]
@@ -557,7 +562,8 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
              .sendSurveyTaskResultData,
              .getUser,
              .getUserData,
-             .getUserDataAggregation:
+             .getUserDataAggregation,
+             .delayTask:
             return .bearer
         }
     }
