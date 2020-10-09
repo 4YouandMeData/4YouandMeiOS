@@ -29,7 +29,7 @@ struct UserInfoParameter: Codable {
     var currentItemIdentifier: String? { self.value }
     var currentDate: Date? {
         guard let value = value else { return nil }
-        return ISO8601Strategy.dateFormatter.date(from: value)
+        return DateStrategy.dateFormatter.date(from: value)
     }
     
     static func create(fromParameter parameter: UserInfoParameter, withValue value: String?) -> UserInfoParameter {

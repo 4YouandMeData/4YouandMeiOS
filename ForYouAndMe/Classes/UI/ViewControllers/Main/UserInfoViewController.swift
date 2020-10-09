@@ -172,7 +172,7 @@ class UserInfoViewController: UIViewController {
                 value = dataPicker.getSelectedData()?.identifier
             } else if let datePicker = self.textFieldDatePickerMap[textField] {
                 if let selectedDate = datePicker.selectedDate {
-                    value = ISO8601Strategy.dateFormatter.string(from: selectedDate)
+                    value = DateStrategy.dateFormatter.string(from: selectedDate)
                 }
             } else {
                 value = textField.text
