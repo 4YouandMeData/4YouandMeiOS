@@ -9,14 +9,14 @@ import Foundation
 import ResearchKit
 
 class WalkTask {
-    static func createTask(withIdentifier identifier: String, options: TaskOptions?, locationAuthorised: Bool) -> ORKTask {
+    static func createTask(withIdentifier identifier: String, options: TaskOptions?, orkTaskOptions: ORKPredefinedTaskOption) -> ORKTask {
         return ORKOrderedTask.timedWalk(withIdentifier: identifier,
                                         intendedUseDescription: options?.intendedUseDescription,
                                         distanceInMeters: options?.distanceInMeters ?? 100.0,
                                         timeLimit: options?.timeLimit ?? 180.0,
                                         turnAroundTimeLimit: options?.turnAroundTimeLimit ?? 60.0,
                                         includeAssistiveDeviceForm: options?.includeAssistiveDeviceForm ?? true,
-                                        options: [.excludeLocation])
+                                        options: orkTaskOptions)
     }
     
     static func getNetworkResultData(taskResult: ORKTaskResult) -> TaskNetworkResult? {

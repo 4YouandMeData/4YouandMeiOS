@@ -426,6 +426,7 @@ class AppNavigator {
                 return TaskSectionCoordinator(withTaskIdentifier: taskIdentifier,
                                               taskType: taskType,
                                               taskOptions: taskOptions,
+                                              welcomePage: nil,
                                               completionCallback: completionCallback)
             }
         }()

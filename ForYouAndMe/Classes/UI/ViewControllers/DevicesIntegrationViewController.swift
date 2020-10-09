@@ -5,7 +5,8 @@
 //  Created by Giuseppe Lapenta on 11/09/2020.
 //
 
-import PureLayout
+import UIKit
+import RxSwift
 
 public class DevicesIntegrationViewController: UIViewController {
     
@@ -14,6 +15,9 @@ public class DevicesIntegrationViewController: UIViewController {
     private var titleString: String
     private let navigator: AppNavigator
     private let analytics: AnalyticsService
+    private let repository: Repository
+    
+    private let disposeBag = DisposeBag()
     
     private lazy var scrollStackView: ScrollStackView = {
         let scrollStackView = ScrollStackView(axis: .vertical, horizontalInset: 0.0)
@@ -24,6 +28,7 @@ public class DevicesIntegrationViewController: UIViewController {
         self.titleString = title
         self.navigator = Services.shared.navigator
         self.analytics = Services.shared.analytics
+        self.repository = Services.shared.repository
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -47,6 +52,12 @@ public class DevicesIntegrationViewController: UIViewController {
         self.scrollStackView.autoPinEdgesToSuperviewEdges(with: .zero, excludingEdge: .top)
         self.scrollStackView.autoPinEdge(.top, to: .bottom, of: headerView, withOffset: 30)
         self.scrollStackView.stackView.spacing = 30
+        
+        self.refreshUI()
+    }
+    
+    private func refreshUI() {
+        self.scrollStackView.stackView.arrangedSubviews.forEach({ $0.removeFromSuperview() })
         
         guard let currentUser = Services.shared.repository.currentUser,
               let navigationController = self.navigationController else {
@@ -73,6 +84,17 @@ public class DevicesIntegrationViewController: UIViewController {
         self.analytics.track(event: .recordScreen(screenName: AnalyticsScreens.openAppsAndDevices.rawValue,
                                                   screenClass: String(describing: type(of: self))))
         self.navigationController?.navigationBar.apply(style: NavigationBarStyleCategory.primary(hidden: true).style)
+        
+        self.navigator.pushProgressHUD()
+        self.repository.refreshUser()
+            .toVoid()
+            .catchErrorJustReturn(())
+            .subscribe(onSuccess: { [weak self] in
+                guard let self = self else { return }
+                self.navigator.popProgressHUD()
+                self.refreshUI()
+            })
+            .disposed(by: self.disposeBag)
     }
     
     // MARK: Actions

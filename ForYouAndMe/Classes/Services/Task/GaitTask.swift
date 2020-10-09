@@ -9,12 +9,12 @@ import Foundation
 import ResearchKit
 
 class GaitTask {
-    static func createTask(withIdentifier identifier: String, options: TaskOptions?, locationAuthorised: Bool) -> ORKTask {
+    static func createTask(withIdentifier identifier: String, options: TaskOptions?, orkTaskOptions: ORKPredefinedTaskOption) -> ORKTask {
         return ORKOrderedTask.shortWalk(withIdentifier: identifier,
                                         intendedUseDescription: options?.intendedUseDescription,
                                         numberOfStepsPerLeg: options?.numberOfStepsPerLeg ?? 20,
                                         restDuration: options?.restDuration ?? 20.0,
-                                        options: [])
+                                        options: orkTaskOptions)
     }
     
     static func getNetworkResultData(taskResult: ORKTaskResult) -> TaskNetworkResult? {

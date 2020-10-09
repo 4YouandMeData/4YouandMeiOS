@@ -192,6 +192,15 @@ enum StringKey: String, CaseIterable, CodingKey {
     case rescueTimeOauthTitle = "OAUTH_RESCUETIME"
     case availableOauthIntegrations = "OAUTH_AVAILABLE_INTERATIONS"
     
+    // Task (Temporary)
+    // TODO: Remove as soon as the server sends these data
+    case taskStartButton = "TASK_START_BUTTON"
+    case taskRemindMeLater = "TASK_REMIND_ME_LATER"
+    case taskGaitIntroTitle = "TASK_GAIT_INTRO_TITLE"
+    case taskGaitIntroBody = "TASK_GAIT_INTRO_BODY"
+    case taskWalkIntroTitle = "TASK_WALK_INTRO_TITLE"
+    case taskWalkIntroBody = "TASK_WALK_INTRO_BODY"
+    
     var defaultValue: String {
         switch self {
         case .setupErrorTitle: return "Uh, oh!"

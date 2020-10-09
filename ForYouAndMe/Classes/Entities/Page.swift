@@ -30,7 +30,8 @@ struct Page {
     var specialLinkValue: String?
     @FailableDecodable
     var specialLinkType: PageSpecialLinkType?
-    let imageData: Data?
+    @ImageDecodable
+    var image: UIImage?
     @NilIfEmptyString
     var buttonFirstlabel: String?
     var buttonFirstPage: PageRef?
@@ -56,20 +57,16 @@ extension Page: JSONAPIMappable {
         case buttonFirstPage = "link_1"
         case buttonSecondlabel = "link_2_label"
         case buttonSecondPage = "link_2"
-        case imageData = "image"
+        case image = "image"
     }
 }
 
 extension Page {
-    var image: UIImage? {
-        if let data = self.imageData {
-            return UIImage(data: data)
-        } else {
-            return nil
-        }
+    init(id: String, title: String, body: String) {
+        self.init(id: id, image: nil, title: title, body: body, buttonFirstLabel: nil, buttonSecondLabel: nil)
     }
     
-    init(id: String, title: String, body: String) {
+    init(id: String, image: UIImage?, title: String, body: String, buttonFirstLabel: String?, buttonSecondLabel: String?) {
         self.id = id
         self.type = "page"
         self.title = title
@@ -81,10 +78,10 @@ extension Page {
         self.specialLinkLabel = nil
         self.specialLinkValue = nil
         self.specialLinkType = nil
-        self.imageData = nil
-        self.buttonFirstlabel = nil
+        self.image = image
+        self.buttonFirstlabel = buttonFirstLabel
         self.buttonFirstPage = nil
-        self.buttonSecondlabel = nil
+        self.buttonSecondlabel = buttonSecondLabel
         self.buttonSecondPage = nil
     }
 }

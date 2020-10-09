@@ -9,7 +9,9 @@ import Foundation
 import ResearchKit
 
 class ReactionTimeTask {
-    static func createTask(withIdentifier identifier: String, options: TaskOptions?, locationAuthorised: Bool) -> ORKTask {
+    static func createTask(withIdentifier identifier: String,
+                           options: TaskOptions?,
+                           orkTaskOptions: ORKPredefinedTaskOption) -> ORKTask {
         return ORKOrderedTask.reactionTime(withIdentifier: identifier,
                                            intendedUseDescription: options?.intendedUseDescription,
                                            maximumStimulusInterval: options?.maximumStimulusInterval ?? 10,
@@ -20,7 +22,7 @@ class ReactionTimeTask {
                                            successSound: UInt32(kSystemSoundID_Vibrate),
                                            timeoutSound: 0,
                                            failureSound: UInt32(kSystemSoundID_Vibrate),
-                                           options: locationAuthorised ? [] : [.excludeLocation])
+                                           options: orkTaskOptions)
     }
     
     static func getNetworkResultData(taskResult: ORKTaskResult) -> TaskNetworkResult? {

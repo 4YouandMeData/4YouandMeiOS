@@ -44,9 +44,12 @@ class DeviceItemView: UIView {
         let label = UILabel()
         label.attributedText = attributedString
         label.numberOfLines = 0
-        label.setContentHuggingPriority(UILayoutPriority(100), for: .horizontal)
+        label.setContentHuggingPriority(UILayoutPriority(300), for: .horizontal)
+        label.setContentCompressionResistancePriority(UILayoutPriority(900), for: .horizontal)
         
         stackView.addArrangedSubview(label, horizontalInset: 8)
+        
+        stackView.addArrangedSubview(UIView())
         
         attributedString = NSAttributedString.create(withText: StringsProvider.string(forKey: .connectMessage),
                                                      fontStyle: .paragraph,
@@ -56,8 +59,9 @@ class DeviceItemView: UIView {
         
         let connectLabel = UILabel()
         connectLabel.attributedText = attributedString
-        connectLabel.numberOfLines = 0
-        connectLabel.setContentHuggingPriority(UILayoutPriority(101), for: .horizontal)
+        connectLabel.numberOfLines = 1
+        connectLabel.setContentHuggingPriority(UILayoutPriority(301), for: .horizontal)
+        connectLabel.setContentCompressionResistancePriority(UILayoutPriority(901), for: .horizontal)
         
         stackView.addArrangedSubview(connectLabel, horizontalInset: 16)
         

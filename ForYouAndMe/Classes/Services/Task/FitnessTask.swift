@@ -9,12 +9,12 @@ import Foundation
 import ResearchKit
 
 class FitnessTask {
-    static func createTask(withIdentifier identifier: String, options: TaskOptions?, locationAuthorised: Bool) -> ORKTask {
+    static func createTask(withIdentifier identifier: String, options: TaskOptions?, orkTaskOptions: ORKPredefinedTaskOption) -> ORKTask {
         return ORKOrderedTask.fitnessCheck(withIdentifier: identifier,
                                            intendedUseDescription: options?.intendedUseDescription,
                                            walkDuration: options?.walkDuration ?? 60.0,
                                            restDuration: options?.restDuration ?? 10.0,
-                                           options: [.excludeHeartRate, .excludeLocation])
+                                           options: orkTaskOptions)
     }
     
     static func getNetworkResultData(taskResult: ORKTaskResult) -> TaskNetworkResult? {

@@ -11,9 +11,19 @@ import RxSwift
 
 class TaskSectionCoordinator: NSObject, ActivitySectionCoordinator {
     
+    var navigationController: UINavigationController {
+        guard let navigationController = self.internalNavigationController else {
+            assertionFailure("Missing navigation controller")
+            return UINavigationController()
+        }
+        return navigationController
+    }
+    private weak var internalNavigationController: UINavigationController?
+    
     private let taskIdentifier: String
     private let taskType: TaskType
     private let taskOptions: TaskOptions?
+    private let welcomePage: Page?
     private let completionCallback: NotificationCallback
     
     private let navigator: AppNavigator
@@ -24,10 +34,12 @@ class TaskSectionCoordinator: NSObject, ActivitySectionCoordinator {
     init(withTaskIdentifier taskIdentifier: String,
          taskType: TaskType,
          taskOptions: TaskOptions?,
+         welcomePage: Page?,
          completionCallback: @escaping NotificationCallback) {
         self.taskIdentifier = taskIdentifier
         self.taskType = taskType
         self.taskOptions = taskOptions
+        self.welcomePage = welcomePage
         self.completionCallback = completionCallback
         self.navigator = Services.shared.navigator
         self.repository = Services.shared.repository
@@ -37,10 +49,37 @@ class TaskSectionCoordinator: NSObject, ActivitySectionCoordinator {
     // MARK: - Public Methods
     
     public func getStartingPage() -> UIViewController? {
-        
+        if let welcomeViewController = self.getWelcomeViewController() {
+            return welcomeViewController
+        } else {
+            return self.getTaskViewController(showInstructionPage: true, showConclusionPage: true)
+        }
+    }
+    
+    // MARK: - Private Methods
+    
+    private func getWelcomeViewController() -> UIViewController? {
+        let welcomePage = self.welcomePage ?? self.taskType.welcomePage
+        guard let page = welcomePage else {
+            return nil
+        }
+        let infoPageData = InfoPageData(page: page,
+                                        addAbortOnboardingButton: false,
+                                        addCloseButton: true,
+                                        allowBackwardNavigation: false,
+                                        bodyTextAlignment: .left,
+                                        bottomViewStyle: .singleButton)
+        let infoPageViewController = InfoPageViewController(withPageData: infoPageData, coordinator: self)
+        let navigationController = UINavigationController(rootViewController: infoPageViewController)
+        self.internalNavigationController = navigationController
+        return navigationController
+    }
+    
+    private func getTaskViewController(showInstructionPage: Bool, showConclusionPage: Bool) -> UIViewController? {
         guard let task = self.taskType.createTask(withIdentifier: self.taskIdentifier,
                                                   options: self.taskOptions,
-                                                  locationAuthorised: getLocationAuthorized()) else {
+                                                  showIstructions: showInstructionPage,
+                                                  showConclusion: showConclusionPage) else {
             assertionFailure("Couldn't find ORKTask for given task")
             return nil
         }
@@ -53,11 +92,10 @@ class TaskSectionCoordinator: NSObject, ActivitySectionCoordinator {
         taskViewController.delegate = self
         taskViewController.view.tintColor = ColorPalette.color(withType: .primary)
         taskViewController.outputDirectory = Constants.Task.taskResultURL
+        taskViewController.view.backgroundColor = ColorPalette.color(withType: .secondary)
         
         return taskViewController
     }
-    
-    // MARK: - Private Methods
     
     private func customizeTaskUI() {
         // Setup Colors
@@ -140,7 +178,6 @@ extension TaskSectionCoordinator: ORKTaskViewControllerDelegate {
     func taskViewController(_ taskViewController: ORKTaskViewController,
                             didFinishWith reason: ORKTaskViewControllerFinishReason,
                             error: Error?) {
-//        print("TaskSectionCoordinator - Task Finished with reason: \(reason). Result: \(taskViewController.result)")
         switch reason {
         case .completed:
             print("TaskSectionCoordinator - Task Completed")
@@ -173,5 +210,24 @@ extension TaskSectionCoordinator: ORKTaskViewControllerDelegate {
                 }
             })
         }
+    }
+}
+
+extension TaskSectionCoordinator: PagedSectionCoordinator {
+    var pages: [Page] {
+        var pages: [Page] = []
+        if let welcomePage = self.welcomePage {
+            pages.append(welcomePage)
+        }
+        return pages
+    }
+    
+    func onUnhandledPrimaryButtonNavigation(page: Page) {
+        guard let taskViewController = self.getTaskViewController(showInstructionPage: true, showConclusionPage: true) else {
+            assertionFailure("Missing expected task controller")
+            return
+        }
+        self.internalNavigationController?.pushViewController(taskViewController, animated: true)
+        self.internalNavigationController?.navigationBar.apply(style: NavigationBarStyleCategory.secondary(hidden: true).style)
     }
 }

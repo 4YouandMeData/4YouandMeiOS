@@ -25,20 +25,28 @@ enum TaskType: String, CaseIterable {
 
 extension TaskType {
     
-    func createTask(withIdentifier identifier: String, options: TaskOptions?, locationAuthorised: Bool) -> ORKTask? {
+    func createTask(withIdentifier identifier: String, options: TaskOptions?, showIstructions: Bool, showConclusion: Bool) -> ORKTask? {
+        // For privacy issues, location is always excluded. Heart Rate is excluded by design.
+        var orkTaskOptions: ORKPredefinedTaskOption = [.excludeLocation, .excludeHeartRate]
+        if false == showIstructions {
+            orkTaskOptions.insert(.excludeInstructions)
+        }
+        if false == showConclusion {
+            orkTaskOptions.insert(.excludeConclusion)
+        }
         switch self {
         case .reactionTime:
-            return ReactionTimeTask.createTask(withIdentifier: identifier, options: options, locationAuthorised: locationAuthorised)
+            return ReactionTimeTask.createTask(withIdentifier: identifier, options: options, orkTaskOptions: orkTaskOptions)
         case .trailMaking:
-            return TrailMakingTask.createTask(withIdentifier: identifier, options: options, locationAuthorised: locationAuthorised)
+            return TrailMakingTask.createTask(withIdentifier: identifier, options: options, orkTaskOptions: orkTaskOptions)
         case .walk:
-            return WalkTask.createTask(withIdentifier: identifier, options: options, locationAuthorised: locationAuthorised)
+            return WalkTask.createTask(withIdentifier: identifier, options: options, orkTaskOptions: orkTaskOptions)
         case .gait:
-            return GaitTask.createTask(withIdentifier: identifier, options: options, locationAuthorised: locationAuthorised)
+            return GaitTask.createTask(withIdentifier: identifier, options: options, orkTaskOptions: orkTaskOptions)
         case .tremor:
-            return TremorTask.createTask(withIdentifier: identifier, options: options, locationAuthorised: locationAuthorised)
+            return TremorTask.createTask(withIdentifier: identifier, options: options, orkTaskOptions: orkTaskOptions)
         case .fitness:
-            return FitnessTask.createTask(withIdentifier: identifier, options: options, locationAuthorised: locationAuthorised)
+            return FitnessTask.createTask(withIdentifier: identifier, options: options, orkTaskOptions: orkTaskOptions)
         case .videoDiary, .camcogPvt, .camcogNbx, .camcogEbt:
             return nil
         }
@@ -266,5 +274,35 @@ extension Array where Element == ORKFileResult {
             }
         }
         return result
+    }
+}
+
+// MARK: - Temporary
+
+// TODO: remove when the server will send pages
+
+extension TaskType {
+    
+    var welcomePage: Page? {
+        switch self {
+        case .reactionTime: return nil
+        case .trailMaking: return nil
+        case .walk: return nil
+        case .gait: return Page(id: "1",
+                                image: ImagePalette.image(withName: .taskGait),
+                                title: StringsProvider.string(forKey: .taskGaitIntroTitle),
+                                body: StringsProvider.string(forKey: .taskGaitIntroBody),
+                                buttonFirstLabel: StringsProvider.string(forKey: .taskStartButton),
+                                buttonSecondLabel: StringsProvider.string(forKey: .taskRemindMeLater))
+        case .tremor: return nil
+        case .fitness: return Page(id: "1",
+                                   image: ImagePalette.image(withName: .taskWalk),
+                                   title: StringsProvider.string(forKey: .taskWalkIntroTitle),
+                                   body: StringsProvider.string(forKey: .taskWalkIntroBody),
+                                   buttonFirstLabel: StringsProvider.string(forKey: .taskStartButton),
+                                   buttonSecondLabel: StringsProvider.string(forKey: .taskRemindMeLater))
+        case .camcogEbt, .camcogPvt, .camcogNbx: return nil
+        case .videoDiary: return nil
+        }
     }
 }

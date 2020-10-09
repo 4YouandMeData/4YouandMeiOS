@@ -21,7 +21,7 @@ enum TestSection {
 
 struct Constants {
     struct Test {
-        static let NetworkStubsEnabled = false
+        static let NetworkStubsEnabled = true
         static let NetworkStubsDelay = 0.3
         static let NetworkLogVerbose = true
         
@@ -157,10 +157,10 @@ nunc, blandit sit amet lorem a, scelerisque eleifend odio. In euismod nunc tinci
                         specialLinkLabel: nil,
                         specialLinkValue: nil,
                         specialLinkType: nil,
-                        imageData: ImagePalette.image(withName: .camcogImage)?.pngData(),
-                        buttonFirstlabel: StringsProvider.string(forKey: .videoDiaryIntroButton),
+                        image: ImagePalette.image(withName: .camcogImage),
+                        buttonFirstlabel: StringsProvider.string(forKey: .taskStartButton),
                         buttonFirstPage: nil,
-                        buttonSecondlabel: "Remind Me Later",
+                        buttonSecondlabel: StringsProvider.string(forKey: .taskRemindMeLater),
                         buttonSecondPage: nil)
         }
     }

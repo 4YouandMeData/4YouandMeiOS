@@ -9,12 +9,12 @@ import Foundation
 import ResearchKit
 
 class TrailMakingTask {
-    static func createTask(withIdentifier identifier: String, options: TaskOptions?, locationAuthorised: Bool) -> ORKTask {
+    static func createTask(withIdentifier identifier: String, options: TaskOptions?, orkTaskOptions: ORKPredefinedTaskOption) -> ORKTask {
         return ORKOrderedTask.trailmakingTask(withIdentifier: identifier,
                                               intendedUseDescription: options?.intendedUseDescription,
                                               trailmakingInstruction: options?.trailmakingInstruction,
                                               trailType: options?.trailType?.internalValue ?? ORKTrailMakingTypeIdentifier.A,
-                                              options: [])
+                                              options: orkTaskOptions)
     }
     
     static func getNetworkResultData(taskResult: ORKTaskResult) -> TaskNetworkResult? {
