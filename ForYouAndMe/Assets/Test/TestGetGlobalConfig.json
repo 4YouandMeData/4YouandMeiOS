@@ -164,7 +164,9 @@
       "OAUTH_TWITTER": "Twitter",
       "OAUTH_INSTAGRAM": "Instagram",
       "OAUTH_RESCUETIME": "Rescue Time",
-      "OAUTH_AVAILABLE_INTERATIONS": "garmin;oura;instagram;rescuetime;twitter"
+      "OAUTH_AVAILABLE_INTERATIONS": "garmin;oura;instagram;rescuetime;twitter",
+      "CAMCOG_TASK_BODY": "<p>About this activity</p><p></p><p>Twice each day, we’ll ask you to complete this task in which you’ll be asked to recall a series of numbers.</p><p></p><p>Why this activity</p><p></p><p>This activity will help us understand your attention and memory and how they change throughout your pregnancy.</p>",
+      "CAMCOG_TASK_TITLE": "2-Back Task"
     },
     "country_codes": ["US", "GB", "IT"]
 }

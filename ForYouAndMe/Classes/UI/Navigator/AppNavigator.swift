@@ -418,6 +418,10 @@ class AppNavigator {
             case .videoDiary:
                 return VideoDiarySectionCoordinator(withTaskIdentifier: taskIdentifier,
                                                     completionCallback: completionCallback)
+            case .camcogEbt, .camcogNbx, .camcogPvt:
+                return CamcogSectionCoordinator(withTaskIdentifier: taskIdentifier,
+                                                completionCallback: completionCallback,
+                                                welcomePage: Constants.Camcog.DefaultIntroPage)
             default:
                 return TaskSectionCoordinator(withTaskIdentifier: taskIdentifier,
                                               taskType: taskType,

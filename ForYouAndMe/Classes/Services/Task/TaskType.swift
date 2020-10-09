@@ -18,6 +18,9 @@ enum TaskType: String, CaseIterable {
     case tremor = "tremor_task"
     case fitness = "walk_task"
     case videoDiary = "video_diary"
+    case camcogPvt = "camcog_pvt"
+    case camcogNbx = "camcog_nbx"
+    case camcogEbt = "camcog_ebt"
 }
 
 extension TaskType {
@@ -36,7 +39,7 @@ extension TaskType {
             return TremorTask.createTask(withIdentifier: identifier, options: options, locationAuthorised: locationAuthorised)
         case .fitness:
             return FitnessTask.createTask(withIdentifier: identifier, options: options, locationAuthorised: locationAuthorised)
-        case .videoDiary:
+        case .videoDiary, .camcogPvt, .camcogNbx, .camcogEbt:
             return nil
         }
     }
@@ -49,7 +52,7 @@ extension TaskType {
         case .gait: return GaitTask.getNetworkResultData(taskResult: taskResult)
         case .tremor: return TremorTask.getNetworkResultData(taskResult: taskResult)
         case .fitness: return FitnessTask.getNetworkResultData(taskResult: taskResult)
-        case .videoDiary: return nil
+        case .videoDiary, .camcogEbt, .camcogNbx, .camcogPvt: return nil
         }
     }
 }

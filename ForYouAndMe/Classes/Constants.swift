@@ -46,7 +46,8 @@ nunc, blandit sit amet lorem a, scelerisque eleifend odio. In euismod nunc tinci
         
     }
     struct Network {
-        static let ApiBaseUrlStr = "https://api-4youandme-staging.balzo.eu/api"
+        static let BaseUrl = "https://api-4youandme-staging.balzo.eu"
+        static let ApiBaseUrlStr = "\(BaseUrl)/api"
     }
     
     struct Style {
@@ -140,6 +141,28 @@ nunc, blandit sit amet lorem a, scelerisque eleifend odio. In euismod nunc tinci
             ]
             return userInfoParameters
         }()
+    }
+    
+    struct Camcog {
+        static var DefaultIntroPage: Page {
+            
+            return Page(id: "1",
+                        type: "page",
+                        title: StringsProvider.string(forKey: .camcogTitle),
+                        body: StringsProvider.string(forKey: .camcogBody),
+                        externalLinkLabel: nil,
+                        externalLinkUrl: nil,
+                        linkModalLabel: nil,
+                        linkModalPage: nil,
+                        specialLinkLabel: nil,
+                        specialLinkValue: nil,
+                        specialLinkType: nil,
+                        imageData: ImagePalette.image(withName: .camcogImage)?.pngData(),
+                        buttonFirstlabel: StringsProvider.string(forKey: .videoDiaryIntroButton),
+                        buttonFirstPage: nil,
+                        buttonSecondlabel: "Remind Me Later",
+                        buttonSecondPage: nil)
+        }
     }
 }
 
