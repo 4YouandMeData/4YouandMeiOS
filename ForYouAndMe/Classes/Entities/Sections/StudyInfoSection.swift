@@ -18,7 +18,12 @@ struct StudyInfoSection {
 }
 
 extension StudyInfoSection: JSONAPIMappable {
-    static var includeList: String? = ""
+    static var includeList: String? = """
+pages,\
+reward_page,\
+information_page,\
+faq_page
+"""
     
     enum CodingKeys: String, CodingKey {
         case id
@@ -26,6 +31,6 @@ extension StudyInfoSection: JSONAPIMappable {
         case pages
         case rewardPage = "reward_page"
         case faqPage = "faq_page"
-        case contactsPage = "contacts_page"
+        case contactsPage = "information_page"
     }
 }

@@ -50,6 +50,7 @@ extension UIStackView {
         imageView.tintColor = color
         imageView.contentMode = .scaleAspectFit
         imageView.autoSetDimension(.width, toSize: sizeDimension)
+        imageView.autoSetDimension(.height, toSize: sizeDimension)
         self.addArrangedSubview(imageView, horizontalInset: horizontalInset)
     }
 }

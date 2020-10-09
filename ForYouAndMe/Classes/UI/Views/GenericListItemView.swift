@@ -14,7 +14,7 @@ class GenericListItemView: UIView {
     private var gestureCallback: GenericListItemViewCallback?
     
     init(withTitle title: String,
-         templateImageName: TemplateImageName,
+         image: UIImage,
          colorType: ColorType,
          gestureCallback: @escaping GenericListItemViewCallback) {
         
@@ -29,7 +29,7 @@ class GenericListItemView: UIView {
         self.addSubview(stackView)
         stackView.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets(top: 10.0, left: 20.0, bottom: 10.0, right: 20.0))
         
-        stackView.addImage(withImage: ImagePalette.templateImage(withName: templateImageName) ?? UIImage(),
+        stackView.addImage(withImage: image,
                            color: ColorPalette.color(withType: colorType),
                            sizeDimension: 32)
         

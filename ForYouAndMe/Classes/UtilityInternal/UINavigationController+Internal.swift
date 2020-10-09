@@ -47,3 +47,10 @@ extension UINavigationController {
         return false
     }
 }
+
+extension UITabBarController {
+    
+    open override var shouldAutorotate: Bool {
+        return false
+    }
+}

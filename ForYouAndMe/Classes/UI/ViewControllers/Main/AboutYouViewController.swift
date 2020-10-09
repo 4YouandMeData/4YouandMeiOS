@@ -47,30 +47,30 @@ class AboutYouViewController: UIViewController {
         if let userInfoParameters = self.repository.currentUser?.customData, userInfoParameters.count > 0 {
             let userInfoTitle = StringsProvider.string(forKey: .aboutYouUserInfo)
             let userInfo = GenericListItemView(withTitle: userInfoTitle,
-                templateImageName: .userInfoIcon,
-                colorType: .primary,
-                gestureCallback: { [weak self] in
-                    guard let self = self else { return }
-                    guard let navigationController = self.navigationController else {
-                        assertionFailure("Missing expected navigation controller")
-                        return
-                    }
-                    self.navigator.showUserInfoPage(navigationController: navigationController,
-                                                     title: userInfoTitle,
-                                                     userInfoParameters: userInfoParameters)
-                    
-            })
+                                               image: ImagePalette.templateImage(withName: .userInfoIcon) ?? UIImage(),
+                                               colorType: .primary,
+                                               gestureCallback: { [weak self] in
+                                                guard let self = self else { return }
+                                                guard let navigationController = self.navigationController else {
+                                                    assertionFailure("Missing expected navigation controller")
+                                                    return
+                                                }
+                                                self.navigator.showUserInfoPage(navigationController: navigationController,
+                                                                                title: userInfoTitle,
+                                                                                userInfoParameters: userInfoParameters)
+                                                
+                                               })
             self.scrollStackView.stackView.addArrangedSubview(userInfo)
         }
-    
+        
         let appsAndDevicesTitle = StringsProvider.string(forKey: .aboutYouAppsAndDevices)
         let appsAndDevices = GenericListItemView(withTitle: appsAndDevicesTitle,
-            templateImageName: .devicesIcon,
-            colorType: .primary,
-            gestureCallback: { [weak self] in
-                self?.navigator.showAppsAndDevices(navigationController: self?.navigationController ?? UINavigationController(),
-                                                   title: appsAndDevicesTitle)
-        })
+                                                 image: ImagePalette.templateImage(withName: .devicesIcon) ?? UIImage(),
+                                                 colorType: .primary,
+                                                 gestureCallback: { [weak self] in
+                                                    self?.navigator.showAppsAndDevices(navigationController: self?.navigationController ?? UINavigationController(),
+                                                                                       title: appsAndDevicesTitle)
+                                                 })
         self.scrollStackView.stackView.addArrangedSubview(appsAndDevices)
         
         self.scrollStackView.stackView.addLineSeparator(lineColor: ColorPalette.color(withType: .inactive),
@@ -79,21 +79,21 @@ class AboutYouViewController: UIViewController {
         
         let consentTitle = StringsProvider.string(forKey: .aboutYouReviewConsent)
         let reviewConsent = GenericListItemView(withTitle: consentTitle,
-            templateImageName: .reviewConsentIcon,
-            colorType: .primary,
-            gestureCallback: { [weak self] in
-                self?.navigator.showReviewConsent(navigationController: self?.navigationController ?? UINavigationController())
-        })
+                                                image: ImagePalette.templateImage(withName: .reviewConsentIcon) ?? UIImage(),
+                                                colorType: .primary,
+                                                gestureCallback: { [weak self] in
+                                                    self?.navigator.showReviewConsent(navigationController: self?.navigationController ?? UINavigationController())
+                                                })
         self.scrollStackView.stackView.addArrangedSubview(reviewConsent)
         
         let permissionTitle = StringsProvider.string(forKey: .aboutYouPermissions)
         let permissions = GenericListItemView(withTitle: permissionTitle,
-            templateImageName: .permissionIcon,
-            colorType: .primary,
-            gestureCallback: { [weak self] in
-                self?.navigator.showPermissions(navigationController: self?.navigationController ?? UINavigationController(),
-                title: permissionTitle)
-        })
+                                              image: ImagePalette.templateImage(withName: .permissionIcon) ?? UIImage(),
+                                              colorType: .primary,
+                                              gestureCallback: { [weak self] in
+                                                self?.navigator.showPermissions(navigationController: self?.navigationController ?? UINavigationController(),
+                                                                                title: permissionTitle)
+                                              })
         self.scrollStackView.stackView.addArrangedSubview(permissions)
         
         self.scrollStackView.stackView.addBlankSpace(space: 57)
