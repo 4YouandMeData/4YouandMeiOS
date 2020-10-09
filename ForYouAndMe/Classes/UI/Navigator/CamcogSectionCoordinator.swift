@@ -51,7 +51,7 @@ class CamcogSectionCoordinator: NSObject, ActivitySectionCoordinator {
                                 addCloseButton: true,
                                 allowBackwardNavigation: false,
                                 bodyTextAlignment: .left,
-                                bottomViewStyle: .singleButton)
+                                bottomViewStyle: .horizontal)
         
         let welcomeViewController = InfoPageViewController(withPageData: data,
                                                           coordinator: self)
@@ -85,5 +85,19 @@ extension CamcogSectionCoordinator: PagedSectionCoordinator {
     func onUnhandledPrimaryButtonNavigation(page: Page) {
         let camcogViewController = self.getCamCogViewController()
         self.navigationController.pushViewController(camcogViewController, animated: true)
+    }
+    
+    func onUnhandledSecondaryButtonNavigation(page: Page) {
+        self.navigator.pushProgressHUD()
+        self.repository.delayTask(taskId: self.taskIdentifier)
+            .subscribe(onSuccess: { [weak self] in
+                guard let self = self else { return }
+                self.navigator.popProgressHUD()
+                self.completionCallback()
+                }, onError: { [weak self] error in
+                    guard let self = self else { return }
+                    self.navigator.popProgressHUD()
+                    self.navigator.handleError(error: error, presenter: self.navigationController)
+            }).disposed(by: self.diposeBag)
     }
 }

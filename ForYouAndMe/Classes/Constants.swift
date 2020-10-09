@@ -147,21 +147,11 @@ nunc, blandit sit amet lorem a, scelerisque eleifend odio. In euismod nunc tinci
         static var DefaultIntroPage: Page {
             
             return Page(id: "1",
-                        type: "page",
+                        image: ImagePalette.image(withName: .camcogImage),
                         title: StringsProvider.string(forKey: .camcogTitle),
                         body: StringsProvider.string(forKey: .camcogBody),
-                        externalLinkLabel: nil,
-                        externalLinkUrl: nil,
-                        linkModalLabel: nil,
-                        linkModalPage: nil,
-                        specialLinkLabel: nil,
-                        specialLinkValue: nil,
-                        specialLinkType: nil,
-                        image: ImagePalette.image(withName: .camcogImage),
-                        buttonFirstlabel: StringsProvider.string(forKey: .taskStartButton),
-                        buttonFirstPage: nil,
-                        buttonSecondlabel: StringsProvider.string(forKey: .taskRemindMeLater),
-                        buttonSecondPage: nil)
+                        buttonFirstLabel: StringsProvider.string(forKey: .taskStartButton),
+                        buttonSecondLabel: StringsProvider.string(forKey: .taskRemindMeLater))
         }
     }
 }
