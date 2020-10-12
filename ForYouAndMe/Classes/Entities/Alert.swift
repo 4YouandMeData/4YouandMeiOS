@@ -19,6 +19,8 @@ struct Alert {
     var image: UIImage?
     @NilIfEmptyString
     var buttonText: String?
+    @NilIfEmptyString
+    var urlString: String?
     @FailableEnumStringDecodable
     var taskType: TaskType?
     

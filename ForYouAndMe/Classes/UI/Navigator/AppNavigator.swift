@@ -466,12 +466,13 @@ class AppNavigator {
         self.currentActivityCoordinator = coordinator
     }
     
-    public func handleInfoTile(infoUrl: URL, presenter: UIViewController) {
+    public func handleInfoTile(infoUrl: String?, presenter: UIViewController) {
         let completionCallback: NotificationCallback = { [weak self] in
             guard let self = self else { return }
             presenter.dismiss(animated: true, completion: nil)
         }
-        self.openWebView(withTitle: "", url: infoUrl, presenter: presenter)
+        guard let string = infoUrl, let url = URL(string: string) else { return }
+        self.openWebView(withTitle: "", url: url, presenter: presenter)
     }
     
     // MARK: About You
