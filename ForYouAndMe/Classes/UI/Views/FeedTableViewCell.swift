@@ -90,7 +90,8 @@ class FeedTableViewCell: UITableViewCell {
         self.buttonPressedCallback = buttonPressedCallback
 //        self.gradientView.updateParameters(colors: [data.startColor ?? ColorPalette.color(withType: .primary),
 //                                                    data.endColor ?? ColorPalette.color(withType: .gradientPrimaryEnd)])
-        self.gradientView.updateParameters(colors: [data.cardColor ?? ColorPalette.color(withType: .primary)])
+        self.gradientView.updateParameters(colors: [data.cardColor ?? ColorPalette.color(withType: .primary),
+                                                    data.cardColor ?? ColorPalette.color(withType: .gradientPrimaryEnd)])
         
         self.setFeedImage(image: data.image)
         self.setFeedTitle(text: data.title)
@@ -110,7 +111,8 @@ class FeedTableViewCell: UITableViewCell {
         self.buttonPressedCallback = buttonPressedCallback
 //        self.gradientView.updateParameters(colors: [data.startColor ?? ColorPalette.color(withType: .primary),
 //                                                    data.endColor ?? ColorPalette.color(withType: .gradientPrimaryEnd)])
-        self.gradientView.updateParameters(colors: [data.cardColor ?? ColorPalette.color(withType: .primary)])
+        self.gradientView.updateParameters(colors: [data.cardColor ?? ColorPalette.color(withType: .primary),
+                                                    data.cardColor ?? ColorPalette.color(withType: .gradientPrimaryEnd)])
         
         self.setFeedImage(image: data.image)
         self.setFeedTitle(text: data.title)
@@ -125,7 +127,8 @@ class FeedTableViewCell: UITableViewCell {
         self.buttonPressedCallback = buttonPressedCallback
 //        self.gradientView.updateParameters(colors: [data.startColor ?? ColorPalette.color(withType: .primary),
 //                                                    data.endColor ?? ColorPalette.color(withType: .gradientPrimaryEnd)])
-        self.gradientView.updateParameters(colors: [data.cardColor ?? ColorPalette.color(withType: .primary)])
+        self.gradientView.updateParameters(colors: [data.cardColor ?? ColorPalette.color(withType: .primary),
+                                                    data.cardColor ?? ColorPalette.color(withType: .gradientPrimaryEnd)])
         
         self.setFeedImage(image: data.image)
         self.setFeedTitle(text: data.title)
@@ -145,7 +148,8 @@ class FeedTableViewCell: UITableViewCell {
         self.buttonPressedCallback = buttonPressedCallback
 //        self.gradientView.updateParameters(colors: [data.startColor ?? ColorPalette.color(withType: .primary),
 //                                                    data.endColor ?? ColorPalette.color(withType: .gradientPrimaryEnd)])
-        self.gradientView.updateParameters(colors: [data.cardColor ?? ColorPalette.color(withType: .primary)])
+        self.gradientView.updateParameters(colors: [data.cardColor ?? ColorPalette.color(withType: .primary),
+                                                    data.cardColor ?? ColorPalette.color(withType: .gradientPrimaryEnd)])
         
         self.setFeedImage(image: data.image)
         self.setFeedTitle(text: data.title)
@@ -165,7 +169,8 @@ class FeedTableViewCell: UITableViewCell {
         self.buttonPressedCallback = buttonPressedCallback
 //        self.gradientView.updateParameters(colors: [data.startColor ?? ColorPalette.color(withType: .primary),
 //                                                    data.endColor ?? ColorPalette.color(withType: .gradientPrimaryEnd)])
-        self.gradientView.updateParameters(colors: [data.cardColor ?? ColorPalette.color(withType: .primary)])
+        self.gradientView.updateParameters(colors: [data.cardColor ?? ColorPalette.color(withType: .primary),
+                                                    data.cardColor ?? ColorPalette.color(withType: .gradientPrimaryEnd)])
         
         self.setFeedImage(image: data.image)
         self.setFeedTitle(text: data.title)
