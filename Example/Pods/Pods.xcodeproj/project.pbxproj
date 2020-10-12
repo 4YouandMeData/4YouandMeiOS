@@ -410,6 +410,7 @@
 		20C7F8B925334DA20084895C /* Educational.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20C7F8B825334DA20084895C /* Educational.swift */; };
 		20C7F8E725334DAB0084895C /* Rewards.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20C7F8E625334DAB0084895C /* Rewards.swift */; };
 		20C7F91525334DB40084895C /* Alert.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20C7F91425334DB40084895C /* Alert.swift */; };
+		20C7F9E425347F160084895C /* DeepLinkService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20C7F9E325347F160084895C /* DeepLinkService.swift */; };
 		20CD78EFC735FEBD0C63BD4CC8DB05EC /* Empty.pbobjc.h in Headers */ = {isa = PBXBuildFile; fileRef = 459665215DAB6E7B8C3995B37F3559E3 /* Empty.pbobjc.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		20EFD2C891D33E3DDC20170EDF83FBEE /* FIRCLSReportAdapter.h in Headers */ = {isa = PBXBuildFile; fileRef = 33BEB3C22DBA06126392F214ECFA461C /* FIRCLSReportAdapter.h */; settings = {ATTRIBUTES = (Project, ); }; };
 		20F9F0A61630FF6DCF42EC6FBEB20B6D /* GULSceneDelegateSwizzler.h in Headers */ = {isa = PBXBuildFile; fileRef = 658B46976195FEE4F9F15093C6E85979 /* GULSceneDelegateSwizzler.h */; settings = {ATTRIBUTES = (Private, ); }; };
@@ -4008,6 +4009,7 @@
 		20C7F8B825334DA20084895C /* Educational.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Educational.swift; sourceTree = "<group>"; };
 		20C7F8E625334DAB0084895C /* Rewards.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Rewards.swift; sourceTree = "<group>"; };
 		20C7F91425334DB40084895C /* Alert.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Alert.swift; sourceTree = "<group>"; };
+		20C7F9E325347F160084895C /* DeepLinkService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeepLinkService.swift; sourceTree = "<group>"; };
 		20CF6129383EB46B6163A595DEEB8DB3 /* pb_encode.c */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.c; path = pb_encode.c; sourceTree = "<group>"; };
 		20E30F8CD5EAC505FB14BD0A9D777D5F /* GULKeychainStorage.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = GULKeychainStorage.h; path = GoogleUtilities/Environment/Private/GULKeychainStorage.h; sourceTree = "<group>"; };
 		20EF4FACA282F4AD1B99691C903FD120 /* FIRInstallationsItem.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = FIRInstallationsItem.m; path = FirebaseInstallations/Source/Library/FIRInstallationsItem.m; sourceTree = "<group>"; };
@@ -9644,6 +9646,7 @@
 				83DD3CD0CD1E79F1F5BE5DE64A85EB79 /* Network */,
 				DD32C2A7ACB0C27A695C4C70960D8A75 /* Permission */,
 				D2419128C18AA5D1ACD848BE23798CDC /* Task */,
+				20C7F9E325347F160084895C /* DeepLinkService.swift */,
 			);
 			name = Services;
 			path = ForYouAndMe/Classes/Services;
@@ -14983,6 +14986,7 @@
 				120D6EB0FFE71DEC6B2EC46769B53C3B /* QuickActivityOption.swift in Sources */,
 				31D9D05E852A9321201F92C62A5DED40 /* QuickActivityOptionView.swift in Sources */,
 				A71768188220CEBD4537ED18A069C231 /* QuickActivityView.swift in Sources */,
+				20C7F9E425347F160084895C /* DeepLinkService.swift in Sources */,
 				5B80937A1409C6ECB8654C60F1851C85 /* ReachabilityManager.swift in Sources */,
 				716FD863E902457ACA3BDC8D433C4E85 /* ReachabilityService.swift in Sources */,
 				D43D6FB8DB7A7505CAADE52AF5C3477F /* ReactionTimeTask.swift in Sources */,
