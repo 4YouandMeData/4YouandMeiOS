@@ -26,6 +26,8 @@ struct Activity {
     var startColor: UIColor?
     @ColorDecodable
     var endColor: UIColor?
+    @ColorDecodable
+    var cardColor: UIColor?
 }
 
 extension Activity: JSONAPIMappable {
@@ -39,5 +41,6 @@ extension Activity: JSONAPIMappable {
         case taskType = "activity_type"
         case startColor = "start_color"
         case endColor = "end_color"
+        case cardColor = "card_color"
     }
 }

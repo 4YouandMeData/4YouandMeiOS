@@ -24,6 +24,8 @@ struct Survey {
     var startColor: UIColor?
     @ColorDecodable
     var endColor: UIColor?
+    @ColorDecodable
+    var cardColor: UIColor?
 }
 
 extension Survey: JSONAPIMappable {
@@ -36,5 +38,6 @@ extension Survey: JSONAPIMappable {
         case buttonText = "task_action_button_label"
         case startColor = "start_color"
         case endColor = "end_color"
+        case cardColor = "card_color"
     }
 }
