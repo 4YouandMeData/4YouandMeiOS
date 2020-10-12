@@ -46,10 +46,12 @@ class PermissionItemView: UIView {
         label.attributedText = attributedString
         label.numberOfLines = 0
         label.setContentHuggingPriority(UILayoutPriority(100), for: .horizontal)
+        label.setContentHuggingPriority(UILayoutPriority(1000), for: .vertical)
+        label.setContentCompressionResistancePriority(UILayoutPriority(1000), for: .vertical)
         stackView.addArrangedSubview(label, horizontalInset: 0, verticalInset: 14)
         
         //Allow
-        let titleKey: StringKey = (permission.isAuthorized) ? .allowMessage : .allowedMessage
+        let titleKey: StringKey = (permission.isAuthorized) ? .allowedMessage : .allowMessage
         attributedString = NSAttributedString.create(withText: StringsProvider.string(forKey: titleKey),
                                                      fontStyle: .paragraph,
                                                      colorType: (permission.isAuthorized) ? .gradientPrimaryEnd : .secondaryText,

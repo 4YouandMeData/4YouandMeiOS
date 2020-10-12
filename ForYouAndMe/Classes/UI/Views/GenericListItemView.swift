@@ -31,7 +31,8 @@ class GenericListItemView: UIView {
         
         stackView.addImage(withImage: image,
                            color: ColorPalette.color(withType: colorType),
-                           sizeDimension: 32)
+                           sizeDimension: 32,
+                           verticalDimension: 32)
         
         let attributedString = NSAttributedString.create(withText: title,
                                                          fontStyle: .paragraph,
