@@ -119,6 +119,63 @@ class FeedTableViewCell: UITableViewCell {
         self.buttonView.setButtonText(buttonText)
     }
     
+    public func display(data: Educational, buttonPressedCallback: @escaping NotificationCallback) {
+        self.buttonPressedCallback = buttonPressedCallback
+        self.gradientView.updateParameters(colors: [data.startColor ?? ColorPalette.color(withType: .primary),
+                                                    data.endColor ?? ColorPalette.color(withType: .gradientPrimaryEnd)])
+        
+        self.setFeedImage(image: data.image)
+        self.setFeedTitle(text: data.title)
+        self.setFeedDescription(text: data.body)
+        
+        if nil != data.taskType {
+            let buttonText = data.buttonText ?? StringsProvider.string(forKey: .activityButtonDefault)
+            self.buttonView.isHidden = false
+            self.buttonView.setButtonText(buttonText)
+        } else {
+            assert(data.buttonText == nil, "Existing button text for activity without activity type")
+            self.buttonView.isHidden = true
+        }
+    }
+    
+    public func display(data: Alert, buttonPressedCallback: @escaping NotificationCallback) {
+        self.buttonPressedCallback = buttonPressedCallback
+        self.gradientView.updateParameters(colors: [data.startColor ?? ColorPalette.color(withType: .primary),
+                                                    data.endColor ?? ColorPalette.color(withType: .gradientPrimaryEnd)])
+        
+        self.setFeedImage(image: data.image)
+        self.setFeedTitle(text: data.title)
+        self.setFeedDescription(text: data.body)
+        
+        if nil != data.taskType {
+            let buttonText = data.buttonText ?? StringsProvider.string(forKey: .activityButtonDefault)
+            self.buttonView.isHidden = false
+            self.buttonView.setButtonText(buttonText)
+        } else {
+            assert(data.buttonText == nil, "Existing button text for activity without activity type")
+            self.buttonView.isHidden = true
+        }
+    }
+    
+    public func display(data: Rewards, buttonPressedCallback: @escaping NotificationCallback) {
+        self.buttonPressedCallback = buttonPressedCallback
+        self.gradientView.updateParameters(colors: [data.startColor ?? ColorPalette.color(withType: .primary),
+                                                    data.endColor ?? ColorPalette.color(withType: .gradientPrimaryEnd)])
+        
+        self.setFeedImage(image: data.image)
+        self.setFeedTitle(text: data.title)
+        self.setFeedDescription(text: data.body)
+        
+        if nil != data.taskType {
+            let buttonText = data.buttonText ?? StringsProvider.string(forKey: .activityButtonDefault)
+            self.buttonView.isHidden = false
+            self.buttonView.setButtonText(buttonText)
+        } else {
+            assert(data.buttonText == nil, "Existing button text for activity without activity type")
+            self.buttonView.isHidden = true
+        }
+    }
+    
     // MARK: - Actions
     
     @objc private func buttonPressed() {

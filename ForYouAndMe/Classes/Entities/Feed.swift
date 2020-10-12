@@ -11,12 +11,18 @@ enum Schedulable {
     case quickActivity(quickActivity: QuickActivity)
     case activity(activity: Activity)
     case survey(survey: Survey)
+    case educational(educational: Educational)
+    case alert(alert: Alert)
+    case rewards(rewards: Rewards)
     
     var schedulableType: String {
         switch self {
         case .quickActivity: return "quick_activity"
         case .activity: return "activity"
         case .survey: return "survey"
+        case .educational: return "educational"
+        case .alert: return "alert"
+        case .rewards: return "rewards"
         }
     }
 }
@@ -74,6 +80,15 @@ struct SchedulableDecodable: Decodable {
         } else if let survey = try? container.decode(Survey.self),
             Schedulable.survey(survey: survey).schedulableType == survey.type {
             self.wrappedValue = .survey(survey: survey)
+        } else if let educational = try? container.decode(Educational.self),
+                  Schedulable.educational(educational: educational).schedulableType == educational.type {
+            self.wrappedValue = .educational(educational: educational)
+        } else if let alert = try? container.decode(Alert.self),
+                  Schedulable.alert(alert: alert).schedulableType == alert.type {
+            self.wrappedValue = .alert(alert: alert)
+        } else if let rewards = try? container.decode(Rewards.self),
+                  Schedulable.rewards(rewards: rewards).schedulableType == rewards.type {
+            self.wrappedValue = .rewards(rewards: rewards)
         } else {
             // TODO: Add all expected cases
             throw FeedError.invalidSchedulable

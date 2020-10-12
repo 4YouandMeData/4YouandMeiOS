@@ -158,12 +158,12 @@ class FeedListManager: NSObject {
                 
                 onCompletion?()
                 
-                }, onError: { [weak self] error in
-                    guard let self = self else { return }
-                    self.tableView.refreshControl?.endRefreshing()
-                    
-                    self.currentRequestDisposable = nil
-                    self.errorView.showViewWithError(error)
+            }, onError: { [weak self] error in
+                guard let self = self else { return }
+                self.tableView.refreshControl?.endRefreshing()
+                
+                self.currentRequestDisposable = nil
+                self.errorView.showViewWithError(error)
             })
     }
     
@@ -198,9 +198,9 @@ class FeedListManager: NSObject {
                 guard let self = self else { return }
                 self.analytics.track(event: .quickActivity(taskId, option: option.id))
                 self.loadItems()
-                }, onError: { [weak self] error in
-                    guard let self = self else { return }
-                    self.navigator.handleError(error: error, presenter: delegate.presenter)
+            }, onError: { [weak self] error in
+                guard let self = self else { return }
+                self.navigator.handleError(error: error, presenter: delegate.presenter)
             }).disposed(by: self.disposeBag)
     }
     
@@ -237,11 +237,11 @@ extension FeedListManager: UITableViewDataSource {
                                 return
                             }
                             self.sendQuickActiviyOption(selectedOption, forTaskId: item.taskId)
-            },
+                         },
                          selectionCallback: { [weak self] (item, option) in
                             guard let self = self else { return }
                             self.quickActivitySelections[item] = option
-            })
+                         })
             return cell
         } else if let feedSection = section as? FeedSection {
             let feed = feedSection.feedItems[indexPath.row]
@@ -277,6 +277,27 @@ extension FeedListManager: UITableViewDataSource {
                             self.navigator.popProgressHUD()
                             self.navigator.handleError(error: error, presenter: delegate.presenter)
                         }).disposed(by: self.disposeBag)
+                })
+            case .educational(let educational):
+                cell.display(data: educational, buttonPressedCallback: { [weak self] in
+                    guard let self = self else { return }
+                    guard let delegate = self.delegate else { return }
+                    self.navigator.handleInfoTile(info: educational,
+                                                  presenter: delegate.presenter)
+                })
+            case .alert(let alert):
+                cell.display(data: alert, buttonPressedCallback: { [weak self] in
+                    guard let self = self else { return }
+                    guard let delegate = self.delegate else { return }
+                    self.navigator.handleInfoTile(info: alert,
+                                                  presenter: delegate.presenter)
+                })
+            case .rewards(let rewards):
+                cell.display(data: rewards, buttonPressedCallback: { [weak self] in
+                    guard let self = self else { return }
+                    guard let delegate = self.delegate else { return }
+                    self.navigator.handleInfoTile(info: rewards,
+                                                  presenter: delegate.presenter)
                 })
             }
             return cell
@@ -333,15 +354,15 @@ fileprivate extension FeedContent {
                 var currentResult = result
                 currentResult[dateString] = items
                 return currentResult
-        }
-        .map { FeedSection(dateString: $0.key, feedItems: $0.value) }
-        // This sorts the sections
-        .sorted { (sectionA, sectionB) -> Bool in
-            guard let dateA = sectionA.feedItems.first?.fromDate, let dateB = sectionB.feedItems.first?.fromDate else {
-                return true
             }
-            return dateA > dateB
-        }
+            .map { FeedSection(dateString: $0.key, feedItems: $0.value) }
+            // This sorts the sections
+            .sorted { (sectionA, sectionB) -> Bool in
+                guard let dateA = sectionA.feedItems.first?.fromDate, let dateB = sectionB.feedItems.first?.fromDate else {
+                    return true
+                }
+                return dateA > dateB
+            }
         return quickActivitySections + feedSections
     }
 }
