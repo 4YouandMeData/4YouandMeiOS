@@ -278,6 +278,8 @@ extension FeedListManager: UITableViewDataSource {
                             self.navigator.handleError(error: error, presenter: delegate.presenter)
                         }).disposed(by: self.disposeBag)
                 })
+            }
+            switch feed.notifiable {
             case .educational(let educational):
                 cell.display(data: educational, buttonPressedCallback: { [weak self] in
                     guard let self = self else { return }

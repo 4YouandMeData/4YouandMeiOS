@@ -11,18 +11,26 @@ enum Schedulable {
     case quickActivity(quickActivity: QuickActivity)
     case activity(activity: Activity)
     case survey(survey: Survey)
-    case educational(educational: Educational)
-    case alert(alert: Alert)
-    case rewards(rewards: Rewards)
     
     var schedulableType: String {
         switch self {
         case .quickActivity: return "quick_activity"
         case .activity: return "activity"
         case .survey: return "survey"
-        case .educational: return "educational"
-        case .alert: return "alert"
-        case .rewards: return "rewards"
+        }
+    }
+}
+
+enum Notifiable {
+    case educational(educational: Educational)
+    case alert(alert: Alert)
+    case rewards(rewards: Rewards)
+    
+    var schedulableType: String {
+        switch self {
+        case .educational: return "feed_educational"
+        case .alert: return "feed_alert"
+        case .rewards: return "feed_reward"
         }
     }
 }
@@ -38,12 +46,16 @@ struct Feed {
     
     @SchedulableDecodable
     var schedulable: Schedulable
+    
+    @NotifiableDecode
+    var notifiable: Notifiable
 }
 
 extension Feed: JSONAPIMappable {
     static var includeList: String? = """
 schedulable,\
-schedulable.quick_activity_options
+schedulable.quick_activity_options,\
+notifiable
 """
     
     enum CodingKeys: String, CodingKey {
@@ -52,11 +64,13 @@ schedulable.quick_activity_options
         case fromDate = "from"
         case toDate = "to"
         case schedulable
+        case notifiable
     }
 }
 
 enum FeedError: Error {
     case invalidSchedulable
+    case invalidNotifiable
 }
 
 @propertyWrapper
@@ -80,18 +94,38 @@ struct SchedulableDecodable: Decodable {
         } else if let survey = try? container.decode(Survey.self),
             Schedulable.survey(survey: survey).schedulableType == survey.type {
             self.wrappedValue = .survey(survey: survey)
-        } else if let educational = try? container.decode(Educational.self),
-                  Schedulable.educational(educational: educational).schedulableType == educational.type {
-            self.wrappedValue = .educational(educational: educational)
-        } else if let alert = try? container.decode(Alert.self),
-                  Schedulable.alert(alert: alert).schedulableType == alert.type {
-            self.wrappedValue = .alert(alert: alert)
-        } else if let rewards = try? container.decode(Rewards.self),
-                  Schedulable.rewards(rewards: rewards).schedulableType == rewards.type {
-            self.wrappedValue = .rewards(rewards: rewards)
         } else {
             // TODO: Add all expected cases
             throw FeedError.invalidSchedulable
         }
     }
 }
+
+@propertyWrapper
+struct NotifiableDecode: Decodable {
+    
+    var wrappedValue: Notifiable
+    
+    init(wrappedValue: Notifiable) {
+        self.wrappedValue = wrappedValue
+    }
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        
+        if let educational = try? container.decode(Educational.self),
+                  Notifiable.educational(educational: educational).schedulableType == educational.type {
+            self.wrappedValue = .educational(educational: educational)
+        } else if let alert = try? container.decode(Alert.self),
+                  Notifiable.alert(alert: alert).schedulableType == alert.type {
+            self.wrappedValue = .alert(alert: alert)
+        } else if let rewards = try? container.decode(Rewards.self),
+                  Notifiable.rewards(rewards: rewards).schedulableType == rewards.type {
+            self.wrappedValue = .rewards(rewards: rewards)
+        } else {
+            // TODO: Add all expected cases
+            throw FeedError.invalidNotifiable
+        }
+    }
+}
+
