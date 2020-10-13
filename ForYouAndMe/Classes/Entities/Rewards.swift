@@ -23,8 +23,6 @@ struct Rewards {
     var buttonText: String?
     @NilIfEmptyString
     var urlString: String?
-    @FailableEnumStringDecodable
-    var taskType: TaskType?
     
     @ColorDecodable
     var startColor: UIColor?
@@ -42,7 +40,6 @@ extension Rewards: JSONAPIMappable {
         case body = "description"
         case image
         case buttonText = "task_action_button_label"
-        case taskType = "activity_type"
         case startColor = "start_color"
         case endColor = "end_color"
         case cardColor = "card_color"

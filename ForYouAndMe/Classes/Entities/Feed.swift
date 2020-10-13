@@ -26,7 +26,7 @@ enum Notifiable {
     case alert(alert: Alert)
     case rewards(rewards: Rewards)
     
-    var schedulableType: String {
+    var notifiableType: String {
         switch self {
         case .educational: return "feed_educational"
         case .alert: return "feed_alert"
@@ -45,10 +45,10 @@ struct Feed {
     var toDate: Date
     
     @SchedulableDecodable
-    var schedulable: Schedulable
+    var schedulable: Schedulable?
     
     @NotifiableDecode
-    var notifiable: Notifiable
+    var notifiable: Notifiable?
 }
 
 extension Feed: JSONAPIMappable {
@@ -68,17 +68,12 @@ notifiable
     }
 }
 
-enum FeedError: Error {
-    case invalidSchedulable
-    case invalidNotifiable
-}
-
 @propertyWrapper
 struct SchedulableDecodable: Decodable {
     
-    var wrappedValue: Schedulable
+    var wrappedValue: Schedulable?
     
-    init(wrappedValue: Schedulable) {
+    init(wrappedValue: Schedulable?) {
         self.wrappedValue = wrappedValue
     }
     
@@ -95,8 +90,7 @@ struct SchedulableDecodable: Decodable {
             Schedulable.survey(survey: survey).schedulableType == survey.type {
             self.wrappedValue = .survey(survey: survey)
         } else {
-            // TODO: Add all expected cases
-            throw FeedError.invalidSchedulable
+            self.wrappedValue = nil
         }
     }
 }
@@ -104,9 +98,9 @@ struct SchedulableDecodable: Decodable {
 @propertyWrapper
 struct NotifiableDecode: Decodable {
     
-    var wrappedValue: Notifiable
+    var wrappedValue: Notifiable?
     
-    init(wrappedValue: Notifiable) {
+    init(wrappedValue: Notifiable?) {
         self.wrappedValue = wrappedValue
     }
     
@@ -114,17 +108,16 @@ struct NotifiableDecode: Decodable {
         let container = try decoder.singleValueContainer()
         
         if let educational = try? container.decode(Educational.self),
-                  Notifiable.educational(educational: educational).schedulableType == educational.type {
+                  Notifiable.educational(educational: educational).notifiableType == educational.type {
             self.wrappedValue = .educational(educational: educational)
         } else if let alert = try? container.decode(Alert.self),
-                  Notifiable.alert(alert: alert).schedulableType == alert.type {
+                  Notifiable.alert(alert: alert).notifiableType == alert.type {
             self.wrappedValue = .alert(alert: alert)
         } else if let rewards = try? container.decode(Rewards.self),
-                  Notifiable.rewards(rewards: rewards).schedulableType == rewards.type {
+                  Notifiable.rewards(rewards: rewards).notifiableType == rewards.type {
             self.wrappedValue = .rewards(rewards: rewards)
         } else {
-            // TODO: Add all expected cases
-            throw FeedError.invalidNotifiable
+            self.wrappedValue = nil
         }
     }
 }

@@ -22,8 +22,8 @@ struct FeedContent {
     let feedItems: [Feed]
     
     init(withFeeds feeds: [Feed]) {
-        self.quickActivities = feeds.filter { $0.schedulable.isQuickActivity }
-        self.feedItems = feeds.filter { false == $0.schedulable.isQuickActivity }
+        self.quickActivities = feeds.filter { $0.schedulable?.isQuickActivity ?? false}
+        self.feedItems = feeds.filter { false == $0.schedulable?.isQuickActivity ?? false}
     }
 }
 
@@ -249,58 +249,63 @@ extension FeedListManager: UITableViewDataSource {
                 assertionFailure("FeedTableViewCell not registered")
                 return UITableViewCell()
             }
-            switch feed.schedulable {
-            case .quickActivity:
-                assertionFailure("Unexpected quick activity as schedulable type")
-            case .activity(let activity):
-                cell.display(data: activity, buttonPressedCallback: { [weak self] in
-                    guard let self = self else { return }
-                    guard let delegate = self.delegate else { return }
-                    guard let taskType = activity.taskType else { return }
-                    self.navigator.startTaskSection(taskIdentifier: feed.id,
-                                                    taskType: taskType,
-                                                    taskOptions: nil,
-                                                    presenter: delegate.presenter)
-                })
-            case .survey(let survey):
-                cell.display(data: survey, buttonPressedCallback: { () in
-                    self.navigator.pushProgressHUD()
-                    self.repository.getSurvey(surveyId: feed.id)
-                        .subscribe(onSuccess: { [weak self] surveyGroup in
-                            guard let self = self else { return }
-                            guard let delegate = self.delegate else { return }
-                            self.navigator.popProgressHUD()
-                            self.navigator.startSurveySection(surveyGroup: surveyGroup, presenter: delegate.presenter)
-                        }, onError: { [weak self] error in
-                            guard let self = self else { return }
-                            guard let delegate = self.delegate else { return }
-                            self.navigator.popProgressHUD()
-                            self.navigator.handleError(error: error, presenter: delegate.presenter)
-                        }).disposed(by: self.disposeBag)
-                })
-            }
-            switch feed.notifiable {
-            case .educational(let educational):
-                cell.display(data: educational, buttonPressedCallback: { [weak self] in
-                    guard let self = self else { return }
-                    guard let delegate = self.delegate else { return }
-                    self.navigator.handleInfoTile(infoUrl: educational.urlString,
-                                                  presenter: delegate.presenter)
-                })
-            case .alert(let alert):
-                cell.display(data: alert, buttonPressedCallback: { [weak self] in
-                    guard let self = self else { return }
-                    guard let delegate = self.delegate else { return }
-                    self.navigator.handleInfoTile(infoUrl: alert.urlString,
-                                                  presenter: delegate.presenter)
-                })
-            case .rewards(let rewards):
-                cell.display(data: rewards, buttonPressedCallback: { [weak self] in
-                    guard let self = self else { return }
-                    guard let delegate = self.delegate else { return }
-                    self.navigator.handleInfoTile(infoUrl: rewards.urlString,
-                                                  presenter: delegate.presenter)
-                })
+            if let schedulable = feed.schedulable {
+                switch schedulable {
+                case .quickActivity:
+                    assertionFailure("Unexpected quick activity as schedulable type")
+                case .activity(let activity):
+                    cell.display(data: activity, buttonPressedCallback: { [weak self] in
+                        guard let self = self else { return }
+                        guard let delegate = self.delegate else { return }
+                        guard let taskType = activity.taskType else { return }
+                        self.navigator.startTaskSection(taskIdentifier: feed.id,
+                                                        taskType: taskType,
+                                                        taskOptions: nil,
+                                                        presenter: delegate.presenter)
+                    })
+                case .survey(let survey):
+                    cell.display(data: survey, buttonPressedCallback: { () in
+                        self.navigator.pushProgressHUD()
+                        self.repository.getSurvey(surveyId: feed.id)
+                            .subscribe(onSuccess: { [weak self] surveyGroup in
+                                guard let self = self else { return }
+                                guard let delegate = self.delegate else { return }
+                                self.navigator.popProgressHUD()
+                                self.navigator.startSurveySection(surveyGroup: surveyGroup, presenter: delegate.presenter)
+                            }, onError: { [weak self] error in
+                                guard let self = self else { return }
+                                guard let delegate = self.delegate else { return }
+                                self.navigator.popProgressHUD()
+                                self.navigator.handleError(error: error, presenter: delegate.presenter)
+                            }).disposed(by: self.disposeBag)
+                    })
+                }
+            } else if let notifiable = feed.notifiable {
+                switch notifiable {
+                case .educational(let educational):
+                    cell.display(data: educational, buttonPressedCallback: { [weak self] in
+                        guard let self = self else { return }
+                        guard let delegate = self.delegate else { return }
+                        self.navigator.handleNotifiableTile(notifiableUrl: educational.urlString,
+                                                            presenter: delegate.presenter)
+                    })
+                case .alert(let alert):
+                    cell.display(data: alert, buttonPressedCallback: { [weak self] in
+                        guard let self = self else { return }
+                        guard let delegate = self.delegate else { return }
+                        self.navigator.handleNotifiableTile(notifiableUrl: alert.urlString,
+                                                            presenter: delegate.presenter)
+                    })
+                case .rewards(let rewards):
+                    cell.display(data: rewards, buttonPressedCallback: { [weak self] in
+                        guard let self = self else { return }
+                        guard let delegate = self.delegate else { return }
+                        self.navigator.handleNotifiableTile(notifiableUrl: rewards.urlString,
+                                                            presenter: delegate.presenter)
+                    })
+                }
+            } else {
+                assertionFailure("Unhandle Type")
             }
             return cell
         } else {

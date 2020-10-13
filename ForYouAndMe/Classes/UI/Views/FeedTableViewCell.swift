@@ -134,7 +134,7 @@ class FeedTableViewCell: UITableViewCell {
         self.setFeedTitle(text: data.title)
         self.setFeedDescription(text: data.body)
         
-        if nil != data.taskType {
+        if nil != data.urlString {
             let buttonText = data.buttonText ?? StringsProvider.string(forKey: .activityButtonDefault)
             self.buttonView.isHidden = false
             self.buttonView.setButtonText(buttonText)
@@ -155,7 +155,7 @@ class FeedTableViewCell: UITableViewCell {
         self.setFeedTitle(text: data.title)
         self.setFeedDescription(text: data.body)
         
-        if nil != data.taskType {
+        if nil != data.urlString {
             let buttonText = data.buttonText ?? StringsProvider.string(forKey: .activityButtonDefault)
             self.buttonView.isHidden = false
             self.buttonView.setButtonText(buttonText)
@@ -176,7 +176,7 @@ class FeedTableViewCell: UITableViewCell {
         self.setFeedTitle(text: data.title)
         self.setFeedDescription(text: data.body)
         
-        if nil != data.taskType {
+        if nil != data.urlString {
             let buttonText = data.buttonText ?? StringsProvider.string(forKey: .activityButtonDefault)
             self.buttonView.isHidden = false
             self.buttonView.setButtonText(buttonText)
