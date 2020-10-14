@@ -11,20 +11,18 @@ struct SurveyTask {
     let id: String
     let type: String
     
+    let pages: [Page]
     let welcomePage: Page
     let questions: [SurveyQuestion]
     let successPage: Page?
-    
-    var pages: [Page] {
-        return [self.welcomePage, self.successPage].compactMap { $0 }
-    }
 }
 
-extension SurveyTask: Decodable {
+extension SurveyTask: JSONAPIMappable {
     enum CodingKeys: String, CodingKey {
         case id
         case type
-        case welcomePage = "welcome_page"
+        case pages
+        case welcomePage = "intro_page"
         case questions
         case successPage = "success_page"
     }

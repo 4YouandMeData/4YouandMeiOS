@@ -15,7 +15,7 @@ struct SurveyQuestionOption {
     let targets: [SurveyTarget]?
 }
 
-extension SurveyQuestionOption: Decodable {
+extension SurveyQuestionOption: JSONAPIMappable {
     enum CodingKeys: String, CodingKey {
         case id
         case type

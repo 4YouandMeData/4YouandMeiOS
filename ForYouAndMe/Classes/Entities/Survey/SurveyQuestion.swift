@@ -13,7 +13,7 @@ enum SurveyQuestionType: String {
     case pickOne = "pick-one"
     case pickMany = "pick-many"
     case textInput = "text-input"
-    case dateInput = "date-input"
+    case dateInput = "SurveyQuestionDate"
     case scale = "scale"
     case range = "range"
 }
@@ -55,12 +55,12 @@ struct SurveyQuestion {
     let targets: [SurveyTarget]?
 }
 
-extension SurveyQuestion: Decodable {
+extension SurveyQuestion: JSONAPIMappable {
     enum CodingKeys: String, CodingKey {
         case id
         case type
         case questionType = "question_type"
-        case body
+        case body = "text"
         case image
         case minimum = "min"
         case maximum = "max"

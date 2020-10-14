@@ -14,10 +14,17 @@ struct SurveyGroup {
     let surveys: [SurveyTask]
 }
 
-extension SurveyGroup: PlainDecodable {
+extension SurveyGroup: JSONAPIMappable {
+    static var includeList: String? = """
+survey_blocks.pages,\
+survey_blocks.intro_page,\
+survey_blocks.success_page,\
+survey_blocks.questions
+"""
+    
     enum CodingKeys: String, CodingKey {
         case id
         case type
-        case surveys
+        case surveys = "survey_blocks"
     }
 }

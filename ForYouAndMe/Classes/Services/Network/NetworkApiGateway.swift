@@ -335,9 +335,9 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             return "v1/studies/\(studyId)/user_data_aggregations/\(period.networkValue)"
         // Survey
         case .getSurvey(let surveyId):
-            return "v1/survey_group/\(surveyId)"  // TODO: Check against final API specs
+            return "v1/surveys/\(surveyId)"
         case .sendSurveyTaskResultData(let surveyTaskId, _):
-            return "v1/survey/\(surveyTaskId)"  // TODO: Check against final API specs
+            return "v1/surveys/\(surveyTaskId)"  // TODO: Check against final API specs
         }
     }
     
@@ -356,7 +356,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
              .getStudyInfoSection,
              .getFeeds,
              .getTasks,
-             .getSurvey, // TODO: Check against final API specs
+             .getSurvey,
              .getUser,
              .getUserData,
              .getUserDataAggregation:

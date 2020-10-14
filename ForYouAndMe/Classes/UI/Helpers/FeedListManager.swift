@@ -266,7 +266,7 @@ extension FeedListManager: UITableViewDataSource {
                 case .survey(let survey):
                     cell.display(data: survey, buttonPressedCallback: { () in
                         self.navigator.pushProgressHUD()
-                        self.repository.getSurvey(surveyId: feed.id)
+                        self.repository.getSurvey(surveyId: survey.id)
                             .subscribe(onSuccess: { [weak self] surveyGroup in
                                 guard let self = self else { return }
                                 guard let delegate = self.delegate else { return }

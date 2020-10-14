@@ -22,7 +22,7 @@ struct SurveyTarget {
     let questionId: String
 }
 
-extension SurveyTarget: Decodable {
+extension SurveyTarget: JSONAPIMappable {
     enum CodingKeys: String, CodingKey {
         case id
         case type
