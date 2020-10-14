@@ -1,6 +1,6 @@
 {
   "name": "ForYouAndMe",
-  "version": "0.17.0",
+  "version": "0.19.0",
   "summary": "Framework for research studies apps",
   "description": "ForYouAndMe is a framework aimed to easily develop an app for research study",
   "homepage": "http://balzo.eu",
@@ -13,9 +13,15 @@
   },
   "source": {
     "git": "https://github.com/balzo-tech/4youandmeiOS.git",
-    "tag": "0.17.0"
+    "tag": "0.19.0"
   },
   "cocoapods_version": ">= 1.6.0",
+  "pod_target_xcconfig": {
+    "EXCLUDED_ARCHS[sdk=iphonesimulator*]": "arm64"
+  },
+  "user_target_xcconfig": {
+    "EXCLUDED_ARCHS[sdk=iphonesimulator*]": "arm64"
+  },
   "platforms": {
     "ios": "13.0"
   },

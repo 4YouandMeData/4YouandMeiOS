@@ -11,7 +11,7 @@ import WebKit
 class IntegrationLoginViewController: UIViewController {
     
     private enum IntegrationLoginScriptInterface: String {
-        case login = "wearableLogin"
+        case login = "integrationLogin"
     }
     
     private enum IntegrationLoginResult: String {
