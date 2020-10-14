@@ -9,10 +9,6 @@
 import UIKit
 import SVProgressHUD
 
-protocol ActivitySectionCoordinator: class {
-    func getStartingPage() -> UIViewController?
-}
-
 class AppNavigator {
     
     private var progressHudCount = 0
@@ -445,14 +441,15 @@ class AppNavigator {
         self.currentActivityCoordinator = coordinator
     }
     
-    public func startSurveySection(surveyGroup: SurveyGroup, presenter: UIViewController) {
+    public func startSurveySection(withTaskIdentfier taskIdentifier: String, surveyGroup: SurveyGroup, presenter: UIViewController) {
         let completionCallback: NotificationCallback = { [weak self] in
             guard let self = self else { return }
             presenter.dismiss(animated: true, completion: nil)
             self.currentActivityCoordinator = nil
         }
         
-        let coordinator = SurveyGroupSectionCoordinator(withSectionData: surveyGroup,
+        let coordinator = SurveyGroupSectionCoordinator(withTaskIdentifier: taskIdentifier,
+                                                        sectionData: surveyGroup,
                                                         navigationController: nil,
                                                         completionCallback: completionCallback)
         guard let startingPage = coordinator.getStartingPage() else {

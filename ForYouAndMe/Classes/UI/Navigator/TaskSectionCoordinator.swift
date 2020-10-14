@@ -20,17 +20,18 @@ class TaskSectionCoordinator: NSObject, ActivitySectionCoordinator {
     }
     private weak var internalNavigationController: UINavigationController?
     
-    private let taskIdentifier: String
+    // MARK: - ActivitySectionCoordinator
+    var activityPresenter: UIViewController? { return self.navigationController }
+    let taskIdentifier: String
+    let navigator: AppNavigator
+    let repository: Repository
+    let completionCallback: NotificationCallback
+    let disposeBag = DisposeBag()
+    
     private let taskType: TaskType
     private let taskOptions: TaskOptions?
     private let welcomePage: Page?
     private let successPage: Page?
-    private let completionCallback: NotificationCallback
-    
-    private let navigator: AppNavigator
-    private let repository: Repository
-    
-    private let diposeBag = DisposeBag()
     
     init(withTaskIdentifier taskIdentifier: String,
          taskType: TaskType,
@@ -180,7 +181,7 @@ class TaskSectionCoordinator: NSObject, ActivitySectionCoordinator {
                                                onRetry: { [weak self] in
                                                 self?.sendResult(taskResult: taskResult, presenter: presenter)
                     }, dismissStyle: .destructive)
-            }).disposed(by: self.diposeBag)
+            }).disposed(by: self.disposeBag)
     }
     
     private func showSuccess() {
@@ -276,17 +277,7 @@ extension TaskSectionCoordinator: PagedSectionCoordinator {
     }
     
     func onUnhandledSecondaryButtonNavigation(page: Page) {
-        self.navigator.pushProgressHUD()
-        self.repository.delayTask(taskId: self.taskIdentifier)
-            .subscribe(onSuccess: { [weak self] in
-                guard let self = self else { return }
-                self.navigator.popProgressHUD()
-                self.deleteTaskResult(path: Constants.Task.taskResultURL)
-                self.completionCallback()
-                }, onError: { [weak self] error in
-                    guard let self = self else { return }
-                    self.navigator.popProgressHUD()
-                    self.navigator.handleError(error: error, presenter: self.navigationController)
-            }).disposed(by: self.diposeBag)
+        self.deleteTaskResult(path: Constants.Task.taskResultURL)
+        self.delayActivity()
     }
 }

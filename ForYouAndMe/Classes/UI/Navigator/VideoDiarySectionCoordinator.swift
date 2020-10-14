@@ -19,13 +19,13 @@ class VideoDiarySectionCoordinator: NSObject, ActivitySectionCoordinator {
     }
     private weak var internalNavigationController: UINavigationController?
     
-    private let taskIdentifier: String
-    private let completionCallback: NotificationCallback
-    
-    private let navigator: AppNavigator
-    private let repository: Repository
-    
-    private let diposeBag = DisposeBag()
+    // MARK: - ActivitySectionCoordinator
+    var activityPresenter: UIViewController? { return self.navigationController }
+    let taskIdentifier: String
+    let completionCallback: NotificationCallback
+    let navigator: AppNavigator
+    let repository: Repository
+    let disposeBag = DisposeBag()
     
     init(withTaskIdentifier taskIdentifier: String,
          completionCallback: @escaping NotificationCallback) {
@@ -67,17 +67,7 @@ class VideoDiarySectionCoordinator: NSObject, ActivitySectionCoordinator {
     }
     
     public func onIntroPageSecondaryButtonPressed() {
-        self.navigator.pushProgressHUD()
-        self.repository.delayTask(taskId: self.taskIdentifier)
-            .subscribe(onSuccess: { [weak self] in
-                guard let self = self else { return }
-                self.navigator.popProgressHUD()
-                self.completionCallback()
-                }, onError: { [weak self] error in
-                    guard let self = self else { return }
-                    self.navigator.popProgressHUD()
-                    self.navigator.handleError(error: error, presenter: self.navigationController)
-            }).disposed(by: self.diposeBag)
+        self.delayActivity()
     }
     
     public func onRecordCompleted() {

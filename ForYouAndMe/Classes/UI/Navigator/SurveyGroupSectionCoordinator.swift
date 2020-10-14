@@ -14,19 +14,23 @@ class SurveyGroupSectionCoordinator: ActivitySectionCoordinator {
     
     public weak var navigationController: UINavigationController?
     
+    // MARK: - ActivitySectionCoordinator
+    var activityPresenter: UIViewController? { return self.navigationController }
+    let taskIdentifier: String
+    let completionCallback: NotificationCallback
+    let navigator: AppNavigator
+    let repository: Repository
+    let disposeBag = DisposeBag()
+    
     private let sectionData: SurveyGroup
-    private let completionCallback: NotificationCallback
-    
-    private let navigator: AppNavigator
-    private let repository: Repository
-    
-    private let disposeBag = DisposeBag()
     
     private var answersForSurveys: [SurveyTask: [SurveyResult]] = [:]
     
-    init(withSectionData sectionData: SurveyGroup,
+    init(withTaskIdentifier taskIdentifier: String,
+         sectionData: SurveyGroup,
          navigationController: UINavigationController?,
          completionCallback: @escaping NotificationCallback) {
+        self.taskIdentifier = taskIdentifier
         self.sectionData = sectionData
         self.navigationController = navigationController
         self.completionCallback = completionCallback
@@ -44,13 +48,13 @@ class SurveyGroupSectionCoordinator: ActivitySectionCoordinator {
         if let navigationController = self.navigationController {
             return self.getSurveyViewController(forSurvey: firstSurvey,
                                                 navigationController: navigationController,
-                                                showCloseButton: true)
+                                                isFirstStartingPage: true)
         } else {
             let navigationController = UINavigationController()
             self.navigationController = navigationController
             let startingPage = self.getSurveyViewController(forSurvey: firstSurvey,
                                                             navigationController: navigationController,
-                                                            showCloseButton: true)
+                                                            isFirstStartingPage: true)
             navigationController.pushViewController(startingPage, animated: false)
             return navigationController
         }
@@ -60,14 +64,18 @@ class SurveyGroupSectionCoordinator: ActivitySectionCoordinator {
     
     private func getSurveyViewController(forSurvey survey: SurveyTask,
                                          navigationController: UINavigationController,
-                                         showCloseButton: Bool) -> UIViewController {
+                                         isFirstStartingPage: Bool) -> UIViewController {
         let coordinator = SurveySectionCoordinator(withSectionData: survey,
                                                    navigationController: navigationController,
                                                    completionCallback: { [weak self] (_, survey, answers) in
                                                     guard let self = self else { return }
                                                     self.onSurveyCompleted(survey, answers: answers)
+                                                   },
+                                                   delayCallback: { [weak self] in
+                                                    guard let self = self else { return }
+                                                    self.delayActivity()
                                                    })
-        return coordinator.getStartingPage(showCloseButton: showCloseButton)
+        return coordinator.getStartingPage(isFirstStartingPage: isFirstStartingPage)
     }
     
     private func showSurvey(_ survey: SurveyTask) {
@@ -76,8 +84,8 @@ class SurveyGroupSectionCoordinator: ActivitySectionCoordinator {
             return
         }
         let surveyStartingViewController = self.getSurveyViewController(forSurvey: survey,
-                                                                                navigationController: navigationController,
-                                                                                showCloseButton: false)
+                                                                        navigationController: navigationController,
+                                                                        isFirstStartingPage: false)
         navigationController.pushViewController(surveyStartingViewController, animated: true)
     }
     

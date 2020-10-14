@@ -71,7 +71,7 @@
       "attributes": {
         "title": "Welcome to Survey block 1",
         "link_1_label": "Start Survey",
-        "link_2_label": "",
+        "link_2_label": "Remind Me",
         "link_modal_label": "",
         "external_link_label": "",
         "external_link_url": "",

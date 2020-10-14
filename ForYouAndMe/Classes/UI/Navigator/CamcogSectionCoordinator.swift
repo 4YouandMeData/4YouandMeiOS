@@ -12,14 +12,15 @@ class CamcogSectionCoordinator: NSObject, ActivitySectionCoordinator {
     
     var navigationController: UINavigationController = UINavigationController()
     
-    private let taskIdentifier: String
+    // MARK: - ActivitySectionCoordinator
+    var activityPresenter: UIViewController? { return self.navigationController }
+    let completionCallback: NotificationCallback
+    let taskIdentifier: String
+    let navigator: AppNavigator
+    let repository: Repository
+    let disposeBag = DisposeBag()
+    
     private let welcomePage: Page?
-    private let completionCallback: NotificationCallback
-    
-    private let navigator: AppNavigator
-    private let repository: Repository
-    
-    private let diposeBag = DisposeBag()
     
     init(withTaskIdentifier taskIdentifier: String,
          completionCallback: @escaping NotificationCallback,
@@ -89,16 +90,6 @@ extension CamcogSectionCoordinator: PagedSectionCoordinator {
     }
     
     func onUnhandledSecondaryButtonNavigation(page: Page) {
-        self.navigator.pushProgressHUD()
-        self.repository.delayTask(taskId: self.taskIdentifier)
-            .subscribe(onSuccess: { [weak self] in
-                guard let self = self else { return }
-                self.navigator.popProgressHUD()
-                self.completionCallback()
-                }, onError: { [weak self] error in
-                    guard let self = self else { return }
-                    self.navigator.popProgressHUD()
-                    self.navigator.handleError(error: error, presenter: self.navigationController)
-            }).disposed(by: self.diposeBag)
+        self.delayActivity()
     }
 }

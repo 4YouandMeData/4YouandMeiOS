@@ -15,21 +15,32 @@ class SurveySectionCoordinator {
     
     private let sectionData: SurveyTask
     private let completionCallback: SurveySectionCallback
+    private let delayCallback: NotificationCallback
     
     private var results: [SurveyResult] = []
     
     init(withSectionData sectionData: SurveyTask,
          navigationController: UINavigationController,
-         completionCallback: @escaping SurveySectionCallback) {
+         completionCallback: @escaping SurveySectionCallback,
+         delayCallback: @escaping NotificationCallback) {
         self.sectionData = sectionData
         self.navigationController = navigationController
         self.completionCallback = completionCallback
+        self.delayCallback = delayCallback
     }
     
     // MARK: - Public Methods
     
-    public func getStartingPage(showCloseButton: Bool) -> UIViewController {
-        let infoPageData = InfoPageData.createWelcomePageData(withPage: self.sectionData.welcomePage, showCloseButton: showCloseButton)
+    public func getStartingPage(isFirstStartingPage: Bool) -> UIViewController {
+        
+        let infoPageData = InfoPageData(page: self.sectionData.welcomePage,
+                                addAbortOnboardingButton: false,
+                                addCloseButton: isFirstStartingPage,
+                                allowBackwardNavigation: false,
+                                bodyTextAlignment: .left,
+                                bottomViewStyle: isFirstStartingPage ? .horizontal : .singleButton,
+                                customImageHeight: nil)
+        
         return InfoPageViewController(withPageData: infoPageData, coordinator: self)
     }
     
@@ -96,6 +107,10 @@ extension SurveySectionCoordinator: PagedSectionCoordinator {
     
     func onUnhandledPrimaryButtonNavigation(page: Page) {
         self.showQuestions()
+    }
+    
+    func onUnhandledSecondaryButtonNavigation(page: Page) {
+        self.delayCallback()
     }
 }
 
