@@ -47,6 +47,7 @@ steps:
     SourceFolder: '$(Agent.TempDirectory)'
     Contents: 'GoogleService-Info.plist'
     TargetFolder: '$(system.defaultWorkingDirectory)/Example/ForYouAndMe'
+- powershell: /bin/bash -c "sudo xcode-select -s /Applications/Xcode_12.2.app/Contents/Developer"
 - task: Xcode@5
   inputs:
     actions: 'test'
