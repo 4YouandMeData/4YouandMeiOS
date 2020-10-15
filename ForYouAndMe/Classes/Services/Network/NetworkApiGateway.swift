@@ -339,7 +339,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         case .getSurvey(let surveyId):
             return "v1/surveys/\(surveyId)"
         case .sendSurveyTaskResultData(let surveyTaskId, _):
-            return "v1/surveys/\(surveyTaskId)"  // TODO: Check against final API specs
+            return "v1/tasks/\(surveyTaskId)"
         }
     }
     
@@ -377,7 +377,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
              .sendTaskResultFile,
              .sendUserInfoParameters,
              .sendUserTimeZone,
-             .sendSurveyTaskResultData: // TODO: Check against final API specs
+             .sendSurveyTaskResultData:
             return .patch
         }
     }
@@ -510,8 +510,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         case .sendUserTimeZone(let timeZoneAbbreviation):
             return .requestParameters(parameters: ["time_zone": timeZoneAbbreviation], encoding: JSONEncoding.default)
         case .sendSurveyTaskResultData(_, let results):
-            // TODO: Update request encoding according to API specs
-            let params: [[String: Any]] = results.reduce([]) { (result, parameter) in
+            let answerParams: [[String: Any]] = results.reduce([]) { (result, parameter) in
                 var result = result
                 var userParameter: [String: Any] = [:]
                 userParameter["question_id"] = parameter.question.id
@@ -519,7 +518,9 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
                 result.append(userParameter)
                 return result
             }
-            return .requestParameters(parameters: ["answers": params], encoding: JSONEncoding.default)
+            let resultData: [String: Any] = ["answers": answerParams]
+            let params: [String: Any] = ["result": resultData]
+            return .requestParameters(parameters: ["task": params], encoding: JSONEncoding.default)
         }
     }
     

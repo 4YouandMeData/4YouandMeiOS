@@ -10,8 +10,6 @@ import RxSwift
 
 class SurveyGroupSectionCoordinator: ActivitySectionCoordinator {
     
-    private static let sendResultAtTheEnd: Bool = true
-    
     public weak var navigationController: UINavigationController?
     
     // MARK: - ActivitySectionCoordinator
@@ -90,26 +88,8 @@ class SurveyGroupSectionCoordinator: ActivitySectionCoordinator {
     }
     
     private func onSurveyCompleted(_ survey: SurveyTask, answers: [SurveyResult]) {
-        guard let navigationController = self.navigationController else {
-            assertionFailure("Missing expected navigation controller")
-            return
-        }
-        if Self.sendResultAtTheEnd {
-            self.answersForSurveys[survey] = answers
-            self.showNextSurvey(forCurrentSurvey: survey)
-        } else {
-            self.navigator.pushProgressHUD()
-            self.repository.sendSurveyTaskResult(surveyTaskId: survey.id, results: answers)
-                .subscribe( onSuccess: { [weak self] in
-                    guard let self = self else { return }
-                    self.navigator.popProgressHUD()
-                    self.showNextSurvey(forCurrentSurvey: survey)
-                }, onError: { [weak self] error in
-                    guard let self = self else { return }
-                    self.navigator.popProgressHUD()
-                    self.navigator.handleError(error: error, presenter: navigationController)
-                }).disposed(by: self.disposeBag)
-        }
+        self.answersForSurveys[survey] = answers
+        self.showNextSurvey(forCurrentSurvey: survey)
     }
     
     private func showNextSurvey(forCurrentSurvey currentSurvey: SurveyTask) {
@@ -125,26 +105,20 @@ class SurveyGroupSectionCoordinator: ActivitySectionCoordinator {
         
         let nextCurrentSurveyIndex = currentSurveyIndex + 1
         if nextCurrentSurveyIndex == self.sectionData.surveys.count {
-            if Self.sendResultAtTheEnd {
-                var resultsSendRequests: [Single<()>] = []
-                self.answersForSurveys.forEach { answersForSurvey in
-                    let surveyTask = answersForSurvey.key
-                    let answers = answersForSurvey.value
-                    resultsSendRequests.append(self.repository.sendSurveyTaskResult(surveyTaskId: surveyTask.id, results: answers))
-                }
-                Single<()>.zip(resultsSendRequests)
-                    .subscribe( onSuccess: { [weak self] _ in
-                        guard let self = self else { return }
-                        self.navigator.popProgressHUD()
-                        self.completionCallback()
-                    }, onError: { [weak self] error in
-                        guard let self = self else { return }
-                        self.navigator.popProgressHUD()
-                        self.navigator.handleError(error: error, presenter: navigationController)
-                    }).disposed(by: self.disposeBag)
-            } else {
-                self.completionCallback()
+            var aggregatedAnswers: [SurveyResult] = []
+            self.answersForSurveys.forEach { answersForSurvey in
+                aggregatedAnswers.append(contentsOf: answersForSurvey.value)
             }
+            self.repository.sendSurveyTaskResult(surveyTaskId: self.taskIdentifier, results: aggregatedAnswers)
+                .subscribe( onSuccess: { [weak self] in
+                    guard let self = self else { return }
+                    self.navigator.popProgressHUD()
+                    self.completionCallback()
+                }, onError: { [weak self] error in
+                    guard let self = self else { return }
+                    self.navigator.popProgressHUD()
+                    self.navigator.handleError(error: error, presenter: navigationController)
+                }).disposed(by: self.disposeBag)
         } else {
             let nextSurvey = self.sectionData.surveys[nextCurrentSurveyIndex]
             self.showSurvey(nextSurvey)
