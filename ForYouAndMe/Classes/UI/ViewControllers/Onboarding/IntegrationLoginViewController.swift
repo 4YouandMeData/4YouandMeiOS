@@ -27,6 +27,7 @@ class IntegrationLoginViewController: UIViewController {
     
     private let webView: WKWebView
     private let url: URL
+    private let allowBackwardNavigation: Bool
     private let onLoginSuccessCallback: ViewControllerCallback
     private let onLoginFailureCallback: ViewControllerCallback
     private let navigator: AppNavigator
@@ -41,10 +42,12 @@ class IntegrationLoginViewController: UIViewController {
     
     init(withTitle title: String,
          url: URL,
+         allowBackwardNavigation: Bool,
          onLoginSuccessCallback: @escaping ViewControllerCallback,
          onLoginFailureCallback: @escaping ViewControllerCallback) {
         self.webView = WKWebView(frame: .zero, configuration: WKWebViewConfiguration())
         self.url = url
+        self.allowBackwardNavigation = allowBackwardNavigation
         self.onLoginSuccessCallback = onLoginSuccessCallback
         self.onLoginFailureCallback = onLoginFailureCallback
         self.navigator = Services.shared.navigator
@@ -134,7 +137,11 @@ class IntegrationLoginViewController: UIViewController {
         if self.isModal {
             self.addCustomCloseButton()
         } else {
-            self.addCustomBackButton()
+            if self.allowBackwardNavigation {
+                self.addCustomBackButton()
+            } else {
+                self.navigationItem.hidesBackButton = true
+            }
         }
     }
     

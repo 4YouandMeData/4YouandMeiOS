@@ -322,6 +322,7 @@ class AppNavigator {
     public func showIntegrationLogin(loginUrl: URL, navigationController: UINavigationController) {
         let viewController = IntegrationLoginViewController(withTitle: "",
                                                             url: loginUrl,
+                                                            allowBackwardNavigation: true,
                                                             onLoginSuccessCallback: { _ in
                                                                 navigationController.popViewController(animated: true)
                                                             },

@@ -65,7 +65,9 @@ class CamcogSectionCoordinator: NSObject, ActivitySectionCoordinator {
     private func getCamCogViewController() -> UIViewController {
         
         let url = URL(string: "\(Constants.Network.BaseUrl)/camcog/tasks/\(self.taskIdentifier)")!
-        return IntegrationLoginViewController(withTitle: "", url: url,
+        return IntegrationLoginViewController(withTitle: "",
+                                              url: url,
+                                              allowBackwardNavigation: false,
                                               onLoginSuccessCallback: { viewController in
                                                 viewController.dismiss(animated: true, completion: nil)
                                               }, onLoginFailureCallback: { viewController in

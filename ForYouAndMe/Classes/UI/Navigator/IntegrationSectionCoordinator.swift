@@ -82,6 +82,7 @@ extension IntegrationSectionCoordinator: IntegrationPageCoordinator {
         }
         let viewController = IntegrationLoginViewController(withTitle: "",
                                                          url: externalLinkUrl,
+                                                         allowBackwardNavigation: true,
                                                          onLoginSuccessCallback: { loginViewController in
                                                             loginViewController.dismiss(animated: true, completion: { [weak self] in
                                                                 self?.onPagePrimaryButtonPressed(page: page)
