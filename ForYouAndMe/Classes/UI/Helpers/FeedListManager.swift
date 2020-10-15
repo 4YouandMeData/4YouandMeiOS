@@ -31,6 +31,11 @@ protocol FeedListManagerDelegate: class {
     var presenter: UIViewController { get }
     func handleEmptyList(show: Bool)
     func getDataProviderSingle(repository: Repository) -> Single<FeedContent>
+    func onListRefresh()
+}
+
+extension FeedListManagerDelegate {
+    func onListRefresh() {}
 }
 
 protocol FeedListSection {
@@ -168,6 +173,8 @@ class FeedListManager: NSObject {
     }
     
     private func reloadTableView() {
+        self.delegate?.onListRefresh()
+        
         let showEmptyView = self.sections.count == 0
         self.delegate?.handleEmptyList(show: showEmptyView)
         self.tableView.reloadData()

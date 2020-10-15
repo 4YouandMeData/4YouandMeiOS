@@ -263,3 +263,22 @@ public struct DateStrategy: DateValueCodableStrategy {
         return Self.dateFormatter.string(from: date)
     }
 }
+
+@propertyWrapper
+struct TimeZoneDecodable: Codable, OptionalCodingWrapper {
+    
+    var wrappedValue: TimeZone?
+    
+    init(wrappedValue: TimeZone?) {
+        self.wrappedValue = wrappedValue
+    }
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        if let timeZoneAbbreviationString = try? container.decode(String.self) {
+            self.wrappedValue = TimeZone(abbreviation: timeZoneAbbreviationString)
+        } else {
+            self.wrappedValue = nil
+        }
+    }
+}

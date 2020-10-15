@@ -328,6 +328,8 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             return "v1/users/me"
         case .sendUserInfoParameters:
             return "v1/users/me"
+        case .sendUserTimeZone:
+            return "v1/users/me"
         // User Data
         case .getUserData:
             return "v1/studies/\(studyId)/your_data"
@@ -374,6 +376,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
              .sendTaskResultData,
              .sendTaskResultFile,
              .sendUserInfoParameters,
+             .sendUserTimeZone,
              .sendSurveyTaskResultData: // TODO: Check against final API specs
             return .patch
         }
@@ -420,6 +423,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         // User
         case .getUser: return Bundle.getTestData(from: "TestGetUser")
         case .sendUserInfoParameters: return Bundle.getTestData(from: "TestGetUser")
+        case .sendUserTimeZone: return Bundle.getTestData(from: "TestGetUser")
         // User Data
         case .getUserData: return Bundle.getTestData(from: "TestGetUserData")
         case .getUserDataAggregation: return Bundle.getTestData(from: "TestGetUserDataAggregation")
@@ -503,6 +507,8 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             var params: [String: Any] = [:]
             params["custom_data"] = customDataParams
             return .requestParameters(parameters: ["user": params], encoding: JSONEncoding.default)
+        case .sendUserTimeZone(let timeZoneAbbreviation):
+            return .requestParameters(parameters: ["time_zone": timeZoneAbbreviation], encoding: JSONEncoding.default)
         case .sendSurveyTaskResultData(_, let results):
             // TODO: Update request encoding according to API specs
             let params: [[String: Any]] = results.reduce([]) { (result, parameter) in
@@ -557,12 +563,13 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
              .getTasks,
              .sendTaskResultData,
              .sendTaskResultFile,
-             .sendUserInfoParameters,
-             .getSurvey,
-             .sendSurveyTaskResultData,
              .getUser,
+             .sendUserTimeZone,
+             .sendUserInfoParameters,
              .getUserData,
              .getUserDataAggregation,
+             .getSurvey,
+             .sendSurveyTaskResultData,
              .delayTask:
             return .bearer
         }

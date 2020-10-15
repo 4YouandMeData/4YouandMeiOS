@@ -144,6 +144,7 @@ nunc, blandit sit amet lorem a, scelerisque eleifend odio. In euismod nunc tinci
     }
     
     struct Camcog {
+        // TODO: Remove this when the server sends welcome and success pages for camcog tasks
         enum CamcogPageIdentifier: String {
             case welcome = "1"
             case success = "2"

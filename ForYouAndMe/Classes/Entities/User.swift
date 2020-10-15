@@ -16,6 +16,8 @@ struct User: Codable {
     let daysInStudy: Int
     let identities: [String]
     let points: Int
+    @TimeZoneDecodable
+    var timeZone: TimeZone?
     var customData: [UserInfoParameter]?
 }
 
@@ -29,6 +31,7 @@ extension User: JSONAPIMappable {
         case daysInStudy = "days_in_study"
         case identities
         case points
+        case timeZone = "time_zone"
         case customData = "custom_data"
     }
 }

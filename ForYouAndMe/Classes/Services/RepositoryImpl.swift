@@ -264,6 +264,7 @@ extension RepositoryImpl: Repository {
     func refreshUser() -> Single<User> {
         return self.api.send(request: ApiRequest(serviceRequest: .getUser))
             .handleError()
+            .flatMap { user in self.updateUserTimeZoneIfNeeded(user: user) }
             .map { self.handleUserInfo($0) }
             .do(onSuccess: { self.saveUser($0) })
     }
@@ -300,6 +301,17 @@ extension RepositoryImpl: Repository {
     }
     
     // MARK: - Private Methods
+    
+    func updateUserTimeZoneIfNeeded(user: User) -> Single<User> {
+        let currentTimeZone = TimeZone.current
+        if let currentTimeZoneAbbreviation = currentTimeZone.abbreviation(),
+           currentTimeZoneAbbreviation != user.timeZone?.abbreviation() {
+            return self.api.send(request: ApiRequest(serviceRequest: .sendUserTimeZone(timeZoneAbbreviation: currentTimeZoneAbbreviation)))
+                .handleError()
+        } else {
+            return Single.just(user)
+        }
+    }
     
     func handleUserInfo(_ user: User) -> User {
         var user = user

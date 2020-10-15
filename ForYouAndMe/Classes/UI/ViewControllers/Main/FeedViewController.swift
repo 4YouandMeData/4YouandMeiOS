@@ -89,7 +89,20 @@ class FeedViewController: UIViewController {
                                                          screenClass: String(describing: type(of: self))))
 
         self.listManager.viewWillAppear()
-        
+    }
+    
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        self.listManager.viewDidLayoutSubviews()
+    }
+    
+    // MARK: - Private Methods
+    
+    private func showProfile() {
+        self.navigator.showAboutYouPage(presenter: self)
+    }
+    
+    private func refreshUser() {
         self.repository.refreshUser()
             .toVoid()
             .catchErrorJustReturn(())
@@ -105,17 +118,6 @@ class FeedViewController: UIViewController {
                 print("FeedViewController - Error refreshing user: \(error.localizedDescription)")
             }).disposed(by: self.disposeBag)
     }
-    
-    override func viewDidLayoutSubviews() {
-        super.viewDidLayoutSubviews()
-        self.listManager.viewDidLayoutSubviews()
-    }
-    
-    // MARK: - Private Methods
-    
-    private func showProfile() {
-        self.navigator.showAboutYouPage(presenter: self)
-    }
 }
 
 extension FeedViewController: FeedListManagerDelegate {
@@ -128,5 +130,9 @@ extension FeedViewController: FeedListManagerDelegate {
     
     func getDataProviderSingle(repository: Repository) -> Single<FeedContent> {
         return self.repository.getFeeds().map { FeedContent(withFeeds: $0) }
+    }
+    
+    func onListRefresh() {
+        self.refreshUser()
     }
 }
