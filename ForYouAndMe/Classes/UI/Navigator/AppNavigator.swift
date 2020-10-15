@@ -475,8 +475,6 @@ class AppNavigator {
     // MARK: About You
     
     public func showAboutYouPage(presenter: UIViewController) {
-        
-        // TODO: Load From Server
         let aboutYouViewController = AboutYouViewController()
         let navigationController = UINavigationController(rootViewController: aboutYouViewController)
         navigationController.modalPresentationStyle = .fullScreen
@@ -484,7 +482,6 @@ class AppNavigator {
     }
     
     public func showAppsAndDevices(navigationController: UINavigationController, title: String) {
-        // TODO: Load From Server
         let devicesViewController = DevicesIntegrationViewController(withTitle: title)
         navigationController.pushViewController(devicesViewController, animated: true)
     }
@@ -497,7 +494,6 @@ class AppNavigator {
     }
     
     public func showPermissions(navigationController: UINavigationController, title: String) {
-        // TODO: Load From Server
         let permissionViewController = PermissionViewController(withTitle: title)
         navigationController.pushViewController(permissionViewController, animated: true)
     }
@@ -580,12 +576,23 @@ class AppNavigator {
     public func handleUserNotLoggedError(error: Error?) -> Bool {
         if let error = error, case RepositoryError.userNotLoggedIn = error {
             print("Log out due to 'RepositoryError.userNotLoggedIn' error")
-            // TODO: Show a user friendly popup to explain the user that he must login again.
             self.logOut()
             return true
         } else {
             return false
         }
+    }
+    
+    // MARK: - Deeplink
+    
+    func handleDeeplinkToTask() {
+        print("Open Deeplinked Task")
+        // TODO: Open Deeplinked  Task
+    }
+    
+    func handleDeeplinkToUrl() {
+        print("Open Deeplinked Url")
+        // TODO: Open Deeplinked  Url
     }
     
     // MARK: Study Info

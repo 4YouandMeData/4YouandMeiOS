@@ -25,6 +25,7 @@ class Services {
     private(set) var healthService: HealthService!
     private(set) var analytics: AnalyticsService!
     private(set) var storageServices: CacheService!
+    private(set) var deeplinkService: DeeplinkService!
     
     private var window: UIWindow?
     
@@ -41,6 +42,9 @@ class Services {
         
         let reachabilityService = ReachabilityManager()
         self.services.append(reachabilityService)
+        
+        let deeplinkService = DeeplinkManager()
+        self.services.append(deeplinkService)
         
         #if DEBUG
         let networkApiGateway =
@@ -63,12 +67,20 @@ class Services {
         let navigator = AppNavigator(withRepository: repository, analytics: analytics, window: window)
         self.services.append(navigator)
         
+        let notificationService = NotificationManager(withNotificationDeeplinkHandler: deeplinkService,
+                                                      notificationTokenHandler: repository)
+        self.services.append(notificationService)
+        
+        // Add services circular dependences
+        deeplinkService.navigator = navigator
+        
         // Assign concreate services
         self.repository = repository
         self.navigator = navigator
         self.healthService = healthService
         self.analytics = analytics
         self.storageServices = storage
+        self.deeplinkService = deeplinkService
         self.navigator.showSetupScreen()
     }
     

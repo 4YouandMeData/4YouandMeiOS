@@ -34,8 +34,8 @@ struct NotificationPermission: PermissionProtocol {
         let semaphore = DispatchSemaphore(value: 0)
         
         DispatchQueue.global().async {
-            UNUserNotificationCenter.current().getNotificationSettings { setttings in
-                notificationSettings = setttings
+            UNUserNotificationCenter.current().getNotificationSettings { settings in
+                notificationSettings = settings
                 semaphore.signal()
             }
         }

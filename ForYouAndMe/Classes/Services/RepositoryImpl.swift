@@ -314,6 +314,13 @@ extension RepositoryImpl: Repository {
     }
 }
 
+extension RepositoryImpl: NotificationTokenHandler {
+    func registerNotificationToken(token: String) {
+        // TODO: Send token to server
+        print("TODO: Send token to server")
+    }
+}
+
 // MARK: - Extension(PrimitiveSequence)
 
 fileprivate extension PrimitiveSequence where Trait == SingleTrait {
