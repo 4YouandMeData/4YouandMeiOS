@@ -12,9 +12,9 @@ struct StudyInfoSection {
     let type: String
     
     let pages: [Page]
-    let rewardPage: Page
-    let faqPage: Page
-    let contactsPage: Page
+    let rewardPage: Page?
+    let faqPage: Page?
+    let contactsPage: Page?
 }
 
 extension StudyInfoSection: JSONAPIMappable {
