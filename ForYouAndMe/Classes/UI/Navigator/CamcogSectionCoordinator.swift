@@ -21,12 +21,15 @@ class CamcogSectionCoordinator: NSObject, ActivitySectionCoordinator {
     let disposeBag = DisposeBag()
     
     private let welcomePage: Page?
+    private let successPage: Page?
     
     init(withTaskIdentifier taskIdentifier: String,
          completionCallback: @escaping NotificationCallback,
-         welcomePage: Page?) {
+         welcomePage: Page?,
+         successPage: Page?) {
         self.taskIdentifier = taskIdentifier
         self.welcomePage = welcomePage
+        self.successPage = successPage
         self.completionCallback = completionCallback
         self.navigator = Services.shared.navigator
         self.repository = Services.shared.repository
@@ -68,11 +71,22 @@ class CamcogSectionCoordinator: NSObject, ActivitySectionCoordinator {
         return IntegrationLoginViewController(withTitle: "",
                                               url: url,
                                               allowBackwardNavigation: false,
-                                              onLoginSuccessCallback: { viewController in
-                                                viewController.dismiss(animated: true, completion: nil)
-                                              }, onLoginFailureCallback: { viewController in
-                                                viewController.dismiss(animated: true, completion: nil)
+                                              onLoginSuccessCallback: { [weak self] _ in
+                                                self?.showSuccessViewController()
+                                              }, onLoginFailureCallback: { [weak self] _ in
+                                                self?.completionCallback()
                                               })
+    }
+    
+    private func showSuccessViewController() {
+        if let successPage = self.successPage {
+            let data = InfoPageData.createResultPageData(withPage: successPage)
+            let successViewController = InfoPageViewController(withPageData: data,
+                                                              coordinator: self)
+            self.navigationController.pushViewController(successViewController, animated: true)
+        } else {
+            self.completionCallback()
+        }
     }
 }
 
@@ -84,6 +98,14 @@ extension CamcogSectionCoordinator: PagedSectionCoordinator {
         } else {
             return []
         }
+    }
+    
+    func performCustomPrimaryButtonNavigation(page: Page) -> Bool {
+        if self.successPage?.id == page.id {
+            self.completionCallback()
+            return true
+        }
+        return false
     }
     
     func onUnhandledPrimaryButtonNavigation(page: Page) {

@@ -418,7 +418,8 @@ class AppNavigator {
             case .camcogEbt, .camcogNbx, .camcogPvt:
                 return CamcogSectionCoordinator(withTaskIdentifier: taskIdentifier,
                                                 completionCallback: completionCallback,
-                                                welcomePage: Constants.Camcog.DefaultIntroPage)
+                                                welcomePage: Constants.Camcog.DefaultWelcomePage,
+                                                successPage: Constants.Camcog.DefaultSuccessPage)
             default:
                 return TaskSectionCoordinator(withTaskIdentifier: taskIdentifier,
                                               taskType: taskType,

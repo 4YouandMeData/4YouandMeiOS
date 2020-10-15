@@ -167,6 +167,8 @@
       "OAUTH_AVAILABLE_INTERATIONS": "garmin;oura;instagram;rescuetime;twitter",
       "CAMCOG_TASK_BODY": "<p>About this activity</p><p></p><p>Twice each day, we’ll ask you to complete this task in which you’ll be asked to recall a series of numbers.</p><p></p><p>Why this activity</p><p></p><p>This activity will help us understand your attention and memory and how they change throughout your pregnancy.</p>",
       "CAMCOG_TASK_TITLE": "2-Back Task",
+      "CAMCOG_TASK_COMPLETE_BODY": "<p>You have completed this task</p>",
+      "CAMCOG_TASK_COMPLETE_TITLE": "Congratulations!",
       "TASK_START_BUTTON": "Start Now",
       "TASK_REMIND_ME_LATER": "Remind me",
       "TASK_GAIT_INTRO_TITLE": "Gait Activity",

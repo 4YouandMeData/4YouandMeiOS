@@ -409,7 +409,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         // Integration Section
         case .getIntegrationSection: return Bundle.getTestData(from: "TestGetIntegrationSection")
         //StudyInfo
-        case .getStudyInfoSection: return "{}".utf8Encoded
+        case .getStudyInfoSection: return Bundle.getTestData(from: "TestGetStudyInfo")
         // Answers
         case .sendAnswer: return "{}".utf8Encoded
         // Task

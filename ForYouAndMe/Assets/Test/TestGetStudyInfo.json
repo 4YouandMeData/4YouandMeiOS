@@ -1,0 +1,158 @@
+{
+  "data": {
+    "id": "1",
+    "type": "study_info",
+    "attributes": {
+      "title": "Study Info",
+      "body": "",
+      "created_at": "2020-10-06T15:29:04.254Z",
+      "updated_at": "2020-10-11T17:34:47.757Z"
+    },
+    "relationships": {
+      "pages": {
+        "data": [
+          {
+            "id": "68",
+            "type": "page"
+          },
+          {
+            "id": "69",
+            "type": "page"
+          },
+          {
+            "id": "70",
+            "type": "page"
+          }
+        ]
+      },
+      "information_page": {
+        "data": {
+          "id": "70",
+          "type": "page"
+        }
+      },
+      "faq_page": {
+        "data": {
+          "id": "69",
+          "type": "page"
+        }
+      },
+      "reward_page": {
+        "data": {
+          "id": "68",
+          "type": "page"
+        }
+      }
+    }
+  },
+  "included": [
+    {
+      "id": "68",
+      "type": "page",
+      "attributes": {
+        "title": "Rewards",
+        "link_1_label": "",
+        "link_2_label": "",
+        "link_modal_label": "",
+        "external_link_label": "",
+        "external_link_url": "",
+        "special_link_type": null,
+        "special_link_label": "",
+        "special_link_data": "",
+        "created_at": "2020-10-09T08:27:33.874Z",
+        "updated_at": "2020-10-09T10:48:52.398Z",
+        "body": "<p><body>\\n  <h2 style=\\\"color:#5ABB8B\\\"> Points System and Compensation</h2>\\n  <p> You\\&#39;ll receive points for wearing sensors, taking surveys, and completing other study tasks. You can earn a gift card each month by reaching a fixed number of points.</p>\\n  <p> Points may take up to 24 hours to appear in your Activity Feed.</p>\\n\\n<style>\\n  body\\n{\\n    font-family: \\&quot;Helvetica\\&quot;, \\&quot;Arial\\&quot;, sans-serif;\\n  }\\ntable, th, td {\\nborder: 1px solid black;\\nborder-collapse: collapse;\\n}\\nth, td {\\n  padding:10px;\\n}\\nth\\n{\\n  text-align: left;\\n}\\n</style>\\n  <table>\\n  <tr>\\n    <th style=\\\"color: #5ABB8B\\\"> Frequency </th>\\n    <th style=\\\"color: #5ABB8B\\\"> Activity </th>\\n    <th style=\\\"color: #5ABB8B\\\"> Points </th>\\n  </tr>\\n   <td> Daily tasks </td>\\n   <td> </td>\\n   <td> </td>\\n <tr>\\n   <td> </td>\\n   <td> Self-assessed mood question </td>\\n   <td> 5 </td>\\n </tr>\\n <tr>\\n   <td> </td>\\n   <td> Survey </td>\\n   <td> 5 </td>\\n </tr>\\n <tr>\\n   <td> </td>\\n   <td>Trail-making task/Reaction-time task</td>\\n   <td> 10 </td>\\n </tr>\\n <tr>\\n   <td> </td>\\n   <td> Wear Empatica (x2 boost for 3 days in a row)* </td>\\n   <td> 5 </td>\\n </tr>\\n <tr>\\n   <td> </td>\\n   <td> Wear Oura (x2 boost for 3 days in a row)* </td>\\n   <td> 5 </td>\\n </tr>\\n <tr>\\n   <td> </td>\\n   <td> Bodyport weigh-in (x2 boost for 3 days in a row)* </td>\\n   <td> 5 </td>\\n </tr>\\n <tr>\\n   <td>Bi-weekly tasks </td>\\n   <td> </td>\\n   <td> </td>\\n </tr>\\n <tr>\\n   <td> </td>\\n   <td> 6-minute walk test </td>\\n   <td> 30 </td>\\n </tr>\\n <tr>\\n   <td> </td>\\n   <td> Video diary </td>\\n   <td> 30 </td>\\n </tr>\\n </table>\\n<p> (*): 4x boost for all 3 devices 3 days in a row </p>\\n<h4 style=\\\"color: #144E30\\\">Gift Card Amounts </h4>\\n<table>\\n <style>\\n table, th, td {\\n   border: 1px solid black;\\n   border-collapse: collapse;\\n }\\n th, td {\\n   padding:10px;\\n }\\n th\\n {\\n   text-align: left;\\n }\\n </style>\\n   <tr>\\n     <th style=\\\"color: #5ABB8B\\\"> Monthly points awarded </th>\\n     <th style=\\\"color: #5ABB8B\\\"> Gift card value </th>\\n   </tr>\\n   <tr>\\n     <td> &gt;2000 </td>\\n     <td> $40 (£30) </td>\\n   </tr>\\n   <tr>\\n     <td> 1500-2000 </td>\\n     <td> $30 (£23) </td>\\n   </tr>\\n   <tr>\\n     <td> 1000-1500 </td>\\n     <td> $20 (£15) </td>\\n   </tr>\\n   <tr>\\n     <td> 500-1000 </td>\\n     <td> $15 (£12) </td>\\n   </tr>\\n </table>\\n</body></p>\n",
+        "image": "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"
+      },
+      "relationships": {
+        "section": {
+          "data": {
+            "id": "1",
+            "type": "study_info"
+          }
+        },
+        "link_1": {
+          "data": null
+        },
+        "link_2": {
+          "data": null
+        },
+        "link_modal": {
+          "data": null
+        }
+      }
+    },
+    {
+      "id": "69",
+      "type": "page",
+      "attributes": {
+        "title": "Faq",
+        "link_1_label": "",
+        "link_2_label": "",
+        "link_modal_label": "",
+        "external_link_label": "",
+        "external_link_url": "",
+        "special_link_type": null,
+        "special_link_label": "",
+        "special_link_data": "",
+        "created_at": "2020-10-09T08:29:16.050Z",
+        "updated_at": "2020-10-09T10:49:11.952Z",
+        "body": "<p><html>\\n<head>\\n  <meta charset=\\\"utf-8\\\">\\n  <title>Points and Compensation</title>\\n  <meta name=\\\"description\\\" content=\\\"\\\">\\n  <meta name=\\\"author\\\" content=\\\"\\\">\\n  &lt;!-- Mobile Specific Metas\\n  –––––––––––––––––––––––––––––––––––––––––––––––––– --&gt;\\n  <meta name=\\\"viewport\\\" content=\\\"width=device-width, initial-scale=1\\\">\\n</head>\\n<body>\\n  <h2 style=\\\"color:#5ABB8B\\\"> Points System and Compensation</h2>\\n  <p> You\\&#39;ll receive points for wearing sensors, taking surveys, and completing other study tasks. You can earn a gift card each month by reaching a fixed number of points.</p>\\n  <p> Points may take up to 24 hours to appear in your Activity Feed.</p>\\n\\n<style>\\n  body\\n{\\n    font-family: \\&quot;Helvetica\\&quot;, \\&quot;Arial\\&quot;, sans-serif;\\n  }\\ntable, th, td {\\nborder: 1px solid black;\\nborder-collapse: collapse;\\n}\\nth, td {\\n  padding:10px;\\n}\\nth\\n{\\n  text-align: left;\\n}\\n</style>\\n  <table>\\n  <tr>\\n    <th style=\\\"color: #5ABB8B\\\"> Frequency </th>\\n    <th style=\\\"color: #5ABB8B\\\"> Activity </th>\\n    <th style=\\\"color: #5ABB8B\\\"> Points </th>\\n  </tr>\\n   <td> Daily tasks </td>\\n   <td> </td>\\n   <td> </td>\\n <tr>\\n   <td> </td>\\n   <td> Self-assessed mood question </td>\\n   <td> 5 </td>\\n </tr>\\n <tr>\\n   <td> </td>\\n   <td> Survey </td>\\n   <td> 5 </td>\\n </tr>\\n <tr>\\n   <td> </td>\\n   <td>Trail-making task/Reaction-time task</td>\\n   <td> 10 </td>\\n </tr>\\n <tr>\\n   <td> </td>\\n   <td> Wear Empatica (x2 boost for 3 days in a row)* </td>\\n   <td> 5 </td>\\n </tr>\\n <tr>\\n   <td> </td>\\n   <td> Wear Oura (x2 boost for 3 days in a row)* </td>\\n   <td> 5 </td>\\n </tr>\\n <tr>\\n   <td> </td>\\n   <td> Bodyport weigh-in (x2 boost for 3 days in a row)* </td>\\n   <td> 5 </td>\\n </tr>\\n <tr>\\n   <td>Bi-weekly tasks </td>\\n   <td> </td>\\n   <td> </td>\\n </tr>\\n <tr>\\n   <td> </td>\\n   <td> 6-minute walk test </td>\\n   <td> 30 </td>\\n </tr>\\n <tr>\\n   <td> </td>\\n   <td> Video diary </td>\\n   <td> 30 </td>\\n </tr>\\n </table>\\n<p> (*): 4x boost for all 3 devices 3 days in a row </p>\\n<h4 style=\\\"color: #144E30\\\">Gift Card Amounts </h4>\\n<table>\\n <style>\\n table, th, td {\\n   border: 1px solid black;\\n   border-collapse: collapse;\\n }\\n th, td {\\n   padding:10px;\\n }\\n th\\n {\\n   text-align: left;\\n }\\n </style>\\n   <tr>\\n     <th style=\\\"color: #5ABB8B\\\"> Monthly points awarded </th>\\n     <th style=\\\"color: #5ABB8B\\\"> Gift card value </th>\\n   </tr>\\n   <tr>\\n     <td> &gt;2000 </td>\\n     <td> $40 (£30) </td>\\n   </tr>\\n   <tr>\\n     <td> 1500-2000 </td>\\n     <td> $30 (£23) </td>\\n   </tr>\\n   <tr>\\n     <td> 1000-1500 </td>\\n     <td> $20 (£15) </td>\\n   </tr>\\n   <tr>\\n     <td> 500-1000 </td>\\n     <td> $15 (£12) </td>\\n   </tr>\\n </table>\\n</body>\\n</html></p>\n",
+        "image": "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"
+      },
+      "relationships": {
+        "section": {
+          "data": {
+            "id": "1",
+            "type": "study_info"
+          }
+        },
+        "link_1": {
+          "data": null
+        },
+        "link_2": {
+          "data": null
+        },
+        "link_modal": {
+          "data": null
+        }
+      }
+    },
+    {
+      "id": "70",
+      "type": "page",
+      "attributes": {
+        "title": "Contact Information",
+        "link_1_label": "",
+        "link_2_label": "",
+        "link_modal_label": "",
+        "external_link_label": "",
+        "external_link_url": "",
+        "special_link_type": null,
+        "special_link_label": "",
+        "special_link_data": "",
+        "created_at": "2020-10-09T08:31:01.777Z",
+        "updated_at": "2020-10-11T17:34:47.755Z",
+        "body": "<p>&lt;!DOCTYPE html&gt;\\n<html>\\n<head><meta charset= \\\"utf-8\\\">\\n<title> Stress in Crohn\\&#39;s Research Team </title>\\n<meta name=\\\"description\\\" content=\\\"\\\">\\n<meta name=\\\"author\\\" content=\\\"\\\">\\n<meta name=\\\"viewport\\\" content=\\\"width=device-width, initial-scale=1\\\">\\n<style>\\n  body\\n  {\\n    font-family: \\&quot;Helvetica\\&quot;, \\&quot;Arial\\&quot;, sans-serif;\\n  }\\n  a:link {\\n    color:#144E30;\\n  }\\n  a:visited{\\n    color:#144E30\\n  }\\n.accordion {\\n  background-color: #eee;\\n  color: #444;\\n  cursor: pointer;\\n  padding: 18px;\\n  width: 100%;\\n  border: none;\\n  text-align: left;\\n  outline: none;\\n  font-size: 15px;\\n  transition: 0.4s;\\n}\\n\\n.active, .accordion:hover {\\n  background-color: #5ABB8B;\\n}\\n\\n.panel {\\n  padding: 0 18px;\\n  display: none;\\n  background-color: white;\\n  overflow: hidden;\\n}\\n</style>\\n</head>\\n<body>\\n  <h2 style=\\\"color:#5ABB8B\\\">Contact Information</h2>\\n  <button class=\\\"accordion\\\"> Stress in Crohn\\&#39;s Research Team- Mount Sinai</button>\\n  <div class=\\\"panel\\\">\\n  <h2 style=\\\"color:#5ABB8B\\\"> Anthony Biello </h2>\\n  \\t<p>\\n  \\t\\t<i> Clincial Research Coordinator</i>, Stress in Crohn\\&#39;s Study\\n  \\t\\t<br>\\n  \\t\\tIcahn School of Medicine at Mt. Sinai\\n  \\t\\t<br> <br>\\n  \\t\\t<a href=\\\"mailto:anthony.biello@mountsinai.org?Subject=Crohn&#8217s%20Help\\\" target=\\\"_top\\\"> <a href=\"mailto:anthony.biello@mountsinai.org\">anthony.biello@mountsinai.org</a></a>\\n  \\t\\t<br>\\n  \\t\\t<a href=\\\"tel+12128247736\\\">212-824-7736</a>\\n  \\t</p>\\n\\t<h2 style= \\\"color:#5ABB8B\\\">Bruce Sands M.D.</h2>\\n\\t\\t<p>\\n\\t\\t\\t<i>Principal Investigator</i>, Stress in Crohn\\&#39;s Study\\n\\t\\t\\t<br>\\n\\t\\t\\tDivision of Gastroenterology\\n\\t\\t\\t<br>\\n\\t\\t\\tIcahn School of Medicine at Mt. Sinai\\n\\t\\t\\t<br> <br>\\n\\t\\t\\t<a href=\\\"mailto:bruce.sands@mssm.edu?Subject=Crohn&#8217s%20Help\\\" target=\\\"_top\\\"><a href=\"mailto:bruce.sands@mssm.edu\">bruce.sands@mssm.edu</a></a>\\n\\t\\t\\t<br>\\n\\t\\t</p>\\n  </div>\\n  <button class=\\\"accordion\\\"> Stress in Crohn\\&#39;s Research Team- Oxford</button>\\n  <div class=\\\"panel\\\">\\n    <h2 style=\\\"color:#5ABB8B\\\"> Gastroenterology Clinical Trials Facility, John Radcliffe Hospital </h2>\\n    \\t<p>\\n    \\t\\t<a href=\\\"mailto:CTF.ResearchNurses@nhs.net\\\" target=\\\"_top\\\"><a href=\"mailto:CTF.ResearchNurses@nhs.net\">CTF.ResearchNurses@nhs.net</a></a>\\n    \\t\\t<br>\\n    \\t\\t<a href=\\\"tel+4401865231619\\\">01865 231619</a>\\n    \\t</p>\\n      <h2 style= \\\"color:#5ABB8B\\\">Alissa Walsh M.D.</h2>\\n    \\t\\t<p>\\n    \\t\\t\\t<i>Chief Investigator</i>, Stress in Crohn\\&#39;s Study\\n    \\t\\t\\t<br>\\n    \\t\\t\\tInflammatory Bowel Disease Service\\n    \\t\\t\\t<br>\\n    \\t\\t\\tTranslational Gastroenterology Department\\n          <br>\\n          John Radcliffe Hospital, Oxford\\n    \\t\\t\\t<br> <br>\\n    \\t\\t\\t<a href=\\\"mailto:alissa.walsh@ouh.nhs.uk\\\" target=\\\"_top\\\"><a href=\"mailto:alissa.walsh@ouh.nhs.uk\">alissa.walsh@ouh.nhs.uk</a></a>\\n    \\t\\t\\t<br>\\n    \\t\\t</p>\\n  </div>\\n  <script>\\n  var acc = document.getElementsByClassName(\\&quot;accordion\\&quot;);\\n  var i;\\n\\n  for (i = 0; i &lt; acc.length; i++) {\\n    acc[i].addEventListener(\\&quot;click\\&quot;, function() {\\n      this.classList.toggle(\\&quot;active\\&quot;);\\n      var panel = this.nextElementSibling;\\n      if (panel.style.display === \\&quot;block\\&quot;) {\\n        panel.style.display = \\&quot;none\\&quot;;\\n      } else {\\n        panel.style.display = \\&quot;block\\&quot;;\\n      }\\n    });\\n  }\\n  </script>\\n\\n  </body>\\n  </html>\\n</p>\n",
+        "image": "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"
+      },
+      "relationships": {
+        "section": {
+          "data": {
+            "id": "1",
+            "type": "study_info"
+          }
+        },
+        "link_1": {
+          "data": null
+        },
+        "link_2": {
+          "data": null
+        },
+        "link_modal": {
+          "data": null
+        }
+      }
+    }
+  ]
+}
