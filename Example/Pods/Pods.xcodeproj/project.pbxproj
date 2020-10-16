@@ -1558,6 +1558,7 @@
 		89419F6DA745C9EB2B494B0BF12289E9 /* ORKStepNavigationRule_Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = E90174F67D92F91C73E19839D5740C38 /* ORKStepNavigationRule_Internal.h */; settings = {ATTRIBUTES = (Project, ); }; };
 		8943632E2538962400BA5DFE /* TestGetStudyInfoNoData.json in Resources */ = {isa = PBXBuildFile; fileRef = 8943632D2538962400BA5DFE /* TestGetStudyInfoNoData.json */; };
 		8945C37725398FD100654F0C /* Survey+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8945C37625398FD100654F0C /* Survey+Extensions.swift */; };
+		8945C3D3253A03E700654F0C /* TestGetTaskVideoDiary.json in Resources */ = {isa = PBXBuildFile; fileRef = 8945C3D2253A03E700654F0C /* TestGetTaskVideoDiary.json */; };
 		8959EA6A08FD2FBDEC0661DA718B415F /* ORKPageStep.h in Headers */ = {isa = PBXBuildFile; fileRef = D8CEDC28D09C129C9A4FBF203786F743 /* ORKPageStep.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		89685658BA3C54A4B49CF409B8A930EA /* FBLPromise+Then.m in Sources */ = {isa = PBXBuildFile; fileRef = 73B7672EF7E84178167D166082B5A5AC /* FBLPromise+Then.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
 		899AFC7DB0CA4B9B6117637697522333 /* ORKUSDZModelManagerResult.m in Sources */ = {isa = PBXBuildFile; fileRef = AFE90A49F113053646E9A0769F4D9402 /* ORKUSDZModelManagerResult.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
@@ -5243,6 +5244,7 @@
 		891F989821E945BD8984CB92B19ED0A5 /* Mappable.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = Mappable.swift; path = Sources/Mappable.swift; sourceTree = "<group>"; };
 		8943632D2538962400BA5DFE /* TestGetStudyInfoNoData.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = TestGetStudyInfoNoData.json; sourceTree = "<group>"; };
 		8945C37625398FD100654F0C /* Survey+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Survey+Extensions.swift"; sourceTree = "<group>"; };
+		8945C3D2253A03E700654F0C /* TestGetTaskVideoDiary.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = TestGetTaskVideoDiary.json; sourceTree = "<group>"; };
 		897B760A007DE19B3CB539EDC77224EF /* HKSample+ORKJSONDictionary.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = "HKSample+ORKJSONDictionary.m"; path = "ResearchKit/ActiveTasks/HKSample+ORKJSONDictionary.m"; sourceTree = "<group>"; };
 		89A8F25984EBF19FF61FF8584FD7BBF8 /* Observable+Bind.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = "Observable+Bind.swift"; path = "RxRelay/Observable+Bind.swift"; sourceTree = "<group>"; };
 		89AAB5DC5E9C9F4F0B5D6E12566E33FA /* ORKCompletionCheckmarkView.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = ORKCompletionCheckmarkView.h; path = ResearchKit/Common/ORKCompletionCheckmarkView.h; sourceTree = "<group>"; };
@@ -10016,6 +10018,7 @@
 				E65202E224C7372BE49BC8F978F6C54B /* TestGetStudyInfo.json */,
 				8943632D2538962400BA5DFE /* TestGetStudyInfoNoData.json */,
 				E4B7B01A1DC22F22D29A1E6CC69193C8 /* TestGetSurvey.json */,
+				8945C3D2253A03E700654F0C /* TestGetTaskVideoDiary.json */,
 				AF1C7EF5D61A86F91E7D3C47E074E25D /* TestGetTasks.json */,
 				8A30E1517F56A7E2D7F8C9D95BA08450 /* TestGetUser.json */,
 				EC8E8293DED11A4E03219CCD23BAFDCE /* TestGetUserConsentSection.json */,
@@ -13440,6 +13443,7 @@
 				B4F61A7CA352AAAEEFBC7855166B6F24 /* TestGetInformedConsentSectionNoQuestions.json in Resources */,
 				FF1216DD88BAB5923DFCBC384EBFE83D /* TestGetIntegrationSection.json in Resources */,
 				8943632E2538962400BA5DFE /* TestGetStudyInfoNoData.json in Resources */,
+				8945C3D3253A03E700654F0C /* TestGetTaskVideoDiary.json in Resources */,
 				21101A053F0F4E8F53BDC899DD4D3626 /* TestGetOptInSection.json in Resources */,
 				55DBB9BB9509AAAC321A4FD2A50A1935 /* TestGetScreeningSection.json in Resources */,
 				52F964C2209C9BCC600C3507321903E3 /* TestGetStudyInfo.json in Resources */,

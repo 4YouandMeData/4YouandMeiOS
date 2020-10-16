@@ -11,7 +11,22 @@ import SVProgressHUD
 import RxSwift
 import SafariServices
 
+enum InternalDeeplinkKey: String {
+    case feed
+    case task
+    case userData = "your_data"
+    case studyInfo = "study_info"
+    case aboutYou = "about_you"
+    case faq
+    case rewards
+    case contacts
+}
+
 class AppNavigator {
+    
+    enum MainTab: Int, CaseIterable { case feed = 0, task = 1, userData = 2, studyInfo = 3 }
+    
+    static let defaultStartingTab: MainTab = .feed
     
     private var progressHudCount = 0
     
@@ -369,40 +384,45 @@ class AppNavigator {
         
         let titleFont = FontPalette.fontStyleData(forStyle: .menu).font
         
-        let feedViewController = FeedViewController()
-        let feedNavigationController = UINavigationController(rootViewController: feedViewController)
-        feedNavigationController.preventPopWithSwipe()
-        feedNavigationController.tabBarItem.image = ImagePalette.templateImage(withName: .tabFeed)
-        feedNavigationController.tabBarItem.title = StringsProvider.string(forKey: .tabFeed)
-        feedNavigationController.tabBarItem.setTitleTextAttributes([.font: titleFont], for: .normal)
-        viewControllers.append(feedNavigationController)
-        
-        let taskViewController = TaskViewController()
-        let taskNavigationController = UINavigationController(rootViewController: taskViewController)
-        taskNavigationController.preventPopWithSwipe()
-        taskNavigationController.tabBarItem.image = ImagePalette.templateImage(withName: .tabTask)
-        taskNavigationController.tabBarItem.title = StringsProvider.string(forKey: .tabTask)
-        taskNavigationController.tabBarItem.setTitleTextAttributes([.font: titleFont], for: .normal)
-        viewControllers.append(taskNavigationController)
-        
-        let userDataViewController = UserDataViewController()
-        let userDataNavigationController = UINavigationController(rootViewController: userDataViewController)
-        userDataNavigationController.preventPopWithSwipe()
-        userDataNavigationController.tabBarItem.image = ImagePalette.templateImage(withName: .tabUserData)
-        userDataNavigationController.tabBarItem.title = StringsProvider.string(forKey: .tabUserData)
-        userDataNavigationController.tabBarItem.setTitleTextAttributes([.font: titleFont], for: .normal)
-        viewControllers.append(userDataNavigationController)
-        
-        let studyInfoViewController = StudyInfoViewController()
-        let studyInfoNavigationController = UINavigationController(rootViewController: studyInfoViewController)
-        studyInfoNavigationController.preventPopWithSwipe()
-        studyInfoNavigationController.tabBarItem.image = ImagePalette.templateImage(withName: .tabStudyInfo)
-        studyInfoNavigationController.tabBarItem.title = StringsProvider.string(forKey: .tabStudyInfo)
-        studyInfoNavigationController.tabBarItem.setTitleTextAttributes([.font: titleFont], for: .normal)
-        viewControllers.append(studyInfoNavigationController)
+        MainTab.allCases.forEach { mainTab in
+            switch mainTab {
+            case .feed:
+                let feedViewController = FeedViewController()
+                let feedNavigationController = UINavigationController(rootViewController: feedViewController)
+                feedNavigationController.preventPopWithSwipe()
+                feedNavigationController.tabBarItem.image = ImagePalette.templateImage(withName: .tabFeed)
+                feedNavigationController.tabBarItem.title = StringsProvider.string(forKey: .tabFeed)
+                feedNavigationController.tabBarItem.setTitleTextAttributes([.font: titleFont], for: .normal)
+                viewControllers.append(feedNavigationController)
+            case .task:
+                let taskViewController = TaskViewController()
+                let taskNavigationController = UINavigationController(rootViewController: taskViewController)
+                taskNavigationController.preventPopWithSwipe()
+                taskNavigationController.tabBarItem.image = ImagePalette.templateImage(withName: .tabTask)
+                taskNavigationController.tabBarItem.title = StringsProvider.string(forKey: .tabTask)
+                taskNavigationController.tabBarItem.setTitleTextAttributes([.font: titleFont], for: .normal)
+                viewControllers.append(taskNavigationController)
+            case .userData:
+                let userDataViewController = UserDataViewController()
+                let userDataNavigationController = UINavigationController(rootViewController: userDataViewController)
+                userDataNavigationController.preventPopWithSwipe()
+                userDataNavigationController.tabBarItem.image = ImagePalette.templateImage(withName: .tabUserData)
+                userDataNavigationController.tabBarItem.title = StringsProvider.string(forKey: .tabUserData)
+                userDataNavigationController.tabBarItem.setTitleTextAttributes([.font: titleFont], for: .normal)
+                viewControllers.append(userDataNavigationController)
+            case .studyInfo:
+                let studyInfoViewController = StudyInfoViewController()
+                let studyInfoNavigationController = UINavigationController(rootViewController: studyInfoViewController)
+                studyInfoNavigationController.preventPopWithSwipe()
+                studyInfoNavigationController.tabBarItem.image = ImagePalette.templateImage(withName: .tabStudyInfo)
+                studyInfoNavigationController.tabBarItem.title = StringsProvider.string(forKey: .tabStudyInfo)
+                studyInfoNavigationController.tabBarItem.setTitleTextAttributes([.font: titleFont], for: .normal)
+                viewControllers.append(studyInfoNavigationController)
+            }
+        }
         
         tabBarController.viewControllers = viewControllers
-        tabBarController.selectedIndex = viewControllers.firstIndex(of: feedViewController) ?? 0
+        tabBarController.selectedIndex = Self.defaultStartingTab.rawValue
         self.window.rootViewController = tabBarController
     }
     
@@ -454,8 +474,11 @@ class AppNavigator {
                 case .rewards(let rewards): return rewards.urlString
                 }
             }()
-            self.handleNotifiableTile(notifiableUrl: urlString,
-                                      presenter: presenter)
+            guard let notifiableUrl = urlString else {
+                assertionFailure("AppNavigator - Missing notifiable url for given notifiable")
+                return
+            }
+            self.handleNotifiableTile(notifiableUrl: notifiableUrl, presenter: presenter)
         } else {
             assertionFailure("Unhandle Type")
         }
@@ -522,9 +545,12 @@ class AppNavigator {
         self.currentActivityCoordinator = coordinator
     }
     
-    public func handleNotifiableTile(notifiableUrl: String?, presenter: UIViewController) {
-        guard let string = notifiableUrl, let url = URL(string: string) else { return }
-        self.openWebView(withTitle: "", url: url, presenter: presenter)
+    public func handleNotifiableTile(notifiableUrl: String, presenter: UIViewController) {
+        if let internalDeeplinkKey = InternalDeeplinkKey(rawValue: notifiableUrl) {
+            self.handleInternalDeeplink(withKey: internalDeeplinkKey, presenter: presenter)
+        } else if let url = URL(string: notifiableUrl) {
+            self.openUrlOnBrowser(url, presenter: presenter)
+        }
     }
     
     // MARK: About You
@@ -597,6 +623,10 @@ class AppNavigator {
     }
     
     public func openUrlOnBrowser(_ url: URL, presenter: UIViewController) {
+        guard self.canOpenExternalUrl(url) else {
+            print("Cannot open given url: \(url)")
+            return
+        }
         let viewController = SFSafariViewController(url: url)
         viewController.preferredControlTintColor = ColorPalette.color(withType: .primaryText)
         viewController.preferredBarTintColor = ColorPalette.color(withType: .secondary)
@@ -647,7 +677,7 @@ class AppNavigator {
     
     // MARK: - Deeplink
     
-    func handleDeeplinkToTask() {
+    public func handleDeeplinkToTask() {
         if self.setupCompleted,
            self.repository.isLoggedIn,
            self.repository.currentUser?.isOnboardingCompleted ?? false,
@@ -656,7 +686,7 @@ class AppNavigator {
         }
     }
     
-    func handleDeeplinkToUrl() {
+    public func handleDeeplinkToUrl() {
         if self.setupCompleted,
            self.repository.isLoggedIn,
            self.repository.currentUser?.isOnboardingCompleted ?? false,
@@ -665,7 +695,8 @@ class AppNavigator {
         }
     }
     
-    // MARK: Study Info
+    // MARK: - Study Info
+    
     public func showInfoDetailPage(presenter: UIViewController, page: Page, isModal: Bool) {
         guard let navController = presenter.navigationController else {
             assertionFailure("Missing UINavigationController")
@@ -679,6 +710,35 @@ class AppNavigator {
         }
         pageViewController.hidesBottomBarWhenPushed = true
         navController.pushViewController(pageViewController, animated: true)
+    }
+    
+    // MARK: - Internal deeplink
+    
+    private func handleInternalDeeplink(withKey key: InternalDeeplinkKey, presenter: UIViewController) {
+        switch key {
+        case .feed: self.goToMainTab(tab: .feed, presenter: presenter)
+        case .task: self.goToMainTab(tab: .task, presenter: presenter)
+        case .userData: self.goToMainTab(tab: .userData, presenter: presenter)
+        case .studyInfo: self.goToMainTab(tab: .studyInfo, presenter: presenter)
+        case .aboutYou: self.showAboutYouPage(presenter: presenter)
+        case .faq:
+            // TODO: Show FAQ
+            print("AppNavigator - TODO: Show FAQ")
+        case .rewards:
+            // TODO: Show Rewards
+            print("AppNavigator - TODO: Show Rewards")
+        case .contacts:
+            // TODO: Show Contacts
+            print("AppNavigator - TODO: Show Contacts")
+        }
+    }
+    
+    private func goToMainTab(tab: MainTab, presenter: UIViewController) {
+        guard let tabBarController = presenter.tabBarController else {
+            print("AppNavigator - Missing tab bar controller")
+            return
+        }
+        tabBarController.selectedIndex = tab.rawValue
     }
 }
 

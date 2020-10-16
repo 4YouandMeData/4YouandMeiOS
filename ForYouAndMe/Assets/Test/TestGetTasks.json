@@ -298,6 +298,213 @@
           "data": null
         }
       }
+    },
+    {
+      "id": "534",
+      "type": "task",
+      "attributes": {
+        "from": "2020-08-05T00:00:00.000Z",
+        "to": "2020-08-05T23:59:59.999Z",
+        "result": null,
+        "created_at": "2020-08-05T00:05:04.678Z",
+        "updated_at": "2020-08-05T00:05:04.678Z",
+        "attachments": []
+      },
+      "relationships": {
+        "schedulable": {
+          "data": null
+        },
+        "notifiable": {
+            "data": {
+              "id": "1",
+              "type": "feed_educational"
+            }
+        }
+      }
+    },
+    {
+      "id": "535",
+      "type": "task",
+      "attributes": {
+        "from": "2020-08-05T00:00:00.000Z",
+        "to": "2020-08-05T23:59:59.999Z",
+        "result": null,
+        "created_at": "2020-08-05T00:05:04.678Z",
+        "updated_at": "2020-08-05T00:05:04.678Z",
+        "attachments": []
+      },
+      "relationships": {
+        "schedulable": {
+          "data": null
+        },
+        "notifiable": {
+            "data": {
+              "id": "2",
+              "type": "feed_educational"
+            }
+        }
+      }
+    },
+    {
+      "id": "536",
+      "type": "task",
+      "attributes": {
+        "from": "2020-08-05T00:00:00.000Z",
+        "to": "2020-08-05T23:59:59.999Z",
+        "result": null,
+        "created_at": "2020-08-05T00:05:04.678Z",
+        "updated_at": "2020-08-05T00:05:04.678Z",
+        "attachments": []
+      },
+      "relationships": {
+        "schedulable": {
+          "data": null
+        },
+        "notifiable": {
+            "data": {
+              "id": "3",
+              "type": "feed_educational"
+            }
+        }
+      }
+    },
+    {
+      "id": "537",
+      "type": "task",
+      "attributes": {
+        "from": "2020-08-05T00:00:00.000Z",
+        "to": "2020-08-05T23:59:59.999Z",
+        "result": null,
+        "created_at": "2020-08-05T00:05:04.678Z",
+        "updated_at": "2020-08-05T00:05:04.678Z",
+        "attachments": []
+      },
+      "relationships": {
+        "schedulable": {
+          "data": null
+        },
+        "notifiable": {
+            "data": {
+              "id": "4",
+              "type": "feed_educational"
+            }
+        }
+      }
+    },
+    {
+      "id": "538",
+      "type": "task",
+      "attributes": {
+        "from": "2020-08-05T00:00:00.000Z",
+        "to": "2020-08-05T23:59:59.999Z",
+        "result": null,
+        "created_at": "2020-08-05T00:05:04.678Z",
+        "updated_at": "2020-08-05T00:05:04.678Z",
+        "attachments": []
+      },
+      "relationships": {
+        "schedulable": {
+          "data": null
+        },
+        "notifiable": {
+            "data": {
+              "id": "5",
+              "type": "feed_educational"
+            }
+        }
+      }
+    },
+    {
+      "id": "539",
+      "type": "task",
+      "attributes": {
+        "from": "2020-08-05T00:00:00.000Z",
+        "to": "2020-08-05T23:59:59.999Z",
+        "result": null,
+        "created_at": "2020-08-05T00:05:04.678Z",
+        "updated_at": "2020-08-05T00:05:04.678Z",
+        "attachments": []
+      },
+      "relationships": {
+        "schedulable": {
+          "data": null
+        },
+        "notifiable": {
+            "data": {
+              "id": "6",
+              "type": "feed_educational"
+            }
+        }
+      }
+    },
+    {
+      "id": "540",
+      "type": "task",
+      "attributes": {
+        "from": "2020-08-05T00:00:00.000Z",
+        "to": "2020-08-05T23:59:59.999Z",
+        "result": null,
+        "created_at": "2020-08-05T00:05:04.678Z",
+        "updated_at": "2020-08-05T00:05:04.678Z",
+        "attachments": []
+      },
+      "relationships": {
+        "schedulable": {
+          "data": null
+        },
+        "notifiable": {
+            "data": {
+              "id": "7",
+              "type": "feed_educational"
+            }
+        }
+      }
+    },
+    {
+      "id": "541",
+      "type": "task",
+      "attributes": {
+        "from": "2020-08-05T00:00:00.000Z",
+        "to": "2020-08-05T23:59:59.999Z",
+        "result": null,
+        "created_at": "2020-08-05T00:05:04.678Z",
+        "updated_at": "2020-08-05T00:05:04.678Z",
+        "attachments": []
+      },
+      "relationships": {
+        "schedulable": {
+          "data": null
+        },
+        "notifiable": {
+            "data": {
+              "id": "8",
+              "type": "feed_educational"
+            }
+        }
+      }
+    },
+    {
+      "id": "542",
+      "type": "task",
+      "attributes": {
+        "from": "2020-08-05T00:00:00.000Z",
+        "to": "2020-08-05T23:59:59.999Z",
+        "result": null,
+        "created_at": "2020-08-05T00:05:04.678Z",
+        "updated_at": "2020-08-05T00:05:04.678Z",
+        "attachments": []
+      },
+      "relationships": {
+        "schedulable": {
+          "data": null
+        },
+        "notifiable": {
+            "data": {
+              "id": "9",
+              "type": "feed_educational"
+            }
+        }
+      }
     }
   ],
   "included": [
@@ -647,6 +854,123 @@
         "title": "Test Camcog",
         "description": "",
         "activity_type": "camcog_pvt",
+        "repeat_every": 1,
+        "created_at": "2020-07-30T13:37:00.815Z",
+        "updated_at": "2020-07-30T13:37:00.815Z",
+        "image": null
+      }
+    },
+    {
+      "id": "1",
+      "type": "feed_educational",
+      "attributes": {
+        "title": "Test Feed Deeplink",
+        "description": "",
+        "link_url": "feed",
+        "repeat_every": 1,
+        "created_at": "2020-07-30T13:37:00.815Z",
+        "updated_at": "2020-07-30T13:37:00.815Z",
+        "image": null
+      }
+    },
+    {
+      "id": "2",
+      "type": "feed_educational",
+      "attributes": {
+        "title": "Test Task Deeplink",
+        "description": "",
+        "link_url": "task",
+        "repeat_every": 1,
+        "created_at": "2020-07-30T13:37:00.815Z",
+        "updated_at": "2020-07-30T13:37:00.815Z",
+        "image": null
+      }
+    },
+    {
+      "id": "3",
+      "type": "feed_educational",
+      "attributes": {
+        "title": "Test Your Data Deeplink",
+        "description": "",
+        "link_url": "your_data",
+        "repeat_every": 1,
+        "created_at": "2020-07-30T13:37:00.815Z",
+        "updated_at": "2020-07-30T13:37:00.815Z",
+        "image": null
+      }
+    },
+    {
+      "id": "4",
+      "type": "feed_educational",
+      "attributes": {
+        "title": "Test Study Info Deeplink",
+        "description": "",
+        "link_url": "study_info",
+        "repeat_every": 1,
+        "created_at": "2020-07-30T13:37:00.815Z",
+        "updated_at": "2020-07-30T13:37:00.815Z",
+        "image": null
+      }
+    },
+    {
+      "id": "5",
+      "type": "feed_educational",
+      "attributes": {
+        "title": "Test About You",
+        "description": "",
+        "link_url": "about_you",
+        "repeat_every": 1,
+        "created_at": "2020-07-30T13:37:00.815Z",
+        "updated_at": "2020-07-30T13:37:00.815Z",
+        "image": null
+      }
+    },
+    {
+      "id": "6",
+      "type": "feed_educational",
+      "attributes": {
+        "title": "Test FAQ",
+        "description": "",
+        "link_url": "faq",
+        "repeat_every": 1,
+        "created_at": "2020-07-30T13:37:00.815Z",
+        "updated_at": "2020-07-30T13:37:00.815Z",
+        "image": null
+      }
+    },
+    {
+      "id": "7",
+      "type": "feed_educational",
+      "attributes": {
+        "title": "Test Reward Deeplink",
+        "description": "",
+        "link_url": "rewards",
+        "repeat_every": 1,
+        "created_at": "2020-07-30T13:37:00.815Z",
+        "updated_at": "2020-07-30T13:37:00.815Z",
+        "image": null
+      }
+    },
+    {
+      "id": "8",
+      "type": "feed_educational",
+      "attributes": {
+        "title": "Test Contacts Deeplink",
+        "description": "",
+        "link_url": "contacts",
+        "repeat_every": 1,
+        "created_at": "2020-07-30T13:37:00.815Z",
+        "updated_at": "2020-07-30T13:37:00.815Z",
+        "image": null
+      }
+    },
+    {
+      "id": "9",
+      "type": "feed_educational",
+      "attributes": {
+        "title": "Test URL",
+        "description": "",
+        "link_url": "http:\/\/google.com",
         "repeat_every": 1,
         "created_at": "2020-07-30T13:37:00.815Z",
         "updated_at": "2020-07-30T13:37:00.815Z",

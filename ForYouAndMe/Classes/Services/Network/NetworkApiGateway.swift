@@ -420,7 +420,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         case .sendAnswer: return "{}".utf8Encoded
         // Task
         case .getFeeds, .getTasks: return Bundle.getTestData(from: "TestGetTasks")
-        case .getTask: return Bundle.getTestData(from: "TaskGetTask")
+        case .getTask: return Bundle.getTestData(from: "TaskGetTaskVideoDiary")
         case .sendTaskResultData: return "{}".utf8Encoded
         case .sendTaskResultFile: return "{}".utf8Encoded
         case .delayTask: return "{}".utf8Encoded

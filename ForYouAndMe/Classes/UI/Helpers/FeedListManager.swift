@@ -295,21 +295,24 @@ extension FeedListManager: UITableViewDataSource {
                     cell.display(data: educational, buttonPressedCallback: { [weak self] in
                         guard let self = self else { return }
                         guard let delegate = self.delegate else { return }
-                        self.navigator.handleNotifiableTile(notifiableUrl: educational.urlString,
+                        guard let notifiableUrl = educational.urlString else { return }
+                        self.navigator.handleNotifiableTile(notifiableUrl: notifiableUrl,
                                                             presenter: delegate.presenter)
                     })
                 case .alert(let alert):
                     cell.display(data: alert, buttonPressedCallback: { [weak self] in
                         guard let self = self else { return }
                         guard let delegate = self.delegate else { return }
-                        self.navigator.handleNotifiableTile(notifiableUrl: alert.urlString,
+                        guard let notifiableUrl = alert.urlString else { return }
+                        self.navigator.handleNotifiableTile(notifiableUrl: notifiableUrl,
                                                             presenter: delegate.presenter)
                     })
                 case .rewards(let rewards):
                     cell.display(data: rewards, buttonPressedCallback: { [weak self] in
                         guard let self = self else { return }
                         guard let delegate = self.delegate else { return }
-                        self.navigator.handleNotifiableTile(notifiableUrl: rewards.urlString,
+                        guard let notifiableUrl = rewards.urlString else { return }
+                        self.navigator.handleNotifiableTile(notifiableUrl: notifiableUrl,
                                                             presenter: delegate.presenter)
                     })
                 }
