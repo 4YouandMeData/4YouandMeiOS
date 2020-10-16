@@ -7,6 +7,10 @@
 
 class SurveyQuestionScale: UIView {
     
+    // Temporary workaround to avoid UILabels crowding
+    private static let maxNumberOfLabels: Int = 20
+    private static let defaultInterval: Int = 1
+    
     private var values: [Int] = []
     private var surveyQuestion: SurveyQuestion
     private var slider: Slider = Slider()
@@ -15,6 +19,8 @@ class SurveyQuestionScale: UIView {
     
     private var intervalStackView: UIStackView = {
         let stackView = UIStackView()
+        stackView.distribution = .equalCentering
+        stackView.alignment = .fill
         stackView.axis = .horizontal
         return stackView
     }()
@@ -25,10 +31,10 @@ class SurveyQuestionScale: UIView {
     
     init(surveyQuestion: SurveyQuestion, delegate: SurveyQuestionProtocol) {
         guard let minimum = surveyQuestion.minimum,
-              let maximum = surveyQuestion.maximum,
-              let interval = surveyQuestion.interval else {
-            fatalError("Minimum, Maximum and interval are required in Scale question")
+              let maximum = surveyQuestion.maximum else {
+            fatalError("Minimum, Maximum are required in Scale question")
         }
+        let interval = surveyQuestion.interval ?? Self.defaultInterval
         self.delegate = delegate
         self.surveyQuestion = surveyQuestion
         super.init(frame: .zero)
@@ -64,56 +70,45 @@ class SurveyQuestionScale: UIView {
     
     // MARK: - Private Methods
     
-    private func getScaleValues(minmumValue: Int,
-                                maximuValue: Int,
+    private func getScaleValues(minimumValue: Int,
+                                maximumValue: Int,
                                 interval: Int) -> [Int] {
-        var scaleValues = [minmumValue]
-        var  value = minmumValue
-        while maximuValue > value {
-            value += interval
-            scaleValues.append(value)
+        var scaleValues: [Int] = []
+        var currentValue = minimumValue
+        while maximumValue >= currentValue {
+            scaleValues.append(currentValue)
+            currentValue += interval
         }
         return scaleValues
     }
     
     private func configureScaleValues() {
         self.intervalStackView.subviews.forEach({ $0.removeFromSuperview()})
-        for  value in self.values {
-            
-            self.intervalStackView.addLabel(withText: "\(Int(value))",
-                                            fontStyle: .paragraph,
-                                            color: ColorPalette.color(withType: .primaryText))
+        if self.values.count < Self.maxNumberOfLabels {
+            for  value in self.values {
+                self.intervalStackView.addLabel(withText: "\(Int(value))",
+                                                fontStyle: .paragraph,
+                                                color: ColorPalette.color(withType: .primaryText))
+            }
         }
     }
     
     private func configureSlider(minimum: Int, maximum: Int, interval: Int) {
         
-//        self.slider.addTarget(self, action: #selector(changeValue(_:)), for: .valueChanged)
         self.slider.value = Float(minimum)
         self.slider.minimumValue = Float(minimum)
         self.slider.maximumValue = Float(maximum)
         self.slider.sliderType = .scale
         self.slider.setup()
-        self.values = getScaleValues(minmumValue: minimum,
-                                     maximuValue: maximum,
-                                     interval: interval)
+        self.values = self.getScaleValues(minimumValue: minimum,
+                                          maximumValue: maximum,
+                                          interval: interval)
         self.configureScaleValues()
         
         self.slider.sliderPointTapped = {[weak self] pointTapped in
             self?.sliderTapped(pointTapped: pointTapped)
         }
     }
-    
-//    @objc private func changeValue(_ sender: UISlider) {
-//        var new = sender.value
-//        new.round()
-//        new = (new <= 0) ? 1 : new
-//        let value = Int(new)
-//        guard value <= self.values.count, value > 0 else { return }
-//        let actualValue = self.values[value - 1]
-//        self.currentValue.text = "\(actualValue)"
-//        self.slider.setValue(Float(actualValue), animated: false)
-//    }
     
     fileprivate func sliderTapped(pointTapped: CGPoint) {
         var new = (CGFloat(values.count) * pointTapped.x) / slider.frame.width

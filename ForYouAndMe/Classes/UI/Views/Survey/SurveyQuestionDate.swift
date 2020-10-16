@@ -8,20 +8,12 @@
 class SurveyQuestionDate: UIView {
     
     private var surveyQuestion: SurveyQuestion
-    private var minDate: Date
-    private var maxDate: Date
     private weak var delegate: SurveyQuestionProtocol?
     
     init(surveyQuestion: SurveyQuestion, delegate: SurveyQuestionProtocol) {
         
-        guard let minDate = surveyQuestion.minimumDate, let maxDate = surveyQuestion.maximumDate else {
-            fatalError("Date Picker request min and max date")
-        }
-        
         self.delegate = delegate
         self.surveyQuestion = surveyQuestion
-        self.minDate = minDate
-        self.maxDate = maxDate
         super.init(frame: .zero)
         
         let stackView = UIStackView()
@@ -32,8 +24,8 @@ class SurveyQuestionDate: UIView {
         stackView.addBlankSpace(space: 20)
         
         let datePicker = UIDatePicker()
-        datePicker.minimumDate = self.minDate
-        datePicker.maximumDate = self.maxDate
+        datePicker.minimumDate = surveyQuestion.minimumDate
+        datePicker.maximumDate = surveyQuestion.maximumDate
         if #available(iOS 13.4, *) {
             datePicker.preferredDatePickerStyle = .wheels
         }

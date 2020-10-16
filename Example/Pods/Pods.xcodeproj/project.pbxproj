@@ -1557,6 +1557,7 @@
 		8938D0666204FE43FEB6BB972E27B4B8 /* GlobalConfig+Mappable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05094434E057E453B6E9BDA1772FDA4F /* GlobalConfig+Mappable.swift */; };
 		89419F6DA745C9EB2B494B0BF12289E9 /* ORKStepNavigationRule_Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = E90174F67D92F91C73E19839D5740C38 /* ORKStepNavigationRule_Internal.h */; settings = {ATTRIBUTES = (Project, ); }; };
 		8943632E2538962400BA5DFE /* TestGetStudyInfoNoData.json in Resources */ = {isa = PBXBuildFile; fileRef = 8943632D2538962400BA5DFE /* TestGetStudyInfoNoData.json */; };
+		8945C37725398FD100654F0C /* Survey+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8945C37625398FD100654F0C /* Survey+Extensions.swift */; };
 		8959EA6A08FD2FBDEC0661DA718B415F /* ORKPageStep.h in Headers */ = {isa = PBXBuildFile; fileRef = D8CEDC28D09C129C9A4FBF203786F743 /* ORKPageStep.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		89685658BA3C54A4B49CF409B8A930EA /* FBLPromise+Then.m in Sources */ = {isa = PBXBuildFile; fileRef = 73B7672EF7E84178167D166082B5A5AC /* FBLPromise+Then.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
 		899AFC7DB0CA4B9B6117637697522333 /* ORKUSDZModelManagerResult.m in Sources */ = {isa = PBXBuildFile; fileRef = AFE90A49F113053646E9A0769F4D9402 /* ORKUSDZModelManagerResult.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
@@ -5241,6 +5242,7 @@
 		88DFAC3545C1D216669745A4211EABCB /* GULSecureCoding.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = GULSecureCoding.h; path = GoogleUtilities/Environment/Private/GULSecureCoding.h; sourceTree = "<group>"; };
 		891F989821E945BD8984CB92B19ED0A5 /* Mappable.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = Mappable.swift; path = Sources/Mappable.swift; sourceTree = "<group>"; };
 		8943632D2538962400BA5DFE /* TestGetStudyInfoNoData.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = TestGetStudyInfoNoData.json; sourceTree = "<group>"; };
+		8945C37625398FD100654F0C /* Survey+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Survey+Extensions.swift"; sourceTree = "<group>"; };
 		897B760A007DE19B3CB539EDC77224EF /* HKSample+ORKJSONDictionary.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = "HKSample+ORKJSONDictionary.m"; path = "ResearchKit/ActiveTasks/HKSample+ORKJSONDictionary.m"; sourceTree = "<group>"; };
 		89A8F25984EBF19FF61FF8584FD7BBF8 /* Observable+Bind.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = "Observable+Bind.swift"; path = "RxRelay/Observable+Bind.swift"; sourceTree = "<group>"; };
 		89AAB5DC5E9C9F4F0B5D6E12566E33FA /* ORKCompletionCheckmarkView.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = ORKCompletionCheckmarkView.h; path = ResearchKit/Common/ORKCompletionCheckmarkView.h; sourceTree = "<group>"; };
@@ -9276,6 +9278,7 @@
 				3DA8B558AD9CE4B3651EFD3551E84249 /* UIStackView+Internal.swift */,
 				31FCBF5F5CA573D42C5C84A21D8C4255 /* UIViewController+Internal.swift */,
 				109A521458540FF192AF1BA5F16F13B7 /* User+Extensions.swift */,
+				8945C37625398FD100654F0C /* Survey+Extensions.swift */,
 			);
 			name = UtilityInternal;
 			path = ForYouAndMe/Classes/UtilityInternal;
@@ -15131,6 +15134,7 @@
 				7ABD632A5E6D9A68D91E8A687701F16D /* ReachabilityService.swift in Sources */,
 				A5A8DEF70F1815E8B6F301A378B93DC6 /* ReactionTimeTask.swift in Sources */,
 				AAA397AC2EA0F0CB0AD143F346229847 /* RemindersPermission.swift in Sources */,
+				8945C37725398FD100654F0C /* Survey+Extensions.swift in Sources */,
 				63686C6851128AF15B03B55C7A9F0ECD /* Repository+AlertError.swift in Sources */,
 				6CC153C73E202C7A3DA6BDCC66986F8B /* Repository.swift in Sources */,
 				377A35C03FC6685EF8F5A158A2162566 /* RepositoryImpl.swift in Sources */,

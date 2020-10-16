@@ -12,14 +12,12 @@ struct SurveyQuestionOption {
     let type: String
     
     let value: String
-    let targets: [SurveyTarget]?
 }
 
 extension SurveyQuestionOption: JSONAPIMappable {
     enum CodingKeys: String, CodingKey {
         case id
         case type
-        case value
-        case targets
+        case value = "text"
     }
 }

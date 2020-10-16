@@ -282,3 +282,22 @@ struct TimeZoneDecodable: Codable, OptionalCodingWrapper {
         }
     }
 }
+
+@propertyWrapper
+struct StringToInt: Decodable, OptionalCodingWrapper {
+    
+    var wrappedValue: Int?
+    
+    init(wrappedValue: Int?) {
+        self.wrappedValue = wrappedValue
+    }
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        if let string = try? container.decode(String.self), let doubleValue = Double(string) {
+            self.wrappedValue = Int(doubleValue)
+        } else {
+            self.wrappedValue = nil
+        }
+    }
+}

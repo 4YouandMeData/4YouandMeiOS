@@ -19,7 +19,7 @@ extension SurveyGroup: JSONAPIMappable {
 survey_blocks.pages,\
 survey_blocks.intro_page,\
 survey_blocks.success_page,\
-survey_blocks.questions
+survey_blocks.questions.possible_answers
 """
     
     enum CodingKeys: String, CodingKey {

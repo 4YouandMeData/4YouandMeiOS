@@ -12,23 +12,21 @@ enum SurveyTargetCriteria: String {
 }
 
 struct SurveyTarget {
-    let id: String
-    let type: String
-    
     @FailableEnumStringDecodable
     var criteria: SurveyTargetCriteria?
     let minimum: Int?
     let maximum: Int?
     let questionId: String
+    @NilIfEmptyString
+    var answerId: String?
 }
 
-extension SurveyTarget: JSONAPIMappable {
+extension SurveyTarget: PlainDecodable {
     enum CodingKeys: String, CodingKey {
-        case id
-        case type
         case criteria
         case minimum = "min"
         case maximum = "max"
         case questionId = "question_id"
+        case answerId = "answer_id"
     }
 }

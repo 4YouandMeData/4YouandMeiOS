@@ -39,7 +39,7 @@ class SurveyGroupSectionCoordinator: ActivitySectionCoordinator {
     // MARK: - ActivitySectionCoordinator
     
     public func getStartingPage() -> UIViewController? {
-        guard let firstSurvey = self.sectionData.surveys.first else {
+        guard let firstSurvey = self.sectionData.validSurveys.first else {
             assertionFailure("Missing survey for current survey group")
             return nil
         }
@@ -93,7 +93,7 @@ class SurveyGroupSectionCoordinator: ActivitySectionCoordinator {
     }
     
     private func showNextSurvey(forCurrentSurvey currentSurvey: SurveyTask) {
-        guard let currentSurveyIndex = self.sectionData.surveys.firstIndex(of: currentSurvey) else {
+        guard let currentSurveyIndex = self.sectionData.validSurveys.firstIndex(of: currentSurvey) else {
             assertionFailure("Missing survey in survey array")
             self.cancelSurveyGroup()
             return
@@ -104,7 +104,7 @@ class SurveyGroupSectionCoordinator: ActivitySectionCoordinator {
         }
         
         let nextCurrentSurveyIndex = currentSurveyIndex + 1
-        if nextCurrentSurveyIndex == self.sectionData.surveys.count {
+        if nextCurrentSurveyIndex == self.sectionData.validSurveys.count {
             var aggregatedAnswers: [SurveyResult] = []
             self.answersForSurveys.forEach { answersForSurvey in
                 aggregatedAnswers.append(contentsOf: answersForSurvey.value)
@@ -120,7 +120,7 @@ class SurveyGroupSectionCoordinator: ActivitySectionCoordinator {
                     self.navigator.handleError(error: error, presenter: navigationController)
                 }).disposed(by: self.disposeBag)
         } else {
-            let nextSurvey = self.sectionData.surveys[nextCurrentSurveyIndex]
+            let nextSurvey = self.sectionData.validSurveys[nextCurrentSurveyIndex]
             self.showSurvey(nextSurvey)
         }
     }

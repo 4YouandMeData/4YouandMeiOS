@@ -9,13 +9,13 @@ import Foundation
 import RxSwift
 
 enum SurveyQuestionType: String {
-    case numerical = "numerical"
-    case pickOne = "pick-one"
-    case pickMany = "pick-many"
-    case textInput = "text-input"
+    case numerical = "SurveyQuestionNumerical"
+    case pickOne = "SurveyQuestionPickOne"
+    case pickMany = "SurveyQuestionPickMany"
+    case textInput = "SurveyQuestionText"
     case dateInput = "SurveyQuestionDate"
-    case scale = "scale"
-    case range = "range"
+    case scale = "SurveyQuestionScale"
+    case range = "SurveyQuestionRange"
 }
 
 struct SurveyQuestion {
@@ -32,6 +32,7 @@ struct SurveyQuestion {
     // Details
     var minimum: Int?
     var maximum: Int?
+    @StringToInt
     var interval: Int?
     @NilIfEmptyString
     var minimumDisplay: String?
@@ -73,7 +74,7 @@ extension SurveyQuestion: JSONAPIMappable {
         case maxCharacters = "max_characters"
         case minimumDate = "min_date"
         case maximumDate = "max_date"
-        case options
+        case options = "possible_answers"
         case targets
     }
 }

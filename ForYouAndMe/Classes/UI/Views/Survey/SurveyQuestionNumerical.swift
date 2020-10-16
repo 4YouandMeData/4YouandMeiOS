@@ -49,17 +49,13 @@ class SurveyQuestionNumerical: UIView, UIPickerViewDelegate, UIPickerViewDataSou
         for idx in 0...self.numberOfItems {
             self.items.append("\(self.minumum + idx)")
         }
-        guard let minimum = self.surveyQuestion.minimumDisplay,
-              !(self.surveyQuestion.minimumDisplay ?? "").isEmpty else {
-            return
+        if let minimum = self.surveyQuestion.minimumDisplay, false == minimum.isEmpty {
+            self.items.insert(minimum, at: 0)
         }
-        self.items.insert(minimum, at: 0)
         
-        guard let maximum = self.surveyQuestion.maximumDisplay,
-              !(self.surveyQuestion.maximumDisplay ?? "").isEmpty else {
-            return
+        if let maximum = self.surveyQuestion.maximumDisplay, false == maximum.isEmpty {
+            self.items.insert(maximum, at: self.items.count)
         }
-        self.items.insert(maximum, at: self.items.count)
     }
     
     // MARK: Picker Datasource
@@ -90,7 +86,14 @@ class SurveyQuestionNumerical: UIView, UIPickerViewDelegate, UIPickerViewDataSou
                                                         color: ColorPalette.color(withType: .secondaryText))
         view?.label.attributedText = attributeString
         view?.label.layer.backgroundColor = ColorPalette.color(withType: .primary).cgColor
-        self.delegate?.answerDidChange(self.surveyQuestion, answer: self.items[row])
+        let selectedItem = self.items[row]
+        if selectedItem == self.surveyQuestion.minimumDisplay {
+            self.delegate?.answerDidChange(self.surveyQuestion, answer: Constants.Survey.NumericTypeMinValue)
+        } else if selectedItem == self.surveyQuestion.maximumDisplay {
+            self.delegate?.answerDidChange(self.surveyQuestion, answer: Constants.Survey.NumericTypeMaxValue)
+        } else {
+            self.delegate?.answerDidChange(self.surveyQuestion, answer: selectedItem)
+        }
     }
     
     func pickerView(_ pickerView: UIPickerView, viewForRow row: Int, forComponent component: Int, reusing view: UIView?) -> UIView {

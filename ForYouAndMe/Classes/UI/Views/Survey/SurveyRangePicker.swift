@@ -8,8 +8,6 @@
 class SurveyRangePicker: UIView {
     
     private var surveyQuestion: SurveyQuestion
-    private var minimumLabel: UILabel = UILabel()
-    private var maximumLabel: UILabel = UILabel()
     private var currentValue: UILabel = UILabel()
     private var slider: Slider = Slider()
     private weak var delegate: SurveyQuestionProtocol?
@@ -22,8 +20,6 @@ class SurveyRangePicker: UIView {
         
         self.surveyQuestion = surveyQuestion
         self.delegate = delegate
-        self.minimumLabel.text = surveyQuestion.minimumLabel
-        self.maximumLabel.text = surveyQuestion.maximumLabel
         
         super.init(frame: .zero)
         
@@ -44,10 +40,10 @@ class SurveyRangePicker: UIView {
 
         stackView.addBlankSpace(space: 40)
         
-        self.slider.addTarget(self, action: #selector(changeValue(_:)), for: .valueChanged)
-        self.slider.value = Float(minimum)
+        self.slider.addTarget(self, action: #selector(self.changeValue(_:)), for: .valueChanged)
         self.slider.minimumValue = Float(minimum)
         self.slider.maximumValue = Float(maximum)
+        self.slider.value = Float(minimum)
         self.slider.setup()
         stackView.addArrangedSubview(self.slider)
         

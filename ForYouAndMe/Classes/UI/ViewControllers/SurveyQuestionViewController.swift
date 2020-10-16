@@ -80,10 +80,6 @@ class SurveyQuestionViewController: UIViewController,
         label.numberOfLines = 0
         stackView.addArrangedSubview(label)
         label.setContentHuggingPriority(UILayoutPriority(1000), for: .vertical)
-//        stackView.addLabel(withText: self.pageData.question.body,
-//                                           fontStyle: .title,
-//                                           colorType: .primaryText)
-//        stackView.addBlankSpace(space: 40.0)
         
         let questionPicker = SurveyQuestionPickerFactory.getSurveyQuestionPicker(for: self.pageData.question, delegate: self)
         
@@ -96,17 +92,6 @@ class SurveyQuestionViewController: UIViewController,
         
         let tap = UITapGestureRecognizer(target: self, action: #selector(self.tapView))
         self.view.addGestureRecognizer(tap)
-        
-//        // TODO: Remove (Test Purpose)
-//        switch self.pageData.question.questionType {
-//        case .numerical: self.answer = "2"
-//        case .pickOne: self.answer = "1"
-//        case .pickMany: self.answer = ["3", "1"]
-//        case .textInput: self.answer = "Ok"
-//        case .dateInput: self.answer = "2000-03-01"
-//        case .scale: self.answer = 3
-//        case .range: self.answer = 4
-//        }
         
         self.updateConfirmButton()
     }
@@ -158,16 +143,7 @@ class SurveyQuestionViewController: UIViewController,
     
     // MARK: Delegate
     func answerDidChange(_ surveyQuestion: SurveyQuestion, answer: Any) {
-        print(answer)
+        print("SurveyQuestionViewController - Answer Did Change: \(answer)")
         self.answer = answer
-//        switch self.pageData.question.questionType {
-//        case .numerical: self.answer = "2"
-//        case .pickOne: self.answer = "1"
-//        case .pickMany: self.answer = ["3", "1"]
-//        case .textInput: self.answer = "Ok"
-//        case .dateInput: self.answer = "2000-03-01"
-//        case .scale: self.answer = 3
-//        case .range: self.answer = 4
-//        }
     }
 }
