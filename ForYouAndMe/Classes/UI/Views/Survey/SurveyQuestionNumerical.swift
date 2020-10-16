@@ -80,12 +80,6 @@ class SurveyQuestionNumerical: UIView, UIPickerViewDelegate, UIPickerViewDataSou
 
     func pickerView(_ pickerView: UIPickerView, didSelectRow row: Int, inComponent component: Int) {
         
-        let view = pickerView.view(forRow: row, forComponent: component) as? OverlayView
-        let attributeString = NSAttributedString.create(withText: self.items[row],
-                                                        fontStyle: .header2,
-                                                        color: ColorPalette.color(withType: .secondaryText))
-        view?.label.attributedText = attributeString
-        view?.label.layer.backgroundColor = ColorPalette.color(withType: .primary).cgColor
         let selectedItem = self.items[row]
         if selectedItem == self.surveyQuestion.minimumDisplay {
             self.delegate?.answerDidChange(self.surveyQuestion, answer: Constants.Survey.NumericTypeMinValue)
