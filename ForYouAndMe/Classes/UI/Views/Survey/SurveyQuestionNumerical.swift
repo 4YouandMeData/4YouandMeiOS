@@ -95,36 +95,4 @@ class SurveyQuestionNumerical: UIView, UIPickerViewDelegate, UIPickerViewDataSou
             self.delegate?.answerDidChange(self.surveyQuestion, answer: selectedItem)
         }
     }
-    
-    func pickerView(_ pickerView: UIPickerView, viewForRow row: Int, forComponent component: Int, reusing view: UIView?) -> UIView {
-        pickerView.subviews[1].isHidden = true
-        
-        let attributeString = NSAttributedString.create(withText: self.items[row],
-                                                        fontStyle: .header2,
-                                                        color: ColorPalette.color(withType: .primaryText))
-        
-        let currentView = (view as? OverlayView) ?? OverlayView(withTitle: attributeString)
-        currentView.label.layer.backgroundColor = UIColor.clear.cgColor
-        currentView.label.attributedText = attributeString
-        return currentView
-    }
-}
-
-class OverlayView: UIView {
-    
-    var label: UILabel = UILabel()
-
-    init(withTitle attributedString: NSAttributedString) {
-        super.init(frame: .zero)
-        self.label.attributedText = attributedString
-        self.addSubview(self.label)
-        self.label.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets(top: 0, left: 10, bottom: 0, right: 10))
-        self.label.autoCenterInSuperview()
-        self.label.layer.cornerRadius = 24
-        self.label.layer.masksToBounds = true
-    }
-    
-    required init?(coder aDecoder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
 }
