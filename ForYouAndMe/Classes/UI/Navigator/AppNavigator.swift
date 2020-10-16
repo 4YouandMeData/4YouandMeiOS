@@ -17,6 +17,7 @@ class AppNavigator {
     private let analytics: AnalyticsService
     private let window: UIWindow
     
+    private var setupCompleted = false
     private var currentCoordinator: Any?
     private var currentActivityCoordinator: ActivitySectionCoordinator?
     
@@ -65,6 +66,7 @@ class AppNavigator {
         }
         #endif
         
+        self.setupCompleted = true
         if self.repository.isLoggedIn {
             var onboardingCompleted = self.repository.currentUser?.isOnboardingCompleted ?? false
             #if DEBUG
@@ -588,13 +590,19 @@ class AppNavigator {
     // MARK: - Deeplink
     
     func handleDeeplinkToTask() {
-        print("Open Deeplinked Task")
-        // TODO: Open Deeplinked  Task
+        if self.setupCompleted &&
+            self.repository.isLoggedIn &&
+            self.repository.currentUser?.isOnboardingCompleted ?? false {
+            self.goHome()
+        }
     }
     
     func handleDeeplinkToUrl() {
-        print("Open Deeplinked Url")
-        // TODO: Open Deeplinked  Url
+        if self.setupCompleted &&
+            self.repository.isLoggedIn &&
+            self.repository.currentUser?.isOnboardingCompleted ?? false {
+            self.goHome()
+        }
     }
     
     // MARK: Study Info
