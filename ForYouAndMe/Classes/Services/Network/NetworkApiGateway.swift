@@ -317,6 +317,8 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         // Task
         case .getTasks:
             return "v1/tasks"
+        case .getTask(let taskId):
+            return "v1/task/\(taskId)"
         case .sendTaskResultData(let taskId, _):
             return "v1/tasks/\(taskId)"
         case .sendTaskResultFile(let taskId, _):
@@ -358,6 +360,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
              .getStudyInfoSection,
              .getFeeds,
              .getTasks,
+             .getTask,
              .getSurvey,
              .getUser,
              .getUserData,
@@ -417,6 +420,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         case .sendAnswer: return "{}".utf8Encoded
         // Task
         case .getFeeds, .getTasks: return Bundle.getTestData(from: "TestGetTasks")
+        case .getTask: return Bundle.getTestData(from: "TaskGetTask")
         case .sendTaskResultData: return "{}".utf8Encoded
         case .sendTaskResultFile: return "{}".utf8Encoded
         case .delayTask: return "{}".utf8Encoded
@@ -446,6 +450,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
              .getIntegrationSection,
              .getFeeds,
              .getTasks,
+             .getTask,
              .getSurvey,
              .getUser,
              .getUserData,
@@ -562,6 +567,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
              .sendAnswer,
              .getFeeds,
              .getTasks,
+             .getTask,
              .sendTaskResultData,
              .sendTaskResultFile,
              .getUser,

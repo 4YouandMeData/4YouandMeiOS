@@ -48,6 +48,7 @@ enum DefaultService {
     case getFeeds
     // Task
     case getTasks
+    case getTask(taskId: String)
     case sendTaskResultData(taskId: String, resultData: TaskNetworkResultData)
     case sendTaskResultFile(taskId: String, resultFile: TaskNetworkResultFile)
     case delayTask(taskId: String)

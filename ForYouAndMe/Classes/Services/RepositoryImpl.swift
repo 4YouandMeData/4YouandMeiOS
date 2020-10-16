@@ -230,6 +230,11 @@ extension RepositoryImpl: Repository {
             .handleError()
     }
     
+    func getTask(taskId: String) -> Single<Feed> {
+        return self.api.send(request: ApiRequest(serviceRequest: .getTasks))
+            .handleError()
+    }
+    
     func sendQuickActivityResult(quickActivityTaskId: String, quickActivityOption: QuickActivityOption) -> Single<()> {
         let resultData = quickActivityOption.networkResultData.data
         return self.api.send(request: ApiRequest(serviceRequest: .sendTaskResultData(taskId: quickActivityTaskId,

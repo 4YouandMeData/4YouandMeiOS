@@ -58,6 +58,7 @@ protocol Repository: class {
     // Tasks
     func getFeeds() -> Single<[Feed]>
     func getTasks() -> Single<[Feed]>
+    func getTask(taskId: String) -> Single<Feed>
     func sendQuickActivityResult(quickActivityTaskId: String, quickActivityOption: QuickActivityOption) -> Single<()>
     func sendTaskResult(taskId: String, taskResult: TaskNetworkResult) -> Single<()>
     func delayTask(taskId: String) -> Single<()>
