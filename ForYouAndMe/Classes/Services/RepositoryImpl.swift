@@ -231,7 +231,7 @@ extension RepositoryImpl: Repository {
     }
     
     func getTask(taskId: String) -> Single<Feed> {
-        return self.api.send(request: ApiRequest(serviceRequest: .getTasks))
+        return self.api.send(request: ApiRequest(serviceRequest: .getTask(taskId: taskId)))
             .handleError()
     }
     

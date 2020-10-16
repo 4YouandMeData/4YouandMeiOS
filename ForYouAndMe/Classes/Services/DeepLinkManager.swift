@@ -57,7 +57,7 @@ class DeeplinkManager: NSObject, DeeplinkService {
     // MARK: - Private Methods
     
     private func handleReceivedDeeplinkedTaskId(taskId: String) {
-        print("DeeplinkManager - handleReceivedDeeplinkedURL for task id: '\(taskId)'")
+        print("DeeplinkManager - handleReceivedDeeplinkedTask for task id: '\(taskId)'")
         self.deeplinkedTaskData = DeeplinkedTaskData(taskId: taskId,
                                                      expirationDate: Date(timeIntervalSinceNow: (type(of: self)).ExpirationTime))
         self.navigator.handleDeeplinkToTask()

@@ -31,6 +31,27 @@ extension UIViewController {
         self.navigationItem.rightBarButtonItem = buttonItem
     }
     
+    func handleDeeplinks(deeplinkService: DeeplinkService,
+                         navigator: AppNavigator,
+                         repository: Repository,
+                         disposeBag: DisposeBag) {
+        if let taskId = deeplinkService.getDeeplinkedTaskId() {
+            repository.getTask(taskId: taskId)
+                .subscribe(onSuccess: { feed in
+                    navigator.startFeedFlow(withFeed: feed, presenter: self)
+                    deeplinkService.clearDeeplinkedTaskData()
+                }, onError: { error in
+                    print("\(Self.self) - Could not get task for deeplink. Error: \(error)")
+                    deeplinkService.clearDeeplinkedTaskData()
+                }).disposed(by: disposeBag)
+        } else if let url = deeplinkService.getDeeplinkedUrl() {
+            navigator.openUrlOnBrowser(url, presenter: self)
+            deeplinkService.clearDeeplinkedUrlData()
+        }
+    }
+    
+    // MARK: - actions
+    
     @objc private func onboardingAbortPressed() {
         Services.shared.navigator.abortOnboardingWithWarning(presenter: self)
     }

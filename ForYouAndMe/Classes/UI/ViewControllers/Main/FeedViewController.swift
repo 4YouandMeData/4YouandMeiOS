@@ -90,9 +90,7 @@ class FeedViewController: UIViewController {
         self.analytics.track(event: .recordScreen(screenName: AnalyticsScreens.feed.rawValue,
                                                   screenClass: String(describing: type(of: self))))
         
-        self.listManager.refreshItems(onCompletion: {
-            self.resolveDeeplink()
-        })
+        self.listManager.viewWillAppear()
     }
     
     override func viewDidLayoutSubviews() {
@@ -122,58 +120,6 @@ class FeedViewController: UIViewController {
                 print("FeedViewController - Error refreshing user: \(error.localizedDescription)")
             }).disposed(by: self.disposeBag)
     }
-    
-    private func resolveDeeplink() {
-        if let taskId = self.deeplinkService.getDeeplinkedTaskId() {
-            self.navigator.pushProgressHUD()
-            self.repository.getTask(taskId: taskId)
-                .subscribe(onSuccess: { task in
-                    DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + .milliseconds(100)) { [weak self] in
-                        guard let self = self else { return }
-                        self.navigator.popProgressHUD()
-                        switch task.schedulable {
-                        case .quickActivity:
-                            assertionFailure("Unexpected quick activity as schedulable type")
-                        case .activity(let activity):
-                            guard let taskType = activity.taskType else { return }
-                            self.navigator.startTaskSection(taskIdentifier: activity.id,
-                                                            taskType: taskType,
-                                                            taskOptions: nil,
-                                                            presenter: self)
-                        case .survey(survey: let survey):
-                            self.repository.getSurvey(surveyId: survey.id)
-                                .subscribe(onSuccess: { [weak self] surveyGroup in
-                                    guard let self = self else { return }
-                                    self.navigator.popProgressHUD()
-                                    self.navigator.startSurveySection(withTaskIdentfier: survey.id,
-                                                                      surveyGroup: surveyGroup,
-                                                                      presenter: self)
-                                }, onError: { [weak self] error in
-                                    guard let self = self else { return }
-                                    self.navigator.popProgressHUD()
-                                    self.navigator.handleError(error: error, presenter: self)
-                                }).disposed(by: self.disposeBag)
-                        case .none: break
-                        }
-                        self.deeplinkService.clearDeeplinkedTaskData()
-                    }
-                }, onError: { [weak self] error in
-                    guard let self = self else { return }
-                    print("Error while retrieving deeplinked book. Error:\(error.localizedDescription)")
-                    self.navigator.popProgressHUD()
-                    self.deeplinkService.clearDeeplinkedTaskData()
-                })
-                .disposed(by: self.disposeBag)
-        } else if let url = self.deeplinkService.getDeeplinkedUrl() {
-            self.navigator.pushProgressHUD()
-            DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + .milliseconds(100)) { [weak self] in
-                guard let self = self else { return }
-                self.navigator.popProgressHUD()
-                self.navigator.openExternalUrl(url)
-            }
-            self.deeplinkService.clearDeeplinkedTaskData()
-        }
-    }
 }
 
 extension FeedViewController: FeedListManagerDelegate {
@@ -190,5 +136,9 @@ extension FeedViewController: FeedListManagerDelegate {
     
     func onListRefresh() {
         self.refreshUser()
+        self.handleDeeplinks(deeplinkService: self.deeplinkService,
+                             navigator: self.navigator,
+                             repository: self.repository,
+                             disposeBag: self.disposeBag)
     }
 }

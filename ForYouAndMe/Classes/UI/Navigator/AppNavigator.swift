@@ -8,18 +8,29 @@
 
 import UIKit
 import SVProgressHUD
+import RxSwift
+import SafariServices
 
 class AppNavigator {
     
     private var progressHudCount = 0
     
+    private var setupCompleted = false
+    private var currentCoordinator: Any?
+    private var currentActivityCoordinator: ActivitySectionCoordinator?
+    
+    private var isTaskInProgress: Bool {
+        return false
+        // TODO: Fix this! currentActivityCoordinator is not always release due to some
+        // shared close buttons that dismiss the task without clearing this variable
+//        return nil != self.currentActivityCoordinator
+    }
+    
     private let repository: Repository
     private let analytics: AnalyticsService
     private let window: UIWindow
     
-    private var setupCompleted = false
-    private var currentCoordinator: Any?
-    private var currentActivityCoordinator: ActivitySectionCoordinator?
+    private let disposeBag = DisposeBag()
     
     init(withRepository repository: Repository, analytics: AnalyticsService, window: UIWindow) {
         self.repository = repository
@@ -406,6 +417,50 @@ class AppNavigator {
     
     // MARK: Task
     
+    public func startFeedFlow(withFeed feed: Feed, presenter: UIViewController) {
+        if let schedulable = feed.schedulable {
+            switch schedulable {
+            case .quickActivity:
+                print("AppNavigator - No section should be started for the quick activities")
+            case .activity(let activity):
+                guard let taskType = activity.taskType else {
+                    assertionFailure("Missing task type for the current Activity")
+                    break
+                }
+                self.startTaskSection(taskIdentifier: feed.id,
+                                      taskType: taskType,
+                                      taskOptions: nil,
+                                      presenter: presenter)
+            case .survey(let survey):
+                self.pushProgressHUD()
+                self.repository.getSurvey(surveyId: survey.id)
+                    .subscribe(onSuccess: { [weak self] surveyGroup in
+                        guard let self = self else { return }
+                        self.popProgressHUD()
+                        self.startSurveySection(withTaskIdentfier: feed.id,
+                                                surveyGroup: surveyGroup,
+                                                presenter: presenter)
+                    }, onError: { [weak self] error in
+                        guard let self = self else { return }
+                        self.popProgressHUD()
+                        self.handleError(error: error, presenter: presenter)
+                    }).disposed(by: self.disposeBag)
+            }
+        } else if let notifiable = feed.notifiable {
+            let urlString: String? = {
+                switch notifiable {
+                case .educational(let educational): return educational.urlString
+                case .alert(let alert): return alert.urlString
+                case .rewards(let rewards): return rewards.urlString
+                }
+            }()
+            self.handleNotifiableTile(notifiableUrl: urlString,
+                                      presenter: presenter)
+        } else {
+            assertionFailure("Unhandle Type")
+        }
+    }
+    
     public func startTaskSection(taskIdentifier: String, taskType: TaskType, taskOptions: TaskOptions?, presenter: UIViewController) {
         let completionCallback: NotificationCallback = { [weak self] in
             guard let self = self else { return }
@@ -468,10 +523,6 @@ class AppNavigator {
     }
     
     public func handleNotifiableTile(notifiableUrl: String?, presenter: UIViewController) {
-        let completionCallback: NotificationCallback = { [weak self] in
-            guard let self = self else { return }
-            presenter.dismiss(animated: true, completion: nil)
-        }
         guard let string = notifiableUrl, let url = URL(string: string) else { return }
         self.openWebView(withTitle: "", url: url, presenter: presenter)
     }
@@ -545,6 +596,13 @@ class AppNavigator {
         UIApplication.shared.open(url)
     }
     
+    public func openUrlOnBrowser(_ url: URL, presenter: UIViewController) {
+        let viewController = SFSafariViewController(url: url)
+        viewController.preferredControlTintColor = ColorPalette.color(withType: .primaryText)
+        viewController.preferredBarTintColor = ColorPalette.color(withType: .secondary)
+        presenter.present(viewController, animated: true, completion: nil)
+    }
+    
     public func openWebView(withTitle title: String, url: URL, presenter: UIViewController) {
         let webViewViewController = WebViewViewController(withTitle: title, allowNavigation: true, url: url)
         let navigationViewController = UINavigationController(rootViewController: webViewViewController)
@@ -590,17 +648,19 @@ class AppNavigator {
     // MARK: - Deeplink
     
     func handleDeeplinkToTask() {
-        if self.setupCompleted &&
-            self.repository.isLoggedIn &&
-            self.repository.currentUser?.isOnboardingCompleted ?? false {
+        if self.setupCompleted,
+           self.repository.isLoggedIn,
+           self.repository.currentUser?.isOnboardingCompleted ?? false,
+           self.isTaskInProgress == false {
             self.goHome()
         }
     }
     
     func handleDeeplinkToUrl() {
-        if self.setupCompleted &&
-            self.repository.isLoggedIn &&
-            self.repository.currentUser?.isOnboardingCompleted ?? false {
+        if self.setupCompleted,
+           self.repository.isLoggedIn,
+           self.repository.currentUser?.isOnboardingCompleted ?? false,
+           self.isTaskInProgress == false {
             self.goHome()
         }
     }

@@ -318,7 +318,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         case .getTasks:
             return "v1/tasks"
         case .getTask(let taskId):
-            return "v1/task/\(taskId)"
+            return "v1/tasks/\(taskId)"
         case .sendTaskResultData(let taskId, _):
             return "v1/tasks/\(taskId)"
         case .sendTaskResultFile(let taskId, _):
