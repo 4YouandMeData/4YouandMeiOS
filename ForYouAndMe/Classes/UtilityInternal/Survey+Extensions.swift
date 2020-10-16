@@ -48,7 +48,6 @@ extension SurveyResult {
             guard let value = self.answer as? Int else { return false }
             if let minimum = self.question.minimum, value < minimum { return false }
             if let maximum = self.question.maximum, value > maximum { return false }
-            if let interval = self.question.interval, value % interval != 0 { return false }
             return true
         case .range:
             guard let value = self.answer as? Int else { return false }
@@ -93,7 +92,7 @@ extension SurveyQuestion {
         case .numerical:
             guard let minimum = self.minimum,
                   let maximum = self.maximum,
-                  minimum <= maximum else {
+                  minimum < maximum else {
                 return false
             }
         case .pickOne:
@@ -105,22 +104,23 @@ extension SurveyQuestion {
         case .dateInput:
             guard let minimumDate = self.minimumDate,
                   let maximumDate = self.maximumDate,
-                  minimumDate <= maximumDate else {
+                  minimumDate < maximumDate else {
                 return false
             }
         case .scale:
             guard let minimum = self.minimum,
                   let maximum = self.maximum,
-                  minimum <= maximum else {
+                  minimum < maximum else {
                 return false
             }
-            if let interval = self.interval, interval <= 0 {
+            let interval = self.interval ?? Constants.Survey.ScaleTypeDefaultInterval
+            guard interval > 0, minimum + interval <= maximum else {
                 return false
             }
         case .range:
             guard let minimum = self.minimum,
                   let maximum = self.maximum,
-                  minimum <= maximum else {
+                  minimum < maximum else {
                 return false
             }
         }

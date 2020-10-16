@@ -113,6 +113,7 @@ nunc, blandit sit amet lorem a, scelerisque eleifend odio. In euismod nunc tinci
         static let TargetQuit: String = "exit"
         static let NumericTypeMinValue: String = "min_display"
         static let NumericTypeMaxValue: String = "max_display"
+        static let ScaleTypeDefaultInterval: Int = 1
     }
     
     struct UserInfo {

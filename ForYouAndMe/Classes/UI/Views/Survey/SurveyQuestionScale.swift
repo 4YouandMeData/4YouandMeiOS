@@ -9,7 +9,6 @@ class SurveyQuestionScale: UIView {
     
     // Temporary workaround to avoid UILabels crowding
     private static let maxNumberOfLabels: Int = 20
-    private static let defaultInterval: Int = 1
     
     private var values: [Int] = []
     private var surveyQuestion: SurveyQuestion
@@ -34,7 +33,7 @@ class SurveyQuestionScale: UIView {
               let maximum = surveyQuestion.maximum else {
             fatalError("Minimum, Maximum are required in Scale question")
         }
-        let interval = surveyQuestion.interval ?? Self.defaultInterval
+        let interval = surveyQuestion.interval ?? Constants.Survey.ScaleTypeDefaultInterval
         self.delegate = delegate
         self.surveyQuestion = surveyQuestion
         super.init(frame: .zero)
