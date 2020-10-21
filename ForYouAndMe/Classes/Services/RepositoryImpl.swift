@@ -106,10 +106,6 @@ extension RepositoryImpl: Repository {
         return self.api.send(request: ApiRequest(serviceRequest: .verifyPhoneNumber(phoneNumber: phoneNumber,
                                                                                     validationCode: validationCode)))
             .handleError()
-            .do(onSuccess: { (user: User) in
-                print("Current user: \(user)")
-                self.storage.user = user
-            })
             .catchError({ (error)-> Single<(User)> in
                 enum ErrorCode: Int, CaseIterable { case wrongValidationCode = 401 }
                 if let errorCodeNumber = error.getFirstServerError(forExpectedStatusCodes: ErrorCode.allCases.map { $0.rawValue }),
@@ -121,6 +117,9 @@ extension RepositoryImpl: Repository {
                     return Single.error(error)
                 }
             })
+            .flatMap { user in self.updateUserTimeZoneIfNeeded(user: user) }
+            .map { self.handleUserInfo($0) }
+            .do(onSuccess: { self.saveUser($0) })
     }
     
     // MARK: - Screening
@@ -313,6 +312,9 @@ extension RepositoryImpl: Repository {
            currentTimeZoneAbbreviation != user.timeZone?.abbreviation() {
             return self.api.send(request: ApiRequest(serviceRequest: .sendUserTimeZone(timeZoneAbbreviation: currentTimeZoneAbbreviation)))
                 .handleError()
+                // Update Time zone is ignored, not blocking operation
+                .do(onError: { error in print("Repository - error updateUserTimeZoneIfNeeded: \(error.localizedDescription)") })
+                .catchErrorJustReturn(user)
         } else {
             return Single.just(user)
         }
