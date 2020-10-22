@@ -1295,7 +1295,7 @@
 		701DBDD23716644F455B3D6355D80F8F /* ORKStepViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = FFC25B11226F0A271E9353F6DE1B7372 /* ORKStepViewController.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
 		70225F0889D2E2D72EF9E2F308B64ECE /* ORKCollector.m in Sources */ = {isa = PBXBuildFile; fileRef = 7D18F2304B74E453A0ACFEC465F7EB01 /* ORKCollector.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
 		70355D81A4065F82758BBF5DACC72A13 /* GDTCORDirectorySizeTracker.h in Headers */ = {isa = PBXBuildFile; fileRef = 20BFC57CA154F16F98609E1AC281B296 /* GDTCORDirectorySizeTracker.h */; settings = {ATTRIBUTES = (Project, ); }; };
-		7037C0075E5FA7C951D6CF4C3B1A55A1 /* Rewards.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4B22B803D220D427DF7205176E929E5 /* Rewards.swift */; };
+		7037C0075E5FA7C951D6CF4C3B1A55A1 /* Reward.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4B22B803D220D427DF7205176E929E5 /* Reward.swift */; };
 		704415F18331DCBBFDE5EB685282C5DD /* HKSample+ORKJSONDictionary.m in Sources */ = {isa = PBXBuildFile; fileRef = 897B760A007DE19B3CB539EDC77224EF /* HKSample+ORKJSONDictionary.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
 		708221022A686B455E7D2A0D5AF1721B /* HaveValidSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8716B271FBF2FEC741D173E77039408D /* HaveValidSnapshot.swift */; };
 		709152D66394DCE1D7D3802C65090118 /* IBarLineScatterCandleBubbleChartDataSet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DC138D4A080F5C0DD8648A6D1570098 /* IBarLineScatterCandleBubbleChartDataSet.swift */; };
@@ -6448,7 +6448,7 @@
 		F47D57631DBE8A6AB8BFD5D70FFF7757 /* FirebaseCrashlytics-umbrella.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = "FirebaseCrashlytics-umbrella.h"; sourceTree = "<group>"; };
 		F49047BB786811685024C747A7B2F3CA /* FIRCurrentDateProvider.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = FIRCurrentDateProvider.m; path = FirebaseInstallations/Source/Library/InstallationsIDController/FIRCurrentDateProvider.m; sourceTree = "<group>"; };
 		F4A3B004CD2B24FB08A3EF59B26903BB /* fr_CA.lproj */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = folder; name = fr_CA.lproj; path = ResearchKit/Localized/fr_CA.lproj; sourceTree = "<group>"; };
-		F4B22B803D220D427DF7205176E929E5 /* Rewards.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Rewards.swift; sourceTree = "<group>"; };
+		F4B22B803D220D427DF7205176E929E5 /* Reward.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Reward.swift; sourceTree = "<group>"; };
 		F4C9DA52E80FFF0D1D34E177D1C88400 /* GenericCheckboxView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = GenericCheckboxView.swift; sourceTree = "<group>"; };
 		F4CAC863875641866C9CA8526EF2A761 /* ORKMotionActivityQueryOperation.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = ORKMotionActivityQueryOperation.h; path = ResearchKit/Common/ORKMotionActivityQueryOperation.h; sourceTree = "<group>"; };
 		F4E9984A767E86D5212D007D45660225 /* ORKTitleLabel.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = ORKTitleLabel.h; path = ResearchKit/Common/ORKTitleLabel.h; sourceTree = "<group>"; };
@@ -7454,7 +7454,7 @@
 				E937F97409215B2E6D6366285A473434 /* Question.swift */,
 				3B30D0BE779A1EF41554170206641CB6 /* QuickActivity.swift */,
 				55623C9361E033EFB9EA733ECB82C950 /* QuickActivityOption.swift */,
-				F4B22B803D220D427DF7205176E929E5 /* Rewards.swift */,
+				F4B22B803D220D427DF7205176E929E5 /* Reward.swift */,
 				9F57C8F2E68FF6E14671AE73CEEAF4FC /* User.swift */,
 				0A1206094014643842B082E352883C6B /* UserData.swift */,
 				CD95E4BE4553EEC5986026887BF64976 /* UserDataAggregation.swift */,
@@ -15145,7 +15145,7 @@
 				C043C68189FDADE99654B8ABDF89E707 /* ResponseError+Mappable.swift in Sources */,
 				1B21D2960D375E41DAD406B58D19E0FA /* ResponseError.swift in Sources */,
 				3AA7F61BEE9D13BE73D69AA60319E597 /* ReusableIdentifier.swift in Sources */,
-				7037C0075E5FA7C951D6CF4C3B1A55A1 /* Rewards.swift in Sources */,
+				7037C0075E5FA7C951D6CF4C3B1A55A1 /* Reward.swift in Sources */,
 				F9EE08863D7F0EB81B2F17620DD4A45A /* ScreeningSection.swift in Sources */,
 				8DFC0171F2FF159124D040BCDE76729B /* ScreeningSectionCoordinator.swift in Sources */,
 				F570E27E71F52107C3F2DF35169676F6 /* ScrollStackView.swift in Sources */,

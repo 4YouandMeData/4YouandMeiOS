@@ -307,11 +307,11 @@ extension FeedListManager: UITableViewDataSource {
                         self.navigator.handleNotifiableTile(notifiableUrl: notifiableUrl,
                                                             presenter: delegate.presenter)
                     })
-                case .rewards(let rewards):
-                    cell.display(data: rewards, buttonPressedCallback: { [weak self] in
+                case .reward(let reward):
+                    cell.display(data: reward, buttonPressedCallback: { [weak self] in
                         guard let self = self else { return }
                         guard let delegate = self.delegate else { return }
-                        guard let notifiableUrl = rewards.urlString else { return }
+                        guard let notifiableUrl = reward.urlString else { return }
                         self.navigator.handleNotifiableTile(notifiableUrl: notifiableUrl,
                                                             presenter: delegate.presenter)
                     })

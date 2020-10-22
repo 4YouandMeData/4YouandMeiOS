@@ -135,11 +135,11 @@ class FeedTableViewCell: UITableViewCell {
         self.setFeedDescription(text: data.body)
         
         if nil != data.urlString {
-            let buttonText = data.buttonText ?? StringsProvider.string(forKey: .activityButtonDefault)
+            let buttonText = data.buttonText ?? StringsProvider.string(forKey: .educationalButtonDefault)
             self.buttonView.isHidden = false
             self.buttonView.setButtonText(buttonText)
         } else {
-            assert(data.buttonText == nil, "Existing button text for activity without activity type")
+            assert(data.buttonText == nil, "Existing button text for notifiable without urlString")
             self.buttonView.isHidden = true
         }
     }
@@ -156,16 +156,16 @@ class FeedTableViewCell: UITableViewCell {
         self.setFeedDescription(text: data.body)
         
         if nil != data.urlString {
-            let buttonText = data.buttonText ?? StringsProvider.string(forKey: .activityButtonDefault)
+            let buttonText = data.buttonText ?? StringsProvider.string(forKey: .alertButtonDefault)
             self.buttonView.isHidden = false
             self.buttonView.setButtonText(buttonText)
         } else {
-            assert(data.buttonText == nil, "Existing button text for activity without activity type")
+            assert(data.buttonText == nil, "Existing button text for notifiable without urlString")
             self.buttonView.isHidden = true
         }
     }
     
-    public func display(data: Rewards, buttonPressedCallback: @escaping NotificationCallback) {
+    public func display(data: Reward, buttonPressedCallback: @escaping NotificationCallback) {
         self.buttonPressedCallback = buttonPressedCallback
 //        self.gradientView.updateParameters(colors: [data.startColor ?? ColorPalette.color(withType: .primary),
 //                                                    data.endColor ?? ColorPalette.color(withType: .gradientPrimaryEnd)])
@@ -177,11 +177,11 @@ class FeedTableViewCell: UITableViewCell {
         self.setFeedDescription(text: data.body)
         
         if nil != data.urlString {
-            let buttonText = data.buttonText ?? StringsProvider.string(forKey: .activityButtonDefault)
+            let buttonText = data.buttonText ?? StringsProvider.string(forKey: .rewardButtonDefault)
             self.buttonView.isHidden = false
             self.buttonView.setButtonText(buttonText)
         } else {
-            assert(data.buttonText == nil, "Existing button text for activity without activity type")
+            assert(data.buttonText == nil, "Existing button text for notifiable without urlString")
             self.buttonView.isHidden = true
         }
     }

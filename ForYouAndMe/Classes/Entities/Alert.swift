@@ -38,6 +38,7 @@ extension Alert: JSONAPIMappable {
         case body = "description"
         case image
         case buttonText = "task_action_button_label"
+        case urlString = "link_url"
         case startColor = "start_color"
         case endColor = "end_color"
         case cardColor = "card_color"

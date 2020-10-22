@@ -475,7 +475,7 @@ class AppNavigator {
                 switch notifiable {
                 case .educational(let educational): return educational.urlString
                 case .alert(let alert): return alert.urlString
-                case .rewards(let rewards): return rewards.urlString
+                case .reward(let reward): return reward.urlString
                 }
             }()
             guard let notifiableUrl = urlString else {

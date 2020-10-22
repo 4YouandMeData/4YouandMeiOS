@@ -24,13 +24,13 @@ enum Schedulable {
 enum Notifiable {
     case educational(educational: Educational)
     case alert(alert: Alert)
-    case rewards(rewards: Rewards)
+    case reward(reward: Reward)
     
     var notifiableType: String {
         switch self {
         case .educational: return "feed_educational"
         case .alert: return "feed_alert"
-        case .rewards: return "feed_reward"
+        case .reward: return "feed_reward"
         }
     }
 }
@@ -113,9 +113,9 @@ struct NotifiableDecode: Decodable {
         } else if let alert = try? container.decode(Alert.self),
                   Notifiable.alert(alert: alert).notifiableType == alert.type {
             self.wrappedValue = .alert(alert: alert)
-        } else if let rewards = try? container.decode(Rewards.self),
-                  Notifiable.rewards(rewards: rewards).notifiableType == rewards.type {
-            self.wrappedValue = .rewards(rewards: rewards)
+        } else if let reward = try? container.decode(Reward.self),
+                  Notifiable.reward(reward: reward).notifiableType == reward.type {
+            self.wrappedValue = .reward(reward: reward)
         } else {
             self.wrappedValue = nil
         }
