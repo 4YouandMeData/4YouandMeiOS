@@ -25,6 +25,7 @@ enum InternalDeeplinkKey: String {
 class AppNavigator {
     
     enum MainTab: Int, CaseIterable { case feed = 0, task = 1, userData = 2, studyInfo = 3 }
+    enum StudyInfoPage { case faq, reward, contacts }
     
     static let defaultStartingTab: MainTab = .feed
     
@@ -692,18 +693,20 @@ class AppNavigator {
     // MARK: - Study Info
     
     public func showInfoDetailPage(presenter: UIViewController, page: Page, isModal: Bool) {
-        guard let navController = presenter.navigationController else {
-            assertionFailure("Missing UINavigationController")
-            return
-        }
-        
         let pageData = InfoDetailPageData(page: page, isModal: isModal)
-        let pageViewController = InfoDetailPageViewController(withPageData: pageData)
+        let viewController = InfoDetailPageViewController(withPageData: pageData)
         if isModal {
-            presenter.modalPresentationStyle = .fullScreen
+            let navigationController = UINavigationController(rootViewController: viewController)
+            navigationController.modalPresentationStyle = .fullScreen
+            presenter.present(navigationController, animated: true, completion: nil)
+        } else {
+            guard let navController = presenter.navigationController else {
+                assertionFailure("Missing UINavigationController")
+                return
+            }
+            viewController.hidesBottomBarWhenPushed = true
+            navController.pushViewController(viewController, animated: true)
         }
-        pageViewController.hidesBottomBarWhenPushed = true
-        navController.pushViewController(pageViewController, animated: true)
     }
     
     // MARK: - Internal deeplink
@@ -715,15 +718,9 @@ class AppNavigator {
         case .userData: self.goToMainTab(tab: .userData, presenter: presenter)
         case .studyInfo: self.goToMainTab(tab: .studyInfo, presenter: presenter)
         case .aboutYou: self.showAboutYouPage(presenter: presenter)
-        case .faq:
-            // TODO: Show FAQ
-            print("AppNavigator - TODO: Show FAQ")
-        case .rewards:
-            // TODO: Show Rewards
-            print("AppNavigator - TODO: Show Rewards")
-        case .contacts:
-            // TODO: Show Contacts
-            print("AppNavigator - TODO: Show Contacts")
+        case .faq: self.openStudyInfoPage(studyInfoPage: .faq, presenter: presenter)
+        case .rewards: self.openStudyInfoPage(studyInfoPage: .reward, presenter: presenter)
+        case .contacts: self.openStudyInfoPage(studyInfoPage: .contacts, presenter: presenter)
         }
     }
     
@@ -733,6 +730,28 @@ class AppNavigator {
             return
         }
         tabBarController.selectedIndex = tab.rawValue
+    }
+    
+    private func openStudyInfoPage(studyInfoPage: StudyInfoPage, presenter: UIViewController) {
+        self.pushProgressHUD()
+        self.repository.getStudyInfoSection().subscribe(onSuccess: { [weak self] section in
+            guard let self = self else { return }
+            let page: Page? = {
+                switch studyInfoPage {
+                case .faq: return section.faqPage
+                case .reward: return section.rewardPage
+                case .contacts: return section.contactsPage
+                }
+            }()
+            
+            guard let unwrappedPage = page else { return }
+            self.showInfoDetailPage(presenter: presenter, page: unwrappedPage, isModal: true)
+            self.popProgressHUD()
+        }, onError: { [weak self] error in
+            guard let self = self else { return }
+            self.popProgressHUD()
+            self.handleError(error: error, presenter: presenter)
+        }).disposed(by: self.disposeBag)
     }
 }
 

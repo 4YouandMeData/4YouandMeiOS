@@ -56,10 +56,12 @@ class StudyInfoViewController: UIViewController {
         self.analytics.track(event: .recordScreen(screenName: AnalyticsScreens.studyInfo.rawValue,
                                                   screenClass: String(describing: type(of: self))))
         self.navigationController?.navigationBar.apply(style: NavigationBarStyleCategory.primary(hidden: true).style)
-        self.repository.getStudyInfoSection().subscribe(onSuccess: { infoSection in
+        self.repository.getStudyInfoSection().subscribe(onSuccess: { [weak self] infoSection in
+            guard let self = self else { return }
             self.studyInfoSection = infoSection
             self.refreshUI()
-        }, onError: { error in
+        }, onError: { [weak self] error in
+            guard let self = self else { return }
             print("StudyInfo View Controller - Error retrieve studyInfo page: \(error.localizedDescription)")
             self.refreshUI()
             self.navigator.handleError(error: error, presenter: self)

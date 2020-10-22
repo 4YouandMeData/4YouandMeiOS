@@ -121,10 +121,6 @@ class AboutYouViewController: UIViewController {
         self.navigationController?.navigationBar.apply(style: NavigationBarStyleCategory.primary(hidden: true).style)
     }
     
-    private func showPage(page: Page, isModal: Bool) {
-        self.navigator.showInfoDetailPage(presenter: self, page: page, isModal: isModal)
-    }
-    
     @objc private func closeButtonDidPressed() {
         self.customCloseButtonPressed()
     }
