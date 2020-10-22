@@ -43,13 +43,15 @@ class AppNavigator {
     
     private let repository: Repository
     private let analytics: AnalyticsService
+    private let deeplinkService: DeeplinkService
     private let window: UIWindow
     
     private let disposeBag = DisposeBag()
     
-    init(withRepository repository: Repository, analytics: AnalyticsService, window: UIWindow) {
+    init(withRepository repository: Repository, analytics: AnalyticsService, deeplinkService: DeeplinkService, window: UIWindow) {
         self.repository = repository
         self.analytics = analytics
+        self.deeplinkService = deeplinkService
         self.window = window
         
         // Needed to block user interaction!! :S
@@ -103,10 +105,12 @@ class AppNavigator {
             if onboardingCompleted {
                 self.goHome()
             } else {
+                self.deeplinkService.clearCurrentDeeplinkedData()
                 // If onboarding is not completed, log out (restart from the very beginning)
                 self.logOut()
             }
         } else {
+            self.deeplinkService.clearCurrentDeeplinkedData()
             self.goToWelcome()
         }
     }
@@ -348,15 +352,15 @@ class AppNavigator {
     }
     
     public func showIntegrationLogin(loginUrl: URL, navigationController: UINavigationController) {
-        let viewController = IntegrationLoginViewController(withTitle: "",
-                                                            url: loginUrl,
-                                                            allowBackwardNavigation: true,
-                                                            onLoginSuccessCallback: { _ in
-                                                                navigationController.popViewController(animated: true)
-                                                            },
-                                                            onLoginFailureCallback: { _ in
-                                                                navigationController.popViewController(animated: true)
-                                                            })
+        let viewController = ReactiveAuthWebViewController(withTitle: "",
+                                                           url: loginUrl,
+                                                           allowBackwardNavigation: true,
+                                                           onSuccessCallback: { _ in
+                                                            navigationController.popViewController(animated: true)
+                                                           },
+                                                           onFailureCallback: { _ in
+                                                            navigationController.popViewController(animated: true)
+                                                           })
         viewController.hidesBottomBarWhenPushed = true
         navigationController.pushViewController(viewController, animated: true)
     }
@@ -548,6 +552,8 @@ class AppNavigator {
     public func handleNotifiableTile(notifiableUrl: String, presenter: UIViewController) {
         if let internalDeeplinkKey = InternalDeeplinkKey(rawValue: notifiableUrl) {
             self.handleInternalDeeplink(withKey: internalDeeplinkKey, presenter: presenter)
+        } else if let integration = Integration(rawValue: notifiableUrl) {
+            self.openIntegrationApp(forIntegration: integration)
         } else if let url = URL(string: notifiableUrl) {
             self.openUrlOnBrowser(url, presenter: presenter)
         }
@@ -633,6 +639,14 @@ class AppNavigator {
         presenter.present(viewController, animated: true, completion: nil)
     }
     
+    public func openIntegrationApp(forIntegration intergration: Integration) {
+        if self.canOpenExternalUrl(intergration.appSchemaUrl) {
+            self.openExternalUrl(intergration.appSchemaUrl)
+        } else {
+            self.openExternalUrl(intergration.storeUrl)
+        }
+    }
+    
     public func openWebView(withTitle title: String, url: URL, presenter: UIViewController) {
         let webViewViewController = WebViewViewController(withTitle: title, allowNavigation: true, url: url)
         let navigationViewController = UINavigationController(rootViewController: webViewViewController)
@@ -672,26 +686,6 @@ class AppNavigator {
             return true
         } else {
             return false
-        }
-    }
-    
-    // MARK: - Deeplink
-    
-    public func handleDeeplinkToTask() {
-        if self.setupCompleted,
-           self.repository.isLoggedIn,
-           self.repository.currentUser?.isOnboardingCompleted ?? false,
-           self.isTaskInProgress == false {
-            self.goHome()
-        }
-    }
-    
-    public func handleDeeplinkToUrl() {
-        if self.setupCompleted,
-           self.repository.isLoggedIn,
-           self.repository.currentUser?.isOnboardingCompleted ?? false,
-           self.isTaskInProgress == false {
-            self.goHome()
         }
     }
     
@@ -739,6 +733,35 @@ class AppNavigator {
             return
         }
         tabBarController.selectedIndex = tab.rawValue
+    }
+}
+
+// MARK: - DeeplinkManagerDelegate
+
+extension AppNavigator: DeeplinkManagerDelegate {
+    func handleDeeplink(_ deeplink: Deeplink) -> Bool {
+        guard self.setupCompleted else {
+            // If App Setup is still in progress, the deeplink
+            // will be handled upon setup completion
+            return false
+        }
+        
+        guard self.repository.isLoggedIn, self.repository.currentUser?.isOnboardingCompleted ?? false else {
+            // Currently no deeplink are expected to do anything if user is logged out or
+            // has not completed the onboarding yet.
+            return true
+        }
+        
+        switch deeplink {
+        case .openTask, .openUrl:
+            if self.isTaskInProgress == false {
+                self.goHome()
+                return false
+            }
+        case .openIntegrationApp(let integration):
+            self.openIntegrationApp(forIntegration: integration)
+        }
+        return true
     }
 }
 

@@ -80,17 +80,17 @@ extension IntegrationSectionCoordinator: IntegrationPageCoordinator {
             assertionFailure("Missing expected external link url")
             return
         }
-        let viewController = IntegrationLoginViewController(withTitle: "",
-                                                         url: externalLinkUrl,
-                                                         allowBackwardNavigation: true,
-                                                         onLoginSuccessCallback: { loginViewController in
+        let viewController = ReactiveAuthWebViewController(withTitle: "",
+                                                           url: externalLinkUrl,
+                                                           allowBackwardNavigation: true,
+                                                           onSuccessCallback: { loginViewController in
                                                             loginViewController.dismiss(animated: true, completion: { [weak self] in
                                                                 self?.onPagePrimaryButtonPressed(page: page)
                                                             })
-        },
-                                                         onLoginFailureCallback: { loginViewController in
+                                                           },
+                                                           onFailureCallback: { loginViewController in
                                                             loginViewController.dismiss(animated: true, completion: nil)
-        })
+                                                           })
         let navigationViewController = UINavigationController(rootViewController: viewController)
         navigationViewController.preventPopWithSwipe()
         self.navigationController.present(navigationViewController, animated: true, completion: nil)
@@ -114,11 +114,7 @@ extension IntegrationSectionCoordinator: IntegrationPageCoordinator {
                 assertionFailure("Missing app for open behaviour")
                 return
             }
-            if self.navigator.canOpenExternalUrl(app.appSchemaUrl) {
-                self.navigator.openExternalUrl(app.appSchemaUrl)
-            } else {
-                self.navigator.openExternalUrl(app.storeUrl)
-            }
+            self.navigator.openIntegrationApp(forIntegration: app)
         }
     }
 }

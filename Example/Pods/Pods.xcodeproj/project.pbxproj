@@ -805,7 +805,7 @@
 		45C859C16432F39FA6A582FD646E38B7 /* FBLPromise+Always.h in Copy . Public Headers */ = {isa = PBXBuildFile; fileRef = 3BC41F4483141FBE09DC48CB1E4D8812 /* FBLPromise+Always.h */; };
 		45D1E124662D171A00A544330C1C6F72 /* ORKPieChartTitleTextView.m in Sources */ = {isa = PBXBuildFile; fileRef = 8467521964EF07B7F42D2D0E1082824D /* ORKPieChartTitleTextView.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
 		45DF1BBA30865D4440A8CC81B45EF4BE /* FIRCLSConstants.m in Sources */ = {isa = PBXBuildFile; fileRef = DF3086E35B6BDD04466114762EA3C886 /* FIRCLSConstants.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
-		45DFEE0152A41AFE271B7725FB07EFA6 /* IntegrationLoginViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09DB971265742DABC5E04CD8805CD523 /* IntegrationLoginViewController.swift */; };
+		45DFEE0152A41AFE271B7725FB07EFA6 /* ReactiveAuthWebViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09DB971265742DABC5E04CD8805CD523 /* ReactiveAuthWebViewController.swift */; };
 		45E6D8D6F4FFD22CB8CBACEC52DA1F83 /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6CEED8577FCD9C2D5107B9DE35CA548F /* Constants.swift */; };
 		45EC4BCB80D89D94BFBBE89B2378EE56 /* FeedViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06D2110F1A5E413C7043032AC8420BD3 /* FeedViewController.swift */; };
 		45F18D12B51FA11E57225D809836F25A /* Errors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B4013CFDA178300789DBC22C23A9BF6 /* Errors.swift */; };
@@ -1278,7 +1278,7 @@
 		6E6B2ACF850C0E58917EA6B7161A8FB0 /* FIRMessagingContextManagerService.h in Headers */ = {isa = PBXBuildFile; fileRef = E2DFA1670C12983498A7A1EEE643CF68 /* FIRMessagingContextManagerService.h */; settings = {ATTRIBUTES = (Project, ); }; };
 		6E9A893DB5E57526794F151B8DDD1F6E /* consent_05@2x.m4v in Resources */ = {isa = PBXBuildFile; fileRef = 64A1042E0C56BF186B59E564CFDFE44D /* consent_05@2x.m4v */; };
 		6ED3EABCBF5410B8F29F8DDCFF0B527D /* RecursiveLock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A9D7C534994309FF940E2AAD8D85D09 /* RecursiveLock.swift */; };
-		6ED9A0C1986E5989D1465D666521D55B /* DeepLinkService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 250A4852683C269F797BE2DE3543A010 /* DeepLinkService.swift */; };
+		6ED9A0C1986E5989D1465D666521D55B /* DeeplinkService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 250A4852683C269F797BE2DE3543A010 /* DeeplinkService.swift */; };
 		6EE05F213BDB225214B1BCE62C0D21C7 /* InvocableScheduledItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D4A885B94DDBCCDB1E48146CD64BEC0 /* InvocableScheduledItem.swift */; };
 		6F05C1011BD1F00F1FACC6C54C336953 /* ORKSeparatorView.h in Headers */ = {isa = PBXBuildFile; fileRef = 9CC6BEF7ED2A1349CDDE6E3AC2605687 /* ORKSeparatorView.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		6F0A0C18564EDF1422D2D36B97F039A2 /* mapMany.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B33447C14003CB92679EB0312789B0F /* mapMany.swift */; };
@@ -1681,7 +1681,7 @@
 		9400854C32DFF16FD068D280CD43176F /* AxisBase.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5730E40F09E06E2F2E36FC485C1F1C78 /* AxisBase.swift */; };
 		940B736213529F16F6D10376FEE4AF37 /* ORKHolePegTestRemoveStepViewController.h in Headers */ = {isa = PBXBuildFile; fileRef = D50F2825431386CC92A43605AAA8E347 /* ORKHolePegTestRemoveStepViewController.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		9432ED71C534DFABBF34BC953C5AE974 /* FIRCLSSymbolResolver.m in Sources */ = {isa = PBXBuildFile; fileRef = 60C3B8BF2557D1DBBA02A442DFE620C2 /* FIRCLSSymbolResolver.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
-		943CCF2500F6923F7CBB6917C229067A /* DeepLinkManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D2EDF12B543BB4BFB97E4D8453DC627 /* DeepLinkManager.swift */; };
+		943CCF2500F6923F7CBB6917C229067A /* DeeplinkManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D2EDF12B543BB4BFB97E4D8453DC627 /* DeeplinkManager.swift */; };
 		9484E06205F77E25CCD13ADB765EF6E5 /* ORKQuestionResult.m in Sources */ = {isa = PBXBuildFile; fileRef = 48B64F77AB47CF3BEECA60021EE20F7D /* ORKQuestionResult.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
 		94921CD3D3FBA3D6572678B1F59AA957 /* TransformerHorizontalBarChart.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6352640BBF9CBB05171BAC4AB981F3E9 /* TransformerHorizontalBarChart.swift */; };
 		94C361757CC795F310CA9CD489410335 /* crashlytics.nanopb.c in Sources */ = {isa = PBXBuildFile; fileRef = 335A6D1994DED71CED6DF349783F4A31 /* crashlytics.nanopb.c */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
@@ -3769,7 +3769,7 @@
 		098297167DDA859AE2E0551E9E6B04BD /* QuestionBooleanTableViewCell.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = QuestionBooleanTableViewCell.swift; sourceTree = "<group>"; };
 		0990FAE99BBAAF7E39FA62C69A6D0D55 /* FIRInstallationsSingleOperationPromiseCache.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = FIRInstallationsSingleOperationPromiseCache.h; path = FirebaseInstallations/Source/Library/InstallationsIDController/FIRInstallationsSingleOperationPromiseCache.h; sourceTree = "<group>"; };
 		09A089661F8D57BC34846FCBF4103E79 /* ORKdBHLToneAudiometryAudioGenerator.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = ORKdBHLToneAudiometryAudioGenerator.m; path = ResearchKit/ActiveTasks/ORKdBHLToneAudiometryAudioGenerator.m; sourceTree = "<group>"; };
-		09DB971265742DABC5E04CD8805CD523 /* IntegrationLoginViewController.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = IntegrationLoginViewController.swift; sourceTree = "<group>"; };
+		09DB971265742DABC5E04CD8805CD523 /* ReactiveAuthWebViewController.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ReactiveAuthWebViewController.swift; sourceTree = "<group>"; };
 		09F8DECC646E4CB1B2FBA397535D9D4F /* EndWith.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = EndWith.swift; path = Sources/Nimble/Matchers/EndWith.swift; sourceTree = "<group>"; };
 		0A0AFEF6BF9FC432412404DB8FFB97B0 /* FIRInteropParameterNames.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = FIRInteropParameterNames.h; path = Interop/Analytics/Public/FIRInteropParameterNames.h; sourceTree = "<group>"; };
 		0A1206094014643842B082E352883C6B /* UserData.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = UserData.swift; sourceTree = "<group>"; };
@@ -4078,7 +4078,7 @@
 		24D3830D4701BBD8C0811E7D8669403E /* Pods-ForYouAndMe_Tests-acknowledgements.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = "Pods-ForYouAndMe_Tests-acknowledgements.plist"; sourceTree = "<group>"; };
 		24D714E1CFB2EBC05A46BAAE3A18F991 /* IntroViewController.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = IntroViewController.swift; sourceTree = "<group>"; };
 		24F605475EE94843291813CB9F273D91 /* GtalkExtensions.pbobjc.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = GtalkExtensions.pbobjc.m; path = FirebaseMessaging/Sources/Protos/GtalkExtensions.pbobjc.m; sourceTree = "<group>"; };
-		250A4852683C269F797BE2DE3543A010 /* DeepLinkService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DeepLinkService.swift; sourceTree = "<group>"; };
+		250A4852683C269F797BE2DE3543A010 /* DeeplinkService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DeeplinkService.swift; sourceTree = "<group>"; };
 		2567693DF50FD06E62D9AF4D8AB0FD5A /* ORKSpatialSpanGameState.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = ORKSpatialSpanGameState.m; path = ResearchKit/ActiveTasks/ORKSpatialSpanGameState.m; sourceTree = "<group>"; };
 		25791711CA5C941BD471D8860A6CCE2E /* ParameterEncoder.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ParameterEncoder.swift; path = Source/ParameterEncoder.swift; sourceTree = "<group>"; };
 		259C238BCCB737BF75AA9492F66F2FB1 /* UIView+Constraints.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = "UIView+Constraints.swift"; sourceTree = "<group>"; };
@@ -4917,7 +4917,7 @@
 		6CEED8577FCD9C2D5107B9DE35CA548F /* Constants.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = Constants.swift; path = ForYouAndMe/Classes/Constants.swift; sourceTree = "<group>"; };
 		6D12A0599D9E66022CBB897927564912 /* GPBUnknownField.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = GPBUnknownField.h; path = objectivec/GPBUnknownField.h; sourceTree = "<group>"; };
 		6D2AFF487065BCB044A246B2B9E45FC4 /* PhoneNumberKit-dummy.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = "PhoneNumberKit-dummy.m"; sourceTree = "<group>"; };
-		6D2EDF12B543BB4BFB97E4D8453DC627 /* DeepLinkManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DeepLinkManager.swift; sourceTree = "<group>"; };
+		6D2EDF12B543BB4BFB97E4D8453DC627 /* DeeplinkManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DeeplinkManager.swift; sourceTree = "<group>"; };
 		6D5C8C16DA35BEC381AB57D22A6D82BB /* Platform.Linux.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = Platform.Linux.swift; path = Platform/Platform.Linux.swift; sourceTree = "<group>"; };
 		6D8DD52E5AD3E97D4F64338E6729CE1F /* ORKTouchAnywhereStepViewController.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = ORKTouchAnywhereStepViewController.h; path = ResearchKit/ActiveTasks/ORKTouchAnywhereStepViewController.h; sourceTree = "<group>"; };
 		6DA9480CB229E9BC0594F4DD3E76BCFB /* ORKFormStepViewController_Private.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = ORKFormStepViewController_Private.h; path = ResearchKit/Common/ORKFormStepViewController_Private.h; sourceTree = "<group>"; };
@@ -8649,8 +8649,8 @@
 		78F3D06713B2B2461DEE33209E3642B1 /* Services */ = {
 			isa = PBXGroup;
 			children = (
-				6D2EDF12B543BB4BFB97E4D8453DC627 /* DeepLinkManager.swift */,
-				250A4852683C269F797BE2DE3543A010 /* DeepLinkService.swift */,
+				6D2EDF12B543BB4BFB97E4D8453DC627 /* DeeplinkManager.swift */,
+				250A4852683C269F797BE2DE3543A010 /* DeeplinkService.swift */,
 				AAA23E726CA12848D12DAFC802DFD1C2 /* NotificationManager.swift */,
 				61F105915E5A617D58EA60F1C5EE371B /* NotificationService.swift */,
 				96B73D36A992181350DD6A99E5F7F56B /* ReachabilityManager.swift */,
@@ -9411,7 +9411,7 @@
 		AADF769BA67881B6AAB30D0D783E26A1 /* Onboarding */ = {
 			isa = PBXGroup;
 			children = (
-				09DB971265742DABC5E04CD8805CD523 /* IntegrationLoginViewController.swift */,
+				09DB971265742DABC5E04CD8805CD523 /* ReactiveAuthWebViewController.swift */,
 				07BBD56E9EC84E9DBA66D8EF21A54C40 /* IntegrationPageViewController.swift */,
 				5A621DBCC69A965294C638ED22046B4B /* IntroVideoViewController.swift */,
 				A67E4B4C583EFE0AA551276CA5FD1D3F /* OptInPermissionViewController.swift */,
@@ -15033,8 +15033,8 @@
 				843E46305F981FB03D49D5F17B3B8852 /* DataPickerHandler.swift in Sources */,
 				535025FF61CF5EEDCCA9A5A06EF7B803 /* Date+Extensions.swift in Sources */,
 				689401C986A316D5F27741C1B6738E98 /* DatePickerHandler.swift in Sources */,
-				943CCF2500F6923F7CBB6917C229067A /* DeepLinkManager.swift in Sources */,
-				6ED9A0C1986E5989D1465D666521D55B /* DeepLinkService.swift in Sources */,
+				943CCF2500F6923F7CBB6917C229067A /* DeeplinkManager.swift in Sources */,
+				6ED9A0C1986E5989D1465D666521D55B /* DeeplinkService.swift in Sources */,
 				1495875849B59046C105CE18366E584D /* DeviceItemView.swift in Sources */,
 				EF8DAC49C1A387A9A0E49225A37820CA /* DevicesIntegrationViewController.swift in Sources */,
 				9630F605FA8B67C0D11F1243887B3FB3 /* DoubleButtonHorizontalView.swift in Sources */,
@@ -15077,7 +15077,7 @@
 				091120F4DA829F760F4E760BE85147DD /* InformedConsentSectionCoordinator.swift in Sources */,
 				D7A182A0B769C4C12B3049A1CD1EEFB7 /* Int+Custom.swift in Sources */,
 				A426C3576B13FE35C1A0562653FC24DF /* Integration.swift in Sources */,
-				45DFEE0152A41AFE271B7725FB07EFA6 /* IntegrationLoginViewController.swift in Sources */,
+				45DFEE0152A41AFE271B7725FB07EFA6 /* ReactiveAuthWebViewController.swift in Sources */,
 				03D52D6A16252310786F1B4D76E172DE /* IntegrationPageViewController.swift in Sources */,
 				74A5E5DF48F12D86D4714D8F4201E313 /* IntegrationSection.swift in Sources */,
 				20B6E9CEB047161ED529CA7470A3D8ED /* IntegrationSectionCoordinator.swift in Sources */,

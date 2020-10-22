@@ -10,8 +10,9 @@ import RxSwift
 import FirebaseMessaging
 
 protocol NotificationDeeplinkHandler: class {
-    func receivedNotificationDeeplinkedTaskId(taskId: String)
-    func receivedNotificationDeeplinkedURL(url: URL)
+    func receivedNotificationDeeplinkedOpenTaskId(forTaskId taskId: String)
+    func receivedNotificationDeeplinkedOpenURL(forUrl url: URL)
+    func receivedNotificationDeeplinkedOpenIntegrationApp(forIntegration integration: Integration)
 }
 
 protocol NotificationTokenHandler: class {
@@ -23,6 +24,7 @@ class NotificationManager: NSObject, NotificationService {
     private enum DeeplinkKey: String, CaseIterable {
         case taskId = "task_id"
         case url
+        case openIntegrationApp = "open_app_integration"
     }
     
     private let notificationDeeplinkHandler: NotificationDeeplinkHandler
@@ -47,12 +49,17 @@ class NotificationManager: NSObject, NotificationService {
                     guard let valueString = value as? String else {
                         return
                     }
-                    self.notificationDeeplinkHandler.receivedNotificationDeeplinkedTaskId(taskId: valueString)
+                    self.notificationDeeplinkHandler.receivedNotificationDeeplinkedOpenTaskId(forTaskId: valueString)
                 case .url:
                     guard let valueString = value as? String, let deepLinkedUrl = URL(string: valueString) else {
                         return
                     }
-                    self.notificationDeeplinkHandler.receivedNotificationDeeplinkedURL(url: deepLinkedUrl)
+                    self.notificationDeeplinkHandler.receivedNotificationDeeplinkedOpenURL(forUrl: deepLinkedUrl)
+                case .openIntegrationApp:
+                    guard let valueString = value as? String, let integration = Integration(rawValue: valueString) else {
+                        return
+                    }
+                    self.notificationDeeplinkHandler.receivedNotificationDeeplinkedOpenIntegrationApp(forIntegration: integration)
                 }
             }
         }

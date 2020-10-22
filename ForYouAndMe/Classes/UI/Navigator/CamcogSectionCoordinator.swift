@@ -68,14 +68,14 @@ class CamcogSectionCoordinator: NSObject, ActivitySectionCoordinator {
     private func getCamCogViewController() -> UIViewController {
         
         let url = URL(string: "\(Constants.Network.BaseUrl)/camcog/tasks/\(self.taskIdentifier)")!
-        return IntegrationLoginViewController(withTitle: "",
-                                              url: url,
-                                              allowBackwardNavigation: false,
-                                              onLoginSuccessCallback: { [weak self] _ in
+        return ReactiveAuthWebViewController(withTitle: "",
+                                             url: url,
+                                             allowBackwardNavigation: false,
+                                             onSuccessCallback: { [weak self] _ in
                                                 self?.showSuccessViewController()
-                                              }, onLoginFailureCallback: { [weak self] _ in
+                                             }, onFailureCallback: { [weak self] _ in
                                                 self?.completionCallback()
-                                              })
+                                             })
     }
     
     private func showSuccessViewController() {

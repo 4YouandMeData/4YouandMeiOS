@@ -35,18 +35,21 @@ extension UIViewController {
                          navigator: AppNavigator,
                          repository: Repository,
                          disposeBag: DisposeBag) {
-        if let taskId = deeplinkService.getDeeplinkedTaskId() {
-            repository.getTask(taskId: taskId)
-                .subscribe(onSuccess: { feed in
-                    navigator.startFeedFlow(withFeed: feed, presenter: self)
-                    deeplinkService.clearDeeplinkedTaskData()
-                }, onError: { error in
-                    print("\(Self.self) - Could not get task for deeplink. Error: \(error)")
-                    deeplinkService.clearDeeplinkedTaskData()
-                }).disposed(by: disposeBag)
-        } else if let url = deeplinkService.getDeeplinkedUrl() {
-            navigator.openUrlOnBrowser(url, presenter: self)
-            deeplinkService.clearDeeplinkedUrlData()
+        if let deeplink = deeplinkService.currentDeeplink {
+            switch deeplink {
+            case .openTask(let taskId):
+                repository.getTask(taskId: taskId)
+                    .subscribe(onSuccess: { feed in
+                        navigator.startFeedFlow(withFeed: feed, presenter: self)
+                    }, onError: { error in
+                        print("\(Self.self) - Could not get task for deeplink. Error: \(error)")
+                    }).disposed(by: disposeBag)
+            case .openUrl(let url):
+                navigator.openUrlOnBrowser(url, presenter: self)
+            case .openIntegrationApp(let integration):
+                navigator.openIntegrationApp(forIntegration: integration)
+            }
+            deeplinkService.clearCurrentDeeplinkedData()
         }
     }
     

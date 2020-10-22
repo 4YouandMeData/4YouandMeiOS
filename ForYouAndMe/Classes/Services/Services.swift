@@ -64,7 +64,7 @@ class Services {
         let analytics = AnalyticsManager(api: networkApiGateway)
         self.services.append(analytics)
         
-        let navigator = AppNavigator(withRepository: repository, analytics: analytics, window: window)
+        let navigator = AppNavigator(withRepository: repository, analytics: analytics, deeplinkService: deeplinkService, window: window)
         self.services.append(navigator)
         
         let notificationService = NotificationManager(withNotificationDeeplinkHandler: deeplinkService,
@@ -72,7 +72,7 @@ class Services {
         self.services.append(notificationService)
         
         // Add services circular dependences
-        deeplinkService.navigator = navigator
+        deeplinkService.delegate = navigator
         
         // Assign concreate services
         self.repository = repository

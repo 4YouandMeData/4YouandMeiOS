@@ -1,5 +1,5 @@
 //
-//  IntegrationLoginViewController.swift
+//  ReactiveAuthWebViewController.swift
 //  ForYouAndMe
 //
 //  Created by Leonardo Passeri on 09/07/2020.
@@ -8,13 +8,13 @@
 import Foundation
 import WebKit
 
-class IntegrationLoginViewController: UIViewController {
+class ReactiveAuthWebViewController: UIViewController {
     
-    private enum IntegrationLoginScriptInterface: String {
-        case login = "integrationLogin"
+    private enum ScriptInterface: String {
+        case genericCallback = "integrationLogin"
     }
     
-    private enum IntegrationLoginResult: String {
+    private enum ReactiveAuthWebResult: String {
         case success
         case failure
     }
@@ -28,8 +28,8 @@ class IntegrationLoginViewController: UIViewController {
     private let webView: WKWebView
     private let url: URL
     private let allowBackwardNavigation: Bool
-    private let onLoginSuccessCallback: ViewControllerCallback
-    private let onLoginFailureCallback: ViewControllerCallback
+    private let onSuccessCallback: ViewControllerCallback
+    private let onFailureCallback: ViewControllerCallback
     private let navigator: AppNavigator
     private let repository: Repository
     private let analytics: AnalyticsService
@@ -43,13 +43,13 @@ class IntegrationLoginViewController: UIViewController {
     init(withTitle title: String,
          url: URL,
          allowBackwardNavigation: Bool,
-         onLoginSuccessCallback: @escaping ViewControllerCallback,
-         onLoginFailureCallback: @escaping ViewControllerCallback) {
+         onSuccessCallback: @escaping ViewControllerCallback,
+         onFailureCallback: @escaping ViewControllerCallback) {
         self.webView = WKWebView(frame: .zero, configuration: WKWebViewConfiguration())
         self.url = url
         self.allowBackwardNavigation = allowBackwardNavigation
-        self.onLoginSuccessCallback = onLoginSuccessCallback
-        self.onLoginFailureCallback = onLoginFailureCallback
+        self.onSuccessCallback = onSuccessCallback
+        self.onFailureCallback = onFailureCallback
         self.navigator = Services.shared.navigator
         self.repository = Services.shared.repository
         self.analytics = Services.shared.analytics
@@ -70,7 +70,7 @@ class IntegrationLoginViewController: UIViewController {
         self.view.addSubview(self.webView)
         self.webView.autoPinEdgesToSuperviewSafeArea()
         self.webView.navigationDelegate = self
-        self.webView.configuration.userContentController.add(self, name: IntegrationLoginScriptInterface.login.rawValue)
+        self.webView.configuration.userContentController.add(self, name: ScriptInterface.genericCallback.rawValue)
         
         // Progress bar
         self.view.addSubview(self.progressView)
@@ -123,7 +123,7 @@ class IntegrationLoginViewController: UIViewController {
         request.httpShouldHandleCookies = true
         self.webView.configuration.websiteDataStore.httpCookieStore.setCookie(authenticationCookie, completionHandler: { [weak self] in
             guard let self = self else { return }
-            print("IntegrationLoginViewController - Authentication cookie setup done")
+            print("ReactiveAuthWebViewController - Authentication cookie setup done")
             self.webView.load(request)
         })
     }
@@ -171,7 +171,7 @@ class IntegrationLoginViewController: UIViewController {
     }
 }
 
-extension IntegrationLoginViewController: WKNavigationDelegate {
+extension ReactiveAuthWebViewController: WKNavigationDelegate {
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
         self.hideProgressView()
     }
@@ -181,31 +181,31 @@ extension IntegrationLoginViewController: WKNavigationDelegate {
     }
     
     func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
-        print("IntegrationLoginViewController - Navigation did fail with error: \(error.localizedDescription)")
+        print("ReactiveAuthWebViewController - Navigation did fail with error: \(error.localizedDescription)")
         self.handleNavigationError(error: error)
     }
     
     func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
-        print("IntegrationLoginViewController - Navigation did fail provisional navigation with error: \(error.localizedDescription)")
+        print("ReactiveAuthWebViewController - Navigation did fail provisional navigation with error: \(error.localizedDescription)")
         self.handleNavigationError(error: error)
     }
 }
 
-extension IntegrationLoginViewController: WKScriptMessageHandler {
+extension ReactiveAuthWebViewController: WKScriptMessageHandler {
     func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
-        guard let scriptInterface = IntegrationLoginScriptInterface(rawValue: message.name) else {
-            print("IntegrationLoginViewController - Unhandled interface for message with name: \(message.name) and body: \(message.body)")
+        guard let scriptInterface = ScriptInterface(rawValue: message.name) else {
+            print("ReactiveAuthWebViewController - Unhandled interface for message with name: \(message.name) and body: \(message.body)")
             return
         }
         switch scriptInterface {
-        case .login:
-           guard let resultTypeString = message.body as? String, let result = IntegrationLoginResult(rawValue: resultTypeString) else {
-               print("IntegrationLoginViewController - Unhandled message with name: \(message.name) and body: \(message.body)")
+        case .genericCallback:
+           guard let resultTypeString = message.body as? String, let result = ReactiveAuthWebResult(rawValue: resultTypeString) else {
+               print("ReactiveAuthWebViewController - Unhandled message with name: \(message.name) and body: \(message.body)")
                return
            }
            switch result {
-           case .success: self.onLoginSuccessCallback(self)
-           case .failure: self.onLoginFailureCallback(self)
+           case .success: self.onSuccessCallback(self)
+           case .failure: self.onFailureCallback(self)
            }
         }
     }
