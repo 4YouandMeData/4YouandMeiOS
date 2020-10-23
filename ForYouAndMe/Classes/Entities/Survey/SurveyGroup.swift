@@ -12,6 +12,10 @@ struct SurveyGroup {
     let type: String
     
     let surveys: [SurveyTask]
+    
+    let pages: [Page]
+    let welcomePage: Page
+    let successPage: Page?
 }
 
 extension SurveyGroup: JSONAPIMappable {
@@ -19,12 +23,18 @@ extension SurveyGroup: JSONAPIMappable {
 survey_blocks.pages,\
 survey_blocks.intro_page,\
 survey_blocks.success_page,\
-survey_blocks.questions.possible_answers
+survey_blocks.questions.possible_answers,\
+pages.link_1,\
+welcome_page.link_1,\
+success_page
 """
     
     enum CodingKeys: String, CodingKey {
         case id
         case type
         case surveys = "survey_blocks"
+        case pages
+        case welcomePage = "success_page"
+        case successPage = "welcome_page"
     }
 }

@@ -9,16 +9,7 @@ import Foundation
 import ResearchKit
 import RxSwift
 
-class TaskSectionCoordinator: NSObject, ActivitySectionCoordinator {
-    
-    var navigationController: UINavigationController {
-        guard let navigationController = self.internalNavigationController else {
-            assertionFailure("Missing navigation controller")
-            return UINavigationController()
-        }
-        return navigationController
-    }
-    private weak var internalNavigationController: UINavigationController?
+class TaskSectionCoordinator: NSObject, PagedActivitySectionCoordinator {
     
     // MARK: - ActivitySectionCoordinator
     var activityPresenter: UIViewController? { return self.navigationController }
@@ -28,83 +19,40 @@ class TaskSectionCoordinator: NSObject, ActivitySectionCoordinator {
     let completionCallback: NotificationCallback
     let disposeBag = DisposeBag()
     
+    // MARK: - PagedActivitySectionCoordinator
+    weak var internalNavigationController: UINavigationController?
+    let activity: Activity
+    var coreViewController: UIViewController? { self.getTaskViewController() }
+    
     private let taskType: TaskType
     private let taskOptions: TaskOptions?
-    private let welcomePage: Page?
-    private let successPage: Page?
     
     init(withTaskIdentifier taskIdentifier: String,
+         activity: Activity,
          taskType: TaskType,
          taskOptions: TaskOptions?,
-         welcomePage: Page?,
-         successPage: Page?,
          completionCallback: @escaping NotificationCallback) {
         self.taskIdentifier = taskIdentifier
+        self.activity = activity
         self.taskType = taskType
         self.taskOptions = taskOptions
-        self.welcomePage = welcomePage ?? taskType.welcomePage
-        self.successPage = successPage ?? taskType.successPage
         self.completionCallback = completionCallback
         self.navigator = Services.shared.navigator
         self.repository = Services.shared.repository
         super.init()
     }
     
-    // MARK: - Public Methods
-    
-    public func getStartingPage() -> UIViewController? {
-        let navigationController: UINavigationController? = {
-            if let welcomeViewController = self.getWelcomeViewController() {
-                return UINavigationController(rootViewController: welcomeViewController)
-            } else if let taskViewController = self.getTaskViewController(showInstructionPage: true, showConclusionPage: true) {
-                let navigationController = UINavigationController(rootViewController: taskViewController)
-                navigationController.navigationBar.apply(style: NavigationBarStyleCategory.secondary(hidden: true).style)
-                return navigationController
-            } else {
-                return nil
-            }
-        }()
-        self.internalNavigationController = navigationController
-        return navigationController
+    deinit {
+        self.deleteTaskResult(path: Constants.Task.taskResultURL)
     }
     
     // MARK: - Private Methods
     
-    private func getWelcomeViewController() -> UIViewController? {
-        let welcomePage = self.welcomePage
-        guard let page = welcomePage else {
-            return nil
-        }
-        let infoPageData = InfoPageData(page: page,
-                                        addAbortOnboardingButton: false,
-                                        addCloseButton: true,
-                                        allowBackwardNavigation: false,
-                                        bodyTextAlignment: .left,
-                                        bottomViewStyle: .horizontal,
-                                        customImageHeight: nil)
-        return InfoPageViewController(withPageData: infoPageData, coordinator: self)
-    }
-    
-    private func getSuccessViewController() -> UIViewController? {
-        let successPage = self.successPage
-        guard let page = successPage else {
-            return nil
-        }
-        let infoPageData = InfoPageData(page: page,
-                                        addAbortOnboardingButton: false,
-                                        addCloseButton: false,
-                                        allowBackwardNavigation: false,
-                                        bodyTextAlignment: .center,
-                                        bottomViewStyle: .singleButton,
-                                        customImageHeight: 140.0)
-        return InfoPageViewController(withPageData: infoPageData, coordinator: self)
-    }
-    
-    private func getTaskViewController(showInstructionPage: Bool, showConclusionPage: Bool) -> UIViewController? {
+    private func getTaskViewController() -> UIViewController? {
         guard let task = self.taskType.createTask(withIdentifier: self.taskIdentifier,
                                                   options: self.taskOptions,
-                                                  showIstructions: showInstructionPage,
-                                                  showConclusion: showConclusionPage) else {
+                                                  showIstructions: true,
+                                                  showConclusion: true) else {
             assertionFailure("Couldn't find ORKTask for given task")
             return nil
         }
@@ -123,6 +71,9 @@ class TaskSectionCoordinator: NSObject, ActivitySectionCoordinator {
     }
     
     private func customizeTaskUI() {
+        
+        self.navigationController.navigationBar.apply(style: NavigationBarStyleCategory.secondary(hidden: true).style)
+        
         // Setup Colors
         ORKColorSetColorForKey(ORKCheckMarkTintColorKey, ColorPalette.color(withType: .primary))
         ORKColorSetColorForKey(ORKAlertActionTintColorKey, ColorPalette.color(withType: .primary))
@@ -169,7 +120,7 @@ class TaskSectionCoordinator: NSObject, ActivitySectionCoordinator {
                 guard let self = self else { return }
                 self.navigator.popProgressHUD()
                 self.deleteTaskResult(path: Constants.Task.taskResultURL)
-                self.showSuccess()
+                self.showSuccessPage()
                 }, onError: { [weak self] error in
                     guard let self = self else { return }
                     self.navigator.popProgressHUD()
@@ -182,14 +133,6 @@ class TaskSectionCoordinator: NSObject, ActivitySectionCoordinator {
                                                 self?.sendResult(taskResult: taskResult, presenter: presenter)
                     }, dismissStyle: .destructive)
             }).disposed(by: self.disposeBag)
-    }
-    
-    private func showSuccess() {
-        if let successViewController = self.getSuccessViewController() {
-            self.navigationController.pushViewController(successViewController, animated: true)
-        } else {
-            self.completionCallback()
-        }
     }
     
     private func delay(_ delay: Double, closure: @escaping () -> Void ) {
@@ -233,51 +176,16 @@ extension TaskSectionCoordinator: ORKTaskViewControllerDelegate {
     
     func taskViewController(_ taskViewController: ORKTaskViewController,
                             stepViewControllerWillAppear stepViewController: ORKStepViewController) {
-        // TODO: Check this against all cases
-        
+        // TODO: Check if this is really needed (taken from ORKCatalog)
         if stepViewController.step?.identifier == "WaitStepIndeterminate" ||
             stepViewController.step?.identifier == "WaitStep" ||
             stepViewController.step?.identifier == "LoginWaitStep" {
+            print("TaskSectionCoordinator - A delay was needed")
             delay(5.0, closure: { () -> Void in
                 if let stepViewController = stepViewController as? ORKWaitStepViewController {
                     stepViewController.goForward()
                 }
             })
         }
-    }
-}
-
-extension TaskSectionCoordinator: PagedSectionCoordinator {
-    var pages: [Page] {
-        var pages: [Page] = []
-        if let welcomePage = self.welcomePage {
-            pages.append(welcomePage)
-        }
-        if let successPage = self.successPage {
-            pages.append(successPage)
-        }
-        return pages
-    }
-    
-    func performCustomPrimaryButtonNavigation(page: Page) -> Bool {
-        if self.successPage?.id == page.id {
-            self.completionCallback()
-            return true
-        }
-        return false
-    }
-    
-    func onUnhandledPrimaryButtonNavigation(page: Page) {
-        guard let taskViewController = self.getTaskViewController(showInstructionPage: true, showConclusionPage: true) else {
-            assertionFailure("Missing expected task controller")
-            return
-        }
-        self.internalNavigationController?.pushViewController(taskViewController, animated: true)
-        self.internalNavigationController?.navigationBar.apply(style: NavigationBarStyleCategory.secondary(hidden: true).style)
-    }
-    
-    func onUnhandledSecondaryButtonNavigation(page: Page) {
-        self.deleteTaskResult(path: Constants.Task.taskResultURL)
-        self.delayActivity()
     }
 }

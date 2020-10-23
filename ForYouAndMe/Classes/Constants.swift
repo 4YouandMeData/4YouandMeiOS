@@ -143,30 +143,6 @@ nunc, blandit sit amet lorem a, scelerisque eleifend odio. In euismod nunc tinci
             return userInfoParameters
         }()
     }
-    
-    struct Camcog {
-        // TODO: Remove this when the server sends welcome and success pages for camcog tasks
-        enum CamcogPageIdentifier: String {
-            case welcome = "1"
-            case success = "2"
-        }
-        static var DefaultWelcomePage: Page {
-            return Page(id: CamcogPageIdentifier.welcome.rawValue,
-                        image: ImagePalette.image(withName: .camcogWelcomeImage),
-                        title: StringsProvider.string(forKey: .camcogWelcomeTitle),
-                        body: StringsProvider.string(forKey: .camcogWelcomeBody),
-                        buttonFirstLabel: StringsProvider.string(forKey: .taskStartButton),
-                        buttonSecondLabel: StringsProvider.string(forKey: .taskRemindMeLater))
-        }
-        static var DefaultSuccessPage: Page {
-            return Page(id: CamcogPageIdentifier.success.rawValue,
-                        image: ImagePalette.image(withName: .camcogCompleteImage),
-                        title: StringsProvider.string(forKey: .camcogCompleteTitle),
-                        body: StringsProvider.string(forKey: .camcogCompleteBody),
-                        buttonFirstLabel: StringsProvider.string(forKey: .taskCompleteButton),
-                        buttonSecondLabel: nil)
-        }
-    }
 }
 
 enum FilePath: String {

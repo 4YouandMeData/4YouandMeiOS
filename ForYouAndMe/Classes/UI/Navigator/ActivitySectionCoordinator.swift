@@ -16,7 +16,7 @@ protocol ActivitySectionCoordinator: class {
     var activityPresenter: UIViewController? { get }
     var completionCallback: NotificationCallback { get }
     
-    func getStartingPage() -> UIViewController?
+    func getStartingPage() -> UIViewController
     func delayActivity()
 }
 

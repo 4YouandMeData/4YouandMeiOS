@@ -38,10 +38,11 @@ class SurveyGroupSectionCoordinator: ActivitySectionCoordinator {
     
     // MARK: - ActivitySectionCoordinator
     
-    public func getStartingPage() -> UIViewController? {
+    public func getStartingPage() -> UIViewController {
         guard let firstSurvey = self.sectionData.validSurveys.first else {
             assertionFailure("Missing survey for current survey group")
-            return nil
+            // TODO: Replace with mandatory welcome page.
+            return UIViewController()
         }
         if let navigationController = self.navigationController {
             return self.getSurveyViewController(forSurvey: firstSurvey,

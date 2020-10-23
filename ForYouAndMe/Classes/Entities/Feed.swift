@@ -51,11 +51,18 @@ struct Feed {
     var notifiable: Notifiable?
 }
 
+enum FeedParsingError: Error {
+    case missingBothSchedulableAndNotifiable
+}
+
 extension Feed: JSONAPIMappable {
     static var includeList: String? = """
 schedulable,\
 schedulable.quick_activity_options,\
-notifiable
+notifiable,\
+schedulable.pages.link_1,\
+schedulable.welcome_page.link_1,\
+schedulable.success_page
 """
     
     enum CodingKeys: String, CodingKey {
@@ -65,6 +72,19 @@ notifiable
         case toDate = "to"
         case schedulable
         case notifiable
+    }
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.id = try container.decode(String.self, forKey: .id)
+        self.type = try container.decode(String.self, forKey: .type)
+        self.toDate = try container.decode(DateValue<ISO8601Strategy>.self, forKey: .toDate).wrappedValue
+        self.fromDate = try container.decode(DateValue<ISO8601Strategy>.self, forKey: .fromDate).wrappedValue
+        self.schedulable = try? container.decodeIfPresent(SchedulableDecodable.self, forKey: .schedulable)?.wrappedValue
+        self.notifiable = try? container.decodeIfPresent(NotifiableDecode.self, forKey: .notifiable)?.wrappedValue
+        guard self.schedulable != nil || self.notifiable != nil else {
+            throw FeedParsingError.missingBothSchedulableAndNotifiable
+        }
     }
 }
 

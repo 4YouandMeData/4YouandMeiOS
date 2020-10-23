@@ -264,9 +264,8 @@ extension FeedListManager: UITableViewDataSource {
                     cell.display(data: activity, buttonPressedCallback: { [weak self] in
                         guard let self = self else { return }
                         guard let delegate = self.delegate else { return }
-                        guard let taskType = activity.taskType else { return }
                         self.navigator.startTaskSection(taskIdentifier: feed.id,
-                                                        taskType: taskType,
+                                                        activity: activity,
                                                         taskOptions: nil,
                                                         presenter: delegate.presenter)
                     })

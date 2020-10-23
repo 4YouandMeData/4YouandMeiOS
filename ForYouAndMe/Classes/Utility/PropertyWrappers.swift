@@ -60,6 +60,8 @@ struct ExcludeInvalid<Element: Decodable>: Decodable {
         while !container.isAtEnd {
             if let element = try container.decode(FailableDecodable<Element>.self).wrappedValue {
                 elements.append(element)
+            } else {
+                print("Invalid item exclude from array")
             }
         }
 

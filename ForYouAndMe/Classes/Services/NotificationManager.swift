@@ -42,26 +42,26 @@ class NotificationManager: NSObject, NotificationService {
     // MARK: - Private Methods
     
     private func processPushPayload(userInfo: [AnyHashable: Any]) {
-        DeeplinkKey.allCases.forEach { deeplinkKey in
-            if let value = userInfo[deeplinkKey.rawValue] {
-                switch deeplinkKey {
-                case .taskId:
-                    guard let valueString = value as? String else {
-                        return
-                    }
-                    self.notificationDeeplinkHandler.receivedNotificationDeeplinkedOpenTaskId(forTaskId: valueString)
-                case .url:
-                    guard let valueString = value as? String, let deepLinkedUrl = URL(string: valueString) else {
-                        return
-                    }
-                    self.notificationDeeplinkHandler.receivedNotificationDeeplinkedOpenURL(forUrl: deepLinkedUrl)
-                case .openIntegrationApp:
-                    guard let valueString = value as? String, let integration = Integration(rawValue: valueString) else {
-                        return
-                    }
-                    self.notificationDeeplinkHandler.receivedNotificationDeeplinkedOpenIntegrationApp(forIntegration: integration)
-                }
+        guard let deeplinkKey = DeeplinkKey.allCases.first(where: { nil != userInfo[$0.rawValue] }),
+              let value = userInfo[deeplinkKey.rawValue] else {
+            return
+        }
+        switch deeplinkKey {
+        case .taskId:
+            guard let valueString = value as? String else {
+                return
             }
+            self.notificationDeeplinkHandler.receivedNotificationDeeplinkedOpenTaskId(forTaskId: valueString)
+        case .url:
+            guard let valueString = value as? String, let deepLinkedUrl = URL(string: valueString) else {
+                return
+            }
+            self.notificationDeeplinkHandler.receivedNotificationDeeplinkedOpenURL(forUrl: deepLinkedUrl)
+        case .openIntegrationApp:
+            guard let valueString = value as? String, let integration = Integration(rawValue: valueString) else {
+                return
+            }
+            self.notificationDeeplinkHandler.receivedNotificationDeeplinkedOpenIntegrationApp(forIntegration: integration)
         }
     }
 }

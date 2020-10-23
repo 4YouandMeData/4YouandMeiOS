@@ -448,12 +448,8 @@ class AppNavigator {
             case .quickActivity:
                 print("AppNavigator - No section should be started for the quick activities")
             case .activity(let activity):
-                guard let taskType = activity.taskType else {
-                    assertionFailure("Missing task type for the current Activity")
-                    break
-                }
                 self.startTaskSection(taskIdentifier: feed.id,
-                                      taskType: taskType,
+                                      activity: activity,
                                       taskOptions: nil,
                                       presenter: presenter)
             case .survey(let survey):
@@ -489,7 +485,14 @@ class AppNavigator {
         }
     }
     
-    public func startTaskSection(taskIdentifier: String, taskType: TaskType, taskOptions: TaskOptions?, presenter: UIViewController) {
+    public func startTaskSection(taskIdentifier: String,
+                                 activity: Activity,
+                                 taskOptions: TaskOptions?, presenter: UIViewController) {
+        guard let taskType = activity.taskType else {
+            assertionFailure("Missing task type for given activity")
+            self.handleError(error: nil, presenter: presenter)
+            return
+        }
         let completionCallback: NotificationCallback = { [weak self] in
             guard let self = self else { return }
             presenter.dismiss(animated: true, completion: nil)
@@ -499,30 +502,24 @@ class AppNavigator {
             switch taskType {
             case .videoDiary:
                 return VideoDiarySectionCoordinator(withTaskIdentifier: taskIdentifier,
+                                                    activity: activity,
                                                     completionCallback: completionCallback)
             case .camcogEbt, .camcogNbx, .camcogPvt:
                 return CamcogSectionCoordinator(withTaskIdentifier: taskIdentifier,
-                                                completionCallback: completionCallback,
-                                                welcomePage: Constants.Camcog.DefaultWelcomePage,
-                                                successPage: Constants.Camcog.DefaultSuccessPage)
+                                                activity: activity,
+                                                completionCallback: completionCallback)
             default:
                 return TaskSectionCoordinator(withTaskIdentifier: taskIdentifier,
+                                              activity: activity,
                                               taskType: taskType,
                                               taskOptions: taskOptions,
-                                              welcomePage: nil,
-                                              successPage: nil,
                                               completionCallback: completionCallback)
             }
         }()
-        guard let startingPage = coordinator.getStartingPage() else {
-            self.currentActivityCoordinator = nil
-            self.handleError(error: nil, presenter: presenter)
-            assertionFailure("Couldn't get starting view controller for current task type")
-            return
-        }
         self.analytics.track(event: .recordScreen(screenName: taskIdentifier,
                                                   screenClass: String(describing: type(of: self))))
         
+        let startingPage = coordinator.getStartingPage()
         startingPage.modalPresentationStyle = .fullScreen
         presenter.present(startingPage, animated: true, completion: nil)
         self.currentActivityCoordinator = coordinator
@@ -539,11 +536,7 @@ class AppNavigator {
                                                         sectionData: surveyGroup,
                                                         navigationController: nil,
                                                         completionCallback: completionCallback)
-        guard let startingPage = coordinator.getStartingPage() else {
-            self.currentActivityCoordinator = nil
-            self.handleError(error: nil, presenter: presenter)
-            return
-        }
+        let startingPage = coordinator.getStartingPage()
         startingPage.modalPresentationStyle = .fullScreen
         presenter.present(startingPage, animated: true, completion: nil)
         

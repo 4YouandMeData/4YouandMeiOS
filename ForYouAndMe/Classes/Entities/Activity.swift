@@ -28,6 +28,10 @@ struct Activity {
     var endColor: UIColor?
     @ColorDecodable
     var cardColor: UIColor?
+    
+    let pages: [Page]
+    let welcomePage: Page
+    let successPage: Page?
 }
 
 extension Activity: JSONAPIMappable {
@@ -42,5 +46,8 @@ extension Activity: JSONAPIMappable {
         case startColor = "start_color"
         case endColor = "end_color"
         case cardColor = "card_color"
+        case pages
+        case welcomePage = "welcome_page"
+        case successPage = "success_page"
     }
 }
