@@ -115,14 +115,6 @@ enum StringKey: String, CaseIterable, CodingKey {
     case surveyButtonSkip = "SURVEY_BUTTON_SKIP"
     case surveyStepsCount = "SURVEY_STEPS_COUNT"
     // Video Diary
-    case videoDiaryIntroTitle = "VIDEO_DIARY_INTRO_TITLE"
-    case videoDiaryIntroButton = "VIDEO_DIARY_INTRO_BUTTON"
-    case videoDiaryIntroParagraphTitleA = "VIDEO_DIARY_INTRO_PARAGRAPH_TITLE_A"
-    case videoDiaryIntroParagraphBodyA = "VIDEO_DIARY_INTRO_PARAGRAPH_BODY_A"
-    case videoDiaryIntroParagraphTitleB = "VIDEO_DIARY_INTRO_PARAGRAPH_TITLE_B"
-    case videoDiaryIntroParagraphBodyB = "VIDEO_DIARY_INTRO_PARAGRAPH_BODY_B"
-    case videoDiaryIntroParagraphTitleC = "VIDEO_DIARY_INTRO_PARAGRAPH_TITLE_C"
-    case videoDiaryIntroParagraphBodyC = "VIDEO_DIARY_INTRO_PARAGRAPH_BODY_C"
     case videoDiaryRecorderTitle = "VIDEO_DIARY_RECORDER_TITLE"
     case videoDiaryRecorderStartRecordingDescription = "VIDEO_DIARY_RECORDER_START_RECORDING_DESCRIPTION"
     case videoDiaryRecorderResumeRecordingDescription = "VIDEO_DIARY_RECORDER_RESUME_RECORDING_DESCRIPTION"
@@ -132,8 +124,6 @@ enum StringKey: String, CaseIterable, CodingKey {
     case videoDiaryRecorderSubmitButton = "VIDEO_DIARY_RECORDER_SUBMIT_BUTTON"
     case videoDiaryRecorderSubmitFeedback = "VIDEO_DIARY_RECORDER_SUBMIT_FEEDBACK"
     case videoDiaryRecorderCloseButton = "VIDEO_DIARY_RECORDER_CLOSE_BUTTON"
-    case videoDiarySuccessTitle = "VIDEO_DIARY_SUCCESS_TITLE"
-    case videoDiarySuccessButton = "VIDEO_DIARY_SUCCESS_BUTTON"
     case videoDiaryDiscardTitle = "VIDEO_DIARY_DISCARD_TITLE"
     case videoDiaryDiscardBody = "VIDEO_DIARY_DISCARD_BODY"
     case videoDiaryDiscardConfirm = "VIDEO_DIARY_DISCARD_CONFIRM"
@@ -144,12 +134,6 @@ enum StringKey: String, CaseIterable, CodingKey {
     case videoDiaryMissingPermissionBodyMic = "VIDEO_DIARY_MISSING_PERMISSION_BODY_MIC"
     case videoDiaryMissingPermissionSettings = "VIDEO_DIARY_MISSING_PERMISSION_SETTINGS"
     case videoDiaryMissingPermissionDiscard = "VIDEO_DIARY_MISSING_PERMISSION_DISCARD"
-    
-    //Camcog
-    case camcogWelcomeTitle = "CAMCOG_TASK_TITLE"
-    case camcogWelcomeBody = "CAMCOG_TASK_BODY"
-    case camcogCompleteTitle = "CAMCOG_TASK_COMPLETE_TITLE"
-    case camcogCompleteBody = "CAMCOG_TASK_COMPLETE_BODY"
 
     //Study Info
     case studyInfoContactTitle = "STUDY_INFO_CONTACT_INFO"
@@ -196,20 +180,6 @@ enum StringKey: String, CaseIterable, CodingKey {
     case instagramOauthTitle = "OAUTH_INSTAGRAM"
     case rescueTimeOauthTitle = "OAUTH_RESCUETIME"
     case availableOauthIntegrations = "OAUTH_AVAILABLE_INTERATIONS"
-    
-    // Task (Temporary)
-    // TODO: Remove as soon as the server sends these data
-    case taskStartButton = "TASK_START_BUTTON"
-    case taskRemindMeLater = "TASK_REMIND_ME_LATER"
-    case taskGaitIntroTitle = "TASK_GAIT_INTRO_TITLE"
-    case taskGaitIntroBody = "TASK_GAIT_INTRO_BODY"
-    case taskWalkIntroTitle = "TASK_WALK_INTRO_TITLE"
-    case taskWalkIntroBody = "TASK_WALK_INTRO_BODY"
-    case taskCompleteButton = "TASK_COMPLETE_BUTTON"
-    case taskGaitCompleteTitle = "TASK_GAIT_COMPLETE_TITLE"
-    case taskGaitCompleteBody = "TASK_GAIT_COMPLETE_BODY"
-    case taskWalkCompleteTitle = "TASK_WALK_COMPLETE_TITLE"
-    case taskWalkCompleteBody = "TASK_WALK_COMPLETE_BODY"
     
     var defaultValue: String {
         switch self {

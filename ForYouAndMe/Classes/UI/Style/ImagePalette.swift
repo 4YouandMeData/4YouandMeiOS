@@ -23,7 +23,6 @@ enum ImageName: String, CaseIterable {
     case checkmark = "checkmark"
     case edit = "edit"
     case closeCircleButton = "close_circle_button"
-    case videoDiaryIntro = "video_diary_intro"
     case videoCalendar = "video_calendar"
     case videoPause = "video_pause"
     case videoPlay = "video_play"
@@ -31,7 +30,6 @@ enum ImageName: String, CaseIterable {
     case videoRecordResume = "video_resume_record"
     case videoRecordedFeedback = "video_recorded_feedback"
     case videoTime = "video_time"
-    case videoDiarySuccess = "video_diary_success"
     case cameraSwitch = "camera_switch"
     case flashOff = "flash_off"
     case flashOn = "flash_on"
@@ -47,12 +45,6 @@ enum ImageName: String, CaseIterable {
     case locationIcon = "location_icon"
     case starFill = "star_fill"
     case starEmpty = "star_empty"
-    case camcogWelcomeImage = "camcog_welcome"
-    case camcogCompleteImage = "camcog_complete"
-    case taskWalk = "task_walk"
-    case taskWalkFinish = "task_walk_finish"
-    case taskGait = "task_gait"
-    case taskGaitFinish = "task_gait_finish"
 }
 
 enum TemplateImageName: String, CaseIterable {
