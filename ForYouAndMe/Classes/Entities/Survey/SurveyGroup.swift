@@ -34,7 +34,7 @@ success_page
         case type
         case surveys = "survey_blocks"
         case pages
-        case welcomePage = "success_page"
-        case successPage = "welcome_page"
+        case welcomePage = "welcome_page"
+        case successPage = "success_page"
     }
 }

@@ -8,9 +8,7 @@
 import Foundation
 import RxSwift
 
-class SurveyGroupSectionCoordinator: ActivitySectionCoordinator {
-    
-    public weak var navigationController: UINavigationController?
+class SurveyGroupSectionCoordinator: PagedActivitySectionCoordinator {
     
     // MARK: - ActivitySectionCoordinator
     var activityPresenter: UIViewController? { return self.navigationController }
@@ -20,46 +18,37 @@ class SurveyGroupSectionCoordinator: ActivitySectionCoordinator {
     let repository: Repository
     let disposeBag = DisposeBag()
     
+    // MARK: - PagedActivitySectionCoordinator
+    weak var internalNavigationController: UINavigationController?
+    let pagedSectionData: PagedSectionData
+    var coreViewController: UIViewController? { self.getFirstSurveyViewController() }
+    
     private let sectionData: SurveyGroup
     
     private var answersForSurveys: [SurveyTask: [SurveyResult]] = [:]
     
     init(withTaskIdentifier taskIdentifier: String,
          sectionData: SurveyGroup,
-         navigationController: UINavigationController?,
          completionCallback: @escaping NotificationCallback) {
         self.taskIdentifier = taskIdentifier
         self.sectionData = sectionData
-        self.navigationController = navigationController
+        self.pagedSectionData = sectionData.pagedSectionData
         self.completionCallback = completionCallback
         self.navigator = Services.shared.navigator
         self.repository = Services.shared.repository
     }
     
-    // MARK: - ActivitySectionCoordinator
+    // MARK: - Private Methods
     
-    public func getStartingPage() -> UIViewController {
+    private func getFirstSurveyViewController() -> UIViewController? {
         guard let firstSurvey = self.sectionData.validSurveys.first else {
             assertionFailure("Missing survey for current survey group")
-            // TODO: Replace with mandatory welcome page.
-            return UIViewController()
+            return nil
         }
-        if let navigationController = self.navigationController {
-            return self.getSurveyViewController(forSurvey: firstSurvey,
-                                                navigationController: navigationController,
-                                                isFirstStartingPage: true)
-        } else {
-            let navigationController = UINavigationController()
-            self.navigationController = navigationController
-            let startingPage = self.getSurveyViewController(forSurvey: firstSurvey,
-                                                            navigationController: navigationController,
-                                                            isFirstStartingPage: true)
-            navigationController.pushViewController(startingPage, animated: false)
-            return navigationController
-        }
+        return self.getSurveyViewController(forSurvey: firstSurvey,
+                                            navigationController: self.navigationController,
+                                            isFirstStartingPage: true)
     }
-    
-    // MARK: - Private Methods
     
     private func getSurveyViewController(forSurvey survey: SurveyTask,
                                          navigationController: UINavigationController,
@@ -69,23 +58,15 @@ class SurveyGroupSectionCoordinator: ActivitySectionCoordinator {
                                                    completionCallback: { [weak self] (_, survey, answers) in
                                                     guard let self = self else { return }
                                                     self.onSurveyCompleted(survey, answers: answers)
-                                                   },
-                                                   delayCallback: { [weak self] in
-                                                    guard let self = self else { return }
-                                                    self.delayActivity()
                                                    })
-        return coordinator.getStartingPage(isFirstStartingPage: isFirstStartingPage)
+        return coordinator.getStartingPage()
     }
     
     private func showSurvey(_ survey: SurveyTask) {
-        guard let navigationController = self.navigationController else {
-            assertionFailure("Missing expected navigation controller")
-            return
-        }
         let surveyStartingViewController = self.getSurveyViewController(forSurvey: survey,
-                                                                        navigationController: navigationController,
+                                                                        navigationController: self.navigationController,
                                                                         isFirstStartingPage: false)
-        navigationController.pushViewController(surveyStartingViewController, animated: true)
+        self.navigationController.pushViewController(surveyStartingViewController, animated: true)
     }
     
     private func onSurveyCompleted(_ survey: SurveyTask, answers: [SurveyResult]) {
@@ -99,10 +80,6 @@ class SurveyGroupSectionCoordinator: ActivitySectionCoordinator {
             self.cancelSurveyGroup()
             return
         }
-        guard let navigationController = self.navigationController else {
-            assertionFailure("Missing expected navigation controller")
-            return
-        }
         
         let nextCurrentSurveyIndex = currentSurveyIndex + 1
         if nextCurrentSurveyIndex == self.sectionData.validSurveys.count {
@@ -114,11 +91,11 @@ class SurveyGroupSectionCoordinator: ActivitySectionCoordinator {
                 .subscribe( onSuccess: { [weak self] in
                     guard let self = self else { return }
                     self.navigator.popProgressHUD()
-                    self.completionCallback()
+                    self.showSuccessPage()
                 }, onError: { [weak self] error in
                     guard let self = self else { return }
                     self.navigator.popProgressHUD()
-                    self.navigator.handleError(error: error, presenter: navigationController)
+                    self.navigator.handleError(error: error, presenter: self.navigationController)
                 }).disposed(by: self.disposeBag)
         } else {
             let nextSurvey = self.sectionData.validSurveys[nextCurrentSurveyIndex]

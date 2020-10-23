@@ -7,17 +7,23 @@
 
 import UIKit
 
+struct PagedSectionData {
+    let welcomePage: Page
+    let successPage: Page?
+    let pages: [Page]
+}
+
 protocol PagedActivitySectionCoordinator: ActivitySectionCoordinator, PagedSectionCoordinator {
     var internalNavigationController: UINavigationController? { get set }
-    var activity: Activity { get }
+    var pagedSectionData: PagedSectionData { get }
     var coreViewController: UIViewController? { get }
 }
 
 extension PagedActivitySectionCoordinator {
-    var pages: [Page] { self.activity.pages }
+    var pages: [Page] { self.pagedSectionData.pages }
     
     func performCustomPrimaryButtonNavigation(page: Page) -> Bool {
-        if self.activity.successPage?.id == page.id {
+        if self.pagedSectionData.successPage?.id == page.id {
             self.completionCallback()
             return true
         }
@@ -25,7 +31,7 @@ extension PagedActivitySectionCoordinator {
     }
     
     func performCustomSecondaryButtonNavigation(page: Page) -> Bool {
-        if self.activity.welcomePage.id == page.id {
+        if self.pagedSectionData.welcomePage.id == page.id {
             self.delayActivity()
             return true
         }
@@ -52,7 +58,7 @@ extension PagedActivitySectionCoordinator {
     }
     
     func getStartingPage() -> UIViewController {
-        let data = InfoPageData(page: self.activity.welcomePage,
+        let data = InfoPageData(page: self.pagedSectionData.welcomePage,
                                 addAbortOnboardingButton: false,
                                 addCloseButton: true,
                                 allowBackwardNavigation: false,
@@ -68,7 +74,7 @@ extension PagedActivitySectionCoordinator {
     }
     
     func showSuccessPage() {
-        if let successPage = self.activity.successPage {
+        if let successPage = self.pagedSectionData.successPage {
             let data = InfoPageData.createResultPageData(withPage: successPage)
             let successViewController = InfoPageViewController(withPageData: data,
                                                               coordinator: self)

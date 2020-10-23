@@ -20,14 +20,14 @@ class CamcogSectionCoordinator: NSObject, PagedActivitySectionCoordinator {
     
     // MARK: - PagedActivitySectionCoordinator
     weak var internalNavigationController: UINavigationController?
-    let activity: Activity
+    let pagedSectionData: PagedSectionData
     var coreViewController: UIViewController? { self.getCamCogViewController() }
     
     init(withTaskIdentifier taskIdentifier: String,
          activity: Activity,
          completionCallback: @escaping NotificationCallback) {
         self.taskIdentifier = taskIdentifier
-        self.activity = activity
+        self.pagedSectionData = activity.pagedSectionData
         self.completionCallback = completionCallback
         self.navigator = Services.shared.navigator
         self.repository = Services.shared.repository

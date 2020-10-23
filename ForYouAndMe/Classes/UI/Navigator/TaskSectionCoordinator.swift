@@ -21,7 +21,7 @@ class TaskSectionCoordinator: NSObject, PagedActivitySectionCoordinator {
     
     // MARK: - PagedActivitySectionCoordinator
     weak var internalNavigationController: UINavigationController?
-    let activity: Activity
+    let pagedSectionData: PagedSectionData
     var coreViewController: UIViewController? { self.getTaskViewController() }
     
     private let taskType: TaskType
@@ -33,7 +33,7 @@ class TaskSectionCoordinator: NSObject, PagedActivitySectionCoordinator {
          taskOptions: TaskOptions?,
          completionCallback: @escaping NotificationCallback) {
         self.taskIdentifier = taskIdentifier
-        self.activity = activity
+        self.pagedSectionData = activity.pagedSectionData
         self.taskType = taskType
         self.taskOptions = taskOptions
         self.completionCallback = completionCallback

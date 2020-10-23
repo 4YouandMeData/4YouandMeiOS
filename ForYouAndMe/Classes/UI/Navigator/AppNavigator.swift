@@ -534,7 +534,6 @@ class AppNavigator {
         
         let coordinator = SurveyGroupSectionCoordinator(withTaskIdentifier: taskIdentifier,
                                                         sectionData: surveyGroup,
-                                                        navigationController: nil,
                                                         completionCallback: completionCallback)
         let startingPage = coordinator.getStartingPage()
         startingPage.modalPresentationStyle = .fullScreen

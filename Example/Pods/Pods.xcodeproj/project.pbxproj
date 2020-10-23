@@ -1592,6 +1592,8 @@
 		8921310819048EEE2E4F243A141999B2 /* ORKRequestPermissionsStepViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = E04C95C7514D00D668BA1D33D044BFCE /* ORKRequestPermissionsStepViewController.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
 		89419F6DA745C9EB2B494B0BF12289E9 /* ORKStepNavigationRule_Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = E90174F67D92F91C73E19839D5740C38 /* ORKStepNavigationRule_Internal.h */; settings = {ATTRIBUTES = (Project, ); }; };
 		8943C829254322C500238AF8 /* PagedActivitySectionCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8943C828254322C500238AF8 /* PagedActivitySectionCoordinator.swift */; };
+		8943C85725432F7F00238AF8 /* Activity+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8943C85625432F7F00238AF8 /* Activity+Extensions.swift */; };
+		8943C88525432FAF00238AF8 /* SurveyGroup+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8943C88425432FAF00238AF8 /* SurveyGroup+Extensions.swift */; };
 		8951627F1BB1F21985C283D35B3EE0DC /* FirebaseMessaging.h in Headers */ = {isa = PBXBuildFile; fileRef = C2C0AD4F28E5E56ABCD5984E4F1A69AA /* FirebaseMessaging.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		8959EA6A08FD2FBDEC0661DA718B415F /* ORKPageStep.h in Headers */ = {isa = PBXBuildFile; fileRef = D8CEDC28D09C129C9A4FBF203786F743 /* ORKPageStep.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		895FBDF174379A7EBC0AD833AB394C79 /* FIRInstallationsAPIService.m in Sources */ = {isa = PBXBuildFile; fileRef = F0CC60E34DCD8AB59AF61196A8A168C6 /* FIRInstallationsAPIService.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
@@ -5227,6 +5229,8 @@
 		88DFAC3545C1D216669745A4211EABCB /* GULSecureCoding.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = GULSecureCoding.h; path = GoogleUtilities/Environment/Private/GULSecureCoding.h; sourceTree = "<group>"; };
 		891F989821E945BD8984CB92B19ED0A5 /* Mappable.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = Mappable.swift; path = Sources/Mappable.swift; sourceTree = "<group>"; };
 		8943C828254322C500238AF8 /* PagedActivitySectionCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PagedActivitySectionCoordinator.swift; sourceTree = "<group>"; };
+		8943C85625432F7F00238AF8 /* Activity+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Activity+Extensions.swift"; sourceTree = "<group>"; };
+		8943C88425432FAF00238AF8 /* SurveyGroup+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SurveyGroup+Extensions.swift"; sourceTree = "<group>"; };
 		897B760A007DE19B3CB539EDC77224EF /* HKSample+ORKJSONDictionary.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = "HKSample+ORKJSONDictionary.m"; path = "ResearchKit/ActiveTasks/HKSample+ORKJSONDictionary.m"; sourceTree = "<group>"; };
 		89A8F25984EBF19FF61FF8584FD7BBF8 /* Observable+Bind.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = "Observable+Bind.swift"; path = "RxRelay/Observable+Bind.swift"; sourceTree = "<group>"; };
 		89AAB5DC5E9C9F4F0B5D6E12566E33FA /* ORKCompletionCheckmarkView.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = ORKCompletionCheckmarkView.h; path = ResearchKit/Common/ORKCompletionCheckmarkView.h; sourceTree = "<group>"; };
@@ -9004,6 +9008,8 @@
 				1140C1F24A713228EA1C3E21B382E72F /* UIViewController+Alert.swift */,
 				DA45661E88091D34BF15354F4721425A /* UIViewController+Extensions.swift */,
 				91BB9166CB706E63367D2B2010F328BF /* URL+Extensions.swift */,
+				8943C85625432F7F00238AF8 /* Activity+Extensions.swift */,
+				8943C88425432FAF00238AF8 /* SurveyGroup+Extensions.swift */,
 			);
 			name = Utility;
 			path = ForYouAndMe/Classes/Utility;
@@ -14380,6 +14386,7 @@
 				F676DB108A748B17669059EB9EC3FDED /* Async.swift in Sources */,
 				FFC0504AE4F4B73D734538E012B2C773 /* AttributedTextStyle.swift in Sources */,
 				8EABC80BE8D682B8D32FAB50CEF2629F /* BluetoothPermission.swift in Sources */,
+				8943C88525432FAF00238AF8 /* SurveyGroup+Extensions.swift in Sources */,
 				48AD08E43E57D22D02B968D408D61F6E /* BooleanQuestionsViewController.swift in Sources */,
 				61FA473D971A3636607DAC4649887159 /* Bundle+Extensions.swift in Sources */,
 				FB42CE9396DEB07401949E05A2E4643D /* ButtonStyles.swift in Sources */,
@@ -14544,6 +14551,7 @@
 				B44B87644F5CC71891C7E71795410BC2 /* SurveyQuestionDate.swift in Sources */,
 				C2F9137CB5C92630BE45D7633CE79A8D /* SurveyQuestionNumerical.swift in Sources */,
 				69325696347B1346E1803ED0AF9946A0 /* SurveyQuestionOption.swift in Sources */,
+				8943C85725432F7F00238AF8 /* Activity+Extensions.swift in Sources */,
 				9E141AE923BC95B9FFF1513A4868BC43 /* SurveyQuestionPickerFactory.swift in Sources */,
 				D63CD58BBA677171301100249CCAFF74 /* SurveyQuestionPickMany.swift in Sources */,
 				2A7FCE67A35450E424D7B749E5FBAB2E /* SurveyQuestionPickOne.swift in Sources */,
