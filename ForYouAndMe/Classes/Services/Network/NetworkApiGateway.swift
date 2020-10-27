@@ -332,6 +332,8 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             return "v1/users/me"
         case .sendUserTimeZone:
             return "v1/users/me"
+        case .sendPushToken:
+            return "v1/users/me/add_firebase_token"
         // User Data
         case .getUserData:
             return "v1/studies/\(studyId)/your_data"
@@ -380,6 +382,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
              .sendTaskResultFile,
              .sendUserInfoParameters,
              .sendUserTimeZone,
+             .sendPushToken,
              .sendSurveyTaskResultData:
             return .patch
         }
@@ -428,6 +431,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         case .getUser: return Bundle.getTestData(from: "TestGetUser")
         case .sendUserInfoParameters: return Bundle.getTestData(from: "TestGetUser")
         case .sendUserTimeZone: return Bundle.getTestData(from: "TestGetUser")
+        case .sendPushToken: return "{}".utf8Encoded
         // User Data
         case .getUserData: return Bundle.getTestData(from: "TestGetUserData")
         case .getUserDataAggregation: return Bundle.getTestData(from: "TestGetUserDataAggregation")
@@ -512,6 +516,10 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             var params: [String: Any] = [:]
             params["custom_data"] = customDataParams
             return .requestParameters(parameters: ["user": params], encoding: JSONEncoding.default)
+        case .sendPushToken(let token):
+            var params: [String: Any] = [:]
+            params["firebase_token"] = token
+            return .requestParameters(parameters: ["user": params], encoding: JSONEncoding.default)
         case .sendUserTimeZone(let timeZoneAbbreviation):
             return .requestParameters(parameters: ["time_zone": timeZoneAbbreviation], encoding: JSONEncoding.default)
         case .sendSurveyTaskResultData(_, let results):
@@ -577,6 +585,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
              .getUserDataAggregation,
              .getSurvey,
              .sendSurveyTaskResultData,
+             .sendPushToken,
              .delayTask:
             return .bearer
         }

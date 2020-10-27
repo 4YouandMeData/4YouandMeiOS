@@ -15,6 +15,7 @@ class CacheManager: CacheService {
         case accessToken
         case deviceUDID
         case userKey
+        case firebaseToken
     }
     
     private let mainUserDefaults = UserDefaults.standard
@@ -39,6 +40,11 @@ class CacheManager: CacheService {
         set {
             self.saveString(newValue, forKey: CacheManagerKey.deviceUDID.rawValue)
         }
+    }
+    
+    var firebaseToken: String? {
+        get {return self.load(forKey: CacheManagerKey.firebaseToken.rawValue)}
+        set {self.save(encodable: newValue, forKey: CacheManagerKey.firebaseToken.rawValue)}
     }
         
     // MARK: - Private methods

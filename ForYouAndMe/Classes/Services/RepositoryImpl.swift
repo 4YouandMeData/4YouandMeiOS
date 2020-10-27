@@ -12,6 +12,7 @@ import RxSwift
 protocol RepositoryStorage {
     var globalConfig: GlobalConfig? { get set }
     var user: User? { get set }
+    var firebaseToken: String? { get set }
 }
 
 class RepositoryImpl {
@@ -21,6 +22,8 @@ class RepositoryImpl {
     private var storage: RepositoryStorage
     private let api: ApiGateway
     private let showDefaultUserInfo: Bool
+    
+    private let disposeBag = DisposeBag()
     
     init(api: ApiGateway,
          storage: RepositoryStorage,
@@ -71,19 +74,10 @@ extension RepositoryImpl: Repository {
     }
     
     func sendFirebaseToken(token: String) -> Single<()> {
-        return self.api.send(request: ApiRequest(serviceRequest: .submitPhoneNumber(phoneNumber: token)))
+        return self.api.send(request: ApiRequest(serviceRequest: .sendPushToken(token: token)))
             .handleError()
-            .catchError({ error -> Single<()> in
-                enum ErrorCode: Int, CaseIterable { case missingPhoneNumber = 404 }
-                if let errorCodeNumber = error.getFirstServerError(forExpectedStatusCodes: ErrorCode.allCases.map { $0.rawValue }),
-                   let errorCode = ErrorCode(rawValue: errorCodeNumber) {
-                    switch errorCode {
-                    case .missingPhoneNumber: return Single.error(RepositoryError.missingPhoneNumber)
-                    }
-                } else {
-                    return Single.error(error)
-                }
-            })
+            .do(onError: { error in print("Repository - error updateFirebaseToken: \(error.localizedDescription)") })
+            .catchErrorJustReturn(())
     }
     
     func submitPhoneNumber(phoneNumber: String) -> Single<()> {
@@ -330,13 +324,19 @@ extension RepositoryImpl: Repository {
     
     func saveUser(_ user: User) {
         self.storage.user = user
+        guard let firebaseToken = self.storage.firebaseToken else { return }
+        self.sendFirebaseToken(token: firebaseToken)
+            .subscribe { _ in
+                self.storage.firebaseToken = firebaseToken
+            } onError: { error in
+                print(error)
+            }.disposed(by: self.disposeBag)
     }
 }
 
 extension RepositoryImpl: NotificationTokenHandler {
     func registerNotificationToken(token: String) {
-        // TODO: Send token to server
-        print("TODO: Send token to server")
+        self.storage.firebaseToken = token
     }
 }
 
