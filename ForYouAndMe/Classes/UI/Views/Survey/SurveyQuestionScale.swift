@@ -18,8 +18,8 @@ class SurveyQuestionScale: UIView {
     
     private var intervalStackView: UIStackView = {
         let stackView = UIStackView()
-        stackView.distribution = .equalCentering
         stackView.alignment = .fill
+        stackView.distribution = .equalCentering
         stackView.axis = .horizontal
         return stackView
     }()
@@ -84,10 +84,12 @@ class SurveyQuestionScale: UIView {
     private func configureScaleValues() {
         self.intervalStackView.subviews.forEach({ $0.removeFromSuperview()})
         if self.values.count < Self.maxNumberOfLabels {
-            for  value in self.values {
+            for value in self.values {
                 self.intervalStackView.addLabel(withText: "\(Int(value))",
                                                 fontStyle: .paragraph,
-                                                color: ColorPalette.color(withType: .primaryText))
+                                                color: ColorPalette.color(withType: .primaryText),
+                                                horizontalInset: 1)
+                
             }
         }
     }
