@@ -102,6 +102,9 @@ enum StringKey: String, CaseIterable, CodingKey {
     case tabFeedHeaderSubtitle = "TAB_FEED_HEADER_SUBTITLE"
     case tabFeedHeaderPoints = "TAB_FEED_HEADER_POINTS"
     case profileTitle = "PROFILE_TITLE"
+    // Task
+    case taskStartButton = "TASK_START_BUTTON"
+    case taskRemindMeLater = "TASK_REMIND_ME_LATER"
     // Activity
     case activityButtonDefault = "ACTIVITY_BUTTON_DEFAULT"
     // Quick Activity

@@ -36,7 +36,9 @@ class SurveySectionCoordinator {
                                 allowBackwardNavigation: false,
                                 bodyTextAlignment: .left,
                                 bottomViewStyle: .singleButton,
-                                customImageHeight: nil)
+                                customImageHeight: nil,
+                                defaultButtonFirstLabel: nil,
+                                defaultButtonSecondLabel: nil)
         
         return InfoPageViewController(withPageData: infoPageData, coordinator: self)
     }

@@ -32,6 +32,8 @@ struct Activity {
     let pages: [Page]
     let welcomePage: Page
     let successPage: Page?
+    
+    let rescheduleTimes: Int?
 }
 
 extension Activity: JSONAPIMappable {
@@ -49,5 +51,6 @@ extension Activity: JSONAPIMappable {
         case pages
         case welcomePage = "welcome_page"
         case successPage = "success_page"
+        case rescheduleTimes = "reschedule_times"
     }
 }

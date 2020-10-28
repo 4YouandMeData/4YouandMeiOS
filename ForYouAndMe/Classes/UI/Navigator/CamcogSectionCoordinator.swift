@@ -21,13 +21,17 @@ class CamcogSectionCoordinator: NSObject, PagedActivitySectionCoordinator {
     // MARK: - PagedActivitySectionCoordinator
     weak var internalNavigationController: UINavigationController?
     let pagedSectionData: PagedSectionData
+    var currentlyRescheduledTimes: Int
+    var maxRescheduleTimes: Int
     var coreViewController: UIViewController? { self.getCamCogViewController() }
     
-    init(withTaskIdentifier taskIdentifier: String,
+    init(withTask task: Feed,
          activity: Activity,
          completionCallback: @escaping NotificationCallback) {
-        self.taskIdentifier = taskIdentifier
+        self.taskIdentifier = task.id
         self.pagedSectionData = activity.pagedSectionData
+        self.currentlyRescheduledTimes = task.rescheduledTimes ?? 0
+        self.maxRescheduleTimes = activity.rescheduleTimes ?? 0
         self.completionCallback = completionCallback
         self.navigator = Services.shared.navigator
         self.repository = Services.shared.repository

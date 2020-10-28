@@ -21,17 +21,21 @@ class SurveyGroupSectionCoordinator: PagedActivitySectionCoordinator {
     // MARK: - PagedActivitySectionCoordinator
     weak var internalNavigationController: UINavigationController?
     let pagedSectionData: PagedSectionData
+    var currentlyRescheduledTimes: Int
+    var maxRescheduleTimes: Int
     var coreViewController: UIViewController? { self.getFirstSurveyViewController() }
     
     private let sectionData: SurveyGroup
     
     private var answersForSurveys: [SurveyTask: [SurveyResult]] = [:]
     
-    init(withTaskIdentifier taskIdentifier: String,
+    init(withTask task: Feed,
          sectionData: SurveyGroup,
          completionCallback: @escaping NotificationCallback) {
-        self.taskIdentifier = taskIdentifier
+        self.taskIdentifier = task.id
         self.sectionData = sectionData
+        self.currentlyRescheduledTimes = task.rescheduledTimes ?? 0
+        self.maxRescheduleTimes = sectionData.rescheduleTimes ?? 0
         self.pagedSectionData = sectionData.pagedSectionData
         self.completionCallback = completionCallback
         self.navigator = Services.shared.navigator

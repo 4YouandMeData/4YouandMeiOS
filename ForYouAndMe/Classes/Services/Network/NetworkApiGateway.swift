@@ -324,7 +324,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         case .sendTaskResultFile(let taskId, _):
             return "v1/tasks/\(taskId)/attach"
         case .delayTask(let taskId):
-            return "v1/tasks/\(taskId)/remind"
+            return "v1/tasks/\(taskId)/reschedule"
         // User
         case .getUser:
             return "v1/users/me"
@@ -372,8 +372,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
              .verifyPhoneNumber,
              .createUserConsent,
              .sendOptInPermission,
-             .sendAnswer,
-             .delayTask:
+             .sendAnswer:
             return .post
         case .verifyEmail,
              .resendConfirmationEmail,
@@ -383,7 +382,8 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
              .sendUserInfoParameters,
              .sendUserTimeZone,
              .sendPushToken,
-             .sendSurveyTaskResultData:
+             .sendSurveyTaskResultData,
+             .delayTask:
             return .patch
         }
     }

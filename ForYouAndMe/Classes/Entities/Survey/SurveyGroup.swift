@@ -16,6 +16,8 @@ struct SurveyGroup {
     let pages: [Page]
     let welcomePage: Page
     let successPage: Page?
+    
+    let rescheduleTimes: Int?
 }
 
 extension SurveyGroup: JSONAPIMappable {
@@ -36,5 +38,6 @@ success_page
         case pages
         case welcomePage = "welcome_page"
         case successPage = "success_page"
+        case rescheduleTimes = "reschedule_times"
     }
 }

@@ -448,7 +448,7 @@ class AppNavigator {
             case .quickActivity:
                 print("AppNavigator - No section should be started for the quick activities")
             case .activity(let activity):
-                self.startTaskSection(taskIdentifier: feed.id,
+                self.startTaskSection(withTask: feed,
                                       activity: activity,
                                       taskOptions: nil,
                                       presenter: presenter)
@@ -458,7 +458,7 @@ class AppNavigator {
                     .subscribe(onSuccess: { [weak self] surveyGroup in
                         guard let self = self else { return }
                         self.popProgressHUD()
-                        self.startSurveySection(withTaskIdentfier: feed.id,
+                        self.startSurveySection(withTask: feed,
                                                 surveyGroup: surveyGroup,
                                                 presenter: presenter)
                     }, onError: { [weak self] error in
@@ -485,7 +485,7 @@ class AppNavigator {
         }
     }
     
-    public func startTaskSection(taskIdentifier: String,
+    public func startTaskSection(withTask task: Feed,
                                  activity: Activity,
                                  taskOptions: TaskOptions?, presenter: UIViewController) {
         guard let taskType = activity.taskType else {
@@ -501,22 +501,22 @@ class AppNavigator {
         let coordinator: ActivitySectionCoordinator = {
             switch taskType {
             case .videoDiary:
-                return VideoDiarySectionCoordinator(withTaskIdentifier: taskIdentifier,
+                return VideoDiarySectionCoordinator(withTask: task,
                                                     activity: activity,
                                                     completionCallback: completionCallback)
             case .camcogEbt, .camcogNbx, .camcogPvt:
-                return CamcogSectionCoordinator(withTaskIdentifier: taskIdentifier,
+                return CamcogSectionCoordinator(withTask: task,
                                                 activity: activity,
                                                 completionCallback: completionCallback)
             default:
-                return TaskSectionCoordinator(withTaskIdentifier: taskIdentifier,
+                return TaskSectionCoordinator(withTask: task,
                                               activity: activity,
                                               taskType: taskType,
                                               taskOptions: taskOptions,
                                               completionCallback: completionCallback)
             }
         }()
-        self.analytics.track(event: .recordScreen(screenName: taskIdentifier,
+        self.analytics.track(event: .recordScreen(screenName: task.id,
                                                   screenClass: String(describing: type(of: self))))
         
         let startingPage = coordinator.getStartingPage()
@@ -525,14 +525,14 @@ class AppNavigator {
         self.currentActivityCoordinator = coordinator
     }
     
-    public func startSurveySection(withTaskIdentfier taskIdentifier: String, surveyGroup: SurveyGroup, presenter: UIViewController) {
+    public func startSurveySection(withTask task: Feed, surveyGroup: SurveyGroup, presenter: UIViewController) {
         let completionCallback: NotificationCallback = { [weak self] in
             guard let self = self else { return }
             presenter.dismiss(animated: true, completion: nil)
             self.currentActivityCoordinator = nil
         }
         
-        let coordinator = SurveyGroupSectionCoordinator(withTaskIdentifier: taskIdentifier,
+        let coordinator = SurveyGroupSectionCoordinator(withTask: task,
                                                         sectionData: surveyGroup,
                                                         completionCallback: completionCallback)
         let startingPage = coordinator.getStartingPage()

@@ -44,7 +44,9 @@ class OptInSectionCoordinator {
                                         allowBackwardNavigation: false,
                                         bodyTextAlignment: .center,
                                         bottomViewStyle: .singleButton,
-                                        customImageHeight: nil)
+                                        customImageHeight: nil,
+                                        defaultButtonFirstLabel: nil,
+                                        defaultButtonSecondLabel: nil)
         return InfoPageViewController(withPageData: infoPageData, coordinator: self)
     }
     

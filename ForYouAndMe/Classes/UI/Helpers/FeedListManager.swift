@@ -264,7 +264,7 @@ extension FeedListManager: UITableViewDataSource {
                     cell.display(data: activity, buttonPressedCallback: { [weak self] in
                         guard let self = self else { return }
                         guard let delegate = self.delegate else { return }
-                        self.navigator.startTaskSection(taskIdentifier: feed.id,
+                        self.navigator.startTaskSection(withTask: feed,
                                                         activity: activity,
                                                         taskOptions: nil,
                                                         presenter: delegate.presenter)
@@ -277,7 +277,7 @@ extension FeedListManager: UITableViewDataSource {
                                 guard let self = self else { return }
                                 guard let delegate = self.delegate else { return }
                                 self.navigator.popProgressHUD()
-                                self.navigator.startSurveySection(withTaskIdentfier: feed.id,
+                                self.navigator.startSurveySection(withTask: feed,
                                                                   surveyGroup: surveyGroup,
                                                                   presenter: delegate.presenter)
                             }, onError: { [weak self] error in

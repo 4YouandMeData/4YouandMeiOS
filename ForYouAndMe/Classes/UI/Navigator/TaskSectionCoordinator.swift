@@ -22,18 +22,22 @@ class TaskSectionCoordinator: NSObject, PagedActivitySectionCoordinator {
     // MARK: - PagedActivitySectionCoordinator
     weak var internalNavigationController: UINavigationController?
     let pagedSectionData: PagedSectionData
+    var currentlyRescheduledTimes: Int
+    var maxRescheduleTimes: Int
     var coreViewController: UIViewController? { self.getTaskViewController() }
     
     private let taskType: TaskType
     private let taskOptions: TaskOptions?
     
-    init(withTaskIdentifier taskIdentifier: String,
+    init(withTask task: Feed,
          activity: Activity,
          taskType: TaskType,
          taskOptions: TaskOptions?,
          completionCallback: @escaping NotificationCallback) {
-        self.taskIdentifier = taskIdentifier
+        self.taskIdentifier = task.id
         self.pagedSectionData = activity.pagedSectionData
+        self.currentlyRescheduledTimes = task.rescheduledTimes ?? 0
+        self.maxRescheduleTimes = activity.rescheduleTimes ?? 0
         self.taskType = taskType
         self.taskOptions = taskOptions
         self.completionCallback = completionCallback

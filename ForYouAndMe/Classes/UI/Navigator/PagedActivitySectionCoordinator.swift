@@ -17,6 +17,8 @@ protocol PagedActivitySectionCoordinator: ActivitySectionCoordinator, PagedSecti
     var internalNavigationController: UINavigationController? { get set }
     var pagedSectionData: PagedSectionData { get }
     var coreViewController: UIViewController? { get }
+    var currentlyRescheduledTimes: Int { get }
+    var maxRescheduleTimes: Int { get }
 }
 
 extension PagedActivitySectionCoordinator {
@@ -58,13 +60,17 @@ extension PagedActivitySectionCoordinator {
     }
     
     func getStartingPage() -> UIViewController {
+        
+        let delayTaskPossible = self.currentlyRescheduledTimes < self.maxRescheduleTimes
         let data = InfoPageData(page: self.pagedSectionData.welcomePage,
                                 addAbortOnboardingButton: false,
                                 addCloseButton: true,
                                 allowBackwardNavigation: false,
                                 bodyTextAlignment: .left,
                                 bottomViewStyle: .horizontal,
-                                customImageHeight: nil)
+                                customImageHeight: nil,
+                                defaultButtonFirstLabel: delayTaskPossible ? StringsProvider.string(forKey: .taskStartButton) : nil,
+                                defaultButtonSecondLabel: delayTaskPossible ? StringsProvider.string(forKey: .taskRemindMeLater) : nil)
         
         let welcomeViewController = InfoPageViewController(withPageData: data,
                                                           coordinator: self)

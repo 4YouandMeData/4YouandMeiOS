@@ -58,7 +58,9 @@ class InformedConsentSectionCoordinator {
                                         allowBackwardNavigation: false,
                                         bodyTextAlignment: .center,
                                         bottomViewStyle: .vertical(backButton: true),
-                                        customImageHeight: nil)
+                                        customImageHeight: nil,
+                                        defaultButtonFirstLabel: nil,
+                                        defaultButtonSecondLabel: nil)
         let viewController = InfoPageViewController(withPageData: infoPageData, coordinator: self)
         self.navigationController.pushViewController(viewController, animated: true)
     }

@@ -22,6 +22,8 @@ struct InfoPageData {
     let bodyTextAlignment: NSTextAlignment
     let bottomViewStyle: InfoPageBottomViewStyle
     let customImageHeight: CGFloat?
+    let defaultButtonFirstLabel: String?
+    let defaultButtonSecondLabel: String?
     
     static func createWelcomePageData(withPage page: Page, showCloseButton: Bool = false) -> InfoPageData {
         return InfoPageData(page: page,
@@ -30,7 +32,9 @@ struct InfoPageData {
                             allowBackwardNavigation: false,
                             bodyTextAlignment: .left,
                             bottomViewStyle: .singleButton,
-                            customImageHeight: nil)
+                            customImageHeight: nil,
+                            defaultButtonFirstLabel: nil,
+                            defaultButtonSecondLabel: nil)
     }
     
     static func createInfoPageData(withPage page: Page, isOnboarding: Bool) -> InfoPageData {
@@ -40,7 +44,9 @@ struct InfoPageData {
                             allowBackwardNavigation: true,
                             bodyTextAlignment: .left,
                             bottomViewStyle: .singleButton,
-                            customImageHeight: nil)
+                            customImageHeight: nil,
+                            defaultButtonFirstLabel: nil,
+                            defaultButtonSecondLabel: nil)
     }
     
     static func createResultPageData(withPage page: Page) -> InfoPageData {
@@ -50,7 +56,9 @@ struct InfoPageData {
                             allowBackwardNavigation: false,
                             bodyTextAlignment: .center,
                             bottomViewStyle: .singleButton,
-                            customImageHeight: nil)
+                            customImageHeight: nil,
+                            defaultButtonFirstLabel: nil,
+                            defaultButtonSecondLabel: nil)
     }
 }
 
@@ -121,7 +129,7 @@ public class InfoPageViewController: UIViewController, PageProvider {
             switch self.pageData.bottomViewStyle {
             case .singleButton:
                 let view: GenericButtonView = {
-                    if let confirmButtonText = self.pageData.page.buttonFirstlabel {
+                    if let confirmButtonText = self.pageData.page.buttonFirstlabel ?? self.pageData.defaultButtonFirstLabel {
                         let view = GenericButtonView(withTextStyleCategory: .secondaryBackground())
                         view.setButtonText(confirmButtonText)
                         return view
@@ -134,14 +142,14 @@ public class InfoPageViewController: UIViewController, PageProvider {
             case .vertical(let backButton):
                 let view = DoubleButtonVerticalView(styleCategory: .secondaryBackground(backButton: backButton))
                 view.addTargetToPrimaryButton(target: self, action: #selector(self.primaryButtonPressed))
-                if let buttonSecondlabel = self.pageData.page.buttonSecondlabel {
+                if let buttonSecondlabel = self.pageData.page.buttonSecondlabel ?? self.pageData.defaultButtonSecondLabel {
                     view.addTargetToSecondaryButton(target: self, action: #selector(self.secondaryButtonPressed))
                     view.setSecondaryButtonText(buttonSecondlabel)
                 }
                 return view
             case .horizontal:
-                if let buttonFirstlabel = self.pageData.page.buttonFirstlabel,
-                   let buttonSecondlabel = self.pageData.page.buttonSecondlabel {
+                if let buttonFirstlabel = self.pageData.page.buttonFirstlabel ?? self.pageData.defaultButtonFirstLabel,
+                   let buttonSecondlabel = self.pageData.page.buttonSecondlabel ?? self.pageData.defaultButtonSecondLabel {
                     let view = DoubleButtonHorizontalView(styleCategory: .secondaryBackground(firstButtonPrimary: false,
                                                                                               secondButtonPrimary: true))
                     view.addTargetToFirstButton(target: self, action: #selector(self.secondaryButtonPressed))
