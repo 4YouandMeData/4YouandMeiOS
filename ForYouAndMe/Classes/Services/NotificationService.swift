@@ -8,4 +8,10 @@
 import Foundation
 import RxSwift
 
-protocol NotificationService {}
+enum NotificationError: Error {
+    case fetchRegistrationTokenError
+}
+
+protocol NotificationService {
+    func getRegistrationToken() -> Single<String?>
+}

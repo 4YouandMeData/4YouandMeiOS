@@ -36,8 +36,6 @@ protocol Repository: class {
     func logOut()
     func submitPhoneNumber(phoneNumber: String) -> Single<()>
     func verifyPhoneNumber(phoneNumber: String, validationCode: String) -> Single<User>
-    //Push notification
-    func sendFirebaseToken(token: String) -> Single<()>
     // Screening Section
     func getScreeningSection() -> Single<ScreeningSection>
     // Informed Consent Section

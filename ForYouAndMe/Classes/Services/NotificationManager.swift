@@ -9,14 +9,14 @@ import Foundation
 import RxSwift
 import FirebaseMessaging
 
+protocol NotificationTokenDelegate: class {
+    func registerNotificationToken(token: String)
+}
+
 protocol NotificationDeeplinkHandler: class {
     func receivedNotificationDeeplinkedOpenTaskId(forTaskId taskId: String)
     func receivedNotificationDeeplinkedOpenURL(forUrl url: URL)
     func receivedNotificationDeeplinkedOpenIntegrationApp(forIntegration integration: Integration)
-}
-
-protocol NotificationTokenHandler: class {
-    func registerNotificationToken(token: String)
 }
 
 class NotificationManager: NSObject, NotificationService {
@@ -27,16 +27,30 @@ class NotificationManager: NSObject, NotificationService {
         case openIntegrationApp = "open_app_integration"
     }
     
-    private let notificationDeeplinkHandler: NotificationDeeplinkHandler
-    private let notificationTokenHandler: NotificationTokenHandler
+    weak var notificationTokenDelegate: NotificationTokenDelegate?
     
-    init(withNotificationDeeplinkHandler notificationDeeplinkHandler: NotificationDeeplinkHandler,
-         notificationTokenHandler: NotificationTokenHandler) {
+    private let notificationDeeplinkHandler: NotificationDeeplinkHandler
+    
+    init(withNotificationDeeplinkHandler notificationDeeplinkHandler: NotificationDeeplinkHandler) {
         self.notificationDeeplinkHandler = notificationDeeplinkHandler
-        self.notificationTokenHandler = notificationTokenHandler
         super.init()
         UNUserNotificationCenter.current().delegate = self
         Messaging.messaging().delegate = self
+    }
+    
+    // MARK: - NotificationService
+    
+    func getRegistrationToken() -> Single<String?> {
+        return Single.create { singleEvent -> Disposable in
+            Messaging.messaging().token { token, error in
+              if nil != error {
+                singleEvent(.error(NotificationError.fetchRegistrationTokenError))
+              } else {
+                singleEvent(.success(token))
+              }
+            }
+            return Disposables.create()
+        }
     }
     
     // MARK: - Private Methods
@@ -90,7 +104,11 @@ extension NotificationManager: MessagingDelegate {
     // [START refresh_token]
     func messaging(_ messaging: Messaging, didReceiveRegistrationToken fcmToken: String) {
         print("Firebase registration token: \(fcmToken)")
-        self.notificationTokenHandler.registerNotificationToken(token: fcmToken)
+        guard let notificationTokenDelegate = notificationTokenDelegate else {
+            assertionFailure("Missing expected notificationTokenDelegate")
+            return
+        }
+        notificationTokenDelegate.registerNotificationToken(token: fcmToken)
     }
     // [END refresh_token]
 }

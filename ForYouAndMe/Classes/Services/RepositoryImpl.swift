@@ -12,24 +12,26 @@ import RxSwift
 protocol RepositoryStorage {
     var globalConfig: GlobalConfig? { get set }
     var user: User? { get set }
-    var firebaseToken: String? { get set }
 }
 
 class RepositoryImpl {
     
     var isInitialized: Bool = false
     
-    private var storage: RepositoryStorage
     private let api: ApiGateway
+    private var storage: RepositoryStorage
+    private let notificationService: NotificationService
     private let showDefaultUserInfo: Bool
     
     private let disposeBag = DisposeBag()
     
     init(api: ApiGateway,
          storage: RepositoryStorage,
+         notificationService: NotificationService,
          showDefaultUserInfo: Bool) {
         self.api = api
         self.storage = storage
+        self.notificationService = notificationService
         self.showDefaultUserInfo = showDefaultUserInfo
     }
     
@@ -73,11 +75,10 @@ extension RepositoryImpl: Repository {
         self.api.logOut()
     }
     
-    func sendFirebaseToken(token: String) -> Single<()> {
+    func sendFirebaseToken(token: String) -> Single<User> {
         return self.api.send(request: ApiRequest(serviceRequest: .sendPushToken(token: token)))
             .handleError()
             .do(onError: { error in print("Repository - error updateFirebaseToken: \(error.localizedDescription)") })
-            .catchErrorJustReturn(())
     }
     
     func submitPhoneNumber(phoneNumber: String) -> Single<()> {
@@ -112,6 +113,7 @@ extension RepositoryImpl: Repository {
                 }
             })
             .flatMap { user in self.updateUserTimeZoneIfNeeded(user: user) }
+            .flatMap { user in self.updateNotificationRegistrationToken(user: user) }
             .map { self.handleUserInfo($0) }
             .do(onSuccess: { self.saveUser($0) })
     }
@@ -263,6 +265,7 @@ extension RepositoryImpl: Repository {
         return self.api.send(request: ApiRequest(serviceRequest: .getUser))
             .handleError()
             .flatMap { user in self.updateUserTimeZoneIfNeeded(user: user) }
+            .flatMap { user in self.updateNotificationRegistrationToken(user: user) }
             .map { self.handleUserInfo($0) }
             .do(onSuccess: { self.saveUser($0) })
     }
@@ -300,7 +303,7 @@ extension RepositoryImpl: Repository {
     
     // MARK: - Private Methods
     
-    func updateUserTimeZoneIfNeeded(user: User) -> Single<User> {
+    private func updateUserTimeZoneIfNeeded(user: User) -> Single<User> {
         let currentTimeZone = TimeZone.current
         if let currentTimeZoneAbbreviation = currentTimeZone.abbreviation(),
            currentTimeZoneAbbreviation != user.timeZone?.abbreviation() {
@@ -314,7 +317,7 @@ extension RepositoryImpl: Repository {
         }
     }
     
-    func handleUserInfo(_ user: User) -> User {
+    private func handleUserInfo(_ user: User) -> User {
         var user = user
         if self.showDefaultUserInfo && (user.customData ?? []).count == 0 {
             user.customData = Constants.UserInfo.DefaultUserInfoParameters
@@ -322,21 +325,36 @@ extension RepositoryImpl: Repository {
         return user
     }
     
-    func saveUser(_ user: User) {
+    private func updateNotificationRegistrationToken(user: User) -> Single<User> {
+        return self.notificationService
+            .getRegistrationToken()
+            .flatMap { token in
+                if let token = token {
+                    return self.sendFirebaseToken(token: token)
+                } else {
+                    return Single.just(user)
+                }
+            }
+            .handleError()
+            .do(onError: { error in print("RepositoryImpl - Error while updating notification registration token. Error: \(error)") })
+            .catchErrorJustReturn(user)
+    }
+    
+    private func saveUser(_ user: User) {
         self.storage.user = user
-        guard let firebaseToken = self.storage.firebaseToken else { return }
-        self.sendFirebaseToken(token: firebaseToken)
-            .subscribe { _ in
-                self.storage.firebaseToken = firebaseToken
-            } onError: { error in
-                print(error)
-            }.disposed(by: self.disposeBag)
     }
 }
 
-extension RepositoryImpl: NotificationTokenHandler {
+extension RepositoryImpl: NotificationTokenDelegate {
     func registerNotificationToken(token: String) {
-        self.storage.firebaseToken = token
+        if self.isLoggedIn {
+            self.sendFirebaseToken(token: token)
+                .subscribe { _ in
+                    print("RepositoryImpl - Sent Registration Token to server due to token update")
+                } onError: { error in
+                    print("RepositoryImpl - Error while sending Registration Token to server due to token update. Error: \(error)")
+                }.disposed(by: self.disposeBag)
+        }
     }
 }
 

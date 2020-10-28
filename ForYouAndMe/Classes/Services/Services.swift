@@ -46,6 +46,9 @@ class Services {
         let deeplinkService = DeeplinkManager()
         self.services.append(deeplinkService)
         
+        let notificationService = NotificationManager(withNotificationDeeplinkHandler: deeplinkService)
+        self.services.append(notificationService)
+        
         #if DEBUG
         let networkApiGateway =
             Constants.Test.NetworkStubsEnabled
@@ -58,6 +61,7 @@ class Services {
         
         let repository = RepositoryImpl(api: networkApiGateway,
                                         storage: storage,
+                                        notificationService: notificationService,
                                         showDefaultUserInfo: showDefaultUserInfo)
         self.services.append(repository)
         
@@ -67,12 +71,11 @@ class Services {
         let navigator = AppNavigator(withRepository: repository, analytics: analytics, deeplinkService: deeplinkService, window: window)
         self.services.append(navigator)
         
-        let notificationService = NotificationManager(withNotificationDeeplinkHandler: deeplinkService,
-                                                      notificationTokenHandler: repository)
-        self.services.append(notificationService)
+        
         
         // Add services circular dependences
         deeplinkService.delegate = navigator
+        notificationService.notificationTokenDelegate = repository
         
         // Assign concreate services
         self.repository = repository
