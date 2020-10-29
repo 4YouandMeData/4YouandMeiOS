@@ -501,6 +501,7 @@ class AppNavigator {
         }
         let completionCallback: NotificationCallback = { [weak self] in
             guard let self = self else { return }
+            self.rotateToPortrait()
             presenter.dismiss(animated: true, completion: nil)
             self.currentActivityCoordinator = nil
         }
