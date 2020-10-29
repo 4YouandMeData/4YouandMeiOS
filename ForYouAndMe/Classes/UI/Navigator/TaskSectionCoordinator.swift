@@ -96,7 +96,7 @@ class TaskSectionCoordinator: NSObject, PagedActivitySectionCoordinator {
     }
     
     private func cancelTask() {
-        self.rotateToPortrait()
+        self.navigator.rotateToPortrait()
         self.deleteTaskResult(path: Constants.Task.taskResultURL)
         self.completionCallback()
     }

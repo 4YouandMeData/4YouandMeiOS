@@ -116,6 +116,12 @@ class AppNavigator {
         }
     }
     
+    public func rotateToPortrait() {
+        let value = UIInterfaceOrientation.portrait.rawValue
+        UIDevice.current.setValue(value, forKey: "orientation")
+        UIViewController.attemptRotationToDeviceOrientation()
+    }
+    
     public func abortOnboardingWithWarning(presenter: UIViewController) {
         let cancelAction = UIAlertAction(title: StringsProvider.string(forKey: .onboardingAbortCancel),
                                          style: .cancel,
