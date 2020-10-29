@@ -15,6 +15,36 @@
         "primary_color_end": "0B99AE",
         "tertiary_color_end": "25B8C9"
     },
+    "supported_integrations": {
+      "camcog": {
+        "oauth": false,
+        "biometric": false
+      },
+      "oura": {
+        "oauth": true,
+        "biometric": true
+      },
+      "twitter": {
+        "oauth": true,
+        "biometric": false
+      },
+      "garmin": {
+        "oauth": true,
+        "biometric": true
+      },
+      "bodyport": {
+        "oauth": false,
+        "biometric": true
+      },
+      "rescuetime": {
+        "oauth": true,
+        "biometric": false
+      },
+      "instagram": {
+        "oauth": true,
+        "biometric": false
+      }
+    },
     "strings": {
       "INTRO_BACK": "I will set up my app later",
       "INTRO_BODY": "You have completed the first step to begin this journey together: downloading the app.\n\nNext, we will go through the initial setup of the app. This process will take approximately 30 minutes and will require an internet connection. Please ensure you have plenty of time before we start this process. Otherwise, feel free to start it when you have sufficient time.",
@@ -157,7 +187,6 @@
       "OAUTH_TWITTER": "Twitter",
       "OAUTH_INSTAGRAM": "Instagram",
       "OAUTH_RESCUETIME": "Rescue Time",
-      "OAUTH_AVAILABLE_INTERATIONS": "garmin;oura;instagram;rescuetime;twitter",
       "TASK_START_BUTTON": "Start Now",
       "TASK_REMIND_ME_LATER": "Remind me"
     },

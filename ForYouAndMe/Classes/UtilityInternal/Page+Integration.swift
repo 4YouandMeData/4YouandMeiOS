@@ -36,6 +36,6 @@ extension Page {
         let endIndex = specialLinkValue.index(startIndex, offsetBy: specialLinkBehaviourString.count + 1)
         let specialLinkAppString = specialLinkValue.replacingCharacters(in: startIndex..<endIndex, with: "")
         
-        return Integration(rawValue: specialLinkAppString)
+        return IntegrationProvider.oAuthIntegration(withName: specialLinkAppString)
     }
 }

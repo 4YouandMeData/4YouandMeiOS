@@ -16,7 +16,7 @@ protocol NotificationTokenDelegate: class {
 protocol NotificationDeeplinkHandler: class {
     func receivedNotificationDeeplinkedOpenTaskId(forTaskId taskId: String)
     func receivedNotificationDeeplinkedOpenURL(forUrl url: URL)
-    func receivedNotificationDeeplinkedOpenIntegrationApp(forIntegration integration: Integration)
+    func receivedNotificationDeeplinkedOpenIntegrationApp(forIntegrationName integrationName: String)
 }
 
 class NotificationManager: NSObject, NotificationService {
@@ -72,10 +72,10 @@ class NotificationManager: NSObject, NotificationService {
             }
             self.notificationDeeplinkHandler.receivedNotificationDeeplinkedOpenURL(forUrl: deepLinkedUrl)
         case .openIntegrationApp:
-            guard let valueString = value as? String, let integration = Integration(rawValue: valueString) else {
+            guard let valueString = value as? String else {
                 return
             }
-            self.notificationDeeplinkHandler.receivedNotificationDeeplinkedOpenIntegrationApp(forIntegration: integration)
+            self.notificationDeeplinkHandler.receivedNotificationDeeplinkedOpenIntegrationApp(forIntegrationName: valueString)
         }
     }
 }

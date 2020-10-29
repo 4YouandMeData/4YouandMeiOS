@@ -182,7 +182,6 @@ enum StringKey: String, CaseIterable, CodingKey {
     case twitterOauthTitle = "OAUTH_TWITTER"
     case instagramOauthTitle = "OAUTH_INSTAGRAM"
     case rescueTimeOauthTitle = "OAUTH_RESCUETIME"
-    case availableOauthIntegrations = "OAUTH_AVAILABLE_INTERATIONS"
     
     var defaultValue: String {
         switch self {

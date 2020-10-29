@@ -10,7 +10,7 @@ import RxSwift
 enum Deeplink {
     case openTask(taskId: String)
     case openUrl(url: URL)
-    case openIntegrationApp(integration: Integration)
+    case openIntegrationApp(integrationName: String)
 }
 
 protocol DeeplinkService: class {

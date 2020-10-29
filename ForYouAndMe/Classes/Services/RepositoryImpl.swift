@@ -52,6 +52,7 @@ class RepositoryImpl {
                 ColorPalette.initialize(withColorMap: globalCongig.colorMap)
                 StringsProvider.initialize(withStringMap: globalCongig.stringMap)
                 CountryCodeProvider.initialize(withcountryCodes: globalCongig.countryCodes)
+                IntegrationProvider.initialize(withIntegrationDatas: globalCongig.integrationDatas)
             })
             .map { _ in () }
     }

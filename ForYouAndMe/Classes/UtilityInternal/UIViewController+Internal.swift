@@ -46,8 +46,10 @@ extension UIViewController {
                     }).disposed(by: disposeBag)
             case .openUrl(let url):
                 navigator.openUrlOnBrowser(url, presenter: self)
-            case .openIntegrationApp(let integration):
-                navigator.openIntegrationApp(forIntegration: integration)
+            case .openIntegrationApp(let integrationName):
+                if let oAuthIntegration = IntegrationProvider.oAuthIntegration(withName: integrationName) {
+                    navigator.openIntegrationApp(forIntegration: oAuthIntegration)
+                }
             }
             deeplinkService.clearCurrentDeeplinkedData()
         }

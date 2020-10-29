@@ -37,9 +37,9 @@ class DeeplinkManager: NSObject, DeeplinkService {
         self.sharedDeeplinkHandling(deepLink: Deeplink.openUrl(url: url))
     }
     
-    private func handleReceivedDeeplinkedOpenIntegrationApp(forIntegration integration: Integration) {
-        print("DeeplinkManager - handleReceivedDeeplinkedOpenIntegrationApp for integration: '\(integration)'")
-        self.sharedDeeplinkHandling(deepLink: Deeplink.openIntegrationApp(integration: integration))
+    private func handleReceivedDeeplinkedOpenIntegrationApp(forIntegrationName integrationName: String) {
+        print("DeeplinkManager - handleReceivedDeeplinkedOpenIntegrationApp for integration name: '\(integrationName)'")
+        self.sharedDeeplinkHandling(deepLink: Deeplink.openIntegrationApp(integrationName: integrationName))
     }
     
     private func sharedDeeplinkHandling(deepLink: Deeplink) {
@@ -65,7 +65,7 @@ extension DeeplinkManager: NotificationDeeplinkHandler {
         self.handleReceivedDeeplinkedOpenURL(forUrl: url)
     }
     
-    func receivedNotificationDeeplinkedOpenIntegrationApp(forIntegration integration: Integration) {
-        self.handleReceivedDeeplinkedOpenIntegrationApp(forIntegration: integration)
+    func receivedNotificationDeeplinkedOpenIntegrationApp(forIntegrationName integrationName: String) {
+        self.handleReceivedDeeplinkedOpenIntegrationApp(forIntegrationName: integrationName)
     }
 }

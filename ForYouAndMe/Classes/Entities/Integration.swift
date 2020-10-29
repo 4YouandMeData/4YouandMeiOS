@@ -40,9 +40,4 @@ enum Integration: String {
     var apiOAuthUrl: URL {
         return Constants.Url.ApiOAuthIntegrationBaseUrl.appendingPathComponent(self.rawValue)
     }
-    
-    static var availableIntegrations: [Integration] {
-        let integrationStrings = StringsProvider.string(forKey: .availableOauthIntegrations).split(separator: ";")
-        return integrationStrings.compactMap { Integration(rawValue: String($0)) }
-    }
 }

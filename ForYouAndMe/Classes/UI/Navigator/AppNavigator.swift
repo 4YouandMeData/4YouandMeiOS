@@ -545,8 +545,8 @@ class AppNavigator {
     public func handleNotifiableTile(notifiableUrl: String, presenter: UIViewController) {
         if let internalDeeplinkKey = InternalDeeplinkKey(rawValue: notifiableUrl) {
             self.handleInternalDeeplink(withKey: internalDeeplinkKey, presenter: presenter)
-        } else if let integration = Integration(rawValue: notifiableUrl) {
-            self.openIntegrationApp(forIntegration: integration)
+        } else if let oAuthIntegration = IntegrationProvider.oAuthIntegration(withName: notifiableUrl) {
+            self.openIntegrationApp(forIntegration: oAuthIntegration)
         } else if let url = URL(string: notifiableUrl) {
             self.openUrlOnBrowser(url, presenter: presenter)
         }
@@ -769,8 +769,10 @@ extension AppNavigator: DeeplinkManagerDelegate {
                 self.goHome()
                 return false
             }
-        case .openIntegrationApp(let integration):
-            self.openIntegrationApp(forIntegration: integration)
+        case .openIntegrationApp(let integrationName):
+            if let oAuthIntegration = IntegrationProvider.oAuthIntegration(withName: integrationName) {
+                self.openIntegrationApp(forIntegration: oAuthIntegration)
+            }
         }
         return true
     }

@@ -64,7 +64,7 @@ public class DevicesIntegrationViewController: UIViewController {
             return
         }
         
-        Integration.availableIntegrations.forEach { integration in
+        IntegrationProvider.oAuthIntegrations().forEach { integration in
             let item = DeviceItemView(withTitle: integration.title,
                 imageName: integration.icon,
                 connected: currentUser.identities.contains(integration.rawValue),

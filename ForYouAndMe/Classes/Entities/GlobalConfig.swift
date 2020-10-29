@@ -12,6 +12,7 @@ struct GlobalConfig {
     let colorMap: ColorMap
     let stringMap: StringMap
     let countryCodes: [String]
+    let integrationDatas: [IntegrationData]
 }
 
 extension GlobalConfig: Codable {
@@ -19,6 +20,7 @@ extension GlobalConfig: Codable {
         case colorMapDictionary
         case stringMapDictionary
         case countryCodesArray
+        case integrationDatasArray
     }
     
     init(from decoder: Decoder) throws {
@@ -27,6 +29,7 @@ extension GlobalConfig: Codable {
             .mapValues { (codableColor: CodableColor) in codableColor.uiColor }
         self.stringMap = try container.decode(CodableDictionary.self, forKey: .stringMapDictionary).decoded
         self.countryCodes = try container.decode(Array<String>.self, forKey: .countryCodesArray)
+        self.integrationDatas = try container.decode(Array<IntegrationData>.self, forKey: .integrationDatasArray)
     }
 
     func encode(to encoder: Encoder) throws {
@@ -34,5 +37,6 @@ extension GlobalConfig: Codable {
         try container.encode(CodableDictionary(self.colorMap.mapValues { CodableColor(uiColor: $0) }), forKey: .colorMapDictionary)
         try container.encode(CodableDictionary(self.stringMap), forKey: .stringMapDictionary)
         try container.encode(self.countryCodes, forKey: .countryCodesArray)
+        try container.encode(self.integrationDatas, forKey: .integrationDatasArray)
     }
 }

@@ -1590,6 +1590,8 @@
 		88F327EA97983FC0C851488DD85A998D /* ORKGraphChartView.m in Sources */ = {isa = PBXBuildFile; fileRef = 1CBF0FF78F9DDCCF8F89B0AA7C898A57 /* ORKGraphChartView.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
 		8904E5A6609A86149E34A9A7C75AC2CD /* ORKAudioStep.h in Headers */ = {isa = PBXBuildFile; fileRef = 4ADC2D00AB50661CD282FD5023442431 /* ORKAudioStep.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		8921310819048EEE2E4F243A141999B2 /* ORKRequestPermissionsStepViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = E04C95C7514D00D668BA1D33D044BFCE /* ORKRequestPermissionsStepViewController.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
+		893B20FE254AD3EA0068BB03 /* IntegrationData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893B20FD254AD3EA0068BB03 /* IntegrationData.swift */; };
+		893B2186254ADC160068BB03 /* IntegrationProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893B2185254ADC160068BB03 /* IntegrationProvider.swift */; };
 		89419F6DA745C9EB2B494B0BF12289E9 /* ORKStepNavigationRule_Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = E90174F67D92F91C73E19839D5740C38 /* ORKStepNavigationRule_Internal.h */; settings = {ATTRIBUTES = (Project, ); }; };
 		8943C829254322C500238AF8 /* PagedActivitySectionCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8943C828254322C500238AF8 /* PagedActivitySectionCoordinator.swift */; };
 		8943C85725432F7F00238AF8 /* Activity+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8943C85625432F7F00238AF8 /* Activity+Extensions.swift */; };
@@ -5228,6 +5230,8 @@
 		88B1003A550CC979E5F1C1DE7CFAECF2 /* SVProgressHUD-prefix.pch */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = "SVProgressHUD-prefix.pch"; sourceTree = "<group>"; };
 		88DFAC3545C1D216669745A4211EABCB /* GULSecureCoding.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = GULSecureCoding.h; path = GoogleUtilities/Environment/Private/GULSecureCoding.h; sourceTree = "<group>"; };
 		891F989821E945BD8984CB92B19ED0A5 /* Mappable.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = Mappable.swift; path = Sources/Mappable.swift; sourceTree = "<group>"; };
+		893B20FD254AD3EA0068BB03 /* IntegrationData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntegrationData.swift; sourceTree = "<group>"; };
+		893B2185254ADC160068BB03 /* IntegrationProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntegrationProvider.swift; sourceTree = "<group>"; };
 		8943C828254322C500238AF8 /* PagedActivitySectionCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PagedActivitySectionCoordinator.swift; sourceTree = "<group>"; };
 		8943C85625432F7F00238AF8 /* Activity+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Activity+Extensions.swift"; sourceTree = "<group>"; };
 		8943C88425432FAF00238AF8 /* SurveyGroup+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SurveyGroup+Extensions.swift"; sourceTree = "<group>"; };
@@ -8711,6 +8715,7 @@
 			isa = PBXGroup;
 			children = (
 				D42D1C300FCA818AAB189CCD576376BF /* CountryCodeProvider.swift */,
+				893B2185254ADC160068BB03 /* IntegrationProvider.swift */,
 				B93EC3B16DDA42975F888295DE62887F /* NSObject+Internal.swift */,
 				A21BF02AC7DECEE6700F2E10A5BD24D4 /* Page+Integration.swift */,
 				2553E4371C2415CFD54D1F6159C7ACF7 /* Survey+Extensions.swift */,
@@ -10213,6 +10218,7 @@
 				DFC05FC68593E8FD565037C0BCAC8855 /* Feed.swift */,
 				86DE41DD7A27413FAD1F563C5F5C98CA /* GlobalConfig.swift */,
 				E67F28366F4E8F62E9EF88BA18517A4F /* Integration.swift */,
+				893B20FD254AD3EA0068BB03 /* IntegrationData.swift */,
 				B8F9F1CBE4DF0C786FCF4202065BD9FB /* OptInPermission.swift */,
 				AFCF236B51EA817EB1CC513929633579 /* Page.swift */,
 				38B8DB60945B8C779E0DEE64CD8E7A8E /* PageRef.swift */,
@@ -14506,6 +14512,7 @@
 				ED6234ABE047E085872751974F881FB0 /* PrioritizedRequest.swift in Sources */,
 				8AC183EFAB7CA30D30785C522E0E0B1D /* PropertyWrappers.swift in Sources */,
 				920F82BC46BB650B8444D82EFA568D55 /* Question.swift in Sources */,
+				893B2186254ADC160068BB03 /* IntegrationProvider.swift in Sources */,
 				94843F0FF017415B4D6A733077543492 /* QuestionBooleanTableViewCell.swift in Sources */,
 				4408785F8F84F6A585846725F2D7483B /* QuestionViewController.swift in Sources */,
 				CAFFD2E11937B08A3CE7A255130B7945 /* QuickActivity.swift in Sources */,
@@ -14551,6 +14558,7 @@
 				B44B87644F5CC71891C7E71795410BC2 /* SurveyQuestionDate.swift in Sources */,
 				C2F9137CB5C92630BE45D7633CE79A8D /* SurveyQuestionNumerical.swift in Sources */,
 				69325696347B1346E1803ED0AF9946A0 /* SurveyQuestionOption.swift in Sources */,
+				893B20FE254AD3EA0068BB03 /* IntegrationData.swift in Sources */,
 				8943C85725432F7F00238AF8 /* Activity+Extensions.swift in Sources */,
 				9E141AE923BC95B9FFF1513A4868BC43 /* SurveyQuestionPickerFactory.swift in Sources */,
 				D63CD58BBA677171301100249CCAFF74 /* SurveyQuestionPickMany.swift in Sources */,

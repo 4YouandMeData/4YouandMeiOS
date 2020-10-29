@@ -14,6 +14,7 @@ extension GlobalConfig: Mappable {
         try self.colorMap = map.from("color_palette")
         try self.stringMap = map.from("strings")
         try self.countryCodes = map.from("country_codes", transformation: Mapper.errorIfEmpty)
+        try self.integrationDatas = map.from("supported_integrations", transformation: Mapper.extractIntegrationData)
     }
 }
 
@@ -73,5 +74,24 @@ extension Mapper {
         }
         
         return stringMap
+    }
+    
+    static func extractIntegrationData(object: Any?) throws -> [IntegrationData] {
+        guard let integrationDatasOuterDict = object as? [String: Any] else {
+            throw MapperError.convertibleError(value: object, type: [IntegrationData].self)
+        }
+        
+        return integrationDatasOuterDict.compactMap { integrationDataOuterDictPair in
+            let name = integrationDataOuterDictPair.key
+            guard let integrationDataInnerDict = integrationDataOuterDictPair.value as? [String: Any] else {
+                print("GlobalConfig - Missing integration inner data for integration '\(name)'")
+                return nil
+            }
+            guard let oAuthAvailable = integrationDataInnerDict["oauth"] as? Bool else {
+                print("GlobalConfig - Missing ouath data as Boolean for integration '\(name)'")
+                return nil
+            }
+            return IntegrationData(name: name, oAuthAvailable: oAuthAvailable)
+        }
     }
 }
