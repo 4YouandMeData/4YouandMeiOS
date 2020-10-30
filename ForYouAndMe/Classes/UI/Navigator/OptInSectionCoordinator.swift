@@ -113,11 +113,10 @@ extension OptInSectionCoordinator: OptInPermissionCoordinator {
             }
         
         systemPermissionRequests
-            .do(onSuccess: { self.navigator.pushProgressHUD() })
+            .addProgress()
             .flatMap { self.repository.sendOptInPermission(permission: optInPermission, granted: granted) }
             .subscribe(onSuccess: { [weak self] () in
                 guard let self = self else { return }
-                self.navigator.popProgressHUD()
                 
                 guard let permissionIndex = self.sectionData.optInPermissions.firstIndex(where: { $0.id == optInPermission.id }) else {
                     assertionFailure("Missing Permission with give ID")
@@ -132,7 +131,6 @@ extension OptInSectionCoordinator: OptInPermissionCoordinator {
                 }
                 }, onError: { [weak self] error in
                     guard let self = self else { return }
-                    self.navigator.popProgressHUD()
                     self.navigator.handleError(error: error, presenter: self.navigationController)
             }).disposed(by: self.disposeBag)
     }

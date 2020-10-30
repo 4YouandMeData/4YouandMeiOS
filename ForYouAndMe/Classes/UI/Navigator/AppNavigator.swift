@@ -29,7 +29,7 @@ class AppNavigator {
     
     static let defaultStartingTab: MainTab = .feed
     
-    private var progressHudCount = 0
+    private static var progressHudCount = 0
     
     private var setupCompleted = false
     private var currentCoordinator: Any?
@@ -456,17 +456,15 @@ class AppNavigator {
                                       taskOptions: nil,
                                       presenter: presenter)
             case .survey(let survey):
-                self.pushProgressHUD()
                 self.repository.getSurvey(surveyId: survey.id)
+                    .addProgress()
                     .subscribe(onSuccess: { [weak self] surveyGroup in
                         guard let self = self else { return }
-                        self.popProgressHUD()
                         self.startSurveySection(withTask: feed,
                                                 surveyGroup: surveyGroup,
                                                 presenter: presenter)
                     }, onError: { [weak self] error in
                         guard let self = self else { return }
-                        self.popProgressHUD()
                         self.handleError(error: error, presenter: presenter)
                     }).disposed(by: self.disposeBag)
             }
@@ -585,14 +583,14 @@ class AppNavigator {
     
     // MARK: Progress HUD
     
-    public func pushProgressHUD() {
+    public static func pushProgressHUD() {
         if self.progressHudCount == 0 {
             SVProgressHUD.show()
         }
         self.progressHudCount += 1
     }
     
-    public func popProgressHUD() {
+    public static func popProgressHUD() {
         if self.progressHudCount > 0 {
             self.progressHudCount -= 1
             if self.progressHudCount == 0 {
@@ -730,25 +728,23 @@ class AppNavigator {
     }
     
     private func openStudyInfoPage(studyInfoPage: StudyInfoPage, presenter: UIViewController) {
-        self.pushProgressHUD()
-        self.repository.getStudyInfoSection().subscribe(onSuccess: { [weak self] section in
-            guard let self = self else { return }
-            let page: Page? = {
-                switch studyInfoPage {
-                case .faq: return section.faqPage
-                case .reward: return section.rewardPage
-                case .contacts: return section.contactsPage
-                }
-            }()
-            
-            guard let unwrappedPage = page else { return }
-            self.showInfoDetailPage(presenter: presenter, page: unwrappedPage, isModal: true)
-            self.popProgressHUD()
-        }, onError: { [weak self] error in
-            guard let self = self else { return }
-            self.popProgressHUD()
-            self.handleError(error: error, presenter: presenter)
-        }).disposed(by: self.disposeBag)
+        self.repository.getStudyInfoSection()
+            .addProgress()
+            .subscribe(onSuccess: { [weak self] section in
+                guard let self = self else { return }
+                let page: Page? = {
+                    switch studyInfoPage {
+                    case .faq: return section.faqPage
+                    case .reward: return section.rewardPage
+                    case .contacts: return section.contactsPage
+                    }
+                }()
+                guard let unwrappedPage = page else { return }
+                self.showInfoDetailPage(presenter: presenter, page: unwrappedPage, isModal: true)
+            }, onError: { [weak self] error in
+                guard let self = self else { return }
+                self.handleError(error: error, presenter: presenter)
+            }).disposed(by: self.disposeBag)
     }
 }
 
@@ -818,5 +814,23 @@ extension UIViewController {
                        message: message,
                        actions: [dismissAction],
                        tintColor: ColorPalette.color(withType: .primary))
+    }
+}
+
+extension PrimitiveSequence where Trait == SingleTrait {
+    func addProgress() -> Single<Element> {
+        self.do(afterSuccess: { _ in AppNavigator.popProgressHUD() },
+                afterError: { _ in AppNavigator.popProgressHUD() },
+                onSubscribe: { AppNavigator.pushProgressHUD() },
+                onDispose: { AppNavigator.popProgressHUD() })
+    }
+}
+
+extension Observable {
+    func addProgress() -> Observable<Element> {
+        self.do(afterError: { _ in AppNavigator.popProgressHUD() },
+                afterCompleted: { AppNavigator.popProgressHUD() },
+                onSubscribe: { AppNavigator.pushProgressHUD() },
+                onDispose: { AppNavigator.popProgressHUD() })
     }
 }

@@ -78,39 +78,36 @@ class LoadingViewController<T>: UIViewController, LoadingPage {
     
     private func startLoading() {
         self.errorView.hideView()
-        self.navigator.pushProgressHUD()
         
         switch self.loadingMode {
         case .initialSetup:
             Services.shared.initializeServices().delaySubscription(.seconds(1), scheduler: MainScheduler.instance)
+                .addProgress()
                 .subscribe(onNext: { progress in
                     print("SetupViewController - Initialization Progress: \(progress)")
                 }, onError: { [weak self] error in
                     guard let self = self else { return }
                     AppNavigator.rotateToPortrait()
-                    self.navigator.popProgressHUD()
                     self.errorView.showViewWithError(error)
-                    }, onCompleted: { [weak self] in
-                        guard let self = self else { return }
-                        self.navigator.popProgressHUD()
-                        AppNavigator.rotateToPortrait()
-                        self.navigator.showSetupCompleted()
+                }, onCompleted: { [weak self] in
+                    guard let self = self else { return }
+                    AppNavigator.rotateToPortrait()
+                    self.navigator.showSetupCompleted()
                 }).disposed(by: self.disposeBag)
             
         case .genericLoad(let loadingInfo, _):
-            loadingInfo.requestSingle.subscribe(onSuccess: { [weak self] loadedData in
-                guard let self = self else { return }
-                self.navigator.popProgressHUD()
-                AppNavigator.rotateToPortrait()
-                loadingInfo.completionCallback(loadedData)
+            loadingInfo.requestSingle
+                .addProgress()
+                .subscribe(onSuccess: { loadedData in
+                    AppNavigator.rotateToPortrait()
+                    loadingInfo.completionCallback(loadedData)
                 }, onError: { [weak self]  error in
                     guard let self = self else { return }
                     AppNavigator.rotateToPortrait()
-                    self.navigator.popProgressHUD()
                     if false == self.navigator.handleUserNotLoggedError(error: error) {
                         self.errorView.showViewWithError(error)
                     }
-            }).disposed(by: self.disposeBag)
+                }).disposed(by: self.disposeBag)
         }
     }
 }

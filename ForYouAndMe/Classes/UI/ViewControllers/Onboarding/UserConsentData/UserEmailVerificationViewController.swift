@@ -152,14 +152,10 @@ public class UserEmailVerificationViewController: UIViewController {
     // MARK: Actions
     
     @objc private func resendCodeButtonPressed() {
-        self.navigator.pushProgressHUD()
         self.repository.resendConfirmationEmail()
-            .subscribe(onSuccess: { [weak self] in
+            .addProgress()
+            .subscribe(onError: { [weak self] error in
                 guard let self = self else { return }
-                self.navigator.popProgressHUD()
-            }, onError: { [weak self] error in
-                guard let self = self else { return }
-                self.navigator.popProgressHUD()
                 self.navigator.handleError(error: error, presenter: self)
             }).disposed(by: self.disposeBag)
     }
@@ -170,23 +166,21 @@ public class UserEmailVerificationViewController: UIViewController {
             return
         }
         
-        self.navigator.pushProgressHUD()
         self.repository.verifyEmail(validationCode: self.codeTextFieldView.text)
-        .subscribe(onSuccess: { [weak self] in
-            guard let self = self else { return }
-            self.navigator.popProgressHUD()
-            self.codeTextFieldView.clearError(clearErrorText: true)
-            self.view.endEditing(true)
-            self.coordinator.onUserEmailVerified()
-        }, onError: { [weak self] error in
-            guard let self = self else { return }
-            self.navigator.popProgressHUD()
-            if let error = error as? RepositoryError, case .wrongEmailValidationCode = error {
-                self.codeTextFieldView.setError(errorText: error.localizedDescription)
-            } else {
-                self.navigator.handleError(error: error, presenter: self)
-            }
-        }).disposed(by: self.disposeBag)
+            .addProgress()
+            .subscribe(onSuccess: { [weak self] in
+                guard let self = self else { return }
+                self.codeTextFieldView.clearError(clearErrorText: true)
+                self.view.endEditing(true)
+                self.coordinator.onUserEmailVerified()
+            }, onError: { [weak self] error in
+                guard let self = self else { return }
+                if let error = error as? RepositoryError, case .wrongEmailValidationCode = error {
+                    self.codeTextFieldView.setError(errorText: error.localizedDescription)
+                } else {
+                    self.navigator.handleError(error: error, presenter: self)
+                }
+            }).disposed(by: self.disposeBag)
     }
     
     @objc private func emailPressed() {

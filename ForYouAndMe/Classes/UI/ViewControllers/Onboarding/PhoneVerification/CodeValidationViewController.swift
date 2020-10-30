@@ -149,38 +149,32 @@ public class CodeValidationViewController: UIViewController {
     // MARK: Actions
     
     @objc private func resendCodeButtonPressed() {
-        self.navigator.pushProgressHUD()
         self.repository.submitPhoneNumber(phoneNumber: self.phoneNumberView.fullNumber)
-            .subscribe(onSuccess: { [weak self] in
+            .addProgress()
+            .subscribe(onError: { [weak self] error in
                 guard let self = self else { return }
-                self.navigator.popProgressHUD()
-            }, onError: { [weak self] error in
-                guard let self = self else { return }
-                self.navigator.popProgressHUD()
                 self.navigator.handleError(error: error, presenter: self)
             }).disposed(by: self.disposeBag)
     }
     
     @objc private func confirmButtonPressed() {
-        self.navigator.pushProgressHUD()
         self.repository.verifyPhoneNumber(phoneNumber: self.phoneNumberView.fullNumber, validationCode: self.codeTextFieldView.text)
-        .subscribe(onSuccess: { [weak self] user in
-            guard let self = self else { return }
-            self.analytics.track(event: .setUserID("\(user.id)"))
-            self.analytics.track(event: .userRegistration(self.phoneNumberView.countryCode))
-            self.navigator.popProgressHUD()
-            self.codeTextFieldView.clearError(clearErrorText: true)
-            self.view.endEditing(true)
-            self.navigator.onLoginCompleted(presenter: self)
-        }, onError: { [weak self] error in
-            guard let self = self else { return }
-            self.navigator.popProgressHUD()
-            if let error = error as? RepositoryError, case .wrongPhoneValidationCode = error {
-                self.codeTextFieldView.setError(errorText: error.localizedDescription)
-            } else {
-                self.navigator.handleError(error: error, presenter: self)
-            }
-        }).disposed(by: self.disposeBag)
+            .addProgress()
+            .subscribe(onSuccess: { [weak self] user in
+                guard let self = self else { return }
+                self.analytics.track(event: .setUserID("\(user.id)"))
+                self.analytics.track(event: .userRegistration(self.phoneNumberView.countryCode))
+                self.codeTextFieldView.clearError(clearErrorText: true)
+                self.view.endEditing(true)
+                self.navigator.onLoginCompleted(presenter: self)
+            }, onError: { [weak self] error in
+                guard let self = self else { return }
+                if let error = error as? RepositoryError, case .wrongPhoneValidationCode = error {
+                    self.codeTextFieldView.setError(errorText: error.localizedDescription)
+                } else {
+                    self.navigator.handleError(error: error, presenter: self)
+                }
+            }).disposed(by: self.disposeBag)
     }
     
     @objc private func phoneNumberPressed() {

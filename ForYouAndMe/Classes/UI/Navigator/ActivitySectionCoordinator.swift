@@ -22,15 +22,13 @@ protocol ActivitySectionCoordinator: class {
 
 extension ActivitySectionCoordinator {
     func delayActivity() {
-        self.navigator.pushProgressHUD()
         self.repository.delayTask(taskId: self.taskIdentifier)
+            .addProgress()
             .subscribe(onSuccess: { [weak self] in
                 guard let self = self else { return }
-                self.navigator.popProgressHUD()
                 self.completionCallback()
                 }, onError: { [weak self] error in
                     guard let self = self else { return }
-                    self.navigator.popProgressHUD()
                     if let presenter = self.activityPresenter {
                         self.navigator.handleError(error: error, presenter: presenter)
                     }

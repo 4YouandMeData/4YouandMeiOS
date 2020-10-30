@@ -71,8 +71,6 @@ class Services {
         let navigator = AppNavigator(withRepository: repository, analytics: analytics, deeplinkService: deeplinkService, window: window)
         self.services.append(navigator)
         
-        
-        
         // Add services circular dependences
         deeplinkService.delegate = navigator
         notificationService.notificationTokenDelegate = repository

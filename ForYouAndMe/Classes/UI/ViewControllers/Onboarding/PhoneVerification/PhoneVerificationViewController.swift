@@ -182,11 +182,10 @@ public class PhoneVerificationViewController: UIViewController {
     // MARK: Actions
     
     @objc private func confirmButtonPressed() {
-        self.navigator.pushProgressHUD()
         self.repository.submitPhoneNumber(phoneNumber: self.phoneNumberView.fullNumber)
+            .addProgress()
             .subscribe(onSuccess: { [weak self] in
                 guard let self = self else { return }
-                self.navigator.popProgressHUD()
                 self.phoneNumberView.clearError(clearErrorText: true)
                 self.view.endEditing(true)
                 self.navigator.showCodeValidation(countryCode: self.phoneNumberView.countryCode,
@@ -194,7 +193,6 @@ public class PhoneVerificationViewController: UIViewController {
                                                   presenter: self)
             }, onError: { [weak self] error in
                 guard let self = self else { return }
-                self.navigator.popProgressHUD()
                 if let error = error as? RepositoryError, case .missingPhoneNumber = error {
                     self.phoneNumberView.setError(errorText: error.localizedDescription)
                 } else {

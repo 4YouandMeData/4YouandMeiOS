@@ -63,15 +63,13 @@ class ConsentUserDataSectionCoordinator {
                 return
         }
         
-        self.navigator.pushProgressHUD()
         self.repository.sendUserData(firstName: firstName, lastName: lastName, signatureImage: signatureImage)
+            .addProgress()
             .subscribe(onSuccess: { [weak self] in
                 guard let self = self else { return }
-                self.navigator.popProgressHUD()
                 self.showSuccess()
                 }, onError: { [weak self] error in
                     guard let self = self else { return }
-                    self.navigator.popProgressHUD()
                     self.navigator.handleError(error: error, presenter: self.navigationController)
             }).disposed(by: self.disposeBag)
     }

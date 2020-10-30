@@ -272,7 +272,7 @@ public class VideoDiaryRecorderViewController: UIViewController {
     }
     
     private func sendResult() {
-        self.navigator.pushProgressHUD()
+        AppNavigator.pushProgressHUD()
         guard let videoUrl = self.playerView.videoURL, let videoData = try? Data.init(contentsOf: videoUrl) else {
             assertionFailure("Couldn't transform result data to expected network representation")
             self.navigator.handleError(error: nil, presenter: self, onDismiss: { [weak self] in
@@ -283,14 +283,15 @@ public class VideoDiaryRecorderViewController: UIViewController {
         let videoResultFile = TaskNetworkResultFile(data: videoData, fileExtension: self.mergedVideoExtension)
         let taskNetworkResult = TaskNetworkResult(data: [:], attachedFile: videoResultFile)
         self.repository.sendTaskResult(taskId: self.taskIdentifier, taskResult: taskNetworkResult)
+            .do(afterSuccess: { _ in AppNavigator.popProgressHUD() },
+                afterError: { _ in AppNavigator.popProgressHUD() },
+                onDispose: { AppNavigator.popProgressHUD() })
             .subscribe(onSuccess: { [weak self] in
                 guard let self = self else { return }
-                self.navigator.popProgressHUD()
                 try? FileManager.default.removeItem(atPath: Constants.Task.videoResultURL.path)
                 self.currentState = .submitted(submitDate: Date(), isPlaying: false)
                 }, onError: { [weak self] error in
                     guard let self = self else { return }
-                    self.navigator.popProgressHUD()
                     self.navigator.handleError(error: error,
                                                presenter: self)
             }).disposed(by: self.disposeBag)
@@ -318,7 +319,7 @@ public class VideoDiaryRecorderViewController: UIViewController {
     }
     
     private func stopRecording() {
-        self.navigator.pushProgressHUD()
+        AppNavigator.pushProgressHUD()
         self.recordTrackingTimer?.invalidate()
         self.currentState = .record(isRecording: false)
         self.cameraView.stopRecording()
@@ -341,7 +342,7 @@ public class VideoDiaryRecorderViewController: UIViewController {
     private func handleCompleteRecording() {
         // Adding Progress HUD here so that the user interaction is disabled until the video is saved to documents directory
         self.analytics.track(event: .videoDiaryAction(AnalyticsParameter.recordingPaused.rawValue))
-        self.navigator.pushProgressHUD()
+        AppNavigator.pushProgressHUD()
         self.cameraView.mergeRecordedVideos()
     }
     
@@ -525,7 +526,7 @@ extension VideoDiaryRecorderViewController: CameraViewDelegate {
     }
     
     func hasFinishedRecording(fileURL: URL?, error: Error?) {
-        self.navigator.popProgressHUD()
+        AppNavigator.popProgressHUD()
         
         guard nil == error, nil != fileURL else {
             print("VideoDiaryRecorderViewController - Error while writing video on file: \(String(describing: error))")
@@ -545,7 +546,7 @@ extension VideoDiaryRecorderViewController: CameraViewDelegate {
         guard let mergedVideoURL = mergedVideoURL else { return }
         
         self.playerView.videoURL = mergedVideoURL
-        self.navigator.popProgressHUD()
+        AppNavigator.popProgressHUD()
         
         self.currentState = .review(isPlaying: false)
     }
@@ -553,7 +554,7 @@ extension VideoDiaryRecorderViewController: CameraViewDelegate {
     func hasVideoMergingErrorOccurred(error: VideoMergingError) {
         Async.mainQueue { [weak self] in
             guard let self = self else { return }
-            self.navigator.popProgressHUD()
+            AppNavigator.popProgressHUD()
             self.navigator.handleError(error: error, presenter: self)
         }
     }

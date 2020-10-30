@@ -117,16 +117,14 @@ class TaskSectionCoordinator: NSObject, PagedActivitySectionCoordinator {
             })
             return
         }
-        self.navigator.pushProgressHUD()
         self.repository.sendTaskResult(taskId: self.taskIdentifier, taskResult: taskNetworkResult)
+            .addProgress()
             .subscribe(onSuccess: { [weak self] in
                 guard let self = self else { return }
-                self.navigator.popProgressHUD()
                 self.deleteTaskResult(path: Constants.Task.taskResultURL)
                 self.showSuccessPage()
                 }, onError: { [weak self] error in
                     guard let self = self else { return }
-                    self.navigator.popProgressHUD()
                     self.navigator.handleError(error: error,
                                                presenter: presenter,
                                                onDismiss: { [weak self] in

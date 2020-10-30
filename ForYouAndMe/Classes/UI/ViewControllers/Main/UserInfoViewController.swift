@@ -180,15 +180,13 @@ class UserInfoViewController: UIViewController {
             return UserInfoParameterRequest(parameter: parameter, value: value)
         }
         
-        self.navigator.pushProgressHUD()
         self.repository.sendUserInfoParameters(userParameterRequests: userInfoParameterRequests)
+            .addProgress()
             .subscribe(onSuccess: { [weak self] _ in
                 guard let self = self else { return }
-                self.navigator.popProgressHUD()
                 self.pageState.accept(.read)
                 }, onError: { [weak self] error in
                     guard let self = self else { return }
-                    self.navigator.popProgressHUD()
                     self.navigator.handleError(error: error, presenter: self)
             }).disposed(by: self.disposeBag)
     }

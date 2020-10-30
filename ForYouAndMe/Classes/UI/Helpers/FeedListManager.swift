@@ -146,11 +146,8 @@ class FeedListManager: NSObject {
         }
         
         self.currentRequestDisposable?.dispose()
-        self.navigator.pushProgressHUD()
         self.currentRequestDisposable = delegate.getDataProviderSingle(repository: self.repository)
-            .do(onSuccess: { [weak self] _ in self?.navigator.popProgressHUD() },
-                onError: { [weak self] _ in self?.navigator.popProgressHUD() },
-                onDispose: { () in self.navigator.popProgressHUD() })
+            .addProgress()
             .subscribe(onSuccess: { [weak self] content in
                 guard let self = self else { return }
                 self.tableView.refreshControl?.endRefreshing()
@@ -196,12 +193,9 @@ class FeedListManager: NSObject {
             return
         }
         
-        self.navigator.pushProgressHUD()
         self.repository.sendQuickActivityResult(quickActivityTaskId: taskId,
                                                 quickActivityOption: option)
-            .do(onSuccess: { [weak self] _ in self?.navigator.popProgressHUD() },
-                onError: { [weak self] _ in self?.navigator.popProgressHUD() },
-                onDispose: { [weak self] in self?.navigator.popProgressHUD() })
+            .addProgress()
             .subscribe(onSuccess: { [weak self] in
                 guard let self = self else { return }
                 self.analytics.track(event: .quickActivity(taskId, option: option.id))
@@ -272,19 +266,17 @@ extension FeedListManager: UITableViewDataSource {
                     })
                 case .survey(let survey):
                     cell.display(data: survey, buttonPressedCallback: { () in
-                        self.navigator.pushProgressHUD()
                         self.repository.getSurvey(surveyId: survey.id)
+                            .addProgress()
                             .subscribe(onSuccess: { [weak self] surveyGroup in
                                 guard let self = self else { return }
                                 guard let delegate = self.delegate else { return }
-                                self.navigator.popProgressHUD()
                                 self.navigator.startSurveySection(withTask: feed,
                                                                   surveyGroup: surveyGroup,
                                                                   presenter: delegate.presenter)
                             }, onError: { [weak self] error in
                                 guard let self = self else { return }
                                 guard let delegate = self.delegate else { return }
-                                self.navigator.popProgressHUD()
                                 self.navigator.handleError(error: error, presenter: delegate.presenter)
                             }).disposed(by: self.disposeBag)
                     })

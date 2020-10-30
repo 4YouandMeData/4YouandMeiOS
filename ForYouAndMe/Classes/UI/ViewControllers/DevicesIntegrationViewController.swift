@@ -85,13 +85,12 @@ public class DevicesIntegrationViewController: UIViewController {
                                                   screenClass: String(describing: type(of: self))))
         self.navigationController?.navigationBar.apply(style: NavigationBarStyleCategory.primary(hidden: true).style)
         
-        self.navigator.pushProgressHUD()
         self.repository.refreshUser()
+            .addProgress()
             .toVoid()
             .catchErrorJustReturn(())
             .subscribe(onSuccess: { [weak self] in
                 guard let self = self else { return }
-                self.navigator.popProgressHUD()
                 self.refreshUI()
             })
             .disposed(by: self.disposeBag)

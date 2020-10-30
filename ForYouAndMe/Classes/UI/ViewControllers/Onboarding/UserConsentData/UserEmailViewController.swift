@@ -149,17 +149,15 @@ public class UserEmailViewController: UIViewController {
             assertionFailure("Invalid text field data")
             return
         }
-        self.navigator.pushProgressHUD()
         self.repository.submitEmail(email: self.emailFieldView.text)
+            .addProgress()
             .subscribe(onSuccess: { [weak self] in
                 guard let self = self else { return }
-                self.navigator.popProgressHUD()
                 self.emailFieldView.clearError(clearErrorText: true)
                 self.view.endEditing(true)
                 self.coordinator.onUserEmailSubmitted(email: self.emailFieldView.text)
             }, onError: { [weak self] error in
                 guard let self = self else { return }
-                self.navigator.popProgressHUD()
                 self.navigator.handleError(error: error, presenter: self)
             }).disposed(by: self.disposeBag)
     }

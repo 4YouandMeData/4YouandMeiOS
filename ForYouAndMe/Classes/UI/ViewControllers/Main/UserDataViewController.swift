@@ -170,41 +170,39 @@ class UserDataViewController: UIViewController, CustomSegmentViewDelegate {
         let userDataRequest = self.repository.getUserData()
         let userDataAggregationRequest = self.repository.getUserDataAggregation(period: self.currentPeriod)
         
-        self.navigator.pushProgressHUD()
         // Fetch both UserData and UserDataAggregation
-        Single.zip(userDataRequest, userDataAggregationRequest).subscribe(onSuccess: { [weak self] (userData, userDataAggregations) in
-            guard let self = self else { return }
-            self.errorView.hideView()
-            self.navigator.popProgressHUD()
-            // Prepare UI if needed
-            if false == self.isViewInitialized {
-                self.scrollStackView.stackView.addArrangedSubview(self.summaryView)
-                self.scrollStackView.stackView.addArrangedSubview(self.dataView)
-            }
-            // Show data on UI
-            self.refreshSummary(withUserData: userData)
-            self.refreshCharts(withUserDataAggregations: userDataAggregations)
-        }, onError: { [weak self] error in
-            guard let self = self else { return }
-            self.navigator.popProgressHUD()
-            self.errorView.showViewWithError(error)
-        }).disposed(by: self.disposeBag)
+        Single.zip(userDataRequest, userDataAggregationRequest)
+            .addProgress()
+            .subscribe(onSuccess: { [weak self] (userData, userDataAggregations) in
+                guard let self = self else { return }
+                self.errorView.hideView()
+                // Prepare UI if needed
+                if false == self.isViewInitialized {
+                    self.scrollStackView.stackView.addArrangedSubview(self.summaryView)
+                    self.scrollStackView.stackView.addArrangedSubview(self.dataView)
+                }
+                // Show data on UI
+                self.refreshSummary(withUserData: userData)
+                self.refreshCharts(withUserDataAggregations: userDataAggregations)
+            }, onError: { [weak self] error in
+                guard let self = self else { return }
+                self.errorView.showViewWithError(error)
+            }).disposed(by: self.disposeBag)
     }
     
     private func refreshCharts(withStudyPeriod studyPeriod: StudyPeriod) {
-        self.navigator.pushProgressHUD()
         // Fetch UserDataAggregation
-        self.repository.getUserDataAggregation(period: studyPeriod).subscribe(onSuccess: { [weak self] userDataAggregations in
-            guard let self = self else { return }
-            self.navigator.popProgressHUD()
-            // Show data on UI
-            self.refreshCharts(withUserDataAggregations: userDataAggregations)
-        }, onError: { [weak self] error in
-            guard let self = self else { return }
-            print("UserDataViewController - Error Fetching User Data Aggregation: \(error.localizedDescription)")
-            self.navigator.popProgressHUD()
-            self.showChartsError()
-        }).disposed(by: self.disposeBag)
+        self.repository.getUserDataAggregation(period: studyPeriod)
+            .addProgress()
+            .subscribe(onSuccess: { [weak self] userDataAggregations in
+                guard let self = self else { return }
+                // Show data on UI
+                self.refreshCharts(withUserDataAggregations: userDataAggregations)
+            }, onError: { [weak self] error in
+                guard let self = self else { return }
+                print("UserDataViewController - Error Fetching User Data Aggregation: \(error.localizedDescription)")
+                self.showChartsError()
+            }).disposed(by: self.disposeBag)
     }
     
     private func refreshSummary(withUserData userData: UserData) {
