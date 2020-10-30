@@ -16,8 +16,9 @@ struct User: Codable {
     let daysInStudy: Int
     let identities: [String]
     let points: Int
-    @TimeZoneDecodable
+    @TimeZoneCodable
     var timeZone: TimeZone?
+    @FailableCodable
     var customData: [UserInfoParameter]?
 }
 

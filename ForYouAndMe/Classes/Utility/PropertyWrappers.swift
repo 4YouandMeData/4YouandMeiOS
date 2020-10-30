@@ -44,6 +44,56 @@ struct FailableDecodable<Wrapped: Decodable>: Decodable, OptionalCodingWrapper {
 }
 
 @propertyWrapper
+struct FailableArrayExcludeInvalid<Element: Decodable>: Decodable {
+
+    var wrappedValue: [Element]?
+    
+    init(from decoder: Decoder) throws {
+
+        guard var container = try? decoder.unkeyedContainer(), false == (try? container.decodeNil()) else {
+            self.wrappedValue = nil
+            return
+        }
+        
+        var elements = [Element]()
+        if let count = container.count {
+            elements.reserveCapacity(count)
+        }
+
+        while !container.isAtEnd {
+            if let element = try container.decode(FailableDecodable<Element>.self).wrappedValue {
+                elements.append(element)
+            } else {
+                print("Invalid item exclude from array")
+            }
+        }
+
+        self.wrappedValue = elements
+    }
+}
+
+@propertyWrapper
+struct FailableCodable<Wrapped: Codable>: Codable, OptionalCodingWrapper {
+    var wrappedValue: Wrapped?
+    
+    init(wrappedValue: Wrapped?) {
+        self.wrappedValue = wrappedValue
+    }
+
+    init(from decoder: Decoder) throws {
+        if let container = try? decoder.singleValueContainer(), false == container.decodeNil() {
+            self.wrappedValue = try? container.decode(Wrapped.self)
+        } else {
+            self.wrappedValue = nil
+        }
+    }
+    
+    public func encode(to encoder: Encoder) throws {
+        try self.wrappedValue.encode(to: encoder)
+    }
+}
+
+@propertyWrapper
 struct ExcludeInvalid<Element: Decodable>: Decodable {
 
     var wrappedValue: [Element]
@@ -267,7 +317,7 @@ public struct DateStrategy: DateValueCodableStrategy {
 }
 
 @propertyWrapper
-struct TimeZoneDecodable: Codable, OptionalCodingWrapper {
+struct TimeZoneCodable: Codable, OptionalCodingWrapper {
     
     var wrappedValue: TimeZone?
     

@@ -11,7 +11,8 @@ struct SurveyGroup {
     let id: String
     let type: String
     
-    let surveys: [SurveyTask]
+    @ExcludeInvalid
+    var surveys: [SurveyTask]
     
     let pages: [Page]
     let welcomePage: Page

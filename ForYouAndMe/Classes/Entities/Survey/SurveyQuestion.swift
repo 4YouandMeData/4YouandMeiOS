@@ -50,10 +50,11 @@ struct SurveyQuestion {
     @FailableDateValue<DateStrategy>
     var maximumDate: Date?
     
-    // Options
-    let options: [SurveyQuestionOption]?
+    @FailableDecodable
+    var options: [SurveyQuestionOption]?
     
-    let targets: [SurveyTarget]?
+    @FailableArrayExcludeInvalid
+    var targets: [SurveyTarget]?
 }
 
 extension SurveyQuestion: JSONAPIMappable {

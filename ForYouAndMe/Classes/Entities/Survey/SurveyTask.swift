@@ -13,7 +13,8 @@ struct SurveyTask {
     
     let pages: [Page]
     let welcomePage: Page
-    let questions: [SurveyQuestion]
+    @ExcludeInvalid
+    var questions: [SurveyQuestion]
     let successPage: Page?
 }
 
