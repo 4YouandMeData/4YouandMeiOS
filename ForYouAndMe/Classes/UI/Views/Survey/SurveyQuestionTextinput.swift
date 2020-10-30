@@ -62,6 +62,8 @@ class SurveyQuestionTextInput: UIView, UITextViewDelegate {
         stackView.addArrangedSubview(self.labelLimit)
         
         stackView.addBlankSpace(space: 15)
+        
+        self.autoSetDimension(.height, toSize: Constants.Style.SurveyPickerDefaultHeight)
     }
     
     required init?(coder aDecoder: NSCoder) {

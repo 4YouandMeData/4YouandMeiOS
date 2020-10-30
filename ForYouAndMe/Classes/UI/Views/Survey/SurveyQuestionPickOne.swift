@@ -12,11 +12,7 @@ class SurveyQuestionPickOne: UIView {
     private var currentIndexSelected: Int = 0
     private weak var delegate: SurveyQuestionProtocol?
     
-    private lazy var scrollStackView: ScrollStackView = {
-        let scrollStackView = ScrollStackView(axis: .vertical, horizontalInset: 0.0)
-        scrollStackView.stackView.distribution = .fill
-        return scrollStackView
-    }()
+    private let stackView = UIStackView.create(withAxis: .vertical)
     
     init(surveyQuestion: SurveyQuestion, delegate: SurveyQuestionProtocol) {
         guard surveyQuestion.options != nil else {
@@ -25,8 +21,8 @@ class SurveyQuestionPickOne: UIView {
         self.delegate = delegate
         self.surveyQuestion = surveyQuestion
         super.init(frame: .zero)
-        self.addSubview(self.scrollStackView)
-        self.scrollStackView.autoPinEdgesToSuperviewEdges()
+        self.addSubview(self.stackView)
+        self.stackView.autoPinEdgesToSuperviewEdges()
         self.refresh()
     }
     
@@ -35,8 +31,8 @@ class SurveyQuestionPickOne: UIView {
     }
     
     func refresh() {
-        self.scrollStackView.stackView.arrangedSubviews.forEach({$0.removeFromSuperview()})
-        self.scrollStackView.stackView.addBlankSpace(space: 40)
+        self.stackView.arrangedSubviews.forEach({$0.removeFromSuperview()})
+        self.stackView.addBlankSpace(space: 40)
         
         let options = self.surveyQuestion.options
         options?.forEach({ option in
@@ -82,8 +78,8 @@ class SurveyQuestionPickOne: UIView {
             answerLabel.autoAlignAxis(toSuperviewAxis: .horizontal)
             horizontalStackView.addArrangedSubview(answerContainerView)
             
-            self.scrollStackView.stackView.addArrangedSubview(horizontalStackView)
-            self.scrollStackView.stackView.addBlankSpace(space: 20)
+            self.stackView.addArrangedSubview(horizontalStackView)
+            self.stackView.addBlankSpace(space: 20)
         })
     }
     

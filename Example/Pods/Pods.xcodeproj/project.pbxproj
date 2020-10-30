@@ -1763,7 +1763,6 @@
 		97A98750809077EA443B7B433ACF4EFD /* FIRLogger.m in Sources */ = {isa = PBXBuildFile; fileRef = B4DB6F33F19C135703C0B7781BC27E32 /* FIRLogger.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
 		97D2778E818DF4DD86736F0A64C3E84C /* SetupLaterViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B1B1EAB4BBA78874F335EF72ECA5B01 /* SetupLaterViewController.swift */; };
 		97F26DA629789E84507000FB5AF561BC /* GPBUnknownField_PackagePrivate.h in Headers */ = {isa = PBXBuildFile; fileRef = ED9F0FBECB525ACA5B5A0797C3C02124 /* GPBUnknownField_PackagePrivate.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		97F3DF3FD973D4F44AAB02D1CA590616 /* NSObject+Internal.swift in Sources */ = {isa = PBXBuildFile; fileRef = B93EC3B16DDA42975F888295DE62887F /* NSObject+Internal.swift */; };
 		97F433DA97E3FDC4B3162A8DBF28E7B0 /* CaseValidationPattern.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEE1CE80C8D4125F998861E9E873D95D /* CaseValidationPattern.swift */; };
 		9803E9D8C3340F91D9FC693C757ABBC5 /* TestGetUserDataAggregation.json in Resources */ = {isa = PBXBuildFile; fileRef = 1EF5AA0668E2F52796F282EFDE5FAAFB /* TestGetUserDataAggregation.json */; };
 		9817FE5D6F8AFCE0FA6C4F50A63510C8 /* SignatureDrawingModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4E2F6BB729CDDC85882AD7A55ABC8BB /* SignatureDrawingModel.swift */; };
@@ -5813,7 +5812,6 @@
 		B904E29EB4DAEB7CEF3DDA27B69D6FC0 /* GULReachabilityChecker.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = GULReachabilityChecker.h; path = GoogleUtilities/Reachability/Private/GULReachabilityChecker.h; sourceTree = "<group>"; };
 		B90AD73BFE971D9C4FDCF80D133C4A1E /* GPBCodedInputStream.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = GPBCodedInputStream.h; path = objectivec/GPBCodedInputStream.h; sourceTree = "<group>"; };
 		B90B8082BDAAC4FEB4FEDF55C745669E /* ORKHealthClinicalTypeRecorder.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = ORKHealthClinicalTypeRecorder.h; path = ResearchKit/ActiveTasks/ORKHealthClinicalTypeRecorder.h; sourceTree = "<group>"; };
-		B93EC3B16DDA42975F888295DE62887F /* NSObject+Internal.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = "NSObject+Internal.swift"; sourceTree = "<group>"; };
 		B96011994FB8D4BB090C23A0196ED6F8 /* OAuthSwiftHTTPRequest.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = OAuthSwiftHTTPRequest.swift; path = Sources/OAuthSwiftHTTPRequest.swift; sourceTree = "<group>"; };
 		B977E6A5248FF5A4AF7E940CF273AF8F /* ORKReactionTimeViewController.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = ORKReactionTimeViewController.m; path = ResearchKit/ActiveTasks/ORKReactionTimeViewController.m; sourceTree = "<group>"; };
 		B985B193DC8BBC81409BFD3F0E9D1F07 /* GDTCORPlatform.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = GDTCORPlatform.h; path = GoogleDataTransport/GDTCORLibrary/Public/GoogleDataTransport/GDTCORPlatform.h; sourceTree = "<group>"; };
@@ -8716,7 +8714,6 @@
 			children = (
 				D42D1C300FCA818AAB189CCD576376BF /* CountryCodeProvider.swift */,
 				893B2185254ADC160068BB03 /* IntegrationProvider.swift */,
-				B93EC3B16DDA42975F888295DE62887F /* NSObject+Internal.swift */,
 				A21BF02AC7DECEE6700F2E10A5BD24D4 /* Page+Integration.swift */,
 				2553E4371C2415CFD54D1F6159C7ACF7 /* Survey+Extensions.swift */,
 				C30653EC9AF56AD324E70F6D9E88539A /* UILabel+Internal.swift */,
@@ -14484,7 +14481,6 @@
 				9501A1C3678D254FD1FB9219412EAEBC /* NotificationService.swift in Sources */,
 				25D427992CBD37F4F8D19741C3A87AD7 /* NSAttributedString+Extensions.swift in Sources */,
 				70342E44A79DEC0E25645BBEB0AAEE6D /* NSAttributedString+Palette.swift in Sources */,
-				97F3DF3FD973D4F44AAB02D1CA590616 /* NSObject+Internal.swift in Sources */,
 				D8610DAF043D7CB5FABC26B9CB92DA04 /* OptInPermission.swift in Sources */,
 				523C36E961E413708F2721701AC15339 /* OptInPermissionViewController.swift in Sources */,
 				96620AD462C7E91BFBDF709680A0C61F /* OptInSection.swift in Sources */,

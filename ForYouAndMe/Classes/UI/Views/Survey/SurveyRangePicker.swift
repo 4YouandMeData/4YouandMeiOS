@@ -67,6 +67,8 @@ class SurveyRangePicker: UIView {
         let dummyView = UIView()
         stackView.addArrangedSubview(dummyView)
         dummyView.setContentHuggingPriority(UILayoutPriority(100), for: .vertical)
+        
+        self.autoSetDimension(.height, toSize: Constants.Style.SurveyPickerDefaultHeight)
     }
     
     required init?(coder aDecoder: NSCoder) {

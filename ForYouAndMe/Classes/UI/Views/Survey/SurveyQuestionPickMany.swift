@@ -16,11 +16,7 @@ class SurveyQuestionPickMany: UIView {
     private static let optionWidth: CGFloat = 74.0
     private weak var delegate: SurveyQuestionProtocol?
     
-    private lazy var scrollStackView: ScrollStackView = {
-        let scrollStackView = ScrollStackView(axis: .vertical, horizontalInset: 0.0)
-        scrollStackView.stackView.distribution = .fill
-        return scrollStackView
-    }()
+    private let stackView = UIStackView.create(withAxis: .vertical)
     
     private final let disposeBag = DisposeBag()
     
@@ -31,10 +27,10 @@ class SurveyQuestionPickMany: UIView {
         self.delegate = delegate
         self.surveyQuestion = surveyQuestion
         super.init(frame: .zero)
-        self.addSubview(self.scrollStackView)
-        self.scrollStackView.autoPinEdgesToSuperviewEdges()
+        self.addSubview(self.stackView)
+        self.stackView.autoPinEdgesToSuperviewEdges()
         
-        self.scrollStackView.stackView.addBlankSpace(space: 40)
+        self.stackView.addBlankSpace(space: 40)
         
         let options = self.surveyQuestion.options
         options?.forEach({ option in
@@ -70,8 +66,8 @@ class SurveyQuestionPickMany: UIView {
             answerLabel.autoAlignAxis(toSuperviewAxis: .horizontal)
             horizontalStackView.addArrangedSubview(answerContainerView)
             
-            self.scrollStackView.stackView.addArrangedSubview(horizontalStackView)
-            self.scrollStackView.stackView.addBlankSpace(space: 20)
+            self.stackView.addArrangedSubview(horizontalStackView)
+            self.stackView.addBlankSpace(space: 20)
         })
     }
     

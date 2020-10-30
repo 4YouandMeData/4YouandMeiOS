@@ -35,6 +35,8 @@ class SurveyQuestionDate: UIView {
         datePicker.addTarget(self, action: #selector(self.handleDatePicker), for: .valueChanged)
         stackView.addArrangedSubview(datePicker)
         stackView.addBlankSpace(space: 20)
+        
+        self.autoSetDimension(.height, toSize: Constants.Style.SurveyPickerDefaultHeight)
     }
     
     required init?(coder aDecoder: NSCoder) {

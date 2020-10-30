@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import TPKeyboardAvoiding
 
 struct SurveyQuestionPageData {
     let question: SurveyQuestion
@@ -23,6 +24,12 @@ class SurveyQuestionViewController: UIViewController,
     
     private let pageData: SurveyQuestionPageData
     private let coordinator: SurveyQuestionViewCoordinator
+    
+    private lazy var scrollView: UIScrollView = {
+        let scrollView = TPKeyboardAvoidingScrollView()
+        scrollView.keyboardDismissMode = .interactive
+        return scrollView
+    }()
     
     private lazy var confirmButtonView: GenericButtonView = {
         let view = GenericButtonView(withImageStyleCategory: .secondaryBackground)
@@ -57,23 +64,26 @@ class SurveyQuestionViewController: UIViewController,
                                             withParameters: ["\(self.pageData.questionNumber)",
                                                              "\(self.pageData.totalQuestions)"])
         
+        // ScrollView
+        self.view.addSubview(self.scrollView)
+        self.scrollView.autoPinEdgesToSuperviewSafeArea(with: .zero, excludingEdge: .bottom)
+        
         // StackView
         let stackView = UIStackView.create(withAxis: .vertical)
-        self.view.addSubview(stackView)
-        stackView.autoPinEdgesToSuperviewSafeArea(with: UIEdgeInsets(top: 0,
-                                                                     left: Constants.Style.DefaultHorizontalMargins,
-                                                                     bottom: 0,
-                                                                     right: Constants.Style.DefaultHorizontalMargins),
-                                                  excludingEdge: .bottom)
+        self.scrollView.addSubview(stackView)
+        stackView.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets(top: 0.0,
+                                                                  left: Constants.Style.DefaultHorizontalMargins,
+                                                                  bottom: 0.0,
+                                                                  right: Constants.Style.DefaultHorizontalMargins))
+        stackView.autoAlignAxis(toSuperviewAxis: .vertical)
         
         stackView.addBlankSpace(space: 50.0)
         // Image
         stackView.addHeaderImage(image: self.pageData.question.image, height: 54.0)
         stackView.addBlankSpace(space: 40.0)
         // Title
-        
         let attributedString = NSAttributedString.create(withText: self.pageData.question.body,
-                                                         fontStyle: .title,
+                                                         fontStyle: .header2,
                                                          colorType: .primaryText)
         let label = UILabel()
         label.attributedText = attributedString
@@ -82,13 +92,12 @@ class SurveyQuestionViewController: UIViewController,
         label.setContentHuggingPriority(UILayoutPriority(1000), for: .vertical)
         
         let questionPicker = SurveyQuestionPickerFactory.getSurveyQuestionPicker(for: self.pageData.question, delegate: self)
-        
         stackView.addArrangedSubview(questionPicker)
         
         // Bottom View
         self.view.addSubview(self.confirmButtonView)
-        self.confirmButtonView.autoPinEdgesToSuperviewSafeArea(with: UIEdgeInsets.zero, excludingEdge: .top)
-        stackView.autoPinEdge(.bottom, to: .top, of: self.confirmButtonView)
+        self.confirmButtonView.autoPinEdgesToSuperviewSafeArea(with: .zero, excludingEdge: .top)
+        self.confirmButtonView.autoPinEdge(.top, to: .bottom, of: self.scrollView)
         
         let tap = UITapGestureRecognizer(target: self, action: #selector(self.tapView))
         self.view.addGestureRecognizer(tap)
