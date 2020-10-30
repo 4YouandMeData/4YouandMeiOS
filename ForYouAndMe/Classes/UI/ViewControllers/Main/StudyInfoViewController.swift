@@ -33,6 +33,10 @@ class StudyInfoViewController: UIViewController {
         fatalError("init(coder:) has not been implemented")
     }
     
+    deinit {
+        print("StudyInfoViewController - deinit")
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         

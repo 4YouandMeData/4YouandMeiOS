@@ -11,7 +11,6 @@ import RxSwift
 class SurveyGroupSectionCoordinator: PagedActivitySectionCoordinator {
     
     // MARK: - ActivitySectionCoordinator
-    var activityPresenter: UIViewController? { return self.navigationController }
     let taskIdentifier: String
     let completionCallback: NotificationCallback
     let navigator: AppNavigator
@@ -19,7 +18,7 @@ class SurveyGroupSectionCoordinator: PagedActivitySectionCoordinator {
     let disposeBag = DisposeBag()
     
     // MARK: - PagedActivitySectionCoordinator
-    weak var internalNavigationController: UINavigationController?
+    weak var activitySectionViewController: ActivitySectionViewController?
     let pagedSectionData: PagedSectionData
     var currentlyRescheduledTimes: Int
     var maxRescheduleTimes: Int
@@ -40,6 +39,10 @@ class SurveyGroupSectionCoordinator: PagedActivitySectionCoordinator {
         self.completionCallback = completionCallback
         self.navigator = Services.shared.navigator
         self.repository = Services.shared.repository
+    }
+    
+    deinit {
+        print("SurveyGroupSectionCoordinator - deinit")
     }
     
     // MARK: - Private Methods

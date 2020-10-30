@@ -117,6 +117,7 @@ class FeedListManager: NSObject {
     }
     
     deinit {
+        print("FeedListManager - deinit")
         self.currentRequestDisposable?.dispose()
     }
     
@@ -149,7 +150,7 @@ class FeedListManager: NSObject {
         self.currentRequestDisposable = delegate.getDataProviderSingle(repository: self.repository)
             .do(onSuccess: { [weak self] _ in self?.navigator.popProgressHUD() },
                 onError: { [weak self] _ in self?.navigator.popProgressHUD() },
-                onDispose: { [weak self] in self?.navigator.popProgressHUD() })
+                onDispose: { () in self.navigator.popProgressHUD() })
             .subscribe(onSuccess: { [weak self] content in
                 guard let self = self else { return }
                 self.tableView.refreshControl?.endRefreshing()

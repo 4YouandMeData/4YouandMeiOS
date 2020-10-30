@@ -50,6 +50,7 @@ class IntegrationSectionCoordinator {
 
 extension IntegrationSectionCoordinator: PagedSectionCoordinator {
     
+    var isOnboarding: Bool { true }
     var pages: [Page] { self.sectionData.pages }
     
     func showPage(_ page: Page, isOnboarding: Bool) {

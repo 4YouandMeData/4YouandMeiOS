@@ -33,13 +33,10 @@ class AppNavigator {
     
     private var setupCompleted = false
     private var currentCoordinator: Any?
-    private var currentActivityCoordinator: ActivitySectionCoordinator?
+    private weak var currentActivityCoordinator: ActivitySectionCoordinator?
     
     private var isTaskInProgress: Bool {
-        return false
-        // TODO: Fix this! currentActivityCoordinator is not always release due to some
-        // shared close buttons that dismiss the task without clearing this variable
-//        return nil != self.currentActivityCoordinator
+        return nil != self.currentActivityCoordinator
     }
     
     private let repository: Repository
@@ -116,7 +113,7 @@ class AppNavigator {
         }
     }
     
-    public func rotateToPortrait() {
+    public static func rotateToPortrait() {
         let value = UIInterfaceOrientation.portrait.rawValue
         UIDevice.current.setValue(value, forKey: "orientation")
         UIViewController.attemptRotationToDeviceOrientation()
@@ -494,16 +491,16 @@ class AppNavigator {
     public func startTaskSection(withTask task: Feed,
                                  activity: Activity,
                                  taskOptions: TaskOptions?, presenter: UIViewController) {
+        
+        assert(false == self.isTaskInProgress, "A task is already in progress")
+        
         guard let taskType = activity.taskType else {
             assertionFailure("Missing task type for given activity")
             self.handleError(error: nil, presenter: presenter)
             return
         }
-        let completionCallback: NotificationCallback = { [weak self] in
-            guard let self = self else { return }
-            self.rotateToPortrait()
+        let completionCallback: NotificationCallback = {
             presenter.dismiss(animated: true, completion: nil)
-            self.currentActivityCoordinator = nil
         }
         let coordinator: ActivitySectionCoordinator = {
             switch taskType {
@@ -533,10 +530,11 @@ class AppNavigator {
     }
     
     public func startSurveySection(withTask task: Feed, surveyGroup: SurveyGroup, presenter: UIViewController) {
-        let completionCallback: NotificationCallback = { [weak self] in
-            guard let self = self else { return }
+        
+        assert(false == self.isTaskInProgress, "A task is already in progress")
+        
+        let completionCallback: NotificationCallback = {
             presenter.dismiss(animated: true, completion: nil)
-            self.currentActivityCoordinator = nil
         }
         
         let coordinator = SurveyGroupSectionCoordinator(withTask: task,

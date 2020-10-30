@@ -127,6 +127,10 @@ class UserDataViewController: UIViewController, CustomSegmentViewDelegate {
         fatalError("init(coder:) has not been implemented")
     }
     
+    deinit {
+        print("UserDataViewController - deinit")
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         

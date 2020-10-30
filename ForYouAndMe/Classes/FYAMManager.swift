@@ -20,6 +20,7 @@ public class FYAMManager {
         
         // Firebase Setup
         FirebaseApp.configure()
+        FirebaseConfiguration.shared.setLoggerLevel(.min)
         
         // Prepare Specific app elements
         FontPalette.initialize(withFontStyleMap: fontStyleMap)

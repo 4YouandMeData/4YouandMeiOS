@@ -26,6 +26,10 @@ class SurveySectionCoordinator {
         self.completionCallback = completionCallback
     }
     
+    deinit {
+        print("SurveySectionCoordinator - deinit")
+    }
+    
     // MARK: - Public Methods
     
     public func getStartingPage() -> UIViewController {
@@ -94,6 +98,7 @@ class SurveySectionCoordinator {
 
 extension SurveySectionCoordinator: PagedSectionCoordinator {
     
+    var isOnboarding: Bool { true }
     var pages: [Page] { self.sectionData.pages }
     
     func performCustomPrimaryButtonNavigation(page: Page) -> Bool {

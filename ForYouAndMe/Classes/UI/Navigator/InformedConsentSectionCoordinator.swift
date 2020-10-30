@@ -75,6 +75,7 @@ class InformedConsentSectionCoordinator {
 
 extension InformedConsentSectionCoordinator: PagedSectionCoordinator {
     
+    var isOnboarding: Bool { true }
     var pages: [Page] { self.sectionData.pages }
     
     func performCustomPrimaryButtonNavigation(page: Page) -> Bool {

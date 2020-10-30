@@ -11,7 +11,6 @@ import RxSwift
 class CamcogSectionCoordinator: NSObject, PagedActivitySectionCoordinator {
     
     // MARK: - ActivitySectionCoordinator
-    var activityPresenter: UIViewController? { return self.navigationController }
     let completionCallback: NotificationCallback
     let taskIdentifier: String
     let navigator: AppNavigator
@@ -19,7 +18,7 @@ class CamcogSectionCoordinator: NSObject, PagedActivitySectionCoordinator {
     let disposeBag = DisposeBag()
     
     // MARK: - PagedActivitySectionCoordinator
-    weak var internalNavigationController: UINavigationController?
+    weak var activitySectionViewController: ActivitySectionViewController?
     let pagedSectionData: PagedSectionData
     var currentlyRescheduledTimes: Int
     var maxRescheduleTimes: Int
@@ -36,6 +35,10 @@ class CamcogSectionCoordinator: NSObject, PagedActivitySectionCoordinator {
         self.navigator = Services.shared.navigator
         self.repository = Services.shared.repository
         super.init()
+    }
+    
+    deinit {
+        print("CamcogSectionCoordinator - deinit")
     }
     
     // MARK: - Public Methods

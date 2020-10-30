@@ -124,6 +124,8 @@ extension ConsentUserDataSectionCoordinator: UserSignatureCoordinator {
 }
 
 extension ConsentUserDataSectionCoordinator: PagedSectionCoordinator {
+    
+    var isOnboarding: Bool { true }
     var pages: [Page] { self.sectionData.pages }
     
     func onUnhandledPrimaryButtonNavigation(page: Page) {

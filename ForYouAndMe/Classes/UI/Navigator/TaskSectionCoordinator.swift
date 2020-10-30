@@ -12,7 +12,6 @@ import RxSwift
 class TaskSectionCoordinator: NSObject, PagedActivitySectionCoordinator {
     
     // MARK: - ActivitySectionCoordinator
-    var activityPresenter: UIViewController? { return self.navigationController }
     let taskIdentifier: String
     let navigator: AppNavigator
     let repository: Repository
@@ -20,7 +19,7 @@ class TaskSectionCoordinator: NSObject, PagedActivitySectionCoordinator {
     let disposeBag = DisposeBag()
     
     // MARK: - PagedActivitySectionCoordinator
-    weak var internalNavigationController: UINavigationController?
+    weak var activitySectionViewController: ActivitySectionViewController?
     let pagedSectionData: PagedSectionData
     var currentlyRescheduledTimes: Int
     var maxRescheduleTimes: Int
@@ -47,7 +46,9 @@ class TaskSectionCoordinator: NSObject, PagedActivitySectionCoordinator {
     }
     
     deinit {
+        print("TaskSectionCoordinator - deinit")
         self.deleteTaskResult(path: Constants.Task.taskResultURL)
+        AppNavigator.rotateToPortrait()
     }
     
     // MARK: - Private Methods
@@ -96,7 +97,6 @@ class TaskSectionCoordinator: NSObject, PagedActivitySectionCoordinator {
     }
     
     private func cancelTask() {
-        self.deleteTaskResult(path: Constants.Task.taskResultURL)
         self.completionCallback()
     }
     

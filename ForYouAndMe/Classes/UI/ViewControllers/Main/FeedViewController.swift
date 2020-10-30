@@ -66,6 +66,10 @@ class FeedViewController: UIViewController {
         fatalError("init(coder:) has not been implemented")
     }
     
+    deinit {
+        print("FeedViewController - deinit")
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         

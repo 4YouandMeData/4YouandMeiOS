@@ -11,7 +11,6 @@ import RxSwift
 class VideoDiarySectionCoordinator: NSObject, PagedActivitySectionCoordinator {
     
     // MARK: - ActivitySectionCoordinator
-    var activityPresenter: UIViewController? { return self.navigationController }
     let taskIdentifier: String
     let completionCallback: NotificationCallback
     let navigator: AppNavigator
@@ -19,7 +18,7 @@ class VideoDiarySectionCoordinator: NSObject, PagedActivitySectionCoordinator {
     let disposeBag = DisposeBag()
     
     // MARK: - PagedActivitySectionCoordinator
-    weak var internalNavigationController: UINavigationController?
+    weak var activitySectionViewController: ActivitySectionViewController?
     let pagedSectionData: PagedSectionData
     var currentlyRescheduledTimes: Int
     var maxRescheduleTimes: Int
@@ -46,6 +45,7 @@ class VideoDiarySectionCoordinator: NSObject, PagedActivitySectionCoordinator {
     }
     
     deinit {
+        print("VideoDiarySectionCoordinator - deinit")
         self.deleteVideoResult()
     }
     

@@ -70,6 +70,7 @@ class OptInSectionCoordinator {
 
 extension OptInSectionCoordinator: PagedSectionCoordinator {
     
+    var isOnboarding: Bool { true }
     var pages: [Page] { self.sectionData.pages }
     
     func performCustomPrimaryButtonNavigation(page: Page) -> Bool {

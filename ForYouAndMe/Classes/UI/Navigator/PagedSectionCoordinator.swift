@@ -10,9 +10,10 @@ import Foundation
 protocol PagedSectionCoordinator: PageCoordinator {
     var navigationController: UINavigationController { get }
     var pages: [Page] { get }
+    var isOnboarding: Bool { get }
     
-    func showPage(_ page: Page, isOnboarding: Bool)
-    func showLinkedPage(forPageRef pageRef: PageRef, isOnboarding: Bool)
+    func showPage(_ page: Page)
+    func showLinkedPage(forPageRef pageRef: PageRef)
     func showModalPage(forPageRef pageRef: PageRef)
     
     func performCustomPrimaryButtonNavigation(page: Page) -> Bool
@@ -24,13 +25,13 @@ protocol PagedSectionCoordinator: PageCoordinator {
 
 extension PagedSectionCoordinator {
     
-    func showPage(_ page: Page, isOnboarding: Bool) {
-        let infoPageData = InfoPageData.createInfoPageData(withPage: page, isOnboarding: isOnboarding)
+    func showPage(_ page: Page) {
+        let infoPageData = InfoPageData.createInfoPageData(withPage: page, isOnboarding: self.isOnboarding)
         let viewController = InfoPageViewController(withPageData: infoPageData, coordinator: self)
         self.navigationController.pushViewController(viewController, animated: true)
     }
     
-    func showLinkedPage(forPageRef pageRef: PageRef, isOnboarding: Bool) {
+    func showLinkedPage(forPageRef pageRef: PageRef) {
         let previousController = self.navigationController.viewControllers.reversed().first { viewController -> Bool in
             if let pageProvider = viewController as? PageProvider,
                 pageProvider.page.id == pageRef.id {
@@ -46,7 +47,7 @@ extension PagedSectionCoordinator {
                 assertionFailure("Missing page for page ref")
                 return
             }
-            self.showPage(nextPage, isOnboarding: isOnboarding)
+            self.showPage(nextPage)
         }
     }
     
@@ -84,7 +85,7 @@ extension PagedSectionCoordinator {
         let handled = self.performCustomPrimaryButtonNavigation(page: page)
         if false == handled {
             if let pageRef = page.buttonFirstPage {
-                self.showLinkedPage(forPageRef: pageRef, isOnboarding: true)
+                self.showLinkedPage(forPageRef: pageRef)
             } else {
                 self.onUnhandledPrimaryButtonNavigation(page: page)
             }
@@ -95,7 +96,7 @@ extension PagedSectionCoordinator {
         let handled = self.performCustomSecondaryButtonNavigation(page: page)
         if false == handled {
             if let pageRef = page.buttonSecondPage {
-                self.showLinkedPage(forPageRef: pageRef, isOnboarding: true)
+                self.showLinkedPage(forPageRef: pageRef)
             } else {
                 self.onUnhandledSecondaryButtonNavigation(page: page)
             }

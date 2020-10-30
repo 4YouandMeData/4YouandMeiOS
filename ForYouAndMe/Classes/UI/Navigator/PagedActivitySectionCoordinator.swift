@@ -14,7 +14,7 @@ struct PagedSectionData {
 }
 
 protocol PagedActivitySectionCoordinator: ActivitySectionCoordinator, PagedSectionCoordinator {
-    var internalNavigationController: UINavigationController? { get set }
+    var activitySectionViewController: ActivitySectionViewController? { get set }
     var pagedSectionData: PagedSectionData { get }
     var coreViewController: UIViewController? { get }
     var currentlyRescheduledTimes: Int { get }
@@ -22,6 +22,10 @@ protocol PagedActivitySectionCoordinator: ActivitySectionCoordinator, PagedSecti
 }
 
 extension PagedActivitySectionCoordinator {
+    
+    var isOnboarding: Bool { false }
+    var activityPresenter: UIViewController? { self.activitySectionViewController }
+    
     var pages: [Page] { self.pagedSectionData.pages }
     
     func performCustomPrimaryButtonNavigation(page: Page) -> Bool {
@@ -52,7 +56,7 @@ extension PagedActivitySectionCoordinator {
     }
     
     var navigationController: UINavigationController {
-        guard let navigationController = self.internalNavigationController else {
+        guard let navigationController = self.activitySectionViewController?.internalNavigationController else {
             assertionFailure("Missing navigation controller")
             return UINavigationController()
         }
@@ -74,9 +78,9 @@ extension PagedActivitySectionCoordinator {
         
         let welcomeViewController = InfoPageViewController(withPageData: data,
                                                           coordinator: self)
-        let navigationController = UINavigationController(rootViewController: welcomeViewController)
-        self.internalNavigationController = navigationController
-        return navigationController
+        let activitySectionViewController = ActivitySectionViewController(coordinator: self, startingViewController: welcomeViewController)
+        self.activitySectionViewController = activitySectionViewController
+        return activitySectionViewController
     }
     
     func showSuccessPage() {

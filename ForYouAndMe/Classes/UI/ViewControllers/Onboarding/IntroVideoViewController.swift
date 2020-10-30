@@ -335,7 +335,7 @@ class IntroVideoViewController: UIViewController {
     }
     
     private func navigateForward() {
-        self.navigator.rotateToPortrait()
+        AppNavigator.rotateToPortrait()
         self.removePlayer()
         self.analytics.track(event: .startStudyAction(AnalyticsParameter.close.rawValue))
         self.slider.value = 1.0
