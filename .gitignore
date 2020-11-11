@@ -91,3 +91,5 @@ iOSInjectionProject/
 
 #Firebase config file should be excluded
 GoogleService-Info.plist
+#Project Info file should be excluded
+ProjectInfo.plist

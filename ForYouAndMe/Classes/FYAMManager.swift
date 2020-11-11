@@ -11,8 +11,7 @@ import FirebaseCore
 
 public class FYAMManager {
     
-    public static func startup(withStudyId studyId: String,
-                               fontStyleMap: FontStyleMap,
+    public static func startup(withFontStyleMap fontStyleMap: FontStyleMap,
                                showDefaultUserInfo: Bool,
                                checkResourcesAvailability: Bool = false) -> UIWindow {
         let window = UIWindow(frame: UIScreen.main.bounds)
@@ -21,6 +20,9 @@ public class FYAMManager {
         // Firebase Setup
         FirebaseApp.configure()
         FirebaseConfiguration.shared.setLoggerLevel(.min)
+        
+        // ProjectInfo Validation
+        ProjectInfo.validate()
         
         // Prepare Specific app elements
         FontPalette.initialize(withFontStyleMap: fontStyleMap)
@@ -33,7 +35,7 @@ public class FYAMManager {
         #endif
         
         // Prepare Logic
-        Services.shared.setup(withWindow: window, studyId: studyId, showDefaultUserInfo: showDefaultUserInfo)
+        Services.shared.setup(withWindow: window, showDefaultUserInfo: showDefaultUserInfo)
         
         return window
     }

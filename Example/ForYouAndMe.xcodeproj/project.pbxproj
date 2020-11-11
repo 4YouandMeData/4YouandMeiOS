@@ -12,6 +12,7 @@
 		607FACE01AFB9204008FA782 /* LaunchScreen.xib in Resources */ = {isa = PBXBuildFile; fileRef = 607FACDE1AFB9204008FA782 /* LaunchScreen.xib */; };
 		607FACEC1AFB9204008FA782 /* Tests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 607FACEB1AFB9204008FA782 /* Tests.swift */; };
 		87C58C49289B54E588888596 /* Pods_ForYouAndMe_Tests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DFD45AAF0B51A0665ACCA092 /* Pods_ForYouAndMe_Tests.framework */; };
+		89410E27255C603C00A3B57C /* ProjectInfo.plist in Resources */ = {isa = PBXBuildFile; fileRef = 89410E26255C603C00A3B57C /* ProjectInfo.plist */; };
 		894377A42451C39B00795921 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 894377A32451C39B00795921 /* GoogleService-Info.plist */; };
 		894BEE6D24AE52DD00254DC6 /* HealthKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 894BEE6C24AE52DD00254DC6 /* HealthKit.framework */; };
 		89F730582514F09C00DF9503 /* StudyVideo.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = 89F730572514F09C00DF9503 /* StudyVideo.mp4 */; };
@@ -42,6 +43,7 @@
 		607FACE51AFB9204008FA782 /* ForYouAndMe_Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ForYouAndMe_Tests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		607FACEA1AFB9204008FA782 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		607FACEB1AFB9204008FA782 /* Tests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests.swift; sourceTree = "<group>"; };
+		89410E26255C603C00A3B57C /* ProjectInfo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = ProjectInfo.plist; sourceTree = "<group>"; };
 		894377A32451C39B00795921 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		894BEE6B24AE52DD00254DC6 /* ForYouAndMe_Example.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ForYouAndMe_Example.entitlements; sourceTree = "<group>"; };
 		894BEE6C24AE52DD00254DC6 /* HealthKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = HealthKit.framework; path = System/Library/Frameworks/HealthKit.framework; sourceTree = SDKROOT; };
@@ -133,6 +135,7 @@
 			isa = PBXGroup;
 			children = (
 				894377A32451C39B00795921 /* GoogleService-Info.plist */,
+				89410E26255C603C00A3B57C /* ProjectInfo.plist */,
 				607FACD41AFB9204008FA782 /* Info.plist */,
 			);
 			name = "Supporting Files";
@@ -261,6 +264,7 @@
 				89F730582514F09C00DF9503 /* StudyVideo.mp4 in Resources */,
 				607FACE01AFB9204008FA782 /* LaunchScreen.xib in Resources */,
 				607FACDD1AFB9204008FA782 /* Images.xcassets in Resources */,
+				89410E27255C603C00A3B57C /* ProjectInfo.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -1593,6 +1593,7 @@
 		893B20FE254AD3EA0068BB03 /* IntegrationData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893B20FD254AD3EA0068BB03 /* IntegrationData.swift */; };
 		893B2186254ADC160068BB03 /* IntegrationProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893B2185254ADC160068BB03 /* IntegrationProvider.swift */; };
 		893BA125254C502D0049F3D7 /* ActivitySectionViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893BA124254C502D0049F3D7 /* ActivitySectionViewController.swift */; };
+		89410DF5255C55BC00A3B57C /* ProjectInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89410DF4255C55BC00A3B57C /* ProjectInfo.swift */; };
 		89419F6DA745C9EB2B494B0BF12289E9 /* ORKStepNavigationRule_Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = E90174F67D92F91C73E19839D5740C38 /* ORKStepNavigationRule_Internal.h */; settings = {ATTRIBUTES = (Project, ); }; };
 		8943C829254322C500238AF8 /* PagedActivitySectionCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8943C828254322C500238AF8 /* PagedActivitySectionCoordinator.swift */; };
 		8943C85725432F7F00238AF8 /* Activity+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8943C85625432F7F00238AF8 /* Activity+Extensions.swift */; };
@@ -5233,6 +5234,7 @@
 		893B20FD254AD3EA0068BB03 /* IntegrationData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntegrationData.swift; sourceTree = "<group>"; };
 		893B2185254ADC160068BB03 /* IntegrationProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntegrationProvider.swift; sourceTree = "<group>"; };
 		893BA124254C502D0049F3D7 /* ActivitySectionViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivitySectionViewController.swift; sourceTree = "<group>"; };
+		89410DF4255C55BC00A3B57C /* ProjectInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectInfo.swift; sourceTree = "<group>"; };
 		8943C828254322C500238AF8 /* PagedActivitySectionCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PagedActivitySectionCoordinator.swift; sourceTree = "<group>"; };
 		8943C85625432F7F00238AF8 /* Activity+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Activity+Extensions.swift"; sourceTree = "<group>"; };
 		8943C88425432FAF00238AF8 /* SurveyGroup+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SurveyGroup+Extensions.swift"; sourceTree = "<group>"; };
@@ -10231,6 +10233,7 @@
 				8217EB9E62DA39EDB598B00F57BD2423 /* UserData.swift */,
 				D87F720087785240FE7F2FB12D6C9D7D /* UserDataAggregation.swift */,
 				C5974809B62ED56AFD6A8B7FA11355E2 /* UserInfoParameter.swift */,
+				89410DF4255C55BC00A3B57C /* ProjectInfo.swift */,
 				EC89430C135B6E4B021DB267F2D94C10 /* Sections */,
 				5FCCAE5B909E6A320DFA10F418B9E01B /* Survey */,
 			);
@@ -14381,6 +14384,7 @@
 				9FD0C8C862BD156AEB80080B92280D47 /* AboutYouViewController.swift in Sources */,
 				F0D7E0B04BB1FCFB38A3D881EA69CC48 /* Activity.swift in Sources */,
 				6587754C20FDF8626ACC461C80E18259 /* ActivitySectionCoordinator.swift in Sources */,
+				89410DF5255C55BC00A3B57C /* ProjectInfo.swift in Sources */,
 				DCE932F4DB0EC08C895D4EE84F406855 /* Alert.swift in Sources */,
 				466C83A552E1C5AA5B832198CA5F8660 /* AlertError.swift in Sources */,
 				A20FC73BDFA3A80912BD6A4082D0E702 /* AnalyticsManager.swift in Sources */,

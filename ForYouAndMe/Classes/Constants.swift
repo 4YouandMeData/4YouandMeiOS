@@ -33,7 +33,8 @@ struct Constants {
         static let CheckGlobalColors: Bool = false
     }
     struct Network {
-        static let BaseUrl = "https://api-4youandme-staging.balzo.eu"
+        static var BaseUrl: String { ProjectInfo.BaseUrl }
+        static var StudyId: String { ProjectInfo.StudyId }
         static let ApiBaseUrlStr = "\(BaseUrl)/api"
     }
     
@@ -64,7 +65,7 @@ struct Constants {
     }
     
     struct Url {
-        static let ApiOAuthIntegrationBaseUrl: URL = URL(string: "https://admin-4youandme-staging.balzo.eu/users/integration_oauth")!
+        static let ApiOAuthIntegrationBaseUrl: URL = URL(string: "\(Network.BaseUrl)/users/integration_oauth")!
         static let OuraStoreUrl: URL = URL(string: "itms-apps://apps.apple.com/it/app/oura/id1043837948")!
         static let OuraAppSchema: URL = URL(string: "oura://")!
         static let FitbitStoreUrl: URL = URL(string: "itms-apps://apps.apple.com/us/app/fitbit-health-fitness/id462638897")!

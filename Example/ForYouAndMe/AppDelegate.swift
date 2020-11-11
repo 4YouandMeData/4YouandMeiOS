@@ -33,8 +33,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         if let font = UIFont(name: "Helvetica", size: 13.0) {
             fontStyleMap[.menu] = FontStyleData(font: font, lineSpacing: 3.0, uppercase: true)
         }
-        self.window = FYAMManager.startup(withStudyId: "bump",
-                                          fontStyleMap: fontStyleMap,
+        self.window = FYAMManager.startup(withFontStyleMap: fontStyleMap,
                                           showDefaultUserInfo: true,
                                           checkResourcesAvailability: true)
         return true

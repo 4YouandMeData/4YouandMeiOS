@@ -31,8 +31,10 @@ class Services {
     
     // MARK: - Public Methods
     
-    func setup(withWindow window: UIWindow, studyId: String, showDefaultUserInfo: Bool) {
+    func setup(withWindow window: UIWindow, showDefaultUserInfo: Bool) {
         self.window = window
+        
+        let studyId = Constants.Network.StudyId
         
         let storage = CacheManager()
         self.services.append(storage)
