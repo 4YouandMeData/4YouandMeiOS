@@ -33,7 +33,7 @@ struct Constants {
         static let CheckGlobalColors: Bool = false
     }
     struct Network {
-        static var BaseUrl: String { ProjectInfo.BaseUrl }
+        static var BaseUrl: String { ProjectInfo.ApiBaseUrl }
         static var StudyId: String { ProjectInfo.StudyId }
         static let ApiBaseUrlStr = "\(BaseUrl)/api"
     }
@@ -65,7 +65,8 @@ struct Constants {
     }
     
     struct Url {
-        static let ApiOAuthIntegrationBaseUrl: URL = URL(string: "\(Network.BaseUrl)/users/integration_oauth")!
+        static var BaseUrl: String { ProjectInfo.OauthBaseUrl }
+        static let ApiOAuthIntegrationBaseUrl: URL = URL(string: "\(BaseUrl)/users/integration_oauth")!
         static let OuraStoreUrl: URL = URL(string: "itms-apps://apps.apple.com/it/app/oura/id1043837948")!
         static let OuraAppSchema: URL = URL(string: "oura://")!
         static let FitbitStoreUrl: URL = URL(string: "itms-apps://apps.apple.com/us/app/fitbit-health-fitness/id462638897")!

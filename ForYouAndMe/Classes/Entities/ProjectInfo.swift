@@ -13,17 +13,20 @@ class ProjectInfo {
     
     private enum ProjectInfoKey: String, CaseIterable {
         
-        case baseUrl = "base_url"
+        case apiBaseUrl = "api_base_url"
+        case oauthBaseUrl = "oauth_base_url"
         case studyId = "study_id"
     }
     
-    static var BaseUrl: String { Self.getValue(forKey: .baseUrl, defaultValue: "") }
+    static var ApiBaseUrl: String { Self.getValue(forKey: .apiBaseUrl, defaultValue: "") }
+    static var OauthBaseUrl: String { Self.getValue(forKey: .oauthBaseUrl, defaultValue: "") }
     static var StudyId: String { Self.getValue(forKey: .studyId, defaultValue: "") }
     
     static func validate() {
         ProjectInfoKey.allCases.forEach { key in
             switch key {
-            case .baseUrl: _ = Self.getValue(forKey: key, defaultValue: "")
+            case .apiBaseUrl: _ = Self.getValue(forKey: key, defaultValue: "")
+            case .oauthBaseUrl: _ = Self.getValue(forKey: key, defaultValue: "")
             case .studyId: _ = Self.getValue(forKey: key, defaultValue: "")
             }
         }
