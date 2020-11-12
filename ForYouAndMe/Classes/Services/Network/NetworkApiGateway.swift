@@ -431,10 +431,15 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         case .getUser: return Bundle.getTestData(from: "TestGetUser")
         case .sendUserInfoParameters: return Bundle.getTestData(from: "TestGetUser")
         case .sendUserTimeZone: return Bundle.getTestData(from: "TestGetUser")
-        case .sendPushToken: return "{}".utf8Encoded
+        case .sendPushToken: return Bundle.getTestData(from: "TestGetUser")
         // User Data
         case .getUserData: return Bundle.getTestData(from: "TestGetUserData")
-        case .getUserDataAggregation: return Bundle.getTestData(from: "TestGetUserDataAggregation")
+        case .getUserDataAggregation(let period):
+            switch period {
+            case .week: return Bundle.getTestData(from: "TestGetUserDataAggregationWeek")
+            case .month: return Bundle.getTestData(from: "TestGetUserDataAggregationMonth")
+            case .year: return Bundle.getTestData(from: "TestGetUserDataAggregationYear")
+            }
         // Survey
         case .getSurvey: return Bundle.getTestData(from: "TestGetSurvey")
         case .sendSurveyTaskResultData: return "{}".utf8Encoded

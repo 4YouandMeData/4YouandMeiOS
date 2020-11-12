@@ -158,6 +158,13 @@ class UserDataChartView: UIView {
         let set1 = LineChartDataSet(entries: values, label: periodString)
         set1.drawIconsEnabled = false
         set1.drawValuesEnabled = false
+        switch self.studyPeriod {
+        case .week:
+            set1.drawCirclesEnabled = true
+        case .month, .year:
+            set1.drawCirclesEnabled = values.count == 1
+            set1.mode = .cubicBezier
+        }
         set1.drawCirclesEnabled = values.count == 1
         set1.drawCircleHoleEnabled = false
         set1.highlightLineDashLengths = [5, 2.5]

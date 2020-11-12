@@ -64,7 +64,7 @@ PODS:
     - GoogleUtilities/Reachability (~> 6.7)
     - GoogleUtilities/UserDefaults (~> 6.7)
     - Protobuf (>= 3.9.2, ~> 3.9)
-  - ForYouAndMe (0.21.0):
+  - ForYouAndMe (0.26.0):
     - Charts (~> 3.5.0)
     - CountryPickerView (~> 3.1.2)
     - Firebase/Analytics (~> 6.33.0)
@@ -258,7 +258,7 @@ SPEC CHECKSUMS:
   FirebaseInstallations: 466c7b4d1f58fe16707693091da253726a731ed2
   FirebaseInstanceID: ac5a82fcd21f804dbfc8f318eff9e1d7a9916e49
   FirebaseMessaging: fc1f98b4592f8f2ea538169b1c317c6e76f81300
-  ForYouAndMe: 7f465e9032ae3760e9f18cd331e0d5106548a8f2
+  ForYouAndMe: 30bc3f82bc4be4b0bd3a43a3328880fbc9946929
   FYAMResearchKit: b5edcda0acfcdc50730f9027cbd72dad53ba354b
   GoogleAppMeasurement: 966e88df9d19c15715137bb2ddaf52373f111436
   GoogleDataTransport: b7f406340a291370045a270c599e53c6fa6ec20f
@@ -289,4 +289,4 @@ SPEC CHECKSUMS:
 
 PODFILE CHECKSUM: 5512ce833b295acb93d24de4cf077b1fe8c47305
 
-COCOAPODS: 1.9.3
+COCOAPODS: 1.10.0
