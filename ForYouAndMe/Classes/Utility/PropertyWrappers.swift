@@ -327,8 +327,8 @@ struct TimeZoneCodable: Codable, OptionalCodingWrapper {
     
     init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
-        if let timeZoneAbbreviationString = try? container.decode(String.self) {
-            self.wrappedValue = TimeZone(abbreviation: timeZoneAbbreviationString)
+        if let timeZoneIdentifier = try? container.decode(String.self) {
+            self.wrappedValue = TimeZone(identifier: timeZoneIdentifier)
         } else {
             self.wrappedValue = nil
         }

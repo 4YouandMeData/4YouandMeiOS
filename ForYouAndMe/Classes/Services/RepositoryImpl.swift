@@ -305,10 +305,11 @@ extension RepositoryImpl: Repository {
     // MARK: - Private Methods
     
     private func updateUserTimeZoneIfNeeded(user: User) -> Single<User> {
-        let currentTimeZone = TimeZone.current
-        if let currentTimeZoneAbbreviation = currentTimeZone.abbreviation(),
-           currentTimeZoneAbbreviation != user.timeZone?.abbreviation() {
-            return self.api.send(request: ApiRequest(serviceRequest: .sendUserTimeZone(timeZoneAbbreviation: currentTimeZoneAbbreviation)))
+        let userTimeZoneIdentifier = user.timeZone?.identifier
+        let currentTimeZoneIdentifier = TimeZone.current.identifier
+        if currentTimeZoneIdentifier != userTimeZoneIdentifier {
+            print("Repository - need to update TimeZone. Previous: '\(userTimeZoneIdentifier ?? "")', new: '\(currentTimeZoneIdentifier)'")
+            return self.api.send(request: ApiRequest(serviceRequest: .sendUserTimeZone(timeZoneIdentifier: currentTimeZoneIdentifier)))
                 .handleError()
                 // Update Time zone is ignored, not blocking operation
                 .do(onError: { error in print("Repository - error updateUserTimeZoneIfNeeded: \(error.localizedDescription)") })

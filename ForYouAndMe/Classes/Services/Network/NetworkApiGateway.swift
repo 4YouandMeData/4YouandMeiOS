@@ -520,8 +520,8 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             var params: [String: Any] = [:]
             params["firebase_token"] = token
             return .requestParameters(parameters: ["user": params], encoding: JSONEncoding.default)
-        case .sendUserTimeZone(let timeZoneAbbreviation):
-            return .requestParameters(parameters: ["time_zone": timeZoneAbbreviation], encoding: JSONEncoding.default)
+        case .sendUserTimeZone(let timeZoneIdentifier):
+            return .requestParameters(parameters: ["time_zone": timeZoneIdentifier], encoding: JSONEncoding.default)
         case .sendSurveyTaskResultData(_, let results):
             let answerParams: [[String: Any]] = results.reduce([]) { (result, parameter) in
                 var result = result

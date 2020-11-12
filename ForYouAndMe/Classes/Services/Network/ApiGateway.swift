@@ -55,7 +55,7 @@ enum DefaultService {
     // User
     case getUser
     case sendUserInfoParameters(paramenters: [UserInfoParameterRequest])
-    case sendUserTimeZone(timeZoneAbbreviation: String)
+    case sendUserTimeZone(timeZoneIdentifier: String)
     case sendPushToken(token: String)
     // User Data
     case getUserData
