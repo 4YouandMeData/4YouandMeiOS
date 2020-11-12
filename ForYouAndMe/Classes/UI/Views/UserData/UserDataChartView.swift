@@ -77,12 +77,6 @@ enum StudyPeriod: Int, CaseIterable {
     }
 }
 
-private struct RangeAxisX {
-    let min: Double
-    let max: Double
-    let interval: Int
-}
-
 class UserDataChartView: UIView {
     
     private static let chartBackgroundHeight: CGFloat = 280.0
@@ -158,8 +152,28 @@ class UserDataChartView: UIView {
         self.chartView.legend.font = FontPalette.fontStyleData(forStyle: .paragraph).font
         self.chartView.legend.xOffset = -10
 
+        //Values
+        let values = self.getDataEntries()
+        let periodString = studyPeriod.getPeriodString(fromDateStrings: self.xLabels)
+        let set1 = LineChartDataSet(entries: values, label: periodString)
+        set1.drawIconsEnabled = false
+        set1.drawValuesEnabled = false
+        set1.drawCirclesEnabled = values.count == 1
+        set1.drawCircleHoleEnabled = false
+        set1.highlightLineDashLengths = [5, 2.5]
+        
+        set1.setColor(self.plotColor)
+        set1.setCircleColor(self.plotColor)
+        set1.lineWidth = 2
+        set1.circleRadius = 6
+        set1.circleHoleColor = .white
+        set1.valueFont = .systemFont(ofSize: 9)
+        set1.axisDependency = .right
+        
+        self.chartView.data = LineChartData(dataSet: set1)
+        
         //Axis
-        self.configureXAxis()
+        self.configureXAxis(withEntriesCount: values.count)
         self.configureYAxis()
         
         //X-Axis Formatter
@@ -183,35 +197,14 @@ class UserDataChartView: UIView {
             rightAxis.axisMaximum = Double(self.yLabels.count - 1)
             rightAxis.axisMinimum = 0
         } else {
-            rightAxis.axisMaximum = (data.compactMap { $0 }.max() ?? 0)
-            rightAxis.axisMinimum = (data.compactMap { $0 }.min() ?? 0)
+            rightAxis.axisMaximum = (self.data.compactMap { $0 }.max() ?? 0)
+            rightAxis.axisMinimum = (self.data.compactMap { $0 }.min() ?? 0)
             self.chartView.extraRightOffset = 20
         }
         rightAxis.drawLimitLinesBehindDataEnabled = true
-        
-        //Values
-        let values = self.getDataEntries()
-        let periodString = studyPeriod.getPeriodString(fromDateStrings: self.xLabels)
-        let set1 = LineChartDataSet(entries: values, label: periodString)
-        set1.drawIconsEnabled = false
-        set1.drawValuesEnabled = false
-        set1.drawCirclesEnabled = false
-        set1.drawCircleHoleEnabled = false
-        set1.highlightLineDashLengths = [5, 2.5]
-        
-        set1.setColor(self.plotColor)
-        set1.setCircleColor(self.plotColor)
-        set1.lineWidth = 2
-        set1.circleRadius = 6
-        set1.circleHoleColor = .white
-        set1.valueFont = .systemFont(ofSize: 9)
-        set1.axisDependency = .right
-        
-        let data = LineChartData(dataSet: set1)
-        self.chartView.data = data
     }
     
-    fileprivate func configureXAxis() {
+    fileprivate func configureXAxis(withEntriesCount entriesCount: Int) {
         self.chartView.xAxis.labelPosition = XAxis.LabelPosition.bottom
         self.chartView.xAxis.drawGridLinesEnabled = false
         self.chartView.xAxis.forceLabelsEnabled = true
@@ -221,11 +214,19 @@ class UserDataChartView: UIView {
         self.chartView.xAxis.wordWrapEnabled = false
         self.chartView.xAxis.yOffset = 15
         
-        if self.studyPeriod == .week {
-            let range = self.getXAxisRange(periodType: self.studyPeriod)
-            self.chartView.xAxis.labelCount = range.interval
-            self.chartView.xAxis.axisMinimum = range.min
-            self.chartView.xAxis.axisMaximum = range.max
+        self.chartView.xAxis.axisMinLabels = 1
+        switch self.studyPeriod {
+        case .week:
+            self.chartView.xAxis.labelCount = min(entriesCount - 1, 7)
+        case .month:
+            if entriesCount < 6 {
+                self.chartView.xAxis.labelCount = entriesCount
+            }
+        case .year:
+            self.chartView.xAxis.axisMinLabels = 1
+            if entriesCount < 6 {
+                self.chartView.xAxis.labelCount = entriesCount
+            }
         }
     }
     
@@ -240,14 +241,6 @@ class UserDataChartView: UIView {
         rightAxis.drawGridLinesEnabled = false
         rightAxis.drawLimitLinesBehindDataEnabled = true
         rightAxis.drawZeroLineEnabled = true
-    }
-    
-    fileprivate func getXAxisRange(periodType: StudyPeriod) -> RangeAxisX {
-        if periodType == .week {
-            return RangeAxisX(min: 0, max: 6, interval: 6)
-        } else {
-            return RangeAxisX(min: 0, max: 3, interval: 3)
-        }
     }
     
     private func getDataEntries() -> [ChartDataEntry] {
