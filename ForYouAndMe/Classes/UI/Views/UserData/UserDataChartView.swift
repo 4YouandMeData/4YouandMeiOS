@@ -195,8 +195,8 @@ class UserDataChartView: UIView {
         let set1 = LineChartDataSet(entries: values, label: periodString)
         set1.drawIconsEnabled = false
         set1.drawValuesEnabled = false
-        set1.drawCirclesEnabled = true
-        set1.drawCircleHoleEnabled = true
+        set1.drawCirclesEnabled = false
+        set1.drawCircleHoleEnabled = false
         set1.highlightLineDashLengths = [5, 2.5]
         
         set1.setColor(self.plotColor)
