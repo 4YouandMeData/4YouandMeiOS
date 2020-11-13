@@ -165,8 +165,7 @@ class UserDataChartView: UIView {
             set1.drawCirclesEnabled = values.count == 1
             set1.mode = .cubicBezier
         }
-        set1.drawCirclesEnabled = values.count == 1
-        set1.drawCircleHoleEnabled = false
+        set1.drawCircleHoleEnabled = true
         set1.highlightLineDashLengths = [5, 2.5]
         
         set1.setColor(self.plotColor)
