@@ -53,7 +53,7 @@ extension IntegrationSectionCoordinator: PagedSectionCoordinator {
     var isOnboarding: Bool { true }
     var pages: [Page] { self.sectionData.pages }
     
-    func showPage(_ page: Page, isOnboarding: Bool) {
+    func showPage(_ page: Page) {
         let viewController = IntegrationPageViewController(withPage: page, coordinator: self, backwardNavigation: true)
         self.navigationController.pushViewController(viewController, animated: true)
     }
@@ -68,7 +68,7 @@ extension IntegrationSectionCoordinator: PagedSectionCoordinator {
     
     func onUnhandledPrimaryButtonNavigation(page: Page) {
         if let successPage = self.sectionData.successPage {
-            self.showPage(successPage, isOnboarding: true)
+            self.showPage(successPage)
         } else {
             self.completionCallback(self.navigationController)
         }
