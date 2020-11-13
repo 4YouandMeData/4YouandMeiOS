@@ -22,14 +22,6 @@ class IntroVideoViewController: UIViewController {
         return view
     }()
     
-    private let studyVideoLabel: UILabel = {
-        let label = UILabel()
-        label.attributedText = NSAttributedString.create(withText: StringsProvider.string(forKey: .introVideoTitle),
-                                                         fontStyle: .title,
-                                                         colorType: .secondaryText)
-        return label
-    }()
-    
     private lazy var playButton: UIButton = {
         let button = UIButton()
         button.autoSetDimensions(to: CGSize(width: 96.0, height: 96.0))
@@ -190,7 +182,6 @@ class IntroVideoViewController: UIViewController {
         self.isVideoPlaying = !self.isVideoPlaying
         self.isVideoPlayedOnce = true
         self.continueButton.isHidden = true
-        self.studyVideoLabel.isHidden = true
         self.durationLabel.isHidden = false
         self.slider.isHidden = false
         self.playButton.setImage(isVideoPlaying
@@ -250,19 +241,12 @@ class IntroVideoViewController: UIViewController {
         self.view.addSubview(self.playButton)
         self.playButton.autoCenterInSuperview()
         
-        self.view.addSubview(self.studyVideoLabel)
-        self.studyVideoLabel.autoAlignAxis(toSuperviewAxis: .vertical)
-        self.playButton.autoPinEdge(.top, to: .bottom, of: self.studyVideoLabel, withOffset: 32.0)
-        
         self.view.addSubview(self.closeButton)
         self.closeButton.autoPinEdge(toSuperviewSafeArea: .top, withInset: 8.0)
         self.closeButton.autoPinEdge(toSuperviewEdge: .leading, withInset: Constants.Style.DefaultHorizontalMargins - 8.0)
     }
     
     private func configureTheViewElements() {
-        self.studyVideoLabel.text = StringsProvider.string(forKey: .introVideoTitle)
-        self.continueButton.setTitle(StringsProvider.string(forKey: .introVideoContinueButton), for: .normal)
-        
         self.slider.isHidden = true
         self.durationLabel.isHidden = true
         self.playButton.isHidden = false
