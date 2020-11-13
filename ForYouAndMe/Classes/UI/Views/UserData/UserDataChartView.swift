@@ -163,7 +163,7 @@ class UserDataChartView: UIView {
             set1.drawCirclesEnabled = true
         case .month, .year:
             set1.drawCirclesEnabled = values.count == 1
-            set1.mode = .cubicBezier
+            set1.mode = .horizontalBezier
         }
         set1.drawCircleHoleEnabled = true
         set1.highlightLineDashLengths = [5, 2.5]
@@ -253,8 +253,19 @@ class UserDataChartView: UIView {
         var dataEntries: [ChartDataEntry] = []
         self.xLabels.enumerated().forEach { (index, _) in
             if index < self.data.count {
+                let yValue: Double = {
+                    if self.yLabels.count > 0 {
+                        // When there are yLabels, data values are indexes of the yLabels array (quick activities)
+                        // those indexes range in [1,6], where 1 is the "no answer" value.
+                        // If a value is missing, it must be defaulted to "no answer", thus 1.
+                        // Lastly, to better handle those indexes, we decrease the value of 1 to have a range of [0,5]
+                        return (self.data[index] ?? 1.0) - 1.0
+                    } else {
+                        return self.data[index] ?? 0.0
+                    }
+                }()
                 dataEntries.append(ChartDataEntry(x: Double(index),
-                                                  y: self.data[index] ?? 0.0,
+                                                  y: yValue,
                                                   icon: ImagePalette.image(withName: .circular)))
             }
         }
@@ -305,11 +316,16 @@ class YAxisValueFormatter: NSObject, IAxisValueFormatter {
     }
     
     func stringForValue(_ value: Double, axis: AxisBase?) -> String {
-        let index = Int(value)
-        guard index >= 0, index < self.yLabels.count else {
-            return "\(Int(value))"
+        let integerValue = Int(value)
+        guard self.yLabels.count > 0 else {
+            return "\(integerValue)"
         }
-        let label = self.yLabels[index]
-        return label
+        // When there are yLabels, values are indexes of the yLabels array (quick activities)
+        let index = integerValue
+        guard index >= 0, index < self.yLabels.count else {
+            return ""
+
+        }
+        return self.yLabels[index]
     }
 }
