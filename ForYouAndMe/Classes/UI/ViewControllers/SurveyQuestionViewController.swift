@@ -79,8 +79,10 @@ class SurveyQuestionViewController: UIViewController,
         
         stackView.addBlankSpace(space: 50.0)
         // Image
-        stackView.addHeaderImage(image: self.pageData.question.image, height: 54.0)
-        stackView.addBlankSpace(space: 40.0)
+        if let image = self.pageData.question.image {
+            stackView.addHeaderImage(image: image, height: 54.0)
+            stackView.addBlankSpace(space: 40.0)
+        }
         // Title
         let attributedString = NSAttributedString.create(withText: self.pageData.question.body,
                                                          fontStyle: .header2,
