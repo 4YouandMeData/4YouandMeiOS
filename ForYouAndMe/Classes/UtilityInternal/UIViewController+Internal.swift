@@ -15,7 +15,7 @@ extension UIViewController {
     }
     
     func addCustomCloseButton() {
-        self.addCustomCloseButton(withImage: ImagePalette.image(withName: .closeButton))
+        self.addCustomCloseButton(withImage: ImagePalette.templateImage(withName: .closeButton))
     }
     
     func addOnboardingAbortButton(withColor color: UIColor) {

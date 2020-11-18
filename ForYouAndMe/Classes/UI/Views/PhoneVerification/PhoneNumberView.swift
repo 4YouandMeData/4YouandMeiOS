@@ -160,6 +160,10 @@ extension PhoneNumberView: CountryPickerViewDelegate {
     func countryPickerView(_ countryPickerView: CountryPickerView, didSelectCountry country: Country) {
         self.countryCode = country.code
     }
+    
+    func countryPickerView(_ countryPickerView: CountryPickerView, willShow viewController: CountryPickerViewController) {
+        viewController.navigationController?.navigationBar.tintColor = ColorPalette.color(withType: .primaryText)
+    }
 }
 
 extension PhoneNumberView: CountryPickerViewDataSource {
@@ -201,7 +205,10 @@ extension PhoneNumberView: CountryPickerViewDataSource {
     /// A navigation item button to be used if the internal view controller is presented(not pushed).
     /// Return `nil` to use a default "Close" button.
     func closeButtonNavigationItem(in countryPickerView: CountryPickerView) -> UIBarButtonItem? {
-        return UIBarButtonItem(image: ImagePalette.image(withName: .closeButton), style: .plain, target: nil, action: nil)
+        return UIBarButtonItem(image: ImagePalette.templateImage(withName: .closeButton),
+                               style: .plain,
+                               target: nil,
+                               action: nil)
     }
     
     /// Determines if a country's phone code is shown alongside the country's name on the list.

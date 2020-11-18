@@ -11,7 +11,7 @@ class AboutYouHeaderView: UIView {
     
     let closeButton: UIButton = {
         let button = UIButton()
-        button.setImage(ImagePalette.templateImage(withName: .closeButtonTemplate), for: .normal)
+        button.setImage(ImagePalette.templateImage(withName: .closeButton), for: .normal)
         button.tintColor = ColorPalette.color(withType: .secondaryText)
         button.autoSetDimension(.width, toSize: 32)
         button.imageView?.contentMode = .scaleAspectFit

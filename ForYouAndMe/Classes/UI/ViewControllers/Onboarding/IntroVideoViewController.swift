@@ -39,7 +39,7 @@ class IntroVideoViewController: UIViewController {
     
     private lazy var closeButton: UIButton = {
         let button = UIButton()
-        button.setImage(ImagePalette.templateImage(withName: .closeButtonTemplate), for: .normal)
+        button.setImage(ImagePalette.templateImage(withName: .closeButton), for: .normal)
         button.tintColor = ColorPalette.color(withType: .secondary)
         button.contentEdgeInsets = UIEdgeInsets(top: 8.0, left: 8.0, bottom: 8.0, right: 8.0)
         button.addTarget(self, action: #selector(self.closeButtonPressed), for: .touchUpInside)

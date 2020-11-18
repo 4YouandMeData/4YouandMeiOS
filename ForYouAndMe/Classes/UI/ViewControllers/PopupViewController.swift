@@ -61,7 +61,8 @@ public class PopupViewController: UIViewController {
         
         // Close button
         let closeButton = UIButton()
-        closeButton.setImage(ImagePalette.image(withName: .closeButton), for: .normal)
+        closeButton.setImage(ImagePalette.templateImage(withName: .closeButton), for: .normal)
+        closeButton.tintColor = ColorPalette.color(withType: .primaryText)
         closeButton.addTarget(self, action: #selector(self.closeButtonPressed), for: .touchUpInside)
         closeButton.contentEdgeInsets = UIEdgeInsets(top: 8.0, left: 8.0, bottom: 8.0, right: 8.0)
         
