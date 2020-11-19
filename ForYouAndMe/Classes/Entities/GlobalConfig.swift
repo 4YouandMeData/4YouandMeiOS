@@ -13,7 +13,7 @@ struct GlobalConfig {
     let stringMap: StringMap
     let countryCodes: [String]
     let integrationDatas: [IntegrationData]
-    let onboardingSections: [OnboardingSection]
+    let onboardingSectionGroups: [OnboardingSectionGroup]
 }
 
 extension GlobalConfig: Codable {
@@ -22,7 +22,7 @@ extension GlobalConfig: Codable {
         case stringMapDictionary
         case countryCodesArray
         case integrationDatasArray
-        case onboardingSectionsArray
+        case onboardingSectionGroupsArray
     }
     
     init(from decoder: Decoder) throws {
@@ -32,7 +32,7 @@ extension GlobalConfig: Codable {
         self.stringMap = try container.decode(CodableDictionary.self, forKey: .stringMapDictionary).decoded
         self.countryCodes = try container.decode(Array<String>.self, forKey: .countryCodesArray)
         self.integrationDatas = try container.decode(Array<IntegrationData>.self, forKey: .integrationDatasArray)
-        self.onboardingSections = try container.decode(Array<OnboardingSection>.self, forKey: .onboardingSectionsArray)
+        self.onboardingSectionGroups = try container.decode(Array<OnboardingSectionGroup>.self, forKey: .onboardingSectionGroupsArray)
     }
 
     func encode(to encoder: Encoder) throws {
@@ -41,6 +41,6 @@ extension GlobalConfig: Codable {
         try container.encode(CodableDictionary(self.stringMap), forKey: .stringMapDictionary)
         try container.encode(self.countryCodes, forKey: .countryCodesArray)
         try container.encode(self.integrationDatas, forKey: .integrationDatasArray)
-        try container.encode(self.onboardingSections, forKey: .onboardingSectionsArray)
+        try container.encode(self.onboardingSectionGroups, forKey: .onboardingSectionGroupsArray)
     }
 }

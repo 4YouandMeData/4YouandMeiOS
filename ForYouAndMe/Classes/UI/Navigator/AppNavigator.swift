@@ -81,12 +81,12 @@ class AppNavigator {
             
             switch testSection {
             case .introVideo: self.showIntroVideo(navigationController: testNavigationViewController)
-            case .screeningSection: self.startScreeningSection(navigationController: testNavigationViewController)
-            case .informedConsentSection: self.startInformedConsentSection(navigationController: testNavigationViewController)
-            case .consentSection: self.startConsentSection(navigationController: testNavigationViewController)
-            case .optInSection: self.startOptInSection(navigationController: testNavigationViewController)
-            case .consentUserDataSection: self.startUserContentDataSection(navigationController: testNavigationViewController)
-            case .integrationSection: self.startIntegrationSection(navigationController: testNavigationViewController)
+            case .screening: self.startScreeningSection(navigationController: testNavigationViewController)
+            case .informedConsent: self.startInformedConsentSection(navigationController: testNavigationViewController)
+            case .consent: self.startConsentSection(navigationController: testNavigationViewController)
+            case .optIn: self.startOptInSection(navigationController: testNavigationViewController)
+            case .consentUserData: self.startUserContentDataSection(navigationController: testNavigationViewController)
+            case .integration: self.startIntegrationSection(navigationController: testNavigationViewController)
             }
             return
         }

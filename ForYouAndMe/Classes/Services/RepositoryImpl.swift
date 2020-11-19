@@ -53,7 +53,7 @@ class RepositoryImpl {
                 StringsProvider.initialize(withStringMap: globalCongig.stringMap)
                 CountryCodeProvider.initialize(withcountryCodes: globalCongig.countryCodes)
                 IntegrationProvider.initialize(withIntegrationDatas: globalCongig.integrationDatas)
-                OnboardingSectionProvider.initialize(withOnboardingSections: globalCongig.onboardingSections)
+                OnboardingSectionProvider.initialize(withOnboardingSectionGroups: globalCongig.onboardingSectionGroups)
             })
             .map { _ in () }
     }

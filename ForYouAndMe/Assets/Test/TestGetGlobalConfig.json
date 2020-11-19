@@ -188,7 +188,7 @@
       "OAUTH_RESCUETIME": "Rescue Time",
       "TASK_START_BUTTON": "Start Now",
       "TASK_REMIND_ME_LATER": "Remind me",
-      "ONBOARDING_SECTION_LIST": "intro_video;screening;informed_consent;consent;opt_in;consent_user_data;integration"
+      "ONBOARDING_SECTION_LIST": "intro_video;screening;consent_group;integration"
     },
     "country_codes": ["US", "GB", "IT"]
 }

@@ -7,12 +7,28 @@
 
 import Foundation
 
-enum OnboardingSection: String, Codable {
+enum OnboardingSectionGroup: String, Codable {
     case introVideo = "intro_video"
-    case screeningSection = "screening"
-    case informedConsentSection = "informed_consent"
-    case consentSection = "consent"
-    case optInSection = "opt_in"
-    case consentUserDataSection = "consent_user_data"
-    case integrationSection = "integration"
+    case screening = "screening"
+    case consent = "consent_group"
+    case integration = "integration"
+    
+    var sections: [OnboardingSection] {
+        switch self {
+        case .introVideo: return [.introVideo]
+        case .screening: return [.screening]
+        case .consent: return [.informedConsent, .consent, .optIn, .consentUserData]
+        case .integration: return [.integration]
+        }
+    }
+}
+
+enum OnboardingSection {
+    case introVideo
+    case screening
+    case informedConsent
+    case consent
+    case optIn
+    case consentUserData
+    case integration
 }

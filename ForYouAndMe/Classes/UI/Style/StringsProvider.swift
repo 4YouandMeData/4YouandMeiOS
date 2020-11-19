@@ -41,7 +41,7 @@ enum StringKey: String, CaseIterable, CodingKey {
     // Setup Later
     case introVideoContinueButton = "INTRO_VIDEO_CONTINUE_BUTTON"
     // Onboarding
-    case onboardingSectionList = "ONBOARDING_SECTION_LIST"
+    case onboardingSectionGroupList = "ONBOARDING_SECTION_LIST"
     case onboardingAbortButton = "ONBOARDING_ABORT_BUTTON"
     case onboardingAbortTitle = "ONBOARDING_ABORT_TITLE"
     case onboardingAbortMessage = "ONBOARDING_ABORT_MESSAGE"

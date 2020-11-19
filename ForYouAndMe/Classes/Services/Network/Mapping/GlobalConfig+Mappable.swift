@@ -15,7 +15,7 @@ extension GlobalConfig: Mappable {
         try self.stringMap = map.from("strings")
         try self.countryCodes = map.from("country_codes", transformation: Mapper.errorIfEmpty)
         try self.integrationDatas = map.from("supported_integrations", transformation: Mapper.extractIntegrationData)
-        try self.onboardingSections = self.stringMap.extractOnboardingSections()
+        try self.onboardingSectionGroups = self.stringMap.extractOnboardingSectionGroups()
     }
 }
 
@@ -98,12 +98,12 @@ extension Mapper {
 }
 
 fileprivate extension StringMap {
-    func extractOnboardingSections() throws -> [OnboardingSection] {
-        guard let onboardingSectionListString = self[.onboardingSectionList] else {
-            let errorMessage = "Missing list of onboarding section (key '\(StringKey.onboardingSectionList.rawValue)')"
+    func extractOnboardingSectionGroups() throws -> [OnboardingSectionGroup] {
+        guard let onboardingSectionGroupListString = self[.onboardingSectionGroupList] else {
+            let errorMessage = "Missing list of onboarding section group (key '\(StringKey.onboardingSectionGroupList.rawValue)')"
             throw MapperError.customError(field: "strings", message: errorMessage)
         }
-        let onboardingSectionStrings = onboardingSectionListString.split(separator: ";")
-        return onboardingSectionStrings.compactMap { OnboardingSection(rawValue: String($0)) }
+        let onboardingSectionGroupStrings = onboardingSectionGroupListString.split(separator: ";")
+        return onboardingSectionGroupStrings.compactMap { OnboardingSectionGroup(rawValue: String($0)) }
     }
 }
