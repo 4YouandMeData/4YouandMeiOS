@@ -13,17 +13,21 @@ extension UIStackView {
                          textAlignment: NSTextAlignment = .center,
                          horizontalInset: CGFloat = 0) {
         
-        guard let htmlString = text.htmlToAttributedString else {
+        let fontStyleData = FontPalette.fontStyleData(forStyle: fontStyle)
+        let modifiedFont = String(format: """
+                                    <span style=\"font-family: \(fontStyleData.font.fontName);\
+                                    table, th, td {\
+                                    border: 1px solid black;\
+                                    };\
+                                    font-size: \(fontStyleData.font.pointSize)\">%@</span>
+                                    """, text) as String
+
+        guard let htmlString = modifiedFont.htmlToAttributedString else {
             self.addLabel(withText: text, fontStyle: fontStyle, colorType: colorType)
             fatalError("error parsing HTML text")
         }
-        
-//        let referenceAttributedString = NSAttributedString.create(withText: text,
-//                                                                  fontStyle: fontStyle,
-//                                                                  colorType: colorType,
-//                                                                  textAlignment: textAlignment)
+
         let attributedString = NSMutableAttributedString(attributedString: htmlString)
-//        attributedString.addAttributes(fromAttributedString: referenceAttributedString)
         
         self.addHTMLTextView(attributedString: attributedString,
                              horizontalInset: horizontalInset)
