@@ -8,6 +8,10 @@
 import UIKit
 import AVKit
 
+protocol IntroViewCoordinator {
+    func onIntroVideoCompleted()
+}
+
 class IntroVideoViewController: UIViewController {
     
     private let layerView: UIView = {
@@ -75,11 +79,11 @@ class IntroVideoViewController: UIViewController {
     private var timeObserver: Any?
     private var timer: Timer?
     
-    private let navigator: AppNavigator
+    private let coordinator: IntroViewCoordinator
     private let analytics: AnalyticsService
     
-    init() {
-        self.navigator = Services.shared.navigator
+    init(withcoordinator coordinator: IntroViewCoordinator) {
+        self.coordinator = coordinator
         self.analytics = Services.shared.analytics
         super.init(nibName: nil, bundle: nil)
     }
@@ -323,7 +327,7 @@ class IntroVideoViewController: UIViewController {
         self.removePlayer()
         self.analytics.track(event: .startStudyAction(AnalyticsParameter.close.rawValue))
         self.slider.value = 1.0
-        self.navigator.onIntroVideoCompleted(presenter: self)
+        self.coordinator.onIntroVideoCompleted()
     }
     
     private func removePlayer() {

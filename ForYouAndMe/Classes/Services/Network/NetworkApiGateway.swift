@@ -394,7 +394,10 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         case .getGlobalConfig: return Bundle.getTestData(from: "TestGetGlobalConfig")
         // Login
         case .submitPhoneNumber: return "{}".utf8Encoded
-        case .verifyPhoneNumber: return Bundle.getTestData(from: "TestGetUserNoOnboarding")
+        case .verifyPhoneNumber:
+            return Constants.Test.OnboardingCompleted
+            ? Bundle.getTestData(from: "TestGetUser")
+            : Bundle.getTestData(from: "TestGetUserNoOnboarding")
         // Screening Section
         case .getScreeningSection: return Bundle.getTestData(from: "TestGetScreeningSection")
         // Informed Consent Section
@@ -428,10 +431,22 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         case .sendTaskResultFile: return "{}".utf8Encoded
         case .delayTask: return "{}".utf8Encoded
         // User
-        case .getUser: return Bundle.getTestData(from: "TestGetUser")
-        case .sendUserInfoParameters: return Bundle.getTestData(from: "TestGetUser")
-        case .sendUserTimeZone: return Bundle.getTestData(from: "TestGetUser")
-        case .sendPushToken: return Bundle.getTestData(from: "TestGetUser")
+        case .getUser:
+            return Constants.Test.OnboardingCompleted
+            ? Bundle.getTestData(from: "TestGetUser")
+            : Bundle.getTestData(from: "TestGetUserNoOnboarding")
+        case .sendUserInfoParameters:
+            return Constants.Test.OnboardingCompleted
+            ? Bundle.getTestData(from: "TestGetUser")
+            : Bundle.getTestData(from: "TestGetUserNoOnboarding")
+        case .sendUserTimeZone:
+            return Constants.Test.OnboardingCompleted
+            ? Bundle.getTestData(from: "TestGetUser")
+            : Bundle.getTestData(from: "TestGetUserNoOnboarding")
+        case .sendPushToken:
+            return Constants.Test.OnboardingCompleted
+            ? Bundle.getTestData(from: "TestGetUser")
+            : Bundle.getTestData(from: "TestGetUserNoOnboarding")
         // User Data
         case .getUserData: return Bundle.getTestData(from: "TestGetUserData")
         case .getUserDataAggregation(let period):

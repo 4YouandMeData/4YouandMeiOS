@@ -9,24 +9,14 @@
 import Foundation
 import AVFoundation
 
-enum TestSection {
-    case introVideo
-    case screeningSection
-    case informedConsentSection
-    case consentSection
-    case optInSection
-    case consentUserDataSection
-    case integrationSection
-}
-
 struct Constants {
     struct Test {
         static let NetworkStubsEnabled = false
         static let NetworkStubsDelay = 0.3
         static let NetworkLogVerbose = true
         
-        static let Section: TestSection? = nil //.introVideo
-        static let OnboardingCompleted: Bool? = nil
+        static let StartingOnboardingSection: OnboardingSection? = nil //.introVideo
+        static let OnboardingCompleted: Bool = true
         
         static let InformedConsentWithoutQuestions: Bool = false
         static let CheckGlobalStrings: Bool = false

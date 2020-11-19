@@ -73,7 +73,7 @@ class AppNavigator {
         // Convenient entry point to test each app module atomically,
         // without going through all the official flow
         #if DEBUG
-        if let testSection = Constants.Test.Section {
+        if let testSection = Constants.Test.StartingOnboardingSection {
             let testNavigationViewController = UINavigationController(rootViewController: UIViewController())
             
             testNavigationViewController.preventPopWithSwipe()
@@ -94,13 +94,7 @@ class AppNavigator {
         
         self.setupCompleted = true
         if self.repository.isLoggedIn {
-            var onboardingCompleted = self.repository.currentUser?.isOnboardingCompleted ?? false
-            #if DEBUG
-            if let testOnboardingCompleted = Constants.Test.OnboardingCompleted {
-                onboardingCompleted = testOnboardingCompleted
-            }
-            #endif
-            if onboardingCompleted {
+            if self.repository.currentUser?.isOnboardingCompleted ?? false {
                 self.goHome()
             } else {
                 self.deeplinkService.clearCurrentDeeplinkedData()
@@ -231,6 +225,8 @@ class AppNavigator {
         }
     }
     
+    // MARK: Onboarding
+    
     private func startOnboarding(presenter: UIViewController) {
         guard let navigationController = presenter.navigationController else {
             assertionFailure("Missing UINavigationController")
@@ -242,15 +238,12 @@ class AppNavigator {
     // MARK: Intro Video
     
     public func showIntroVideo(navigationController: UINavigationController) {
-        navigationController.pushViewController(IntroVideoViewController(), animated: true)
-    }
-    
-    public func onIntroVideoCompleted(presenter: UIViewController) {
-        guard let navigationController = presenter.navigationController else {
-            assertionFailure("Missing UINavigationController")
-            return
-        }
-        self.startScreeningSection(navigationController: navigationController)
+        let coordinator = IntroVideoSectionCoordinator(withNavigationController: navigationController,
+                                                       completionCallback: { [weak self] navigationController in
+                                                        self?.startScreeningSection(navigationController: navigationController)
+                                                       })
+        self.currentCoordinator = coordinator
+        navigationController.pushViewController(coordinator.getStartingPage(), animated: true)
     }
     
     // MARK: Screening Questions
