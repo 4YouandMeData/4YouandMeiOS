@@ -8,7 +8,7 @@
 import Foundation
 import RxSwift
 
-protocol ActivitySectionCoordinator: class {
+protocol ActivitySectionCoordinator: class, Coordinator {
     var repository: Repository { get }
     var navigator: AppNavigator { get }
     var taskIdentifier: String { get }
@@ -16,7 +16,6 @@ protocol ActivitySectionCoordinator: class {
     var activityPresenter: UIViewController? { get }
     var completionCallback: NotificationCallback { get }
     
-    func getStartingPage() -> UIViewController
     func delayActivity()
 }
 

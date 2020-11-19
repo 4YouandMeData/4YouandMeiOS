@@ -18,11 +18,11 @@ class IntroVideoSectionCoordinator {
         self.navigationController = navigationController
         self.completionCallback = completionCallback
     }
-    
-    // MARK: - Public Methods
-    
-    public func getStartingPage() -> UIViewController {
-        return IntroVideoViewController(withcoordinator: self)
+}
+
+extension IntroVideoSectionCoordinator: Coordinator {
+    func getStartingPage() -> UIViewController {
+        return IntroVideoViewController(withCoordinator: self)
     }
 }
 

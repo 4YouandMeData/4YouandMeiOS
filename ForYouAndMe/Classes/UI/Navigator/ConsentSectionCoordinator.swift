@@ -13,6 +13,7 @@ class ConsentSectionCoordinator {
     
     private let sectionData: ConsentSection
     private let completionCallback: NavigationControllerCallback
+    private let analytics: AnalyticsService
     
     init(withSectionData sectionData: ConsentSection,
          navigationController: UINavigationController,
@@ -20,23 +21,25 @@ class ConsentSectionCoordinator {
         self.sectionData = sectionData
         self.navigationController = navigationController
         self.completionCallback = completionCallback
+        self.analytics = Services.shared.analytics
     }
-    
-    // MARK: - Public Methods
-    
-    public func getStartingPage() -> UIViewController {
+}
+
+extension ConsentSectionCoordinator: Coordinator {
+    func getStartingPage() -> UIViewController {
         let data = InfoPageListData(title: self.sectionData.title,
-                                  subtitle: self.sectionData.subtitle,
-                                  body: self.sectionData.body,
-                                  startingPage: self.sectionData.welcomePage,
-                                  pages: self.sectionData.pages,
-                                  mode: .acceptance(coordinator: self))
+                                    subtitle: self.sectionData.subtitle,
+                                    body: self.sectionData.body,
+                                    startingPage: self.sectionData.welcomePage,
+                                    pages: self.sectionData.pages,
+                                    mode: .acceptance(coordinator: self))
         return InfoPageListViewController(withData: data)
     }
 }
 
 extension ConsentSectionCoordinator: AcceptanceCoordinator {
     func onAgreeButtonPressed() {
+        self.analytics.track(event: .consentAgreed)
         self.completionCallback(self.navigationController)
     }
     

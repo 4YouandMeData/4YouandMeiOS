@@ -7,7 +7,7 @@
 
 import Foundation
 
-protocol PageCoordinator {
+protocol PageCoordinator: Coordinator {
     func onPagePrimaryButtonPressed(page: Page)
     func onPageSecondaryButtonPressed(page: Page)
     func onLinkedPageButtonPressed(modalPageRef: PageRef)

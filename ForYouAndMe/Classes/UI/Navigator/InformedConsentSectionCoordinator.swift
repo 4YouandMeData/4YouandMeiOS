@@ -28,13 +28,6 @@ class InformedConsentSectionCoordinator {
         self.analytics = Services.shared.analytics
     }
     
-    // MARK: - Public Methods
-    
-    public func getStartingPage() -> UIViewController {
-        let infoPageData = InfoPageData.createWelcomePageData(withPage: self.sectionData.welcomePage)
-        return InfoPageViewController(withPageData: infoPageData, coordinator: self)
-    }
-    
     // MARK: - Private Methods
     
     private func showSuccess() {
@@ -77,6 +70,11 @@ extension InformedConsentSectionCoordinator: PagedSectionCoordinator {
     
     var isOnboarding: Bool { true }
     var pages: [Page] { self.sectionData.pages }
+    
+    func getStartingPage() -> UIViewController {
+        let infoPageData = InfoPageData.createWelcomePageData(withPage: self.sectionData.welcomePage)
+        return InfoPageViewController(withPageData: infoPageData, coordinator: self)
+    }
     
     func performCustomPrimaryButtonNavigation(page: Page) -> Bool {
         self.currentPage = page

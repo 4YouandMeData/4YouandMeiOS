@@ -82,7 +82,7 @@ class IntroVideoViewController: UIViewController {
     private let coordinator: IntroViewCoordinator
     private let analytics: AnalyticsService
     
-    init(withcoordinator coordinator: IntroViewCoordinator) {
+    init(withCoordinator coordinator: IntroViewCoordinator) {
         self.coordinator = coordinator
         self.analytics = Services.shared.analytics
         super.init(nibName: nil, bundle: nil)

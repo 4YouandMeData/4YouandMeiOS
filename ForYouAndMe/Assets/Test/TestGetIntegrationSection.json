@@ -10,52 +10,52 @@
       "pages": {
         "data": [
           {
-            "id": "1",
+            "id": "101",
             "type": "page"
           },
           {
-            "id": "2",
+            "id": "102",
             "type": "page"
           },
           {
-            "id": "3",
+            "id": "103",
             "type": "page"
           },
           {
-            "id": "4",
+            "id": "104",
             "type": "page"
           },
           {
-            "id": "5",
+            "id": "105",
             "type": "page"
           },
           {
-            "id": "6",
+            "id": "106",
             "type": "page"
           },
           {
-            "id": "7",
+            "id": "107",
             "type": "page"
           },
           {
-            "id": "8",
+            "id": "108",
             "type": "page"
           },
           {
-            "id": "9",
+            "id": "109",
             "type": "page"
           }
         ]
       },
       "welcome_page": {
         "data": {
-          "id": "1",
+          "id": "101",
           "type": "page"
         }
       },
       "success_page": {
         "data": {
-          "id": "9",
+          "id": "109",
           "type": "page"
         }
       }
@@ -63,7 +63,7 @@
   },
   "included": [
     {
-      "id": "1",
+      "id": "101",
       "type": "page",
       "attributes": {
         "title": "Download apps",
@@ -87,7 +87,7 @@
         },
         "link_1": {
           "data": {
-            "id": "2",
+            "id": "102",
             "type": "page"
           }
         },
@@ -97,7 +97,7 @@
       }
     },
     {
-      "id": "2",
+      "id": "102",
       "type": "page",
       "attributes": {
         "title": "Oura",
@@ -122,7 +122,7 @@
         },
         "link_1": {
           "data": {
-            "id": "3",
+            "id": "103",
             "type": "page"
           }
         },
@@ -132,7 +132,7 @@
       }
     },
     {
-      "id": "3",
+      "id": "103",
       "type": "page",
       "attributes": {
         "title": "Fitbit",
@@ -157,7 +157,7 @@
         },
         "link_1": {
           "data": {
-            "id": "4",
+            "id": "104",
             "type": "page"
           }
         },
@@ -167,7 +167,7 @@
       }
     },
     {
-      "id": "4",
+      "id": "104",
       "type": "page",
       "attributes": {
         "title": "Connect apps",
@@ -189,7 +189,7 @@
         },
         "link_1": {
           "data": {
-            "id": "5",
+            "id": "105",
             "type": "page"
           }
         },
@@ -199,7 +199,7 @@
       }
     },
       {
-        "id": "5",
+        "id": "105",
         "type": "page",
         "attributes": {
           "title": "Oura",
@@ -224,7 +224,7 @@
           },
           "link_1": {
             "data": {
-              "id": "6",
+              "id": "106",
               "type": "page"
             }
           },
@@ -234,7 +234,7 @@
         }
       },
       {
-        "id": "6",
+        "id": "106",
         "type": "page",
         "attributes": {
           "title": "Oura",
@@ -257,7 +257,7 @@
           },
           "link_1": {
             "data": {
-              "id": "7",
+              "id": "107",
               "type": "page"
             }
           },
@@ -267,7 +267,7 @@
         }
       },
       {
-        "id": "7",
+        "id": "107",
         "type": "page",
         "attributes": {
           "title": "Fitbit",
@@ -292,7 +292,7 @@
           },
           "link_1": {
             "data": {
-              "id": "8",
+              "id": "108",
               "type": "page"
             }
           },
@@ -302,7 +302,7 @@
         }
       },
       {
-        "id": "8",
+        "id": "108",
         "type": "page",
         "attributes": {
           "title": "Fitbit",
@@ -332,7 +332,7 @@
         }
       },
       {
-        "id": "9",
+        "id": "109",
         "type": "page",
         "attributes": {
           "title": "Your apps are now connected",

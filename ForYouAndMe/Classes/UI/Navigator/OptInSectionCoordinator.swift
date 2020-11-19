@@ -35,21 +35,6 @@ class OptInSectionCoordinator {
         self.completionCallback = completionCallback
     }
     
-    // MARK: - Public Methods
-    
-    public func getStartingPage() -> UIViewController {
-        let infoPageData = InfoPageData(page: self.sectionData.welcomePage,
-                                        addAbortOnboardingButton: false,
-                                        addCloseButton: false,
-                                        allowBackwardNavigation: false,
-                                        bodyTextAlignment: .center,
-                                        bottomViewStyle: .singleButton,
-                                        customImageHeight: nil,
-                                        defaultButtonFirstLabel: nil,
-                                        defaultButtonSecondLabel: nil)
-        return InfoPageViewController(withPageData: infoPageData, coordinator: self)
-    }
-    
     // MARK: - Private Methods
     
     private func showSuccess() {
@@ -72,6 +57,19 @@ extension OptInSectionCoordinator: PagedSectionCoordinator {
     
     var isOnboarding: Bool { true }
     var pages: [Page] { self.sectionData.pages }
+    
+    func getStartingPage() -> UIViewController {
+        let infoPageData = InfoPageData(page: self.sectionData.welcomePage,
+                                        addAbortOnboardingButton: false,
+                                        addCloseButton: false,
+                                        allowBackwardNavigation: false,
+                                        bodyTextAlignment: .center,
+                                        bottomViewStyle: .singleButton,
+                                        customImageHeight: nil,
+                                        defaultButtonFirstLabel: nil,
+                                        defaultButtonSecondLabel: nil)
+        return InfoPageViewController(withPageData: infoPageData, coordinator: self)
+    }
     
     func performCustomPrimaryButtonNavigation(page: Page) -> Bool {
         if self.sectionData.successPage?.id == page.id {

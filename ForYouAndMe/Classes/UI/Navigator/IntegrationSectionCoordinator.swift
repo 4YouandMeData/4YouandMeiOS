@@ -40,18 +40,16 @@ class IntegrationSectionCoordinator {
         self.navigationController = navigationController
         self.completionCallback = completionCallback
     }
-    
-    // MARK: - Public Methods
-    
-    public func getStartingPage() -> UIViewController {
-        return IntegrationPageViewController(withPage: self.sectionData.welcomePage, coordinator: self, backwardNavigation: false)
-    }
 }
 
 extension IntegrationSectionCoordinator: PagedSectionCoordinator {
     
     var isOnboarding: Bool { true }
     var pages: [Page] { self.sectionData.pages }
+    
+    func getStartingPage() -> UIViewController {
+        return IntegrationPageViewController(withPage: self.sectionData.welcomePage, coordinator: self, backwardNavigation: false)
+    }
     
     func showPage(_ page: Page) {
         let viewController = IntegrationPageViewController(withPage: page, coordinator: self, backwardNavigation: true)

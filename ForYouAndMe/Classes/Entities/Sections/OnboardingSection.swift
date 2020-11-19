@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import RxSwift
 
 enum OnboardingSectionGroup: String, Codable {
     case introVideo = "intro_video"
@@ -31,4 +32,62 @@ enum OnboardingSection {
     case optIn
     case consentUserData
     case integration
+}
+
+extension OnboardingSection {
+    func getSyncCoordinator(withNavigationController navigationController: UINavigationController,
+                            completionCallback: @escaping NavigationControllerCallback) -> Coordinator? {
+        switch self {
+        case .introVideo:
+            return IntroVideoSectionCoordinator(withNavigationController: navigationController,
+                                                completionCallback: completionCallback)
+        case .screening, .informedConsent, .consent, .optIn, .consentUserData, .integration:
+            return nil
+        }
+    }
+    
+    func getAsyncCoordinatorRequest(withNavigationController navigationController: UINavigationController,
+                                    completionCallback: @escaping NavigationControllerCallback,
+                                    repository: Repository) -> Single<Coordinator>? {
+        switch self {
+        case .introVideo:
+            return nil
+        case .screening:
+            return repository.getScreeningSection().map { section in
+                ScreeningSectionCoordinator(withSectionData: section,
+                                            navigationController: navigationController,
+                                            completionCallback: completionCallback)
+            }
+        case .informedConsent:
+            return repository.getInformedConsentSection().map { section in
+                InformedConsentSectionCoordinator(withSectionData: section,
+                                                  navigationController: navigationController,
+                                                  completionCallback: completionCallback)
+            }
+        case .consent:
+            return repository.getConsentSection().map { section in
+                ConsentSectionCoordinator(withSectionData: section,
+                                          navigationController: navigationController,
+                                          completionCallback: completionCallback)
+            }
+        case .optIn:
+            return repository.getOptInSection().map { section in
+                OptInSectionCoordinator(withSectionData: section,
+                                        navigationController: navigationController,
+                                        completionCallback: completionCallback)
+            }
+        case .consentUserData:
+            return repository.getUserConsentSection().map { section in
+                ConsentUserDataSectionCoordinator(withSectionData: section,
+                                                  navigationController: navigationController,
+                                                  completionCallback: completionCallback)
+            }
+        case .integration:
+            return repository.getIntegrationSection().map { section in
+                IntegrationSectionCoordinator(withSectionData: section,
+                                              navigationController: navigationController,
+                                              completionCallback: completionCallback)
+            }
+        }
+    }
 }

@@ -32,7 +32,7 @@ class AppNavigator {
     private static var progressHudCount = 0
     
     private var setupCompleted = false
-    private var currentCoordinator: Any?
+    private var currentCoordinator: Coordinator?
     private weak var currentActivityCoordinator: ActivitySectionCoordinator?
     
     private var isTaskInProgress: Bool {
@@ -79,15 +79,7 @@ class AppNavigator {
             testNavigationViewController.preventPopWithSwipe()
             self.window.rootViewController = testNavigationViewController
             
-            switch testSection {
-            case .introVideo: self.showIntroVideo(navigationController: testNavigationViewController)
-            case .screening: self.startScreeningSection(navigationController: testNavigationViewController)
-            case .informedConsent: self.startInformedConsentSection(navigationController: testNavigationViewController)
-            case .consent: self.startConsentSection(navigationController: testNavigationViewController)
-            case .optIn: self.startOptInSection(navigationController: testNavigationViewController)
-            case .consentUserData: self.startUserContentDataSection(navigationController: testNavigationViewController)
-            case .integration: self.startIntegrationSection(navigationController: testNavigationViewController)
-            }
+            self.startOnboardingSection(section: testSection, navigationController: testNavigationViewController)
             return
         }
         #endif
@@ -232,65 +224,42 @@ class AppNavigator {
             assertionFailure("Missing UINavigationController")
             return
         }
-        self.showIntroVideo(navigationController: navigationController)
-    }
-    
-    // MARK: Intro Video
-    
-    public func showIntroVideo(navigationController: UINavigationController) {
-        let coordinator = IntroVideoSectionCoordinator(withNavigationController: navigationController,
-                                                       completionCallback: { [weak self] navigationController in
-                                                        self?.startScreeningSection(navigationController: navigationController)
-                                                       })
-        self.currentCoordinator = coordinator
-        navigationController.pushViewController(coordinator.getStartingPage(), animated: true)
-    }
-    
-    // MARK: Screening Questions
-    
-    public func startScreeningSection(navigationController: UINavigationController) {
-        navigationController.loadViewForRequest(self.repository.getScreeningSection()) { section -> UIViewController in
-            let completionCallback: NavigationControllerCallback = { [weak self] navigationController in
-                self?.startInformedConsentSection(navigationController: navigationController)
-            }
-            let coordinator = ScreeningSectionCoordinator(withSectionData: section,
-                                                          navigationController: navigationController,
-                                                          completionCallback: completionCallback)
-            self.currentCoordinator = coordinator
-            return coordinator.getStartingPage()
+        if let firstSection = OnboardingSectionProvider.firstOnboardingSection {
+            self.startOnboardingSection(section: firstSection, navigationController: navigationController)
+        } else {
+            self.goHome()
         }
     }
     
-    // MARK: Informed Consent
-    
-    public func startInformedConsentSection(navigationController: UINavigationController) {
-        navigationController.loadViewForRequest(self.repository.getInformedConsentSection()) { section -> UIViewController in
-            let completionCallback: NavigationControllerCallback = { [weak self] navigationController in
-                self?.startConsentSection(navigationController: navigationController)
+    private func startOnboardingSection(section: OnboardingSection, navigationController: UINavigationController) {
+        let completionCallback: NavigationControllerCallback = { [weak self] navigationController in
+            guard let self = self else { return }
+            if let nextSection = OnboardingSectionProvider.getNextOnboardingSection(forOnboardingSection: section) {
+                self.startOnboardingSection(section: nextSection, navigationController: navigationController)
+            } else {
+                self.currentCoordinator = nil
+                self.goHome()
             }
-            let coordinator = InformedConsentSectionCoordinator(withSectionData: section,
-                                                                navigationController: navigationController,
-                                                                completionCallback: completionCallback)
-            self.currentCoordinator = coordinator
-            return coordinator.getStartingPage()
+        }
+        if let syncCoordinator = section.getSyncCoordinator(withNavigationController: navigationController,
+                                                            completionCallback: completionCallback) {
+            self.currentCoordinator = syncCoordinator
+            navigationController.pushViewController(syncCoordinator.getStartingPage(), animated: true)
+        } else if let asyncCoordinatorRequest = section.getAsyncCoordinatorRequest(withNavigationController: navigationController,
+                                                                                   completionCallback: completionCallback,
+                                                                                   repository: self.repository) {
+            navigationController.loadViewForRequest(asyncCoordinatorRequest) { coordinator -> UIViewController in
+                self.currentCoordinator = coordinator
+                return coordinator.getStartingPage()
+            }
+        } else {
+            assertionFailure("Section han neither a syncCoorindator nor an asyncCoordinator")
+            self.currentCoordinator = nil
+            self.goHome()
         }
     }
     
     // MARK: Consent
-    
-    public func startConsentSection(navigationController: UINavigationController) {
-        navigationController.loadViewForRequest(self.repository.getConsentSection()) { section -> UIViewController in
-            let completionCallback: NavigationControllerCallback = { [weak self] navigationController in
-                self?.analytics.track(event: .consentAgreed)
-                self?.startOptInSection(navigationController: navigationController)
-            }
-            let coordinator = ConsentSectionCoordinator(withSectionData: section,
-                                                        navigationController: navigationController,
-                                                        completionCallback: completionCallback)
-            self.currentCoordinator = coordinator
-            return coordinator.getStartingPage()
-        }
-    }
     
     public func showReviewConsent(navigationController: UINavigationController) {
         navigationController.loadViewForRequest(self.repository.getConsentSection(),
@@ -306,47 +275,7 @@ class AppNavigator {
         }
     }
     
-    // MARK: Opt-In
-    
-    public func startOptInSection(navigationController: UINavigationController) {
-        navigationController.loadViewForRequest(self.repository.getOptInSection()) { section -> UIViewController in
-            let completionCallback: NavigationControllerCallback = { [weak self] navigationController in
-                self?.startUserContentDataSection(navigationController: navigationController)
-            }
-            let coordinator = OptInSectionCoordinator(withSectionData: section,
-                                                      navigationController: navigationController,
-                                                      completionCallback: completionCallback)
-            return coordinator.getStartingPage()
-        }
-    }
-    
-    // MARK: Consent User Data
-    
-    public func startUserContentDataSection(navigationController: UINavigationController) {
-        navigationController.loadViewForRequest(self.repository.getUserConsentSection()) { section -> UIViewController in
-            let completionCallback: NavigationControllerCallback = { [weak self] navigationController in
-                self?.startIntegrationSection(navigationController: navigationController)
-            }
-            let coordinator = ConsentUserDataSectionCoordinator(withSectionData: section,
-                                                                navigationController: navigationController,
-                                                                completionCallback: completionCallback)
-            return coordinator.getStartingPage()
-        }
-    }
-    
     // MARK: Integration
-    
-    public func startIntegrationSection(navigationController: UINavigationController) {
-        navigationController.loadViewForRequest(self.repository.getIntegrationSection()) { section -> UIViewController in
-            let completionCallback: NavigationControllerCallback = { [weak self] navigationController in
-                self?.goHome()
-            }
-            let coordinator = IntegrationSectionCoordinator(withSectionData: section,
-                                                            navigationController: navigationController,
-                                                            completionCallback: completionCallback)
-            return coordinator.getStartingPage()
-        }
-    }
     
     public func showIntegrationLogin(loginUrl: URL, navigationController: UINavigationController) {
         let viewController = ReactiveAuthWebViewController(withTitle: "",

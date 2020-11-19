@@ -35,12 +35,6 @@ class ConsentUserDataSectionCoordinator {
         self.completionCallback = completionCallback
     }
     
-    // MARK: - Public Methods
-    
-    public func getStartingPage() -> UIViewController {
-        return UserNameViewController(coordinator: self)
-    }
-    
     // MARK: - Private Methods
     
     private func showEnterUserEmail() {
@@ -125,6 +119,10 @@ extension ConsentUserDataSectionCoordinator: PagedSectionCoordinator {
     
     var isOnboarding: Bool { true }
     var pages: [Page] { self.sectionData.pages }
+    
+    func getStartingPage() -> UIViewController {
+        return UserNameViewController(coordinator: self)
+    }
     
     func onUnhandledPrimaryButtonNavigation(page: Page) {
         self.completionCallback(self.navigationController)
