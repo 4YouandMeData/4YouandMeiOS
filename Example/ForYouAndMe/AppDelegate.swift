@@ -38,4 +38,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                                           checkResourcesAvailability: true)
         return true
     }
+    
+    func application(_ application: UIApplication, supportedInterfaceOrientationsFor window: UIWindow?) -> UIInterfaceOrientationMask {
+            return FYAMManager.orientationLock
+    }
 }

@@ -11,6 +11,8 @@ import FirebaseCore
 
 public class FYAMManager {
     
+    public static var orientationLock: UIInterfaceOrientationMask { OrientationManager.currentOrientationLock }
+    
     public static func startup(withFontStyleMap fontStyleMap: FontStyleMap,
                                showDefaultUserInfo: Bool,
                                checkResourcesAvailability: Bool = false) -> UIWindow {

@@ -87,11 +87,9 @@ class LoadingViewController<T>: UIViewController, LoadingPage {
                     print("SetupViewController - Initialization Progress: \(progress)")
                 }, onError: { [weak self] error in
                     guard let self = self else { return }
-                    AppNavigator.rotateToPortrait()
                     self.errorView.showViewWithError(error)
                 }, onCompleted: { [weak self] in
                     guard let self = self else { return }
-                    AppNavigator.rotateToPortrait()
                     self.navigator.showSetupCompleted()
                 }).disposed(by: self.disposeBag)
             
@@ -99,11 +97,9 @@ class LoadingViewController<T>: UIViewController, LoadingPage {
             loadingInfo.requestSingle
                 .addProgress()
                 .subscribe(onSuccess: { loadedData in
-                    AppNavigator.rotateToPortrait()
                     loadingInfo.completionCallback(loadedData)
                 }, onError: { [weak self]  error in
                     guard let self = self else { return }
-                    AppNavigator.rotateToPortrait()
                     if false == self.navigator.handleUserNotLoggedError(error: error) {
                         self.errorView.showViewWithError(error)
                     }

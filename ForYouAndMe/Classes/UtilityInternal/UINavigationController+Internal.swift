@@ -40,40 +40,4 @@ extension UINavigationController {
         loadingViewController.hidesBottomBarWhenPushed = hidesBottomBarWhenPushed
         self.pushViewController(loadingViewController, animated: true)
     }
-    
-    override open var shouldAutorotate: Bool {
-        if let visibleVC = visibleViewController, ((visibleVC as? IntroVideoViewController) != nil) {
-            return visibleVC.shouldAutorotate
-        }
-        return false
-    }
-}
-
-extension UITabBarController {
-    open override var shouldAutorotate: Bool {
-        return false
-    }
-    
-    override open var preferredInterfaceOrientationForPresentation: UIInterfaceOrientation {
-        return .portrait
-    }
-
-    open override var supportedInterfaceOrientations: UIInterfaceOrientationMask {
-        return .portrait
-    }
-    
-}
-
-extension ORKTaskViewController {
-    @objc override open var shouldAutorotate: Bool {
-        return false
-    }
-
-    override open var preferredInterfaceOrientationForPresentation: UIInterfaceOrientation {
-        return .portrait
-    }
-
-    open override var supportedInterfaceOrientations: UIInterfaceOrientationMask {
-        return .portrait
-    }
 }

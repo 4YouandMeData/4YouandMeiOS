@@ -48,7 +48,6 @@ class TaskSectionCoordinator: NSObject, PagedActivitySectionCoordinator {
     deinit {
         print("TaskSectionCoordinator - deinit")
         self.deleteTaskResult(path: Constants.Task.taskResultURL)
-        AppNavigator.rotateToPortrait()
     }
     
     // MARK: - Private Methods

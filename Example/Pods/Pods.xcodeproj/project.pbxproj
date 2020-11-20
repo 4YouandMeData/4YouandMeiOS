@@ -1555,6 +1555,7 @@
 		8921310819048EEE2E4F243A141999B2 /* ORKRequestPermissionsStepViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = E04C95C7514D00D668BA1D33D044BFCE /* ORKRequestPermissionsStepViewController.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
 		892878D4E31D1CD59174171FEF2ED082 /* FBLPromise+Race.m in Sources */ = {isa = PBXBuildFile; fileRef = A9A9C3AE672B681B55CB51C2CBDFD5A7 /* FBLPromise+Race.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
 		89419F6DA745C9EB2B494B0BF12289E9 /* ORKStepNavigationRule_Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = E90174F67D92F91C73E19839D5740C38 /* ORKStepNavigationRule_Internal.h */; settings = {ATTRIBUTES = (Project, ); }; };
+		8943A44C2567D06100488BF4 /* OrientationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8943A44B2567D06100488BF4 /* OrientationManager.swift */; };
 		894A3A782566A79E005460AC /* OnboardingSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 894A3A772566A79E005460AC /* OnboardingSection.swift */; };
 		894A3AA62566A989005460AC /* OnboardingSectionProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 894A3AA52566A989005460AC /* OnboardingSectionProvider.swift */; };
 		894A3AD42566ADE7005460AC /* IntroVideoSectionCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 894A3AD32566ADE7005460AC /* IntroVideoSectionCoordinator.swift */; };
@@ -5243,6 +5244,7 @@
 		88B1003A550CC979E5F1C1DE7CFAECF2 /* SVProgressHUD-prefix.pch */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = "SVProgressHUD-prefix.pch"; sourceTree = "<group>"; };
 		88DFAC3545C1D216669745A4211EABCB /* GULSecureCoding.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = GULSecureCoding.h; path = GoogleUtilities/Environment/Private/GULSecureCoding.h; sourceTree = "<group>"; };
 		891F989821E945BD8984CB92B19ED0A5 /* Mappable.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = Mappable.swift; path = Sources/Mappable.swift; sourceTree = "<group>"; };
+		8943A44B2567D06100488BF4 /* OrientationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrientationManager.swift; sourceTree = "<group>"; };
 		894A3A772566A79E005460AC /* OnboardingSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingSection.swift; sourceTree = "<group>"; };
 		894A3AA52566A989005460AC /* OnboardingSectionProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingSectionProvider.swift; sourceTree = "<group>"; };
 		894A3AD32566ADE7005460AC /* IntroVideoSectionCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntroVideoSectionCoordinator.swift; sourceTree = "<group>"; };
@@ -8023,6 +8025,7 @@
 			isa = PBXGroup;
 			children = (
 				A2FFA197A0554599CC5D879D6A2DBC9A /* FeedListManager.swift */,
+				8943A44B2567D06100488BF4 /* OrientationManager.swift */,
 			);
 			path = Helpers;
 			sourceTree = "<group>";
@@ -14774,6 +14777,7 @@
 				C5972B16BB3C9B6FFF78F2A1E6818623 /* SetupLaterViewController.swift in Sources */,
 				2CEBE9B7238A9935C7A2F66EE64B185D /* Single+Extensions.swift in Sources */,
 				C009F53136FA1003196CB4FB2A3553C1 /* SingleTextHeaderView.swift in Sources */,
+				8943A44C2567D06100488BF4 /* OrientationManager.swift in Sources */,
 				80F7F15471675EF59626DCC4620B03D6 /* Slider.swift in Sources */,
 				2A85B3249BFAFB28DDDFE73C451047D5 /* SpeechPermission.swift in Sources */,
 				3F7092653DC30AFFED1E54480F2052C5 /* StarRatingView.swift in Sources */,

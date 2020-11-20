@@ -100,7 +100,7 @@ class IntroVideoViewController: UIViewController {
         self.addTapGestureToContainerView()
         self.updateProgressBar()
         self.configureTheViewElements()
-        NotificationCenter.default.addObserver(self, selector: #selector(rotated),
+        NotificationCenter.default.addObserver(self, selector: #selector(self.rotated),
                                                name: UIDevice.orientationDidChangeNotification,
                                                object: nil)
     }
@@ -112,11 +112,15 @@ class IntroVideoViewController: UIViewController {
         self.navigationController?.navigationBar.apply(style: NavigationBarStyleCategory.primary(hidden: true).style)
         self.navigationItem.hidesBackButton = true
         self.addObserver()
+        
+        OrientationManager.lockOrientation(.allButUpsideDown)
     }
     
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         self.removeObserver()
+        
+        OrientationManager.resetOrientationToDefault()
     }
     
     deinit {
@@ -323,7 +327,6 @@ class IntroVideoViewController: UIViewController {
     }
     
     private func navigateForward() {
-        AppNavigator.rotateToPortrait()
         self.removePlayer()
         self.analytics.track(event: .startStudyAction(AnalyticsParameter.close.rawValue))
         self.slider.value = 1.0
