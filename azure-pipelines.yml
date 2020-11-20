@@ -48,6 +48,17 @@ steps:
     Contents: 'GoogleService-Info.plist'
     TargetFolder: '$(system.defaultWorkingDirectory)/Example/ForYouAndMe'
 - powershell: /bin/bash -c "sudo xcode-select -s /Applications/Xcode_12.2.app/Contents/Developer"
+
+- task: DownloadSecureFile@2
+  inputs:
+    secureFile: 'ProjectInfo.plist'
+- task: CopyFiles@3
+  inputs:
+    SourceFolder: '$(Agent.TempDirectory)'
+    Contents: 'ProjectInfo.plist'
+    TargetFolder: '$(system.defaultWorkingDirectory)/Example/ForYouAndMe'
+- powershell: /bin/bash -c "sudo xcode-select -s /Applications/Xcode_12.2.app/Contents/Developer"
+
 - task: Xcode@5
   inputs:
     actions: 'test'
