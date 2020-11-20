@@ -62,7 +62,7 @@ struct Constants {
         static let FitbitStoreUrl: URL = URL(string: "itms-apps://apps.apple.com/us/app/fitbit-health-fitness/id462638897")!
         static let FitbitAppSchema: URL = URL(string: "fitbit://")!
         static let GarminStoreUrl: URL = URL(string: "itms-apps://apps.apple.com/us/app/garmin-connect/id583446403")!
-        static let GarminAppSchema: URL = URL(string: "garmin://")!
+        static let GarminAppSchema: URL = URL(string: "gcm-ciq://")!
         static let InstagramStoreUrl: URL = URL(string: "itms-apps://apps.apple.com/us/app/instagram/id389801252")!
         static let InstagramAppSchema: URL = URL(string: "instagram://")!
         static let RescueTimeStoreUrl: URL = URL(string: "itms-apps://apps.apple.com/us/app/rescuetime/id966285407")!
