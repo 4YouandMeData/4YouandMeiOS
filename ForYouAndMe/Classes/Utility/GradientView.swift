@@ -32,12 +32,17 @@ public class GradientView: UIView {
     override public func layoutSubviews() {
         super.layoutSubviews()
         
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
         self.gradientMask.frame = CGRect(x: 0.0, y: 0.0, width: self.frame.size.width, height: self.frame.size.height)
+        CATransaction.commit()
     }
     
     // MARK: - Public Methods
     
     func updateParameters(colors: [UIColor]? = nil, locations: [Double]? = nil, startPoint: CGPoint? = nil, endPoint: CGPoint? = nil) {
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
         if let colors = colors {
             self.gradientMask.colors = colors.map { $0.cgColor }
         }
@@ -50,6 +55,7 @@ public class GradientView: UIView {
         if let endPoint = endPoint {
             self.gradientMask.endPoint = endPoint
         }
+        CATransaction.commit()
     }
 }
 

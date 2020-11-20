@@ -60,6 +60,9 @@ class FeedTableViewCell: UITableViewCell {
         
         let panelView = UIView()
         panelView.addGradientView(self.gradientView)
+        self.gradientView.setContentHuggingPriority(UILayoutPriority(100), for: .vertical)
+        self.gradientView.setContentCompressionResistancePriority(UILayoutPriority(100), for: .vertical)
+        panelView.backgroundColor = ColorPalette.color(withType: .primary)
         panelView.layer.cornerRadius = 8.0
         panelView.layer.masksToBounds = true
         backgroundView.addSubview(panelView)
@@ -88,11 +91,8 @@ class FeedTableViewCell: UITableViewCell {
     
     public func display(data: Activity, buttonPressedCallback: @escaping NotificationCallback) {
         self.buttonPressedCallback = buttonPressedCallback
-//        self.gradientView.updateParameters(colors: [data.startColor ?? ColorPalette.color(withType: .primary),
-//                                                    data.endColor ?? ColorPalette.color(withType: .gradientPrimaryEnd)])
-        self.gradientView.updateParameters(colors: [data.cardColor ?? ColorPalette.color(withType: .primary),
-                                                    data.cardColor ?? ColorPalette.color(withType: .gradientPrimaryEnd)])
         
+        self.updateGradientView(startColor: data.startColor, endColor: data.endColor, singleColor: data.cardColor)
         self.setFeedImage(image: data.image)
         self.setFeedTitle(text: data.title)
         self.setFeedDescription(text: data.body)
@@ -109,11 +109,8 @@ class FeedTableViewCell: UITableViewCell {
     
     public func display(data: Survey, buttonPressedCallback: @escaping NotificationCallback) {
         self.buttonPressedCallback = buttonPressedCallback
-//        self.gradientView.updateParameters(colors: [data.startColor ?? ColorPalette.color(withType: .primary),
-//                                                    data.endColor ?? ColorPalette.color(withType: .gradientPrimaryEnd)])
-        self.gradientView.updateParameters(colors: [data.cardColor ?? ColorPalette.color(withType: .primary),
-                                                    data.cardColor ?? ColorPalette.color(withType: .gradientPrimaryEnd)])
         
+        self.updateGradientView(startColor: data.startColor, endColor: data.endColor, singleColor: data.cardColor)
         self.setFeedImage(image: data.image)
         self.setFeedTitle(text: data.title)
         self.setFeedDescription(text: data.body)
@@ -125,11 +122,8 @@ class FeedTableViewCell: UITableViewCell {
     
     public func display(data: Educational, buttonPressedCallback: @escaping NotificationCallback) {
         self.buttonPressedCallback = buttonPressedCallback
-//        self.gradientView.updateParameters(colors: [data.startColor ?? ColorPalette.color(withType: .primary),
-//                                                    data.endColor ?? ColorPalette.color(withType: .gradientPrimaryEnd)])
-        self.gradientView.updateParameters(colors: [data.cardColor ?? ColorPalette.color(withType: .primary),
-                                                    data.cardColor ?? ColorPalette.color(withType: .gradientPrimaryEnd)])
         
+        self.updateGradientView(startColor: data.startColor, endColor: data.endColor, singleColor: data.cardColor)
         self.setFeedImage(image: data.image)
         self.setFeedTitle(text: data.title)
         self.setFeedDescription(text: data.body)
@@ -146,11 +140,8 @@ class FeedTableViewCell: UITableViewCell {
     
     public func display(data: Alert, buttonPressedCallback: @escaping NotificationCallback) {
         self.buttonPressedCallback = buttonPressedCallback
-//        self.gradientView.updateParameters(colors: [data.startColor ?? ColorPalette.color(withType: .primary),
-//                                                    data.endColor ?? ColorPalette.color(withType: .gradientPrimaryEnd)])
-        self.gradientView.updateParameters(colors: [data.cardColor ?? ColorPalette.color(withType: .primary),
-                                                    data.cardColor ?? ColorPalette.color(withType: .gradientPrimaryEnd)])
         
+        self.updateGradientView(startColor: data.startColor, endColor: data.endColor, singleColor: data.cardColor)
         self.setFeedImage(image: data.image)
         self.setFeedTitle(text: data.title)
         self.setFeedDescription(text: data.body)
@@ -167,11 +158,8 @@ class FeedTableViewCell: UITableViewCell {
     
     public func display(data: Reward, buttonPressedCallback: @escaping NotificationCallback) {
         self.buttonPressedCallback = buttonPressedCallback
-//        self.gradientView.updateParameters(colors: [data.startColor ?? ColorPalette.color(withType: .primary),
-//                                                    data.endColor ?? ColorPalette.color(withType: .gradientPrimaryEnd)])
-        self.gradientView.updateParameters(colors: [data.cardColor ?? ColorPalette.color(withType: .primary),
-                                                    data.cardColor ?? ColorPalette.color(withType: .gradientPrimaryEnd)])
         
+        self.updateGradientView(startColor: data.startColor, endColor: data.endColor, singleColor: data.cardColor)
         self.setFeedImage(image: data.image)
         self.setFeedTitle(text: data.title)
         self.setFeedDescription(text: data.body)
@@ -222,6 +210,15 @@ class FeedTableViewCell: UITableViewCell {
             self.feedImageView.image = image
         } else {
             self.feedImageView.isHidden = true
+        }
+    }
+    
+    private func updateGradientView(startColor: UIColor?, endColor: UIColor?, singleColor: UIColor?) {
+        if let startColor = startColor, let endColor = endColor {
+            self.gradientView.updateParameters(colors: [startColor, endColor])
+        } else {
+            self.gradientView.updateParameters(colors: [singleColor ?? ColorPalette.color(withType: .primary),
+                                                        singleColor ?? ColorPalette.color(withType: .gradientPrimaryEnd)])
         }
     }
 }
