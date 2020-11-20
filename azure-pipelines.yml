@@ -49,10 +49,10 @@ steps:
     TargetFolder: '$(system.defaultWorkingDirectory)/Example/ForYouAndMe'
 - powershell: /bin/bash -c "sudo xcode-select -s /Applications/Xcode_12.2.app/Contents/Developer"
 
-- task: DownloadSecureFile@2
+- task: DownloadSecureFile@1
   inputs:
     secureFile: 'ProjectInfo.plist'
-- task: CopyFiles@3
+- task: CopyFiles@2
   inputs:
     SourceFolder: '$(Agent.TempDirectory)'
     Contents: 'ProjectInfo.plist'
