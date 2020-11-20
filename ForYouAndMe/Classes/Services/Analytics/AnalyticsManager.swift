@@ -20,6 +20,7 @@ class AnalyticsManager: AnalyticsService {
     }
     
     func track(event: AnalyticsEvent) {
+        print("Analytics - Tracked event: \(event)")
         self.platforms.forEach({ $0.track(event: event) })
     }
 }
