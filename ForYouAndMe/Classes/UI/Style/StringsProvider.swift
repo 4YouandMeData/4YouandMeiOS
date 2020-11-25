@@ -54,6 +54,7 @@ enum StringKey: String, CaseIterable, CodingKey {
     case onboardingOptInMandatoryDefault = "ONBOARDING_OPT_IN_MANDATORY_DEFAULT"
     case onboardingOptInSubmitButton = "ONBOARDING_OPT_IN_SUBMIT_BUTTON"
     case onboardingUserNameTitle = "ONBOARDING_USER_NAME_TITLE"
+    case onboardingUserNameBody = "ONBOARDING_USER_NAME_BODY"
     case onboardingUserNameFirstNameDescription = "ONBOARDING_USER_NAME_FIRST_NAME_DESCRIPTION"
     case onboardingUserNameLastNameDescription = "ONBOARDING_USER_NAME_LAST_NAME_DESCRIPTION"
     case onboardingUserEmailEmailDescription = "ONBOARDING_USER_EMAIL_EMAIL_DESCRIPTION"

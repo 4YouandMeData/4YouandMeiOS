@@ -86,7 +86,12 @@ public class UserNameViewController: UIViewController {
                            fontStyle: .title,
                            colorType: .secondaryText,
                            textAlignment: .left)
-        stackView.addBlankSpace(space: 60.0)
+        stackView.addBlankSpace(space: 30.0)
+        stackView.addLabel(withText: StringsProvider.string(forKey: .onboardingUserNameBody),
+                           fontStyle: .paragraph,
+                           colorType: .secondaryText,
+                           textAlignment: .left)
+        stackView.addBlankSpace(space: 48.0)
         stackView.addLabel(withText: StringsProvider.string(forKey: .onboardingUserNameFirstNameDescription),
                            fontStyle: .paragraph,
                            colorType: .secondaryText,

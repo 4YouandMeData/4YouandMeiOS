@@ -74,6 +74,7 @@
       "ONBOARDING_OPT_IN_MANDATORY_DEFAULT": "Enrollment in this study require this permission",
       "ONBOARDING_OPT_IN_SUBMIT_BUTTON": "Next",
       "ONBOARDING_USER_NAME_TITLE": "Consent",
+      "ONBOARDING_USER_NAME_BODY": "Enter your first and last name to be added to the consent form. Next, you will sign consent form.",
       "ONBOARDING_USER_NAME_FIRST_NAME_DESCRIPTION": "First Name",
       "ONBOARDING_USER_NAME_LAST_NAME_DESCRIPTION": "Last Name",
       "ONBOARDING_USER_EMAIL_EMAIL_DESCRIPTION": "Email address",
