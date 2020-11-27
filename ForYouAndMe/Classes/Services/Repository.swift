@@ -30,7 +30,7 @@ enum RepositoryError: LocalizedError {
 }
 
 enum FetchMode {
-    case refresh
+    case refresh(pageSize: Int?)
     case append(paginationInfo: PaginationInfo)
 }
 

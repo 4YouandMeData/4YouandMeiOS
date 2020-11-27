@@ -428,7 +428,12 @@ fileprivate extension Error {
 fileprivate extension FetchMode {
     var paginationInfo: PaginationInfo? {
         switch self {
-        case .refresh: return nil
+        case .refresh(let pageSize):
+            if let pageSize = pageSize {
+                return PaginationInfo(pageSize: pageSize, pageIndex: 0)
+            } else {
+                return nil
+            }
         case .append(let paginationInfo): return paginationInfo
         }
     }

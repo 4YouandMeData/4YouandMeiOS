@@ -1553,6 +1553,7 @@
 		8938C7DE19B631E28D8A211D14944EA9 /* UISlider+Rx.swift in Sources */ = {isa = PBXBuildFile; fileRef = 238BD9429C2B8CA8A0A3DAF459415F4E /* UISlider+Rx.swift */; };
 		893B8D6346216F3CB9642DB11CA436ED /* KVORepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6D9E5744E407E5937B1073584AACFED /* KVORepresentable.swift */; };
 		89419F6DA745C9EB2B494B0BF12289E9 /* ORKStepNavigationRule_Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = E90174F67D92F91C73E19839D5740C38 /* ORKStepNavigationRule_Internal.h */; settings = {ATTRIBUTES = (Project, ); }; };
+		894945F625716D7200176D6B /* LoadingTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 894945F525716D7200176D6B /* LoadingTableViewCell.swift */; };
 		8959EA6A08FD2FBDEC0661DA718B415F /* ORKPageStep.h in Headers */ = {isa = PBXBuildFile; fileRef = D8CEDC28D09C129C9A4FBF203786F743 /* ORKPageStep.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		8989DC633756C62D834EDF340DF092F5 /* FIRMessagingClient.m in Sources */ = {isa = PBXBuildFile; fileRef = 2763D7F3036074AD08E393B5688A1C54 /* FIRMessagingClient.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
 		899AFC7DB0CA4B9B6117637697522333 /* ORKUSDZModelManagerResult.m in Sources */ = {isa = PBXBuildFile; fileRef = AFE90A49F113053646E9A0769F4D9402 /* ORKUSDZModelManagerResult.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
@@ -5255,6 +5256,7 @@
 		88B1003A550CC979E5F1C1DE7CFAECF2 /* SVProgressHUD-prefix.pch */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = "SVProgressHUD-prefix.pch"; sourceTree = "<group>"; };
 		88DFAC3545C1D216669745A4211EABCB /* GULSecureCoding.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = GULSecureCoding.h; path = GoogleUtilities/Environment/Private/GULSecureCoding.h; sourceTree = "<group>"; };
 		891F989821E945BD8984CB92B19ED0A5 /* Mappable.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = Mappable.swift; path = Sources/Mappable.swift; sourceTree = "<group>"; };
+		894945F525716D7200176D6B /* LoadingTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoadingTableViewCell.swift; sourceTree = "<group>"; };
 		8978507AF1AAB4D257FBA7DB90790D6E /* DoubleButtonVerticalView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DoubleButtonVerticalView.swift; sourceTree = "<group>"; };
 		897B760A007DE19B3CB539EDC77224EF /* HKSample+ORKJSONDictionary.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = "HKSample+ORKJSONDictionary.m"; path = "ResearchKit/ActiveTasks/HKSample+ORKJSONDictionary.m"; sourceTree = "<group>"; };
 		897D4103B6EF5A7B013CF3396449E32F /* SurveyGroupSectionCoordinator.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SurveyGroupSectionCoordinator.swift; sourceTree = "<group>"; };
@@ -7966,6 +7968,7 @@
 				13B895B9E9DC0F885F1974B73C01D75A /* FeedHeaderView.swift */,
 				EC5FB8A994ECBB83987BE69D737F854B /* FeedListSectionHeader.swift */,
 				F13F0F273F3C0F9AA84CF746CD6DAB9A /* FeedTableViewCell.swift */,
+				894945F525716D7200176D6B /* LoadingTableViewCell.swift */,
 				91B19A14AFE9902D8E47F10DF7469E4C /* FeedTableViewHeader.swift */,
 				979FBB80528C351F829B7A4A653E768F /* GenericButtonView.swift */,
 				4EDDEE37888C25D21CBB6EB184D60C79 /* GenericCheckboxView.swift */,
@@ -13776,6 +13779,7 @@
 				9FDF62B04609C5C529ACD459D34D452F /* ColorPalette.swift in Sources */,
 				24DC169A5FA47711402140C31D8FCE07 /* ConsentSection.swift in Sources */,
 				2865CC4DE3E121E965B76E2708487FE7 /* ConsentSectionCoordinator.swift in Sources */,
+				894945F625716D7200176D6B /* LoadingTableViewCell.swift in Sources */,
 				A47327FC1968034E58A6A054E0435DE1 /* ConsentUserDataSection.swift in Sources */,
 				59A51EEFC5E1390DE3E219F9758F3099 /* ConsentUserDataSectionCoordinator.swift in Sources */,
 				9CA623F527C68AF5F4E8708710462BE6 /* Constants.swift in Sources */,

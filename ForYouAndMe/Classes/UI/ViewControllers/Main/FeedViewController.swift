@@ -15,6 +15,7 @@ class FeedViewController: UIViewController {
                                navigator: self.navigator,
                                tableView: self.tableView,
                                delegate: self,
+                               pageSize: Constants.Misc.FeedPageSize,
                                pullToRefresh: true)
     }()
     
@@ -134,8 +135,8 @@ extension FeedViewController: FeedListManagerDelegate {
         self.tableView.backgroundView = show ? self.emptyView : nil
     }
     
-    func getDataProviderSingle(repository: Repository) -> Single<FeedContent> {
-        return self.repository.getFeeds(fetchMode: .refresh).map { FeedContent(withFeeds: $0) }
+    func getDataProviderSingle(repository: Repository, fetchMode: FetchMode) -> Single<FeedContent> {
+        return self.repository.getFeeds(fetchMode: fetchMode).map { FeedContent(withFeeds: $0) }
     }
     
     func onListRefresh() {
@@ -144,5 +145,9 @@ extension FeedViewController: FeedListManagerDelegate {
                              navigator: self.navigator,
                              repository: self.repository,
                              disposeBag: self.disposeBag)
+    }
+    
+    func showError(error: Error) {
+        self.navigator.handleError(error: error, presenter: self)
     }
 }

@@ -15,6 +15,7 @@ class TaskViewController: UIViewController {
                                     navigator: self.navigator,
                                     tableView: self.tableView,
                                     delegate: self,
+                                    pageSize: Constants.Misc.FeedPageSize,
                                     pullToRefresh: true)
     }()
     
@@ -107,7 +108,11 @@ extension TaskViewController: FeedListManagerDelegate {
         self.emptyView.isHidden = !show
     }
     
-    func getDataProviderSingle(repository: Repository) -> Single<FeedContent> {
-        return self.repository.getTasks(fetchMode: .refresh).map { FeedContent(withFeeds: $0) }
+    func getDataProviderSingle(repository: Repository, fetchMode: FetchMode) -> Single<FeedContent> {
+        return self.repository.getTasks(fetchMode: fetchMode).map { FeedContent(withFeeds: $0) }
+    }
+    
+    func showError(error: Error) {
+        self.navigator.handleError(error: error, presenter: self)
     }
 }

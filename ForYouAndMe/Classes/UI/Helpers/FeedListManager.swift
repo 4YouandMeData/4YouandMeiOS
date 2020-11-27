@@ -25,13 +25,18 @@ struct FeedContent {
         self.quickActivities = feeds.filter { $0.schedulable?.isQuickActivity ?? false}
         self.feedItems = feeds.filter { false == $0.schedulable?.isQuickActivity ?? false}
     }
+    
+    var itemCount: Int {
+        return self.quickActivities.count + self.feedItems.count
+    }
 }
 
 protocol FeedListManagerDelegate: class {
     var presenter: UIViewController { get }
     func handleEmptyList(show: Bool)
-    func getDataProviderSingle(repository: Repository) -> Single<FeedContent>
+    func getDataProviderSingle(repository: Repository, fetchMode: FetchMode) -> Single<FeedContent>
     func onListRefresh()
+    func showError(error: Error)
 }
 
 extension FeedListManagerDelegate {
@@ -59,13 +64,18 @@ private struct QuickActivitySection: FeedListSection {
 }
 
 class FeedListManager: NSObject {
+    
     private let tableView: UITableView
     private let repository: Repository
     private let navigator: AppNavigator
     private let analytics: AnalyticsService
+    
+    private let pageSize: Int?
+    
     private weak var delegate: FeedListManagerDelegate?
     
     private var sections: [FeedListSection] = []
+    private var hasMoreContent: Bool = false
     private var currentRequestDisposable: Disposable?
     
     private var quickActivitySelections: [QuickActivityItem: QuickActivityOption] = [:]
@@ -80,12 +90,14 @@ class FeedListManager: NSObject {
          navigator: AppNavigator,
          tableView: UITableView,
          delegate: FeedListManagerDelegate,
+         pageSize: Int?,
          pullToRefresh: Bool = true) {
         self.repository = repository
         self.navigator = navigator
         self.tableView = tableView
         self.analytics = Services.shared.analytics
         self.delegate = delegate
+        self.pageSize = pageSize
         
         super.init()
         
@@ -94,6 +106,7 @@ class FeedListManager: NSObject {
         self.tableView.delegate = self
         self.tableView.registerCellsWithClass(FeedTableViewCell.self)
         self.tableView.registerCellsWithClass(QuickActivityListTableViewCell.self)
+        self.tableView.registerCellsWithClass(LoadingTableViewCell.self)
         self.tableView.registerHeaderFooterViewWithClass(FeedListSectionHeader.self)
         self.tableView.tableFooterView = UIView()
         self.tableView.separatorStyle = .none
@@ -124,11 +137,11 @@ class FeedListManager: NSObject {
     // MARK: - Public Methods
     
     public func refreshItems(onCompletion: NotificationCallback? = nil) {
-        self.loadItems(onCompletion: onCompletion)
+        self.reloadItems(onCompletion: onCompletion)
     }
     
     public func viewWillAppear() {
-        self.loadItems()
+        self.reloadItems()
     }
     
     public func viewDidLayoutSubviews() {
@@ -138,7 +151,7 @@ class FeedListManager: NSObject {
     
     // MARK: - Private Methods
     
-    private func loadItems(onCompletion: NotificationCallback? = nil) {
+    private func reloadItems(onCompletion: NotificationCallback? = nil) {
         
         guard let delegate = self.delegate else {
             assertionFailure("FeedListManager - Missing delegate")
@@ -146,39 +159,78 @@ class FeedListManager: NSObject {
         }
         
         self.currentRequestDisposable?.dispose()
-        self.currentRequestDisposable = delegate.getDataProviderSingle(repository: self.repository)
+        self.currentRequestDisposable = delegate.getDataProviderSingle(repository: self.repository,
+                                                                       fetchMode: .refresh(pageSize: self.pageSize))
+            .do(onSuccess: { [weak self] _ in self?.handleFetchEnd() },
+                onError: { [weak self] _ in self?.handleFetchEnd() })
             .addProgress()
             .subscribe(onSuccess: { [weak self] content in
                 guard let self = self else { return }
-                self.tableView.refreshControl?.endRefreshing()
-                
+                self.updateHasContent(withFeedContent: content)
                 self.sections = content.sections
-                self.reloadTableView()
-                
-                self.currentRequestDisposable = nil
-                
+                self.handleRefreshEnd()
                 self.errorView.hideView()
-                
                 onCompletion?()
-                
             }, onError: { [weak self] error in
                 guard let self = self else { return }
-                self.tableView.refreshControl?.endRefreshing()
-                
-                self.currentRequestDisposable = nil
+                self.sections = []
+                self.handleRefreshEnd()
                 self.errorView.showViewWithError(error)
             })
     }
     
-    private func reloadTableView() {
+    private func appendItems() {
+        guard let delegate = self.delegate else {
+            assertionFailure("FeedListManager - Missing delegate")
+            return
+        }
+        guard let pageSize = self.pageSize else {
+            assertionFailure("Trying to append items without page size")
+            return
+        }
+        
+        if self.currentRequestDisposable != nil {
+            return
+        }
+        
+        let pageIndex = self.sections.reduce(0, { $0 + $1.numberOfRows }) / pageSize
+        let paginationInfo = PaginationInfo(pageSize: pageSize, pageIndex: pageIndex)
+        self.currentRequestDisposable = delegate.getDataProviderSingle(repository: self.repository,
+                                                                       fetchMode: .append(paginationInfo: paginationInfo))
+            .do(onSuccess: { [weak self] _ in self?.handleFetchEnd() },
+                onError: { [weak self] _ in self?.handleFetchEnd() })
+            .subscribe(onSuccess: { [weak self] content in
+                guard let self = self else { return }
+                self.updateHasContent(withFeedContent: content)
+                // TODO: Merge current sections with previous sections, grouping them for the same day, when needed.
+                self.sections.append(contentsOf: content.sections)
+                self.tableView.reloadData()
+                self.errorView.hideView()
+            }, onError: { error in
+                delegate.showError(error: error)
+            })
+    }
+    
+    private func handleRefreshEnd() {
         self.delegate?.onListRefresh()
         
         let showEmptyView = self.sections.count == 0
         self.delegate?.handleEmptyList(show: showEmptyView)
         self.tableView.reloadData()
         self.tableView.sizeHeaderToFit()
-        if showEmptyView {
-            self.goToTop()
+        self.goToTop()
+    }
+    
+    private func handleFetchEnd() {
+        self.tableView.refreshControl?.endRefreshing()
+        self.currentRequestDisposable = nil
+    }
+    
+    private func updateHasContent(withFeedContent feedContent: FeedContent) {
+        if let pageSize = self.pageSize {
+            self.hasMoreContent = !(feedContent.itemCount == 0 || feedContent.itemCount != pageSize)
+        } else {
+            self.hasMoreContent = false
         }
     }
     
@@ -199,7 +251,7 @@ class FeedListManager: NSObject {
             .subscribe(onSuccess: { [weak self] in
                 guard let self = self else { return }
                 self.analytics.track(event: .quickActivity(taskId, option: option.id))
-                self.loadItems()
+                self.reloadItems()
             }, onError: { [weak self] error in
                 guard let self = self else { return }
                 self.navigator.handleError(error: error, presenter: delegate.presenter)
@@ -209,7 +261,7 @@ class FeedListManager: NSObject {
     // MARK: - Actions
     
     @objc private func refreshControlPulled() {
-        self.loadItems()
+        self.reloadItems()
     }
 }
 
@@ -220,12 +272,33 @@ extension FeedListManager: UITableViewDataSource {
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return self.sections[section].numberOfRows
+        if self.hasMoreContent, section == self.sections.count - 1 {
+            // If there is more content and this is the last section
+            // add one cell for the loading cell
+            return self.sections[section].numberOfRows + 1
+        } else {
+            return self.sections[section].numberOfRows
+        }
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        
+        let getLoadingCell: (() -> UITableViewCell) = {
+            assert(self.hasMoreContent, "No need to show the Loading cell")
+            guard let cell = tableView.dequeueReusableCellOfType(type: LoadingTableViewCell.self, forIndexPath: indexPath) else {
+                assertionFailure("LoadingTableViewCell not registered")
+                return UITableViewCell()
+            }
+            return cell
+        }
+        
         let section = self.sections[indexPath.section]
         if let quickActivitySection = section as? QuickActivitySection {
+            
+            guard indexPath.row < 1 else {
+                return getLoadingCell()
+            }
+            
             guard let cell = tableView.dequeueReusableCellOfType(type: QuickActivityListTableViewCell.self, forIndexPath: indexPath) else {
                 assertionFailure("QuickActivityListTableViewCell not registered")
                 return UITableViewCell()
@@ -246,6 +319,11 @@ extension FeedListManager: UITableViewDataSource {
                          })
             return cell
         } else if let feedSection = section as? FeedSection {
+            
+            guard indexPath.row < feedSection.feedItems.count else {
+                return getLoadingCell()
+            }
+            
             let feed = feedSection.feedItems[indexPath.row]
             guard let cell = tableView.dequeueReusableCellOfType(type: FeedTableViewCell.self, forIndexPath: indexPath) else {
                 assertionFailure("FeedTableViewCell not registered")
@@ -315,6 +393,13 @@ extension FeedListManager: UITableViewDataSource {
         } else {
             assertionFailure("Unhandled Feed")
             return UITableViewCell()
+        }
+    }
+    
+    func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
+        if cell is LoadingTableViewCell, self.hasMoreContent {
+            print("FeedListManager - load more contents")
+            self.appendItems()
         }
     }
 }
