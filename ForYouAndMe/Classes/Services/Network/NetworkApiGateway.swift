@@ -553,15 +553,9 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             let params: [String: Any] = ["result": resultData]
             return .requestParameters(parameters: ["task": params], encoding: JSONEncoding.default)
         case .getFeeds(let paginationInfo):
-            guard let paginationInfo = paginationInfo else {
-                return .requestPlain
-            }
-            return .requestParameters(parameters: paginationInfo.requestParams, encoding: URLEncoding.queryString)
+            return self.getDefaultFeedsNetworkTask(forPaginationInfo: paginationInfo)
         case .getTasks(let paginationInfo):
-            guard let paginationInfo = paginationInfo else {
-                return .requestPlain
-            }
-            return .requestParameters(parameters: paginationInfo.requestParams, encoding: URLEncoding.queryString)
+            return self.getDefaultFeedsNetworkTask(forPaginationInfo: paginationInfo)
         }
     }
     
@@ -617,6 +611,21 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
              .delayTask:
             return .bearer
         }
+    }
+    
+    private func getDefaultFeedsNetworkTask(forPaginationInfo paginationInfo: PaginationInfo?) -> Task {
+        var params: [String: Any] = [:]
+        params["q"] = [
+            ["active": true],
+            ["not_completed": true],
+            ["s": "from desc"]
+        ]
+        if let paginationInfo = paginationInfo {
+            params["page"] = paginationInfo.pageIndex + 1 // Server starts to count from 1
+            params["per_page"] = paginationInfo.pageSize
+        }
+        let encoding = URLEncoding(destination: .queryString, arrayEncoding: .noBrackets, boolEncoding: .literal)
+        return .requestParameters(parameters: params, encoding: encoding)
     }
 }
 
@@ -680,14 +689,5 @@ fileprivate extension StudyPeriod {
         case .month: return "last_month"
         case .year: return "last_year"
         }
-    }
-}
-
-fileprivate extension PaginationInfo {
-    var requestParams: [String: Any] {
-        var params: [String: Any] = [:]
-        params["page"] = self.pageIndex + 1 // Server starts to count from 1
-        params["per_page"] = self.pageSize
-        return params
     }
 }
