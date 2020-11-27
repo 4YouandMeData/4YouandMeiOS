@@ -215,14 +215,14 @@ extension RepositoryImpl: Repository {
     
     // MARK: - Tasks
     
-    func getFeeds() -> Single<[Feed]> {
-        return self.api.send(request: ApiRequest(serviceRequest: .getFeeds))
+    func getFeeds(fetchMode: FetchMode) -> Single<[Feed]> {
+        return self.api.send(request: ApiRequest(serviceRequest: .getFeeds(paginationInfo: fetchMode.paginationInfo)))
             .map { (items: ExcludeInvalid<Feed>) in items.wrappedValue }
             .handleError()
     }
     
-    func getTasks() -> Single<[Feed]> {
-        return self.api.send(request: ApiRequest(serviceRequest: .getTasks))
+    func getTasks(fetchMode: FetchMode) -> Single<[Feed]> {
+        return self.api.send(request: ApiRequest(serviceRequest: .getTasks(paginationInfo: fetchMode.paginationInfo)))
             .map { (items: ExcludeInvalid<Feed>) in items.wrappedValue }
             .handleError()
     }
@@ -420,5 +420,16 @@ fileprivate extension Error {
             }
         }
         return nil
+    }
+}
+
+// MARK: - Extension (FetchMode)
+
+fileprivate extension FetchMode {
+    var paginationInfo: PaginationInfo? {
+        switch self {
+        case .refresh: return nil
+        case .append(let paginationInfo): return paginationInfo
+        }
     }
 }

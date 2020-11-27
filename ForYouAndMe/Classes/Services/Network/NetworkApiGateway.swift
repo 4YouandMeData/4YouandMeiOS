@@ -472,8 +472,6 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
              .getUserConsentSection,
              .resendConfirmationEmail,
              .getIntegrationSection,
-             .getFeeds,
-             .getTasks,
              .getTask,
              .getSurvey,
              .getUser,
@@ -554,6 +552,16 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             let resultData: [String: Any] = ["answers": answerParams]
             let params: [String: Any] = ["result": resultData]
             return .requestParameters(parameters: ["task": params], encoding: JSONEncoding.default)
+        case .getFeeds(let paginationInfo):
+            guard let paginationInfo = paginationInfo else {
+                return .requestPlain
+            }
+            return .requestParameters(parameters: paginationInfo.requestParams, encoding: URLEncoding.queryString)
+        case .getTasks(let paginationInfo):
+            guard let paginationInfo = paginationInfo else {
+                return .requestPlain
+            }
+            return .requestParameters(parameters: paginationInfo.requestParams, encoding: URLEncoding.queryString)
         }
     }
     
@@ -672,5 +680,14 @@ fileprivate extension StudyPeriod {
         case .month: return "last_month"
         case .year: return "last_year"
         }
+    }
+}
+
+fileprivate extension PaginationInfo {
+    var requestParams: [String: Any] {
+        var params: [String: Any] = [:]
+        params["page"] = self.pageIndex + 1 // Server starts to count from 1
+        params["per_page"] = self.pageSize
+        return params
     }
 }

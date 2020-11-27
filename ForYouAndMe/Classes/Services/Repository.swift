@@ -29,6 +29,16 @@ enum RepositoryError: LocalizedError {
     case genericError
 }
 
+enum FetchMode {
+    case refresh
+    case append(paginationInfo: PaginationInfo)
+}
+
+struct PaginationInfo {
+    let pageSize: Int
+    let pageIndex: Int
+}
+
 protocol Repository: class {
     // Authentication
     var accessToken: String? { get }
@@ -54,8 +64,8 @@ protocol Repository: class {
     // Integration Section
     func getIntegrationSection() -> Single<IntegrationSection>
     // Tasks
-    func getFeeds() -> Single<[Feed]>
-    func getTasks() -> Single<[Feed]>
+    func getFeeds(fetchMode: FetchMode) -> Single<[Feed]>
+    func getTasks(fetchMode: FetchMode) -> Single<[Feed]>
     func getTask(taskId: String) -> Single<Feed>
     func sendQuickActivityResult(quickActivityTaskId: String, quickActivityOption: QuickActivityOption) -> Single<()>
     func sendTaskResult(taskId: String, taskResult: TaskNetworkResult) -> Single<()>

@@ -135,7 +135,7 @@ extension FeedViewController: FeedListManagerDelegate {
     }
     
     func getDataProviderSingle(repository: Repository) -> Single<FeedContent> {
-        return self.repository.getFeeds().map { FeedContent(withFeeds: $0) }
+        return self.repository.getFeeds(fetchMode: .refresh).map { FeedContent(withFeeds: $0) }
     }
     
     func onListRefresh() {

@@ -19,7 +19,7 @@ struct OrientationManager {
         self.currentOrientationLock = orientation
     }
 
-    static func lockOrientation(_ orientation: UIInterfaceOrientationMask, andRotateTo rotateOrientation:UIInterfaceOrientation) {
+    static func lockOrientation(_ orientation: UIInterfaceOrientationMask, andRotateTo rotateOrientation: UIInterfaceOrientation) {
    
         self.lockOrientation(orientation)
     

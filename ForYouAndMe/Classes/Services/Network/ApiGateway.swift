@@ -45,9 +45,9 @@ enum DefaultService {
     // Answer
     case sendAnswer(answer: Answer, context: ApiContext?)
     // Feed
-    case getFeeds
+    case getFeeds(paginationInfo: PaginationInfo?)
     // Task
-    case getTasks
+    case getTasks(paginationInfo: PaginationInfo?)
     case getTask(taskId: String)
     case sendTaskResultData(taskId: String, resultData: TaskNetworkResultData)
     case sendTaskResultFile(taskId: String, resultFile: TaskNetworkResultFile)
