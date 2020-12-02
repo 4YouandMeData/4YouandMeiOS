@@ -9,7 +9,11 @@ import UIKit
 
 class LoadingTableViewCell: UITableViewCell {
     
-    private let activityIndicator = UIActivityIndicatorView()
+    private let activityIndicatorView: UIActivityIndicatorView = {
+        let view = UIActivityIndicatorView()
+        view.color = ColorPalette.color(withType: .primary)
+        return view
+    }()
     
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
@@ -17,8 +21,8 @@ class LoadingTableViewCell: UITableViewCell {
         self.selectionStyle = .none
         self.backgroundColor = .clear
         
-        self.contentView.addSubview(self.activityIndicator)
-        self.activityIndicator.autoCenterInSuperview()
+        self.contentView.addSubview(self.activityIndicatorView)
+        self.activityIndicatorView.autoCenterInSuperview()
     }
     
     required init?(coder aDecoder: NSCoder) {
@@ -29,6 +33,6 @@ class LoadingTableViewCell: UITableViewCell {
         super.layoutSubviews()
         // StartAnimating doesn't work if called in init,
         // maybe because it's automatically stopped when the cell is pooled
-        self.activityIndicator.startAnimating()
+        self.activityIndicatorView.startAnimating()
     }
 }
