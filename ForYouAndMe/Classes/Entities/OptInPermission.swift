@@ -10,6 +10,7 @@ import Foundation
 enum SystemPermission: String, Codable {
     case location
     case health
+    case notification
 }
 
 struct OptInPermission {

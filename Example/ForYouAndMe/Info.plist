@@ -29,7 +29,6 @@
 		<string>twitter</string>
 		<string>instagram</string>
 		<string>gcm-ciq</string>
-		<string>rescue-time</string>
 	</array>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>

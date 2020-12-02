@@ -107,6 +107,10 @@ extension OptInSectionCoordinator: OptInPermissionCoordinator {
                     let permission: Permission = .locationWhenInUse
                     return permission.request().catchErrorJustReturn(())
                 }
+                case .notification: return result.flatMap {
+                    let permission: Permission = .notification
+                    return permission.request().catchErrorJustReturn(())
+                }
                 }
             }
         
