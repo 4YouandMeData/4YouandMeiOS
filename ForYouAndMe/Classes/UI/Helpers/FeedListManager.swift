@@ -21,6 +21,44 @@ struct FeedContent {
     let quickActivities: [Feed]
     let feedItems: [Feed]
     
+    lazy var sections: [FeedListSection] = {
+        var quickActivitySections: [QuickActivitySection] = []
+        if self.quickActivities.count > 0 {
+            let items: [QuickActivityItem] = self.quickActivities.compactMap { feed in
+                switch feed.schedulable {
+                case .quickActivity(let quickActivity): return QuickActivityItem(taskId: feed.id, quickActivity: quickActivity)
+                default: return nil
+                }
+            }
+            quickActivitySections.append(QuickActivitySection(quickActivies: items))
+        }
+        let feedSections: [FeedSection] = self.feedItems
+            // This sorts the items within the section
+            .sorted { $0.fromDate > $1.fromDate }
+            .reduce([:]) { (result, item) -> [String: [Feed]] in
+                let dateString = item.fromDate.sectionDateString
+                var items = result[dateString] ?? []
+                items.append(item)
+                var currentResult = result
+                currentResult[dateString] = items
+                return currentResult
+            }
+            .map { FeedSection(dateString: $0.key, feedItems: $0.value) }
+            // This sorts the sections
+            .sorted { (sectionA, sectionB) -> Bool in
+                guard let dateA = sectionA.feedItems.first?.fromDate, let dateB = sectionB.feedItems.first?.fromDate else {
+                    return true
+                }
+                return dateA > dateB
+            }
+        return quickActivitySections + feedSections
+    }()
+    
+    init(withQuickActivities quickActivities: [Feed], feedItems: [Feed]) {
+        self.quickActivities = quickActivities
+        self.feedItems = feedItems
+    }
+    
     init(withFeeds feeds: [Feed]) {
         self.quickActivities = feeds.filter { $0.schedulable?.isQuickActivity ?? false}
         self.feedItems = feeds.filter { false == $0.schedulable?.isQuickActivity ?? false}
@@ -74,7 +112,8 @@ class FeedListManager: NSObject {
     
     private weak var delegate: FeedListManagerDelegate?
     
-    private var sections: [FeedListSection] = []
+    private var sections: [FeedListSection] { return self.content?.sections ?? [] }
+    private var content: FeedContent?
     private var hasMoreContent: Bool = false
     private var currentRequestDisposable: Disposable?
     
@@ -97,7 +136,13 @@ class FeedListManager: NSObject {
         self.tableView = tableView
         self.analytics = Services.shared.analytics
         self.delegate = delegate
-        self.pageSize = pageSize
+        self.pageSize = {
+            if let pageSize = pageSize {
+                return max(1, pageSize)
+            } else {
+                return nil
+            }
+        }()
         
         super.init()
         
@@ -167,13 +212,13 @@ class FeedListManager: NSObject {
             .subscribe(onSuccess: { [weak self] content in
                 guard let self = self else { return }
                 self.updateHasContent(withFeedContent: content)
-                self.sections = content.sections
+                self.content = content
                 self.handleRefreshEnd()
                 self.errorView.hideView()
                 onCompletion?()
             }, onError: { [weak self] error in
                 guard let self = self else { return }
-                self.sections = []
+                self.content = nil
                 self.handleRefreshEnd()
                 self.errorView.showViewWithError(error)
             })
@@ -193,7 +238,7 @@ class FeedListManager: NSObject {
             return
         }
         
-        let pageIndex = self.sections.reduce(0, { $0 + $1.numberOfRows }) / pageSize
+        let pageIndex = (self.content?.itemCount ?? 0) / pageSize
         let paginationInfo = PaginationInfo(pageSize: pageSize, pageIndex: pageIndex)
         self.currentRequestDisposable = delegate.getDataProviderSingle(repository: self.repository,
                                                                        fetchMode: .append(paginationInfo: paginationInfo))
@@ -202,8 +247,7 @@ class FeedListManager: NSObject {
             .subscribe(onSuccess: { [weak self] content in
                 guard let self = self else { return }
                 self.updateHasContent(withFeedContent: content)
-                // TODO: Merge current sections with previous sections, grouping them for the same day, when needed.
-                self.sections.append(contentsOf: content.sections)
+                self.content = self.content.merge(withContent: content)
                 self.tableView.reloadData()
                 self.errorView.hideView()
             }, onError: { error in
@@ -428,46 +472,21 @@ extension FeedListManager: UITableViewDelegate {
     }
 }
 
-fileprivate extension FeedContent {
-    var sections: [FeedListSection] {
-        var quickActivitySections: [QuickActivitySection] = []
-        if self.quickActivities.count > 0 {
-            let items: [QuickActivityItem] = self.quickActivities.compactMap { feed in
-                switch feed.schedulable {
-                case .quickActivity(let quickActivity): return QuickActivityItem(taskId: feed.id, quickActivity: quickActivity)
-                default: return nil
-                }
-            }
-            quickActivitySections.append(QuickActivitySection(quickActivies: items))
-        }
-        let feedSections: [FeedSection] = self.feedItems
-            // This sorts the items within the section
-            .sorted { $0.fromDate > $1.fromDate }
-            .reduce([:]) { (result, item) -> [String: [Feed]] in
-                let dateString = item.fromDate.sectionDateString
-                var items = result[dateString] ?? []
-                items.append(item)
-                var currentResult = result
-                currentResult[dateString] = items
-                return currentResult
-            }
-            .map { FeedSection(dateString: $0.key, feedItems: $0.value) }
-            // This sorts the sections
-            .sorted { (sectionA, sectionB) -> Bool in
-                guard let dateA = sectionA.feedItems.first?.fromDate, let dateB = sectionB.feedItems.first?.fromDate else {
-                    return true
-                }
-                return dateA > dateB
-            }
-        return quickActivitySections + feedSections
-    }
-}
-
 fileprivate extension Date {
     var sectionDateString: String {
         let dateFormatter = DateFormatter()
         dateFormatter.timeStyle = .none
         dateFormatter.dateStyle = .long
         return dateFormatter.string(from: self)
+    }
+}
+
+fileprivate extension Optional where Wrapped == FeedContent {
+    func merge(withContent content: FeedContent) -> FeedContent {
+        guard let self = self else {
+            return content
+        }
+        return FeedContent(withQuickActivities: self.quickActivities + content.quickActivities,
+                           feedItems: self.feedItems + content.feedItems)
     }
 }
