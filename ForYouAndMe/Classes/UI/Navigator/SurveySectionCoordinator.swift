@@ -169,12 +169,26 @@ extension SurveySectionCoordinator: SurveyQuestionViewCoordinator {
             if matchingTarget.questionId == Constants.Survey.TargetQuit {
                 self.showSuccess()
             } else {
-                guard let question = self.sectionData.validQuestions.first(where: { $0.id == matchingTarget.questionId }) else {
-                    assertionFailure("Missing valid question in question array")
+                // Try to show the question specified in the matching target, starting to search it from the current question
+                // of the valid questions array. If it is not found, the next question is shown.
+                let validQuestions = self.sectionData.validQuestions
+                guard let currentQuestionIndex = validQuestions.firstIndex(of: result.question) else {
+                    assertionFailure("Missing current question in valid question array")
                     self.showNextSurveyQuestion(questionId: result.question.id)
                     return
                 }
-                self.showQuestion(question)
+                let nextQuestionIndex = currentQuestionIndex + 1
+                if nextQuestionIndex < validQuestions.count {
+                    let remainingValidQuestions = validQuestions[nextQuestionIndex...]
+                    guard let question = remainingValidQuestions.first(where: { $0.id == matchingTarget.questionId }) else {
+                        print("SurveySectionCoordinator - Missing valid question in remining valid questions array")
+                        self.showNextSurveyQuestion(questionId: result.question.id)
+                        return
+                    }
+                    self.showQuestion(question)
+                } else {
+                    self.showNextSurveyQuestion(questionId: result.question.id)
+                }
             }
         } else {
             self.showNextSurveyQuestion(questionId: result.question.id)
