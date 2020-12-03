@@ -6,7 +6,6 @@
 //
 
 import UserNotifications
-import FirebaseMessaging
 
 struct NotificationPermission: PermissionProtocol {
     
@@ -49,7 +48,6 @@ struct NotificationPermission: PermissionProtocol {
         center.requestAuthorization(options: [.badge, .alert, .sound]) { (_, _) in
             DispatchQueue.main.async {
                 completion()
-                Messaging.messaging().isAutoInitEnabled = true
             }
         }
         
