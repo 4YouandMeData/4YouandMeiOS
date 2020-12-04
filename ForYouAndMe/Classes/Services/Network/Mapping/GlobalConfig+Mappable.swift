@@ -12,10 +12,11 @@ import Mapper
 extension GlobalConfig: Mappable {
     init(map: Mapper) throws {
         try self.colorMap = map.from("color_palette")
-        try self.stringMap = map.from("strings")
+        try self.requiredStringMap = map.from("strings")
+        try self.fullStringMap = map.from("strings")
         try self.countryCodes = map.from("country_codes", transformation: Mapper.errorIfEmpty)
         try self.integrationDatas = map.from("supported_integrations", transformation: Mapper.extractIntegrationData)
-        try self.onboardingSectionGroups = self.stringMap.extractOnboardingSectionGroups()
+        try self.onboardingSectionGroups = self.requiredStringMap.extractOnboardingSectionGroups()
     }
 }
 
@@ -50,10 +51,10 @@ extension Mapper {
         return colorMap
     }
     
-    func from(_ field: String) throws -> StringMap {
+    func from(_ field: String) throws -> RequiredStringMap {
         let dict: [String: String] = try self.from(field)
         
-        let stringMap: StringMap = dict.reduce([:]) { (result, pair) in
+        let stringMap: RequiredStringMap = dict.reduce([:]) { (result, pair) in
             var result = result
             if let stringKey = StringKey(rawValue: pair.key) {
                 result[stringKey] = pair.value
@@ -97,7 +98,7 @@ extension Mapper {
     }
 }
 
-fileprivate extension StringMap {
+fileprivate extension RequiredStringMap {
     func extractOnboardingSectionGroups() throws -> [OnboardingSectionGroup] {
         guard let onboardingSectionGroupListString = self[.onboardingSectionGroupList] else {
             let errorMessage = "Missing list of onboarding section group (key '\(StringKey.onboardingSectionGroupList.rawValue)')"

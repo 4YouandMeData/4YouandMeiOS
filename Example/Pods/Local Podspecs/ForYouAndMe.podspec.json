@@ -62,16 +62,16 @@
       "~> 3.2.1"
     ],
     "Firebase/Analytics": [
-      "~> 6.33.0"
+      "~> 7.2.0"
     ],
     "Firebase/Crashlytics": [
-      "~> 6.33.0"
+      "~> 7.2.0"
     ],
     "Firebase/Messaging": [
-      "~> 6.33.0"
+      "~> 7.2.0"
     ],
     "PhoneNumberKit": [
-      "~> 3.2.0"
+      "~> 3.3.1"
     ],
     "CountryPickerView": [
       "~> 3.1.2"
@@ -86,10 +86,10 @@
       "~> 5.2.0"
     ],
     "FYAMResearchKit": [
-      "~> 2.2.0"
+      "~> 2.3.0"
     ],
     "Charts": [
-      "~> 3.5.0"
+      "~> 3.6.0"
     ]
   },
   "static_framework": true,

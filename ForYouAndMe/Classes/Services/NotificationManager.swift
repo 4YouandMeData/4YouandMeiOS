@@ -102,7 +102,12 @@ extension NotificationManager: UNUserNotificationCenterDelegate {
 
 extension NotificationManager: MessagingDelegate {
     // [START refresh_token]
-    func messaging(_ messaging: Messaging, didReceiveRegistrationToken fcmToken: String) {
+    func messaging(_ messaging: Messaging, didReceiveRegistrationToken fcmToken: String?) {
+        guard let fcmToken = fcmToken else {
+            print("Firebase registration token missing")
+            return
+        }
+        
         print("Firebase registration token: \(fcmToken)")
         guard let notificationTokenDelegate = notificationTokenDelegate else {
             assertionFailure("Missing expected notificationTokenDelegate")

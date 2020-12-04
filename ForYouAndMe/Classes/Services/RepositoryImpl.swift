@@ -48,12 +48,12 @@ class RepositoryImpl {
             }
         }()
         return request
-            .do(onSuccess: { (globalCongig: GlobalConfig) in
-                ColorPalette.initialize(withColorMap: globalCongig.colorMap)
-                StringsProvider.initialize(withStringMap: globalCongig.stringMap)
-                CountryCodeProvider.initialize(withcountryCodes: globalCongig.countryCodes)
-                IntegrationProvider.initialize(withIntegrationDatas: globalCongig.integrationDatas)
-                OnboardingSectionProvider.initialize(withOnboardingSectionGroups: globalCongig.onboardingSectionGroups)
+            .do(onSuccess: { (globalConfig: GlobalConfig) in
+                ColorPalette.initialize(withColorMap: globalConfig.colorMap)
+                StringsProvider.initialize(withFullStringMap: globalConfig.fullStringMap, requiredStringMap: globalConfig.requiredStringMap)
+                CountryCodeProvider.initialize(withcountryCodes: globalConfig.countryCodes)
+                IntegrationProvider.initialize(withIntegrationDatas: globalConfig.integrationDatas)
+                OnboardingSectionProvider.initialize(withOnboardingSectionGroups: globalConfig.onboardingSectionGroups)
             })
             .map { _ in () }
     }

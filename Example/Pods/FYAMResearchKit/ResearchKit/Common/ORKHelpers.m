@@ -522,3 +522,45 @@ NSNumberFormatter *ORKDecimalNumberFormatter() {
 NSString* ORKSwiftLocalizedString(NSString *key, NSString *comment) {
     return ORKLocalizedString(key, comment);
 }
+
+static NSBundle *ORKCustomLocalizedBundle = nil;
+
+void ORKCustomLanguageCodeSetLanguageCode(NSString *languageCode) {
+    if (languageCode != nil) {
+        NSString *path = [ORKBundle() pathForResource:languageCode ofType:@"lproj"];
+        if (path != nil) {
+            ORKCustomLocalizedBundle = [NSBundle bundleWithPath:path];
+        }
+    }
+}
+
+NSBundle *ORKLocalizedBundle() {
+    if (ORKCustomLocalizedBundle != nil) {
+        return ORKCustomLocalizedBundle;
+    } else {
+        return ORKDefaultLocaleBundle();
+    }
+}
+
+static NSMutableDictionary *customTexts() {
+    static NSMutableDictionary *customTexts = nil;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        customTexts = [NSMutableDictionary new];
+    });
+    return customTexts;
+}
+
+NSString *ORKCustomText(NSString *textKey, NSString* defaultText) {
+    NSString * text = customTexts()[textKey];
+    if (text != nil) {
+        return text;
+    } else {
+        return defaultText;
+    }
+}
+
+void ORKCustomTextSetCustomForKey(NSString *key, NSString *text) {
+    NSMutableDictionary *d = customTexts();
+    d[key] = text;
+}

@@ -369,16 +369,32 @@ ORK_INLINE UIColor *ORKOpaqueColorWithReducedAlphaFromBaseColor(UIColor *baseCol
 // Localization
 ORK_EXTERN NSBundle *ORKBundle(void) ORK_AVAILABLE_DECL;
 ORK_EXTERN NSBundle *ORKDefaultLocaleBundle(void);
+ORK_EXTERN NSBundle *ORKLocalizedBundle(void);
 
+// Search inside ResearchKit strings using the value specified in CFBundleDevelopmentRegion (info.plist). If no string is found, return an empty string
 #define ORKDefaultLocalizedValue(key) \
 [ORKDefaultLocaleBundle() localizedStringForKey:key value:@"" table:@"ResearchKit"]
 
+// Search inside ResearchKit strings using the current locale. If no string is found, search using the value specified in CFBundleDevelopmentRegion (info.plist)
+#define ORKAppLocalizedValue(key) \
+[ORKBundle() localizedStringForKey:key value:ORKDefaultLocalizedValue(key) table:@"ResearchKit"]
+
+// Search inside ResearchKit strings using the custom locale. If no string is found, search with the current locale
+#define ORKCustomLocalizedValue(key) \
+[ORKLocalizedBundle() localizedStringForKey:key value:ORKAppLocalizedValue(key) table:@"ResearchKit"]
+
+// [DEFAULT BEHAVIOUR] Search inside the custom strings. If no string is found, search inside ResearchKit strings using the custom locale
 #define ORKLocalizedString(key, comment) \
-[ORKBundle() localizedStringForKey:(key) value:ORKDefaultLocalizedValue(key) table:@"ResearchKit"]
+ORKCustomText(key, ORKCustomLocalizedValue(key))
 
 #define ORKLocalizedStringFromNumber(number) \
 [NSNumberFormatter localizedStringFromNumber:number numberStyle:NSNumberFormatterNoStyle]
 
+void ORKCustomLanguageCodeSetLanguageCode(NSString *languageCode);
+
 NSString* ORKSwiftLocalizedString(NSString *key, NSString *comment);
+
+void ORKCustomTextSetCustomForKey(NSString *key, NSString *text);
+NSString *ORKCustomText(NSString *textKey, NSString* defaultText);
 
 NS_ASSUME_NONNULL_END

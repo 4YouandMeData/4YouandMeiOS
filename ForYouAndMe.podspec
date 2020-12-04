@@ -45,16 +45,16 @@ Pod::Spec.new do |s|
   s.dependency 'OAuthSwift', '~> 2.1.0'
   s.dependency 'ReachabilitySwift', '~> 5.0.0'
   s.dependency 'Validator', '~> 3.2.1'
-  s.dependency 'Firebase/Analytics', '~> 6.33.0'
-  s.dependency 'Firebase/Crashlytics', '~> 6.33.0'
-  s.dependency 'Firebase/Messaging', '~> 6.33.0'
-  s.dependency 'PhoneNumberKit', '~> 3.2.0'
+  s.dependency 'Firebase/Analytics', '~> 7.2.0'
+  s.dependency 'Firebase/Crashlytics', '~> 7.2.0'
+  s.dependency 'Firebase/Messaging', '~> 7.2.0'
+  s.dependency 'PhoneNumberKit', '~> 3.3.1'
   s.dependency 'CountryPickerView', '~> 3.1.2'
   s.dependency 'Japx/RxCodableMoya', '~> 3.0.0'
   s.dependency 'UberSignature', '~> 1.0.3'
   s.dependency 'RxSwiftExt', '~> 5.2.0'
-  s.dependency 'FYAMResearchKit', '~> 2.2.0'
-  s.dependency 'Charts', '~> 3.5.0'
+  s.dependency 'FYAMResearchKit', '~> 2.3.0'
+  s.dependency 'Charts', '~> 3.6.0'
   
   s.static_framework = true
   

@@ -8,7 +8,8 @@
 
 import UIKit
 
-typealias StringMap = [StringKey: String]
+typealias RequiredStringMap = [StringKey: String]
+typealias FullStringMap = [String: String]
 
 enum StringKey: String, CaseIterable, CodingKey {
     // Setup
@@ -202,14 +203,16 @@ enum StringKey: String, CaseIterable, CodingKey {
 
 class StringsProvider {
     
-    private static var stringMap: StringMap = [:]
+    private(set) static var fullStringMap: FullStringMap = [:]
+    private static var requiredStringMap: RequiredStringMap = [:]
     
-    static func initialize(withStringMap stringMap: StringMap) {
-        self.stringMap = stringMap
+    static func initialize(withFullStringMap fullStringMap: FullStringMap, requiredStringMap: RequiredStringMap) {
+        self.fullStringMap = fullStringMap
+        self.requiredStringMap = requiredStringMap
     }
     
     static func string(forKey key: StringKey, withParameters parameters: [String] = []) -> String {
-        let string = self.stringMap[key] ?? key.defaultValue
+        let string = self.requiredStringMap[key] ?? key.defaultValue
         var formattedString = string
         for (index, element) in parameters.enumerated() {
             formattedString = formattedString.replacingOccurrences(of: "{\(index)}", with: element)

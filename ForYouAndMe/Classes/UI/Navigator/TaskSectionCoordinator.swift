@@ -53,6 +53,7 @@ class TaskSectionCoordinator: NSObject, PagedActivitySectionCoordinator {
     // MARK: - Private Methods
     
     private func getTaskViewController() -> UIViewController? {
+        self.customizeTaskTexts()
         guard let task = self.taskType.createTask(withIdentifier: self.taskIdentifier,
                                                   options: self.taskOptions,
                                                   showIstructions: true,
@@ -93,6 +94,16 @@ class TaskSectionCoordinator: NSObject, PagedActivitySectionCoordinator {
         // Setup Layout
         ORKBorderedButtonCornerRadius = 25.0
         ORKBorderedButtonShouldApplyDefaultShadow = true
+    }
+    
+    private func customizeTaskTexts() {
+        // TODO: when backend will support localization,
+        // set this so that ResearchKit language and the study language are the same
+        ORKCustomLanguageCodeSetLanguageCode("en")
+        
+        StringsProvider.taskStrings.forEach { pair in
+            ORKCustomTextSetCustomForKey(pair.0, pair.1)
+        }
     }
     
     private func cancelTask() {
@@ -186,6 +197,19 @@ extension TaskSectionCoordinator: ORKTaskViewControllerDelegate {
                     stepViewController.goForward()
                 }
             })
+        }
+    }
+}
+
+fileprivate extension StringsProvider {
+    
+    static let taskPrefix = "RK_"
+    
+    static var taskStrings: [String: String] {
+        return self.fullStringMap.filter { $0.key.hasPrefix(self.taskPrefix) }.reduce([:]) { (taskStrings, pair) -> [String: String] in
+            var taskStrings = taskStrings
+            taskStrings[String(pair.0.dropFirst(self.taskPrefix.count))] = pair.1
+            return taskStrings
         }
     }
 }
