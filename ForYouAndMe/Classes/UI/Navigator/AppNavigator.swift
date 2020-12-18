@@ -247,7 +247,7 @@ class AppNavigator {
                 return coordinator.getStartingPage()
             }
         } else {
-            assertionFailure("Section han neither a syncCoorindator nor an asyncCoordinator")
+            assertionFailure("Section has neither a syncCoorindator nor an asyncCoordinator")
             self.currentCoordinator = nil
             self.goHome()
         }

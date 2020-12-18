@@ -39,23 +39,15 @@ class ScreeningSectionCoordinator {
     }
     
     private func showSuccess() {
-        guard let successPage = self.sectionData.successPage else {
-            assertionFailure("Missing expected success page")
-            return
+        if let successPage = self.sectionData.successPage {
+            self.showResultPage(successPage)
+        } else {
+            self.completionCallback(self.navigationController)
         }
-        let infoPageData = InfoPageData.createResultPageData(withPage: successPage)
-        let viewController = InfoPageViewController(withPageData: infoPageData, coordinator: self)
-        self.navigationController.pushViewController(viewController, animated: true)
     }
     
     private func showFailure() {
-        guard let failurePage = self.sectionData.failurePage else {
-            assertionFailure("Missing expected failure page")
-            return
-        }
-        let infoPageData = InfoPageData.createResultPageData(withPage: failurePage)
-        let viewController = InfoPageViewController(withPageData: infoPageData, coordinator: self)
-        self.navigationController.pushViewController(viewController, animated: true)
+        self.showResultPage(self.sectionData.failurePage)
     }
     
     private func popBackToQuestions() {
@@ -72,7 +64,7 @@ extension ScreeningSectionCoordinator: PagedSectionCoordinator {
         if self.sectionData.successPage?.id == page.id {
             self.completionCallback(self.navigationController)
             return true
-        } else if self.sectionData.failurePage?.id == page.id {
+        } else if self.sectionData.failurePage.id == page.id {
             self.popBackToQuestions()
             return true
         }

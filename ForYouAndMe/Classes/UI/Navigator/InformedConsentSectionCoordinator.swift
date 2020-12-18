@@ -31,21 +31,15 @@ class InformedConsentSectionCoordinator {
     // MARK: - Private Methods
     
     private func showSuccess() {
-        guard let successPage = self.sectionData.successPage else {
-            assertionFailure("Missing expected success page")
-            return
+        if let successPage = self.sectionData.successPage {
+            self.showResultPage(successPage)
+        } else {
+            self.completionCallback(self.navigationController)
         }
-        let infoPageData = InfoPageData.createResultPageData(withPage: successPage)
-        let viewController = InfoPageViewController(withPageData: infoPageData, coordinator: self)
-        self.navigationController.pushViewController(viewController, animated: true)
     }
     
     private func showFailure() {
-        guard let failurePage = self.sectionData.failurePage else {
-            assertionFailure("Missing expected failure page")
-            return
-        }
-        let infoPageData = InfoPageData(page: failurePage,
+        let infoPageData = InfoPageData(page: self.sectionData.failurePage,
                                         addAbortOnboardingButton: false,
                                         addCloseButton: false,
                                         allowBackwardNavigation: false,

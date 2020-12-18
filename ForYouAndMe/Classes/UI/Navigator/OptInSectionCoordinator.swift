@@ -38,13 +38,11 @@ class OptInSectionCoordinator {
     // MARK: - Private Methods
     
     private func showSuccess() {
-        guard let successPage = self.sectionData.successPage else {
-            assertionFailure("Missing expected success page")
-            return
+        if let successPage = self.sectionData.successPage {
+            self.showResultPage(successPage)
+        } else {
+            self.completionCallback(self.navigationController)
         }
-        let infoPageData = InfoPageData.createResultPageData(withPage: successPage)
-        let viewController = InfoPageViewController(withPageData: infoPageData, coordinator: self)
-        self.navigationController.pushViewController(viewController, animated: true)
     }
     
     private func showOptInPermission(_ optInPermission: OptInPermission) {

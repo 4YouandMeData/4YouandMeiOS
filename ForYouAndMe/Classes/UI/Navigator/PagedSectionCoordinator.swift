@@ -31,6 +31,12 @@ extension PagedSectionCoordinator {
         self.navigationController.pushViewController(viewController, animated: true)
     }
     
+    func showResultPage(_ page: Page) {
+        let infoPageData = InfoPageData.createResultPageData(withPage: page)
+        let viewController = InfoPageViewController(withPageData: infoPageData, coordinator: self)
+        self.navigationController.pushViewController(viewController, animated: true)
+    }
+    
     func showLinkedPage(forPageRef pageRef: PageRef) {
         let previousController = self.navigationController.viewControllers.reversed().first { viewController -> Bool in
             if let pageProvider = viewController as? PageProvider,
