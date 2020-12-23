@@ -60,6 +60,12 @@ class QuickActivityListTableViewCell: UITableViewCell {
         collectionView.showsVerticalScrollIndicator = false
         collectionView.register(QuickActivityCollectionViewCell.self)
         collectionView.autoSetDimension(.height, toSize: Self.collectionViewHeight)
+        
+        // Design change: quick activities must be performed in order.
+        // We take advantage of the list refresh, triggered by the result submission, to show the next quick activity.
+        // The collection view is kept to quickly switch back to the previous behaviour, if needed.
+        collectionView.isScrollEnabled = false
+        
         return collectionView
     }()
     
@@ -138,9 +144,19 @@ extension QuickActivityListTableViewCell: UICollectionViewDataSource {
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         if let cell = collectionView.dequeueReusableCell(ofType: QuickActivityCollectionViewCell.self, forIndexPath: indexPath) {
-            let item = self.items[indexPath.row]
+            let itemIndex = indexPath.row
+            let item = self.items[itemIndex]
+            
+            // All quick activities are designed to be performed atomically. However a new CR require the user
+            // to perform them in order. A different submit button text is shown for all quick activities except
+            // for the last one, to give a sense of progression to the user.
+            let defaultButtonText = (itemIndex < self.items.count - 1)
+                ? StringsProvider.string(forKey: .quickActivityButtonNext)
+                : StringsProvider.string(forKey: .quickActivityButtonDefault)
+            
             cell.quickActivityView.display(item: item.quickActivity,
                                            selectedOption: self.selections[item],
+                                           defaultButtonText: defaultButtonText,
                                            confirmButtonCallback: { [weak self] in
                 self?.confirmCallback?(item)
             }, selectionCallback: { [weak self] selectedOption in

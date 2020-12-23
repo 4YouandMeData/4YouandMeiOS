@@ -75,7 +75,6 @@ class TremorTask {
 
 fileprivate extension String {
     static func createHandStepIdentifier(forStepIdentifier stepIdentifier: String, handIdentifier: String) -> String {
-        // TODO: Get this static method from Research Kit
         return stepIdentifier + "." + handIdentifier
     }
 }

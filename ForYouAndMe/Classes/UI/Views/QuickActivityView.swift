@@ -113,6 +113,7 @@ class QuickActivityView: UIView {
     
     public func display(item: QuickActivity,
                         selectedOption: QuickActivityOption?,
+                        defaultButtonText: String,
                         confirmButtonCallback: @escaping NotificationCallback,
                         selectionCallback: @escaping QuickActivityViewSelectionCallback) {
         self.confirmButtonCallback = confirmButtonCallback
@@ -129,7 +130,7 @@ class QuickActivityView: UIView {
                                                                       fontStyle: .paragraph,
                                                                       colorType: .secondaryText)
         
-        let buttonText = item.buttonText ?? StringsProvider.string(forKey: .quickActivityButtonDefault)
+        let buttonText = item.buttonText ?? defaultButtonText
         self.confirmButtonView.setButtonText(buttonText)
         
         var confirmButtonEnabled = false
