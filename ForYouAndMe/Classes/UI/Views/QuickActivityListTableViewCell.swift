@@ -122,12 +122,16 @@ class QuickActivityListTableViewCell: UITableViewCell {
     // MARK: - Private Methods
     
     private func updatePageControl() {
-        let currentPage = min(self.collectionView.currentPage, self.items.count)
+//        let currentPage = min(self.collectionView.currentPage, self.items.count)
         
+        let totalPages = StringsProvider.string(forKey: .quickActivityTotalNumber)
+        let currentPage = ((Int(totalPages) ?? 4) + 1) - self.items.count
+
         let currentPageAttributedText = NSMutableAttributedString.create(withText: "\(currentPage)",
                fontStyle: .paragraph,
                colorType: .primaryText)
-        let totalPageAttributedText =  NSAttributedString.create(withText: " / \(self.items.count)",
+//        let totalPageAttributedText =  NSAttributedString.create(withText: " / \(self.items.count)",
+        let totalPageAttributedText =  NSAttributedString.create(withText: " / \(totalPages)",
             fontStyle: .paragraph,
             color: ColorPalette.color(withType: .fourthText).applyAlpha(0.3))
         let pageControlAttributedText = NSMutableAttributedString(attributedString: currentPageAttributedText)

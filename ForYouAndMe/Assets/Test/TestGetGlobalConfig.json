@@ -191,7 +191,8 @@
       "TASK_START_BUTTON": "Start Now",
       "TASK_REMIND_ME_LATER": "Remind me",
       "ONBOARDING_SECTION_LIST": "intro_video;screening;consent_group;integration",
-      "RK_WALK_TASK_TITLE": "Walk"
+      "RK_WALK_TASK_TITLE": "Walk",
+      "QUICK_ACTIVITIES_TOTAL_NUMBER": "{0}"
     },
     "country_codes": ["US", "GB", "IT"]
 }

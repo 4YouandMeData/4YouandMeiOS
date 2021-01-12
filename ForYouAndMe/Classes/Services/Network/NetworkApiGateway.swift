@@ -615,11 +615,11 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
     
     private func getDefaultFeedsNetworkTask(forPaginationInfo paginationInfo: PaginationInfo?) -> Task {
         var params: [String: Any] = [:]
-        params["q"] = [
-            ["active": true],
-            ["not_completed": true],
-            ["s": "from desc"]
-        ]
+//        params["q"] = [
+//            ["active": true],
+//            ["not_completed": true],
+//            ["s": "from desc"]
+//        ]
         if let paginationInfo = paginationInfo {
             params["page"] = paginationInfo.pageIndex + 1 // Server starts to count from 1
             params["per_page"] = paginationInfo.pageSize
