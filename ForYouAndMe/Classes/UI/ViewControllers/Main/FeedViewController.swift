@@ -141,7 +141,7 @@ extension FeedViewController: FeedListManagerDelegate {
     
     func onListRefresh() {
         self.refreshUser()
-        self.navigator.checkForNotificationPermission()
+        self.navigator.checkForNotificationPermission(presenter: self)
         self.handleDeeplinks(deeplinkService: self.deeplinkService,
                              navigator: self.navigator,
                              repository: self.repository,

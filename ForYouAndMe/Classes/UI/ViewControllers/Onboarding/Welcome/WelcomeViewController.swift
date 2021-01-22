@@ -63,6 +63,8 @@ class WelcomeViewController: UIViewController {
             guard let self = self else { return }
             self.continueButton.alpha = 1
         }, completion: nil)
+        
+        self.navigator.checkForNotificationPermission(presenter: self)
     }
     
     // MARK: Actions

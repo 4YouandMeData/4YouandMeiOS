@@ -602,9 +602,9 @@ class AppNavigator {
         }
     }
     
-    public func checkForNotificationPermission() {
+    public func checkForNotificationPermission(presenter: UIViewController) {
         
-        guard let rootViewController = self.window.rootViewController, self.pushPermissionCompleted == false else {
+        guard self.pushPermissionCompleted == false else {
             return
         }
         
@@ -613,22 +613,24 @@ class AppNavigator {
         notificationPermission.request().subscribe(onSuccess: { [weak self] _ in
             self?.pushPermissionCompleted = true
             if notificationPermission.isDenied, notificationStatus == false {
-                self?.showPermissionDeniedAlert(presenter: rootViewController)
+                self?.showPermissionDeniedAlert(presenter: presenter)
             }
         }, onError: { [weak self] error in
-            self?.handleError(error: error, presenter: rootViewController)
+            self?.handleError(error: error, presenter: presenter)
         }).disposed(by: self.disposeBag)
         
     }
     
     public func showPermissionDeniedAlert(presenter: UIViewController) {
         
+        let cancelAction = UIAlertAction(title: StringsProvider.string(forKey: .permissionCancel), style: .cancel, handler: nil)
+        let settingsAction = UIAlertAction(title: StringsProvider.string(forKey: .permissionSettings), style: .default, handler: { _ in
+            PermissionsOpener.openSettings()
+        })
+        
         presenter.showAlert(withTitle: StringsProvider.string(forKey: .permissionDeniedTitle),
                             message: StringsProvider.string(forKey: .permissionMessage),
-                            actions: [UIAlertAction(title: StringsProvider.string(forKey: .permissionCancel), style: .cancel, handler: nil),
-                                      UIAlertAction(title: StringsProvider.string(forKey: .permissionSettings), style: .default, handler: { _ in
-                                        PermissionsOpener.openSettings()
-                                      })])
+                            actions: [cancelAction, settingsAction])
     }
     
     // MARK: - Study Info
