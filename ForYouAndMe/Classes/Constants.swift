@@ -58,6 +58,7 @@ struct Constants {
     struct Url {
         static var BaseUrl: String { ProjectInfo.OauthBaseUrl }
         static let ApiOAuthIntegrationBaseUrl: URL = URL(string: "\(BaseUrl)/users/integration_oauth")!
+        static let ApiOAuthDeauthorizationBaseUrl: URL = URL(string: "\(BaseUrl)/users/deauthenticate")!
         static let OuraStoreUrl: URL = URL(string: "itms-apps://apps.apple.com/it/app/oura/id1043837948")!
         static let OuraAppSchema: URL = URL(string: "oura://")!
         static let FitbitStoreUrl: URL = URL(string: "itms-apps://apps.apple.com/us/app/fitbit-health-fitness/id462638897")!

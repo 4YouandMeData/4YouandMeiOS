@@ -71,12 +71,9 @@ public class DevicesIntegrationViewController: UIViewController {
                 imageName: integration.icon,
                 connected: connected,
                 gestureCallback: { [weak self] in
-                    if connected {
-                        print("Devo andare alla pagina per deautorizzare l'oauth")
-                    } else {
-                        self?.navigator.showIntegrationLogin(loginUrl: integration.apiOAuthUrl,
-                                                          navigationController: navigationController)
-                    }
+                    
+                    self?.navigator.showIntegrationLogin(loginUrl: connected ? integration.apiOAuthDeauthorizeUrl : integration.apiOAuthUrl,
+                                                      navigationController: navigationController)
             })
             self.scrollStackView.stackView.addArrangedSubview(item)
             item.autoSetDimension(.height, toSize: Self.IntegrationItemHeight)

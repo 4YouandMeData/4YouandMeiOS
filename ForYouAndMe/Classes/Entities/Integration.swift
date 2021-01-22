@@ -40,4 +40,8 @@ enum Integration: String {
     var apiOAuthUrl: URL {
         return Constants.Url.ApiOAuthIntegrationBaseUrl.appendingPathComponent(self.rawValue)
     }
+    
+    var apiOAuthDeauthorizeUrl: URL {
+        return Constants.Url.ApiOAuthDeauthorizationBaseUrl.appendingPathComponent(self.rawValue)
+    }
 }
