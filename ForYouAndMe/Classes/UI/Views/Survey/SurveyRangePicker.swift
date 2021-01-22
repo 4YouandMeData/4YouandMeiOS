@@ -53,12 +53,12 @@ class SurveyRangePicker: UIView {
         sliderContainer.axis = .horizontal
         stackView.addArrangedSubview(sliderContainer)
         
-        sliderContainer.addLabel(text: surveyQuestion.minimumLabel ?? "\(minimum)",
+        sliderContainer.addLabel(text: surveyQuestion.minimumDisplay ?? "\(minimum)",
                                  font: FontPalette.fontStyleData(forStyle: .header3).font,
                                  textColor: ColorPalette.color(withType: .primaryText),
                                  textAlignment: .left)
         
-        sliderContainer.addLabel(text: surveyQuestion.maximumLabel ?? "\(maximum)",
+        sliderContainer.addLabel(text: surveyQuestion.maximumDisplay ?? "\(maximum)",
                                  font: FontPalette.fontStyleData(forStyle: .header3).font,
                                  textColor: ColorPalette.color(withType: .primaryText),
                                  textAlignment: .right)
