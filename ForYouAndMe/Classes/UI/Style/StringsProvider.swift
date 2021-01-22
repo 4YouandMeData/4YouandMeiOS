@@ -164,6 +164,7 @@ enum StringKey: String, CaseIterable, CodingKey {
     case allowMessage = "PERMISSIONS_ALLOW"
     case allowedMessage = "PERMISSIONS_ALLOWED"
     case connectMessage = "YOUR_APPS_AND_DEVICES_CONNECT"
+    case deauthorizeMessage = "YOUR_APPS_AND_DEVICES_DEAUTHORIZE"
     
     // Generic
     case genericInfoTitle = "GENERIC_INFO_TITLE"

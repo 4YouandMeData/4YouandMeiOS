@@ -65,12 +65,18 @@ public class DevicesIntegrationViewController: UIViewController {
         }
         
         IntegrationProvider.oAuthIntegrations().forEach { integration in
+            
+            let connected = currentUser.identities.contains(integration.rawValue)
             let item = DeviceItemView(withTitle: integration.title,
                 imageName: integration.icon,
-                connected: currentUser.identities.contains(integration.rawValue),
+                connected: connected,
                 gestureCallback: { [weak self] in
-                    self?.navigator.showIntegrationLogin(loginUrl: integration.apiOAuthUrl,
-                                                      navigationController: navigationController)
+                    if connected {
+                        print("Devo andare alla pagina per deautorizzare l'oauth")
+                    } else {
+                        self?.navigator.showIntegrationLogin(loginUrl: integration.apiOAuthUrl,
+                                                          navigationController: navigationController)
+                    }
             })
             self.scrollStackView.stackView.addArrangedSubview(item)
             item.autoSetDimension(.height, toSize: Self.IntegrationItemHeight)

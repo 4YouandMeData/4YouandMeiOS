@@ -182,6 +182,7 @@
       "PERMISSIONS_ALLOW": "Allow",
       "PERMISSIONS_ALLOWED": "Allowed",
       "YOUR_APPS_AND_DEVICES_CONNECT": "Connect",
+      "YOUR_APPS_AND_DEVICES_DEAUTHORIZE": "Deauthorize",
       "OAUTH_OURA": "Oura",
       "OAUTH_FITBIT": "Fitbit",
       "OAUTH_GARMIN": "Garmin",

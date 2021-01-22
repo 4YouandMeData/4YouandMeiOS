@@ -51,7 +51,9 @@ class DeviceItemView: UIView {
         
         stackView.addArrangedSubview(UIView())
         
-        attributedString = NSAttributedString.create(withText: StringsProvider.string(forKey: .connectMessage),
+        let titleKey: StringKey = (connected) ? .deauthorizeMessage : .connectMessage
+
+        attributedString = NSAttributedString.create(withText: StringsProvider.string(forKey: titleKey),
                                                      fontStyle: .paragraph,
                                                      colorType: (connected) ? .gradientPrimaryEnd : .secondaryText,
                                                      textAlignment: .left,
@@ -70,10 +72,9 @@ class DeviceItemView: UIView {
                            color: ColorPalette.color(withType: .gradientPrimaryEnd),
                            sizeDimension: 32)
         
-        if connected == false {
-            let tap = UITapGestureRecognizer(target: self, action: #selector(viewDidPressed))
-            self.addGestureRecognizer(tap)
-        }
+        let tap = UITapGestureRecognizer(target: self, action: #selector(viewDidPressed))
+        self.addGestureRecognizer(tap)
+        
     }
     
     required init?(coder aDecoder: NSCoder) {
