@@ -103,11 +103,11 @@ extension OptInSectionCoordinator: OptInPermissionCoordinator {
                 case .health: return result.flatMap { self.healthService.requestPermissionDefaultMeasurements().catchErrorJustReturn(()) }
                 case .location: return result.flatMap {
                     let permission: Permission = .locationWhenInUse
-                    return permission.request().catchErrorJustReturn(())
+                    return granted ? permission.request().catchErrorJustReturn(()) : Single.just(())
                 }
                 case .notification: return result.flatMap {
                     let permission: Permission = .notification
-                    return permission.request().catchErrorJustReturn(())
+                    return granted ? permission.request().catchErrorJustReturn(()) : Single.just(())
                 }
                 }
             }
@@ -129,9 +129,9 @@ extension OptInSectionCoordinator: OptInPermissionCoordinator {
                 } else {
                     self.showSuccess()
                 }
-                }, onError: { [weak self] error in
-                    guard let self = self else { return }
-                    self.navigator.handleError(error: error, presenter: self.navigationController)
+            }, onError: { [weak self] error in
+                guard let self = self else { return }
+                self.navigator.handleError(error: error, presenter: self.navigationController)
             }).disposed(by: self.disposeBag)
     }
 }
