@@ -77,7 +77,7 @@ public class PermissionViewController: UIViewController {
                                                 guard let self = self else { return }
                                                 permissionLocation.request().subscribe(onSuccess: { _ in
                                                     if permissionLocation.isDenied, locationStatus == false {
-                                                        self.showPermissionDeniedAlert()
+                                                        self.navigator.showPermissionDeniedAlert(presenter: self)
                                                     } else {
                                                         self.refreshStatus()
                                                     }
@@ -101,9 +101,10 @@ public class PermissionViewController: UIViewController {
                                           iconName: .pushNotificationIcon,
                                           gestureCallback: { [weak self] in
                                             guard let self = self else { return }
-                                            notificationPermission.request().subscribe(onSuccess: { _ in
+                                            notificationPermission.request().subscribe(onSuccess: { [weak self] _ in
+                                                guard let self = self else { return }
                                                 if notificationPermission.isDenied, notificationStatus == false {
-                                                    self.showPermissionDeniedAlert()
+                                                    self.navigator.showPermissionDeniedAlert(presenter: self)
                                                 } else {
                                                     self.refreshStatus()
                                                 }
@@ -111,7 +112,8 @@ public class PermissionViewController: UIViewController {
                                                     AnalyticsParameter.allow.rawValue :
                                                     AnalyticsParameter.revoke.rawValue
                                                 self.analytics.track(event: .notificationPermissionChanged(permissionStatus))
-                                            }, onError: { error in
+                                            }, onError: { [weak self] error in
+                                                guard let self = self else { return }
                                                 self.navigator.handleError(error: error, presenter: self)
                                             }).disposed(by: self.disposeBag)
         })
@@ -119,15 +121,5 @@ public class PermissionViewController: UIViewController {
         
         self.scrollStackView.stackView.addArrangedSubview(pushItem)
         self.scrollStackView.stackView.addBlankSpace(space: 40.0)
-    }
-    
-    private func showPermissionDeniedAlert() {
-        
-        self.showAlert(withTitle: StringsProvider.string(forKey: .permissionDeniedTitle),
-                       message: StringsProvider.string(forKey: .permissionMessage),
-                       actions: [UIAlertAction(title: StringsProvider.string(forKey: .permissionCancel), style: .cancel, handler: nil),
-                                 UIAlertAction(title: StringsProvider.string(forKey: .permissionSettings), style: .default, handler: { _ in
-                                    PermissionsOpener.openSettings()
-                                 })])
     }
 }

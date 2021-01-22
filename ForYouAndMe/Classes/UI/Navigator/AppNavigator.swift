@@ -32,6 +32,7 @@ class AppNavigator {
     private static var progressHudCount = 0
     
     private var setupCompleted = false
+    private var pushPermissionCompleted: Bool = false
     private var currentCoordinator: Coordinator?
     private weak var currentActivityCoordinator: ActivitySectionCoordinator?
     
@@ -599,6 +600,35 @@ class AppNavigator {
         } else {
             return false
         }
+    }
+    
+    public func checkForNotificationPermission() {
+        
+        guard let rootViewController = self.window.rootViewController, self.pushPermissionCompleted == false else {
+            return
+        }
+        
+        let notificationPermission: Permission = .notification
+        let notificationStatus: Bool = notificationPermission.isNotDetermined
+        notificationPermission.request().subscribe(onSuccess: { [weak self] _ in
+            self?.pushPermissionCompleted = true
+            if notificationPermission.isDenied, notificationStatus == false {
+                self?.showPermissionDeniedAlert(presenter: rootViewController)
+            }
+        }, onError: { [weak self] error in
+            self?.handleError(error: error, presenter: rootViewController)
+        }).disposed(by: self.disposeBag)
+        
+    }
+    
+    public func showPermissionDeniedAlert(presenter: UIViewController) {
+        
+        presenter.showAlert(withTitle: StringsProvider.string(forKey: .permissionDeniedTitle),
+                            message: StringsProvider.string(forKey: .permissionMessage),
+                            actions: [UIAlertAction(title: StringsProvider.string(forKey: .permissionCancel), style: .cancel, handler: nil),
+                                      UIAlertAction(title: StringsProvider.string(forKey: .permissionSettings), style: .default, handler: { _ in
+                                        PermissionsOpener.openSettings()
+                                      })])
     }
     
     // MARK: - Study Info
