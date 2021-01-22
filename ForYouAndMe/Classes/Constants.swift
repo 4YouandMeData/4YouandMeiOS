@@ -106,20 +106,20 @@ struct Constants {
                                   name: "Your due date",
                                   value: nil,
                                   type: .date,
-                                  items: []),
-                UserInfoParameter(identifier: "2",
-                                  name: "Your baby's gender",
-                                  value: nil,
-                                  type: .items,
-                                  items: [
-                                    UserInfoParameterItem(identifier: "1", value: "It's a Boy!"),
-                                    UserInfoParameterItem(identifier: "2", value: "It's a Girl!")
-                ]),
-                UserInfoParameter(identifier: "3",
-                                  name: "Your baby's name",
-                                  value: nil,
-                                  type: .string,
                                   items: [])
+//                UserInfoParameter(identifier: "2",
+//                                  name: "Your baby's gender",
+//                                  value: nil,
+//                                  type: .items,
+//                                  items: [
+//                                    UserInfoParameterItem(identifier: "1", value: "It's a Boy!"),
+//                                    UserInfoParameterItem(identifier: "2", value: "It's a Girl!")
+//                ]),
+//                UserInfoParameter(identifier: "3",
+//                                  name: "Your baby's name",
+//                                  value: nil,
+//                                  type: .string,
+//                                  items: [])
             ]
             return userInfoParameters
         }()
