@@ -22,7 +22,7 @@ class Services {
     
     private(set) var repository: Repository!
     private(set) var navigator: AppNavigator!
-    private(set) var healthService: HealthService!
+//    private(set) var healthService: HealthService!
     private(set) var analytics: AnalyticsService!
     private(set) var storageServices: CacheService!
     private(set) var deeplinkService: DeeplinkService!
@@ -38,9 +38,9 @@ class Services {
         
         let storage = CacheManager()
         self.services.append(storage)
-        
-        let healthService = HealthManager()
-        services.append(healthService)
+//
+//        let healthService = HealthManager()
+//        services.append(healthService)
         
         let reachabilityService = ReachabilityManager()
         self.services.append(reachabilityService)
@@ -80,7 +80,7 @@ class Services {
         // Assign concreate services
         self.repository = repository
         self.navigator = navigator
-        self.healthService = healthService
+//        self.healthService = healthService
         self.analytics = analytics
         self.storageServices = storage
         self.deeplinkService = deeplinkService

@@ -14,5 +14,5 @@ enum HealthError: Error {
 }
 
 protocol HealthService {
-    func requestPermissionDefaultMeasurements() -> Single<()>
+//    func requestPermissionDefaultMeasurements() -> Single<()>
 }
