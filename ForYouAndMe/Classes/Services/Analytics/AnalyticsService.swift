@@ -86,14 +86,14 @@ enum AnalyticsEvent {
     case screeningQuizCompleted(answers: [Answer])
     // Informed Consent
     case informedConsentQuizCompleted(answers: [Answer])
-    //Record Page
+    // Record Page
     case recordScreen(screenName: String, screenClass: String)
     // User
     case setUserID(_ userID: String)
     case setUserPropertyString(_ value: String?, forName: String)
     case userRegistration(_ accountType: String)
     
-    //Onboarding
+    // Onboarding
     case startStudyAction(_ actionType: String)
     case cancelDuringScreeningQuestion(_ questionID: String?)
     case cancelDuringInformedConsent(_ pageID: String)
@@ -101,15 +101,15 @@ enum AnalyticsEvent {
     case consentAgreed
     case consentDisagreed
     
-    //Main App
+    // Main App
     case switchTab(_ tabName: String)
     case quickActivity(_ quickActivityID: String, option: String)
     case yourDataSelectionPeriod(_ period: String)
     
-    //Task
+    // Task
     case videoDiaryAction(_ action: String)
     
-    //Permission
+    // Permission
     case locationPermissionChanged(_ status: String)
     case notificationPermissionChanged(_ status: String)
 }

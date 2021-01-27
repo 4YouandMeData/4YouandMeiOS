@@ -36,7 +36,7 @@ class PermissionItemView: UIView {
                                    inset: 0,
                                    isVertical: true)
         
-        //Title
+        // Title
         var attributedString = NSAttributedString.create(withText: title,
                                                          fontStyle: .paragraph,
                                                          colorType: .secondaryText,
@@ -50,7 +50,7 @@ class PermissionItemView: UIView {
         label.setContentCompressionResistancePriority(UILayoutPriority(1000), for: .vertical)
         stackView.addArrangedSubview(label, horizontalInset: 0, verticalInset: 14)
         
-        //Allow
+        // Allow
         let titleKey: StringKey = (permission.isAuthorized) ? .allowedMessage : .allowMessage
         attributedString = NSAttributedString.create(withText: StringsProvider.string(forKey: titleKey),
                                                      fontStyle: .paragraph,

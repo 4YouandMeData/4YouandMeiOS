@@ -33,21 +33,35 @@ class SurveySectionCoordinator {
     // MARK: - Public Methods
     
     public func getStartingPage() -> UIViewController {
-        
-        let infoPageData = InfoPageData(page: self.sectionData.welcomePage,
-                                addAbortOnboardingButton: false,
-                                addCloseButton: false,
-                                allowBackwardNavigation: false,
-                                bodyTextAlignment: .left,
-                                bottomViewStyle: .singleButton,
-                                customImageHeight: nil,
-                                defaultButtonFirstLabel: nil,
-                                defaultButtonSecondLabel: nil)
-        
-        return InfoPageViewController(withPageData: infoPageData, coordinator: self)
+        if let welcomePage = self.sectionData.welcomePage {
+            let infoPageData = InfoPageData(page: welcomePage,
+                                    addAbortOnboardingButton: false,
+                                    addCloseButton: false,
+                                    allowBackwardNavigation: false,
+                                    bodyTextAlignment: .left,
+                                    bottomViewStyle: .singleButton,
+                                    customImageHeight: nil,
+                                    defaultButtonFirstLabel: nil,
+                                    defaultButtonSecondLabel: nil)
+            return InfoPageViewController(withPageData: infoPageData, coordinator: self)
+        } else {
+            return self.getQuestionPage(self.sectionData.validQuestions.first)
+        }
     }
     
     // MARK: - Private Methods
+    
+    private func getQuestionPage(_ question: SurveyQuestion?) -> UIViewController {
+        guard let question = question,
+              let questionIndex = self.sectionData.validQuestions.firstIndex(where: { $0.id == question.id }) else {
+            assertionFailure("Missing question in question array")
+            return UIViewController()
+        }
+        let pageData = SurveyQuestionPageData(question: question,
+                                              questionNumber: questionIndex + 1,
+                                              totalQuestions: self.sectionData.validQuestions.count)
+        return SurveyQuestionViewController(withPageData: pageData, coordinator: self)
+    }
     
     private func showQuestions() {
         if let question = self.sectionData.validQuestions.first {
@@ -69,14 +83,7 @@ class SurveySectionCoordinator {
     }
     
     private func showQuestion(_ question: SurveyQuestion) {
-        guard let questionIndex = self.sectionData.validQuestions.firstIndex(where: { $0.id == question.id }) else {
-            assertionFailure("Missing question in question array")
-            return
-        }
-        let pageData = SurveyQuestionPageData(question: question,
-                                              questionNumber: questionIndex + 1,
-                                              totalQuestions: self.sectionData.validQuestions.count)
-        let viewController = SurveyQuestionViewController(withPageData: pageData, coordinator: self)
+        let viewController = self.getQuestionPage(question)
         self.navigationController.pushViewController(viewController, animated: true)
     }
     

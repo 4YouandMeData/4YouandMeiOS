@@ -142,18 +142,18 @@ enum StringKey: String, CaseIterable, CodingKey {
     case videoDiaryMissingPermissionSettings = "VIDEO_DIARY_MISSING_PERMISSION_SETTINGS"
     case videoDiaryMissingPermissionDiscard = "VIDEO_DIARY_MISSING_PERMISSION_DISCARD"
 
-    //Study Info
+    // Study Info
     case studyInfoContactTitle = "STUDY_INFO_CONTACT_INFO"
     case studyInfoRewardsTitle = "STUDY_INFO_REWARDS"
     case studyInfoFaqTitle = "STUDY_INFO_FAQ"
     case studyInfoAboutYou = "STUDY_INFO_ABOUT_YOU"
-    //About You
+    // About You
     case aboutYouUserInfo = "ABOUT_YOU_YOUR_PREGNANCY"
     case aboutYouAppsAndDevices = "ABOUT_YOU_APPS_AND_DEVICES"
     case aboutYouReviewConsent = "ABOUT_YOU_REVIEW_CONSENT"
     case aboutYouPermissions = "ABOUT_YOU_PERMISSIONS"
     case disclaimerFooter = "ABOUT_YOU_DISCLAIMER"
-    //User Info
+    // User Info
     case userInfoButtonEdit = "PROFILE_USER_INFO_BUTTON_EDIT"
     case userInfoButtonSubmit = "PROFILE_USER_INFO_BUTTON_SUBMIT"
     // Permissions
@@ -180,7 +180,7 @@ enum StringKey: String, CaseIterable, CodingKey {
     case urlPrivacyPolicy = "URL_PRIVACY_POLICY"
     case urlTermsOfService = "URL_TERMS_OF_SERVICE"
     
-    //OAUTH
+    // OAuth
     case ouraOauthTitle = "OAUTH_OURA"
     case fitbitOauthTitle = "OAUTH_FITBIT"
     case garminOauthTitle = "OAUTH_GARMIN"

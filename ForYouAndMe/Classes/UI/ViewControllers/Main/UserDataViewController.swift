@@ -8,7 +8,7 @@
 import UIKit
 import RxSwift
 
-class UserDataViewController: UIViewController, CustomSegmentViewDelegate {
+class UserDataViewController: UIViewController {
     
     // MARK: - AttributedTextStyles
     
@@ -235,8 +235,9 @@ class UserDataViewController: UIViewController, CustomSegmentViewDelegate {
             self.refreshCharts(withStudyPeriod: self.currentPeriod)
         }))
     }
-    
-    //Delegate Methods
+}
+
+extension UserDataViewController: CustomSegmentViewDelegate {
     func segmentDidChanged(_ studyPeriod: StudyPeriod) {
         self.refreshCharts(withStudyPeriod: studyPeriod)
         self.analytics.track(event: .yourDataSelectionPeriod(studyPeriod.title))

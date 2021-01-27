@@ -80,6 +80,6 @@ protocol Repository: class {
     // Survey
     func getSurvey(surveyId: String) -> Single<SurveyGroup>
     func sendSurveyTaskResult(surveyTaskId: String, results: [SurveyResult]) -> Single<()>
-    //StudyInfo
+    // StudyInfo
     func getStudyInfoSection() -> Single<StudyInfoSection>
 }

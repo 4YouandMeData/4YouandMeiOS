@@ -148,7 +148,7 @@ class CameraView: UIView {
     func toggleFlash() throws {
         if let currentCameraPosition = self.currentCameraPosition, currentCameraPosition == .back, let rearCamera = self.rearCamera {
             self.withDeviceLock(on: rearCamera) { (rearCamera) in
-                if rearCamera.isTorchAvailable { //check for exception
+                if rearCamera.isTorchAvailable { // Check for exception
                     if self.flashMode == .off {
                         if rearCamera.isTorchModeSupported(.on) {
                             rearCamera.torchMode = .on
@@ -334,7 +334,7 @@ class CameraView: UIView {
         }
         
         captureSession.beginConfiguration()
-        //Because we can have only one camera as input
+        // Because we can have only one camera as input
         if let frontCamera = self.frontCamera {
             let captureInput = try AVCaptureDeviceInput(device: frontCamera)
             self.currentCameraInput = captureInput

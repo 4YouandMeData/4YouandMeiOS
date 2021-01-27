@@ -7,7 +7,7 @@
 
 import UIKit
 
-///It's a custom switch properties Model structure
+/// It's a custom switch properties Model structure
 struct CustomSegmentViewProperties {
     var backgroundColor: UIColor = ColorPalette.color(withType: .secondary)
     var sliderColor: [UIColor] = [ColorPalette.color(withType: .active)]
@@ -23,7 +23,7 @@ struct CustomSegmentViewProperties {
     }
 }
 
-///This Protocol is used to delegate back to owner of this view before and after moving to a particular index.
+/// This Protocol is used to delegate back to owner of this view before and after moving to a particular index.
 protocol CustomSegmentViewDelegate: class {
     func segmentWillChange(_ studyPeriod: StudyPeriod)
     func segmentDidChanged(_ studyPeriod: StudyPeriod)
@@ -38,7 +38,7 @@ extension CustomSegmentViewDelegate {
     }
 }
 
-///This is custom UIControl class designed for custom animated switch control with multiple siwtches.
+/// This is custom UIControl class designed for custom animated switch control with multiple siwtches.
 @IBDesignable class CustomSegmentView: UIControl {
     // MARK: - ALL PRIVATE PROPERTIES -
     fileprivate var backgroundView: UIView = UIView()
@@ -82,9 +82,9 @@ extension CustomSegmentViewDelegate {
         setupCustomSwitchUI()
     }
     
-    ///This will create the based UI needed for Custom switch based on proerties model.
+    /// This will create the based UI needed for Custom switch based on proerties model.
     fileprivate func setupCustomSwitchUI() {
-        //remove old UI if it has
+        // Remove old UI if it has
         for innerLabel in innerLabels {
             innerLabel.removeFromSuperview()
         }
@@ -169,7 +169,7 @@ extension CustomSegmentViewDelegate {
                                       width: CGFloat(sliderWidth),
                                       height: backgroundView.frame.height)
             
-            ///the title labels were not centre virtically, hence added offcet of -2 to y axis
+            /// The title labels were not centre virtically, hence added offcet of -2 to y axis
             let yOffset: CGFloat = -2
             for index in 0..<innerLabels.count {
                 let label = innerLabels[index]

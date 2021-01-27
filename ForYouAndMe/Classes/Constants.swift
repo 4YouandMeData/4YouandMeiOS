@@ -15,7 +15,7 @@ struct Constants {
         static let NetworkStubsDelay = 0.3
         static let NetworkLogVerbose = true
         
-        static let StartingOnboardingSection: OnboardingSection? = nil //.introVideo
+        static let StartingOnboardingSection: OnboardingSection? = nil
         static let OnboardingCompleted: Bool = true
         
         static let InformedConsentWithoutQuestions: Bool = false

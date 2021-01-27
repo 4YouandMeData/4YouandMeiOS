@@ -132,7 +132,7 @@ class UserDataChartView: UIView {
     
     private func setupUI() {
         
-        //General Settings
+        // General Settings
         self.chartView.chartDescription?.enabled = false
         self.chartView.dragEnabled = false
         self.chartView.setScaleEnabled(false)
@@ -146,13 +146,13 @@ class UserDataChartView: UIView {
         self.chartView.extraTopOffset = 20
         self.chartView.clipsToBounds = false
     
-        //Legend
+        // Legend
         self.chartView.legend.form = .line
         self.chartView.legend.textColor = self.plotColor
         self.chartView.legend.font = FontPalette.fontStyleData(forStyle: .paragraph).font
         self.chartView.legend.xOffset = -10
 
-        //Values
+        // Values
         let values = self.getDataEntries()
         let periodString = studyPeriod.getPeriodString(fromDateStrings: self.xLabels)
         let set1 = LineChartDataSet(entries: values, label: periodString)
@@ -178,15 +178,15 @@ class UserDataChartView: UIView {
         
         self.chartView.data = LineChartData(dataSet: set1)
         
-        //Axis
+        // Axis
         self.configureXAxis(withEntriesCount: values.count)
         self.configureYAxis()
         
-        //X-Axis Formatter
+        // X-Axis Formatter
         let xAxisFormatter = XAxisValueFormatter(studyPeriod: self.studyPeriod, xLabels: self.xLabels)
         self.chartView.xAxis.valueFormatter = xAxisFormatter
         
-        //Y-Axis Formatter
+        // Y-Axis Formatter
         let yAxisFormatter = YAxisValueFormatter(yLabels: self.yLabels)
         self.chartView.rightAxis.valueFormatter = yAxisFormatter
         

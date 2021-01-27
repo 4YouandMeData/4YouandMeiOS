@@ -19,7 +19,6 @@ class CacheManager: CacheService {
     
     private let mainUserDefaults = UserDefaults.standard
     
-    //Protocol
     var user: User? {
         get {return self.load(forKey: CacheManagerKey.userKey.rawValue)}
         set {self.save(encodable: newValue, forKey: CacheManagerKey.userKey.rawValue)}

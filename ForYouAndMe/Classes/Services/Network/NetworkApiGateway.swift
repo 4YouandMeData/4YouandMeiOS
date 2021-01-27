@@ -420,7 +420,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         case .resendConfirmationEmail: return "{}".utf8Encoded
         // Integration Section
         case .getIntegrationSection: return Bundle.getTestData(from: "TestGetIntegrationSection")
-        //StudyInfo
+        // StudyInfo
         case .getStudyInfoSection: return Bundle.getTestData(from: "TestGetStudyInfo")
         // Answers
         case .sendAnswer: return "{}".utf8Encoded

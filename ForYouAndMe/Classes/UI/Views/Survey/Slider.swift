@@ -34,7 +34,7 @@ class Slider: UISlider {
 
     override func trackRect(forBounds bounds: CGRect) -> CGRect {
         var result = super.trackRect(forBounds: bounds)
-        result.size.height = thickness //added height for desired effect
+        result.size.height = thickness // Added height for desired effect
         return result
     }
     
