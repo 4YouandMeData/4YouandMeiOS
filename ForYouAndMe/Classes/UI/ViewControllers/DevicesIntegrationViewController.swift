@@ -89,9 +89,9 @@ public class DevicesIntegrationViewController: UIViewController {
         self.navigationController?.navigationBar.apply(style: NavigationBarStyleCategory.primary(hidden: true).style)
         
         self.repository.refreshUser()
-            .addProgress()
             .toVoid()
             .catchErrorJustReturn(())
+            .addProgress()
             .subscribe(onSuccess: { [weak self] in
                 guard let self = self else { return }
                 self.refreshUI()

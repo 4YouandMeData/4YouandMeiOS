@@ -113,8 +113,8 @@ extension OptInSectionCoordinator: OptInPermissionCoordinator {
             }
         
         systemPermissionRequests
-            .addProgress()
             .flatMap { self.repository.sendOptInPermission(permission: optInPermission, granted: granted) }
+            .addProgress()
             .subscribe(onSuccess: { [weak self] () in
                 guard let self = self else { return }
                 

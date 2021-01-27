@@ -766,6 +766,8 @@ extension UIViewController {
 }
 
 extension PrimitiveSequence where Trait == SingleTrait {
+    /// Add a progress view to the calling single, showing it on subscribe and hiding it upon success, error or dispose.
+    /// NOTE: call this after the single object that should be covered by the progress view (tipically before the call to the subscribe method)
     func addProgress() -> Single<Element> {
         self.do(afterSuccess: { _ in AppNavigator.popProgressHUD() },
                 afterError: { _ in AppNavigator.popProgressHUD() },
@@ -775,6 +777,8 @@ extension PrimitiveSequence where Trait == SingleTrait {
 }
 
 extension Observable {
+    /// Add a progress view to the calling observer, showing it on subscribe and hiding it upon success, error or dispose.
+    /// NOTE: call this after the single observer that should be covered by the progress view (tipically before the call to the subscribe method)
     func addProgress() -> Observable<Element> {
         self.do(afterError: { _ in AppNavigator.popProgressHUD() },
                 afterCompleted: { AppNavigator.popProgressHUD() },
