@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import HealthKit
+//import HealthKit
 import RxSwift
 
 class HealthManager: HealthService {
