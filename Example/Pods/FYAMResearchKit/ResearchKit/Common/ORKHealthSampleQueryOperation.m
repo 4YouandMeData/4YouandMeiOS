@@ -28,6 +28,7 @@
  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifdef HEALTHKIT
 
 #import "ORKHealthSampleQueryOperation.h"
 #import "ORKCollector.h"
@@ -245,3 +246,6 @@ static NSUInteger const QueryLimitSize = 1000;
 }
 
 @end
+
+// HEALTHKIT ifdef end
+#endif

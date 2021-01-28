@@ -28,6 +28,8 @@
  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifdef HEALTHKIT
+
 #import <Availability.h>
 
 #if defined(__IPHONE_12_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_12_0
@@ -233,4 +235,7 @@
 }
 
 @end
+#endif
+
+// HEALTHKIT ifdef end
 #endif

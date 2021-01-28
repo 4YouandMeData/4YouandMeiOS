@@ -32,7 +32,9 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+#if HEALTHKIT
 @class ORKHealthKitPermissionType;
+#endif
 @class ORKRequestPermissionView;
 
 ORK_CLASS_AVAILABLE
@@ -40,9 +42,10 @@ ORK_CLASS_AVAILABLE
 
 @property (nonatomic) ORKRequestPermissionView *cardView;
 
+#if HEALTHKIT
 + (ORKHealthKitPermissionType *)healthKitPermissionTypeWithSampleTypesToWrite:(nullable NSSet<HKSampleType *> *)sampleTypesToWrite
                                                             objectTypesToRead:(nullable NSSet<HKObjectType *> *)objectTypesToRead;
-
+#endif
 
 @end
 

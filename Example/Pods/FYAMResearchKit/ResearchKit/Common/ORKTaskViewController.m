@@ -140,8 +140,10 @@ typedef void (^_ORKLocationAuthorizationRequestHandler)(BOOL success);
     BOOL _hasRequestedHealthData;
     BOOL _saveable;
     ORKPermissionMask _grantedPermissions;
+#ifdef HEALTHKIT
     NSSet<HKObjectType *> *_requestedHealthTypesForRead;
     NSSet<HKObjectType *> *_requestedHealthTypesForWrite;
+#endif
     NSURL *_outputDirectory;
     
     NSDate *_presentedDate;
@@ -324,6 +326,8 @@ static NSString *const _ChildNavigationControllerRestorationKey = @"childNavigat
     return [[UIBarButtonItem alloc] initWithTitle:ORKLocalizedString(@"BUTTON_LEARN_MORE", nil) style:UIBarButtonItemStylePlain target:self action:@selector(learnMoreAction:)];
 }
 
+#ifdef HEALTHKIT
+
 - (void)requestHealthStoreAccessWithReadTypes:(NSSet *)readTypes
                                    writeTypes:(NSSet *)writeTypes
                                       handler:(void (^)(void))handler {
@@ -347,6 +351,8 @@ static NSString *const _ChildNavigationControllerRestorationKey = @"childNavigat
         healthStore = nil;
     }];
 }
+
+#endif
 
 - (void)requestPedometerAccessWithHandler:(void (^)(BOOL success))handler {
     NSParameterAssert(handler != nil);
@@ -431,6 +437,8 @@ static NSString *const _ChildNavigationControllerRestorationKey = @"childNavigat
         return;
     }
     
+#ifdef HEALTHKIT
+    
     NSSet *readTypes = nil;
     if ([self.task respondsToSelector:@selector(requestedHealthKitTypesForReading)]) {
         readTypes = [self.task requestedHealthKitTypesForReading];
@@ -441,11 +449,14 @@ static NSString *const _ChildNavigationControllerRestorationKey = @"childNavigat
         writeTypes = [self.task requestedHealthKitTypesForWriting];
     }
     
+#endif
+    
     ORKPermissionMask permissions = [self desiredPermissions];
     
     dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
     
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
+#ifdef HEALTHKIT
         dispatch_async(dispatch_get_main_queue(), ^{
             ORK_Log_Debug("Requesting health access");
             [self requestHealthStoreAccessWithReadTypes:readTypes
@@ -455,6 +466,7 @@ static NSString *const _ChildNavigationControllerRestorationKey = @"childNavigat
                                                 }];
         });
         dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
+#endif
         if (permissions & ORKPermissionCoreMotionAccelerometer) {
             _grantedPermissions |= ORKPermissionCoreMotionAccelerometer;
         }
@@ -583,6 +595,8 @@ static NSString *const _ChildNavigationControllerRestorationKey = @"childNavigat
     }
 }
 
+#ifdef HEALTHKIT
+
 - (NSSet<HKObjectType *> *)requestedHealthTypesForRead {
     return _requestedHealthTypesForRead;
 }
@@ -590,6 +604,8 @@ static NSString *const _ChildNavigationControllerRestorationKey = @"childNavigat
 - (NSSet<HKObjectType *> *)requestedHealthTypesForWrite {
     return _requestedHealthTypesForWrite;
 }
+
+#endif
 
 - (void)loadView {
     self.view = [[UIView alloc] initWithFrame:CGRectZero];
@@ -1484,8 +1500,10 @@ static NSString *const _ORKProgressMode = @"progressMode";
     [coder encodeBool:self.discardable forKey:_ORKDiscardableTaskRestoreKey];
     [coder encodeObject:_managedResults forKey:_ORKManagedResultsRestoreKey];
     [coder encodeObject:_managedStepIdentifiers forKey:_ORKManagedStepIdentifiersRestoreKey];
+#ifdef HEALTHKIT
     [coder encodeObject:_requestedHealthTypesForRead forKey:_ORKRequestedHealthTypesForReadRestoreKey];
     [coder encodeObject:_requestedHealthTypesForWrite forKey:_ORKRequestedHealthTypesForWriteRestoreKey];
+#endif
     [coder encodeObject:_presentedDate forKey:_ORKPresentedDate];
     [coder encodeInteger:_progressMode forKey:_ORKProgressMode];
     [coder encodeObject:ORKBookmarkDataFromURL(_outputDirectory) forKey:_ORKOutputDirectoryRestoreKey];
@@ -1529,8 +1547,10 @@ static NSString *const _ORKProgressMode = @"progressMode";
         }
         
         if ([_task respondsToSelector:@selector(stepWithIdentifier:)]) {
+#ifdef HEALTHKIT
             _requestedHealthTypesForRead = [coder decodeObjectOfClass:[NSSet class] forKey:_ORKRequestedHealthTypesForReadRestoreKey];
             _requestedHealthTypesForWrite = [coder decodeObjectOfClass:[NSSet class] forKey:_ORKRequestedHealthTypesForWriteRestoreKey];
+#endif
             _presentedDate = [coder decodeObjectOfClass:[NSDate class] forKey:_ORKPresentedDate];
             _lastBeginningInstructionStepIdentifier = [coder decodeObjectOfClass:[NSString class] forKey:_ORKLastBeginningInstructionStepIdentifierKey];
             

@@ -335,6 +335,8 @@
     return NO;
 }
 
+#ifdef HEALTHKIT
+
 - (NSSet *)requestedHealthKitTypesForReading {
     NSMutableSet *healthTypes = [NSMutableSet set];
     for (ORKStep *step in self.steps) {
@@ -349,6 +351,8 @@
 - (NSSet *)requestedHealthKitTypesForWriting {
     return nil;
 }
+
+#endif
 
 - (ORKPermissionMask)requestedPermissions {
     ORKPermissionMask mask = ORKPermissionNone;

@@ -43,6 +43,7 @@
 
 @end
 
+#ifdef HEALTHKIT
 
 @protocol ORKHealthCollectable <NSObject>
 
@@ -71,6 +72,9 @@
 @property (copy) HKQueryAnchor *lastAnchor;
 
 @end
+
+// HEALTHKIT ifdef end
+#endif
 
 
 @interface ORKMotionActivityCollector()

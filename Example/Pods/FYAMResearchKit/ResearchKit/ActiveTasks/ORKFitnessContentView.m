@@ -38,7 +38,9 @@
 #import "ORKSkin.h"
 
 @import CoreMotion;
+#ifdef HEALTHKIT
 @import HealthKit;
+#endif
 
 
 // #define LAYOUT_TEST 1
@@ -309,15 +311,36 @@
             break;
     }
     
-    // Use HealthKit to convert the unit, so we can use the number formatter directly.
-    HKUnit *hkUnit = [HKUnit unitFromLengthFormatterUnit:unit];
-    double conversionFactor = 1.0;
-    if ([hkUnit isNull] && (unit == NSLengthFormatterUnitYard)) {
-        hkUnit = [HKUnit footUnit];
-        conversionFactor = 1.0 / 3.0;
+    NSUnitLength *unitLength = nil;
+    switch(unit)
+    {
+        case NSLengthFormatterUnitMillimeter:
+            unitLength = [NSUnitLength millimeters];
+            break;
+        case NSLengthFormatterUnitCentimeter:
+            unitLength = [NSUnitLength centimeters];
+            break;
+        case NSLengthFormatterUnitMeter:
+            unitLength = [NSUnitLength meters];
+            break;
+        case NSLengthFormatterUnitKilometer:
+            unitLength = [NSUnitLength kilometers];
+            break;
+        case NSLengthFormatterUnitInch:
+            unitLength = [NSUnitLength inches];
+            break;
+        case NSLengthFormatterUnitFoot:
+            unitLength = [NSUnitLength feet];
+            break;
+        case NSLengthFormatterUnitYard:
+            unitLength = [NSUnitLength yards];
+            break;
+        case NSLengthFormatterUnitMile:
+            unitLength = [NSUnitLength miles];
+            break;
     }
-    HKQuantity *quantity = [HKQuantity quantityWithUnit:[HKUnit meterUnit] doubleValue:displayDistance];
-    distanceString = [_lengthFormatter.numberFormatter stringFromNumber:@([quantity doubleValueForUnit:hkUnit]*conversionFactor)];
+    
+    distanceString = [_lengthFormatter.numberFormatter stringFromNumber:@([[unitLength converter] valueFromBaseUnitValue:displayDistance])];
     
     [self distanceView].title = [NSString localizedStringWithFormat:ORKLocalizedString(@"FITNESS_DISTANCE_TITLE_FORMAT", nil), unitString];
     [self distanceView].value = distanceString;

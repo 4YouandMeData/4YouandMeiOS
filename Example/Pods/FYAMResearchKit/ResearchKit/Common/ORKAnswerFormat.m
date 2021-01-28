@@ -44,7 +44,9 @@
 
 #import "ORKHelpers_Internal.h"
 
+#ifdef HEALTHKIT
 @import HealthKit;
+#endif
 @import MapKit;
 @import Contacts;
 
@@ -92,6 +94,8 @@ static NSNumberFormatterStyle ORKNumberFormattingStyleConvert(ORKNumberFormattin
 @implementation ORKAnswerDefaultSource {
     NSMutableDictionary *_unitsTable;
 }
+
+#ifdef HEALTHKIT
 
 @synthesize healthStore=_healthStore;
 
@@ -202,7 +206,11 @@ static NSNumberFormatterStyle ORKNumberFormattingStyleConvert(ORKNumberFormattin
     });
 }
 
+// HEALTHKIT ifdef end
+#endif
+
 - (void)fetchDefaultValueForAnswerFormat:(ORKAnswerFormat *)answerFormat handler:(void(^)(id defaultValue, NSError *error))handler {
+#ifdef HEALTHKIT
     HKObjectType *objectType = [answerFormat healthKitObjectType];
     BOOL handled = NO;
     if (objectType) {
@@ -223,7 +231,12 @@ static NSNumberFormatterStyle ORKNumberFormattingStyleConvert(ORKNumberFormattin
     if (!handled) {
         handler(nil, nil);
     }
+#else
+    handler(nil, nil);
+#endif
 }
+
+#ifdef HEALTHKIT
 
 - (HKUnit *)defaultHealthKitUnitForAnswerFormat:(ORKAnswerFormat *)answerFormat {
     __block HKUnit *unit = [answerFormat healthKitUnit];
@@ -266,6 +279,9 @@ static NSNumberFormatterStyle ORKNumberFormattingStyleConvert(ORKNumberFormattin
         [answerFormat setHealthKitUserUnit:healthKitDefault];
     }
 }
+
+// HEALTHKIT ifdef end
+#endif
 
 @end
 
@@ -507,6 +523,8 @@ static NSNumberFormatterStyle ORKNumberFormattingStyleConvert(ORKNumberFormattin
     return 0;
 }
 
+#ifdef HEALTHKIT
+
 - (BOOL)isHealthKitAnswerFormat {
     return NO;
 }
@@ -530,6 +548,9 @@ static NSNumberFormatterStyle ORKNumberFormattingStyleConvert(ORKNumberFormattin
 - (void)setHealthKitUserUnit:(HKUnit *)unit {
     
 }
+
+// HEALTHKIT ifdef end
+#endif
 
 - (ORKQuestionType)questionType {
     return ORKQuestionTypeNone;

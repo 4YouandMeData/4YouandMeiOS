@@ -28,8 +28,9 @@
  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
+#ifdef HEALTHKIT
 @import HealthKit;
+#endif
 #import "ORKAnswerFormat_Private.h"
 #import "ORKChoiceAnswerFormatHelper.h"
 
@@ -38,8 +39,10 @@ NS_ASSUME_NONNULL_BEGIN
 
 BOOL ORKIsAnswerEmpty(_Nullable id answer);
 
+#if HEALTHKIT
 NSString *ORKHKBiologicalSexString(HKBiologicalSex biologicalSex);
 NSString *ORKHKBloodTypeString(HKBloodType bloodType);
+#endif
 NSString *ORKQuestionTypeString(ORKQuestionType questionType);
 
 // Need to mark these as designated initializers to avoid warnings once we designate the others.
@@ -74,6 +77,7 @@ ORK_DESIGNATE_CODING_AND_SERIALIZATION_INITIALIZERS(ORKWeightAnswerFormat)
 
 - (instancetype)init NS_DESIGNATED_INITIALIZER;
 
+#ifdef HEALTHKIT
 - (BOOL)isHealthKitAnswerFormat;
 
 - (nullable HKObjectType *)healthKitObjectType;
@@ -82,6 +86,7 @@ ORK_DESIGNATE_CODING_AND_SERIALIZATION_INITIALIZERS(ORKWeightAnswerFormat)
 @property (nonatomic, strong, readonly, nullable) HKUnit *healthKitUnit;
 
 @property (nonatomic, strong, nullable) HKUnit *healthKitUserUnit;
+#endif
 
 - (nullable NSString *)localizedInvalidValueStringWithAnswerString:(nullable NSString *)text;
 
@@ -238,15 +243,19 @@ ORK_DESIGNATE_CODING_AND_SERIALIZATION_INITIALIZERS(ORKWeightAnswerFormat)
 
 @interface ORKAnswerDefaultSource : NSObject
 
+#ifdef HEALTHKIT
 + (instancetype)sourceWithHealthStore:(HKHealthStore *)healthStore;
 - (instancetype)initWithHealthStore:(HKHealthStore *)healthStore NS_DESIGNATED_INITIALIZER;
 
 @property (nonatomic, strong, readonly, nullable) HKHealthStore *healthStore;
+#endif
 
 - (void)fetchDefaultValueForAnswerFormat:(nullable ORKAnswerFormat *)answerFormat handler:(void(^)(id defaultValue, NSError *error))handler;
 
+#ifdef HEALTHKIT
 - (nullable HKUnit *)defaultHealthKitUnitForAnswerFormat:(ORKAnswerFormat *)answerFormat;
 - (void)updateHealthKitUnitForAnswerFormat:(ORKAnswerFormat *)answerFormat force:(BOOL)force;
+#endif
 
 @end
 

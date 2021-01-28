@@ -140,7 +140,11 @@ static const CGFloat DelayBeforeAutoScroll = 0.25;
 - (instancetype)initWithStep:(ORKStep *)step {
     self = [super initWithStep:step];
     if (self) {
+#ifdef HEALTHKIT
         _defaultSource = [ORKAnswerDefaultSource sourceWithHealthStore:[HKHealthStore new]];
+#else
+        _defaultSource = [ORKAnswerDefaultSource new];
+#endif
     }
     return self;
 }
@@ -387,6 +391,7 @@ static const CGFloat DelayBeforeAutoScroll = 0.25;
         [self.taskViewController setRegisteredScrollView:_tableView];
     }
     
+#ifdef HEALTHKIT
     
     NSMutableSet *types = [NSMutableSet set];
     ORKAnswerFormat *format = [[self questionStep] answerFormat];
@@ -412,6 +417,8 @@ static const CGFloat DelayBeforeAutoScroll = 0.25;
     if (!scheduledRefresh) {
         [self refreshDefaults];
     }
+// HEALTHKIT ifdef end
+#endif
     
     if (_tableContainer) {
         [_tableContainer sizeHeaderToFit];

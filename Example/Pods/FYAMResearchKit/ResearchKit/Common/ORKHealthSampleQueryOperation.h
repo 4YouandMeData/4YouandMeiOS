@@ -28,6 +28,7 @@
  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifdef HEALTHKIT
 
 #import <Foundation/Foundation.h>
 #import "ORKOperation.h"
@@ -47,3 +48,5 @@
 - (instancetype)initWithCollector:(ORKCollector<ORKHealthCollectable> *)collector mananger:(ORKDataCollectionManager *)manager;
 
 @end
+
+#endif

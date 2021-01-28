@@ -31,7 +31,9 @@
 
 @import Foundation;
 @import UIKit;
+#ifdef HEALTHKIT
 @import HealthKit;
+#endif
 #import <ResearchKit/ORKTypes.h>
 
 
@@ -258,6 +260,7 @@ Whether to show progress for this step when it is presented. The default is YES.
  */
 @property (nonatomic, readonly) ORKPermissionMask requestedPermissions;
 
+#ifdef HEALTHKIT
 /**
  The set of HealthKit types the step requests for reading. (read-only)
  
@@ -269,6 +272,7 @@ Whether to show progress for this step when it is presented. The default is YES.
  types the recorders require. Subclasses may override this implementation.
  */
 @property (nonatomic, readonly, nullable) NSSet<HKObjectType *> *requestedHealthKitTypesForReading;
+#endif
 
 /**
  Checks the parameters of the step and throws exceptions on invalid parameters.

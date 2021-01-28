@@ -37,8 +37,10 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @class ORKCollector;
+#ifdef HEALTHKIT
 @class ORKHealthCollector;
 @class ORKHealthCorrelationCollector;
+#endif
 @class ORKMotionActivityCollector;
 @class ORKDataCollectionManager;
 
@@ -50,6 +52,8 @@ NS_ASSUME_NONNULL_BEGIN
 @protocol ORKDataCollectionManagerDelegate <NSObject>
 
 @optional
+
+#ifdef HEALTHKIT
 /**
  Method for delivering the collected health data samples.
  
@@ -73,6 +77,7 @@ NS_ASSUME_NONNULL_BEGIN
  until the data is accepted.
  */
 - (BOOL)healthCorrelationCollector:(ORKHealthCorrelationCollector *)collector didCollectCorrelations:(NSArray<HKCorrelation *> *)correlations;
+#endif
 
 /**
  Method for delivering the collected motion activities.
@@ -135,6 +140,7 @@ ORK_CLASS_AVAILABLE
  */
 @property (nonatomic, weak, nullable) id<ORKDataCollectionManagerDelegate> delegate;
 
+#ifdef HEALTHKIT
 /**
  Add a collector for HealthKit quantity and category samples.
  
@@ -166,6 +172,8 @@ ORK_CLASS_AVAILABLE
                                                                               units:(NSArray<HKUnit *> *)units
                                                                           startDate:(NSDate *)startDate
                                                                               error:(NSError * _Nullable *)error;
+// HEALTHKIT ifdef end
+#endif
 
 /**
  Add a collector for motion activity.

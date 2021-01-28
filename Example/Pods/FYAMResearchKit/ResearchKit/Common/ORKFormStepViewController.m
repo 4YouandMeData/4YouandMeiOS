@@ -321,7 +321,11 @@ static const CGFloat DelayBeforeAutoScroll = 0.25;
 }
 
 - (instancetype)ORKFormStepViewController_initWithResult:(ORKResult *)result {
+#ifdef HEALTHKIT
     _defaultSource = [ORKAnswerDefaultSource sourceWithHealthStore:[HKHealthStore new]];
+#else
+    _defaultSource = [ORKAnswerDefaultSource new];
+#endif
     if (result) {
         NSAssert([result isKindOfClass:[ORKStepResult class]], @"Expect a ORKStepResult instance");
 
@@ -363,6 +367,9 @@ static const CGFloat DelayBeforeAutoScroll = 0.25;
 - (void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
     [self updateAnsweredSections];
+    
+#ifdef HEALTHKIT
+    
     NSMutableSet *types = [NSMutableSet set];
     for (ORKFormItem *item in [self formItems]) {
         ORKAnswerFormat *format = [item answerFormat];
@@ -390,6 +397,9 @@ static const CGFloat DelayBeforeAutoScroll = 0.25;
     if (!refreshDefaultsPending) {
         [self refreshDefaults];
     }
+    
+// HEALTHKIT ifdef end
+#endif
     
     // Reset skipped flag - result can now be non-empty
     _skipped = NO;

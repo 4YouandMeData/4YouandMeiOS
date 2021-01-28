@@ -15,7 +15,6 @@
 		89410E27255C603C00A3B57C /* ProjectInfo.plist in Resources */ = {isa = PBXBuildFile; fileRef = 89410E26255C603C00A3B57C /* ProjectInfo.plist */; };
 		894377A42451C39B00795921 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 894377A32451C39B00795921 /* GoogleService-Info.plist */; };
 		894A3B022566DC82005460AC /* OnboardingSectionProviderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 894A3B012566DC82005460AC /* OnboardingSectionProviderTests.swift */; };
-		894BEE6D24AE52DD00254DC6 /* HealthKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 894BEE6C24AE52DD00254DC6 /* HealthKit.framework */; };
 		89F730582514F09C00DF9503 /* StudyVideo.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = 89F730572514F09C00DF9503 /* StudyVideo.mp4 */; };
 		E0F5C7B459467BD549FAB4D4 /* Pods_ForYouAndMe_Example.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F4219D987F4DF705F404859C /* Pods_ForYouAndMe_Example.framework */; };
 /* End PBXBuildFile section */
@@ -48,7 +47,6 @@
 		894377A32451C39B00795921 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		894A3B012566DC82005460AC /* OnboardingSectionProviderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingSectionProviderTests.swift; sourceTree = "<group>"; };
 		894BEE6B24AE52DD00254DC6 /* ForYouAndMe_Example.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ForYouAndMe_Example.entitlements; sourceTree = "<group>"; };
-		894BEE6C24AE52DD00254DC6 /* HealthKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = HealthKit.framework; path = System/Library/Frameworks/HealthKit.framework; sourceTree = SDKROOT; };
 		89F730572514F09C00DF9503 /* StudyVideo.mp4 */ = {isa = PBXFileReference; lastKnownFileType = file; path = StudyVideo.mp4; sourceTree = "<group>"; };
 		A60A1FC69B7866DB13682B29 /* Pods-ForYouAndMe_Example.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ForYouAndMe_Example.release.xcconfig"; path = "Target Support Files/Pods-ForYouAndMe_Example/Pods-ForYouAndMe_Example.release.xcconfig"; sourceTree = "<group>"; };
 		DFD45AAF0B51A0665ACCA092 /* Pods_ForYouAndMe_Tests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_ForYouAndMe_Tests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -62,7 +60,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				E0F5C7B459467BD549FAB4D4 /* Pods_ForYouAndMe_Example.framework in Frameworks */,
-				894BEE6D24AE52DD00254DC6 /* HealthKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -91,7 +88,6 @@
 		43FCC7C65E649FFFBFEA13F8 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				894BEE6C24AE52DD00254DC6 /* HealthKit.framework */,
 				F4219D987F4DF705F404859C /* Pods_ForYouAndMe_Example.framework */,
 				DFD45AAF0B51A0665ACCA092 /* Pods_ForYouAndMe_Tests.framework */,
 			);

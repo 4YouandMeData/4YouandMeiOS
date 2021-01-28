@@ -46,12 +46,12 @@ PODS:
     - GoogleDataTransport (~> 8.0)
     - nanopb (~> 2.30906.0)
     - PromisesObjC (~> 1.2)
-  - FirebaseInstallations (7.4.0):
+  - FirebaseInstallations (7.5.0):
     - FirebaseCore (~> 7.0)
     - GoogleUtilities/Environment (~> 7.0)
     - GoogleUtilities/UserDefaults (~> 7.0)
     - PromisesObjC (~> 1.2)
-  - FirebaseInstanceID (7.4.0):
+  - FirebaseInstanceID (7.5.0):
     - FirebaseCore (~> 7.0)
     - FirebaseInstallations (~> 7.0)
     - GoogleUtilities/Environment (~> 7.0)
@@ -63,13 +63,13 @@ PODS:
     - GoogleUtilities/Environment (~> 7.0)
     - GoogleUtilities/Reachability (~> 7.0)
     - GoogleUtilities/UserDefaults (~> 7.0)
-  - ForYouAndMe (0.41.0):
+  - ForYouAndMe (0.42.0):
     - Charts (~> 3.6.0)
     - CountryPickerView (~> 3.1.2)
     - Firebase/Analytics (~> 7.2.0)
     - Firebase/Crashlytics (~> 7.2.0)
     - Firebase/Messaging (~> 7.2.0)
-    - FYAMResearchKit (~> 2.3.0)
+    - FYAMResearchKit (~> 3.0.0)
     - Japx/RxCodableMoya (~> 3.0.0)
     - Moya-ModelMapper/RxSwift (~> 10.0.0)
     - Moya/RxSwift (~> 14.0.0)
@@ -83,7 +83,7 @@ PODS:
     - TPKeyboardAvoiding (~> 1.3.3)
     - UberSignature (~> 1.0.3)
     - Validator (~> 3.2.1)
-  - FYAMResearchKit (2.3.0)
+  - FYAMResearchKit (3.0.0)
   - GoogleAppMeasurement (7.2.0):
     - GoogleUtilities/AppDelegateSwizzler (~> 7.0)
     - GoogleUtilities/MethodSwizzler (~> 7.0)
@@ -252,11 +252,11 @@ SPEC CHECKSUMS:
   FirebaseCore: c959e8a598f83125c01c1700d9161b236ab3833c
   FirebaseCoreDiagnostics: d50e11039e5984d92c8a512be2395f13df747350
   FirebaseCrashlytics: 8afbf6e9c3731adee0e721870c9e7b40b0e8fd44
-  FirebaseInstallations: 30646fc9a61c6f4ee3cd7a8b7231721842b40c95
-  FirebaseInstanceID: 46d93d287108246fabbd85371ca27141d2c21ff9
+  FirebaseInstallations: a46ae59915f0931e18814164849cd0354bea24ed
+  FirebaseInstanceID: 47fcb3b70d6349cfd471f430b01bbd01a7698e8f
   FirebaseMessaging: 7091222bfac24ca89c569c3c59e58390311e487f
-  ForYouAndMe: 6b893e4c6db9f7523ea343ab2abf0a956c60f6e0
-  FYAMResearchKit: 1b7319b3372b8ab8593d19a190afbecd905d5bcb
+  ForYouAndMe: f5c7938b26746c480771285b0bf04b6d16ada3f3
+  FYAMResearchKit: c79d2de80d301ac02ba9b303d97d35b083d4676b
   GoogleAppMeasurement: 57a0df93dc2feb5176b1bac06012dbd725191ba5
   GoogleDataTransport: 116c84c4bdeb76be2a7a46de51244368f9794eab
   GoogleUtilities: d866834472f1324d080496bc67ab3ce5d0d46027

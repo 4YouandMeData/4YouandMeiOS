@@ -30,7 +30,9 @@
 
 
 #import <Foundation/Foundation.h>
+#ifdef HEALTHKIT
 #import <HealthKit/HealthKit.h>
+#endif
 #import <ResearchKit/ORKErrors.h>
 #import <ResearchKit/ORKDefines.h>
 
@@ -79,7 +81,7 @@ ORK_CLASS_AVAILABLE
 
 @end
 
-
+#ifdef HEALTHKIT
 /**
  ORKHealthCollector collects HKSample.
  
@@ -148,6 +150,8 @@ ORK_CLASS_AVAILABLE
 
 @end
 
+// HEALTHKIT ifdef end
+#endif
 
 /**
  ORKHealthCollector collects CMMotionActivity.

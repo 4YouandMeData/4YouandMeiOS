@@ -35,7 +35,9 @@
 
 @interface ORKDataCollectionManager ()
 
+#ifdef HEALTHKIT
 @property (nonatomic, strong, readonly) HKHealthStore *healthStore;
+#endif
 
 @property (nonatomic, strong, readonly) CMMotionActivityManager *activityManager;
 

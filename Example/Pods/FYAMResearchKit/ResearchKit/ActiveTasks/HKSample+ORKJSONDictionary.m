@@ -28,6 +28,7 @@
  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifdef HEALTHKIT
 
 #import "HKSample+ORKJSONDictionary.h"
 
@@ -167,3 +168,6 @@ static NSString *const HKCorrelatedObjectsKey = @"objects";
 }
 
 @end
+
+// HEALTHKIT ifdef end
+#endif

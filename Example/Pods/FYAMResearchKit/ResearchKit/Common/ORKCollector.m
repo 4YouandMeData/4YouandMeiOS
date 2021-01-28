@@ -112,6 +112,7 @@ static NSString *const ItemIdentifierFormatWithTwoPlaceholders = @"org.researchk
 
 @end
 
+#ifdef HEALTHKIT
 
 @implementation ORKHealthCollector : ORKCollector
 
@@ -289,6 +290,8 @@ static NSString *const ItemIdentifierFormatWithTwoPlaceholders = @"org.researchk
 
 @end
 
+// HEALTHKIT ifdef end
+#endif
 
 @implementation ORKMotionActivityCollector : ORKCollector
 

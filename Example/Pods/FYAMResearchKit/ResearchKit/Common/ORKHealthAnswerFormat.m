@@ -28,6 +28,7 @@
  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifdef HEALTHKIT
 
 #import "ORKHealthAnswerFormat.h"
 
@@ -420,3 +421,6 @@ NSString *ORKHKBloodTypeString(HKBloodType bloodType) {
 }
 
 @end
+
+// HEALTHKIT ifdef end
+#endif

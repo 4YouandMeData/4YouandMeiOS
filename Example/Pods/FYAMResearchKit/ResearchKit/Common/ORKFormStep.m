@@ -181,6 +181,8 @@
     }
 }
 
+#ifdef HEALTHKIT
+
 - (NSSet<HKObjectType *> *)requestedHealthKitTypesForReading {
     NSMutableSet<HKObjectType *> *healthTypes = [NSMutableSet set];
     
@@ -194,6 +196,8 @@
     
     return healthTypes.count ? healthTypes : nil;
 }
+
+#endif
 
 @end
 

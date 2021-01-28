@@ -89,9 +89,14 @@
     return nil;
 }
 
+#ifdef HEALTHKIT
+
 - (NSSet<HKObjectType *> *)requestedHealthKitTypesForReading {
     return nil;
 }
+
+#endif
+
 - (ORKPermissionMask)requestedPermissionMask {
     return ORKPermissionNone;
 }

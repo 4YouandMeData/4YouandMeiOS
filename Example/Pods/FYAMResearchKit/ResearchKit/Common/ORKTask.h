@@ -30,7 +30,9 @@
 
 
 @import Foundation;
+#ifdef HEALTHKIT
 @import HealthKit;
+#endif
 #import <ResearchKit/ORKTypes.h>
 
 
@@ -231,6 +233,7 @@ ORK_AVAILABLE_DECL
  */
 - (void)validateParameters;
 
+#ifdef HEALTHKIT
 /**
  The set of HealthKit types that steps in the task need to be able to
  read. (read-only)
@@ -257,6 +260,7 @@ requests access to these HealthKit types.
  See also: `requestedHealthKitTypesForReading`.
  */
 @property (nonatomic, copy, readonly, nullable) NSSet<HKObjectType *> *requestedHealthKitTypesForWriting;
+#endif
 
 /**
  The set of permissions requested by the task.

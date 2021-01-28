@@ -31,7 +31,9 @@
 
 
 @import UIKit;
+#ifdef HEALTHKIT
 @import HealthKit;
+#endif
 #import <ResearchKit/ORKDefines.h>
 #import <Availability.h>
 
@@ -95,6 +97,7 @@ ORK_CLASS_AVAILABLE
  */
 - (nullable ORKRecorder *)recorderForStep:(nullable ORKStep *)step outputDirectory:(nullable NSURL *)outputDirectory;
 
+#ifdef HEALTHKIT
 /**
  Returns the HealthKit types for which this recorder requires read access in a set of `HKSampleType` objects.
  
@@ -107,6 +110,7 @@ ORK_CLASS_AVAILABLE
  runtime during the task, return the appropriate set of `HKSampleType` objects.
  */
 - (nullable NSSet<HKObjectType *> *)requestedHealthKitTypesForReading;
+#endif
 
 @end
 
@@ -340,6 +344,7 @@ ORK_CLASS_AVAILABLE
 
 @end
 
+#ifdef HEALTHKIT
 
 /**
  The `ORKHealthQuantityTypeRecorderConfiguration` class represents a configuration
@@ -432,6 +437,9 @@ API_AVAILABLE(ios(12.0))
 @property (nonatomic, readonly, copy) HKFHIRResourceType healthFHIRResourceType;
 
 @end
+#endif
+
+// HEALTHKIT ifdef end
 #endif
 
 /**
