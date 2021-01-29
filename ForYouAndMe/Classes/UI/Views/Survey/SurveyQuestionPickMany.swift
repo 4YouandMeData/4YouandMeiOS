@@ -38,10 +38,10 @@ class SurveyQuestionPickMany: UIView {
             horizontalStackView.axis = .horizontal
             
             horizontalStackView.addBlankSpace(space: 30)
+            
             // CheckBox
             let checkBox = GenericCheckboxView(isDefaultChecked: false, styleCategory: .primary)
             checkBox.tag = Int(option.id) ?? -1
-            horizontalStackView.addArrangedSubview(checkBox)
             checkBox.isCheckedSubject
                 .subscribe(onNext: { check in
                     self.answers.updateValue(check, forKey: "\(checkBox.tag)")
@@ -50,6 +50,16 @@ class SurveyQuestionPickMany: UIView {
                                                    answer: answers)
                 })
                 .disposed(by: self.disposeBag)
+            
+            let checkBoxContainerView = UIView()
+            checkBoxContainerView.addSubview(checkBox)
+            checkBox.autoPinEdge(toSuperviewEdge: .leading)
+            checkBox.autoPinEdge(toSuperviewEdge: .trailing)
+            checkBox.autoPinEdge(toSuperviewEdge: .top, withInset: 0, relation: .greaterThanOrEqual)
+            checkBox.autoPinEdge(toSuperviewEdge: .bottom, withInset: 0, relation: .greaterThanOrEqual)
+            checkBox.autoAlignAxis(toSuperviewAxis: .horizontal)
+            horizontalStackView.addArrangedSubview(checkBoxContainerView)
+            
             // Label
             let answerLabel = UILabel()
             answerLabel.numberOfLines = 0
