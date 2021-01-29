@@ -15,6 +15,11 @@ class CacheManager: CacheService {
         case accessToken
         case deviceUDID
         case userKey
+        // BatchEventUploader keys
+        case batchEventUploadercCurrentBuffer
+        case batchEventUploaderArchivedBuffers
+        case batchEventUploaderDate
+        case batchEventUploaderRecordInterval
     }
     
     private let mainUserDefaults = UserDefaults.standard
@@ -97,5 +102,100 @@ extension CacheManager: NetworkStorage {
     var accessToken: String? {
         get { self.getString(forKey: CacheManagerKey.accessToken.rawValue) }
         set { self.saveString(newValue, forKey: CacheManagerKey.accessToken.rawValue) }
+    }
+}
+
+// MARK: - BatchEventUploaderStorage
+
+extension CacheManager.CacheManagerKey {
+    func getKey(forUploaderIdentifier uploaderIdentifier: String) -> String {
+        return uploaderIdentifier + "." + self.rawValue
+    }
+    
+    static func getBatchEventUploaderDateKey(forUploaderIdentifier uploaderIdentifier: String,
+                                             dateType: BatchEventUploaderDateType) -> String {
+        return uploaderIdentifier + "." + dateType.rawValue + "." + CacheManager.CacheManagerKey.batchEventUploaderDate.rawValue
+    }
+}
+
+extension CacheManager: BatchEventUploaderStorage {
+    
+    // MARK: - Record & Buffers
+    
+    func appendRecord<Record: Codable>(forUploaderIdentifier uploaderIdentifier: String, record: Record) {
+        let currentBufferKey = CacheManagerKey.batchEventUploadercCurrentBuffer.getKey(forUploaderIdentifier: uploaderIdentifier)
+        var buffer: Buffer<Record> = self.load(forKey: currentBufferKey) ?? Buffer(records: [])
+        buffer.records.append(record)
+        self.save(encodable: buffer, forKey: currentBufferKey)
+    }
+    
+    func archiveCurrentBuffer<Record: Codable>(forUploaderIdentifier uploaderIdentifier: String, bufferLimit: Int, type: Record.Type) {
+        let currentBufferKey = CacheManagerKey.batchEventUploadercCurrentBuffer.getKey(forUploaderIdentifier: uploaderIdentifier)
+        let buffer: Buffer<Record> = self.load(forKey: currentBufferKey) ?? Buffer(records: [])
+        self.appendArchivedBuffer(forUploaderIdentifier: uploaderIdentifier, buffer: buffer, bufferLimit: bufferLimit)
+        self.reset(forKey: currentBufferKey)
+    }
+    
+    func removeOldestArchivedBuffer<Record: Codable>(forUploaderIdentifier uploaderIdentifier: String, type: Record.Type) {
+        var buffers: [Buffer<Record>] = self.getArchivedBuffers(forUploaderIdentifier: uploaderIdentifier)
+        if buffers.count > 0 {
+            _ = buffers.removeFirst()
+            let archivedBuffersKey = CacheManagerKey.batchEventUploaderArchivedBuffers.getKey(forUploaderIdentifier: uploaderIdentifier)
+            self.save(encodable: buffers, forKey: archivedBuffersKey)
+        }
+    }
+    
+    func getOldestArchivedBuffer<Record: Codable>(forUploaderIdentifier uploaderIdentifier: String) -> Buffer<Record>? {
+        return self.getArchivedBuffers(forUploaderIdentifier: uploaderIdentifier).first
+    }
+    
+    func resetAllBuffers(forUploaderIdentifier uploaderIdentifier: String) {
+        self.reset(forKey: CacheManagerKey.batchEventUploadercCurrentBuffer.getKey(forUploaderIdentifier: uploaderIdentifier))
+        self.reset(forKey: CacheManagerKey.batchEventUploaderArchivedBuffers.getKey(forUploaderIdentifier: uploaderIdentifier))
+    }
+    
+    private func getArchivedBuffers<Record: Codable>(forUploaderIdentifier uploaderIdentifier: String) -> [Buffer<Record>] {
+        let archivedBuffersKey = CacheManagerKey.batchEventUploaderArchivedBuffers.getKey(forUploaderIdentifier: uploaderIdentifier)
+        return self.load(forKey: archivedBuffersKey) ?? []
+    }
+    
+    private func appendArchivedBuffer<Record: Codable>(forUploaderIdentifier uploaderIdentifier: String,
+                                                       buffer: Buffer<Record>,
+                                                       bufferLimit: Int) {
+        var buffers: [Buffer<Record>] = self.getArchivedBuffers(forUploaderIdentifier: uploaderIdentifier)
+        buffers.append(buffer)
+        if buffers.count > bufferLimit {
+            buffers.removeFirst()
+        }
+        let archivedBuffersKey = CacheManagerKey.batchEventUploaderArchivedBuffers.getKey(forUploaderIdentifier: uploaderIdentifier)
+        self.save(encodable: buffers, forKey: archivedBuffersKey)
+    }
+    
+    // MARK: - Dates
+    
+    func getBatchEventUploaderDate(forUploaderIdentifier uploaderIdentifier: String, dateType: BatchEventUploaderDateType) -> Date? {
+        return self.load(forKey: CacheManagerKey.getBatchEventUploaderDateKey(forUploaderIdentifier: uploaderIdentifier,
+                                                                              dateType: dateType))
+    }
+    
+    func saveBatchEventUploaderDate(forUploaderIdentifier uploaderIdentifier: String, dateType: BatchEventUploaderDateType, date: Date) {
+        self.save(encodable: date, forKey: CacheManagerKey.getBatchEventUploaderDateKey(forUploaderIdentifier: uploaderIdentifier,
+                                                                                        dateType: dateType))
+    }
+    
+    func resetBatchEventUploaderDate(forUploaderIdentifier uploaderIdentifier: String, dateType: BatchEventUploaderDateType) {
+        self.reset(forKey: CacheManagerKey.getBatchEventUploaderDateKey(forUploaderIdentifier: uploaderIdentifier,
+                                                                        dateType: dateType))
+    }
+    
+    // MARK: - Record Interval
+    
+    func getRecordInterval(forUploaderIdentifier uploaderIdentifier: String) -> TimeInterval? {
+        return self.load(forKey: CacheManagerKey.batchEventUploaderRecordInterval.getKey(forUploaderIdentifier: uploaderIdentifier))
+    }
+    
+    func saveRecordInterval(forUploaderIdentifier uploaderIdentifier: String, timeInterval: TimeInterval) {
+        self.save(encodable: timeInterval,
+                  forKey: CacheManagerKey.batchEventUploaderRecordInterval.getKey(forUploaderIdentifier: uploaderIdentifier))
     }
 }

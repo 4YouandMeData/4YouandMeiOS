@@ -344,6 +344,9 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             return "v1/surveys/\(surveyId)"
         case .sendSurveyTaskResultData(let surveyTaskId, _):
             return "v1/tasks/\(surveyTaskId)"
+        // Device Data
+        case .sendDeviceData:
+            return "v1/phone_events"
         }
     }
     
@@ -372,7 +375,8 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
              .verifyPhoneNumber,
              .createUserConsent,
              .sendOptInPermission,
-             .sendAnswer:
+             .sendAnswer,
+             .sendDeviceData:
             return .post
         case .verifyEmail,
              .resendConfirmationEmail,
@@ -458,6 +462,8 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         // Survey
         case .getSurvey: return Bundle.getTestData(from: "TestGetSurvey")
         case .sendSurveyTaskResultData: return "{}".utf8Encoded
+        // Device Data
+        case .sendDeviceData: return "{}".utf8Encoded
         }
     }
     
@@ -556,6 +562,15 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             return self.getDefaultFeedsNetworkTask(forPaginationInfo: paginationInfo)
         case .getTasks(let paginationInfo):
             return self.getDefaultFeedsNetworkTask(forPaginationInfo: paginationInfo)
+        case .sendDeviceData(let deviceData):
+            var params: [String: Any] = [:]
+            params["battery_level"] = deviceData.batteryLevel
+            params["longitude"] = deviceData.longitude.unwrapOrNull
+            params["latitude"] = deviceData.latitude.unwrapOrNull
+            params["time_zone"] = deviceData.timezone
+            params["hashed_ssid"] = deviceData.hashedSSID.unwrapOrNull
+            params["timestamp"] = deviceData.timestamp
+            return .requestParameters(parameters: ["phone_event": params], encoding: JSONEncoding.default)
         }
     }
     
@@ -608,7 +623,8 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
              .getSurvey,
              .sendSurveyTaskResultData,
              .sendPushToken,
-             .delayTask:
+             .delayTask,
+             .sendDeviceData:
             return .bearer
         }
     }

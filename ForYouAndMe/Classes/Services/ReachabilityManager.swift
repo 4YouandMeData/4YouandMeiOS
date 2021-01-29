@@ -72,3 +72,14 @@ extension Reachability.Connection {
         }
     }
 }
+
+extension ReachabilityManager: BatchEventUploaderReachability {
+    func getIsReachableObserver() -> Observable<Bool> {
+        return self.getReachability().map { connectionType in
+            switch connectionType {
+            case .cellular, .wifi: return true
+            case .none: return false
+            }
+        }
+    }
+}

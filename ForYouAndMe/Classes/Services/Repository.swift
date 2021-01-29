@@ -82,4 +82,6 @@ protocol Repository: class {
     func sendSurveyTaskResult(surveyTaskId: String, results: [SurveyResult]) -> Single<()>
     // StudyInfo
     func getStudyInfoSection() -> Single<StudyInfoSection>
+    // Device Data
+    func sendDeviceData(deviceData: DeviceData) -> Single<()>
 }

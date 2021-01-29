@@ -23,6 +23,16 @@ public extension Optional where Wrapped == Int {
     }
 }
 
+public extension Optional {
+    var unwrapOrNull: Any {
+        if let self = self {
+            return self
+        } else {
+            return NSNull()
+        }
+    }
+}
+
 public extension Int {
     var toString: String {
         return String(describing: self)

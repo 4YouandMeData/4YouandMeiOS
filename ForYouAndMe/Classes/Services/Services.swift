@@ -26,6 +26,7 @@ class Services {
     private(set) var analytics: AnalyticsService!
     private(set) var storageServices: CacheService!
     private(set) var deeplinkService: DeeplinkService!
+    private(set) var deviceService: DeviceService!
     
     private var window: UIWindow?
     
@@ -73,6 +74,9 @@ class Services {
         let navigator = AppNavigator(withRepository: repository, analytics: analytics, deeplinkService: deeplinkService, window: window)
         self.services.append(navigator)
         
+        let deviceService = DeviceManager(repository: repository, storage: storage, reachability: reachabilityService)
+        self.services.append(deviceService)
+        
         // Add services circular dependences
         deeplinkService.delegate = navigator
         notificationService.notificationTokenDelegate = repository
@@ -84,6 +88,7 @@ class Services {
         self.analytics = analytics
         self.storageServices = storage
         self.deeplinkService = deeplinkService
+        self.deviceService = deviceService
         self.navigator.showSetupScreen()
     }
     

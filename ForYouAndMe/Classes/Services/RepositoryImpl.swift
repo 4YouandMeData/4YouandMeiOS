@@ -16,6 +16,7 @@ protocol RepositoryStorage {
 
 class RepositoryImpl {
     
+    // InitializableService
     var isInitialized: Bool = false
     
     private let api: ApiGateway
@@ -300,6 +301,13 @@ extension RepositoryImpl: Repository {
     
     func sendSurveyTaskResult(surveyTaskId: String, results: [SurveyResult]) -> Single<()> {
         return self.api.send(request: ApiRequest(serviceRequest: .sendSurveyTaskResultData(surveyTaskId: surveyTaskId, results: results)))
+            .handleError()
+    }
+    
+    // MARK: - Device Data
+    
+    func sendDeviceData(deviceData: DeviceData) -> Single<()> {
+        return self.api.send(request: ApiRequest(serviceRequest: .sendDeviceData(deviceData: deviceData)))
             .handleError()
     }
     

@@ -53,6 +53,13 @@ struct Constants {
         static let FeedPageSize: Int? = 20
         static let VideoDiaryMaxDurationSeconds: TimeInterval = 120.0
         static let VideoDiaryCaptureSessionPreset: AVCaptureSession.Preset = .hd1280x720
+        
+        static let deviceDataUploadConfig = BatchEventUploaderConfig(identifier: BatchEventUploaderIdentifier.deviceData.rawValue,
+                                                                     defaultRecordInterval: 1.0 * 60.0 * 60.0,
+                                                                     uploadInterval: nil,
+                                                                     uploadRetryInterval: 1.0 * 60.0 * 60.0,
+                                                                     bufferLimit: 100,
+                                                                     enableDebugLog: false)
     }
     
     struct Url {
@@ -130,4 +137,8 @@ struct Constants {
 enum FilePath: String {
     case taskResult = "TaskResult"
     case videoResult = "VideoResult"
+}
+
+enum BatchEventUploaderIdentifier: String {
+    case deviceData
 }
