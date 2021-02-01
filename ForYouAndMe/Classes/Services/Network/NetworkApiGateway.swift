@@ -570,7 +570,8 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             params["time_zone"] = deviceData.timezone
             params["hashed_ssid"] = deviceData.hashedSSID.unwrapOrNull
             params["timestamp"] = deviceData.timestamp
-            return .requestParameters(parameters: ["phone_event": params], encoding: JSONEncoding.default)
+            let dataParams: [String: Any] = ["data": params]
+            return .requestParameters(parameters: ["phone_event": dataParams], encoding: JSONEncoding.default)
         }
     }
     
