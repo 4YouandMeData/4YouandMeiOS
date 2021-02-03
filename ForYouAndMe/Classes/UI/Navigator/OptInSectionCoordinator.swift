@@ -102,7 +102,7 @@ extension OptInSectionCoordinator: OptInPermissionCoordinator {
                 switch systemPermission {
 //                case .health: return result.flatMap { self.healthService.requestPermissionDefaultMeasurements().catchErrorJustReturn(()) }
                 case .location: return result.flatMap {
-                    let permission: Permission = .locationWhenInUse
+                    let permission: Permission = Constants.Misc.defaultLocationPermission
                     return granted ? permission.request().catchErrorJustReturn(()) : Single.just(())
                 }
                 case .notification: return result.flatMap {

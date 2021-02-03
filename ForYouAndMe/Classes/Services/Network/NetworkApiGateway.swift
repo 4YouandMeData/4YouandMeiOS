@@ -567,6 +567,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             params["battery_level"] = deviceData.batteryLevel
             params["longitude"] = deviceData.longitude.unwrapOrNull
             params["latitude"] = deviceData.latitude.unwrapOrNull
+            params["location_permission"] = deviceData.locationPermission
             params["time_zone"] = deviceData.timezone
             params["hashed_ssid"] = deviceData.hashedSSID.unwrapOrNull
             params["timestamp"] = deviceData.timestamp

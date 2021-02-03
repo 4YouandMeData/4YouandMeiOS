@@ -62,9 +62,7 @@ struct LocationPermission: PermissionProtocol {
             
             PermissionAlwaysLocationHandler.shared!.requestPermission { authorized in
                 DispatchQueue.main.async {
-                    if authorized {
-                        Services.shared.deviceService.onLocationPermissionGranted()
-                    }
+                    Services.shared.deviceService.onLocationPermissionChanged()
                     completion()
                     PermissionAlwaysLocationHandler.shared = nil
                 }
@@ -77,9 +75,7 @@ struct LocationPermission: PermissionProtocol {
             
             PermissionWhenInUseLocationHandler.shared!.requestPermission { authorized in
                 DispatchQueue.main.async {
-                    if authorized {
-                        Services.shared.deviceService.onLocationPermissionGranted()
-                    }
+                    Services.shared.deviceService.onLocationPermissionChanged()
                     completion()
                     PermissionWhenInUseLocationHandler.shared = nil
                 }

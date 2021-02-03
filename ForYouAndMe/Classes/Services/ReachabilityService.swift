@@ -15,6 +15,7 @@ protocol ReachabilityService {
     
     // Needed to check initial state
     var isCurrentlyReachable: Bool { get }
+    var currentReachabilityType: ReachabilityServiceType { get }
     
     func getReachability() -> Observable<ReachabilityServiceType>
 }

@@ -32,11 +32,15 @@ class ReachabilityManager: ReachabilityService {
     // MARK: - NetworkService Protocol Implementation
     
     public var isCurrentlyReachable: Bool {
-        if let reachability = reachability {
+        if let reachability = self.reachability {
             return reachability.connection != .unavailable
         } else {
             return true
         }
+    }
+    
+    var currentReachabilityType: ReachabilityServiceType {
+        return self.reachability?.connection.reachabilityServiceType ?? .none
     }
     
     public func getReachability() -> Observable<ReachabilityServiceType> {

@@ -60,6 +60,7 @@ struct Constants {
                                                                      uploadRetryInterval: 1.0 * 60.0 * 60.0,
                                                                      bufferLimit: 100,
                                                                      enableDebugLog: false)
+        static var defaultLocationPermission: Permission { Permission.locationWhenInUse }
     }
     
     struct Url {

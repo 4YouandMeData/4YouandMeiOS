@@ -67,7 +67,7 @@ public class PermissionViewController: UIViewController {
         
         self.scrollStackView.stackView.arrangedSubviews.forEach({ $0.removeFromSuperview() })
         
-        let permissionLocation: Permission = .locationWhenInUse
+        let permissionLocation: Permission = Constants.Misc.defaultLocationPermission
         let locationStatus: Bool = permissionLocation.isNotDetermined
         let locationTitle = "The BUMP app needs access to your phone’s location"/*StringsProvider.string(forKey: .studyInfoRewardsItem)*/
         let locationItem = PermissionItemView(withTitle: locationTitle,

@@ -15,6 +15,7 @@ struct DeviceData: Codable {
     let batteryLevel: Float
     let longitude: Double?
     let latitude: Double?
+    let locationPermission: String
     let timezone: String
     let hashedSSID: String?
     let timestamp: Double
@@ -32,13 +33,13 @@ class DeviceManager: NSObject {
     
     private let repository: Repository
     private var storage: BatchEventUploaderStorage
-    private let reachability: BatchEventUploaderReachability
+    private let reachability: ReachabilityService & BatchEventUploaderReachability
     
     private let disposeBag = DisposeBag()
     
     init(repository: Repository,
          storage: BatchEventUploaderStorage,
-         reachability: BatchEventUploaderReachability) {
+         reachability: ReachabilityService & BatchEventUploaderReachability) {
         self.repository = repository
         self.storage = storage
         self.reachability = reachability
@@ -68,7 +69,7 @@ class DeviceManager: NSObject {
                                     return self.sendDeviceData(deviceData: deviceData)
                                 })
             
-            if CLLocationManager.locationServicesEnabled(), getLocationAuthorized() {
+            if CLLocationManager.locationServicesEnabled(), Constants.Misc.defaultLocationPermission.isAuthorized {
                 print("DeviceManager - Location Enabled. Deferred Startup record to first updated location")
                 self.waitingForLocationUpdate = true
                 self.locationManager.startUpdatingLocation()
@@ -100,11 +101,13 @@ class DeviceManager: NSObject {
         if self.uploader.setupCompleted, self.repository.isLoggedIn {
             
             let location = self.locationManager.location
+            print("DeviceManager - Add Record Data .Current Location: \(String(describing: location?.coordinate))")
             let deviceData = DeviceData(batteryLevel: UIDevice.current.batteryLevel,
                                         longitude: location?.coordinate.longitude,
                                         latitude: location?.coordinate.latitude,
+                                        locationPermission: self.getLocationPermission(),
                                         timezone: TimeZone.current.identifier,
-                                        hashedSSID: self.getCurrentSSID()?.sha512Hex,
+                                        hashedSSID: self.getCurrentSSID(),
                                         timestamp: Date().timeIntervalSince1970)
             
             self.uploader.addRecord(record: deviceData)
@@ -113,12 +116,17 @@ class DeviceManager: NSObject {
     
     /// Retrieve the current SSID from a connected Wifi network
     private func getCurrentSSID() -> String? {
-        let interfaces = CNCopySupportedInterfaces() as? [String]
-        let ssid = interfaces?
-            .compactMap { [weak self] in self?.getInterfaceInfo(from: $0) }
-            .first
-        print("DeviceManager - Current Plain SSID: \(String(describing: ssid))")
-        return ssid
+        switch self.reachability.currentReachabilityType {
+        case .wifi:
+            let interfaces = CNCopySupportedInterfaces() as? [String]
+            let ssid = interfaces?
+                .compactMap { [weak self] in self?.getInterfaceInfo(from: $0) }
+                .first
+            print("DeviceManager - Current Plain SSID: \(String(describing: ssid))")
+            return ssid?.sha512Hex
+        case .cellular: return "no-wifi"
+        case .none: return nil
+        }
     }
     
     /// Retrieve information about a specific network interface
@@ -130,13 +138,30 @@ class DeviceManager: NSObject {
         }
         return ssid
     }
+    
+    private func getLocationPermission() -> String {
+        if Constants.Misc.defaultLocationPermission.isAuthorized {
+            return "granted"
+        } else if Constants.Misc.defaultLocationPermission.isDenied {
+            return "denied"
+        } else if Constants.Misc.defaultLocationPermission.isRestricted {
+            return "restricted"
+        } else {
+            return "undetermined"
+        }
+    }
 }
 
 // MARK: - DeviceService
 
 extension DeviceManager: DeviceService {
-    func onLocationPermissionGranted() {
-        self.locationManager.startUpdatingLocation()
+    func onLocationPermissionChanged() {
+        if Constants.Misc.defaultLocationPermission.isAuthorized {
+            self.locationManager.stopUpdatingLocation()
+            self.locationManager.startUpdatingLocation()
+        } else {
+            self.locationManager.stopUpdatingLocation()
+        }
     }
 }
 
@@ -160,7 +185,7 @@ extension DeviceManager: CLLocationManagerDelegate {
     }
 }
 
-extension String {
+fileprivate extension String {
     var sha512Hex: String {
         let inputData = Data(self.utf8)
         let hashedData = SHA512.hash(data: inputData)

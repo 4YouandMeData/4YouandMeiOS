@@ -8,5 +8,5 @@
 import Foundation
 
 protocol DeviceService {
-    func onLocationPermissionGranted()
+    func onLocationPermissionChanged()
 }
