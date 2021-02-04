@@ -76,6 +76,8 @@ class BatchEventUploader<Record: Codable> {
     
     private var isRunning: Bool { self.recordInterval > 0 }
     
+    private var isBufferUploadRunning: Bool = false
+    
     private var recordTimer: Timer?
     private var uploadTimer: Timer?
     private var uploadRetryTimer: Timer?
@@ -303,6 +305,13 @@ class BatchEventUploader<Record: Codable> {
     }
     
     private func uploadBuffers() {
+        guard false == self.isBufferUploadRunning else {
+            self.logDebugText(text: "Upload Buffer already running. Do Nothing")
+            return
+        }
+        
+        self.isBufferUploadRunning = true
+        
         self.resetUploadRetryTimer()
         
         guard self.isRunning else {
@@ -327,10 +336,12 @@ class BatchEventUploader<Record: Codable> {
                 guard let self = self else { return }
                 self.logDebugText(text: "Buffer Upload success. Removing it from archived buffers array and recursively upload buffers")
                 self.storage.removeOldestArchivedBuffer(forUploaderIdentifier: self.config.identifier, type: Record.self)
+                self.isBufferUploadRunning = false
                 self.uploadBuffers()
             }, onError: { [weak self] error in
                 guard let self = self else { return }
                 self.logDebugText(text: "Buffer Upload failed. Schedule Upload Retry. Error: \(error)")
+                self.isBufferUploadRunning = false
                 self.scheduleBuffersUploadRetry(timeInterval: self.config.uploadRetryInterval)
             }).disposed(by: self.disposeBag)
     }
