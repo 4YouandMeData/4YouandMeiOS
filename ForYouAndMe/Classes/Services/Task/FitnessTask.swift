@@ -12,8 +12,8 @@ class FitnessTask {
     static func createTask(withIdentifier identifier: String, options: TaskOptions?, orkTaskOptions: ORKPredefinedTaskOption) -> ORKTask {
         return ORKOrderedTask.fitnessCheck(withIdentifier: identifier,
                                            intendedUseDescription: options?.intendedUseDescription,
-                                           walkDuration: options?.walkDuration ?? 60.0,
-                                           restDuration: options?.restDuration ?? 10.0,
+                                           walkDuration: options?.walkDuration ?? 120.0,
+                                           restDuration: options?.restDuration ?? 30.0,
                                            options: orkTaskOptions)
     }
     
