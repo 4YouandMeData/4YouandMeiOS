@@ -101,7 +101,7 @@ class DeviceManager: NSObject {
         if self.uploader.setupCompleted, self.repository.isLoggedIn {
             
             let location = self.locationManager.location
-            print("DeviceManager - Add Record Data .Current Location: \(String(describing: location?.coordinate))")
+            print("DeviceManager - Add Record Data. Current Location: \(String(describing: location?.coordinate))")
             let deviceData = DeviceData(batteryLevel: UIDevice.current.batteryLevel,
                                         longitude: location?.coordinate.longitude,
                                         latitude: location?.coordinate.latitude,
