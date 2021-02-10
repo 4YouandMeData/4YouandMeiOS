@@ -253,7 +253,7 @@ class CameraView: UIView {
     }
     
     private func returnDocumentsDirectoryFile(fileName: String, fileExtension: String) throws -> URL? {
-        let fileURL = Constants.Task.videoResultURL.appendingPathComponent(fileName).appendingPathExtension(fileExtension)
+        let fileURL = Constants.Task.VideoResultURL.appendingPathComponent(fileName).appendingPathExtension(fileExtension)
         return fileURL
     }
     

@@ -47,7 +47,7 @@ class TaskSectionCoordinator: NSObject, PagedActivitySectionCoordinator {
     
     deinit {
         print("TaskSectionCoordinator - deinit")
-        self.deleteTaskResult(path: Constants.Task.taskResultURL)
+        self.deleteTaskResult(path: Constants.Task.TaskResultURL)
     }
     
     // MARK: - Private Methods
@@ -69,7 +69,7 @@ class TaskSectionCoordinator: NSObject, PagedActivitySectionCoordinator {
         taskViewController.navigationBar.apply(style: NavigationBarStyleCategory.secondary(hidden: true).style)
         taskViewController.delegate = self
         taskViewController.view.tintColor = ColorPalette.color(withType: .primary)
-        taskViewController.outputDirectory = Constants.Task.taskResultURL
+        taskViewController.outputDirectory = Constants.Task.TaskResultURL
         taskViewController.view.backgroundColor = ColorPalette.color(withType: .secondary)
         
         return taskViewController
@@ -131,7 +131,7 @@ class TaskSectionCoordinator: NSObject, PagedActivitySectionCoordinator {
             .addProgress()
             .subscribe(onSuccess: { [weak self] in
                 guard let self = self else { return }
-                self.deleteTaskResult(path: Constants.Task.taskResultURL)
+                self.deleteTaskResult(path: Constants.Task.TaskResultURL)
                 self.showSuccessPage()
                 }, onError: { [weak self] error in
                     guard let self = self else { return }

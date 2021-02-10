@@ -37,7 +37,7 @@ class ReactionTimeTask {
         
         let reactionTimeResult = reactionTimeTaskResult.filter({ $0.identifier == reactionTimeIdentifier })
         reactionTimeResult.forEach { timeResult in
-            if timeResult.fileResult.contentType == Constants.Task.fileResultMimeType, let fileURL = timeResult.fileResult.fileURL {
+            if timeResult.fileResult.contentType == Constants.Task.FileResultMimeType, let fileURL = timeResult.fileResult.fileURL {
                 var attempt: [String: Any] = [TaskNetworkParameter.timestamp.rawValue: timeResult.timestamp]
                 let infoValue = try? String(contentsOf: fileURL, encoding: .utf8)
                 var infoKey: String?

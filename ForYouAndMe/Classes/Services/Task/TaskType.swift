@@ -252,7 +252,7 @@ extension Array where Element == ORKFileResult {
         var result: [String: Any] = [:]
         
         for fileResult in self {
-            guard fileResult.contentType == Constants.Task.fileResultMimeType,
+            guard fileResult.contentType == Constants.Task.FileResultMimeType,
                 let url = fileResult.fileURL,
                 let value = try? String(contentsOf: url, encoding: .utf8) else {
                     return result

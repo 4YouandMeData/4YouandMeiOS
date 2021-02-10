@@ -23,7 +23,7 @@ struct DeviceData: Codable {
 
 class DeviceManager: NSObject {
     
-    private lazy var uploader = BatchEventUploader<DeviceData>(withConfig: Constants.Misc.deviceDataUploadConfig,
+    private lazy var uploader = BatchEventUploader<DeviceData>(withConfig: Constants.Misc.DeviceDataUploadConfig,
                                                                storage: self.storage,
                                                                reachability: self.reachability)
     
@@ -32,13 +32,13 @@ class DeviceManager: NSObject {
     private let locationManager = CLLocationManager()
     
     private let repository: Repository
-    private var storage: BatchEventUploaderStorage
+    private var storage: BatchEventUploaderStorage & CacheService
     private let reachability: ReachabilityService & BatchEventUploaderReachability
     
     private let disposeBag = DisposeBag()
     
     init(repository: Repository,
-         storage: BatchEventUploaderStorage,
+         storage: BatchEventUploaderStorage & CacheService,
          reachability: ReachabilityService & BatchEventUploaderReachability) {
         self.repository = repository
         self.storage = storage
@@ -69,12 +69,13 @@ class DeviceManager: NSObject {
                                     return self.sendDeviceData(deviceData: deviceData)
                                 })
             
-            if CLLocationManager.locationServicesEnabled(), Constants.Misc.defaultLocationPermission.isAuthorized {
+            if CLLocationManager.locationServicesEnabled(), Constants.Misc.DefaultLocationPermission.isAuthorized {
                 print("DeviceManager - Location Enabled. Deferred Startup record to first updated location")
                 self.waitingForLocationUpdate = true
                 self.locationManager.startUpdatingLocation()
             } else {
                 print("DeviceManager - Location Disabled. Add Startup Record")
+                self.locationManager.stopUpdatingLocation()
                 self.addRecordData()
             }
         }
@@ -100,11 +101,22 @@ class DeviceManager: NSObject {
     private func addRecordData() {
         if self.uploader.setupCompleted, self.repository.isLoggedIn {
             
-            let location = self.locationManager.location
-            print("DeviceManager - Add Record Data. Current Location: \(String(describing: location?.coordinate))")
+            let location: UserLocation? = {
+                if Constants.Misc.TrackRelativeLocation {
+                    if let firstUserAbsoluteLocation = self.storage.firstUserAbsoluteLocation,
+                       let currentAbsoluteLocation = self.locationManager.location?.coordinate.userLocation {
+                        return currentAbsoluteLocation.getLocation(relativeTo: firstUserAbsoluteLocation)
+                    } else {
+                        return nil
+                    }
+                } else {
+                    return self.locationManager.location?.coordinate.userLocation
+                }
+            }()
+            print("DeviceManager - Add Record Data. Current Location: \(String(describing: location))")
             let deviceData = DeviceData(batteryLevel: UIDevice.current.batteryLevel,
-                                        longitude: location?.coordinate.longitude,
-                                        latitude: location?.coordinate.latitude,
+                                        longitude: location?.longitude,
+                                        latitude: location?.latitude,
                                         locationPermission: self.getLocationPermission(),
                                         timezone: TimeZone.current.identifier,
                                         hashedSSID: self.getCurrentSSID(),
@@ -140,11 +152,11 @@ class DeviceManager: NSObject {
     }
     
     private func getLocationPermission() -> String {
-        if Constants.Misc.defaultLocationPermission.isAuthorized {
+        if Constants.Misc.DefaultLocationPermission.isAuthorized {
             return "granted"
-        } else if Constants.Misc.defaultLocationPermission.isDenied {
+        } else if Constants.Misc.DefaultLocationPermission.isDenied {
             return "denied"
-        } else if Constants.Misc.defaultLocationPermission.isRestricted {
+        } else if Constants.Misc.DefaultLocationPermission.isRestricted {
             return "restricted"
         } else {
             return "undetermined"
@@ -156,7 +168,7 @@ class DeviceManager: NSObject {
 
 extension DeviceManager: DeviceService {
     func onLocationPermissionChanged() {
-        if Constants.Misc.defaultLocationPermission.isAuthorized {
+        if Constants.Misc.DefaultLocationPermission.isAuthorized {
             self.locationManager.stopUpdatingLocation()
             self.locationManager.startUpdatingLocation()
         } else {
@@ -167,6 +179,25 @@ extension DeviceManager: DeviceService {
 
 extension DeviceManager: CLLocationManagerDelegate {
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        guard let location = locations.last else {
+            print("DeviceManager - Location Update - No last location")
+            return
+        }
+        
+        let updateDate = location.timestamp
+        let referenceDate = Date(timeIntervalSinceNow: -15)
+        guard updateDate > referenceDate else {
+            let updateAge = updateDate.timeIntervalSince1970 - Date().timeIntervalSince1970
+            print("DeviceManager - Location Update - Value too old (\(updateAge) seconds old). Ignore")
+            return
+        }
+        
+        if self.storage.firstUserAbsoluteLocation == nil, Constants.Misc.TrackRelativeLocation {
+            let userLocation = location.coordinate.userLocation
+            print("DeviceManager - Stored first user absolute location: (lat: \(userLocation.latitude), lon: \(userLocation.longitude))")
+            self.storage.firstUserAbsoluteLocation = userLocation
+        }
+        
         if self.waitingForLocationUpdate {
             self.waitingForLocationUpdate = false
             print("DeviceManager - Location Update Success. Add Deferred Startup Record")
@@ -190,5 +221,22 @@ fileprivate extension String {
         let inputData = Data(self.utf8)
         let hashedData = SHA512.hash(data: inputData)
         return hashedData.compactMap { String(format: "%02x", $0) }.joined()
+    }
+}
+
+extension UserLocation {
+    var nativeLocation: CLLocationCoordinate2D {
+        return CLLocationCoordinate2D(latitude: self.latitude, longitude: self.longitude)
+    }
+    
+    func getLocation(relativeTo referenceLocation: UserLocation) -> UserLocation {
+        return UserLocation(latitude: self.latitude - referenceLocation.latitude,
+                            longitude: self.longitude - referenceLocation.longitude)
+    }
+}
+
+extension CLLocationCoordinate2D {
+    var userLocation: UserLocation {
+        return UserLocation(latitude: self.latitude, longitude: self.longitude)
     }
 }

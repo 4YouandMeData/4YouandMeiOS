@@ -288,7 +288,7 @@ public class VideoDiaryRecorderViewController: UIViewController {
                 onDispose: { AppNavigator.popProgressHUD() })
             .subscribe(onSuccess: { [weak self] in
                 guard let self = self else { return }
-                try? FileManager.default.removeItem(atPath: Constants.Task.videoResultURL.path)
+                try? FileManager.default.removeItem(atPath: Constants.Task.VideoResultURL.path)
                 self.currentState = .submitted(submitDate: Date(), isPlaying: false)
                 }, onError: { [weak self] error in
                     guard let self = self else { return }
@@ -330,12 +330,12 @@ public class VideoDiaryRecorderViewController: UIViewController {
         let outputFileName = "\(CameraView.videoFilenamePrefix)\(self.noOfPauses)"
         var isDir: ObjCBool = false
         let fileManager = FileManager.default
-        if !fileManager.fileExists(atPath: Constants.Task.videoResultURL.path, isDirectory: &isDir) {
-            try fileManager.createDirectory(atPath: Constants.Task.videoResultURL.path,
+        if !fileManager.fileExists(atPath: Constants.Task.VideoResultURL.path, isDirectory: &isDir) {
+            try fileManager.createDirectory(atPath: Constants.Task.VideoResultURL.path,
                                             withIntermediateDirectories: false,
                                             attributes: nil)
         }
-        let fileURL = Constants.Task.videoResultURL.appendingPathComponent(outputFileName).appendingPathExtension(self.videoExtension)
+        let fileURL = Constants.Task.VideoResultURL.appendingPathComponent(outputFileName).appendingPathExtension(self.videoExtension)
         return fileURL
     }
     

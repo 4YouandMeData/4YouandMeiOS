@@ -310,8 +310,6 @@ class BatchEventUploader<Record: Codable> {
             return
         }
         
-        self.isBufferUploadRunning = true
-        
         self.resetUploadRetryTimer()
         
         guard self.isRunning else {
@@ -330,6 +328,8 @@ class BatchEventUploader<Record: Codable> {
         }
         
         self.logDebugText(text: "Uploading oldest buffer: \(buffer)")
+        
+        self.isBufferUploadRunning = true
         
         uploadRequest
             .subscribe(onSuccess: { [weak self] in

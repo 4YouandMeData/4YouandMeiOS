@@ -69,6 +69,6 @@ class VideoDiarySectionCoordinator: NSObject, PagedActivitySectionCoordinator {
     // MARK: - Private Methods
     
     private func deleteVideoResult() {
-       try? FileManager.default.removeItem(atPath: Constants.Task.videoResultURL.path)
+       try? FileManager.default.removeItem(atPath: Constants.Task.VideoResultURL.path)
     }
 }

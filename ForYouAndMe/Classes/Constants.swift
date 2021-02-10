@@ -54,13 +54,14 @@ struct Constants {
         static let VideoDiaryMaxDurationSeconds: TimeInterval = 120.0
         static let VideoDiaryCaptureSessionPreset: AVCaptureSession.Preset = .hd1280x720
         
-        static let deviceDataUploadConfig = BatchEventUploaderConfig(identifier: BatchEventUploaderIdentifier.deviceData.rawValue,
+        static let DeviceDataUploadConfig = BatchEventUploaderConfig(identifier: BatchEventUploaderIdentifier.deviceData.rawValue,
                                                                      defaultRecordInterval: 1.0 * 60.0 * 60.0,
                                                                      uploadInterval: nil,
                                                                      uploadRetryInterval: 1.0 * 60.0 * 60.0,
                                                                      bufferLimit: 100,
                                                                      enableDebugLog: false)
-        static var defaultLocationPermission: Permission { Permission.locationWhenInUse }
+        static var DefaultLocationPermission: Permission { Permission.locationWhenInUse }
+        static let TrackRelativeLocation: Bool = true
     }
     
     struct Url {
@@ -82,16 +83,16 @@ struct Constants {
     }
     
     struct Task {
-        static let fileResultMimeType = "application/json"
+        static let FileResultMimeType = "application/json"
         
-        static let taskResultURL: URL = {
+        static let TaskResultURL: URL = {
             let documentsDirectoryString = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)[0]
             var resultDirectory = URL(fileURLWithPath: documentsDirectoryString, isDirectory: true)
             resultDirectory.appendPathComponent(FilePath.taskResult.rawValue)
             return resultDirectory
         }()
         
-        static let videoResultURL: URL = {
+        static let VideoResultURL: URL = {
             let documentsDirectoryString = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)[0]
             var resultDirectory = URL(fileURLWithPath: documentsDirectoryString, isDirectory: true)
             resultDirectory.appendPathComponent(FilePath.videoResult.rawValue)
