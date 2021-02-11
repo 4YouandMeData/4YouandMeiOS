@@ -228,15 +228,20 @@ class CameraView: UIView {
     // MARK: - Private Methods
     
     private func exportVideo(composition: AVMutableComposition, mergedFileURL: URL?) {
-        AVAssetExportSession.determineCompatibility(ofExportPreset: AVAssetExportPresetPassthrough,
+        let exportPreset = AVAssetExportPresetHighestQuality
+        AVAssetExportSession.determineCompatibility(ofExportPreset: exportPreset,
                                                     with: composition,
-                                                    outputFileType: self.mergedFileType) { [weak self] (compatible) in
+                                                    outputFileType: self.mergedFileType) { [weak self] compatible in
             if compatible {
-                guard let exporter = AVAssetExportSession(asset: composition, presetName: AVAssetExportPresetPassthrough) else { return }
+                guard let exporter = AVAssetExportSession(asset: composition, presetName: exportPreset) else {
+                    self?.delegate?.hasVideoMergingErrorOccurred(error: VideoMergingError.failedToExportVideo)
+                    return
+                }
                 
                 exporter.outputURL = mergedFileURL
                 exporter.outputFileType = self?.mergedFileType
                 exporter.shouldOptimizeForNetworkUse = true
+                exporter.fileLengthLimit = Constants.Misc.VideoDiaryMaxFileSize
                 exporter.exportAsynchronously { [weak self] in
                     // To execute the result of exporting in the main thread
                     Async.mainQueue { [weak self] in
@@ -248,6 +253,8 @@ class CameraView: UIView {
                         }
                     }
                 }
+            } else {
+                self?.delegate?.hasVideoMergingErrorOccurred(error: VideoMergingError.failedToExportVideo)
             }
         }
     }

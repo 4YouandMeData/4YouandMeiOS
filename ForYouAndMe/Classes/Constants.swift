@@ -53,6 +53,8 @@ struct Constants {
         static let FeedPageSize: Int? = 20
         static let VideoDiaryMaxDurationSeconds: TimeInterval = 120.0
         static let VideoDiaryCaptureSessionPreset: AVCaptureSession.Preset = .hd1280x720
+        // Server limit is 20 but AVAssetExportSession.fileLengthLimit can be exceeded by 1 or 2 MB
+        static let VideoDiaryMaxFileSize: Int64 = 1024 * 1024 * 18
         
         static let DeviceDataUploadConfig = BatchEventUploaderConfig(identifier: BatchEventUploaderIdentifier.deviceData.rawValue,
                                                                      defaultRecordInterval: 1.0 * 60.0 * 60.0,
