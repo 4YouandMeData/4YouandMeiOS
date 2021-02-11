@@ -27,13 +27,13 @@ class DeviceManager: NSObject {
                                                                storage: self.storage,
                                                                reachability: self.reachability)
     
-    private var waitingForLocationUpdate: Bool = false
+    private var storage: BatchEventUploaderStorage & CacheService
+    private let repository: Repository
+    private let reachability: ReachabilityService & BatchEventUploaderReachability
     
     private let locationManager = CLLocationManager()
     
-    private let repository: Repository
-    private var storage: BatchEventUploaderStorage & CacheService
-    private let reachability: ReachabilityService & BatchEventUploaderReachability
+    private let waitingForLocationUpdate = ExpiringValue<Bool>(withDefaultValue: false, expiryTime: Constants.Misc.WaitingTimeForLocation)
     
     private let disposeBag = DisposeBag()
     
@@ -51,6 +51,10 @@ class DeviceManager: NSObject {
         self.locationManager.delegate = self
         
         self.addApplicationDidBecomeActiveObserver()
+    }
+    
+    deinit {
+        NotificationCenter.default.removeObserver(self, name: UIApplication.didBecomeActiveNotification, object: nil)
     }
     
     // MARK: - Actions
@@ -71,7 +75,11 @@ class DeviceManager: NSObject {
             
             if CLLocationManager.locationServicesEnabled(), Constants.Misc.DefaultLocationPermission.isAuthorized {
                 print("DeviceManager - Location Enabled. Deferred Startup record to first updated location")
-                self.waitingForLocationUpdate = true
+                self.waitingForLocationUpdate.setValue(value: true,
+                                                       onExpiry: { [weak self] in
+                                                        print("DeviceManager - No location update arrived in time. Send Startup Record")
+                                                        self?.addRecordData()
+                                                       })
                 self.locationManager.startUpdatingLocation()
             } else {
                 print("DeviceManager - Location Disabled. Add Startup Record")
@@ -185,7 +193,7 @@ extension DeviceManager: CLLocationManagerDelegate {
         }
         
         let updateDate = location.timestamp
-        let referenceDate = Date(timeIntervalSinceNow: -15)
+        let referenceDate = Date(timeIntervalSinceNow: -Constants.Misc.MaxValidLocationAge)
         guard updateDate > referenceDate else {
             let updateAge = updateDate.timeIntervalSince1970 - Date().timeIntervalSince1970
             print("DeviceManager - Location Update - Value too old (\(updateAge) seconds old). Ignore")
@@ -198,8 +206,8 @@ extension DeviceManager: CLLocationManagerDelegate {
             self.storage.firstUserAbsoluteLocation = userLocation
         }
         
-        if self.waitingForLocationUpdate {
-            self.waitingForLocationUpdate = false
+        if self.waitingForLocationUpdate.value {
+            self.waitingForLocationUpdate.resetValue()
             print("DeviceManager - Location Update Success. Add Deferred Startup Record")
             self.addRecordData()
         }
@@ -208,8 +216,8 @@ extension DeviceManager: CLLocationManagerDelegate {
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
         print("DeviceManager - Location Update Failed. Error: '\(error)'")
         
-        if self.waitingForLocationUpdate {
-            self.waitingForLocationUpdate = false
+        if self.waitingForLocationUpdate.value {
+            self.waitingForLocationUpdate.resetValue()
             print("DeviceManager - Location Update Failed. Add Deferred Startup Record")
             self.addRecordData()
         }

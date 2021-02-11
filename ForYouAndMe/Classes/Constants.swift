@@ -63,7 +63,10 @@ struct Constants {
                                                                      bufferLimit: 100,
                                                                      enableDebugLog: false)
         static var DefaultLocationPermission: Permission { Permission.locationWhenInUse }
+        
         static let TrackRelativeLocation: Bool = true
+        static let WaitingTimeForLocation: DispatchTimeInterval = .seconds(10)
+        static let MaxValidLocationAge: TimeInterval = 15.0
     }
     
     struct Url {

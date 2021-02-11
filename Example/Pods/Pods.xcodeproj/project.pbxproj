@@ -1519,6 +1519,7 @@
 		8959EA6A08FD2FBDEC0661DA718B415F /* ORKPageStep.h in Headers */ = {isa = PBXBuildFile; fileRef = B693D572562284E1F393D55646A3759D /* ORKPageStep.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		895E203025C4065600D92C7D /* BatchEventUploader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 895E202F25C4065600D92C7D /* BatchEventUploader.swift */; };
 		896AD3E325D41D5900313254 /* UserLocation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 896AD3E225D41D5900313254 /* UserLocation.swift */; };
+		896BC21A25D599DE009F3981 /* ExpiringValue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 896BC21925D599DE009F3981 /* ExpiringValue.swift */; };
 		897EAD2E2F4BC803F8F9020B45241AE3 /* FIRCLSAsyncOperation.h in Headers */ = {isa = PBXBuildFile; fileRef = 2C7A68867049DAC05CF49C636838D849 /* FIRCLSAsyncOperation.h */; settings = {ATTRIBUTES = (Project, ); }; };
 		8998F9ECBF7337E8B7AF878199A75DD6 /* IntegrationData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C217B27EAC970DB8ECF0F976D92214D /* IntegrationData.swift */; };
 		899AFC7DB0CA4B9B6117637697522333 /* ORKUSDZModelManagerResult.m in Sources */ = {isa = PBXBuildFile; fileRef = 70A13DAD7BB31533CBD2B24A5BE61B84 /* ORKUSDZModelManagerResult.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
@@ -5135,6 +5136,7 @@
 		895883711E2C8EBA882EA96197DAA251 /* ConcurrentDispatchQueueScheduler.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ConcurrentDispatchQueueScheduler.swift; path = RxSwift/Schedulers/ConcurrentDispatchQueueScheduler.swift; sourceTree = "<group>"; };
 		895E202F25C4065600D92C7D /* BatchEventUploader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatchEventUploader.swift; sourceTree = "<group>"; };
 		896AD3E225D41D5900313254 /* UserLocation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserLocation.swift; sourceTree = "<group>"; };
+		896BC21925D599DE009F3981 /* ExpiringValue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpiringValue.swift; sourceTree = "<group>"; };
 		896DF0C5449BD289B34677B6CBBABAD5 /* UIView+ShadowPalette.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = "UIView+ShadowPalette.swift"; sourceTree = "<group>"; };
 		897B99E8641CBACBF272179F4B4D0034 /* ORKActiveStepTimerView.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = ORKActiveStepTimerView.h; path = ResearchKit/ActiveTasks/ORKActiveStepTimerView.h; sourceTree = "<group>"; };
 		89A16115DE4D8E56DB50AE7674992B44 /* GradientView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = GradientView.swift; sourceTree = "<group>"; };
@@ -7999,6 +8001,7 @@
 				0B99842757D36273B645B8326B4B1F66 /* UIViewController+Extensions.swift */,
 				5BDC69303A583E2CEC4D31B97ED61324 /* URL+Extensions.swift */,
 				895E202F25C4065600D92C7D /* BatchEventUploader.swift */,
+				896BC21925D599DE009F3981 /* ExpiringValue.swift */,
 			);
 			name = Utility;
 			path = ForYouAndMe/Classes/Utility;
@@ -14485,6 +14488,7 @@
 				DE2FEE6E199D7C79969EE3A42876E3D7 /* Slider.swift in Sources */,
 				9DB2E19036B5B1F254C259A9C443F68D /* SpeechPermission.swift in Sources */,
 				E75B866EAF9060BA102031EB09399D56 /* StarRatingView.swift in Sources */,
+				896BC21A25D599DE009F3981 /* ExpiringValue.swift in Sources */,
 				B06E0AC4BDF88C56B4165F3F14228F67 /* String+Localization.swift in Sources */,
 				C6C55067280D2BB3326631F23AFD7E97 /* StringsProvider.swift in Sources */,
 				EBE141A0D5FC1178633EFD5204CE5F64 /* StudyInfoHeaderView.swift in Sources */,
