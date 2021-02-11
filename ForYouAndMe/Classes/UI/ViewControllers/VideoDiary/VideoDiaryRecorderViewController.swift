@@ -283,9 +283,7 @@ public class VideoDiaryRecorderViewController: UIViewController {
         let videoResultFile = TaskNetworkResultFile(data: videoData, fileExtension: self.mergedVideoExtension)
         let taskNetworkResult = TaskNetworkResult(data: [:], attachedFile: videoResultFile)
         self.repository.sendTaskResult(taskId: self.taskIdentifier, taskResult: taskNetworkResult)
-            .do(afterSuccess: { _ in AppNavigator.popProgressHUD() },
-                afterError: { _ in AppNavigator.popProgressHUD() },
-                onDispose: { AppNavigator.popProgressHUD() })
+            .do(onDispose: { AppNavigator.popProgressHUD() })
             .subscribe(onSuccess: { [weak self] in
                 guard let self = self else { return }
                 try? FileManager.default.removeItem(atPath: Constants.Task.VideoResultURL.path)

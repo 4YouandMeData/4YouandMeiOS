@@ -513,6 +513,8 @@ class AppNavigator {
             if self.progressHudCount == 0 {
                 SVProgressHUD.dismiss()
             }
+        } else {
+            print("AppNavigator - Attempted hud progress pop when progressHudCount is 0")
         }
     }
     
@@ -770,9 +772,7 @@ extension PrimitiveSequence where Trait == SingleTrait {
     /// NOTE: call this after the single object that should be covered by the progress view
     /// (tipically before the call to the subscribe method)
     func addProgress() -> Single<Element> {
-        self.do(afterSuccess: { _ in AppNavigator.popProgressHUD() },
-                afterError: { _ in AppNavigator.popProgressHUD() },
-                onSubscribe: { AppNavigator.pushProgressHUD() },
+        self.do(onSubscribe: { AppNavigator.pushProgressHUD() },
                 onDispose: { AppNavigator.popProgressHUD() })
     }
 }
@@ -782,9 +782,7 @@ extension Observable {
     /// NOTE: call this after the single observer that should be covered by the progress view
     /// (tipically before the call to the subscribe method)
     func addProgress() -> Observable<Element> {
-        self.do(afterError: { _ in AppNavigator.popProgressHUD() },
-                afterCompleted: { AppNavigator.popProgressHUD() },
-                onSubscribe: { AppNavigator.pushProgressHUD() },
+        self.do(onSubscribe: { AppNavigator.pushProgressHUD() },
                 onDispose: { AppNavigator.popProgressHUD() })
     }
 }
