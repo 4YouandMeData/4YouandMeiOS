@@ -11,6 +11,8 @@ class OnboardingSectionProvider {
     
     private static var onboardingSectionGroups: [OnboardingSectionGroup] = []
     
+    static var userConsentSectionExists: Bool { onboardingSectionGroups.contains(.consent) }
+    
     static var firstOnboardingSection: OnboardingSection? {
         return self.getFirstSectionFromFirstNonEmptyGroup(forStartingGroupIndex: 0)
     }
