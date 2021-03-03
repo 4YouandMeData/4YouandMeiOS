@@ -13,6 +13,7 @@ enum OnboardingSectionGroup: String, Codable {
     case screening = "screening"
     case consent = "consent_group"
     case integration = "integration"
+    case optIn = "opt_in"
     
     var sections: [OnboardingSection] {
         switch self {
@@ -20,6 +21,7 @@ enum OnboardingSectionGroup: String, Codable {
         case .screening: return [.screening]
         case .consent: return [.informedConsent, .consent, .optIn, .consentUserData]
         case .integration: return [.integration]
+        case .optIn: return [.optIn]
         }
     }
 }
