@@ -207,6 +207,11 @@ extension RepositoryImpl: Repository {
             .handleError()
     }
     
+    func notifyOnboardingCompleted() -> Single<()> {
+        return self.api.send(request: ApiRequest(serviceRequest: .notifyOnboardingCompleted))
+            .handleError()
+    }
+    
     // MARK: - Integration
     
     func getIntegrationSection() -> Single<IntegrationSection> {

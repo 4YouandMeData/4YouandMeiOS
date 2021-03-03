@@ -232,8 +232,16 @@ class AppNavigator {
             if let nextSection = OnboardingSectionProvider.getNextOnboardingSection(forOnboardingSection: section) {
                 self.startOnboardingSection(section: nextSection, navigationController: navigationController)
             } else {
-                self.currentCoordinator = nil
-                self.goHome()
+                self.repository.notifyOnboardingCompleted()
+                    .addProgress()
+                    .subscribe(onSuccess: { [weak self] in
+                        guard let self = self else { return }
+                        self.currentCoordinator = nil
+                        self.goHome()
+                    }, onError: { [weak self] error in
+                        self?.handleError(error: error, presenter: navigationController)
+                    })
+                    .disposed(by: self.disposeBag)
             }
         }
         if let syncCoordinator = section.getSyncCoordinator(withNavigationController: navigationController,

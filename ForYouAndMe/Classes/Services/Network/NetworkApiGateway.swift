@@ -299,6 +299,8 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             return "/v1/studies/\(studyId)/signature"
         case .createUserConsent, .updateUserConsent:
             return "/v1/studies/\(studyId)/user_consent"
+        case .notifyOnboardingCompleted:
+            return "/v1/studies/\(studyId)/user_consent"
         case .verifyEmail:
             return "/v1/studies/\(studyId)/user_consent/confirm_email"
         case .resendConfirmationEmail:
@@ -374,6 +376,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         case .submitPhoneNumber,
              .verifyPhoneNumber,
              .createUserConsent,
+             .notifyOnboardingCompleted,
              .sendOptInPermission,
              .sendAnswer,
              .sendDeviceData:
@@ -420,6 +423,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         case .getUserConsentSection: return Bundle.getTestData(from: "TestGetUserConsentSection")
         case .createUserConsent: return "{}".utf8Encoded
         case .updateUserConsent: return "{}".utf8Encoded
+        case .notifyOnboardingCompleted: return "{}".utf8Encoded
         case .verifyEmail: return "{}".utf8Encoded
         case .resendConfirmationEmail: return "{}".utf8Encoded
         // Integration Section
@@ -506,6 +510,12 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
                                              lastName: lastName,
                                              signatureImage: signatureImage,
                                              isCreate: false)
+        case .notifyOnboardingCompleted:
+            return Task.createForUserContent(withEmail: nil,
+                                             firstName: nil,
+                                             lastName: nil,
+                                             signatureImage: nil,
+                                             isCreate: true)
         case .verifyEmail(let email):
             var params: [String: Any] = [:]
             params["email_confirmation_token"] = email
@@ -607,6 +617,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
              .getUserConsentSection,
              .createUserConsent,
              .updateUserConsent,
+             .notifyOnboardingCompleted,
              .getStudyInfoSection,
              .verifyEmail,
              .resendConfirmationEmail,
@@ -657,25 +668,22 @@ fileprivate extension Task {
         if isCreate {
             params["agree"] = true
         }
-        if let email = email {
-            params["new_email"] = email
-        }
-        if let firstName = firstName {
-            params["first_name"] = firstName
-        }
-        if let lastName = lastName {
-            params["last_name"] = lastName
-        }
-        if let signatureImage = signatureImage {
-            if let imageData = signatureImage.pngData() {
-                var imageDataString = imageData.base64EncodedString()
-                // Mime type
-                imageDataString = "data:image/png;base64,\(imageDataString)"
-                params["signature_base64"] = imageDataString
-            } else {
-                assertionFailure("Cannot image to PNG")
+        params["new_email"] = email.unwrapOrNull
+        params["first_name"] = firstName.unwrapOrNull
+        params["last_name"] = lastName.unwrapOrNull
+        params["on_boarding_completed_at"] = Date().string(withFormat: "yyyy-MM-dd")
+        let imageDataString: String? = {
+            guard let signatureImage = signatureImage else { return nil }
+            guard let imageData = signatureImage.pngData() else {
+                assertionFailure("Cannot convert image data to PNG")
+                return nil
             }
-        }
+            var imageDataString = imageData.base64EncodedString()
+            // Adding Mime type
+            imageDataString = "data:image/png;base64,\(imageDataString)"
+            return imageDataString
+        }()
+        params["signature_base64"] = imageDataString.unwrapOrNull
         return .requestParameters(parameters: ["user_consent": params], encoding: JSONEncoding.default)
     }
 }

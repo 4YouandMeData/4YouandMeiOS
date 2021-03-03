@@ -36,6 +36,7 @@ enum DefaultService {
     case getUserConsentSection
     case createUserConsent(email: String?, firstName: String?, lastName: String?, signatureImage: UIImage?)
     case updateUserConsent(email: String?, firstName: String?, lastName: String?, signatureImage: UIImage?)
+    case notifyOnboardingCompleted
     case verifyEmail(validationCode: String)
     case resendConfirmationEmail
     // Study Info Section
