@@ -668,10 +668,15 @@ fileprivate extension Task {
         if isCreate {
             params["agree"] = true
         }
-        params["new_email"] = email.unwrapOrNull
-        params["first_name"] = firstName.unwrapOrNull
-        params["last_name"] = lastName.unwrapOrNull
-        params["on_boarding_completed_at"] = Date().string(withFormat: "yyyy-MM-dd")
+        if let email = email {
+            params["new_email"] = email
+        }
+        if let firstName = firstName {
+            params["first_name"] = firstName
+        }
+        if let lastName = lastName {
+            params["last_name"] = lastName
+        }
         let imageDataString: String? = {
             guard let signatureImage = signatureImage else { return nil }
             guard let imageData = signatureImage.pngData() else {
@@ -683,7 +688,10 @@ fileprivate extension Task {
             imageDataString = "data:image/png;base64,\(imageDataString)"
             return imageDataString
         }()
-        params["signature_base64"] = imageDataString.unwrapOrNull
+        if let imageDataString = imageDataString {
+            params["signature_base64"] = imageDataString
+        }
+        params["on_boarding_completed_at"] = Date().string(withFormat: "yyyy-MM-dd")
         return .requestParameters(parameters: ["user_consent": params], encoding: JSONEncoding.default)
     }
 }
