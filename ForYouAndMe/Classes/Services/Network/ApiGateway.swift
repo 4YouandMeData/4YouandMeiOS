@@ -23,6 +23,7 @@ enum DefaultService {
     // Login
     case submitPhoneNumber(phoneNumber: String)
     case verifyPhoneNumber(phoneNumber: String, validationCode: String)
+    case emailLogin(email: String)
     // Screening Section
     case getScreeningSection
     // Informed Consent Section

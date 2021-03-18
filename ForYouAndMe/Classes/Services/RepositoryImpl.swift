@@ -63,6 +63,7 @@ class RepositoryImpl {
 // MARK: - Repository
 
 extension RepositoryImpl: Repository {
+    
     // MARK: - Authentication
     
     var accessToken: String? {
@@ -71,6 +72,10 @@ extension RepositoryImpl: Repository {
     
     var isLoggedIn: Bool {
         return self.api.isLoggedIn()
+    }
+    
+    var isPinCodeLogin: Bool? {
+        return self.storage.globalConfig?.pinCodeLogin
     }
     
     func logOut() {
@@ -103,6 +108,26 @@ extension RepositoryImpl: Repository {
     func verifyPhoneNumber(phoneNumber: String, validationCode: String) -> Single<User> {
         return self.api.send(request: ApiRequest(serviceRequest: .verifyPhoneNumber(phoneNumber: phoneNumber,
                                                                                     validationCode: validationCode)))
+            .handleError()
+            .catchError({ (error)-> Single<(User)> in
+                enum ErrorCode: Int, CaseIterable { case wrongValidationCode = 401 }
+                if let errorCodeNumber = error.getFirstServerError(forExpectedStatusCodes: ErrorCode.allCases.map { $0.rawValue }),
+                    let errorCode = ErrorCode(rawValue: errorCodeNumber) {
+                    switch errorCode {
+                    case .wrongValidationCode: return Single.error(RepositoryError.wrongPhoneValidationCode)
+                    }
+                } else {
+                    return Single.error(error)
+                }
+            })
+            .flatMap { user in self.updateUserTimeZoneIfNeeded(user: user) }
+            .flatMap { user in self.updateNotificationRegistrationToken(user: user) }
+            .map { self.handleUserInfo($0) }
+            .do(onSuccess: { self.saveUser($0) })
+    }
+    
+    func emailLogin(email: String) -> Single<User> {
+        return self.api.send(request: ApiRequest(serviceRequest: .emailLogin(email: email)))
             .handleError()
             .catchError({ (error)-> Single<(User)> in
                 enum ErrorCode: Int, CaseIterable { case wrongValidationCode = 401 }

@@ -43,9 +43,11 @@ protocol Repository: class {
     // Authentication
     var accessToken: String? { get }
     var isLoggedIn: Bool { get }
+    var isPinCodeLogin: Bool? { get }
     func logOut()
     func submitPhoneNumber(phoneNumber: String) -> Single<()>
     func verifyPhoneNumber(phoneNumber: String, validationCode: String) -> Single<User>
+    func emailLogin(email: String) -> Single<User>
     // Screening Section
     func getScreeningSection() -> Single<ScreeningSection>
     // Informed Consent Section

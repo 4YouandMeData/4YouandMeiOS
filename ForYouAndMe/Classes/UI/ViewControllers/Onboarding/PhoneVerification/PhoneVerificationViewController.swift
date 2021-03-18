@@ -55,6 +55,14 @@ public class PhoneVerificationViewController: UIViewController {
     private lazy var phoneNumberView: PhoneNumberView = PhoneNumberView(presenter: self,
                                                                         allowedCountryCodes: CountryCodeProvider.countryCodes,
                                                                         styleCategory: .secondary)
+        
+    private lazy var pinCodeView: GenericTextFieldView = {
+        let view = GenericTextFieldView(keyboardType: .default, styleCategory: .secondary)
+        view.validationCallback = { text -> Bool in
+            return text.isValidEmail()
+        }
+        return view
+    }()
     
     private lazy var legalNoteView: UIView = {
         let horizontalStackView = UIStackView()
@@ -113,6 +121,8 @@ public class PhoneVerificationViewController: UIViewController {
         
         self.view.addGradientView(GradientView(type: .primaryBackground))
         
+        let isPinCodeLogin = self.repository.isPinCodeLogin ?? false
+        
         // ScrollView
         self.view.addSubview(self.scrollView)
         self.scrollView.autoPinEdgesToSuperviewSafeArea()
@@ -142,7 +152,7 @@ public class PhoneVerificationViewController: UIViewController {
                            colorType: .secondaryText,
                            textAlignment: .left)
         stackView.addBlankSpace(space: 24.0)
-        stackView.addArrangedSubview(self.phoneNumberView)
+        stackView.addArrangedSubview(isPinCodeLogin ? self.pinCodeView : self.phoneNumberView)
         stackView.addBlankSpace(space: 8.0)
         stackView.addArrangedSubview(self.legalNoteView)
         stackView.addBlankSpace(space: 16.0)
@@ -155,9 +165,16 @@ public class PhoneVerificationViewController: UIViewController {
         stackView.addArrangedSubview(confirmButtonContainerView)
         
         // Initialization
-        self.phoneNumberView.isValid
-            .subscribe(onNext: { [weak self] _ in self?.updateUI() })
-            .disposed(by: self.disposeBag)
+        if isPinCodeLogin {
+            self.pinCodeView.isValid
+                .subscribe(onNext: {[weak self] _ in self?.updateUI() })
+                .disposed(by: self.disposeBag)
+            
+        } else {
+            self.phoneNumberView.isValid
+                .subscribe(onNext: { [weak self] _ in self?.updateUI() })
+                .disposed(by: self.disposeBag)
+        }
         
         self.legalNoteCheckBoxView.isCheckedSubject
             .subscribe(onNext: { [weak self] _ in self?.updateUI() })
@@ -182,29 +199,55 @@ public class PhoneVerificationViewController: UIViewController {
     // MARK: Actions
     
     @objc private func confirmButtonPressed() {
-        self.repository.submitPhoneNumber(phoneNumber: self.phoneNumberView.fullNumber)
-            .addProgress()
-            .subscribe(onSuccess: { [weak self] in
-                guard let self = self else { return }
-                self.phoneNumberView.clearError(clearErrorText: true)
-                self.view.endEditing(true)
-                self.navigator.showCodeValidation(countryCode: self.phoneNumberView.countryCode,
-                                                  phoneNumber: self.phoneNumberView.text,
-                                                  presenter: self)
-            }, onError: { [weak self] error in
-                guard let self = self else { return }
-                if let error = error as? RepositoryError, case .missingPhoneNumber = error {
-                    self.phoneNumberView.setError(errorText: error.localizedDescription)
-                } else {
-                    self.navigator.handleError(error: error, presenter: self)
-                }
-            }).disposed(by: self.disposeBag)
+        
+        let isPinCodeLogin = self.repository.isPinCodeLogin ?? false
+        
+        if isPinCodeLogin {
+            self.repository.emailLogin(email: self.pinCodeView.text)
+                .addProgress()
+                .subscribe(onSuccess: { [weak self] user in
+                    guard let self = self else { return }
+                    self.analytics.track(event: .setUserID("\(user.id)"))
+                    self.analytics.track(event: .userRegistration(self.phoneNumberView.countryCode))
+                    self.pinCodeView.clearError(clearErrorText: true)
+                    self.view.endEditing(true)
+                    self.navigator.onLoginCompleted(presenter: self)
+                }, onError: { [weak self] error in
+                    guard let self = self else { return }
+                    if let error = error as? RepositoryError, case .wrongPhoneValidationCode = error {
+                        self.pinCodeView.setError(errorText: error.localizedDescription)
+                    } else {
+                        self.navigator.handleError(error: error, presenter: self)
+                    }
+                }).disposed(by: self.disposeBag)
+        } else {
+            self.repository.submitPhoneNumber(phoneNumber: self.phoneNumberView.fullNumber)
+                .addProgress()
+                .subscribe(onSuccess: { [weak self] in
+                    guard let self = self else { return }
+                    self.phoneNumberView.clearError(clearErrorText: true)
+                    self.view.endEditing(true)
+                    self.navigator.showCodeValidation(countryCode: self.phoneNumberView.countryCode,
+                                                      phoneNumber: self.phoneNumberView.text,
+                                                      presenter: self)
+                }, onError: { [weak self] error in
+                    guard let self = self else { return }
+                    if let error = error as? RepositoryError, case .missingPhoneNumber = error {
+                        self.phoneNumberView.setError(errorText: error.localizedDescription)
+                    } else {
+                        self.navigator.handleError(error: error, presenter: self)
+                    }
+                }).disposed(by: self.disposeBag)
+        }
     }
     
     // MARK: Private Methods
     
     private func updateUI() {
-        self.confirmButton.isEnabled = self.phoneNumberView.isValid.value && self.legalNoteCheckBoxView.isCheckedSubject.value
+        let isPinCodeLogin = self.repository.isPinCodeLogin ?? false
+        print("\(isPinCodeLogin)")
+        let textFieldToCheck = isPinCodeLogin ? self.pinCodeView : self.phoneNumberView
+        self.confirmButton.isEnabled = textFieldToCheck.isValid.value && self.legalNoteCheckBoxView.isCheckedSubject.value
     }
     
     private func handleLabelInteractions(_ text: String) {

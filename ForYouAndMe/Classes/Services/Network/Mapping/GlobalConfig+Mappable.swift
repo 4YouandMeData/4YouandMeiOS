@@ -17,6 +17,7 @@ extension GlobalConfig: Mappable {
         try self.countryCodes = map.from("country_codes", transformation: Mapper.errorIfEmpty)
         try self.integrationDatas = map.from("supported_integrations", transformation: Mapper.extractIntegrationData)
         try self.onboardingSectionGroups = self.requiredStringMap.extractOnboardingSectionGroups()
+        try self.pinCodeLogin = map.from("pincode_login")
     }
 }
 

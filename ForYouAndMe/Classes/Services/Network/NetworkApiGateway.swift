@@ -280,6 +280,8 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             return "/v1/studies/\(studyId)/auth/verify_phone_number"
         case .verifyPhoneNumber:
             return "/v1/studies/\(studyId)/auth/login"
+        case .emailLogin:
+            return "/v1/studies/\(studyId)/auth/email_login"
         // Screening Section
         case .getScreeningSection:
             return "/v1/studies/\(studyId)/screening"
@@ -375,6 +377,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             return .get
         case .submitPhoneNumber,
              .verifyPhoneNumber,
+             .emailLogin,
              .createUserConsent,
              .notifyOnboardingCompleted,
              .sendOptInPermission,
@@ -401,7 +404,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         case .getGlobalConfig: return Bundle.getTestData(from: "TestGetGlobalConfig")
         // Login
         case .submitPhoneNumber: return "{}".utf8Encoded
-        case .verifyPhoneNumber:
+        case .verifyPhoneNumber, .emailLogin:
             return Constants.Test.OnboardingCompleted
             ? Bundle.getTestData(from: "TestGetUser")
             : Bundle.getTestData(from: "TestGetUserNoOnboarding")
@@ -497,6 +500,11 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             var params: [String: Any] = [:]
             params["phone_number"] = phoneNumber
             params["verification_code"] = secureCode
+            return .requestParameters(parameters: ["user": params], encoding: JSONEncoding.default)
+        case .emailLogin(let email):
+            var params: [String: Any] = [:]
+            params["email"] = email
+            params["password"] = "fake_password"
             return .requestParameters(parameters: ["user": params], encoding: JSONEncoding.default)
         case let .createUserConsent(email, firstName, lastName, signatureImage):
             return Task.createForUserContent(withEmail: email,
@@ -607,6 +615,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         switch self {
         case .getGlobalConfig,
              .submitPhoneNumber,
+             .emailLogin,
              .verifyPhoneNumber:
             return nil
         case .getScreeningSection,

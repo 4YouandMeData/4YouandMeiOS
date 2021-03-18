@@ -10,7 +10,7 @@ import Foundation
 struct User: Codable {
     let id: String
     let type: String
-    let phoneNumber: String
+    let phoneNumber: String?
     let email: String
     let isOnboardingCompleted: Bool
     let daysInStudy: Int
