@@ -44,10 +44,23 @@ class SurveyQuestionPickMany: UIView {
             checkBox.tag = Int(option.id) ?? -1
             checkBox.isCheckedSubject
                 .subscribe(onNext: { check in
+                    if check {
+                        if option.isNone == true {
+                            let isNotNoneOptions = options?.filter({$0.isNone == false || $0.isNone == nil})
+                            isNotNoneOptions?.forEach({ isNotNoneOption in
+                                self.answers.updateValue(false, forKey: "\(isNotNoneOption.id)")
+                            })
+                        } else {
+                            let isNoneOptions = options?.filter({$0.isNone == true})
+                            isNoneOptions?.forEach({ isNoneOption in
+                                self.answers.updateValue(false, forKey: "\(isNoneOption.id)")
+                            })
+                        }
+                    }
                     self.answers.updateValue(check, forKey: "\(checkBox.tag)")
                     let answers = self.answers.filter({ $1 == true }).map { $0.key }
                     self.delegate?.answerDidChange(self.surveyQuestion,
-                                                   answer: answers)
+                                                       answer: answers)
                 })
                 .disposed(by: self.disposeBag)
             

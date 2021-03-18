@@ -12,6 +12,7 @@ struct SurveyQuestionOption {
     let type: String
     
     let value: String
+    let isNone: Bool?
 }
 
 extension SurveyQuestionOption: JSONAPIMappable {
@@ -19,5 +20,6 @@ extension SurveyQuestionOption: JSONAPIMappable {
         case id
         case type
         case value = "text"
+        case isNone = "is_none"
     }
 }
