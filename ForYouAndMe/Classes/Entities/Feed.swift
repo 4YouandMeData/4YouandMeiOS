@@ -75,6 +75,7 @@ schedulable.success_page
         case schedulable
         case notifiable
         case rescheduledTimes = "rescheduled_times"
+        case meta
     }
     
     init(from decoder: Decoder) throws {
@@ -85,10 +86,14 @@ schedulable.success_page
         self.toDate = try container.decode(DateValue<ISO8601Strategy>.self, forKey: .toDate).wrappedValue
         self.fromDate = try container.decode(DateValue<ISO8601Strategy>.self, forKey: .fromDate).wrappedValue
         self.schedulable = try? container.decodeIfPresent(SchedulableDecodable.self, forKey: .schedulable)?.wrappedValue
-        self.notifiable = try? container.decodeIfPresent(NotifiableDecode.self, forKey: .notifiable)?.wrappedValue
-        guard self.schedulable != nil || self.notifiable != nil else {
+        let notifiable = try? container.decodeIfPresent(NotifiableDecode.self, forKey: .notifiable)?.wrappedValue
+        guard self.schedulable != nil || notifiable != nil else {
             throw FeedParsingError.missingBothSchedulableAndNotifiable
         }
+        
+        // Workaround to a backend issue (see code at the bottom of the current file)
+        let meta: FeedMeta? = try? container.decodeIfPresent(FeedMeta.self, forKey: .meta)
+        self.notifiable = notifiable?.convertWithFeedMeta(meta)
     }
 }
 
@@ -142,6 +147,74 @@ struct NotifiableDecode: Decodable {
             self.wrappedValue = .reward(reward: reward)
         } else {
             self.wrappedValue = nil
+        }
+    }
+}
+
+// The following code is a workaround for a backend issue, which has trouble replacing
+// variables in the title string of Reward feeds
+
+struct FeedMeta: Decodable {
+    @FailableArrayExcludeInvalid
+    var resolvedTemplates: [FeedResolvedTemplate]?
+    
+    enum CodingKeys: String, CodingKey {
+        case resolvedTemplates = "resolved_templates"
+    }
+}
+
+struct FeedResolvedTemplate: Decodable {
+    let variable: String?
+    let resolved: String?
+    
+    enum CodingKeys: String, CodingKey {
+        case variable
+        case resolved
+    }
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.variable = try? container.decodeIfPresent(String.self, forKey: .variable)
+        if let resolvedString = try? container.decodeIfPresent(String.self, forKey: .resolved) {
+            self.resolved = resolvedString
+        } else if let resolvedInt = try? container.decodeIfPresent(Int.self, forKey: .resolved) {
+            self.resolved = "\(resolvedInt)"
+        } else {
+            self.resolved = nil
+        }
+    }
+}
+
+fileprivate extension String {
+    func convertWithFeedMeta(_ feedMeta: FeedMeta) -> String {
+        let wrappedVariables = self.matches(for: "\\{\\{(.*?)\\}\\}")
+        var string = self
+        wrappedVariables.forEach { wrappedVariable in
+            let variable = wrappedVariable.replacingOccurrences(of: "{{", with: "").replacingOccurrences(of: "}}", with: "")
+            if let matchingResolvedTemplate = feedMeta.resolvedTemplates?.first(where: { $0.variable == variable }),
+               let replaceingString = matchingResolvedTemplate.resolved {
+                string = string.replacingOccurrences(of: wrappedVariable, with: replaceingString)
+            }
+        }
+        return string
+    }
+}
+
+fileprivate extension Notifiable {
+    func convertWithFeedMeta(_ feedMeta: FeedMeta?) -> Notifiable {
+        guard let feedMeta = feedMeta else {
+            return self
+        }
+        switch self {
+        case .educational(var item):
+            item.title = item.title?.convertWithFeedMeta(feedMeta)
+            return .educational(educational: item)
+        case .alert(var item):
+            item.title = item.title?.convertWithFeedMeta(feedMeta)
+            return .alert(alert: item)
+        case .reward(var item):
+            item.title = item.title?.convertWithFeedMeta(feedMeta)
+            return .reward(reward: item)
         }
     }
 }

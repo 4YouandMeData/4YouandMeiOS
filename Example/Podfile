@@ -14,7 +14,7 @@ target 'ForYouAndMe_Example' do
     pod 'Nimble', '~> 7.0'
     pod 'FBSnapshotTestCase' , '~> 2.1.4'
     pod 'Nimble-Snapshots' , '~> 6.3.0'
-    pod 'SwiftLint'
+    pod 'SwiftLint', '0.42.0'
   end
 end
 

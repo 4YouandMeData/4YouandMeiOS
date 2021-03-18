@@ -50,7 +50,7 @@ Pod::Spec.new do |s|
   s.dependency 'Firebase/Messaging', '~> 7.2.0'
   s.dependency 'PhoneNumberKit', '3.3.1'
   s.dependency 'CountryPickerView', '~> 3.1.2'
-  s.dependency 'Japx/RxCodableMoya', '~> 3.0.0'
+  s.dependency 'BLZJapx/RxCodableMoya', '~> 3.0.0'
   s.dependency 'UberSignature', '~> 1.0.3'
   s.dependency 'RxSwiftExt', '~> 5.2.0'
   s.dependency 'FYAMResearchKit', '~> 3.0.0'

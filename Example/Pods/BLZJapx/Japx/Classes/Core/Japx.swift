@@ -343,6 +343,7 @@ private extension Japx.Decoder {
         var attributes = (try? object.dictionary(for: Consts.APIKeys.attributes)) ?? Parameters()
         attributes[Consts.APIKeys.type] = object[Consts.APIKeys.type]
         attributes[Consts.APIKeys.id] = object[Consts.APIKeys.id]
+        attributes[Consts.APIKeys.meta] = object[Consts.APIKeys.meta]
         
         let relationshipsReferences = object.asDictionary(from: Consts.APIKeys.relationships) ?? Parameters()
         

@@ -1,5 +1,5 @@
 framework module Japx {
-  umbrella header "Japx-umbrella.h"
+  umbrella header "BLZJapx-umbrella.h"
 
   export *
   module * { export * }
