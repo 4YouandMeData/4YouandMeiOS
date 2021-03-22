@@ -7,13 +7,13 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0D9B79152608AF1500D7D3E0 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 0D9B78E52608AEF100D7D3E0 /* GoogleService-Info.plist */; };
 		607FACD61AFB9204008FA782 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 607FACD51AFB9204008FA782 /* AppDelegate.swift */; };
 		607FACDD1AFB9204008FA782 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 607FACDC1AFB9204008FA782 /* Images.xcassets */; };
 		607FACE01AFB9204008FA782 /* LaunchScreen.xib in Resources */ = {isa = PBXBuildFile; fileRef = 607FACDE1AFB9204008FA782 /* LaunchScreen.xib */; };
 		607FACEC1AFB9204008FA782 /* Tests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 607FACEB1AFB9204008FA782 /* Tests.swift */; };
 		87C58C49289B54E588888596 /* Pods_ForYouAndMe_Tests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DFD45AAF0B51A0665ACCA092 /* Pods_ForYouAndMe_Tests.framework */; };
 		89410E27255C603C00A3B57C /* ProjectInfo.plist in Resources */ = {isa = PBXBuildFile; fileRef = 89410E26255C603C00A3B57C /* ProjectInfo.plist */; };
-		894377A42451C39B00795921 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 894377A32451C39B00795921 /* GoogleService-Info.plist */; };
 		894A3B022566DC82005460AC /* OnboardingSectionProviderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 894A3B012566DC82005460AC /* OnboardingSectionProviderTests.swift */; };
 		89F730582514F09C00DF9503 /* StudyVideo.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = 89F730572514F09C00DF9503 /* StudyVideo.mp4 */; };
 		E0F5C7B459467BD549FAB4D4 /* Pods_ForYouAndMe_Example.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F4219D987F4DF705F404859C /* Pods_ForYouAndMe_Example.framework */; };
@@ -32,6 +32,7 @@
 /* Begin PBXFileReference section */
 		03978827A254ED1A837CCBA2 /* LICENSE */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; name = LICENSE; path = ../LICENSE; sourceTree = "<group>"; };
 		07D9739BE2A693D117FD9022 /* Pods-ForYouAndMe_Tests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ForYouAndMe_Tests.debug.xcconfig"; path = "Target Support Files/Pods-ForYouAndMe_Tests/Pods-ForYouAndMe_Tests.debug.xcconfig"; sourceTree = "<group>"; };
+		0D9B78E52608AEF100D7D3E0 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		4BCA341441201CB8A7DED062 /* ForYouAndMe.podspec */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; name = ForYouAndMe.podspec; path = ../ForYouAndMe.podspec; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.ruby; };
 		4EA8493658FAE6C751DAE981 /* Pods-ForYouAndMe_Tests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ForYouAndMe_Tests.release.xcconfig"; path = "Target Support Files/Pods-ForYouAndMe_Tests/Pods-ForYouAndMe_Tests.release.xcconfig"; sourceTree = "<group>"; };
 		52AD2FE27C4AEF1395FB8943 /* README.md */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = net.daringfireball.markdown; name = README.md; path = ../README.md; sourceTree = "<group>"; };
@@ -44,7 +45,6 @@
 		607FACEA1AFB9204008FA782 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		607FACEB1AFB9204008FA782 /* Tests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests.swift; sourceTree = "<group>"; };
 		89410E26255C603C00A3B57C /* ProjectInfo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = ProjectInfo.plist; sourceTree = "<group>"; };
-		894377A32451C39B00795921 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		894A3B012566DC82005460AC /* OnboardingSectionProviderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingSectionProviderTests.swift; sourceTree = "<group>"; };
 		894BEE6B24AE52DD00254DC6 /* ForYouAndMe_Example.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ForYouAndMe_Example.entitlements; sourceTree = "<group>"; };
 		89F730572514F09C00DF9503 /* StudyVideo.mp4 */ = {isa = PBXFileReference; lastKnownFileType = file; path = StudyVideo.mp4; sourceTree = "<group>"; };
@@ -132,7 +132,7 @@
 		607FACD31AFB9204008FA782 /* Supporting Files */ = {
 			isa = PBXGroup;
 			children = (
-				894377A32451C39B00795921 /* GoogleService-Info.plist */,
+				0D9B78E52608AEF100D7D3E0 /* GoogleService-Info.plist */,
 				89410E26255C603C00A3B57C /* ProjectInfo.plist */,
 				607FACD41AFB9204008FA782 /* Info.plist */,
 			);
@@ -258,9 +258,9 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				894377A42451C39B00795921 /* GoogleService-Info.plist in Resources */,
 				89F730582514F09C00DF9503 /* StudyVideo.mp4 in Resources */,
 				607FACE01AFB9204008FA782 /* LaunchScreen.xib in Resources */,
+				0D9B79152608AF1500D7D3E0 /* GoogleService-Info.plist in Resources */,
 				607FACDD1AFB9204008FA782 /* Images.xcassets in Resources */,
 				89410E27255C603C00A3B57C /* ProjectInfo.plist in Resources */,
 			);
