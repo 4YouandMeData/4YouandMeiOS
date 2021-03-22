@@ -17,6 +17,7 @@ class SurveyQuestionPickMany: UIView {
     private weak var delegate: SurveyQuestionProtocol?
     
     private let stackView = UIStackView.create(withAxis: .vertical)
+    private var checkBoxAnswers: [GenericCheckboxView] = []
     
     private final let disposeBag = DisposeBag()
     
@@ -48,11 +49,19 @@ class SurveyQuestionPickMany: UIView {
                         if option.isNone == true {
                             let isNotNoneOptions = options?.filter({$0.isNone == false || $0.isNone == nil})
                             isNotNoneOptions?.forEach({ isNotNoneOption in
+                                let isNotNoneViews = self.checkBoxAnswers.filter({$0.tag == Int(isNotNoneOption.id)})
+                                isNotNoneViews.forEach({view in
+                                    view.isCheckedSubject.accept(false)
+                                })
                                 self.answers.updateValue(false, forKey: "\(isNotNoneOption.id)")
                             })
                         } else {
                             let isNoneOptions = options?.filter({$0.isNone == true})
                             isNoneOptions?.forEach({ isNoneOption in
+                                let isNoneViews = self.checkBoxAnswers.filter({$0.tag == Int(isNoneOption.id)})
+                                isNoneViews.forEach({view in
+                                    view.isCheckedSubject.accept(false)
+                                })
                                 self.answers.updateValue(false, forKey: "\(isNoneOption.id)")
                             })
                         }
@@ -64,6 +73,7 @@ class SurveyQuestionPickMany: UIView {
                 })
                 .disposed(by: self.disposeBag)
             
+            self.checkBoxAnswers.append(checkBox)
             let checkBoxContainerView = UIView()
             checkBoxContainerView.addSubview(checkBox)
             checkBox.autoPinEdge(toSuperviewEdge: .leading)
