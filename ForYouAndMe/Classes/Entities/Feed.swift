@@ -176,7 +176,15 @@ struct FeedResolvedTemplate: Decodable {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.variable = try? container.decodeIfPresent(String.self, forKey: .variable)
         if let resolvedString = try? container.decodeIfPresent(String.self, forKey: .resolved) {
-            self.resolved = resolvedString
+            let dateFormatterGet = DateFormatter()
+            dateFormatterGet.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZ"
+            let someDate = resolvedString
+
+            if dateFormatterGet.date(from: someDate) != nil {
+                self.resolved = dateFormatterGet.date(from: someDate)?.string(withFormat: "MMM dd")
+            } else {
+                self.resolved = resolvedString
+            }
         } else if let resolvedInt = try? container.decodeIfPresent(Int.self, forKey: .resolved) {
             self.resolved = "\(resolvedInt)"
         } else {
