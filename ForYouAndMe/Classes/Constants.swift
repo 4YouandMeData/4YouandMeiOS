@@ -67,6 +67,7 @@ struct Constants {
         static let TrackRelativeLocation: Bool = true
         static let WaitingTimeForLocation: DispatchTimeInterval = .seconds(10)
         static let MaxValidLocationAge: TimeInterval = 15.0
+        static let PinCodeSuffix: String = ProjectInfo.PinCodeSuffix
     }
     
     struct Url {

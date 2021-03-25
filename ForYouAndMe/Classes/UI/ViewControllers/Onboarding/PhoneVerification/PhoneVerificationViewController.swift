@@ -59,7 +59,7 @@ public class PhoneVerificationViewController: UIViewController {
     private lazy var pinCodeView: GenericTextFieldView = {
         let view = GenericTextFieldView(keyboardType: .default, styleCategory: .secondary)
         view.validationCallback = { text -> Bool in
-            return text.isValidEmail()
+            return text.count >= 6
         }
         return view
     }()
@@ -203,7 +203,7 @@ public class PhoneVerificationViewController: UIViewController {
         let isPinCodeLogin = self.repository.isPinCodeLogin ?? false
         
         if isPinCodeLogin {
-            self.repository.emailLogin(email: self.pinCodeView.text)
+            self.repository.emailLogin(email: self.pinCodeView.text + Constants.Misc.PinCodeSuffix)
                 .addProgress()
                 .subscribe(onSuccess: { [weak self] user in
                     guard let self = self else { return }
