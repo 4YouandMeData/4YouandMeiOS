@@ -115,14 +115,14 @@ class NetworkApiGateway: ApiGateway {
         self.sendShared(request: request, errorType: errorType)
             .map(to: [T].self)
             .catchError({ (error) in
-            if let error = error as? ApiError {
-                // Network or Server Error
-                return Single.error(error)
-            } else {
-                debugPrint("Response map error: \(error)")
-                return Single.error(ApiError.cannotParseData)
-            }
-        })
+                if let error = error as? ApiError {
+                    // Network or Server Error
+                    return Single.error(error)
+                } else {
+                    debugPrint("Response map error: \(error)")
+                    return Single.error(ApiError.cannotParseData)
+                }
+            })
     }
     
     func sendExcludeInvalid<T: Mappable, E: Mappable>(request: ApiRequest, errorType: E.Type) -> Single<[T]> {
@@ -139,8 +139,8 @@ class NetworkApiGateway: ApiGateway {
     
     func send<T: JSONAPIMappable, E: Mappable>(request: ApiRequest, errorType: E.Type) -> Single<T> {
         self.sendShared(request: request, errorType: errorType)
-        .mapCodableJSONAPI(includeList: T.includeList, keyPath: T.keyPath)
-        .handleMapError()
+            .mapCodableJSONAPI(includeList: T.includeList, keyPath: T.keyPath)
+            .handleMapError()
     }
     
     func send<T: JSONAPIMappable, E: Mappable>(request: ApiRequest, errorType: E.Type) -> Single<T?> {
@@ -153,7 +153,7 @@ class NetworkApiGateway: ApiGateway {
                 } else {
                     return Single.error(error)
                 }
-        }
+            }
     }
     
     func send<T: JSONAPIMappable, E: Mappable>(request: ApiRequest, errorType: E.Type) -> Single<[T]> {
@@ -188,7 +188,7 @@ class NetworkApiGateway: ApiGateway {
 // MARK: - Extension (Single<T>)
 
 fileprivate extension PrimitiveSequence where Trait == SingleTrait {
-
+    
     func handleMapError() -> Single<Element> {
         return catchError({ (error) -> Single<Element> in
             if let error = error as? ApiError {
@@ -248,7 +248,7 @@ fileprivate extension PrimitiveSequence where Trait == SingleTrait, Element == R
                 }
                 // Its an error and can't decode error details from server, push generic message
                 return Single.error(ApiError.network)
-        }
+            }
     }
     
     private func handleAccessToken(response: Response, storage: NetworkStorage) {
@@ -406,8 +406,8 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         case .submitPhoneNumber: return "{}".utf8Encoded
         case .verifyPhoneNumber, .emailLogin:
             return Constants.Test.OnboardingCompleted
-            ? Bundle.getTestData(from: "TestGetUser")
-            : Bundle.getTestData(from: "TestGetUserNoOnboarding")
+                ? Bundle.getTestData(from: "TestGetUser")
+                : Bundle.getTestData(from: "TestGetUserNoOnboarding")
         // Screening Section
         case .getScreeningSection: return Bundle.getTestData(from: "TestGetScreeningSection")
         // Informed Consent Section
@@ -444,20 +444,20 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         // User
         case .getUser:
             return Constants.Test.OnboardingCompleted
-            ? Bundle.getTestData(from: "TestGetUser")
-            : Bundle.getTestData(from: "TestGetUserNoOnboarding")
+                ? Bundle.getTestData(from: "TestGetUser")
+                : Bundle.getTestData(from: "TestGetUserNoOnboarding")
         case .sendUserInfoParameters:
             return Constants.Test.OnboardingCompleted
-            ? Bundle.getTestData(from: "TestGetUser")
-            : Bundle.getTestData(from: "TestGetUserNoOnboarding")
+                ? Bundle.getTestData(from: "TestGetUser")
+                : Bundle.getTestData(from: "TestGetUserNoOnboarding")
         case .sendUserTimeZone:
             return Constants.Test.OnboardingCompleted
-            ? Bundle.getTestData(from: "TestGetUser")
-            : Bundle.getTestData(from: "TestGetUserNoOnboarding")
+                ? Bundle.getTestData(from: "TestGetUser")
+                : Bundle.getTestData(from: "TestGetUserNoOnboarding")
         case .sendPushToken:
             return Constants.Test.OnboardingCompleted
-            ? Bundle.getTestData(from: "TestGetUser")
-            : Bundle.getTestData(from: "TestGetUserNoOnboarding")
+                ? Bundle.getTestData(from: "TestGetUser")
+                : Bundle.getTestData(from: "TestGetUserNoOnboarding")
         // User Data
         case .getUserData: return Bundle.getTestData(from: "TestGetUserData")
         case .getUserDataAggregation(let period):
@@ -569,7 +569,24 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
                 var result = result
                 var userParameter: [String: Any] = [:]
                 userParameter["question_id"] = parameter.question.id
-                userParameter["answer"] = parameter.answer
+                
+                // Pick Many Answers
+                if let pickManyResponses = parameter.answer as? [SurveyPickResponse] {
+                    let pickManyResponsesEncoded: [[String: Any]] = pickManyResponses.reduce([]) { (result, pickManyResponse) in
+                        var result = result
+                        if let data = try? JSONEncoder().encode(pickManyResponse),
+                           let dictionary = try? JSONSerialization.jsonObject(with: data, options: .allowFragments) as? [String: Any] {
+                            result.append(dictionary)
+                        }
+                        return result
+                    }
+                    userParameter["answer"] = pickManyResponsesEncoded
+                } else if let data = try? JSONEncoder().encode(parameter.answer as? SurveyPickResponse), // Pick One Answers
+                          let dictionary = try? JSONSerialization.jsonObject(with: data, options: .allowFragments) as? [String: Any] {
+                    userParameter["answer"] = dictionary
+                } else {
+                    userParameter["answer"] = parameter.answer // Other survey Answers
+                }
                 result.append(userParameter)
                 return result
             }
@@ -600,7 +617,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             let imageDataProvider = MultipartFormData(provider: MultipartFormData.FormDataProvider.data(file.data),
                                                       name: "task[attachment]",
                                                       fileName: "VideoDiary.\(file.fileExtension.name)",
-                mimeType: file.fileExtension.mimeType)
+                                                      mimeType: file.fileExtension.mimeType)
             return [imageDataProvider]
         default:
             return []
@@ -653,11 +670,11 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
     
     private func getDefaultFeedsNetworkTask(forPaginationInfo paginationInfo: PaginationInfo?) -> Task {
         var params: [String: Any] = [:]
-//        params["q"] = [
-//            ["active": true],
-//            ["not_completed": true],
-//            ["s": "from desc"]
-//        ]
+        //        params["q"] = [
+        //            ["active": true],
+        //            ["not_completed": true],
+        //            ["s": "from desc"]
+        //        ]
         if let paginationInfo = paginationInfo {
             params["page"] = paginationInfo.pageIndex + 1 // Server starts to count from 1
             params["per_page"] = paginationInfo.pageSize

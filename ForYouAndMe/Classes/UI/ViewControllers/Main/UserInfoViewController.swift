@@ -202,6 +202,8 @@ extension UserInfoViewController: GenericTextFieldViewDelegate {
     func genericTextFieldShouldReturn(textField: GenericTextFieldView) -> Bool {
         self.view.endEditing(true)
     }
+    
+    func genericTextFieldDidChange(textField: GenericTextFieldView) {}
 }
 
 private extension GenericTextFieldView {

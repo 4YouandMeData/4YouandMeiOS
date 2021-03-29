@@ -80,12 +80,70 @@ class SurveyQuestionPickOne: UIView {
             
             self.stackView.addArrangedSubview(horizontalStackView)
             self.stackView.addBlankSpace(space: 20)
+            
+            if option.isOther == true {
+                let horizontalStackView = UIStackView()
+                horizontalStackView.axis = .horizontal
+                let tag = Int(String(repeating: option.id, count: 3))
+                horizontalStackView.tag = tag ?? 111
+                // Label
+                let answerTextField = GenericTextFieldView(keyboardType: .default, styleCategory: .primary)
+                answerTextField.delegate = self
+                answerTextField.textField.placeholder = StringsProvider.string(forKey: .placeholderOtherField)
+                let answerContainerView = UIView()
+                answerContainerView.addSubview(answerTextField)
+                answerTextField.autoPinEdge(toSuperviewEdge: .leading)
+                answerTextField.autoPinEdge(toSuperviewEdge: .trailing)
+                answerTextField.autoPinEdge(toSuperviewEdge: .top, withInset: 0, relation: .greaterThanOrEqual)
+                answerTextField.autoPinEdge(toSuperviewEdge: .bottom, withInset: 0, relation: .greaterThanOrEqual)
+                answerTextField.autoAlignAxis(toSuperviewAxis: .horizontal)
+                horizontalStackView.addArrangedSubview(answerContainerView)
+                horizontalStackView.isHidden = true
+                self.stackView.addArrangedSubview(horizontalStackView)
+            }
+            
+            if option.isOther == true {
+                let isOtherView = self.getIsOtherView(tag: option.id)
+                UIView.animate(withDuration: 0.2) {
+                    isOtherView?.isHidden = !(self.currentIndexSelected == button.tag)
+                    let textfield = isOtherView?.findViews(subclassOf: GenericTextFieldView.self).first
+                    textfield?.text = ""
+                }
+            }
         })
     }
     
     @objc func buttonPressed(button: UIButton) {
         self.currentIndexSelected = button.tag
-        self.delegate?.answerDidChange(self.surveyQuestion, answer: "\(self.currentIndexSelected)")
+        self.updateAnswers()
         self.refresh()
+    }
+    
+    private func getIsOtherView(tag: String) -> UIView? {
+        let tag = Int(String(repeating: tag, count: 3))
+        let view = self.stackView.subviews.filter({$0.tag == tag}).first
+        return view
+    }
+    
+    private func updateAnswers() {
+        var surveyResponse: SurveyPickResponse = SurveyPickResponse(answerId: "\(self.currentIndexSelected)")
+        let isOther = self.getIsOtherView(tag: "\(self.currentIndexSelected)")
+        if isOther != nil {
+            let textfield = isOther?.findViews(subclassOf: GenericTextFieldView.self).first
+            surveyResponse.answerText = textfield?.text
+        }
+        self.delegate?.answerDidChange(self.surveyQuestion,
+                                       answer: surveyResponse)
+    }
+}
+
+extension SurveyQuestionPickOne: GenericTextFieldViewDelegate {
+    func genericTextFieldShouldReturn(textField: GenericTextFieldView) -> Bool {
+        self.updateAnswers()
+        return self.endEditing(true)
+    }
+    
+    func genericTextFieldDidChange(textField: GenericTextFieldView) {
+        self.updateAnswers()
     }
 }

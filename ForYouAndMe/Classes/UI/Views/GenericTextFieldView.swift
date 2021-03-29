@@ -12,6 +12,7 @@ import RxCocoa
 
 protocol GenericTextFieldViewDelegate: class {
     func genericTextFieldShouldReturn(textField: GenericTextFieldView) -> Bool
+    func genericTextFieldDidChange(textField: GenericTextFieldView)
 }
 
 enum GenericTextFieldStyleCategory: StyleCategory {
@@ -188,6 +189,7 @@ class GenericTextFieldView: UIView {
     @objc func textFieldDidChange(_ textField: UITextField) {
         self.clearError(clearErrorText: false)
         self.checkValidation()
+        self.delegate?.genericTextFieldDidChange(textField: self)
     }
     
     // MARK: Private Methods

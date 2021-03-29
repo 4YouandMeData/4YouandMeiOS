@@ -28,12 +28,12 @@ extension SurveyResult {
             return false
         case .pickOne:
             guard let options = self.question.options else { return false }
-            guard let optionIdentifier = self.answer as? String else { return false }
-            return options.contains(where: { $0.id == optionIdentifier })
+            guard let optionIdentifier = self.answer as? SurveyPickResponse else { return false }
+            return options.contains(where: { $0.id == optionIdentifier.answerId })
         case .pickMany:
             guard let options = self.question.options else { return false }
-            guard let optionIdentifiers = self.answer as? [String] else { return false }
-            return optionIdentifiers.allSatisfy(options.map { $0.id }.contains)
+            guard let optionIdentifiers = self.answer as? [SurveyPickResponse] else { return false }
+            return optionIdentifiers.map({$0.answerId}).allSatisfy(options.map { $0.id }.contains)
         case .textInput:
             guard let text = self.answer as? String else { return false }
             if let maxCharacters = self.question.maxCharacters, text.count > maxCharacters { return false }

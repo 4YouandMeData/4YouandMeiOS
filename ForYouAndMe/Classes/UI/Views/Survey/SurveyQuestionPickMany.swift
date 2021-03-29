@@ -66,10 +66,16 @@ class SurveyQuestionPickMany: UIView {
                             })
                         }
                     }
+                    if option.isOther == true {
+                        let isOtherView = self.getIsOtherView(tag: option.id)
+                        UIView.animate(withDuration: 0.2) {
+                            isOtherView?.isHidden = !check
+                            let textfield = isOtherView?.findViews(subclassOf: GenericTextFieldView.self).first
+                            textfield?.text = ""
+                        }
+                    }
                     self.answers.updateValue(check, forKey: "\(checkBox.tag)")
-                    let answers = self.answers.filter({ $1 == true }).map { $0.key }
-                    self.delegate?.answerDidChange(self.surveyQuestion,
-                                                       answer: answers)
+                    self.updateAnswers()
                 })
                 .disposed(by: self.disposeBag)
             
@@ -101,10 +107,87 @@ class SurveyQuestionPickMany: UIView {
             
             self.stackView.addArrangedSubview(horizontalStackView)
             self.stackView.addBlankSpace(space: 20)
+            if option.isOther == true {
+                let horizontalStackView = UIStackView()
+                horizontalStackView.axis = .horizontal
+                let tag = Int(String(repeating: option.id, count: 3))
+                horizontalStackView.tag = tag ?? 111
+                // Label
+                let answerTextField = GenericTextFieldView(keyboardType: .default, styleCategory: .primary)
+                answerTextField.delegate = self
+                answerTextField.textField.placeholder = StringsProvider.string(forKey: .placeholderOtherField)
+                let answerContainerView = UIView()
+                answerContainerView.addSubview(answerTextField)
+                answerTextField.autoPinEdge(toSuperviewEdge: .leading)
+                answerTextField.autoPinEdge(toSuperviewEdge: .trailing)
+                answerTextField.autoPinEdge(toSuperviewEdge: .top, withInset: 0, relation: .greaterThanOrEqual)
+                answerTextField.autoPinEdge(toSuperviewEdge: .bottom, withInset: 0, relation: .greaterThanOrEqual)
+                answerTextField.autoAlignAxis(toSuperviewAxis: .horizontal)
+                horizontalStackView.addArrangedSubview(answerContainerView)
+                horizontalStackView.isHidden = true
+                self.stackView.addArrangedSubview(horizontalStackView)
+            }
         })
     }
     
     required init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+    
+    private func getIsOtherView(tag: String) -> UIView? {
+        let tag = Int(String(repeating: tag, count: 3))
+        let view = self.stackView.subviews.filter({$0.tag == tag}).first
+        return view
+    }
+    
+    func updateAnswers() {
+        let answers = self.answers.filter({ $1 == true })
+            .map { $0.key }
+        
+        var surveyResponses: [SurveyPickResponse] = []
+        answers.forEach { answerTag in
+            var surveyResponse: SurveyPickResponse = SurveyPickResponse(answerId: answerTag)
+            let isOther = self.getIsOtherView(tag: answerTag)
+            if isOther != nil {
+                let textfield = isOther?.findViews(subclassOf: GenericTextFieldView.self).first
+                surveyResponse.answerText = textfield?.text
+            }
+            surveyResponses.append(surveyResponse)
+        }
+        self.delegate?.answerDidChange(self.surveyQuestion,
+                                           answer: surveyResponses)
+    }
+}
+
+extension SurveyQuestionPickMany: GenericTextFieldViewDelegate {
+    func genericTextFieldShouldReturn(textField: GenericTextFieldView) -> Bool {
+        self.updateAnswers()
+        return self.endEditing(true)
+    }
+    
+    func genericTextFieldDidChange(textField: GenericTextFieldView) {
+        self.updateAnswers()
+    }
+}
+
+struct SurveyPickResponse: Equatable {
+    var answerId: String
+    var answerText: String?
+}
+
+extension SurveyPickResponse: Codable {
+    enum CodingKeys: String, CodingKey {
+        case answerId = "answer_id"
+        case answerText = "answer_text"
+    }
+}
+
+extension UIView {
+    func findViews<T: UIView>(subclassOf: T.Type) -> [T] {
+        return recursiveSubviews.compactMap { $0 as? T }
+    }
+
+    var recursiveSubviews: [UIView] {
+        return subviews + subviews.flatMap { $0.recursiveSubviews }
     }
 }

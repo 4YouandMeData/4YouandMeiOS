@@ -107,6 +107,7 @@ enum StringKey: String, CaseIterable, CodingKey {
     // Task
     case taskStartButton = "TASK_START_BUTTON"
     case taskRemindMeLater = "TASK_REMIND_ME_LATER"
+    case placeholderOtherField = "OTHER_ANSWER_PLACEHOLDER"
     // Activity
     case activityButtonDefault = "ACTIVITY_BUTTON_DEFAULT"
     // Quick Activity
