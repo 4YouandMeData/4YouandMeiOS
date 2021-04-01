@@ -75,9 +75,13 @@ extension SurveyResult {
         switch self.question.questionType {
         case .numerical: return nil
         case .pickOne:
-            guard let optionIdentifier = self.answer as? String else { return nil }
-            return [optionIdentifier]
-        case .pickMany: return self.answer as? [String]
+            guard let optionIdentifier = self.answer as? SurveyPickResponse else { return nil }
+            let optionId = optionIdentifier.answerId
+            return [optionId]
+        case .pickMany:
+            guard let answers = self.answer as? [SurveyPickResponse] else { return nil }
+            let answersIds = answers.map({$0.answerId})
+            return answersIds
         case .textInput: return nil
         case .dateInput: return nil
         case .scale: return nil
