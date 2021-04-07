@@ -153,6 +153,7 @@ enum StringKey: String, CaseIterable, CodingKey {
     case aboutYouAppsAndDevices = "ABOUT_YOU_APPS_AND_DEVICES"
     case aboutYouReviewConsent = "ABOUT_YOU_REVIEW_CONSENT"
     case aboutYouPermissions = "ABOUT_YOU_PERMISSIONS"
+    case aboutYouDailySurveyTiming = "ABOUT_YOU_DAILY_SURVEY_TIMING_TITLE"
     case disclaimerFooter = "ABOUT_YOU_DISCLAIMER"
     // User Info
     case userInfoButtonEdit = "PROFILE_USER_INFO_BUTTON_EDIT"
@@ -167,6 +168,8 @@ enum StringKey: String, CaseIterable, CodingKey {
     case connectMessage = "YOUR_APPS_AND_DEVICES_CONNECT"
     case deauthorizeMessage = "YOUR_APPS_AND_DEVICES_DEAUTHORIZE"
     
+    // DailySurvey Timing
+    case dailySurveyTimingDescription = "ABOUT_YOU_DAILY_SURVEY_TIMING_DESCRIPTION"
     // Generic
     case genericInfoTitle = "GENERIC_INFO_TITLE"
     // Errors

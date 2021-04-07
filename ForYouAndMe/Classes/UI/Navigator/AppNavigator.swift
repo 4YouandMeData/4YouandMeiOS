@@ -506,6 +506,11 @@ class AppNavigator {
         navigationController.pushViewController(permissionViewController, animated: true)
     }
     
+    public func showSurveySchedule(navigationController: UINavigationController, title: String) {
+        let permissionViewController = SurveyScheduleViewController(withTitle: title)
+        navigationController.pushViewController(permissionViewController, animated: true)
+    }
+    
     // MARK: Progress HUD
     
     public static func pushProgressHUD() {

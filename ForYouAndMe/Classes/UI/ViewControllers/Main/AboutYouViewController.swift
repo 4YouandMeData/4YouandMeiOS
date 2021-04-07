@@ -111,6 +111,19 @@ class AboutYouViewController: UIViewController {
                                               })
         self.scrollStackView.stackView.addArrangedSubview(permissions)
         
+        let surveyScheduleTitle = StringsProvider.string(forKey: .aboutYouDailySurveyTiming)
+        let surveySchedule = GenericListItemView(withTitle: surveyScheduleTitle,
+                                              image: ImagePalette.templateImage(withName: .timingIcon) ?? UIImage(),
+                                              colorType: .primary,
+                                              gestureCallback: { [weak self] in
+                                                guard let navigationController = self?.navigationController else {
+                                                    fatalError("Navigation Controller is not present")
+                                                }
+                                                self?.navigator.showSurveySchedule(navigationController: navigationController,
+                                                                                title: surveyScheduleTitle)
+                                              })
+        self.scrollStackView.stackView.addArrangedSubview(surveySchedule)
+        
         self.scrollStackView.stackView.addBlankSpace(space: 57)
         let disclaimerFooter = StringsProvider.string(forKey: .disclaimerFooter)
         self.scrollStackView.stackView.addLabel(withText: disclaimerFooter,

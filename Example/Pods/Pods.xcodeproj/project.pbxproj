@@ -204,6 +204,7 @@
 		0CE90941B197B4FFE580DFA9CBD0F5A2 /* Delegate+DataSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3857472C9484A317FBBF7A00392D9D2F /* Delegate+DataSource.swift */; };
 		0CF400BC2769EE75E09645F6D92265AF /* FIRCLSFABNetworkClient.m in Sources */ = {isa = PBXBuildFile; fileRef = 3E2BE4A0A82120B62748AB2AAE51D73E /* FIRCLSFABNetworkClient.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
 		0D2C3E15261D887C003F5FFD /* NineHoleTask.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D2C3E14261D887C003F5FFD /* NineHoleTask.swift */; };
+		0D2C3E52261E50FC003F5FFD /* SurveyScheduleViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D2C3E51261E50FC003F5FFD /* SurveyScheduleViewController.swift */; };
 		0D3B86E5C1AA658F0F9A6A18FBB0AB61 /* Producer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97F9B1CB332F1D7BECBD2BB459AB2561 /* Producer.swift */; };
 		0D4CCE87065A1B16DA29EBCF4F4C9BA9 /* MainScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 494252A2C371F4F3B1609EDC8B861AD1 /* MainScheduler.swift */; };
 		0D5656DB1744275CAB16C6EF1C78D579 /* ORKHolePegTestPlaceStepViewController.h in Headers */ = {isa = PBXBuildFile; fileRef = 36895F374D5603CB7D9904E940571848 /* ORKHolePegTestPlaceStepViewController.h */; settings = {ATTRIBUTES = (Private, ); }; };
@@ -3662,6 +3663,7 @@
 		0D21C34D5C18F39B9CEDE3F962882500 /* Cancelable.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = Cancelable.swift; path = RxSwift/Cancelable.swift; sourceTree = "<group>"; };
 		0D2AFD42E70746427801D064C4AC0996 /* ORKAnswerFormat.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = ORKAnswerFormat.m; path = ResearchKit/Common/ORKAnswerFormat.m; sourceTree = "<group>"; };
 		0D2C3E14261D887C003F5FFD /* NineHoleTask.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NineHoleTask.swift; sourceTree = "<group>"; };
+		0D2C3E51261E50FC003F5FFD /* SurveyScheduleViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SurveyScheduleViewController.swift; sourceTree = "<group>"; };
 		0D2D72ACBB52046704A1B5383D0C1362 /* FirebaseCoreDiagnostics.modulemap */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.module; path = FirebaseCoreDiagnostics.modulemap; sourceTree = "<group>"; };
 		0D349570F679FE547C2DDD34C9B82AB2 /* TestGetOptInSection.json */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.json; path = TestGetOptInSection.json; sourceTree = "<group>"; };
 		0D5A8F539CEEFD0915A5B7E15438778C /* URLConvertible.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = URLConvertible.swift; path = Sources/URLConvertible.swift; sourceTree = "<group>"; };
@@ -10755,6 +10757,7 @@
 				CB0D8A1B50ABD352E803F92F61326105 /* Main */,
 				0802C061217EDB41446E49CBA1CADA26 /* Onboarding */,
 				F4DE3F268E538B1DC1E06C4AC6367191 /* VideoDiary */,
+				0D2C3E51261E50FC003F5FFD /* SurveyScheduleViewController.swift */,
 			);
 			path = ViewControllers;
 			sourceTree = "<group>";
@@ -14025,6 +14028,7 @@
 				A8DB0DBF57A1579B6FFB8F85137CA4FD /* UserDataAggregationErrorView.swift in Sources */,
 				45C7C3AD6A9400DDE1AEC916B75587DE /* UserDataChartView.swift in Sources */,
 				7423DA3DE76DC1F4703211D144F1B755 /* UserDataViewController.swift in Sources */,
+				0D2C3E52261E50FC003F5FFD /* SurveyScheduleViewController.swift in Sources */,
 				A578783C620410AB8C434090256CF9CE /* UserEmailVerificationViewController.swift in Sources */,
 				50B73594278DA61DBE0CF4B68531F989 /* UserEmailViewController.swift in Sources */,
 				F085F07CA312BD61416E4C38A4AE5F3A /* UserInfoHeaderView.swift in Sources */,
