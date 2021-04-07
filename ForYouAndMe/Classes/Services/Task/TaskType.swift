@@ -17,6 +17,7 @@ enum TaskType: String, CaseIterable {
     case gait = "gait_task"
     case tremor = "tremor_task"
     case fitness = "walk_task"
+    case nineHole = "nine_hole"
     case videoDiary = "video_diary"
     case camcogPvt = "camcog_pvt"
     case camcogNbx = "camcog_nbx"
@@ -121,6 +122,22 @@ enum TaskNetworkParameter: String {
     case tremorHandTurnWrist = "tremor_hand_turn_wrist"
     case fitnessWalk = "fitness_walk"
     case fitnessRest = "fitness_rest"
+    case holePegTask = "hole_peg_task"
+    case holePegDominantPlace = "hole_peg_dominant_place"
+    case holePegDominantRemove = "hole_peg_dominant_remove"
+    case holePegNonDominantPlace = "hole_peg_non_dominant_place"
+    case holePegNonDominantRemove = "hole_peg_non_dominant_remove"
+    case movingDirection = "moving_direction"
+    case dominantHand = "dominant_hand"
+    case numberOfPegs = "number_of_pegs"
+    case threshold = "threshold"
+    case rotated = "rotated"
+    case totalSuccesses = "total_successes"
+    case totalTime = "total_time"
+    case totalDistance = "total_distance"
+    case samples = "samples"
+    case time = "time"
+    case distance = "distance"
 }
 
 // MARK: - TaskOptions
@@ -156,6 +173,12 @@ struct TaskOptions {
     
     // Fitness
     let walkDuration: Double?
+    
+    // NineHole
+    let thresholdArea: Double?
+    let numberOfPegs: Int32?
+    let dominantHand: ORKBodySagittal?
+    let rotated: Bool?
 }
 
 // MARK: - TrailType

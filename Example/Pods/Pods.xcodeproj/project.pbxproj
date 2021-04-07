@@ -203,6 +203,7 @@
 		0CE40CCD9D15A22F81C1BC5F5F82F6D8 /* AnyEncodable.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB2564BD43AF9772FDF0776958C1EABF /* AnyEncodable.swift */; };
 		0CE90941B197B4FFE580DFA9CBD0F5A2 /* Delegate+DataSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3857472C9484A317FBBF7A00392D9D2F /* Delegate+DataSource.swift */; };
 		0CF400BC2769EE75E09645F6D92265AF /* FIRCLSFABNetworkClient.m in Sources */ = {isa = PBXBuildFile; fileRef = 3E2BE4A0A82120B62748AB2AAE51D73E /* FIRCLSFABNetworkClient.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
+		0D2C3E15261D887C003F5FFD /* NineHoleTask.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D2C3E14261D887C003F5FFD /* NineHoleTask.swift */; };
 		0D3B86E5C1AA658F0F9A6A18FBB0AB61 /* Producer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97F9B1CB332F1D7BECBD2BB459AB2561 /* Producer.swift */; };
 		0D4CCE87065A1B16DA29EBCF4F4C9BA9 /* MainScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 494252A2C371F4F3B1609EDC8B861AD1 /* MainScheduler.swift */; };
 		0D5656DB1744275CAB16C6EF1C78D579 /* ORKHolePegTestPlaceStepViewController.h in Headers */ = {isa = PBXBuildFile; fileRef = 36895F374D5603CB7D9904E940571848 /* ORKHolePegTestPlaceStepViewController.h */; settings = {ATTRIBUTES = (Private, ); }; };
@@ -3660,6 +3661,7 @@
 		0CD1C3B2AF61F7A9858C217E3FAC358B /* ORKTouchAbilityTouch.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = ORKTouchAbilityTouch.h; path = ResearchKit/ActiveTasks/ORKTouchAbilityTouch.h; sourceTree = "<group>"; };
 		0D21C34D5C18F39B9CEDE3F962882500 /* Cancelable.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = Cancelable.swift; path = RxSwift/Cancelable.swift; sourceTree = "<group>"; };
 		0D2AFD42E70746427801D064C4AC0996 /* ORKAnswerFormat.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = ORKAnswerFormat.m; path = ResearchKit/Common/ORKAnswerFormat.m; sourceTree = "<group>"; };
+		0D2C3E14261D887C003F5FFD /* NineHoleTask.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NineHoleTask.swift; sourceTree = "<group>"; };
 		0D2D72ACBB52046704A1B5383D0C1362 /* FirebaseCoreDiagnostics.modulemap */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.module; path = FirebaseCoreDiagnostics.modulemap; sourceTree = "<group>"; };
 		0D349570F679FE547C2DDD34C9B82AB2 /* TestGetOptInSection.json */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.json; path = TestGetOptInSection.json; sourceTree = "<group>"; };
 		0D5A8F539CEEFD0915A5B7E15438778C /* URLConvertible.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = URLConvertible.swift; path = Sources/URLConvertible.swift; sourceTree = "<group>"; };
@@ -10184,6 +10186,7 @@
 				26BE8825D3A3C20C6846567571902352 /* TrailMakingTask.swift */,
 				8BB2E822867D7911053040E18707C9AC /* TremorTask.swift */,
 				C88B9BAE526F58BC53C49B1E63B41A17 /* WalkTask.swift */,
+				0D2C3E14261D887C003F5FFD /* NineHoleTask.swift */,
 			);
 			path = Task;
 			sourceTree = "<group>";
@@ -13951,6 +13954,7 @@
 				98DAAA8B6D373A8883E18A1AAD17C015 /* ScrollStackView.swift in Sources */,
 				359361779D6D5A9C40869192BCCB998C /* ServerErrors.swift in Sources */,
 				E167C832D65D84F3A872D5EA06AB1177 /* Services.swift in Sources */,
+				0D2C3E15261D887C003F5FFD /* NineHoleTask.swift in Sources */,
 				EF3E506B1494CD6F8D1265F07E07B601 /* SetupLaterViewController.swift in Sources */,
 				2A6B3E82A0DB4124193AE8B6C800D8CE /* Single+Extensions.swift in Sources */,
 				2426DE9B96656FE05DDF56C7FD7C450B /* SingleTextHeaderView.swift in Sources */,
