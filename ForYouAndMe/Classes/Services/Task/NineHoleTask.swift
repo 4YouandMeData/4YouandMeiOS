@@ -30,8 +30,8 @@ class NineHoleTask {
         var resultData: [String: Any] = [:]
         var stepData: [String: Any] = [:]
         
-        var startDate: Date = taskResult.startDate
-        var endDate: Date = taskResult.endDate
+        let startDate: Date = taskResult.startDate
+        let endDate: Date = taskResult.endDate
         
         let addStep: ((String, TaskNetworkParameter) -> Void) = { (stepIdentifier, networkParameter) in
             if let resultStep: ORKHolePegTestResult = taskResult.getResult(forIdentifier: stepIdentifier)?.first {
