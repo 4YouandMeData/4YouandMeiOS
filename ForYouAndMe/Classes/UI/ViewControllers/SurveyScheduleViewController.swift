@@ -13,6 +13,7 @@ public class SurveyScheduleViewController: UIViewController {
     private var titleString: String
     private let navigator: AppNavigator
     private let analytics: AnalyticsService
+    private let repository: Repository
     private let disposeBag: DisposeBag = DisposeBag()
     
     private lazy var scrollStackView: ScrollStackView = {
@@ -24,15 +25,30 @@ public class SurveyScheduleViewController: UIViewController {
         let view = GenericButtonView(withTextStyleCategory: .secondaryBackground(shadow: false),
                                      horizontalInset: 0,
                                      height: Constants.Style.DefaultTextButtonHeight)
-        view.setButtonText(StringsProvider.string(forKey: .setupLaterConfirmButton))
+        view.setButtonText(StringsProvider.string(forKey: .dailySurveyTimingTitleButton))
         view.addTarget(target: self, action: #selector(self.confirmButtonPressed))
         return view
+    }()
+    
+    private lazy var datePicker: UIDatePicker = {
+        let datePicker = UIDatePicker()
+        datePicker.minuteInterval = 60
+        if #available(iOS 13.4, *) {
+            datePicker.preferredDatePickerStyle = .wheels
+        }
+        datePicker.datePickerMode = .time
+        datePicker.locale = NSLocale(localeIdentifier: "en_US") as Locale
+        datePicker.tintColor = ColorPalette.color(withType: .primary)
+        datePicker.backgroundColor = .white
+        datePicker.addTarget(self, action: #selector(self.handleDatePicker), for: .valueChanged)
+        return datePicker
     }()
     
     init(withTitle title: String) {
         self.titleString = title
         self.navigator = Services.shared.navigator
         self.analytics = Services.shared.analytics
+        self.repository = Services.shared.repository
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -79,31 +95,48 @@ public class SurveyScheduleViewController: UIViewController {
                                                 colorType: .primaryText,
                                                 textAlignment: .left)
                                                 
-        let datePicker = UIDatePicker()
-        datePicker.minuteInterval = 60
-        if #available(iOS 13.4, *) {
-            datePicker.preferredDatePickerStyle = .wheels
-        }
-        datePicker.datePickerMode = .time
-        datePicker.locale = NSLocale(localeIdentifier: "en_US") as Locale
-        datePicker.tintColor = ColorPalette.color(withType: .primary)
-        datePicker.backgroundColor = .white
-        datePicker.addTarget(self, action: #selector(self.handleDatePicker), for: .valueChanged)
-        self.scrollStackView.stackView.addArrangedSubview(datePicker)
+        self.scrollStackView.stackView.addArrangedSubview(self.datePicker)
         self.scrollStackView.stackView.addBlankSpace(space: 20)
         self.scrollStackView.stackView.addArrangedSubview(UIView())
         
         self.view.addSubview(self.confirmButtonView)
         self.confirmButtonView.autoPinEdges(toSuperviewMarginsExcludingEdge: .top)
         self.confirmButtonView.autoPinEdge(.top, to: .bottom, of: self.scrollStackView)
+        
+        self.getUserSettings()
     }
     
     @objc func handleDatePicker(_ datePicker: UIDatePicker) {
         print("\(datePicker.date)")
-//        self.delegate?.answerDidChange(self.surveyQuestion, answer: datePicker.date.string(withFormat: dateFormat))
     }
     
     @objc private func confirmButtonPressed() {
-//        self.coordinator.onConfirmButtonPressed(popupViewController: self)
+        print("\(self.datePicker.date.getSecondsSinceMidnight())")
+        self.sendUserSettings()
+    }
+    
+    private func getUserSettings() {
+        self.repository.getUserSettings()
+            .addProgress()
+            .subscribe(onSuccess: { [weak self] userSettings in
+                guard let self = self else { return }
+                guard let secondsFromMidnight = userSettings.secondsFromMidnight else {
+                    return
+                }
+                let date = secondsFromMidnight.dateFromSeconds()
+                print("\(date.string(withFormat: "HH:mm"))")
+                self.datePicker.date = date
+            }, onError: { error in
+                print("SurveyScheduleViewController - Error refreshing user: \(error.localizedDescription)")
+            }).disposed(by: self.disposeBag)
+    }
+    
+    private func sendUserSettings() {
+        self.repository.sendUserSettings(seconds: self.datePicker.date.getSecondsSinceMidnight())
+            .addProgress()
+            .subscribe(onError: { [weak self] error in
+                    guard let self = self else { return }
+                    self.navigator.handleError(error: error, presenter: self)
+            }).disposed(by: self.disposeBag)
     }
 }

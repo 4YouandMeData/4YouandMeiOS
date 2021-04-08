@@ -155,6 +155,7 @@ enum StringKey: String, CaseIterable, CodingKey {
     case aboutYouPermissions = "ABOUT_YOU_PERMISSIONS"
     case aboutYouDailySurveyTiming = "ABOUT_YOU_DAILY_SURVEY_TIMING_TITLE"
     case disclaimerFooter = "ABOUT_YOU_DISCLAIMER"
+    case dailySurveyTimingHidden = "DAILY_SURVEY_TIMING_HIDDEN"
     // User Info
     case userInfoButtonEdit = "PROFILE_USER_INFO_BUTTON_EDIT"
     case userInfoButtonSubmit = "PROFILE_USER_INFO_BUTTON_SUBMIT"
@@ -170,6 +171,7 @@ enum StringKey: String, CaseIterable, CodingKey {
     
     // DailySurvey Timing
     case dailySurveyTimingDescription = "ABOUT_YOU_DAILY_SURVEY_TIMING_DESCRIPTION"
+    case dailySurveyTimingTitleButton = "ABOUT_YOU_DAILY_SURVEY_TIMING_TITLE_BUTTON"
     // Generic
     case genericInfoTitle = "GENERIC_INFO_TITLE"
     // Errors

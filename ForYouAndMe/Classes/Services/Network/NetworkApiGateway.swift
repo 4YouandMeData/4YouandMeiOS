@@ -343,6 +343,10 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             return "v1/studies/\(studyId)/your_data"
         case .getUserDataAggregation(let period):
             return "v1/studies/\(studyId)/user_data_aggregations/\(period.networkValue)"
+        case .getUserSettings:
+            return "/v1/user_setting"
+        case .sendUserSettings:
+            return "/v1/user_setting"
         // Survey
         case .getSurvey(let surveyId):
             return "v1/surveys/\(surveyId)"
@@ -373,6 +377,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
              .getSurvey,
              .getUser,
              .getUserData,
+             .getUserSettings,
              .getUserDataAggregation:
             return .get
         case .submitPhoneNumber,
@@ -391,6 +396,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
              .sendTaskResultFile,
              .sendUserInfoParameters,
              .sendUserTimeZone,
+             .sendUserSettings,
              .sendPushToken,
              .sendSurveyTaskResultData,
              .delayTask:
@@ -466,6 +472,8 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             case .month: return Bundle.getTestData(from: "TestGetUserDataAggregationMonth")
             case .year: return Bundle.getTestData(from: "TestGetUserDataAggregationYear")
             }
+        case .sendUserSettings: return "{}".utf8Encoded
+        case .getUserSettings: return "{}".utf8Encoded
         // Survey
         case .getSurvey: return Bundle.getTestData(from: "TestGetSurvey")
         case .sendSurveyTaskResultData: return "{}".utf8Encoded
@@ -488,6 +496,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
              .getTask,
              .getSurvey,
              .getUser,
+             .getUserSettings,
              .getUserData,
              .getUserDataAggregation,
              .delayTask:
@@ -558,6 +567,10 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             var params: [String: Any] = [:]
             params["custom_data"] = customDataParams
             return .requestParameters(parameters: ["user": params], encoding: JSONEncoding.default)
+        case .sendUserSettings(let seconds):
+            var params: [String: Any] = [:]
+            params["daily_survey_time_seconds_since_midnight"] = seconds
+            return .requestParameters(parameters: ["user_setting": params], encoding: JSONEncoding.default)
         case .sendPushToken(let token):
             var params: [String: Any] = [:]
             params["firebase_token"] = token
@@ -657,6 +670,8 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
              .getUser,
              .sendUserTimeZone,
              .sendUserInfoParameters,
+             .getUserSettings,
+             .sendUserSettings,
              .getUserData,
              .getUserDataAggregation,
              .getSurvey,

@@ -62,6 +62,8 @@ enum DefaultService {
     // User Data
     case getUserData
     case getUserDataAggregation(period: StudyPeriod)
+    case getUserSettings
+    case sendUserSettings(settings: Int)
     // Survey
     case getSurvey(surveyId: String)
     case sendSurveyTaskResultData(surveyTaskId: String, results: [SurveyResult])

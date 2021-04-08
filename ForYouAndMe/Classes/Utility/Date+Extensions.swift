@@ -47,6 +47,11 @@ public extension Date {
         }
         return arrayOfDates.reversed()
     }
+
+    func getSecondsSinceMidnight() -> Int {
+        let calendar = Calendar.current
+        return (calendar.component(.hour, from: self) * 3600 + calendar.component(.minute, from: self) * 60)
+    }
 }
 
 public extension String {
@@ -61,4 +66,14 @@ public extension String {
         }
         return dateFormatter.date(from: self)
     }
+}
+
+public extension Int {
+    func dateFromSeconds() -> Date {
+        let calendar = Calendar.current
+        let currentDate = Date()
+        let startDayDate = calendar.startOfDay(for: currentDate)
+        let date = Date(timeInterval: TimeInterval(self), since: startDayDate)
+        return date
+     }
 }

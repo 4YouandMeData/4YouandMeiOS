@@ -322,6 +322,16 @@ extension RepositoryImpl: Repository {
             .handleError()
     }
     
+    func getUserSettings() -> Single<(UserSettings)> {
+        return self.api.send(request: ApiRequest(serviceRequest: .getUserSettings))
+            .handleError()
+    }
+    
+    func sendUserSettings(seconds: Int) -> Single<()> {
+        return self.api.send(request: ApiRequest(serviceRequest: .sendUserSettings(settings: seconds)))
+            .handleError()
+    }
+    
     // MARK: - Survey
     
     func getSurvey(surveyId: String) -> Single<SurveyGroup> {

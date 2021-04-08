@@ -80,6 +80,8 @@ protocol Repository: class {
     // User Data
     func getUserData() -> Single<UserData>
     func getUserDataAggregation(period: StudyPeriod) -> Single<[UserDataAggregation]>
+    func getUserSettings() -> Single<UserSettings>
+    func sendUserSettings(seconds: Int) -> Single<()>
     // Survey
     func getSurvey(surveyId: String) -> Single<SurveyGroup>
     func sendSurveyTaskResult(surveyTaskId: String, results: [SurveyResult]) -> Single<()>
