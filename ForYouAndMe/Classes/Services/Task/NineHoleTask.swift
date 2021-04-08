@@ -13,7 +13,7 @@ class NineHoleTask {
         return ORKOrderedTask.holePegTest(withIdentifier: identifier,
                                           intendedUseDescription: options?.intendedUseDescription,
                                           dominantHand: options?.dominantHand ?? .right,
-                                          numberOfPegs: options?.numberOfPegs ?? 2,
+                                          numberOfPegs: options?.numberOfPegs ?? 9,
                                           threshold: options?.thresholdArea ?? 0.2,
                                           rotated: false,
                                           timeLimit: options?.timeLimit ?? 300,
