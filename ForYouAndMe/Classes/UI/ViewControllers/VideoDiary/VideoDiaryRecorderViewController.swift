@@ -545,6 +545,7 @@ extension VideoDiaryRecorderViewController: CameraViewDelegate {
         
         self.playerView.videoURL = mergedVideoURL
         AppNavigator.popProgressHUD()
+        UIApplication.shared.isIdleTimerDisabled = false
         
         self.currentState = .review(isPlaying: false)
     }
@@ -571,6 +572,7 @@ extension VideoDiaryRecorderViewController: PlayerViewDelegate {
     }
     
     func tapGestureDidStart() {
+        UIApplication.shared.isIdleTimerDisabled = true
         self.playerButton.isHidden = !self.playerButton.isHidden
         self.invalidatedHidePlayerButtonTimer()
         if !self.playerButton.isHidden {
