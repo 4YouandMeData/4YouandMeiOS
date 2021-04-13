@@ -187,7 +187,13 @@ public class VideoDiaryRecorderViewController: UIViewController {
     
     public override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        UIApplication.shared.isIdleTimerDisabled = true
         self.navigationController?.navigationBar.apply(style: NavigationBarStyleCategory.primary(hidden: true).style)
+    }
+    
+    public override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        UIApplication.shared.isIdleTimerDisabled = false
     }
     
     // MARK: - Private Methods
@@ -545,7 +551,6 @@ extension VideoDiaryRecorderViewController: CameraViewDelegate {
         
         self.playerView.videoURL = mergedVideoURL
         AppNavigator.popProgressHUD()
-        UIApplication.shared.isIdleTimerDisabled = false
         
         self.currentState = .review(isPlaying: false)
     }
@@ -572,7 +577,6 @@ extension VideoDiaryRecorderViewController: PlayerViewDelegate {
     }
     
     func tapGestureDidStart() {
-        UIApplication.shared.isIdleTimerDisabled = true
         self.playerButton.isHidden = !self.playerButton.isHidden
         self.invalidatedHidePlayerButtonTimer()
         if !self.playerButton.isHidden {
