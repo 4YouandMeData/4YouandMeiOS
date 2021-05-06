@@ -1,3 +1,7 @@
+##  Release 0.60.0
+
+-Bugfix: Fixed texts in Permission page.
+
 ##  Release 0.59.0
 
 -Bugfix: TimeZone missing on reward tiles

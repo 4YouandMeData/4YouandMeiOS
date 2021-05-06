@@ -8,7 +8,7 @@
 
 Pod::Spec.new do |s|
   s.name             = 'ForYouAndMe'
-  s.version          = '0.59.0'
+  s.version          = '0.60.0'
   s.summary          = 'Framework for research studies apps'
   s.description      = <<-DESC
                        ForYouAndMe is a framework aimed to easily develop an app for research study
