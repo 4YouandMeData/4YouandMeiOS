@@ -69,7 +69,7 @@ public class PermissionViewController: UIViewController {
         
         let permissionLocation: Permission = Constants.Misc.DefaultLocationPermission
         let locationStatus: Bool = permissionLocation.isNotDetermined
-        let locationTitle = "The BUMP app needs access to your phone’s location"/*StringsProvider.string(forKey: .studyInfoRewardsItem)*/
+        let locationTitle = StringsProvider.string(forKey: .permissionLocationDescription)
         let locationItem = PermissionItemView(withTitle: locationTitle,
                                               permission: permissionLocation,
                                               iconName: .locationIcon,
@@ -95,7 +95,7 @@ public class PermissionViewController: UIViewController {
         
         let notificationPermission: Permission = .notification
         let notificationStatus: Bool = notificationPermission.isNotDetermined
-        let notificationTitle = "Push Notification"/*StringsProvider.string(forKey: .studyInfoRewardsItem)*/
+        let notificationTitle = StringsProvider.string(forKey: .permissionPushNotificationDescription)
         let pushItem = PermissionItemView(withTitle: notificationTitle,
                                           permission: notificationPermission,
                                           iconName: .pushNotificationIcon,

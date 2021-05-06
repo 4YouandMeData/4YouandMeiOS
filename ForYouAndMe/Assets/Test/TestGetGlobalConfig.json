@@ -198,7 +198,9 @@
       "OTHER_ANSWER_PLACEHOLDER": "Type Here",
       "ONBOARDING_SECTION_LIST": "intro_video;screening;consent_group;integration",
       "RK_WALK_TASK_TITLE": "Walk",
-      "QUICK_ACTIVITIES_TOTAL_NUMBER": "{0}"
+      "QUICK_ACTIVITIES_TOTAL_NUMBER": "{0}",
+      "PERMISSION_LOCATION": "The BUMP app needs access to your phone's location",
+      "PERMISSION_PUSH_NOTIFICATION": "Push Notification"
     },
     "country_codes": ["US", "GB", "IT"]
 }
