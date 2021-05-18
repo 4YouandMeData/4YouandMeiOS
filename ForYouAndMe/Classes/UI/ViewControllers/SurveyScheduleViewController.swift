@@ -100,7 +100,10 @@ public class SurveyScheduleViewController: UIViewController {
         self.scrollStackView.stackView.addArrangedSubview(UIView())
         
         self.view.addSubview(self.confirmButtonView)
-        self.confirmButtonView.autoPinEdgesToSuperviewSafeArea(with: UIEdgeInsets.zero,
+        self.confirmButtonView.autoPinEdgesToSuperviewSafeArea(with: UIEdgeInsets(top: 0,
+                                                                                  left: 0,
+                                                                                  bottom: Constants.Style.DefaultBottomMargin,
+                                                                                  right: 0),
                                                                excludingEdge: .top)
         
         self.getUserSettings()

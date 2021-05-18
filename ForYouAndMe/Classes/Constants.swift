@@ -34,6 +34,7 @@ struct Constants {
         static let DefaultTextButtonHeight: CGFloat = 52.0
         static let FeedCellButtonHeight: CGFloat = 44.0
         static let EditButtonHeight: CGFloat = 26.0
+        static let DefaultBottomMargin: CGFloat = 20.0
         static let SurveyPickerDefaultHeight: CGFloat = 300.0
     }
     struct Resources {
