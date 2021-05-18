@@ -6,10 +6,10 @@ inhibit_all_warnings!
 
 target 'ForYouAndMe_Example' do
   pod 'ForYouAndMe', :path => '../', :inhibit_warnings => false
-
+  
   target 'ForYouAndMe_Tests' do
     inherit! :search_paths
-
+    
     pod 'Quick', '~> 1.2.0'
     pod 'Nimble', '~> 7.0'
     pod 'FBSnapshotTestCase' , '~> 2.1.4'
@@ -19,19 +19,22 @@ target 'ForYouAndMe_Example' do
 end
 
 post_install do |installer|
-    installer.pods_project.targets.each do |target|
-      if ['ForYouAndMe'].include? target.name
-          target.build_configurations.each do |config|
-              config.build_settings['ENABLE_TESTABILITY'] = 'YES'
-          end
+  installer.pods_project.targets.each do |target|
+    if ['ForYouAndMe'].include? target.name
+      target.build_configurations.each do |config|
+        config.build_settings['ENABLE_TESTABILITY'] = 'YES'
       end
-        target.build_configurations.each do |config|
-            # Fix forced pod signing issue on azure
-            config.build_settings['EXPANDED_CODE_SIGN_IDENTITY'] = ""
-            config.build_settings['CODE_SIGNING_REQUIRED'] = "NO"
-            config.build_settings['CODE_SIGNING_ALLOWED'] = "NO"
-            # Clear the deployment target warning
-            config.build_settings.delete 'IPHONEOS_DEPLOYMENT_TARGET'
-        end
     end
+    target.build_configurations.each do |config|
+      # Fix forced pod signing issue on azure
+      config.build_settings['EXPANDED_CODE_SIGN_IDENTITY'] = ""
+      config.build_settings['CODE_SIGNING_REQUIRED'] = "NO"
+      config.build_settings['CODE_SIGNING_ALLOWED'] = "NO"
+      # Clear the deployment target warning
+      config.build_settings.delete 'IPHONEOS_DEPLOYMENT_TARGET'
+    end
+    installer.pods_project.build_configurations.each do |config|
+      config.build_settings["EXCLUDED_ARCHS[sdk=iphonesimulator*]"] = "arm64"
+    end
+  end
 end
