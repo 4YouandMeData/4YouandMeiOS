@@ -23,7 +23,7 @@ public class SurveyScheduleViewController: UIViewController {
     
     private lazy var confirmButtonView: GenericButtonView = {
         let view = GenericButtonView(withTextStyleCategory: .secondaryBackground(shadow: false),
-                                     horizontalInset: 0,
+                                     horizontalInset: Constants.Style.DefaultHorizontalMargins,
                                      height: Constants.Style.DefaultTextButtonHeight)
         view.setButtonText(StringsProvider.string(forKey: .dailySurveyTimingTitleButton))
         view.addTarget(target: self, action: #selector(self.confirmButtonPressed))
@@ -100,8 +100,8 @@ public class SurveyScheduleViewController: UIViewController {
         self.scrollStackView.stackView.addArrangedSubview(UIView())
         
         self.view.addSubview(self.confirmButtonView)
-        self.confirmButtonView.autoPinEdges(toSuperviewMarginsExcludingEdge: .top)
-        self.confirmButtonView.autoPinEdge(.top, to: .bottom, of: self.scrollStackView)
+        self.confirmButtonView.autoPinEdgesToSuperviewSafeArea(with: UIEdgeInsets.zero,
+                                                               excludingEdge: .top)
         
         self.getUserSettings()
     }
