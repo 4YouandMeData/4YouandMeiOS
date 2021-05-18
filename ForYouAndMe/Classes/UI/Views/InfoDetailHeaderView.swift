@@ -40,7 +40,7 @@ class InfoDetailHeaderView: UIView {
                                                               colorType: .secondaryText)
         containerView.addSubview(titleLabel)
         titleLabel.autoCenterInSuperview()
-        titleLabel.autoPinEdge(.leading, to: .trailing, of: self.backButton, withOffset: 16)
+        titleLabel.autoPinEdge(.leading, to: .trailing, of: self.backButton, withOffset: 8)
         
     }
     
