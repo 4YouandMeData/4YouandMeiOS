@@ -1,3 +1,13 @@
+## Release 0.61.0
+
+- Custom Daily Survey timing page title width fixed
+
+- Margin for Generic Button in Daily Survey Schedule fixed
+
+- Pods for M1 build fixed
+
+- Anchor button Survey schedule fixed
+
 ##  Release 0.60.0
 
 -Bugfix: Fixed texts in Permission page.
