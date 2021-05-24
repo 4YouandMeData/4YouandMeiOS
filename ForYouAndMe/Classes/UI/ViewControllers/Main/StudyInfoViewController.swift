@@ -88,7 +88,6 @@ class StudyInfoViewController: UIViewController {
                                             self?.navigator.showAboutYouPage(presenter: self!)
                                            })
         self.scrollStackView.stackView.addArrangedSubview(aboutYou)
-        
         self.scrollStackView.stackView.addLineSeparator(lineColor: ColorPalette.color(withType: .inactive),
                                                         inset: 21,
                                                         isVertical: false)
@@ -132,5 +131,29 @@ class StudyInfoViewController: UIViewController {
                                           })
             self.scrollStackView.stackView.addArrangedSubview(faq)
         }
+        
+        self.scrollStackView.layoutIfNeeded()
+        
+        let footerHeight: CGFloat = 40.0
+        let offset = self.scrollStackView.scrollView.frame.height - self.scrollStackView.stackView.frame.height - footerHeight
+        let spacerView = UIView()
+        self.scrollStackView.stackView.addArrangedSubview(spacerView)
+        spacerView.autoSetDimension(.height, toSize: offset)
+        
+        let containerFooterView = UIView()
+        self.scrollStackView.stackView.addArrangedSubview(containerFooterView)
+        containerFooterView.autoSetDimension(.height, toSize: footerHeight)
+        
+        let versionLabel = UILabel()
+        versionLabel.font = FontPalette.fontStyleData(forStyle: .header3).font
+        versionLabel.textColor = ColorPalette.color(withType: .fourthText)
+        versionLabel.text = Constants.Resources.AppVersion ?? ""
+        versionLabel.numberOfLines = 0
+        containerFooterView.addSubview(versionLabel)
+        versionLabel.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets(top: 0.0,
+                                                                     left: Constants.Style.DefaultHorizontalMargins,
+                                                                     bottom: 16.0,
+                                                                     right: Constants.Style.DefaultHorizontalMargins),
+                                                  excludingEdge: .top)
     }
 }

@@ -46,6 +46,14 @@ struct Constants {
             }
             return URL(fileURLWithPath: videoPathString)
         }()
+        static let AppVersion: String? = {
+            guard let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String,
+                  let buildNumber = Bundle.main.infoDictionary?["CFBundleVersion"] as? String else {
+                assertionFailure("Missing Info Plist")
+                return nil
+            }
+            return "Version: \(version) (\(buildNumber))"
+        }()
     }
     struct Misc {
         static let EnableGlobalConfigCache = false
