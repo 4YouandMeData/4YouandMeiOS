@@ -1,3 +1,8 @@
+
+## Release 0.62.0
+
+- App version label added
+
 ## Release 0.61.0
 
 - Custom Daily Survey timing page title width fixed
