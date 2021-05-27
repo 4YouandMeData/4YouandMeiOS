@@ -27,6 +27,9 @@ extension RepositoryError: AlertError {
         // Shared
         case .connectivityError: return StringsProvider.string(forKey: .errorMessageConnectivity)
         case .genericError: return StringsProvider.string(forKey: .errorMessageDefault)
+            
+        // Debug
+        case .debugError(let error): return error.description
         }
     }
 }

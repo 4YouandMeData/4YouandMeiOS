@@ -119,7 +119,7 @@ extension RepositoryImpl: Repository {
                                                                                     validationCode: validationCode)))
             .logServerError(excludingExpectedErrorCodes: VerifyPhoneNumberExpectedErrorCode.allCases.map { $0.rawValue },
                             analyticsService: self.analyticsService)
-            .handleError()
+            .handleError(debugMode: true)
             .catchError({ error -> Single<(User)> in
                 if let errorCodeNumber = error
                     .getFirstServerError(forExpectedStatusCodes: VerifyPhoneNumberExpectedErrorCode.allCases.map { $0.rawValue }),
@@ -427,14 +427,18 @@ extension RepositoryImpl: NotificationTokenDelegate {
 // MARK: - Extension(PrimitiveSequence)
 
 fileprivate extension PrimitiveSequence where Trait == SingleTrait {
-    func handleError() -> Single<Element> {
-        return self.handleServerError()
+    func handleError(debugMode: Bool = false) -> Single<Element> {
+        return self.handleServerError(debugMode: debugMode)
     }
     
-    func handleServerError() -> Single<Element> {
+    func handleServerError(debugMode: Bool = false) -> Single<Element> {
         return self.catchError({ (error) -> Single<Element> in
             if let error = error as? ApiError {
-                return Single.error(error.repositoryError)
+                if debugMode {
+                    return Single.error(error.repositoryErrorDebugMode)
+                } else {
+                    return Single.error(error.repositoryError)
+                }
             }
             return Single.error(error)
         })
@@ -499,6 +503,19 @@ fileprivate extension ApiError {
         case .unexpectedError: return RepositoryError.remoteServerError
         case let .expectedError(_, _, _, _, parsedError): return RepositoryError.serverErrorSpecific(error: parsedError)
         case .userUnauthorized: return RepositoryError.userNotLoggedIn
+        }
+    }
+    var repositoryErrorDebugMode: RepositoryError {
+        guard let nsError = self.nsError else {
+            return self.repositoryError
+        }
+        switch self {
+        case .cannotParseData: return RepositoryError.debugError(error: nsError)
+        case .network: return RepositoryError.debugError(error: nsError)
+        case .connectivity: return RepositoryError.debugError(error: nsError)
+        case .unexpectedError: return RepositoryError.debugError(error: nsError)
+        case let .expectedError(_, _, _, _, parsedError): return RepositoryError.serverErrorSpecific(error: parsedError)
+        case .userUnauthorized: return RepositoryError.debugError(error: nsError)
         }
     }
 }

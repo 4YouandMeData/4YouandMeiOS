@@ -27,6 +27,10 @@ enum RepositoryError: LocalizedError {
     // Shared
     case connectivityError
     case genericError
+    
+    // Debug Only - To be used only when showing full error details to the
+    // user is really necessary (e.g. when Apple reviewers have unreproducable issues)
+    case debugError(error: NSError)
 }
 
 enum FetchMode {

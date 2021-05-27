@@ -171,38 +171,10 @@ class FirebaseAnalyticsPlatform: AnalyticsPlatform {
     // MARK: Errors
     
     func serverError(withApiError apiError: ApiError) {
-        switch apiError {
-        case .connectivity: break // Reachability errors won't be tracked
-        case let .cannotParseData(pathUrl, request, statusCode, responseBody):
-            self.reportServerError(withErrorType: "parse_error",
-                                   domain: FirebaseErrorDomain.serverError(requestName: request.serviceRequest.requestName),
-                                   pathUrl: pathUrl,
-                                   statusCode: statusCode,
-                                   request: request,
-                                   responseBody: responseBody)
-        case let .network(pathUrl, request, underlyingError):
-            self.reportServerError(withErrorType: "network_error",
-                                   domain: FirebaseErrorDomain.serverError(requestName: request.serviceRequest.requestName),
-                                   pathUrl: pathUrl,
-                                   statusCode: 502,
-                                   request: request,
-                                   underlyingError: underlyingError)
-        case let .unexpectedError(pathUrl, request, statusCode, responseBody):
-            self.reportServerError(withErrorType: "server_error",
-                                   domain: FirebaseErrorDomain.serverError(requestName: request.serviceRequest.requestName),
-                                   pathUrl: pathUrl,
-                                   statusCode: statusCode,
-                                   request: request,
-                                   responseBody: responseBody)
-        case let .expectedError(pathUrl, request, statusCode, responseBody, _):
-            self.reportServerError(withErrorType: "unhandled_error",
-                                   domain: FirebaseErrorDomain.serverError(requestName: request.serviceRequest.requestName),
-                                   pathUrl: pathUrl,
-                                   statusCode: statusCode,
-                                   request: request,
-                                   responseBody: responseBody)
-        case .userUnauthorized: break // User Unauthorized errors are expected and handled correctly by the app
+        guard let nsError = apiError.nsError else {
+            return
         }
+        self.reportNonFatalError(nsError)
     }
     
     // MARK: Screens
@@ -214,14 +186,59 @@ class FirebaseAnalyticsPlatform: AnalyticsPlatform {
     private func sendEvent(withEventName eventName: String, parameters: [String: Any]? = nil) {
         Analytics.logEvent(eventName, parameters: parameters)
     }
+        
+    private func reportNonFatalError(withDomain domain: FirebaseErrorDomain, statusCode: Int, userInfo: [String: Any]? = nil) {
+        self.reportNonFatalError(NSError(domain: domain.stringValue, code: statusCode, userInfo: userInfo))
+    }
     
-    private func reportServerError(withErrorType errorType: String,
-                                   domain: FirebaseErrorDomain,
-                                   pathUrl: String,
-                                   statusCode: Int,
-                                   request: ApiRequest,
-                                   responseBody: String? = nil,
-                                   underlyingError: Error? = nil) {
+    private func reportNonFatalError(_ nsError: NSError) {
+        Crashlytics.crashlytics().record(error: nsError)
+    }
+}
+
+extension ApiError {
+    var nsError: NSError? {
+        switch self {
+        case .connectivity: return nil // Reachability errors won't be tracked
+        case let .cannotParseData(pathUrl, request, statusCode, responseBody):
+            return self.getNSError(forErrorType: "parse_error",
+                                   domain: FirebaseErrorDomain.serverError(requestName: request.serviceRequest.requestName),
+                                   pathUrl: pathUrl,
+                                   statusCode: statusCode,
+                                   request: request,
+                                   responseBody: responseBody)
+        case let .network(pathUrl, request, underlyingError):
+            return self.getNSError(forErrorType: "network_error",
+                                   domain: FirebaseErrorDomain.serverError(requestName: request.serviceRequest.requestName),
+                                   pathUrl: pathUrl,
+                                   statusCode: 502,
+                                   request: request,
+                                   underlyingError: underlyingError)
+        case let .unexpectedError(pathUrl, request, statusCode, responseBody):
+            return self.getNSError(forErrorType: "server_error",
+                                   domain: FirebaseErrorDomain.serverError(requestName: request.serviceRequest.requestName),
+                                   pathUrl: pathUrl,
+                                   statusCode: statusCode,
+                                   request: request,
+                                   responseBody: responseBody)
+        case let .expectedError(pathUrl, request, statusCode, responseBody, _):
+            return self.getNSError(forErrorType: "unhandled_error",
+                                   domain: FirebaseErrorDomain.serverError(requestName: request.serviceRequest.requestName),
+                                   pathUrl: pathUrl,
+                                   statusCode: statusCode,
+                                   request: request,
+                                   responseBody: responseBody)
+        case .userUnauthorized: return nil // User Unauthorized errors are expected and handled correctly by the app
+        }
+    }
+    
+    private func getNSError(forErrorType errorType: String,
+                            domain: FirebaseErrorDomain,
+                            pathUrl: String,
+                            statusCode: Int,
+                            request: ApiRequest,
+                            responseBody: String? = nil,
+                            underlyingError: Error? = nil) -> NSError {
         var userInfo: [String: Any] = [:]
         userInfo[FirebaseErrorCustomUserInfo.networkErrorType.rawValue] = errorType
         userInfo[FirebaseErrorCustomUserInfo.networkRequestUrl.rawValue] = pathUrl
@@ -234,12 +251,6 @@ class FirebaseAnalyticsPlatform: AnalyticsPlatform {
         if let underlyingError = underlyingError {
             userInfo[FirebaseErrorCustomUserInfo.networkUnderlyingError.rawValue] = underlyingError
         }
-        self.reportNonFatalError(withDomain: domain, statusCode: statusCode, userInfo: userInfo)
-    }
-        
-    private func reportNonFatalError(withDomain domain: FirebaseErrorDomain, statusCode: Int, userInfo: [String: Any]? = nil) {
-        let nsError = NSError(domain: domain.stringValue, code: statusCode, userInfo: userInfo)
-        print("FirebaseAnalyticsPlatform - Record Non Fatal Error: \(nsError)")
-        Crashlytics.crashlytics().record(error: nsError)
+        return NSError(domain: domain.stringValue, code: statusCode, userInfo: userInfo)
     }
 }
