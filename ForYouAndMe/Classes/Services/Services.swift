@@ -62,14 +62,15 @@ class Services {
         #endif
         self.services.append(networkApiGateway)
         
+        let analytics = AnalyticsManager(api: networkApiGateway)
+        self.services.append(analytics)
+        
         let repository = RepositoryImpl(api: networkApiGateway,
                                         storage: storage,
                                         notificationService: notificationService,
+                                        analyticsService: analytics,
                                         showDefaultUserInfo: showDefaultUserInfo)
         self.services.append(repository)
-        
-        let analytics = AnalyticsManager(api: networkApiGateway)
-        self.services.append(analytics)
         
         let navigator = AppNavigator(withRepository: repository, analytics: analytics, deeplinkService: deeplinkService, window: window)
         self.services.append(navigator)

@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import Moya
 
 public extension String {
     var urlEscaped: String {
@@ -67,5 +68,22 @@ public extension Data {
         } catch {
             return String(data: data, encoding: .utf8) ?? ""
         }
+    }
+}
+
+extension ApiRequest {
+    var body: String? {
+        if case Task.requestParameters(let parameters, _) = self.serviceRequest.task {
+            if let requestData = try? JSONSerialization.data(withJSONObject: parameters, options: .prettyPrinted) {
+                return String(data: requestData, encoding: .utf8)
+            }
+        }
+        return nil
+    }
+}
+
+extension Response {
+    var body: String {
+        return String(data: self.data, encoding: .utf8) ?? ""
     }
 }

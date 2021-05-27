@@ -112,8 +112,68 @@ enum AnalyticsEvent {
     // Permission
     case locationPermissionChanged(_ status: String)
     case notificationPermissionChanged(_ status: String)
+    
+    // Errors
+    case serverError(apiError: ApiError)
 }
 
 protocol AnalyticsService {
     func track(event: AnalyticsEvent)
+}
+
+extension DefaultService {
+    var requestName: String {
+        switch self {
+        case .getGlobalConfig: return "Get Configuration"
+        // Login
+        case .submitPhoneNumber: return "Verify Phone Number"
+        case .verifyPhoneNumber: return "Login"
+        case .emailLogin: return "Email Login"
+        // Screening Section
+        case .getScreeningSection: return "Get Screening"
+        // Informed Consent Section
+        case .getInformedConsentSection: return "Get Informed Consent"
+        // Consent Section
+        case .getConsentSection: return "Get Consent"
+        // Opt In Section
+        case .getOptInSection: return "Get Opt In"
+        case .sendOptInPermission: return "Send User Permission"
+        // User Consent Section
+        case .getUserConsentSection: return "Get Signature"
+        case .createUserConsent: return "Create User Consent"
+        case .updateUserConsent: return "Update User Consent"
+        case .notifyOnboardingCompleted: return "Notify User Consent Completed"
+        case .verifyEmail: return "Confirm Email"
+        case .resendConfirmationEmail: return "Resend Confirmation Email"
+        // Study Info Section
+        case .getStudyInfoSection: return "Get Study Info"
+        // Integration Section
+        case .getIntegrationSection: return "Get Integration"
+        // Answer
+        case .sendAnswer: return "Send Answer"
+        // Feed
+        case .getFeeds: return "Get Feeds"
+        // Task
+        case .getTasks: return "Get Tasks"
+        case .getTask: return "Get Task"
+        case .sendTaskResultData: return "Send Task Result Data"
+        case .sendTaskResultFile: return "Send Task Result Attachment"
+        case .delayTask: return "Reschedule Task"
+        // User
+        case .getUser: return "Get User"
+        case .sendUserInfoParameters: return "Send User Info Parameters"
+        case .sendUserTimeZone: return "Send User Device Time Zone"
+        case .sendPushToken: return "Add Firebase Token"
+        // User Data
+        case .getUserData: return "Get Your Data"
+        case .getUserDataAggregation: return "Get User Data Aggragation"
+        case .getUserSettings: return "Get User Settings"
+        case .sendUserSettings: return "Send User Settings"
+        // Survey
+        case .getSurvey: return "Get Survey"
+        case .sendSurveyTaskResultData: return "Send Survey Task Result Data"
+        // Device Data
+        case .sendDeviceData: return "Send Phone Events"
+        }
+    }
 }

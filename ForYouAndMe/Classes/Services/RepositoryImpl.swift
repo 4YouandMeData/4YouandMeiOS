@@ -22,6 +22,7 @@ class RepositoryImpl {
     private let api: ApiGateway
     private var storage: RepositoryStorage
     private let notificationService: NotificationService
+    private let analyticsService: AnalyticsService
     private let showDefaultUserInfo: Bool
     
     private let disposeBag = DisposeBag()
@@ -29,10 +30,12 @@ class RepositoryImpl {
     init(api: ApiGateway,
          storage: RepositoryStorage,
          notificationService: NotificationService,
+         analyticsService: AnalyticsService,
          showDefaultUserInfo: Bool) {
         self.api = api
         self.storage = storage
         self.notificationService = notificationService
+        self.analyticsService = analyticsService
         self.showDefaultUserInfo = showDefaultUserInfo
     }
     
@@ -89,13 +92,16 @@ extension RepositoryImpl: Repository {
             .do(onError: { error in print("Repository - error updateFirebaseToken: \(error.localizedDescription)") })
     }
     
+    enum SubmitPhoneNumberErrorCode: Int, CaseIterable { case missingPhoneNumber = 404 }
+    
     func submitPhoneNumber(phoneNumber: String) -> Single<()> {
         return self.api.send(request: ApiRequest(serviceRequest: .submitPhoneNumber(phoneNumber: phoneNumber)))
             .handleError()
             .catchError({ error -> Single<()> in
-                enum ErrorCode: Int, CaseIterable { case missingPhoneNumber = 404 }
-                if let errorCodeNumber = error.getFirstServerError(forExpectedStatusCodes: ErrorCode.allCases.map { $0.rawValue }),
-                    let errorCode = ErrorCode(rawValue: errorCodeNumber) {
+                
+                if let errorCodeNumber = error
+                    .getFirstServerError(forExpectedStatusCodes: SubmitPhoneNumberErrorCode.allCases.map { $0.rawValue }),
+                    let errorCode = SubmitPhoneNumberErrorCode(rawValue: errorCodeNumber) {
                     switch errorCode {
                     case .missingPhoneNumber: return Single.error(RepositoryError.missingPhoneNumber)
                     }
@@ -105,14 +111,19 @@ extension RepositoryImpl: Repository {
             })
     }
     
+    enum VerifyPhoneNumberExpectedErrorCode: Int, CaseIterable { case wrongValidationCode = 401 }
+    
     func verifyPhoneNumber(phoneNumber: String, validationCode: String) -> Single<User> {
+        
         return self.api.send(request: ApiRequest(serviceRequest: .verifyPhoneNumber(phoneNumber: phoneNumber,
                                                                                     validationCode: validationCode)))
+            .logServerError(excludingExpectedErrorCodes: VerifyPhoneNumberExpectedErrorCode.allCases.map { $0.rawValue },
+                            analyticsService: self.analyticsService)
             .handleError()
-            .catchError({ (error)-> Single<(User)> in
-                enum ErrorCode: Int, CaseIterable { case wrongValidationCode = 401 }
-                if let errorCodeNumber = error.getFirstServerError(forExpectedStatusCodes: ErrorCode.allCases.map { $0.rawValue }),
-                    let errorCode = ErrorCode(rawValue: errorCodeNumber) {
+            .catchError({ error -> Single<(User)> in
+                if let errorCodeNumber = error
+                    .getFirstServerError(forExpectedStatusCodes: VerifyPhoneNumberExpectedErrorCode.allCases.map { $0.rawValue }),
+                    let errorCode = VerifyPhoneNumberExpectedErrorCode(rawValue: errorCodeNumber) {
                     switch errorCode {
                     case .wrongValidationCode: return Single.error(RepositoryError.wrongPhoneValidationCode)
                     }
@@ -126,13 +137,15 @@ extension RepositoryImpl: Repository {
             .do(onSuccess: { self.saveUser($0) })
     }
     
+    enum EmailLoginErrorCode: Int, CaseIterable { case wrongValidationCode = 401 }
+    
     func emailLogin(email: String) -> Single<User> {
         return self.api.send(request: ApiRequest(serviceRequest: .emailLogin(email: email)))
             .handleError()
             .catchError({ (error)-> Single<(User)> in
-                enum ErrorCode: Int, CaseIterable { case wrongValidationCode = 401 }
-                if let errorCodeNumber = error.getFirstServerError(forExpectedStatusCodes: ErrorCode.allCases.map { $0.rawValue }),
-                    let errorCode = ErrorCode(rawValue: errorCodeNumber) {
+                if let errorCodeNumber = error
+                    .getFirstServerError(forExpectedStatusCodes: EmailLoginErrorCode.allCases.map { $0.rawValue }),
+                    let errorCode = EmailLoginErrorCode(rawValue: errorCodeNumber) {
                     switch errorCode {
                     case .wrongValidationCode: return Single.error(RepositoryError.wrongPhoneValidationCode)
                     }
@@ -203,13 +216,15 @@ extension RepositoryImpl: Repository {
             .handleError()
     }
     
+    enum VerifyEmailErrorCode: Int, CaseIterable { case wrongValidationCode = 422 }
+    
     func verifyEmail(validationCode: String) -> Single<()> {
         return self.api.send(request: ApiRequest(serviceRequest: .verifyEmail(validationCode: validationCode)))
             .handleError()
             .catchError({ error -> Single<()> in
-                enum ErrorCode: Int, CaseIterable { case wrongValidationCode = 422 }
-                if let errorCodeNumber = error.getFirstServerError(forExpectedStatusCodes: ErrorCode.allCases.map { $0.rawValue }),
-                    let errorCode = ErrorCode(rawValue: errorCodeNumber) {
+                if let errorCodeNumber = error
+                    .getFirstServerError(forExpectedStatusCodes: VerifyEmailErrorCode.allCases.map { $0.rawValue }),
+                    let errorCode = VerifyEmailErrorCode(rawValue: errorCodeNumber) {
                     switch errorCode {
                     case .wrongValidationCode: return Single.error(RepositoryError.wrongEmailValidationCode)
                     }
@@ -413,23 +428,25 @@ extension RepositoryImpl: NotificationTokenDelegate {
 
 fileprivate extension PrimitiveSequence where Trait == SingleTrait {
     func handleError() -> Single<Element> {
-        return self.handleNetworkError()
+        return self.handleServerError()
     }
     
-    func handleNetworkError() -> Single<Element> {
+    func handleServerError() -> Single<Element> {
         return self.catchError({ (error) -> Single<Element> in
             if let error = error as? ApiError {
-                switch error {
-                case .internalError: return Single.error(RepositoryError.genericError)
-                case .cannotParseData: return Single.error(RepositoryError.remoteServerError)
-                case .network: return Single.error(RepositoryError.remoteServerError)
-                case .connectivity: return Single.error(RepositoryError.connectivityError)
-                case .errorCode: return Single.error(RepositoryError.remoteServerError)
-                case let .error(_, error): return Single.error(RepositoryError.serverErrorSpecific(error: error))
-                case .userUnauthorized: return Single.error(RepositoryError.userNotLoggedIn)
-                }
+                return Single.error(error.repositoryError)
             }
             return Single.error(error)
+        })
+    }
+    
+    func logServerError(excludingExpectedErrorCodes expectedErrorCodes: [Int] = [],
+                        analyticsService: AnalyticsService) -> Single<Element> {
+        return self.do(onError: { error in
+            if let error = error as? ApiError,
+               nil == error.repositoryError.getFirstServerError(forExpectedStatusCodes: expectedErrorCodes) {
+                analyticsService.track(event: .serverError(apiError: error))
+            }
         })
     }
 }
@@ -457,6 +474,8 @@ extension RepositoryImpl: InitializableService {
 // MARK: - Extension (Error)
 
 fileprivate extension Error {
+    
+    // Assumes RepositoryError
     func getFirstServerError(forExpectedStatusCodes statusCodes: [Int]) -> Int? {
         if let repositoryError = self as? RepositoryError {
             switch repositoryError {
@@ -468,6 +487,19 @@ fileprivate extension Error {
             }
         }
         return nil
+    }
+}
+
+fileprivate extension ApiError {
+    var repositoryError: RepositoryError {
+        switch self {
+        case .cannotParseData: return RepositoryError.remoteServerError
+        case .network: return RepositoryError.remoteServerError
+        case .connectivity: return RepositoryError.connectivityError
+        case .unexpectedError: return RepositoryError.remoteServerError
+        case let .expectedError(_, _, _, _, parsedError): return RepositoryError.serverErrorSpecific(error: parsedError)
+        case .userUnauthorized: return RepositoryError.userNotLoggedIn
+        }
     }
 }
 

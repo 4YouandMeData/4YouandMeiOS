@@ -81,14 +81,12 @@ struct ApiRequest {
 }
 
 enum ApiError: Error {
-
-    case internalError
-    case cannotParseData
-    case network
     case connectivity
-    case errorCode(Int, String)
-    case error(Int, Any)
-    case userUnauthorized
+    case cannotParseData(pathUrl: String, request: ApiRequest, statusCode: Int, responseBody: String)
+    case network(pathUrl: String, request: ApiRequest, underlyingError: Error)
+    case unexpectedError(pathUrl: String, request: ApiRequest, statusCode: Int, responseBody: String)
+    case expectedError(pathUrl: String, request: ApiRequest, statusCode: Int, responseBody: String, parsedError: Any)
+    case userUnauthorized(pathUrl: String, request: ApiRequest, statusCode: Int, responseBody: String)
 }
 
 protocol PlainDecodable: Decodable {}

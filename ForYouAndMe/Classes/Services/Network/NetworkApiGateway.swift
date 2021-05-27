@@ -52,7 +52,7 @@ class NetworkApiGateway: ApiGateway {
     fileprivate let storage: NetworkStorage
     fileprivate let reachability: ReachabilityService
     
-    private let studyId: String
+    fileprivate let studyId: String
     
     // MARK: - Service Protocol Implementation
     
@@ -102,8 +102,7 @@ class NetworkApiGateway: ApiGateway {
     
     func send<T: Mappable, E: Mappable>(request: ApiRequest, errorType: E.Type) -> Single<T> {
         self.sendShared(request: request, errorType: errorType)
-            .map(to: T.self)
-            .handleMapError()
+            .flatMap { Single.just($0).map(to: T.self).handleMapError(api: self, request: request, response: $0) }
     }
     
     func send<T: Mappable, E: Mappable>(request: ApiRequest, errorType: E.Type) -> Single<T?> {
@@ -113,16 +112,20 @@ class NetworkApiGateway: ApiGateway {
     
     func send<T: Mappable, E: Mappable>(request: ApiRequest, errorType: E.Type) -> Single<[T]> {
         self.sendShared(request: request, errorType: errorType)
-            .map(to: [T].self)
-            .catchError({ (error) in
-                if let error = error as? ApiError {
-                    // Network or Server Error
-                    return Single.error(error)
-                } else {
-                    debugPrint("Response map error: \(error)")
-                    return Single.error(ApiError.cannotParseData)
-                }
-            })
+            .flatMap { response in
+                Single.just(response).map(to: [T].self).catchError({ (error) in
+                    if let error = error as? ApiError {
+                        // Network or Server Error
+                        return Single.error(error)
+                    } else {
+                        debugPrint("Response map error: \(error)")
+                        return Single.error(ApiError.cannotParseData(pathUrl: request.serviceRequest.getPath(forStudyId: self.studyId),
+                                                                     request: request,
+                                                                     statusCode: response.statusCode,
+                                                                     responseBody: response.body))
+                    }
+                })
+            }
     }
     
     func sendExcludeInvalid<T: Mappable, E: Mappable>(request: ApiRequest, errorType: E.Type) -> Single<[T]> {
@@ -139,14 +142,18 @@ class NetworkApiGateway: ApiGateway {
     
     func send<T: JSONAPIMappable, E: Mappable>(request: ApiRequest, errorType: E.Type) -> Single<T> {
         self.sendShared(request: request, errorType: errorType)
-            .mapCodableJSONAPI(includeList: T.includeList, keyPath: T.keyPath)
-            .handleMapError()
+            .flatMap { response in
+                Single.just(response).mapCodableJSONAPI(includeList: T.includeList, keyPath: T.keyPath)
+                    .handleMapError(api: self, request: request, response: response)
+            }
     }
     
     func send<T: JSONAPIMappable, E: Mappable>(request: ApiRequest, errorType: E.Type) -> Single<T?> {
         self.sendShared(request: request, errorType: errorType)
-            .mapCodableJSONAPI(includeList: T.includeList, keyPath: T.keyPath)
-            .handleMapError()
+            .flatMap { response in
+                Single.just(response).mapCodableJSONAPI(includeList: T.includeList, keyPath: T.keyPath)
+                    .handleMapError(api: self, request: request, response: response)
+            }
             .catchError { error in
                 if case ApiError.cannotParseData = error {
                     return Single.just(nil)
@@ -158,23 +165,30 @@ class NetworkApiGateway: ApiGateway {
     
     func send<T: JSONAPIMappable, E: Mappable>(request: ApiRequest, errorType: E.Type) -> Single<[T]> {
         self.sendShared(request: request, errorType: errorType)
-            .mapCodableJSONAPI(includeList: T.includeList, keyPath: T.keyPath)
-            .handleMapError()
+            .flatMap { response in
+                Single.just(response).mapCodableJSONAPI(includeList: T.includeList, keyPath: T.keyPath)
+                    .handleMapError(api: self, request: request, response: response)
+            }
     }
     
     func send<T: JSONAPIMappable, E: Mappable>(request: ApiRequest, errorType: E.Type) -> Single<ExcludeInvalid<T>> {
         self.sendShared(request: request, errorType: errorType)
-            .mapCodableJSONAPI(includeList: T.includeList, keyPath: T.keyPath)
-            .handleMapError()
+            .flatMap { response in
+                Single.just(response).mapCodableJSONAPI(includeList: T.includeList, keyPath: T.keyPath)
+                    .handleMapError(api: self, request: request, response: response)
+            }
     }
     
     func send<T: PlainDecodable, E: Mappable>(request: ApiRequest, errorType: E.Type) -> Single<T> {
         self.sendShared(request: request, errorType: errorType)
-            .map { response in
-                let decoder = JSONDecoder()
-                return try decoder.decode(T.self, from: response.data)
+            .flatMap { response in
+                Single.just(response)
+                    .map { response in
+                        let decoder = JSONDecoder()
+                        return try decoder.decode(T.self, from: response.data)
+                    }
+                    .handleMapError(api: self, request: request, response: response)
             }
-            .handleMapError()
     }
     
     // MARK: - Private Methods
@@ -189,14 +203,19 @@ class NetworkApiGateway: ApiGateway {
 
 fileprivate extension PrimitiveSequence where Trait == SingleTrait {
     
-    func handleMapError() -> Single<Element> {
-        return catchError({ (error) -> Single<Element> in
+    func handleMapError(api: NetworkApiGateway,
+                        request: ApiRequest,
+                        response: Response) -> Single<Element> {
+        return self.catchError({ (error) -> Single<Element> in
             if let error = error as? ApiError {
                 // Network or Server Error
                 return Single.error(error)
             } else {
                 debugPrint("Response map error: \(error)")
-                return Single.error(ApiError.cannotParseData)
+                return Single.error(ApiError.cannotParseData(pathUrl: request.serviceRequest.getPath(forStudyId: api.studyId),
+                                                             request: request,
+                                                             statusCode: response.statusCode,
+                                                             responseBody: response.body))
             }
         })
     }
@@ -213,10 +232,12 @@ fileprivate extension PrimitiveSequence where Trait == SingleTrait, Element == R
             .do(onError: {
                 print("Network Error: \($0.localizedDescription)")
             })
-            .catchError({ (error) -> Single<Response> in
+            .catchError({ error -> Single<Response> in
                 // Handle network availability
                 if api.reachability.isCurrentlyReachable {
-                    return Single.error(ApiError.network)
+                    return Single.error(ApiError.network(pathUrl: request.serviceRequest.getPath(forStudyId: api.studyId),
+                                                         request: request,
+                                                         underlyingError: error))
                 } else {
                     return Single.error(ApiError.connectivity)
                 }
@@ -224,30 +245,36 @@ fileprivate extension PrimitiveSequence where Trait == SingleTrait, Element == R
             .flatMap { response -> Single<Element> in
                 if 200 ... 299 ~= response.statusCode {
                     // Uncomment this to print the whole response data
-                    //                print("Network Body: \(String(data: response.data, encoding: .utf8) ?? "")")
+//                    print("Network Body: \(String(data: response.data, encoding: .utf8) ?? "")")
                     self.handleAccessToken(response: response, storage: api.storage)
                     return Single.just(response)
                 } else {
-                    if response.statusCode >= 500 {
-                        return Single.error(ApiError.network)
-                    } else if 400 ... 499 ~= response.statusCode {
+                    if 400 ... 499 ~= response.statusCode {
                         if let serverError = ServerErrorCode(rawValue: response.statusCode) {
                             switch serverError {
                             case .unauthorized:
                                 if request.isAuthTokenRequired {
-                                    return Single.error(ApiError.userUnauthorized)
+                                    let pathUrl = request.serviceRequest.getPath(forStudyId: api.studyId)
+                                    return Single.error(ApiError.userUnauthorized(pathUrl: pathUrl,
+                                                                                  request: request,
+                                                                                  statusCode: response.statusCode,
+                                                                                  responseBody: response.body))
                                 }
                             }
                         }
                         if let error = try? response.map(to: errorType) {
-                            return Single.error(ApiError.error(response.statusCode, error))
-                        } else {
-                            return Single.error(ApiError.errorCode(response.statusCode, String(data: response.data, encoding: .utf8) ?? ""))
+                            return Single.error(ApiError.expectedError(pathUrl: request.serviceRequest.getPath(forStudyId: api.studyId),
+                                                                       request: request,
+                                                                       statusCode: response.statusCode,
+                                                                       responseBody: response.body,
+                                                                       parsedError: error))
                         }
                     }
+                    return Single.error(ApiError.unexpectedError(pathUrl: request.serviceRequest.getPath(forStudyId: api.studyId),
+                                                                 request: request,
+                                                                 statusCode: response.statusCode,
+                                                                 responseBody: response.body))
                 }
-                // Its an error and can't decode error details from server, push generic message
-                return Single.error(ApiError.network)
             }
     }
     
