@@ -1,4 +1,10 @@
 
+## Release 0.63.0
+
+- Shown full error details to the user on verify phone number.
+
+- Server error tracking through Firebase Crashlytics added. Tracked verify phone number errors.
+
 ## Release 0.62.0
 
 - App version label added
