@@ -76,6 +76,7 @@ enum AnalyticsScreens: String {
     case feed = "Feed"
     case task = "Task"
     case yourData = "YourData"
+    case yourDataFilter = "YourDataFilter"
     case studyInfo = "StudyInfo"
     case privacyPolicy = "PrivacyPolicy"
     case termsOfService = "TermsOfService"

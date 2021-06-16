@@ -67,6 +67,7 @@ enum TemplateImageName: String, CaseIterable {
     case permissionIcon = "permission_icon"
     case timingIcon = "survey_timing_icon"
     case editSmall = "edit_small"
+    case filterIcon = "filter_icon"
 }
 
 public class ImagePalette {

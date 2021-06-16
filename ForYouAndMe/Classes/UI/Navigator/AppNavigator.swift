@@ -480,6 +480,14 @@ class AppNavigator {
         }
     }
     
+    // MARK: User Data
+    
+    public func showUserDataFilter(presenter: UIViewController) {
+        let userDataFilterViewController = UserDataFilterViewController()
+        userDataFilterViewController.modalPresentationStyle = .fullScreen
+        presenter.present(userDataFilterViewController, animated: true, completion: nil)
+    }
+    
     // MARK: About You
     
     public func showAboutYouPage(presenter: UIViewController) {

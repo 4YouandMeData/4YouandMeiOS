@@ -200,7 +200,13 @@
       "RK_WALK_TASK_TITLE": "Walk",
       "QUICK_ACTIVITIES_TOTAL_NUMBER": "{0}",
       "PERMISSION_LOCATION": "The BUMP app needs access to your phone's location",
-      "PERMISSION_PUSH_NOTIFICATION": "Push Notification"
+      "PERMISSION_PUSH_NOTIFICATION": "Push Notification",
+      "USER_DATA_FILTER_TITLE": "Graphs configuration",
+      "USER_DATA_FILTER_CLEAR_BUTTON": "Clear",
+      "USER_DATA_FILTER_SELECT_ALL_BUTTON": "Select All",
+      "USER_DATA_FILTER_SAVE_BUTTON": "Save",
+      "TAB_USER_DATA_EMPTY_FILTER_MESSAGE": "No graphs are selected to be shown on this page. Please select one or more graph from the configuration page.",
+      "TAB_USER_DATA_EMPTY_FILTER_BUTTON": "Graphs configuration",
     },
     "country_codes": ["US", "GB", "IT"]
 }

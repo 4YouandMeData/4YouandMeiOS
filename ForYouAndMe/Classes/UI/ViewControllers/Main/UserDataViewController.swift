@@ -76,20 +76,58 @@ class UserDataViewController: UIViewController {
     
     private lazy var dataView: UIView = {
         let view = UIView()
-        let stackView = UIStackView.create(withAxis: .vertical, spacing: 30.0)
-        view.addSubview(stackView)
-        stackView.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets(top: 40.0,
+        let verticalStackView = UIStackView.create(withAxis: .vertical, spacing: 30.0)
+        view.addSubview(verticalStackView)
+        verticalStackView.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets(top: 40.0,
                                                                   left: Constants.Style.DefaultHorizontalMargins,
                                                                   bottom: 40.0,
                                                                   right: Constants.Style.DefaultHorizontalMargins))
-        stackView.addLabel(withText: StringsProvider.string(forKey: .tabUserDataPeriodTitle),
+        
+        let headerStackView = UIStackView.create(withAxis: .horizontal, spacing: 16.0)
+        verticalStackView.addArrangedSubview(headerStackView)
+        
+        headerStackView.addLabel(withText: StringsProvider.string(forKey: .tabUserDataPeriodTitle),
                            fontStyle: .paragraph,
                            colorType: .primaryText,
                            textAlignment: .left)
+        let filterContainerView = UIView()
+        filterContainerView.addSubview(self.filterButton)
+        self.filterButton.autoAlignAxis(toSuperviewAxis: .horizontal)
+        self.filterButton.autoPinEdge(toSuperviewEdge: .leading)
+        self.filterButton.autoPinEdge(toSuperviewEdge: .trailing)
+        self.filterButton.autoPinEdge(toSuperviewEdge: .top, withInset: 0.0, relation: .greaterThanOrEqual)
+        self.filterButton.autoPinEdge(toSuperviewEdge: .bottom, withInset: 0.0, relation: .greaterThanOrEqual)
+        headerStackView.addArrangedSubview(filterContainerView)
         
-        stackView.addArrangedSubview(self.periodSegmentView)
-        stackView.addArrangedSubview(self.chartStackView)
+        verticalStackView.addArrangedSubview(self.periodSegmentView)
+        verticalStackView.addArrangedSubview(self.chartStackView)
         return view
+    }()
+    
+    private lazy var filterButton: UIView = {
+        
+        let size = CGSize(width: 44.0, height: 34.0)
+        
+        let containerView = UIView()
+        containerView.layer.cornerRadius = size.height / 2.0
+        containerView.clipsToBounds = true
+        containerView.autoSetDimensions(to: size)
+        
+        let gradientBackGround = GradientView(type: .primaryBackgroundHorizontal)
+        containerView.addSubview(gradientBackGround)
+        gradientBackGround.autoPinEdgesToSuperviewEdges()
+        
+        let imageView = UIImageView(image: ImagePalette.templateImage(withName: .filterIcon))
+        imageView.tintColor = ColorPalette.color(withType: .secondary)
+        containerView.addSubview(imageView)
+        imageView.autoCenterInSuperview()
+        
+        let button = UIButton()
+        button.addTarget(self, action: #selector(self.filterButtonPressed), for: .touchUpInside)
+        containerView.addSubview(button)
+        button.autoPinEdgesToSuperviewEdges()
+        
+        return containerView
     }()
     
     private lazy var scrollStackView: ScrollStackView = {
@@ -164,6 +202,12 @@ class UserDataViewController: UIViewController {
         self.refreshUI()
     }
     
+    // MARK: - Actions
+    
+    @objc func filterButtonPressed() {
+        self.navigator.showUserDataFilter(presenter: self)
+    }
+    
     // MARK: - Private Methods
     
     private func refreshUI() {
@@ -176,6 +220,7 @@ class UserDataViewController: UIViewController {
             .subscribe(onSuccess: { [weak self] (userData, userDataAggregations) in
                 guard let self = self else { return }
                 self.errorView.hideView()
+                self.filterButton.isHidden = false
                 // Prepare UI if needed
                 if false == self.isViewInitialized {
                     self.scrollStackView.stackView.addArrangedSubview(self.summaryView)
@@ -201,6 +246,7 @@ class UserDataViewController: UIViewController {
             }, onError: { [weak self] error in
                 guard let self = self else { return }
                 print("UserDataViewController - Error Fetching User Data Aggregation: \(error.localizedDescription)")
+                self.filterButton.isHidden = true
                 self.showChartsError()
             }).disposed(by: self.disposeBag)
     }

@@ -32,6 +32,10 @@ extension UIViewController {
     }
     
     @objc func customCloseButtonPressed() {
-        self.navigationController?.dismiss(animated: true)
+        if let navigationController = self.navigationController {
+            navigationController.dismiss(animated: true)
+        } else {
+            self.dismiss(animated: true)
+        }
     }
 }

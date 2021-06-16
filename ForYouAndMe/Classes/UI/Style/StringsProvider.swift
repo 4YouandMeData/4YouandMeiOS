@@ -93,6 +93,8 @@ enum StringKey: String, CaseIterable, CodingKey {
     case tabUserDataAggregationErrorTitle = "TAB_USER_DATA_AGGREGATION_ERROR_TITLE"
     case tabUserDataAggregationErrorBody = "TAB_USER_DATA_AGGREGATION_ERROR_BODY"
     case tabUserDataAggregationErrorButton = "TAB_USER_DATA_AGGREGATION_ERROR_BUTTON"
+    case tabUserDataEmptyFilterMessage = "TAB_USER_DATA_EMPTY_FILTER_MESSAGE"
+    case tabUserDataEmptyFilterButton = "TAB_USER_DATA_EMPTY_FILTER_BUTTON"
     case tabStudyInfoTitle = "TAB_STUDY_INFO_TITLE"
     case tabFeedEmptyTitle = "TAB_FEED_EMPTY_TITLE"
     case tabFeedEmptySubtitle = "TAB_FEED_EMPTY_SUBTITLE"
@@ -104,6 +106,11 @@ enum StringKey: String, CaseIterable, CodingKey {
     case tabFeedHeaderSubtitle = "TAB_FEED_HEADER_SUBTITLE"
     case tabFeedHeaderPoints = "TAB_FEED_HEADER_POINTS"
     case profileTitle = "PROFILE_TITLE"
+    // User Data Filter
+    case userDataFilterTitle = "USER_DATA_FILTER_TITLE"
+    case userDataFilterClearButton = "USER_DATA_FILTER_CLEAR_BUTTON"
+    case userDataFilterSelectAllButton = "USER_DATA_FILTER_SELECT_ALL_BUTTON"
+    case userDataFilterSaveButton = "USER_DATA_FILTER_SAVE_BUTTON"
     // Task
     case taskStartButton = "TASK_START_BUTTON"
     case taskRemindMeLater = "TASK_REMIND_ME_LATER"
