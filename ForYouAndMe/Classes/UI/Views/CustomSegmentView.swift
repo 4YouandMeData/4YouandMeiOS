@@ -24,7 +24,7 @@ struct CustomSegmentViewProperties {
 }
 
 /// This Protocol is used to delegate back to owner of this view before and after moving to a particular index.
-protocol CustomSegmentViewDelegate: class {
+protocol CustomSegmentViewDelegate: AnyObject {
     func segmentWillChange(_ studyPeriod: StudyPeriod)
     func segmentDidChanged(_ studyPeriod: StudyPeriod)
 }

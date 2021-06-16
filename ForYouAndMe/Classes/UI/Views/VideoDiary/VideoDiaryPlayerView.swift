@@ -7,7 +7,7 @@
 
 import UIKit
 
-protocol VideoDiaryPlayerViewDelegate: class {
+protocol VideoDiaryPlayerViewDelegate: AnyObject {
     func mainButtonPressed()
     func discardButtonPressed()
 }

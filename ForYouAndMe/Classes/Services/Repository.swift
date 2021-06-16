@@ -43,7 +43,7 @@ struct PaginationInfo {
     let pageIndex: Int
 }
 
-protocol Repository: class {
+protocol Repository: AnyObject {
     // Authentication
     var accessToken: String? { get }
     var isLoggedIn: Bool { get }

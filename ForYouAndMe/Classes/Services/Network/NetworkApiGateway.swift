@@ -14,7 +14,7 @@ import Mapper
 import Japx
 import Reachability
 
-protocol NetworkStorage: class {
+protocol NetworkStorage: AnyObject {
     var accessToken: String? { get set }
 }
 

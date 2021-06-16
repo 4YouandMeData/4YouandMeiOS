@@ -11,7 +11,7 @@ import UIKit
 
 // Protocol for keyboard will show and keyboard will hide
 
-protocol KeyboardNotificationProvider: class {
+protocol KeyboardNotificationProvider: AnyObject {
     var showNotification: NSObjectProtocol? { get set }
     var hideNotification: NSObjectProtocol? { get set }
     

@@ -8,7 +8,7 @@
 import Foundation
 import RxSwift
 
-protocol ActivitySectionCoordinator: class, Coordinator {
+protocol ActivitySectionCoordinator: AnyObject, Coordinator {
     var repository: Repository { get }
     var navigator: AppNavigator { get }
     var taskIdentifier: String { get }

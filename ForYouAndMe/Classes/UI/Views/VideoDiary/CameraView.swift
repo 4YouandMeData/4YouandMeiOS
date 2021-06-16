@@ -9,7 +9,7 @@ import Foundation
 import UIKit
 import AVFoundation
 
-protocol CameraViewDelegate: class {
+protocol CameraViewDelegate: AnyObject {
     func hasFinishedRecording(fileURL: URL?, error: Error?)
     func hasCaptureSessionErrorOccurred(error: CaptureSessionError)
     func hasCaptureOutputErrorOccurred(error: CaptureOutputError)

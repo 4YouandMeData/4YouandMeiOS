@@ -69,7 +69,7 @@ struct FeedContent {
     }
 }
 
-protocol FeedListManagerDelegate: class {
+protocol FeedListManagerDelegate: AnyObject {
     var presenter: UIViewController { get }
     func handleEmptyList(show: Bool)
     func getDataProviderSingle(repository: Repository, fetchMode: FetchMode) -> Single<FeedContent>

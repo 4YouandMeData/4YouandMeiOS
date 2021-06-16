@@ -13,7 +13,7 @@ enum Deeplink {
     case openIntegrationApp(integrationName: String)
 }
 
-protocol DeeplinkService: class {
+protocol DeeplinkService: AnyObject {
     var currentDeeplink: Deeplink? { get }
     func clearCurrentDeeplinkedData()
 }

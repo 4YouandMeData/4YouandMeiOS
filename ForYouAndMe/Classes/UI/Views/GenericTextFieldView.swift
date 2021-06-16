@@ -10,7 +10,7 @@ import Foundation
 import RxSwift
 import RxCocoa
 
-protocol GenericTextFieldViewDelegate: class {
+protocol GenericTextFieldViewDelegate: AnyObject {
     func genericTextFieldShouldReturn(textField: GenericTextFieldView) -> Bool
     func genericTextFieldDidChange(textField: GenericTextFieldView)
 }
