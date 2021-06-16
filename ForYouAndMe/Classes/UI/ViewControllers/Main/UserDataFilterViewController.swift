@@ -13,12 +13,15 @@ class UserDataFilterViewController: UIViewController {
     private let repository: Repository
     private let analytics: AnalyticsService
     
+    private let userDataAggregationFilterData: [UserDataAggregationFilter]
+    
     private lazy var closeButton: UIButton = {
         let button = UIButton()
         button.setImage(ImagePalette.templateImage(withName: .closeButton), for: .normal)
         button.tintColor = ColorPalette.color(withType: .secondaryText)
         button.autoSetDimension(.width, toSize: 32)
         button.imageView?.contentMode = .scaleAspectFit
+        button.addTarget(self, action: #selector(self.closeButtonPressed), for: .touchUpInside)
         return button
     }()
     
@@ -26,7 +29,7 @@ class UserDataFilterViewController: UIViewController {
         let containerView = UIView()
         containerView.addGradientView(GradientView(type: .primaryBackground))
         
-        let stackView = UIStackView.create(withAxis: .vertical, spacing: 40.0)
+        let stackView = UIStackView.create(withAxis: .vertical, spacing: 20.0)
         
         // Close button
         let closeButtonContainerView = UIView()
@@ -39,9 +42,9 @@ class UserDataFilterViewController: UIViewController {
                            colorType: .secondaryText)
         
         containerView.addSubview(stackView)
-        stackView.autoPinEdgesToSuperviewSafeArea(with: UIEdgeInsets(top: 20,
+        stackView.autoPinEdgesToSuperviewSafeArea(with: UIEdgeInsets(top: 25.0,
                                                                      left: Constants.Style.DefaultHorizontalMargins,
-                                                                     bottom: 30.0,
+                                                                     bottom: 26.0,
                                                                      right: Constants.Style.DefaultHorizontalMargins))
         return containerView
     }()
@@ -51,10 +54,23 @@ class UserDataFilterViewController: UIViewController {
         return scrollStackView
     }()
     
-    init() {
+    private lazy var confirmButtonView: GenericButtonView = {
+        let view = GenericButtonView(withTextStyleCategory: .secondaryBackground())
+        view.setButtonText(StringsProvider.string(forKey: .userDataFilterSaveButton))
+        view.addTarget(target: self, action: #selector(self.confirmButtonPressed))
+        return view
+    }()
+    
+    private var storage: CacheService
+    private var excludedUserDataAggregationIds: [String]
+    
+    init(withUserDataAggregationFilterData userDataAggregationFilterData: [UserDataAggregationFilter]) {
         self.navigator = Services.shared.navigator
         self.repository = Services.shared.repository
+        self.storage = Services.shared.storageServices
         self.analytics = Services.shared.analytics
+        self.userDataAggregationFilterData = userDataAggregationFilterData
+        self.excludedUserDataAggregationIds = self.storage.excludedUserDataAggregationIds ?? []
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -71,15 +87,20 @@ class UserDataFilterViewController: UIViewController {
         
         self.view.backgroundColor = ColorPalette.color(withType: .secondary)
         
-        // Header View
-        self.view.addSubview(self.headerView)
-        self.headerView.autoPinEdgesToSuperviewEdges(with: .zero, excludingEdge: .bottom)
-        self.closeButton.addTarget(self, action: #selector(self.closeButtonDidPressed), for: .touchUpInside)
+        // Main Stack View
+        let stackView = UIStackView.create(withAxis: .vertical)
+        self.view.addSubview(stackView)
+        stackView.autoPinEdgesToSuperviewEdges()
         
-        // ScrollStackView
-        self.view.addSubview(self.scrollStackView)
-        self.scrollStackView.autoPinEdgesToSuperviewEdges(with: .zero, excludingEdge: .top)
-        self.scrollStackView.autoPinEdge(.top, to: .bottom, of: headerView, withOffset: 30)
+        stackView.addArrangedSubview(self.headerView)
+        stackView.addArrangedSubview(self.scrollStackView)
+        stackView.addArrangedSubview(self.confirmButtonView)
+        
+        // TODO: Show items,
+        // TODO: Handle selection
+        // TODO: Update UI accordingly
+        // TODO: Update the excludedUserDataAggregationIds array accordingly
+        // TODO: Add clear/select all button
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -91,7 +112,12 @@ class UserDataFilterViewController: UIViewController {
     
     // MARK: - Actions
     
-    @objc private func closeButtonDidPressed() {
+    @objc private func confirmButtonPressed() {
+        self.storage.excludedUserDataAggregationIds = self.excludedUserDataAggregationIds
+        self.customCloseButtonPressed()
+    }
+    
+    @objc private func closeButtonPressed() {
         self.customCloseButtonPressed()
     }
 }

@@ -12,4 +12,5 @@ protocol CacheService {
     var user: User? { get set }
     var deviceUDID: String? { get set }
     var firstUserAbsoluteLocation: UserLocation? { get set }
+    var excludedUserDataAggregationIds: [String]? { get set }
 }

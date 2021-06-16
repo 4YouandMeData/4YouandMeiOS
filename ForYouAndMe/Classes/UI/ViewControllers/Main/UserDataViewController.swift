@@ -74,6 +74,12 @@ class UserDataViewController: UIViewController {
         return segmentView
     }()
     
+    private lazy var emptyByFilterView: UserDataAggregationEmptyByFilterView = {
+        return UserDataAggregationEmptyByFilterView(buttonCallback: { [weak self] in
+            self?.showFilters()
+        })
+    }()
+    
     private lazy var dataView: UIView = {
         let view = UIView()
         let verticalStackView = UIStackView.create(withAxis: .vertical, spacing: 30.0)
@@ -101,6 +107,7 @@ class UserDataViewController: UIViewController {
         
         verticalStackView.addArrangedSubview(self.periodSegmentView)
         verticalStackView.addArrangedSubview(self.chartStackView)
+        
         return view
     }()
     
@@ -147,8 +154,12 @@ class UserDataViewController: UIViewController {
         return GenericErrorView(retryButtonCallback: { [weak self] in self?.refreshUI() })
     }()
     
+    // Stored so they can be used by the filter page
+    private var userDataAggregationFilterData: [UserDataAggregationFilter] = []
+    
     private let navigator: AppNavigator
     private let repository: Repository
+    private let storage: CacheService
     private let analytics: AnalyticsService
     
     private let disposeBag = DisposeBag()
@@ -156,6 +167,7 @@ class UserDataViewController: UIViewController {
     init() {
         self.navigator = Services.shared.navigator
         self.repository = Services.shared.repository
+        self.storage = Services.shared.storageServices
         self.analytics = Services.shared.analytics
         
         super.init(nibName: nil, bundle: nil)
@@ -205,10 +217,17 @@ class UserDataViewController: UIViewController {
     // MARK: - Actions
     
     @objc func filterButtonPressed() {
-        self.navigator.showUserDataFilter(presenter: self)
+        self.navigator.showUserDataFilter(presenter: self, userDataAggregationFilterData: self.userDataAggregationFilterData)
     }
     
     // MARK: - Private Methods
+    
+    private func setupemptyByFilterView() {
+        self.view.addSubview(self.emptyByFilterView)
+        self.emptyByFilterView.autoPinEdgesToSuperviewEdges(with: .zero, excludingEdge: .top)
+        self.summaryView.autoPinEdge(.bottom, to: .top, of: self.emptyByFilterView, withOffset: 0.0)
+        self.emptyByFilterView.isHidden = true
+    }
     
     private func refreshUI() {
         let userDataRequest = self.repository.getUserData()
@@ -220,11 +239,12 @@ class UserDataViewController: UIViewController {
             .subscribe(onSuccess: { [weak self] (userData, userDataAggregations) in
                 guard let self = self else { return }
                 self.errorView.hideView()
-                self.filterButton.isHidden = false
                 // Prepare UI if needed
                 if false == self.isViewInitialized {
                     self.scrollStackView.stackView.addArrangedSubview(self.summaryView)
                     self.scrollStackView.stackView.addArrangedSubview(self.dataView)
+                    // Setup here because it adds a constraint to summaryView
+                    self.setupemptyByFilterView()
                 }
                 // Show data on UI
                 self.refreshSummary(withUserData: userData)
@@ -241,12 +261,14 @@ class UserDataViewController: UIViewController {
             .addProgress()
             .subscribe(onSuccess: { [weak self] userDataAggregations in
                 guard let self = self else { return }
+                self.userDataAggregationFilterData = userDataAggregations.filterData
                 // Show data on UI
                 self.refreshCharts(withUserDataAggregations: userDataAggregations)
             }, onError: { [weak self] error in
                 guard let self = self else { return }
                 print("UserDataViewController - Error Fetching User Data Aggregation: \(error.localizedDescription)")
                 self.filterButton.isHidden = true
+                self.emptyByFilterView.isHidden = true
                 self.showChartsError()
             }).disposed(by: self.disposeBag)
     }
@@ -260,16 +282,27 @@ class UserDataViewController: UIViewController {
     }
     
     private func refreshCharts(withUserDataAggregations userDataAggregations: [UserDataAggregation]) {
+        self.filterButton.isHidden = false
+        self.emptyByFilterView.isHidden = true
         self.chartStackView.arrangedSubviews.forEach({ $0.removeFromSuperview() })
 
-        userDataAggregations.forEach { userDataAggragation in
-            let testChartView = UserDataChartView(title: userDataAggragation.title ?? "",
-                                                  plotColor: userDataAggragation.color ?? ColorPalette.color(withType: .primary),
-                                                  data: userDataAggragation.chartData.data,
-                                                  xLabels: userDataAggragation.chartData.xLabels,
-                                                  yLabels: userDataAggragation.chartData.yLabels,
-                                                   studyPeriod: self.currentPeriod)
-            self.chartStackView.addArrangedSubview(testChartView)
+        let excludedUserDataAggregationIds = self.storage.excludedUserDataAggregationIds ?? []
+        let filteredUserDataAggregations = userDataAggregations.filter({ false == excludedUserDataAggregationIds.contains($0.id)  })
+        
+        if filteredUserDataAggregations.count > 0 {
+            filteredUserDataAggregations.forEach { userDataAggragation in
+                let testChartView = UserDataChartView(title: userDataAggragation.title ?? "",
+                                                      plotColor: userDataAggragation.color ?? ColorPalette.color(withType: .primary),
+                                                      data: userDataAggragation.chartData.data,
+                                                      xLabels: userDataAggragation.chartData.xLabels,
+                                                      yLabels: userDataAggragation.chartData.yLabels,
+                                                       studyPeriod: self.currentPeriod)
+                self.chartStackView.addArrangedSubview(testChartView)
+            }
+        } else if userDataAggregations.count > 0 {
+            // Show the empty by filter view only if there are data and they are all hidden by filtering
+            // If there are no data at all, don't show anything
+            self.emptyByFilterView.isHidden = false
         }
     }
     
@@ -280,6 +313,10 @@ class UserDataViewController: UIViewController {
             guard let self = self else { return }
             self.refreshCharts(withStudyPeriod: self.currentPeriod)
         }))
+    }
+    
+    private func showFilters() {
+        self.navigator.showUserDataFilter(presenter: self, userDataAggregationFilterData: self.userDataAggregationFilterData)
     }
 }
 

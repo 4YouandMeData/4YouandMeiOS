@@ -16,6 +16,7 @@ class CacheManager: CacheService {
         case deviceUDID
         case userKey
         case firstUserAbsoluteLocationKey
+        case excludedUserDataAggregationIdsKey
         // BatchEventUploader keys
         case batchEventUploadercCurrentBuffer
         case batchEventUploaderArchivedBuffers
@@ -49,6 +50,11 @@ class CacheManager: CacheService {
     var firstUserAbsoluteLocation: UserLocation? {
         get {return self.load(forKey: CacheManagerKey.firstUserAbsoluteLocationKey.rawValue)}
         set {self.save(encodable: newValue, forKey: CacheManagerKey.firstUserAbsoluteLocationKey.rawValue)}
+    }
+    
+    var excludedUserDataAggregationIds: [String]? {
+        get {return self.load(forKey: CacheManagerKey.excludedUserDataAggregationIdsKey.rawValue)}
+        set {self.save(encodable: newValue, forKey: CacheManagerKey.excludedUserDataAggregationIdsKey.rawValue)}
     }
         
     // MARK: - Private methods
