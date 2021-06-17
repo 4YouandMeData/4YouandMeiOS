@@ -17,13 +17,23 @@ struct UserDataAggregationFilter: Codable {
     }
 }
 
+extension UserDataAggregationFilter: Hashable, Equatable {
+    static func == (lhs: UserDataAggregationFilter, rhs: UserDataAggregationFilter) -> Bool {
+        return lhs.identifier == rhs.identifier
+    }
+    
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(self.identifier)
+    }
+}
+
 extension Array where Element == UserDataAggregation {
-    var filterData: [UserDataAggregationFilter] {
+    var filterDataSet: Set<UserDataAggregationFilter> {
         return self.compactMap {
             guard let title = $0.title else {
                 return nil
             }
             return UserDataAggregationFilter(withIdentifier: $0.id, title: title)
-        }
+        }.toSet
     }
 }

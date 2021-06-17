@@ -155,7 +155,7 @@ class UserDataViewController: UIViewController {
     }()
     
     // Stored so they can be used by the filter page
-    private var userDataAggregationFilterData: [UserDataAggregationFilter] = []
+    private var userDataAggregationFilterDataSet: Set<UserDataAggregationFilter> = Set()
     
     private let navigator: AppNavigator
     private let repository: Repository
@@ -217,7 +217,7 @@ class UserDataViewController: UIViewController {
     // MARK: - Actions
     
     @objc func filterButtonPressed() {
-        self.navigator.showUserDataFilter(presenter: self, userDataAggregationFilterData: self.userDataAggregationFilterData)
+        self.showFilters()
     }
     
     // MARK: - Private Methods
@@ -261,7 +261,6 @@ class UserDataViewController: UIViewController {
             .addProgress()
             .subscribe(onSuccess: { [weak self] userDataAggregations in
                 guard let self = self else { return }
-                self.userDataAggregationFilterData = userDataAggregations.filterData
                 // Show data on UI
                 self.refreshCharts(withUserDataAggregations: userDataAggregations)
             }, onError: { [weak self] error in
@@ -282,6 +281,7 @@ class UserDataViewController: UIViewController {
     }
     
     private func refreshCharts(withUserDataAggregations userDataAggregations: [UserDataAggregation]) {
+        self.userDataAggregationFilterDataSet = userDataAggregations.filterDataSet
         self.filterButton.isHidden = false
         self.emptyByFilterView.isHidden = true
         self.chartStackView.arrangedSubviews.forEach({ $0.removeFromSuperview() })
@@ -296,7 +296,7 @@ class UserDataViewController: UIViewController {
                                                       data: userDataAggragation.chartData.data,
                                                       xLabels: userDataAggragation.chartData.xLabels,
                                                       yLabels: userDataAggragation.chartData.yLabels,
-                                                       studyPeriod: self.currentPeriod)
+                                                      studyPeriod: self.currentPeriod)
                 self.chartStackView.addArrangedSubview(testChartView)
             }
         } else if userDataAggregations.count > 0 {
@@ -316,7 +316,7 @@ class UserDataViewController: UIViewController {
     }
     
     private func showFilters() {
-        self.navigator.showUserDataFilter(presenter: self, userDataAggregationFilterData: self.userDataAggregationFilterData)
+        self.navigator.showUserDataFilter(presenter: self, userDataAggregationFilterDataSet: self.userDataAggregationFilterDataSet)
     }
 }
 

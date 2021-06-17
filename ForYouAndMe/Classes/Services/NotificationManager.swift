@@ -9,11 +9,11 @@ import Foundation
 import RxSwift
 import FirebaseMessaging
 
-protocol NotificationTokenDelegate: class {
+protocol NotificationTokenDelegate: AnyObject {
     func registerNotificationToken(token: String)
 }
 
-protocol NotificationDeeplinkHandler: class {
+protocol NotificationDeeplinkHandler: AnyObject {
     func receivedNotificationDeeplinkedOpenTaskId(forTaskId taskId: String)
     func receivedNotificationDeeplinkedOpenURL(forUrl url: URL)
     func receivedNotificationDeeplinkedOpenIntegrationApp(forIntegrationName integrationName: String)

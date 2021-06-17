@@ -8,7 +8,7 @@
 import Foundation
 import RxSwift
 
-protocol DeeplinkManagerDelegate: class {
+protocol DeeplinkManagerDelegate: AnyObject {
     func handleDeeplink(_ deeplink: Deeplink) -> Bool
 }
 

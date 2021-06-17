@@ -9,18 +9,18 @@ import UIKit
 import RxCocoa
 
 enum GenericTextCheckboxStyleCategory: StyleCategory {
-    case primary
-    case secondary
+    case primary(fontStyle: FontStyle, textFirst: Bool)
+    case secondary(fontStyle: FontStyle, textFirst: Bool)
     
     var style: Style<GenericTextCheckboxView> {
         switch self {
-        case .primary: return Style<GenericTextCheckboxView> { textCheckboxView in
-            textCheckboxView.labelAttributedTextStyle = AttributedTextStyle(fontStyle: .header3,
+        case .primary(let fontStyle, _): return Style<GenericTextCheckboxView> { textCheckboxView in
+            textCheckboxView.labelAttributedTextStyle = AttributedTextStyle(fontStyle: fontStyle,
                                                                             colorType: .primaryText,
                                                                             textAlignment: .left)
             }
-        case .secondary: return Style<GenericTextCheckboxView> { textCheckboxView in
-            textCheckboxView.labelAttributedTextStyle = AttributedTextStyle(fontStyle: .header3,
+        case .secondary(let fontStyle, _): return Style<GenericTextCheckboxView> { textCheckboxView in
+            textCheckboxView.labelAttributedTextStyle = AttributedTextStyle(fontStyle: fontStyle,
                                                                             colorType: .secondaryText,
                                                                             textAlignment: .left)
             }
@@ -31,6 +31,13 @@ enum GenericTextCheckboxStyleCategory: StyleCategory {
         switch self {
         case .primary: return .primary
         case .secondary: return .secondary
+        }
+    }
+    
+    var textFirst: Bool {
+        switch self {
+        case .primary(_, let textFirst): return textFirst
+        case .secondary(_, let textFirst): return textFirst
         }
     }
 }
@@ -67,8 +74,13 @@ class GenericTextCheckboxView: UIView {
         self.checkBox.autoPinEdge(toSuperviewEdge: .bottom, withInset: 0.0, relation: .greaterThanOrEqual)
         self.checkBox.autoAlignAxis(toSuperviewAxis: .horizontal)
         
-        horizontalStackView.addArrangedSubview(checkboxContainerView)
-        horizontalStackView.addArrangedSubview(self.label)
+        if styleCategory.textFirst {
+            horizontalStackView.addArrangedSubview(self.label)
+            horizontalStackView.addArrangedSubview(checkboxContainerView)
+        } else {
+            horizontalStackView.addArrangedSubview(checkboxContainerView)
+            horizontalStackView.addArrangedSubview(self.label)
+        }
         
         self.apply(style: styleCategory.style)
     }
@@ -86,5 +98,9 @@ class GenericTextCheckboxView: UIView {
         }
         let attributedText = NSAttributedString.create(withText: text, attributedTextStyle: attributedTextStyle)
         self.label.attributedText = attributedText
+    }
+    
+    public func updateCheckBox(_ checked: Bool) {
+        self.checkBox.updateCheckBox(checked)
     }
 }

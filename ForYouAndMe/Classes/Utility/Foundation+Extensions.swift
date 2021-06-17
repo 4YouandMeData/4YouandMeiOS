@@ -27,3 +27,10 @@ public extension Array where Element: Equatable {
         }
     }
 }
+
+public extension Array where Element: Hashable {
+    
+    var toSet: Set<Element> {
+        return Set(self)
+    }
+}

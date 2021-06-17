@@ -9,7 +9,7 @@ import Foundation
 import UIKit
 import AVKit
 
-protocol PlayerViewDelegate: class {
+protocol PlayerViewDelegate: AnyObject {
     func hasFinishedPlaying()
     func tapGestureDidStart()
     func tapGestureWillEnd()

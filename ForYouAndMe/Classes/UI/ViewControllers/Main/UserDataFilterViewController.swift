@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import RxSwift
 
 class UserDataFilterViewController: UIViewController {
     
@@ -13,7 +14,9 @@ class UserDataFilterViewController: UIViewController {
     private let repository: Repository
     private let analytics: AnalyticsService
     
-    private let userDataAggregationFilterData: [UserDataAggregationFilter]
+    private let userDataAggregationFilterDataSet: Set<UserDataAggregationFilter>
+    
+    private let disposeBag = DisposeBag()
     
     private lazy var closeButton: UIButton = {
         let button = UIButton()
@@ -50,7 +53,10 @@ class UserDataFilterViewController: UIViewController {
     }()
     
     private lazy var scrollStackView: ScrollStackView = {
-        let scrollStackView = ScrollStackView(axis: .vertical, horizontalInset: 0.0)
+        // Subtract button content inset and checkbox inset on the right to keep vertical alignment (not elegant but it gets things done...)
+        let scrollStackView = ScrollStackView(axis: .vertical,
+                                              leftInset: Constants.Style.DefaultHorizontalMargins,
+                                              rightInset: Constants.Style.DefaultHorizontalMargins - 8.0)
         return scrollStackView
     }()
     
@@ -61,16 +67,45 @@ class UserDataFilterViewController: UIViewController {
         return view
     }()
     
-    private var storage: CacheService
-    private var excludedUserDataAggregationIds: [String]
+    private lazy var clearButton: UIButton = {
+        let button = UIButton()
+        button.apply(style: ButtonTextStyleCategory.clearSelectAll.style)
+        button.setTitle(StringsProvider.string(forKey: .userDataFilterClearButton), for: .normal)
+        button.addTarget(self, action: #selector(self.clearButtonPressed), for: .touchUpInside)
+        return button
+    }()
     
-    init(withUserDataAggregationFilterData userDataAggregationFilterData: [UserDataAggregationFilter]) {
+    private lazy var selectAllButton: UIButton = {
+        let button = UIButton()
+        button.apply(style: ButtonTextStyleCategory.clearSelectAll.style)
+        button.setTitle(StringsProvider.string(forKey: .userDataFilterSelectAllButton), for: .normal)
+        button.addTarget(self, action: #selector(self.selectAllButtonPressed), for: .touchUpInside)
+        return button
+    }()
+    
+    private lazy var toolbarView: UIView = {
+        let view = UIView()
+        view.autoSetDimension(.height, toSize: 88.0)
+        view.addSubview(self.clearButton)
+        self.clearButton.autoPinEdge(toSuperviewEdge: .trailing)
+        self.clearButton.autoAlignAxis(toSuperviewAxis: .horizontal)
+        view.addSubview(self.selectAllButton)
+        self.selectAllButton.autoPinEdge(toSuperviewEdge: .trailing)
+        self.selectAllButton.autoAlignAxis(toSuperviewAxis: .horizontal)
+        return view
+    }()
+    
+    private var storage: CacheService
+    private var itemViewsByIds: [String: GenericTextCheckboxView] = [:]
+    private var excludedUserDataAggregationIds: Set<String>
+    
+    init(withUserDataAggregationFilterDataSet userDataAggregationFilterDataSet: Set<UserDataAggregationFilter>) {
         self.navigator = Services.shared.navigator
         self.repository = Services.shared.repository
         self.storage = Services.shared.storageServices
         self.analytics = Services.shared.analytics
-        self.userDataAggregationFilterData = userDataAggregationFilterData
-        self.excludedUserDataAggregationIds = self.storage.excludedUserDataAggregationIds ?? []
+        self.userDataAggregationFilterDataSet = userDataAggregationFilterDataSet
+        self.excludedUserDataAggregationIds = (self.storage.excludedUserDataAggregationIds ?? []).toSet
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -96,11 +131,29 @@ class UserDataFilterViewController: UIViewController {
         stackView.addArrangedSubview(self.scrollStackView)
         stackView.addArrangedSubview(self.confirmButtonView)
         
-        // TODO: Show items,
-        // TODO: Handle selection
-        // TODO: Update UI accordingly
-        // TODO: Update the excludedUserDataAggregationIds array accordingly
-        // TODO: Add clear/select all button
+        // toolbar
+        self.scrollStackView.stackView.addArrangedSubview(self.toolbarView)
+        
+        // filters
+        self.userDataAggregationFilterDataSet.forEach { userDataAggregationFilterItem in
+            let isActive = false == self.excludedUserDataAggregationIds.contains(userDataAggregationFilterItem.identifier)
+            let itemView = GenericTextCheckboxView(isDefaultChecked: isActive,
+                                                   styleCategory: .primary(fontStyle: .paragraph, textFirst: true))
+            itemView.setLabelText(userDataAggregationFilterItem.title)
+            itemView.isCheckedSubject.subscribe(onNext: { [weak self] checked in
+                guard let self = self else { return }
+                if checked {
+                    self.excludedUserDataAggregationIds.remove(userDataAggregationFilterItem.identifier)
+                } else {
+                    self.excludedUserDataAggregationIds.insert(userDataAggregationFilterItem.identifier)
+                }
+                self.updateToolBar()
+            }).disposed(by: self.disposeBag)
+            self.itemViewsByIds[userDataAggregationFilterItem.identifier] = itemView
+            self.scrollStackView.stackView.addArrangedSubview(itemView)
+        }
+        
+        self.updateToolBar()
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -113,11 +166,44 @@ class UserDataFilterViewController: UIViewController {
     // MARK: - Actions
     
     @objc private func confirmButtonPressed() {
-        self.storage.excludedUserDataAggregationIds = self.excludedUserDataAggregationIds
+        self.storage.excludedUserDataAggregationIds = Array(self.excludedUserDataAggregationIds)
         self.customCloseButtonPressed()
     }
     
     @objc private func closeButtonPressed() {
         self.customCloseButtonPressed()
+    }
+    
+    @objc private func clearButtonPressed() {
+        self.excludedUserDataAggregationIds = self.userDataAggregationFilterDataSet.map { $0.identifier }.toSet
+        self.updateToolBar()
+        self.updateItemViews()
+    }
+    
+    @objc private func selectAllButtonPressed() {
+        self.excludedUserDataAggregationIds = []
+        self.updateToolBar()
+        self.updateItemViews()
+    }
+    
+    // MARK: - Private Methods
+    
+    private func updateToolBar() {
+        self.clearButton.isHidden = true
+        self.selectAllButton.isHidden = true
+        
+        // Show select all only when every option is unselected, otherwise show clear
+        if self.excludedUserDataAggregationIds.count == self.userDataAggregationFilterDataSet.count {
+            self.selectAllButton.isHidden = false
+        } else {
+            self.clearButton.isHidden = false
+        }
+    }
+    
+    private func updateItemViews() {
+        self.itemViewsByIds.forEach { itemViewById in
+            let isActive = false == self.excludedUserDataAggregationIds.contains(itemViewById.key)
+            itemViewById.value.updateCheckBox(isActive)
+        }
     }
 }

@@ -16,18 +16,23 @@ public class ScrollStackView: UIView {
     
     // MARK: - Initialization
     
-    public init(axis: NSLayoutConstraint.Axis, horizontalInset: CGFloat) {
+    convenience public init(axis: NSLayoutConstraint.Axis, spacing: CGFloat = 0.0, horizontalInset: CGFloat = 0.0) {
+        self.init(axis: axis, spacing: spacing, leftInset: horizontalInset, rightInset: horizontalInset)
+    }
+    
+    public init(axis: NSLayoutConstraint.Axis, spacing: CGFloat = 0.0, leftInset: CGFloat = 0.0, rightInset: CGFloat = 0.0) {
         super.init(frame: .zero)
         
         self.addSubview(self.scrollView)
         self.scrollView.addSubview(self.stackView)
         self.stackView.axis = axis
+        self.stackView.spacing = spacing
         
         self.scrollView.autoPinEdgesToSuperviewEdges()
         self.stackView.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets(top: 0.0,
-                                                                       left: horizontalInset,
+                                                                       left: leftInset,
                                                                        bottom: 0.0,
-                                                                       right: horizontalInset))
+                                                                       right: rightInset))
         
         switch axis {
         case .horizontal: self.stackView.autoAlignAxis(toSuperviewAxis: .horizontal)

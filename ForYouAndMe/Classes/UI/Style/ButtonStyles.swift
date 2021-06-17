@@ -15,6 +15,7 @@ enum ButtonTextStyleCategory: StyleCategory {
     case genericErrorStyle
     case feed
     case edit
+    case clearSelectAll
     
     var style: Style<UIButton> {
         switch self {
@@ -63,6 +64,14 @@ enum ButtonTextStyleCategory: StyleCategory {
             button.titleLabel?.font = FontPalette.fontStyleData(forStyle: .header3).font
             button.layer.borderWidth = 2.0
             button.layer.borderColor = ColorPalette.color(withType: .secondaryText).cgColor
+            }
+        case .clearSelectAll: return Style<UIButton> { button in
+            let buttonHeight = Constants.Style.EditButtonHeight
+            button.heightConstraintValue = buttonHeight
+            button.backgroundColor = .clear
+            button.setTitleColor(ColorPalette.color(withType: .primary), for: .normal)
+            button.titleLabel?.font = FontPalette.fontStyleData(forStyle: .paragraph).font
+            button.contentEdgeInsets = UIEdgeInsets(top: 8.0, left: 8.0, bottom: 8.0, right: 8.0)
             }
         }
     }

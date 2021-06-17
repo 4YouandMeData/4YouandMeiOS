@@ -23,13 +23,13 @@ class OptInPermissionViewController: UIViewController {
     private let disposeBag = DisposeBag()
     
     private lazy var grantTextCheckbox: GenericTextCheckboxView = {
-        let textCheckBox = GenericTextCheckboxView(isDefaultChecked: false, styleCategory: .primary)
+        let textCheckBox = GenericTextCheckboxView(isDefaultChecked: false, styleCategory: .primary(fontStyle: .header3, textFirst: false))
         textCheckBox.setLabelText(self.optInPermission.grantText)
         return textCheckBox
     }()
     
     private lazy var denyTextCheckbox: GenericTextCheckboxView = {
-        let textCheckBox = GenericTextCheckboxView(isDefaultChecked: false, styleCategory: .primary)
+        let textCheckBox = GenericTextCheckboxView(isDefaultChecked: false, styleCategory: .primary(fontStyle: .header3, textFirst: false))
         textCheckBox.setLabelText(self.optInPermission.denyText)
         return textCheckBox
     }()

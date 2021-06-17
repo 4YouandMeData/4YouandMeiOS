@@ -568,7 +568,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             var params: [String: Any] = [:]
             params["agree"] = granted
             params.addContext(context)
-            return .requestParameters(parameters    : ["user_permission": params], encoding: JSONEncoding.default)
+            return .requestParameters(parameters: ["user_permission": params], encoding: JSONEncoding.default)
         case .sendAnswer(let answer, let context):
             var params: [String: Any] = [:]
             params["answer_text"] = answer.possibleAnswer.text

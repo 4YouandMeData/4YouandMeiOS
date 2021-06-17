@@ -57,19 +57,26 @@ class GenericCheckboxView: UIView {
         self.addSubview(self.checkboxImageView)
         self.checkboxImageView.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets(top: 8.0, left: 8.0, bottom: 8.0, right: 8.0))
         
-        self.isCheckedSubject.asObservable().subscribe(onNext: { checked in
-            if checked {
-                self.checkboxImageView.image = ImagePalette.templateImage(withName: .checkboxFilled)
-                self.checkboxImageView.tintColor = self.checkboxFilledColor
-            } else {
-                self.checkboxImageView.image = ImagePalette.templateImage(withName: .checkboxOutline)
-                self.checkboxImageView.tintColor = self.checkboxOutlineColor
-            }
+        self.isCheckedSubject.asObservable().subscribe(onNext: { [weak self] checked in
+            guard let self = self else { return }
+            self.updateCheckBox(checked)
         }).disposed(by: self.disposeBag)
     }
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+    
+    // MARK: - Public Methods
+    
+    public func updateCheckBox(_ checked: Bool) {
+        if checked {
+            self.checkboxImageView.image = ImagePalette.templateImage(withName: .checkboxFilled)
+            self.checkboxImageView.tintColor = self.checkboxFilledColor
+        } else {
+            self.checkboxImageView.image = ImagePalette.templateImage(withName: .checkboxOutline)
+            self.checkboxImageView.tintColor = self.checkboxOutlineColor
+        }
     }
     
     // MARK: - Actions
