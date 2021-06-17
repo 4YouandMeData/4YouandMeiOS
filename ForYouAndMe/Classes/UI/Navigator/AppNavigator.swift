@@ -483,9 +483,9 @@ class AppNavigator {
     // MARK: User Data
     
     public func showUserDataFilter(presenter: UIViewController, userDataAggregationFilterDataSet: Set<UserDataAggregationFilter>) {
-        let userDataFilterViewController = UserDataFilterViewController(withUserDataAggregationFilterDataSet: userDataAggregationFilterDataSet)
-        userDataFilterViewController.modalPresentationStyle = .fullScreen
-        presenter.present(userDataFilterViewController, animated: true, completion: nil)
+        let viewController = UserDataFilterViewController(withUserDataAggregationFilterDataSet: userDataAggregationFilterDataSet)
+        viewController.modalPresentationStyle = .fullScreen
+        presenter.present(viewController, animated: true, completion: nil)
     }
     
     // MARK: About You

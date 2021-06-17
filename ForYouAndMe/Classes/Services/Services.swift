@@ -14,6 +14,11 @@ protocol InitializableService {
     func initialize() -> Single<()>
 }
 
+struct ServicesSetupData {
+    let showDefaultUserInfo: Bool
+    let healthReadTypes: [HealthReadType]
+}
+
 class Services {
     
     static let shared = Services()
@@ -32,16 +37,16 @@ class Services {
     
     // MARK: - Public Methods
     
-    func setup(withWindow window: UIWindow, showDefaultUserInfo: Bool) {
+    func setup(withWindow window: UIWindow, servicesSetupData: ServicesSetupData) {
         self.window = window
         
         let studyId = Constants.Network.StudyId
         
         let storage = CacheManager()
         self.services.append(storage)
-//
-//        let healthService = HealthManager()
-//        services.append(healthService)
+        
+        let healthService = HealthManager(withReadTypes: servicesSetupData.healthReadTypes)
+        services.append(healthService)
         
         let reachabilityService = ReachabilityManager()
         self.services.append(reachabilityService)
@@ -69,7 +74,7 @@ class Services {
                                         storage: storage,
                                         notificationService: notificationService,
                                         analyticsService: analytics,
-                                        showDefaultUserInfo: showDefaultUserInfo)
+                                        showDefaultUserInfo: servicesSetupData.showDefaultUserInfo)
         self.services.append(repository)
         
         let navigator = AppNavigator(withRepository: repository, analytics: analytics, deeplinkService: deeplinkService, window: window)

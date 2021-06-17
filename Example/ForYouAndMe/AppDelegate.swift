@@ -35,7 +35,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         }
         self.window = FYAMManager.startup(withFontStyleMap: fontStyleMap,
                                           showDefaultUserInfo: true,
-                                          checkResourcesAvailability: true)
+                                          checkResourcesAvailability: true,
+                                          healthReadTypes: [.bloodType, .stepCount])
         return true
     }
     

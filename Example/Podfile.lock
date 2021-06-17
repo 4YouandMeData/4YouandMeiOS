@@ -80,7 +80,7 @@ PODS:
     - GoogleUtilities/Environment (~> 7.0)
     - GoogleUtilities/Reachability (~> 7.0)
     - GoogleUtilities/UserDefaults (~> 7.0)
-  - ForYouAndMe (0.60.0):
+  - ForYouAndMe (0.63.0):
     - BLZJapx/RxCodableMoya (~> 3.0.0)
     - Charts (~> 3.6.0)
     - CountryPickerView (~> 3.1.2)
@@ -256,7 +256,7 @@ SPEC CHECKSUMS:
   FirebaseInstallations: 7f7ed0e7e27fb51f57291e1876e2ddb1524126c1
   FirebaseInstanceID: aaecc93b4528bbcafea12c477e26827719ca1183
   FirebaseMessaging: 7091222bfac24ca89c569c3c59e58390311e487f
-  ForYouAndMe: f32894f5ad2bbeada7402cf8ceaa121736c4c311
+  ForYouAndMe: 299a831f374325e64d131d7360165d64dde87a92
   FYAMResearchKit: c79d2de80d301ac02ba9b303d97d35b083d4676b
   GoogleAppMeasurement: 57a0df93dc2feb5176b1bac06012dbd725191ba5
   GoogleDataTransport: 116c84c4bdeb76be2a7a46de51244368f9794eab
@@ -283,6 +283,6 @@ SPEC CHECKSUMS:
   UberSignature: 93a5860a83211569d6d25b586e0fcad8aa163144
   Validator: 80a6f567220c962dfd2d9928ae98a8c1d164f6f4
 
-PODFILE CHECKSUM: b95393b1f22712a7bfbbd85f7762ae456ae099aa
+PODFILE CHECKSUM: d0f18e12288463be0fe6a44dd0ab29258ceb5483
 
 COCOAPODS: 1.10.1

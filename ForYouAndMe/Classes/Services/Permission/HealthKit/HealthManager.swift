@@ -6,10 +6,19 @@
 //
 
 import Foundation
-// import HealthKit
 import RxSwift
+#if HEALTHKIT
+import HealthKit
 
 class HealthManager: HealthService {
+    
+    private let readTypes: [HealthReadType]
+    
+    init(withReadTypes readTypes: [HealthReadType]) {
+        // If read types are not provided, HealthKit should be removed
+        assert(readTypes.count > 0, "Read Types are not provided but the HEALTHKIT compilation condition has been defined")
+        self.readTypes = readTypes
+    }
     
 //    private static let defaultMeasurements: Set<HKSampleType> = [
 //        HKObjectType.categoryType(forIdentifier: HKCategoryTypeIdentifier.sleepAnalysis)!,
@@ -48,3 +57,15 @@ class HealthManager: HealthService {
 //        }
 //    }
 }
+
+#else
+
+class HealthManager: HealthService {
+    
+    init(withReadTypes readTypes: [HealthReadType]) {
+        // If read types are provided, you probabily want to add HealthKit.
+        assert(readTypes.count == 0, "Read Types are provided but the HEALTHKIT compilation condition has not been defined")
+    }
+}
+
+#endif

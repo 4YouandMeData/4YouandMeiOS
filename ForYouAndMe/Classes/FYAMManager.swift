@@ -15,7 +15,8 @@ public class FYAMManager {
     
     public static func startup(withFontStyleMap fontStyleMap: FontStyleMap,
                                showDefaultUserInfo: Bool,
-                               checkResourcesAvailability: Bool = false) -> UIWindow {
+                               checkResourcesAvailability: Bool = false,
+                               healthReadTypes: [HealthReadType] = []) -> UIWindow {
         let window = UIWindow(frame: UIScreen.main.bounds)
         window.makeKeyAndVisible()
         
@@ -37,7 +38,9 @@ public class FYAMManager {
         #endif
         
         // Prepare Logic
-        Services.shared.setup(withWindow: window, showDefaultUserInfo: showDefaultUserInfo)
+        let servicesSetupData = ServicesSetupData(showDefaultUserInfo: showDefaultUserInfo,
+                                                  healthReadTypes: healthReadTypes)
+        Services.shared.setup(withWindow: window, servicesSetupData: servicesSetupData)
         
         return window
     }
