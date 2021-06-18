@@ -28,10 +28,12 @@ private enum FirebaseEventCustomName: String {
 
 private enum FirebaseErrorDomain {
     case serverError(requestName: String)
+    case healthError(errorName: String)
     
     var stringValue: String {
         switch self {
-        case .serverError(let pathUrl): return "Server Error - \(pathUrl)"
+        case .serverError(let requestName): return "Server Error - \(requestName)"
+        case .healthError(let errorName): return "Health Error - \(errorName)"
         }
     }
 }
@@ -42,6 +44,7 @@ private enum FirebaseErrorCustomUserInfo: String {
     case networkRequestBody = "network_request_body"
     case networkResponseBody = "network_response_body"
     case networkUnderlyingError = "network_underlying_error"
+    case healthUnderlyingError = "health_underlying_error"
 }
 
 class FirebaseAnalyticsPlatform: AnalyticsPlatform {
@@ -82,6 +85,8 @@ class FirebaseAnalyticsPlatform: AnalyticsPlatform {
             self.videoDiaryAction(action)
         case .serverError(let apiError):
             self.serverError(withApiError: apiError)
+        case .healthError(let healthError):
+            self.healthError(withHealthError: healthError)
         default:
             break
         }
@@ -177,6 +182,13 @@ class FirebaseAnalyticsPlatform: AnalyticsPlatform {
         self.reportNonFatalError(nsError)
     }
     
+    func healthError(withHealthError healthError: HealthError) {
+        guard let nsError = healthError.nsError else {
+            return
+        }
+        self.reportNonFatalError(nsError)
+    }
+    
     // MARK: Screens
     
     private func sendRecordScreen(screenName: String, screenClass: String) {
@@ -252,5 +264,25 @@ extension ApiError {
             userInfo[FirebaseErrorCustomUserInfo.networkUnderlyingError.rawValue] = underlyingError
         }
         return NSError(domain: domain.stringValue, code: statusCode, userInfo: userInfo)
+    }
+}
+
+extension HealthError {
+    var nsError: NSError? {
+        switch self {
+        case .healthKitNotAvailable:
+            return self.getNSError(forDomain: FirebaseErrorDomain.healthError(errorName: "health_kit_not_available_error"))
+        case let .permissionRequestError(underlyingError):
+            return self.getNSError(forDomain: FirebaseErrorDomain.healthError(errorName: "permission_request_error"),
+                                   underlyingError: underlyingError)
+        }
+    }
+    
+    private func getNSError(forDomain domain: FirebaseErrorDomain, underlyingError: Error? = nil) -> NSError {
+        var userInfo: [String: Any] = [:]
+        if let underlyingError = underlyingError {
+            userInfo[FirebaseErrorCustomUserInfo.healthUnderlyingError.rawValue] = underlyingError
+        }
+        return NSError(domain: domain.stringValue, code: 500, userInfo: userInfo)
     }
 }

@@ -20,7 +20,7 @@ class OptInSectionCoordinator {
     
     private let disposeBag = DisposeBag()
     
-//    private let healthService: HealthService
+    private let healthService: HealthService
     
     var answers: [Question: PossibleAnswer] = [:]
     
@@ -29,7 +29,7 @@ class OptInSectionCoordinator {
          completionCallback: @escaping NavigationControllerCallback) {
         self.repository = Services.shared.repository
         self.navigator = Services.shared.navigator
-//        self.healthService = Services.shared.healthService
+        self.healthService = Services.shared.healthService
         self.sectionData = sectionData
         self.navigationController = navigationController
         self.completionCallback = completionCallback
@@ -100,7 +100,7 @@ extension OptInSectionCoordinator: OptInPermissionCoordinator {
         let systemPermissionRequests: Single<()> = optInPermission.systemPermissions
             .reduce(Single.just(())) { (result, systemPermission) in
                 switch systemPermission {
-//                case .health: return result.flatMap { self.healthService.requestPermissionDefaultMeasurements().catchErrorJustReturn(()) }
+                case .health: return result.flatMap { self.healthService.requestPermissions().catchErrorJustReturn(()) }
                 case .location: return result.flatMap {
                     let permission: Permission = Constants.Misc.DefaultLocationPermission
                     return granted ? permission.request().catchErrorJustReturn(()) : Single.just(())

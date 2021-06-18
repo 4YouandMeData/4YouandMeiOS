@@ -116,6 +116,7 @@ enum AnalyticsEvent {
     
     // Errors
     case serverError(apiError: ApiError)
+    case healthError(healthError: HealthError)
 }
 
 protocol AnalyticsService {

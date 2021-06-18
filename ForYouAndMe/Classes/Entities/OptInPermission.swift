@@ -9,7 +9,7 @@ import Foundation
 
 enum SystemPermission: String, Codable {
     case location
-//    case health
+    case health
     case notification
 }
 
