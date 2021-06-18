@@ -656,6 +656,18 @@ class AppNavigator {
                             actions: [cancelAction, settingsAction])
     }
     
+    public func showHealthPermissionSettingsAlert(presenter: UIViewController) {
+        
+        let cancelAction = UIAlertAction(title: StringsProvider.string(forKey: .permissionCancel), style: .cancel, handler: nil)
+        let settingsAction = UIAlertAction(title: StringsProvider.string(forKey: .permissionSettings), style: .default, handler: { _ in
+            self.openSettings()
+        })
+        
+        presenter.showAlert(withTitle: StringsProvider.string(forKey: .permissionHealthSettingsTitle),
+                            message: StringsProvider.string(forKey: .permissionHealthSettingsMessage),
+                            actions: [cancelAction, settingsAction])
+    }
+    
     // MARK: - Study Info
     
     public func showInfoDetailPage(presenter: UIViewController, page: Page, isModal: Bool) {

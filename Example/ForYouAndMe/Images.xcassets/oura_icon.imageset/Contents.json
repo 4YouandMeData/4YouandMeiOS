@@ -1,17 +1,17 @@
 {
   "images" : [
     {
-      "filename" : "icon_oura.png",
+      "filename" : "oura_icon.png",
       "idiom" : "universal",
       "scale" : "1x"
     },
     {
-      "filename" : "icon_oura@2x.png",
+      "filename" : "oura_icon@2x.png",
       "idiom" : "universal",
       "scale" : "2x"
     },
     {
-      "filename" : "icon_oura@3x.png",
+      "filename" : "oura_icon@3x.png",
       "idiom" : "universal",
       "scale" : "3x"
     }

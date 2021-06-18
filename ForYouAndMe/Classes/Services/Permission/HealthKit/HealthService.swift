@@ -16,8 +16,11 @@ public enum HealthReadType {
 enum HealthError: Error {
     case healthKitNotAvailable
     case permissionRequestError(underlyingError: Error?)
+    case getPermissionRequestStatusError(underlyingError: Error?)
 }
 
 protocol HealthService {
+    var serviceAvailable: Bool { get }
     func requestPermissions() -> Single<()>
+    func getIsAuthorizationStatusUndetermined() -> Single<Bool>
 }

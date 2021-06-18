@@ -171,12 +171,15 @@ enum StringKey: String, CaseIterable, CodingKey {
     case permissionSettings = "PERMISSION_SETTINGS"
     case permissionCancel = "PERMISSION_CANCEL"
     case permissionMessage = "PERMISSION_MESSAGE"
+    case permissionHealthSettingsTitle = "PERMISSION_HEALTH_SETTINGS_TITLE"
+    case permissionHealthSettingsMessage = "PERMISSION_HEALTH_SETTINGS_MESSAGE"
     case allowMessage = "PERMISSIONS_ALLOW"
     case allowedMessage = "PERMISSIONS_ALLOWED"
     case connectMessage = "YOUR_APPS_AND_DEVICES_CONNECT"
     case deauthorizeMessage = "YOUR_APPS_AND_DEVICES_DEAUTHORIZE"
     case permissionLocationDescription = "PERMISSION_LOCATION"
     case permissionPushNotificationDescription = "PERMISSION_PUSH_NOTIFICATION"
+    case permissionHealthDescription = "PERMISSION_HEALTH"
     
     // DailySurvey Timing
     case dailySurveyTimingDescription = "ABOUT_YOU_DAILY_SURVEY_TIMING_DESCRIPTION"

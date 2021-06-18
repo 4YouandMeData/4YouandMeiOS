@@ -13,6 +13,7 @@ public class PermissionViewController: UIViewController {
     private var titleString: String
     private let navigator: AppNavigator
     private let analytics: AnalyticsService
+    private let healthService: HealthService
     private let disposeBag: DisposeBag = DisposeBag()
     
     private lazy var scrollStackView: ScrollStackView = {
@@ -24,6 +25,7 @@ public class PermissionViewController: UIViewController {
         self.titleString = title
         self.navigator = Services.shared.navigator
         self.analytics = Services.shared.analytics
+        self.healthService = Services.shared.healthService
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -68,58 +70,101 @@ public class PermissionViewController: UIViewController {
         self.scrollStackView.stackView.arrangedSubviews.forEach({ $0.removeFromSuperview() })
         
         let permissionLocation: Permission = Constants.Misc.DefaultLocationPermission
-        let locationStatus: Bool = permissionLocation.isNotDetermined
+
         let locationTitle = StringsProvider.string(forKey: .permissionLocationDescription)
         let locationItem = PermissionItemView(withTitle: locationTitle,
-                                              permission: permissionLocation,
+                                              isAuthorized: permissionLocation.isAuthorized,
                                               iconName: .locationIcon,
                                               gestureCallback: { [weak self] in
-                                                guard let self = self else { return }
-                                                permissionLocation.request().subscribe(onSuccess: { _ in
-                                                    if permissionLocation.isDenied, locationStatus == false {
-                                                        self.navigator.showPermissionDeniedAlert(presenter: self)
-                                                    } else {
-                                                        self.refreshStatus()
-                                                    }
-                                                    let permissionStatus = permissionLocation.isAuthorized ?
-                                                        AnalyticsParameter.allow.rawValue :
-                                                        AnalyticsParameter.revoke.rawValue
-                                                    
-                                                    self.analytics.track(event: .locationPermissionChanged(permissionStatus))
-                                                    
-                                                }, onError: { error in
-                                                    self.navigator.handleError(error: error, presenter: self)
-                                                }).disposed(by: self.disposeBag)
+                                                self?.handleLocationPermission(permission: permissionLocation)
         })
         self.scrollStackView.stackView.addArrangedSubview(locationItem)
         
         let notificationPermission: Permission = .notification
-        let notificationStatus: Bool = notificationPermission.isNotDetermined
         let notificationTitle = StringsProvider.string(forKey: .permissionPushNotificationDescription)
         let pushItem = PermissionItemView(withTitle: notificationTitle,
-                                          permission: notificationPermission,
+                                          isAuthorized: notificationPermission.isAuthorized,
                                           iconName: .pushNotificationIcon,
                                           gestureCallback: { [weak self] in
-                                            guard let self = self else { return }
-                                            notificationPermission.request().subscribe(onSuccess: { [weak self] _ in
-                                                guard let self = self else { return }
-                                                if notificationPermission.isDenied, notificationStatus == false {
-                                                    self.navigator.showPermissionDeniedAlert(presenter: self)
-                                                } else {
-                                                    self.refreshStatus()
-                                                }
-                                                let permissionStatus = notificationPermission.isAuthorized ?
-                                                    AnalyticsParameter.allow.rawValue :
-                                                    AnalyticsParameter.revoke.rawValue
-                                                self.analytics.track(event: .notificationPermissionChanged(permissionStatus))
-                                            }, onError: { [weak self] error in
-                                                guard let self = self else { return }
-                                                self.navigator.handleError(error: error, presenter: self)
-                                            }).disposed(by: self.disposeBag)
+                                            self?.handlePushNotificationPermission(permission: notificationPermission)
         })
         pushItem.autoSetDimension(.height, toSize: 72, relation: .greaterThanOrEqual)
         
         self.scrollStackView.stackView.addArrangedSubview(pushItem)
+        
+        if self.healthService.serviceAvailable {
+            let healthItemTitle = StringsProvider.string(forKey: .permissionHealthDescription)
+            let healthItem = PermissionItemView(withTitle: healthItemTitle,
+                                                isAuthorized: nil,
+                                                iconName: .healthIcon,
+                                                gestureCallback: { [weak self] in
+                                                    self?.handleHealthPermission()
+                                                })
+            healthItem.autoSetDimension(.height, toSize: 72, relation: .greaterThanOrEqual)
+            self.scrollStackView.stackView.addArrangedSubview(healthItem)
+        }
+            
         self.scrollStackView.stackView.addBlankSpace(space: 40.0)
+    }
+    
+    private func handleLocationPermission(permission: Permission) {
+        permission.request().subscribe(onSuccess: { _ in
+            if permission.isDenied, permission.isNotDetermined == false {
+                self.navigator.showPermissionDeniedAlert(presenter: self)
+            } else {
+                self.refreshStatus()
+            }
+            let permissionStatus = permission.isAuthorized ?
+                AnalyticsParameter.allow.rawValue :
+                AnalyticsParameter.revoke.rawValue
+            self.analytics.track(event: .locationPermissionChanged(permissionStatus))
+        }, onError: { error in
+            self.navigator.handleError(error: error, presenter: self)
+        }).disposed(by: self.disposeBag)
+    }
+    
+    private func handlePushNotificationPermission(permission: Permission) {
+        permission.request().subscribe(onSuccess: { [weak self] _ in
+            guard let self = self else { return }
+            if permission.isDenied, permission.isNotDetermined == false {
+                self.navigator.showPermissionDeniedAlert(presenter: self)
+            } else {
+                self.refreshStatus()
+            }
+            let permissionStatus = permission.isAuthorized ?
+                AnalyticsParameter.allow.rawValue :
+                AnalyticsParameter.revoke.rawValue
+            self.analytics.track(event: .notificationPermissionChanged(permissionStatus))
+        }, onError: { [weak self] error in
+            guard let self = self else { return }
+            self.navigator.handleError(error: error, presenter: self)
+        }).disposed(by: self.disposeBag)
+    }
+    
+    private func handleHealthPermission() {
+        self.healthService
+            .getIsAuthorizationStatusUndetermined()
+            .subscribe(onSuccess: { [weak self] undetermined in
+                guard let self = self else { return }
+                if undetermined {
+                    self.healthService.requestPermissions().subscribe(onSuccess: { [weak self] _ in
+                        guard let self = self else { return }
+                        self.refreshStatus()
+                        // TODO: Send analytics?
+//                        let permissionStatus = self.healthService.permissionsGranted ?
+//                            AnalyticsParameter.allow.rawValue :
+//                            AnalyticsParameter.revoke.rawValue
+//                        self.analytics.track(event: .healthPermissionChanged(permissionStatus))
+                    }, onError: { [weak self] error in
+                        guard let self = self else { return }
+                        self.navigator.handleError(error: error, presenter: self)
+                    }).disposed(by: self.disposeBag)
+                } else {
+                    self.navigator.showHealthPermissionSettingsAlert(presenter: self)
+                }
+            }, onError: { [weak self] error in
+                guard let self = self else { return }
+                self.navigator.handleError(error: error, presenter: self)
+            }).disposed(by: self.disposeBag)
     }
 }

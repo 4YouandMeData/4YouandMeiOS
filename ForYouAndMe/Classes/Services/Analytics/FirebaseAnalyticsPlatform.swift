@@ -275,6 +275,9 @@ extension HealthError {
         case let .permissionRequestError(underlyingError):
             return self.getNSError(forDomain: FirebaseErrorDomain.healthError(errorName: "permission_request_error"),
                                    underlyingError: underlyingError)
+        case let .getPermissionRequestStatusError(underlyingError):
+            return self.getNSError(forDomain: FirebaseErrorDomain.healthError(errorName: "get_permission_request_status_error"),
+                                   underlyingError: underlyingError)
         }
     }
     

@@ -89,7 +89,7 @@ class TaskViewController: UIViewController {
         self.navigationController?.navigationBar.apply(style: NavigationBarStyleCategory.primary(hidden: true).style)
         self.analytics.track(event: .switchTab(StringsProvider.string(forKey: .tabTask)))
         self.analytics.track(event: .recordScreen(screenName: AnalyticsScreens.task.rawValue,
-                                                         screenClass: String(describing: type(of: self))))
+                                                  screenClass: String(describing: type(of: self))))
         
         self.listManager.viewWillAppear()
     }

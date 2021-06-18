@@ -12,7 +12,7 @@ class PermissionItemView: UIView {
     private var gestureCallback: PermissionItemViewCallback?
     
     init(withTitle title: String,
-         permission: Permission,
+         isAuthorized: Bool?,
          iconName: ImageName,
          gestureCallback: @escaping PermissionItemViewCallback) {
         
@@ -51,19 +51,21 @@ class PermissionItemView: UIView {
         stackView.addArrangedSubview(label, horizontalInset: 0, verticalInset: 14)
         
         // Allow
-        let titleKey: StringKey = (permission.isAuthorized) ? .allowedMessage : .allowMessage
-        attributedString = NSAttributedString.create(withText: StringsProvider.string(forKey: titleKey),
-                                                     fontStyle: .paragraph,
-                                                     colorType: (permission.isAuthorized) ? .gradientPrimaryEnd : .secondaryText,
-                                                     textAlignment: .left,
-                                                     underlined: true)
-        let allowLabel = UILabel()
-        allowLabel.attributedText = attributedString
-        allowLabel.numberOfLines = 1
-        allowLabel.setContentCompressionResistancePriority(UILayoutPriority(751), for: .horizontal)
-        stackView.addArrangedSubview(allowLabel, horizontalInset: 8)
+        if let isAuthorized = isAuthorized {
+            let titleKey: StringKey = isAuthorized ? .allowedMessage : .allowMessage
+            attributedString = NSAttributedString.create(withText: StringsProvider.string(forKey: titleKey),
+                                                         fontStyle: .paragraph,
+                                                         colorType: isAuthorized ? .gradientPrimaryEnd : .secondaryText,
+                                                         textAlignment: .left,
+                                                         underlined: true)
+            let allowLabel = UILabel()
+            allowLabel.attributedText = attributedString
+            allowLabel.numberOfLines = 1
+            allowLabel.setContentCompressionResistancePriority(UILayoutPriority(751), for: .horizontal)
+            stackView.addArrangedSubview(allowLabel, horizontalInset: 8)
+        }
         
-        if permission.isAuthorized == false {
+        if isAuthorized != true {
             let tap = UITapGestureRecognizer(target: self, action: #selector(viewDidPressed))
             self.addGestureRecognizer(tap)
         }

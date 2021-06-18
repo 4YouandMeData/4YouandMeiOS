@@ -1,17 +1,17 @@
 {
   "images" : [
     {
-      "filename" : "icon_fitbit.png",
+      "filename" : "fitbit_icon.png",
       "idiom" : "universal",
       "scale" : "1x"
     },
     {
-      "filename" : "icon_fitbit@2x.png",
+      "filename" : "fitbit_icon@2x.png",
       "idiom" : "universal",
       "scale" : "2x"
     },
     {
-      "filename" : "icon_fitbit@3x.png",
+      "filename" : "fitbit_icon@3x.png",
       "idiom" : "universal",
       "scale" : "3x"
     }
