@@ -176,6 +176,8 @@ extension DefaultService {
         case .sendSurveyTaskResultData: return "Send Survey Task Result Data"
         // Device Data
         case .sendDeviceData: return "Send Phone Events"
+        // Health
+        case .sendHealthData: return "Send Health Data"
         }
     }
 }

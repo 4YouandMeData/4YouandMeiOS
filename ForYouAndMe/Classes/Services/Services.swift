@@ -16,7 +16,7 @@ protocol InitializableService {
 
 struct ServicesSetupData {
     let showDefaultUserInfo: Bool
-    let healthReadTypes: [HealthReadType]
+    let healthReadDataTypes: [HealthDataType]
 }
 
 class Services {
@@ -67,7 +67,7 @@ class Services {
         let analytics = AnalyticsManager(api: networkApiGateway)
         self.services.append(analytics)
         
-        let healthService = HealthManager(withReadTypes: servicesSetupData.healthReadTypes, analyticsService: analytics)
+        let healthService = HealthManager(withReadDataTypes: servicesSetupData.healthReadDataTypes, analyticsService: analytics)
         services.append(healthService)
         
         let repository = RepositoryImpl(api: networkApiGateway,
@@ -86,6 +86,7 @@ class Services {
         // Add services circular dependences
         deeplinkService.delegate = navigator
         notificationService.notificationTokenDelegate = repository
+        healthService.networkDelegate = repository
         
         // Assign concreate services
         self.repository = repository

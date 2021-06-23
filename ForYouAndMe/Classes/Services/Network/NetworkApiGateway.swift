@@ -382,6 +382,9 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         // Device Data
         case .sendDeviceData:
             return "v1/phone_events"
+        // Health
+        case .sendHealthData:
+            return "v1/health_data" // TODO: Replace with correct endpoint
         }
     }
     
@@ -414,7 +417,8 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
              .notifyOnboardingCompleted,
              .sendOptInPermission,
              .sendAnswer,
-             .sendDeviceData:
+             .sendDeviceData,
+             .sendHealthData:
             return .post
         case .verifyEmail,
              .resendConfirmationEmail,
@@ -506,6 +510,8 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         case .sendSurveyTaskResultData: return "{}".utf8Encoded
         // Device Data
         case .sendDeviceData: return "{}".utf8Encoded
+        // Health
+        case .sendHealthData: return "{}".utf8Encoded
         }
     }
     
@@ -648,6 +654,8 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             params["timestamp"] = deviceData.timestamp
             let dataParams: [String: Any] = ["data": params]
             return .requestParameters(parameters: ["phone_event": dataParams], encoding: JSONEncoding.default)
+        case .sendHealthData(let healthData):
+            return .requestParameters(parameters: ["health_data": healthData], encoding: JSONEncoding.default)
         }
     }
     
@@ -705,7 +713,8 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
              .sendSurveyTaskResultData,
              .sendPushToken,
              .delayTask,
-             .sendDeviceData:
+             .sendDeviceData,
+             .sendHealthData:
             return .bearer
         }
     }

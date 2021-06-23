@@ -424,6 +424,13 @@ extension RepositoryImpl: NotificationTokenDelegate {
     }
 }
 
+extension RepositoryImpl: HealthManagerNetworkDelegate {
+    func uploadHealthNetworkData(_ healthNetworkData: HealthNetworkData) -> Single<()> {
+        return self.api.send(request: ApiRequest(serviceRequest: .sendHealthData(healthData: healthNetworkData)))
+            .handleError()
+    }
+}
+
 // MARK: - Extension(PrimitiveSequence)
 
 fileprivate extension PrimitiveSequence where Trait == SingleTrait {

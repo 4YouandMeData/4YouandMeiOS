@@ -7,20 +7,33 @@
 
 import Foundation
 import RxSwift
+
+typealias HealthNetworkData = [String: Any]
+
+protocol HealthManagerNetworkDelegate: AnyObject {
+    func uploadHealthNetworkData(_ healthNetworkData: HealthNetworkData) -> Single<()>
+}
+
 #if HEALTHKIT
 import HealthKit
 
 class HealthManager: HealthService {
     
-    private let readTypes: [HealthReadType]
+    public weak var networkDelegate: HealthManagerNetworkDelegate?
+    
+    private let readDataTypes: [HealthDataType]
     private let analyticsService: AnalyticsService
     private let healthStore = HKHealthStore()
     
-    init(withReadTypes readTypes: [HealthReadType], analyticsService: AnalyticsService) {
-        // If read types are not provided, HealthKit should be removed
-        assert(readTypes.count > 0, "Read Types are not provided but the HEALTHKIT compilation condition has been defined")
-        self.readTypes = readTypes
+    private let disposeBag = DisposeBag()
+    
+    init(withReadDataTypes readDataTypes: [HealthDataType], analyticsService: AnalyticsService) {
+        // If read data types are not provided, HealthKit should be removed
+        assert(readDataTypes.count > 0, "Read Data Types are not provided but the HEALTHKIT compilation condition has been defined")
+        self.readDataTypes = readDataTypes
         self.analyticsService = analyticsService
+        
+        self.addApplicationDidBecomeActiveObserver()
     }
     
     // MARK: - HealthService
@@ -33,10 +46,11 @@ class HealthManager: HealthService {
                 return Single.create { singleEvent -> Disposable in
                     // Background Thread
                     self.healthStore
-                        .requestAuthorization(toShare: nil, read: self.readTypes.objectTypeSet, completion: { (success, error) in
+                        .requestAuthorization(toShare: nil, read: self.readDataTypes.objectTypeSet, completion: { (success, error) in
                         // Main Thread
                         DispatchQueue.main.async {
                             if success {
+                                self.processCharacteristicTypes()
                                 singleEvent(.success(()))
                             } else {
                                 // Apple doc don't specify what could cause this error. Check if and when they occur.
@@ -57,9 +71,9 @@ class HealthManager: HealthService {
             .flatMap {
                 return Single.create { singleEvent -> Disposable in
                     // Background Thread
-                    let readObjectTypeSet = self.readTypes.objectTypeSet
+                    let readDataObjectTypeSet = self.readDataTypes.objectTypeSet
                     self.healthStore
-                        .getRequestStatusForAuthorization(toShare: Set(), read: readObjectTypeSet, completion: { (status, error) in
+                        .getRequestStatusForAuthorization(toShare: Set(), read: readDataObjectTypeSet, completion: { (status, error) in
                             // Main Thread
                             DispatchQueue.main.async {
                                 if let error = error {
@@ -80,6 +94,13 @@ class HealthManager: HealthService {
     
     // MARK: - Private Methods
     
+    private func addApplicationDidBecomeActiveObserver() {
+        NotificationCenter.default.addObserver(self,
+                                               selector: #selector(self.applicationDidBecomeActive),
+                                               name: UIApplication.didBecomeActiveNotification,
+                                               object: nil)
+    }
+    
     private func checkHealthKitAvailability() -> Single<()> {
         guard HKHealthStore.isHealthDataAvailable() else {
             // TODO: Handle this in more user-friendly way.
@@ -91,21 +112,33 @@ class HealthManager: HealthService {
         }
         return Single.just(())
     }
-}
-
-// MARK: - HealthReadType Extensions
-
-extension HealthReadType {
-    var objectType: HKObjectType {
-        switch self {
-        case .bloodType: return HKObjectType.characteristicType(forIdentifier: .bloodType)!
-        case .stepCount: return HKObjectType.quantityType(forIdentifier: .stepCount)!
+    
+    private func processCharacteristicTypes() {
+        guard let networkDelegate = self.networkDelegate else {
+            assertionFailure("Missing Network Delegate")
+            return
         }
+        let data: [String: String] = self.readDataTypes.reduce([:]) { result, type in
+            if let key = type.characteristicTypeKey {
+                var result = result
+                result[key] = type.characteristicValueDataString(healthStore: self.healthStore) ?? ""
+                return result
+            } else {
+                return result
+            }
+        }
+        networkDelegate.uploadHealthNetworkData(data)
+            .do(onSuccess: { _ in print("HealthManager - Characteristics Data sent successfully") },
+                onError: { error in print("HealthManager - Characteristics Data sending failed with error: \(error)") })
+            .subscribe()
+            .disposed(by: self.disposeBag)
     }
-}
-
-extension Array where Element == HealthReadType {
-    var objectTypeSet: Set<HKObjectType> { self.map { $0.objectType }.toSet }
+    
+    // MARK: - Actions
+    
+    @objc private func applicationDidBecomeActive() {
+        self.processCharacteristicTypes()
+    }
 }
 
 // MARK: - HKAuthorizationRequestStatus Extensions
@@ -128,9 +161,9 @@ extension HKAuthorizationRequestStatus {
 
 class HealthManager: HealthService {
     
-    init(withReadTypes readTypes: [HealthReadType], analyticsService: AnalyticsService) {
-        // If read types are provided, you probabily want to add HealthKit.
-        assert(readTypes.count == 0, "Read Types are provided but the HEALTHKIT compilation condition has not been defined")
+    init(withReadDataTypes readDataTypes: [HealthDataType], analyticsService: AnalyticsService) {
+        // If read data types are provided, you probabily want to add HealthKit.
+        assert(readDataTypes.count == 0, "Read Data Types are provided but the HEALTHKIT compilation condition has not been defined")
     }
     
     // MARK: - HealthService

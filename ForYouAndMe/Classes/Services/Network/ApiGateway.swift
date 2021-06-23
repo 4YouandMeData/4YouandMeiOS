@@ -69,6 +69,8 @@ enum DefaultService {
     case sendSurveyTaskResultData(surveyTaskId: String, results: [SurveyResult])
     // Device Data
     case sendDeviceData(deviceData: DeviceData)
+    // Health
+    case sendHealthData(healthData: HealthNetworkData)
 }
 
 struct ApiRequest {
