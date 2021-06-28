@@ -1,4 +1,14 @@
 
+## Release 0.64.0
+
+- User Data Filters - added filter item views. Added clear and select all buttons.
+
+- Replaced deprecated class keyword with AnyObject keyword.
+
+- User Data filter - added empty by filter view and related show logic. Added filtering logic and persistance.
+
+- User Data page - Added filter button and related visibility logic. Created UserDataFilterViewController (WIP) and related navigation.
+
 ## Release 0.63.0
 
 - Shown full error details to the user on verify phone number.
