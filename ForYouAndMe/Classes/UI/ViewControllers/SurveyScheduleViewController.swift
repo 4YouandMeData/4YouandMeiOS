@@ -62,7 +62,7 @@ public class SurveyScheduleViewController: UIViewController {
         self.view.backgroundColor = ColorPalette.color(withType: .secondary)
         
         // Header View
-        let headerView = InfoDetailHeaderView(withTitle: self.titleString )
+        let headerView = InfoDetailHeaderView(withTitle: self.titleString)
         self.view.addSubview(headerView)
         headerView.autoPinEdgesToSuperviewEdges(with: .zero, excludingEdge: .bottom)
         headerView.backButton.addTarget(self, action: #selector(self.backButtonPressed), for: .touchUpInside)

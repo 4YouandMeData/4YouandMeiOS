@@ -428,6 +428,16 @@ extension RepositoryImpl: HealthManagerNetworkDelegate {
     func uploadHealthNetworkData(_ healthNetworkData: HealthNetworkData) -> Single<()> {
         return self.api.send(request: ApiRequest(serviceRequest: .sendHealthData(healthData: healthNetworkData)))
             .handleError()
+            .catchError { error in
+                guard let repositoryError = error as? RepositoryError else {
+                    assertionFailure("Unexpected error type")
+                    return Single.error(error)
+                }
+                switch repositoryError {
+                case .connectivityError: return Single.error(HealthSampleUploaderError.uploadConnectivityError)
+                default: return Single.error(HealthSampleUploaderError.uploadServerError(underlyingError: error))
+                }
+            }
     }
 }
 

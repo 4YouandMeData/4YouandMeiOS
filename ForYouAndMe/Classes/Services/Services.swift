@@ -67,7 +67,10 @@ class Services {
         let analytics = AnalyticsManager(api: networkApiGateway)
         self.services.append(analytics)
         
-        let healthService = HealthManager(withReadDataTypes: servicesSetupData.healthReadDataTypes, analyticsService: analytics)
+        let healthService = HealthManager(withReadDataTypes: servicesSetupData.healthReadDataTypes,
+                                          analyticsService: analytics,
+                                          storage: storage,
+                                          reachability: reachabilityService)
         services.append(healthService)
         
         let repository = RepositoryImpl(api: networkApiGateway,

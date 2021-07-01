@@ -1497,6 +1497,8 @@
 		88ECA4128F8DD33CB0F7CE2863FCFA6E /* FIRCLSReportAdapter_Private.h in Headers */ = {isa = PBXBuildFile; fileRef = 2663EA07BC0633802A711B43FE59F88F /* FIRCLSReportAdapter_Private.h */; settings = {ATTRIBUTES = (Project, ); }; };
 		88F327EA97983FC0C851488DD85A998D /* ORKGraphChartView.m in Sources */ = {isa = PBXBuildFile; fileRef = 365A024DA3692264A8608DAC338FDA1B /* ORKGraphChartView.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
 		88F97EF99E71DF23F5649C4B08340A3B /* FIRCLSHandler.h in Headers */ = {isa = PBXBuildFile; fileRef = 1E26F46890559A31280FDE869BF1711F /* FIRCLSHandler.h */; settings = {ATTRIBUTES = (Project, ); }; };
+		890470FD268CC09C008DB720 /* HealthSampleUploadManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 890470FC268CC09C008DB720 /* HealthSampleUploadManager.swift */; };
+		890470FF268CC0A9008DB720 /* HealthSampleUploader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 890470FE268CC0A9008DB720 /* HealthSampleUploader.swift */; };
 		8904E5A6609A86149E34A9A7C75AC2CD /* ORKAudioStep.h in Headers */ = {isa = PBXBuildFile; fileRef = A8C39481CC851CAA4D1020C3A5A11129 /* ORKAudioStep.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		890577C42683708F00D06A65 /* HealthDataType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 890577C32683708F00D06A65 /* HealthDataType.swift */; };
 		890577C6268390BE00D06A65 /* HealthDataType+Characteristic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 890577C5268390BE00D06A65 /* HealthDataType+Characteristic.swift */; };
@@ -1509,6 +1511,7 @@
 		8959EA6A08FD2FBDEC0661DA718B415F /* ORKPageStep.h in Headers */ = {isa = PBXBuildFile; fileRef = 01BE45A2EC228079EBB31116D3433FA4 /* ORKPageStep.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		895F6DA5EF78B7F25F4E690879A6DA27 /* TestNetworkApiGateway.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0BCDC4DF1C9FE54BB34910EAFB3184A /* TestNetworkApiGateway.swift */; };
 		89636098B722F3041D8B3009F05E8D6C /* FIRMessagingUtilities.m in Sources */ = {isa = PBXBuildFile; fileRef = E1464ABCF4ACF5F7EB7E4F6D54353E0E /* FIRMessagingUtilities.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
+		8968DCD8268E26C000AEE7BB /* ReachabilityManager+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8968DCD7268E26C000AEE7BB /* ReachabilityManager+Extensions.swift */; };
 		896D5B64F825D1EED6CAB4531391065D /* FIRCLSOnboardingOperation.h in Headers */ = {isa = PBXBuildFile; fileRef = 5B93D11CFB4C51CA6E98BE0923CC8EE6 /* FIRCLSOnboardingOperation.h */; settings = {ATTRIBUTES = (Project, ); }; };
 		899AFC7DB0CA4B9B6117637697522333 /* ORKUSDZModelManagerResult.m in Sources */ = {isa = PBXBuildFile; fileRef = 43CC2D93DFDD06CA7BA251DEFF05B990 /* ORKUSDZModelManagerResult.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
 		899CB9626F9E9BF5D1EACB658BEF16E8 /* GULApplication.h in Headers */ = {isa = PBXBuildFile; fileRef = CAD6B111BC04628B64811EA874696445 /* GULApplication.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -5048,6 +5051,8 @@
 		88C73AC6A0DCFC1D669420ACAFBD5155 /* uk.lproj */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = folder; name = uk.lproj; path = ResearchKit/Localized/uk.lproj; sourceTree = "<group>"; };
 		88D28CCDC11E5204071C1EAD0CECBEC9 /* ChevronUpShapeRenderer.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ChevronUpShapeRenderer.swift; path = Source/Charts/Renderers/Scatter/ChevronUpShapeRenderer.swift; sourceTree = "<group>"; };
 		88D6DD1193EB7553611FAC9E2EB1150A /* IHighlighter.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = IHighlighter.swift; path = Source/Charts/Highlight/IHighlighter.swift; sourceTree = "<group>"; };
+		890470FC268CC09C008DB720 /* HealthSampleUploadManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthSampleUploadManager.swift; sourceTree = "<group>"; };
+		890470FE268CC0A9008DB720 /* HealthSampleUploader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthSampleUploader.swift; sourceTree = "<group>"; };
 		890577C32683708F00D06A65 /* HealthDataType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthDataType.swift; sourceTree = "<group>"; };
 		890577C5268390BE00D06A65 /* HealthDataType+Characteristic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "HealthDataType+Characteristic.swift"; sourceTree = "<group>"; };
 		8909F0BA4B6FF34280103BB94DCD1A0E /* NotificationCenter+OAuthSwift.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = "NotificationCenter+OAuthSwift.swift"; path = "Sources/NotificationCenter+OAuthSwift.swift"; sourceTree = "<group>"; };
@@ -5057,6 +5062,7 @@
 		89435FB1C39FE2CB73F4DFCBFB4B011B /* ORKStepContentView.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = ORKStepContentView.h; path = ResearchKit/Common/ORKStepContentView.h; sourceTree = "<group>"; };
 		894D0B738A35ADAFC02E70F7C7821A5A /* FIRMessagingPersistentSyncMessage.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = FIRMessagingPersistentSyncMessage.h; path = FirebaseMessaging/Sources/FIRMessagingPersistentSyncMessage.h; sourceTree = "<group>"; };
 		89676494CEBADA023F15F5622E9FEB7D /* JapxMoya.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = JapxMoya.swift; path = Japx/Classes/Moya/JapxMoya.swift; sourceTree = "<group>"; };
+		8968DCD7268E26C000AEE7BB /* ReachabilityManager+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ReachabilityManager+Extensions.swift"; sourceTree = "<group>"; };
 		896ABDD3CBF72607DE7267070A51EEE3 /* Firebase.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = Firebase.release.xcconfig; sourceTree = "<group>"; };
 		896C4BE952A15005C8F6B10CBC355E6D /* ORKPSATResult.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = ORKPSATResult.m; path = ResearchKit/ActiveTasks/ORKPSATResult.m; sourceTree = "<group>"; };
 		896CFCA97E9DED15C53E2FDC42F95F6C /* IntegrationData.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = IntegrationData.swift; sourceTree = "<group>"; };
@@ -10198,6 +10204,7 @@
 				6E109A89878BBAAF64062B79CBCBAC95 /* UIStackView+Internal.swift */,
 				EB3B2E82104A3893294B00A3D47F4F8B /* UIViewController+Internal.swift */,
 				7E2EC770D4247B5516E091C1E26E1146 /* User+Extensions.swift */,
+				8968DCD7268E26C000AEE7BB /* ReachabilityManager+Extensions.swift */,
 			);
 			name = UtilityInternal;
 			path = ForYouAndMe/Classes/UtilityInternal;
@@ -10508,6 +10515,8 @@
 			isa = PBXGroup;
 			children = (
 				FB1FEB3E08A2726A37DD1C05BEB48C40 /* HealthManager.swift */,
+				890470FC268CC09C008DB720 /* HealthSampleUploadManager.swift */,
+				890470FE268CC0A9008DB720 /* HealthSampleUploader.swift */,
 				6023A85C0E17B275E2B2283A610206D3 /* HealthService.swift */,
 				890577C32683708F00D06A65 /* HealthDataType.swift */,
 				890577C5268390BE00D06A65 /* HealthDataType+Characteristic.swift */,
@@ -13477,6 +13486,7 @@
 				FB402B9F85BB1D90B2FB45F251A24DAF /* ProjectInfo.swift in Sources */,
 				3A3A0D16892ADD5ABD43C04EFE1F1676 /* PropertyWrappers.swift in Sources */,
 				7D49B3F1BC14A4E1C388EA0BE8215B43 /* Question.swift in Sources */,
+				8968DCD8268E26C000AEE7BB /* ReachabilityManager+Extensions.swift in Sources */,
 				31B8BC670FA7CCF65CD690942123D846 /* QuestionBooleanTableViewCell.swift in Sources */,
 				82931E37E384E1FF7A3E08BA40251377 /* QuestionViewController.swift in Sources */,
 				3D5DF2B3DF631F327F2C7E6C97C99347 /* QuickActivity.swift in Sources */,
@@ -13487,6 +13497,7 @@
 				302A91276897710BA31DB8CB29D82DDC /* ReachabilityManager.swift in Sources */,
 				D1B24C584DFBE5DF460BAC3C60D16D8A /* ReachabilityService.swift in Sources */,
 				2F32099736EC0420EFD30FDED4D0C3B8 /* ReactionTimeTask.swift in Sources */,
+				890470FD268CC09C008DB720 /* HealthSampleUploadManager.swift in Sources */,
 				B00AEF3B37D9F69FE452919BC409BD7C /* ReactiveAuthWebViewController.swift in Sources */,
 				C7F776869636A071F827068B0C0B4D07 /* RemindersPermission.swift in Sources */,
 				946F735C324DE86779659200E1AD4B3C /* Repository+AlertError.swift in Sources */,
@@ -13557,6 +13568,7 @@
 				3DB7D7E80F84C6F68DFB9F8276F2A3BD /* UIStackView+Internal.swift in Sources */,
 				932013EFDD77580705A9323CEF929C7E /* UIStackView+Palette.swift in Sources */,
 				E2E3A7E256B84383FF5EC89327D89FCA /* UITableView+Extensions.swift in Sources */,
+				890470FF268CC0A9008DB720 /* HealthSampleUploader.swift in Sources */,
 				96512CE631FD5E5B09286786DD557416 /* UIView+BorderLine.swift in Sources */,
 				71E221B5D5DE7C48F0B990C476090EDE /* UIView+Constraints.swift in Sources */,
 				D2DC3E661D6E0F70765DDED861A08DBB /* UIView+Round.swift in Sources */,

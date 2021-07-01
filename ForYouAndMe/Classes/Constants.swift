@@ -55,6 +55,11 @@ struct Constants {
             return "Version: \(version) (\(buildNumber))"
         }()
     }
+    struct HealthKit {
+        static let SamplesStartDateTimeInThePast: TimeInterval = 7 * 24 * 60 * 60 // 1 week
+        static let UploadSequenceTimeInterval: TimeInterval = 60 * 60 // 1 hour
+        static let ConnectionAvailabilityForUpload: [ReachabilityServiceType] = [.wifi]
+    }
     struct Misc {
         static let EnableGlobalConfigCache = false
         static let PhoneValidationCodeDigitCount: Int = 6

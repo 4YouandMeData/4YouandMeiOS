@@ -10,29 +10,48 @@ import RxSwift
 
 typealias HealthNetworkData = [String: Any]
 
-protocol HealthManagerNetworkDelegate: AnyObject {
+protocol HealthManagerNetworkDelegate: HealthSampleUploaderNetworkDelegate {
     func uploadHealthNetworkData(_ healthNetworkData: HealthNetworkData) -> Single<()>
 }
+
+typealias HealthManagerStorage = HealthSampleUploadManagerStorage
+typealias HealthManagerReachability = HealthSampleUploadManagerReachability
 
 #if HEALTHKIT
 import HealthKit
 
 class HealthManager: HealthService {
     
-    public weak var networkDelegate: HealthManagerNetworkDelegate?
+    // InitializableService
+    var isInitialized: Bool = false
+    
+    public weak var networkDelegate: HealthManagerNetworkDelegate? {
+        didSet {
+            if let networkDelegate = self.networkDelegate {
+                self.healthSampleUploadManager.setNetworkDelegate(networkDelegate)
+            }
+        }
+    }
     
     private let readDataTypes: [HealthDataType]
     private let analyticsService: AnalyticsService
     private let healthStore = HKHealthStore()
     
+    private let healthSampleUploadManager: HealthSampleUploadManager
+    
     private let disposeBag = DisposeBag()
     
-    init(withReadDataTypes readDataTypes: [HealthDataType], analyticsService: AnalyticsService) {
+    init(withReadDataTypes readDataTypes: [HealthDataType],
+         analyticsService: AnalyticsService,
+         storage: HealthManagerStorage,
+         reachability: HealthManagerReachability) {
         // If read data types are not provided, HealthKit should be removed
         assert(readDataTypes.count > 0, "Read Data Types are not provided but the HEALTHKIT compilation condition has been defined")
         self.readDataTypes = readDataTypes
         self.analyticsService = analyticsService
-        
+        self.healthSampleUploadManager = HealthSampleUploadManager(withDataTypes: readDataTypes,
+                                                                   storage: storage,
+                                                                   reachability: reachability)
         self.addApplicationDidBecomeActiveObserver()
     }
     
@@ -141,6 +160,17 @@ class HealthManager: HealthService {
     }
 }
 
+// MARK: - InitializableService
+
+extension HealthManager: InitializableService {
+    func initialize() -> Single<()> {
+        self.isInitialized = true
+        // Need to start uploading once all dependencies are set and running (see network delegates)
+        self.healthSampleUploadManager.startUploadLogic()
+        return Single.just(())
+    }
+}
+
 // MARK: - HKAuthorizationRequestStatus Extensions
 
 extension HKAuthorizationRequestStatus {
@@ -161,7 +191,7 @@ extension HKAuthorizationRequestStatus {
 
 class HealthManager: HealthService {
     
-    init(withReadDataTypes readDataTypes: [HealthDataType], analyticsService: AnalyticsService) {
+    init(withReadDataTypes readDataTypes: [HealthDataType], analyticsService: AnalyticsService, storage: HealthManagerStorage) {
         // If read data types are provided, you probabily want to add HealthKit.
         assert(readDataTypes.count == 0, "Read Data Types are provided but the HEALTHKIT compilation condition has not been defined")
     }

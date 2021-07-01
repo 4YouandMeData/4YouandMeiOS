@@ -22,6 +22,10 @@ class CacheManager: CacheService {
         case batchEventUploaderArchivedBuffers
         case batchEventUploaderDate
         case batchEventUploaderRecordInterval
+        // HealthUploader keys
+        case lastCompletedUploaderDataType
+        case lastSampleUploadAnchor
+        case lastUploadSequenceCompletionDate
     }
     
     private let mainUserDefaults = UserDefaults.standard
@@ -76,6 +80,23 @@ class CacheManager: CacheService {
             if let object = try? decoder.decode(T.self, from: encodedData) {
                 return object
             }
+        }
+        return nil
+    }
+    
+    private func saveNSSecureCoding<T>(object: T?, forKey key: String) where T: NSSecureCoding & NSObject {
+        if let object = object {
+            if let encoded = try? NSKeyedArchiver.archivedData(withRootObject: object, requiringSecureCoding: true) {
+                self.mainUserDefaults.set(encoded, forKey: key)
+            }
+        } else {
+            self.reset(forKey: key)
+        }
+    }
+    
+    private func loadNSSecureCoding<T>(forKey key: String) -> T? where T: NSSecureCoding & NSObject {
+        if let encodedData = self.mainUserDefaults.object(forKey: key) as? Data {
+            return try? NSKeyedUnarchiver.unarchivedObject(ofClass: T.self, from: encodedData)
         }
         return nil
     }
@@ -209,5 +230,42 @@ extension CacheManager: BatchEventUploaderStorage {
     func saveRecordInterval(forUploaderIdentifier uploaderIdentifier: String, timeInterval: TimeInterval) {
         self.save(encodable: timeInterval,
                   forKey: CacheManagerKey.batchEventUploaderRecordInterval.getKey(forUploaderIdentifier: uploaderIdentifier))
+    }
+}
+
+// MARK: - HealthSampleUploaderStorage
+
+extension CacheManager.CacheManagerKey {
+    static func getLastSampleUploadAnchorKey(forHealthDataTypeIdentifier healthDataTypeIdentifier: HealthDataType) -> String {
+        return CacheManager.CacheManagerKey.lastSampleUploadAnchor.rawValue + "." + healthDataTypeIdentifier.rawValue
+    }
+}
+
+extension CacheManager: HealthSampleUploaderStorage {
+    var lastUploadSequenceCompletionDate: Date? {
+        get { self.load(forKey: CacheManagerKey.lastUploadSequenceCompletionDate.rawValue) }
+        set { self.save(encodable: newValue, forKey: CacheManagerKey.lastUploadSequenceCompletionDate.rawValue) }
+    }
+    
+    func saveLastSampleUploadAnchor<T: NSSecureCoding & NSObject>(_ anchor: T?, forDataType dateType: HealthDataType) {
+        self.saveNSSecureCoding(object: anchor, forKey: CacheManagerKey.getLastSampleUploadAnchorKey(forHealthDataTypeIdentifier: dateType))
+    }
+    
+    func loadLastSampleUploadAnchor<T: NSSecureCoding & NSObject>(forDataType dateType: HealthDataType) -> T? {
+        return self.loadNSSecureCoding(forKey: CacheManagerKey.getLastSampleUploadAnchorKey(forHealthDataTypeIdentifier: dateType))
+    }
+}
+
+// MARK: - HealthSampleUploadManagerStorage
+
+extension CacheManager: HealthSampleUploadManagerStorage {
+    var lastCompletedUploaderDataType: HealthDataType? {
+        get {
+            guard let dataTypeString = self.getString(forKey: CacheManagerKey.lastCompletedUploaderDataType.rawValue) else {
+                return nil
+            }
+            return HealthDataType(rawValue: dataTypeString)
+        }
+        set { self.saveString(newValue?.rawValue, forKey: CacheManagerKey.lastCompletedUploaderDataType.rawValue) }
     }
 }

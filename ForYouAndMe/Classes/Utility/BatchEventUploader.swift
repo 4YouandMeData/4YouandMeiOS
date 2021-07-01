@@ -38,8 +38,8 @@ struct BatchEventUploaderConfig {
 }
 
 protocol BatchEventUploaderReachability {
-    var isCurrentlyReachable: Bool { get }
-    func getIsReachableObserver() -> Observable<Bool>
+    var isCurrentlyReachableForBatchEventUpload: Bool { get }
+    func getIsReachableObserverForBatchEventUpload() -> Observable<Bool>
 }
 
 enum BatchEventUploaderDateType: String {
@@ -109,7 +109,7 @@ class BatchEventUploader<Record: Codable> {
         self.setupBuffersUploadTimer()
         self.setupBuffersUploadRetryTimer()
         
-        self.reachability.getIsReachableObserver()
+        self.reachability.getIsReachableObserverForBatchEventUpload()
             .subscribe(onNext: { [weak self] isReachable in
                 guard let self = self else { return }
                 if isReachable, nil != self.storage.getBatchEventUploaderDate(forUploaderIdentifier: self.config.identifier,
@@ -251,7 +251,7 @@ class BatchEventUploader<Record: Codable> {
                                                 date: Date(timeIntervalSinceNow: timeInterval))
         self.uploadRetryTimer = Timer.scheduledTimer(withTimeInterval: timeInterval, repeats: false, block: { [weak self] _ in
             guard let self = self else { return }
-            if self.reachability.isCurrentlyReachable {
+            if self.reachability.isCurrentlyReachableForBatchEventUpload {
                 self.logDebugText(text: "Buffer Upload Retry Timer Tick. Connection available -> Upload buffers")
                 self.uploadBuffers()
             } else {

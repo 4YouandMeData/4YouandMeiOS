@@ -135,6 +135,10 @@ extension HealthDataType {
         // Workouts
         }
     }
+    
+    var sampleType: HKSampleType? {
+        return self.objectType as? HKSampleType
+    }
 }
 
 extension Date {
