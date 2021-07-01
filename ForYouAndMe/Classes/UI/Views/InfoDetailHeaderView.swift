@@ -39,9 +39,11 @@ class InfoDetailHeaderView: UIView {
                                                               fontStyle: .title,
                                                               colorType: .secondaryText)
         containerView.addSubview(titleLabel)
-        titleLabel.autoCenterInSuperview()
-        titleLabel.autoPinEdge(.leading, to: .trailing, of: self.backButton, withOffset: 8)
-        
+        NSLayoutConstraint.autoSetPriority(.defaultLow) {
+            titleLabel.autoCenterInSuperview()
+        }
+        titleLabel.setContentCompressionResistancePriority(.defaultHigh, for: .horizontal)
+        titleLabel.autoPinEdge(.leading, to: .trailing, of: self.backButton, withOffset: 8, relation: .greaterThanOrEqual)
     }
     
     required init?(coder aDecoder: NSCoder) {
