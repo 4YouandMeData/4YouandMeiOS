@@ -79,6 +79,31 @@ extension HKSample {
         } else if let correlationSample = self as? HKCorrelation {
             result["sampleClass"] = "correlation"
             result["objects"] = correlationSample.objects.map { $0.getDictionary(forDataType: dataType) }
+        } else if let workoutSample = self as? HKWorkout {
+            result["sampleClass"] = "workout"
+            result["workoutActivityType"] = workoutSample.workoutActivityType.stringValue
+            if let workoutEvents = workoutSample.workoutEvents {
+                result["workoutEvents"] = workoutEvents.map { $0.dictionary }
+            }
+            result["duration"] = workoutSample.duration
+            if let totalEnergyBurned = workoutSample.totalEnergyBurned {
+                result["totalEnergyBurned"] = totalEnergyBurned.getStringValue(forUnit: HKUnit.defaultEnergy)
+            }
+            if let totalDistance = workoutSample.totalDistance {
+                result["totalDistance"] = totalDistance.getStringValue(forUnit: HKUnit.defaultShortDistance)
+            }
+            if let totalSwimmingStrokeCount = workoutSample.totalSwimmingStrokeCount {
+                result["totalSwimmingStrokeCount"] = totalSwimmingStrokeCount.getStringValue(forUnit: HKUnit.defaultCount)
+            }
+            if let totalFlightsClimbed = workoutSample.totalFlightsClimbed {
+                result["totalFlightsClimbed"] = totalFlightsClimbed.getStringValue(forUnit: HKUnit.defaultCountOnTime)
+            }
+        } else if let heartBeatSeriesSample = self as? HKHeartbeatSeriesSample {
+            result["sampleClass"] = "heartBeatSeries"
+            result["count"] = heartBeatSeriesSample.count
+        } else if let workoutRouteSample = self as? HKWorkoutRoute {
+            result["sampleClass"] = "workoutRoute"
+            result["count"] = workoutRouteSample.count
         } else {
             assertionFailure("Unhandled subclass")
             result["sampleClass"] = "unhandled"
@@ -209,6 +234,45 @@ extension HKElectrocardiogram.SymptomsStatus {
     }
 }
 
+// MARK: - Workout
+
+extension HKWorkoutActivityType {
+    var stringValue: String {
+        // TODO: Convert the whole enum to string
+        return "\(self.rawValue)"
+    }
+}
+
+extension HKWorkoutEvent {
+    var dictionary: [String: Any] {
+        var result: [String: Any] = [:]
+        result["type"] = self.type.stringValue
+        result["startDate"] = self.dateInterval.start.sampleDateTimeString
+        result["endDate"] = self.dateInterval.end.sampleDateTimeString
+        result["duration"] = self.dateInterval.duration
+        if let metadata = self.metadata {
+            result["metadata"] = metadata
+        }
+        return result
+    }
+}
+
+extension HKWorkoutEventType {
+    var stringValue: String {
+        switch self {
+        case .pause: return "pause"
+        case .resume: return "resume"
+        case .lap: return "lap"
+        case .marker: return "marker"
+        case .motionPaused: return "motionPaused"
+        case .motionResumed: return "motionResumed"
+        case .segment: return "segment"
+        case .pauseOrResumeRequest: return "pauseOrResumeRequest"
+        @unknown default: return "unknown"
+        }
+    }
+}
+
 // MARK: - HealthDataType + HKUnit
 
 fileprivate extension HealthDataType {
@@ -262,6 +326,7 @@ fileprivate extension HealthDataType {
         case .heartRateVariabilitySDNN: return HKUnit(from: "ms")
         case .walkingHeartRateAverage: return HKUnit.defaultCountOnTime
         case .electrocardiogram: return nil
+//        case .heartbeatSeries: return nil
         case .oxygenSaturation: return HKUnit(from: "%")
         case .bodyTemperature: return HKUnit.defaultTemperature
         case .bloodPressureSystolic: return HKUnit.defaultPressure
@@ -272,6 +337,8 @@ fileprivate extension HealthDataType {
         case .mindfulSession: return nil
         case .sleepAnalysis: return nil
         // Workouts
+        case .workout: return nil
+//        case .workoutRoute: return nil
         }
     }
 }

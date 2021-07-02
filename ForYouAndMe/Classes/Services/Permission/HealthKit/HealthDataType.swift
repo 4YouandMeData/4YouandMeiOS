@@ -41,8 +41,8 @@ public enum HealthDataType: String, CaseIterable {
     case restingHeartRate
     case heartRateVariabilitySDNN
     case walkingHeartRateAverage
-    // TODO: Understance usage
-//    case HKDataTypeIdentifierHeartbeatSeries
+    // TODO: Check if it must be done, since it require a separate upload logic
+//    case heartbeatSeries
     case electrocardiogram
     case oxygenSaturation
     case bodyTemperature
@@ -54,10 +54,9 @@ public enum HealthDataType: String, CaseIterable {
     case mindfulSession
     case sleepAnalysis
     // Workouts
-    // TODO: Understance usage
-//    case utTypeIdentifier
-    // TODO: Understance usage
-//    case utRouteTypeIdentifier
+    case workout
+    // TODO: Check if it must be done, since it require a separate upload logic
+//    case workoutRoute
 }
 
 #if HEALTHKIT
@@ -117,6 +116,7 @@ extension HealthDataType {
         case .restingHeartRate: return HKObjectType.quantityType(forIdentifier: .restingHeartRate)
         case .heartRateVariabilitySDNN: return HKObjectType.quantityType(forIdentifier: .heartRateVariabilitySDNN)
         case .walkingHeartRateAverage: return HKObjectType.quantityType(forIdentifier: .walkingHeartRateAverage)
+//        case .heartbeatSeries: return HKSeriesType.heartbeat()
         case .electrocardiogram:
             if #available(iOS 14.0, *) {
                 return HKObjectType.electrocardiogramType()
@@ -133,6 +133,8 @@ extension HealthDataType {
         case .mindfulSession: return HKObjectType.categoryType(forIdentifier: .mindfulSession)
         case .sleepAnalysis: return HKObjectType.categoryType(forIdentifier: .sleepAnalysis)
         // Workouts
+        case .workout: return HKObjectType.workoutType()
+//        case .workoutRoute: return HKSeriesType.workoutRoute()
         }
     }
     
