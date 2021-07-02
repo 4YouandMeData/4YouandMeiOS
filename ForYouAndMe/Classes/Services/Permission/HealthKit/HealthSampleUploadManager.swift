@@ -13,7 +13,8 @@ protocol HealthSampleUploadManagerReachability {
     func getIsReachableForHealthSampleUploadObserver() -> Observable<Bool>
 }
 
-protocol HealthSampleUploadManagerStorage: HealthSampleUploaderStorage {
+protocol HealthSampleUploadManagerStorage {
+    var lastUploadSequenceCompletionDate: Date? { get set }
     var lastCompletedUploaderDataType: HealthDataType? { get set }
 }
 
@@ -33,7 +34,7 @@ class HealthSampleUploadManager {
     private let disposeBag = DisposeBag()
     
     init(withDataTypes dataTypes: [HealthDataType],
-         storage: HealthSampleUploadManagerStorage,
+         storage: HealthSampleUploadManagerStorage & HealthSampleUploaderStorage,
          reachability: HealthSampleUploadManagerReachability) {
         self.storage = storage
         self.reachability = reachability
@@ -41,6 +42,7 @@ class HealthSampleUploadManager {
             .filter { $0.sampleType != nil }
             .filter { $0.isValid }
         self.uploaders = sampleTypes.map { HealthSampleUploader(withSampleDataType: $0, storage: storage) }
+        self.logDebugText(text: "Initialized with \(self.uploaders.count) uploaders")
     }
     
     public func setNetworkDelegate(_ networkDelegate: HealthSampleUploaderNetworkDelegate) {
@@ -59,7 +61,7 @@ class HealthSampleUploadManager {
         self.reachability.getIsReachableForHealthSampleUploadObserver()
             .subscribe(onNext: { [weak self] reachable in
                 guard let self = self else { return }
-                if reachable, self.uploadSequenceTimerDisposable != nil {
+                if reachable, self.uploadSequenceTimerDisposable == nil {
                     self.scheduleUploadSequence()
                 }
             }).disposed(by: self.disposeBag)
@@ -123,7 +125,7 @@ class HealthSampleUploadManager {
                     return
                 }
                 switch sampleUploadError {
-                case .internalError, .fetchDataError, .unexpectedDataType, .readPermissionDenied, .uploadServerError:
+                case .internalError, .fetchDataError, .unexpectedDataType, .uploadServerError:
                     self.processNextUploader(forUploader: uploader)
                 case .uploadConnectivityError:
                     // Restart the same upload. At the beginning of the method, if connection is still unavailable,

@@ -26,6 +26,7 @@ class CacheManager: CacheService {
         case lastCompletedUploaderDataType
         case lastSampleUploadAnchor
         case lastUploadSequenceCompletionDate
+        case firstSuccessfulSampleUploadDate
     }
     
     private let mainUserDefaults = UserDefaults.standard
@@ -84,7 +85,7 @@ class CacheManager: CacheService {
         return nil
     }
     
-    private func saveNSSecureCoding<T>(object: T?, forKey key: String) where T: NSSecureCoding & NSObject {
+    private func saveNSSecureCoding<T>(object: T?, forKey key: String) where T: NSSecureCoding {
         if let object = object {
             if let encoded = try? NSKeyedArchiver.archivedData(withRootObject: object, requiringSecureCoding: true) {
                 self.mainUserDefaults.set(encoded, forKey: key)
@@ -242,23 +243,28 @@ extension CacheManager.CacheManagerKey {
 }
 
 extension CacheManager: HealthSampleUploaderStorage {
-    var lastUploadSequenceCompletionDate: Date? {
-        get { self.load(forKey: CacheManagerKey.lastUploadSequenceCompletionDate.rawValue) }
-        set { self.save(encodable: newValue, forKey: CacheManagerKey.lastUploadSequenceCompletionDate.rawValue) }
+    var firstSuccessfulSampleUploadDate: Date? {
+        get { self.load(forKey: CacheManagerKey.firstSuccessfulSampleUploadDate.rawValue) }
+        set { self.save(encodable: newValue, forKey: CacheManagerKey.firstSuccessfulSampleUploadDate.rawValue) }
     }
     
-    func saveLastSampleUploadAnchor<T: NSSecureCoding & NSObject>(_ anchor: T?, forDataType dateType: HealthDataType) {
-        self.saveNSSecureCoding(object: anchor, forKey: CacheManagerKey.getLastSampleUploadAnchorKey(forHealthDataTypeIdentifier: dateType))
+    func saveLastSampleUploadAnchor<T: NSSecureCoding>(_ anchor: T?, forDataType dataType: HealthDataType) {
+        self.saveNSSecureCoding(object: anchor, forKey: CacheManagerKey.getLastSampleUploadAnchorKey(forHealthDataTypeIdentifier: dataType))
     }
     
-    func loadLastSampleUploadAnchor<T: NSSecureCoding & NSObject>(forDataType dateType: HealthDataType) -> T? {
-        return self.loadNSSecureCoding(forKey: CacheManagerKey.getLastSampleUploadAnchorKey(forHealthDataTypeIdentifier: dateType))
+    func loadLastSampleUploadAnchor<T: NSSecureCoding & NSObject>(forDataType dataType: HealthDataType) -> T? {
+        return self.loadNSSecureCoding(forKey: CacheManagerKey.getLastSampleUploadAnchorKey(forHealthDataTypeIdentifier: dataType))
     }
 }
 
 // MARK: - HealthSampleUploadManagerStorage
 
 extension CacheManager: HealthSampleUploadManagerStorage {
+    var lastUploadSequenceCompletionDate: Date? {
+        get { self.load(forKey: CacheManagerKey.lastUploadSequenceCompletionDate.rawValue) }
+        set { self.save(encodable: newValue, forKey: CacheManagerKey.lastUploadSequenceCompletionDate.rawValue) }
+    }
+    
     var lastCompletedUploaderDataType: HealthDataType? {
         get {
             guard let dataTypeString = self.getString(forKey: CacheManagerKey.lastCompletedUploaderDataType.rawValue) else {

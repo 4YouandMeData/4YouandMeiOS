@@ -14,7 +14,7 @@ protocol HealthManagerNetworkDelegate: HealthSampleUploaderNetworkDelegate {
     func uploadHealthNetworkData(_ healthNetworkData: HealthNetworkData) -> Single<()>
 }
 
-typealias HealthManagerStorage = HealthSampleUploadManagerStorage
+typealias HealthManagerStorage = HealthSampleUploadManagerStorage & HealthSampleUploaderStorage
 typealias HealthManagerReachability = HealthSampleUploadManagerReachability
 
 #if HEALTHKIT
