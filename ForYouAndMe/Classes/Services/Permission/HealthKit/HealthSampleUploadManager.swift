@@ -162,8 +162,6 @@ class HealthSampleUploadManager {
     }
 }
 
-#endif
-
 extension Array where Element == HealthSampleUploader {
     func getNextUploader(forDataType dataType: HealthDataType) -> HealthSampleUploader? {
         guard let currentUploaderIndex = self.firstIndex(where: { $0.sampleDataType == dataType }) else {
@@ -176,3 +174,5 @@ extension Array where Element == HealthSampleUploader {
         return self[nextUploaderIndex]
     }
 }
+
+#endif

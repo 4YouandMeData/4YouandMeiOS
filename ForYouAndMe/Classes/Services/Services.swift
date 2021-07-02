@@ -67,10 +67,14 @@ class Services {
         let analytics = AnalyticsManager(api: networkApiGateway)
         self.services.append(analytics)
         
+        #if HEALTHKIT
         let healthService = HealthManager(withReadDataTypes: servicesSetupData.healthReadDataTypes,
                                           analyticsService: analytics,
                                           storage: storage,
                                           reachability: reachabilityService)
+        #else
+        let healthService = DummyHealthManager()
+        #endif
         services.append(healthService)
         
         let repository = RepositoryImpl(api: networkApiGateway,
@@ -89,7 +93,9 @@ class Services {
         // Add services circular dependences
         deeplinkService.delegate = navigator
         notificationService.notificationTokenDelegate = repository
+        #if HEALTHKIT
         healthService.networkDelegate = repository
+        #endif
         
         // Assign concreate services
         self.repository = repository

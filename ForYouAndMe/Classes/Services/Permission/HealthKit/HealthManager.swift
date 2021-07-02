@@ -185,30 +185,4 @@ extension HKAuthorizationRequestStatus {
     }
 }
 
-#else
-
-// MARK: - Dummy HealthManager
-
-class HealthManager: HealthService {
-    
-    init(withReadDataTypes readDataTypes: [HealthDataType], analyticsService: AnalyticsService, storage: HealthManagerStorage) {
-        // If read data types are provided, you probabily want to add HealthKit.
-        assert(readDataTypes.count == 0, "Read Data Types are provided but the HEALTHKIT compilation condition has not been defined")
-    }
-    
-    // MARK: - HealthService
-    
-    var serviceAvailable: Bool { false }
-    
-    func getIsAuthorizationStatusUndetermined() -> Single<Bool> {
-        assertionFailure("Unexpected get authorization status. The HEALTHKIT compilation condition has not been defined")
-        return false
-    }
-    
-    func requestPermission() -> Single<()> {
-        assertionFailure("Unexpected health permission request. The HEALTHKIT compilation condition has not been defined")
-        return Single<()>
-    }
-}
-
 #endif

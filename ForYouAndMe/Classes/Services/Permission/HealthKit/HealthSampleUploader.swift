@@ -18,9 +18,6 @@ protocol HealthSampleUploaderStorage {
     func loadLastSampleUploadAnchor<T: NSSecureCoding & NSObject>(forDataType dateType: HealthDataType) -> T?
 }
 
-#if HEALTHKIT
-import HealthKit
-
 enum HealthSampleUploaderError: Error {
     case internalError
     case unexpectedDataType
@@ -28,6 +25,9 @@ enum HealthSampleUploaderError: Error {
     case uploadServerError(underlyingError: Error)
     case uploadConnectivityError
 }
+
+#if HEALTHKIT
+import HealthKit
 
 private struct HealthQueryResult {
     let anchor: HKQueryAnchor?
