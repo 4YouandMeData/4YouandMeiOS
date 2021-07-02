@@ -37,7 +37,10 @@ class HealthSampleUploadManager {
          reachability: HealthSampleUploadManagerReachability) {
         self.storage = storage
         self.reachability = reachability
-        self.uploaders = dataTypes.filter { $0.sampleType != nil }.map { HealthSampleUploader(withSampleDataType: $0, storage: storage) }
+        let sampleTypes = dataTypes
+            .filter { $0.sampleType != nil }
+            .filter { $0.isValid }
+        self.uploaders = sampleTypes.map { HealthSampleUploader(withSampleDataType: $0, storage: storage) }
     }
     
     public func setNetworkDelegate(_ networkDelegate: HealthSampleUploaderNetworkDelegate) {
@@ -106,15 +109,15 @@ class HealthSampleUploadManager {
             return
         }
         
-        self.logDebugText(text: "Upload for data type '\(uploader.sampleDataType.rawValue)' started")
+        self.logDebugText(text: "Upload for data type '\(uploader.sampleDataType.keyName)' started")
         self.uploadDisposable = uploader.run()
             .subscribe(onSuccess: {
                 self.uploadDisposable = nil
-                self.logDebugText(text: "Upload for data type '\(uploader.sampleDataType.rawValue)' completed")
+                self.logDebugText(text: "Upload for data type '\(uploader.sampleDataType.keyName)' completed")
                 self.processNextUploader(forUploader: uploader)
             }, onError: { error in
                 self.uploadDisposable = nil
-                self.logDebugText(text: "Data Type '\(uploader.sampleDataType.rawValue)' upload failed with error: \(error)")
+                self.logDebugText(text: "Data Type '\(uploader.sampleDataType.keyName)' upload failed with error: \(error)")
                 guard let sampleUploadError = error as? HealthSampleUploaderError else {
                     assertionFailure("Unexpected error type")
                     return

@@ -1507,7 +1507,9 @@
 		891F32E0B7EE0A63E542A480CE5D039C /* FIRLogger.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A402CCD23339A185685C1E836341182 /* FIRLogger.h */; settings = {ATTRIBUTES = (Project, ); }; };
 		8921310819048EEE2E4F243A141999B2 /* ORKRequestPermissionsStepViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 2AB60B1B76E72E728D41C8C0BCE2E5FB /* ORKRequestPermissionsStepViewController.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
 		89419F6DA745C9EB2B494B0BF12289E9 /* ORKStepNavigationRule_Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 245CB7A0A6F07508D7893C23E6BC186C /* ORKStepNavigationRule_Internal.h */; settings = {ATTRIBUTES = (Project, ); }; };
+		894D8AFB268EFF28001BAA4E /* HKSample+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 894D8AFA268EFF28001BAA4E /* HKSample+Extensions.swift */; };
 		89502F4711359241F37949CF695E40E7 /* GULMutableDictionary.h in Headers */ = {isa = PBXBuildFile; fileRef = 75A532D933F6E680DAB1468810C1B93B /* GULMutableDictionary.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		8954A085268F114C00F1C2B9 /* OperatingSystemVersion+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8954A084268F114C00F1C2B9 /* OperatingSystemVersion+Extensions.swift */; };
 		8959EA6A08FD2FBDEC0661DA718B415F /* ORKPageStep.h in Headers */ = {isa = PBXBuildFile; fileRef = 01BE45A2EC228079EBB31116D3433FA4 /* ORKPageStep.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		895F6DA5EF78B7F25F4E690879A6DA27 /* TestNetworkApiGateway.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0BCDC4DF1C9FE54BB34910EAFB3184A /* TestNetworkApiGateway.swift */; };
 		89636098B722F3041D8B3009F05E8D6C /* FIRMessagingUtilities.m in Sources */ = {isa = PBXBuildFile; fileRef = E1464ABCF4ACF5F7EB7E4F6D54353E0E /* FIRMessagingUtilities.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
@@ -5061,6 +5063,8 @@
 		89409262F70A52C380926A2B65F0365E /* ORKFormStepViewController_Private.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = ORKFormStepViewController_Private.h; path = ResearchKit/Common/ORKFormStepViewController_Private.h; sourceTree = "<group>"; };
 		89435FB1C39FE2CB73F4DFCBFB4B011B /* ORKStepContentView.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = ORKStepContentView.h; path = ResearchKit/Common/ORKStepContentView.h; sourceTree = "<group>"; };
 		894D0B738A35ADAFC02E70F7C7821A5A /* FIRMessagingPersistentSyncMessage.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = FIRMessagingPersistentSyncMessage.h; path = FirebaseMessaging/Sources/FIRMessagingPersistentSyncMessage.h; sourceTree = "<group>"; };
+		894D8AFA268EFF28001BAA4E /* HKSample+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "HKSample+Extensions.swift"; sourceTree = "<group>"; };
+		8954A084268F114C00F1C2B9 /* OperatingSystemVersion+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "OperatingSystemVersion+Extensions.swift"; sourceTree = "<group>"; };
 		89676494CEBADA023F15F5622E9FEB7D /* JapxMoya.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = JapxMoya.swift; path = Japx/Classes/Moya/JapxMoya.swift; sourceTree = "<group>"; };
 		8968DCD7268E26C000AEE7BB /* ReachabilityManager+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ReachabilityManager+Extensions.swift"; sourceTree = "<group>"; };
 		896ABDD3CBF72607DE7267070A51EEE3 /* Firebase.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = Firebase.release.xcconfig; sourceTree = "<group>"; };
@@ -7073,6 +7077,7 @@
 				54D8A86FC5A5597AC13C2CFC6C67803B /* UIViewController+Alert.swift */,
 				31C4EA95A4E873F4490333D30078E4BA /* UIViewController+Extensions.swift */,
 				7BF91A85FA609DB8698AE9C37F22FF45 /* URL+Extensions.swift */,
+				8954A084268F114C00F1C2B9 /* OperatingSystemVersion+Extensions.swift */,
 			);
 			name = Utility;
 			path = ForYouAndMe/Classes/Utility;
@@ -10520,6 +10525,7 @@
 				6023A85C0E17B275E2B2283A610206D3 /* HealthService.swift */,
 				890577C32683708F00D06A65 /* HealthDataType.swift */,
 				890577C5268390BE00D06A65 /* HealthDataType+Characteristic.swift */,
+				894D8AFA268EFF28001BAA4E /* HKSample+Extensions.swift */,
 			);
 			path = HealthKit;
 			sourceTree = "<group>";
@@ -13525,6 +13531,7 @@
 				ACE6A7A51486D55AA7B419AB7E97ABDF /* StudyInfoHeaderView.swift in Sources */,
 				0933C003F94AC444417355713066FF24 /* StudyInfoSection.swift in Sources */,
 				7DE430A797C9403D8C8408426F43581E /* StudyInfoViewController.swift in Sources */,
+				8954A085268F114C00F1C2B9 /* OperatingSystemVersion+Extensions.swift in Sources */,
 				38D21526A5E7842A1A83AA6C9B710687 /* Style.swift in Sources */,
 				EB42EB069AF2CFD533D432AB86087DB2 /* StyleCategory.swift in Sources */,
 				55178AAD76D5F89AB00D78384EA01FF7 /* Survey+Extensions.swift in Sources */,
@@ -13561,6 +13568,7 @@
 				17CA12CE4A3C8FCED937EA8002CBE71E /* UIButton+Extensions.swift in Sources */,
 				D72DB42234C1C9BA0B94EC6F5625801C /* UIColor+Extension.swift in Sources */,
 				4E09CA3249D2616562F3F84C111CEF97 /* UILabel+Internal.swift in Sources */,
+				894D8AFB268EFF28001BAA4E /* HKSample+Extensions.swift in Sources */,
 				56B4A50761814F30158DE2612D5C5390 /* UILabelInteractionManager.swift in Sources */,
 				8E5EA54E8A300ECBC65720B876BF655E /* UINavigationController+Extensions.swift in Sources */,
 				E81E552F797A8FA66B18E08E295643B4 /* UINavigationController+Internal.swift in Sources */,

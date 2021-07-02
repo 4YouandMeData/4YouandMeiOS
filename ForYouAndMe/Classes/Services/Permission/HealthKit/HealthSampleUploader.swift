@@ -102,11 +102,3 @@ class HealthSampleUploader {
 }
 
 #endif
-
-extension Array where Element == HKSample {
-    func getNetworkData(forDataType dataType: HealthDataType) -> HealthNetworkData {
-        var networkData: [[String: Any]] = []
-        // TODO: Convert samples to health network data
-        return [dataType.rawValue: networkData]
-    }
-}

@@ -68,7 +68,7 @@ extension Array where Element == HealthDataType {
 }
 
 extension HealthDataType {
-    var keyName: String? {
+    var keyName: String {
         return self.rawValue
     }
     
