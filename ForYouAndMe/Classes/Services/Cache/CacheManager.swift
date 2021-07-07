@@ -283,6 +283,7 @@ extension CacheManager {
     func resetHealthKitCache() {
         self.lastCompletedUploaderDataType = nil
         self.lastUploadSequenceCompletionDate = nil
+        self.firstSuccessfulSampleUploadDate = nil
         HealthDataType.allCases.forEach { dataType in
             self.reset(forKey: CacheManagerKey.getLastSampleUploadAnchorKey(forHealthDataTypeIdentifier: dataType))
         }
