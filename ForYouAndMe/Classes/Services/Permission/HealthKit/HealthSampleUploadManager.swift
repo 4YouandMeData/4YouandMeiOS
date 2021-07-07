@@ -15,7 +15,8 @@ protocol HealthSampleUploadManagerReachability {
 
 protocol HealthSampleUploadManagerStorage {
     var lastUploadSequenceCompletionDate: Date? { get set }
-    var lastCompletedUploaderDataType: HealthDataType? { get set }
+    var lastUploadSequenceStartingDate: Date? { get set }
+    var pendingUploadDataType: HealthDataType? { get set }
 }
 
 #if HEALTHKIT
@@ -24,13 +25,11 @@ import HealthKit
 class HealthSampleUploadManager {
     
     private var storage: HealthSampleUploadManagerStorage
-    private var reachability: HealthSampleUploadManagerReachability
     
+    private var uploadSequenceScheduledOrRunning: Bool = false
+    
+    private let reachability: HealthSampleUploadManagerReachability
     private let uploaders: [HealthSampleUploader]
-    
-    private var uploadSequenceTimerDisposable: Disposable?
-    private var uploadDisposable: Disposable?
-    
     private let disposeBag = DisposeBag()
     
     init(withDataTypes dataTypes: [HealthDataType],
@@ -56,12 +55,11 @@ class HealthSampleUploadManager {
         }
         self.logDebugText(text: "Upload logic started")
         
-        self.scheduleUploadSequence()
-        
+        // This subscription must happen after the first call to scheduleUploadSequence
         self.reachability.getIsReachableForHealthSampleUploadObserver()
             .subscribe(onNext: { [weak self] reachable in
                 guard let self = self else { return }
-                if reachable, self.uploadSequenceTimerDisposable == nil {
+                if reachable, self.uploadSequenceScheduledOrRunning == false {
                     self.scheduleUploadSequence()
                 }
             }).disposed(by: self.disposeBag)
@@ -70,6 +68,12 @@ class HealthSampleUploadManager {
     // MARK: - Private Methods
     
     private func scheduleUploadSequence() {
+        guard self.uploadSequenceScheduledOrRunning == false else {
+            assertionFailure("Trying to schedule an upload sequence while one is already scheduled or running")
+            return
+        }
+        self.uploadSequenceScheduledOrRunning = true
+        
         let dueTimeSeconds: Int
         if let lastUploadSequenceCompletionDate = self.storage.lastUploadSequenceCompletionDate {
             let nextUploadSequenceDate = lastUploadSequenceCompletionDate.addingTimeInterval(Constants.HealthKit.UploadSequenceTimeInterval)
@@ -78,24 +82,30 @@ class HealthSampleUploadManager {
             dueTimeSeconds = 0
         }
         
-        if dueTimeSeconds == 0 {
-            // Since we have to restart the entire sequence, clear any record of the last complete data type
-            self.storage.lastCompletedUploaderDataType = nil
-        }
-        
-        self.uploadSequenceTimerDisposable = Observable<Int>
+        Observable<Int>
             .timer(.seconds(dueTimeSeconds), scheduler: MainScheduler.asyncInstance)
             .subscribe(onNext: { [weak self] _ in
                 guard let self = self else { return }
                 self.startUploadSequence()
-            })
+            }).disposed(by: self.disposeBag)
     }
     
     private func startUploadSequence() {
         self.logDebugText(text: "Upload sequence started")
+        
+        // If too much time has passed from the sequence start and, in that case, restart from the beginning (drop the pending upload)
+        if let lastUploadSequenceStartingDate = self.storage.lastUploadSequenceStartingDate,
+           lastUploadSequenceStartingDate.addingTimeInterval(Constants.HealthKit.PendingUploadExpireTimeInterval) < Date() {
+            self.storage.pendingUploadDataType = nil
+        }
+        
+        self.storage.lastUploadSequenceStartingDate = Date()
+        
         if let pendingUploader = self.getPendingUploader() {
+            self.logDebugText(text: "Resuming pending uploader")
             self.startUpload(forUploader: pendingUploader)
         } else if let firstUploader = self.uploaders.first {
+            self.logDebugText(text: "Start from first uploader")
             self.startUpload(forUploader: firstUploader)
         } else {
             self.logDebugText(text: "No sample data types to be uploaded")
@@ -103,21 +113,22 @@ class HealthSampleUploadManager {
     }
     
     private func startUpload(forUploader uploader: HealthSampleUploader) {
+        self.storage.pendingUploadDataType = uploader.sampleDataType
         guard self.reachability.isCurrentlyReachableForHealthSampleUpload else {
-            // If network connection is not available, unschedule the upload sequence, waiting for connection to be re-established.
-            self.uploadSequenceTimerDisposable?.dispose()
-            self.uploadSequenceTimerDisposable = nil
+            self.logDebugText(text: "Upload sequence stopped due to not available connection")
+            // If network connection is not available, stop the upload sequence, waiting for connection to be re-established.
+            self.uploadSequenceScheduledOrRunning = false
             return
         }
         
         self.logDebugText(text: "Upload for data type '\(uploader.sampleDataType.keyName)' started")
-        self.uploadDisposable = uploader.run()
-            .subscribe(onSuccess: {
-                self.uploadDisposable = nil
+        uploader.run()
+            .subscribe(onSuccess: { [weak self] in
+                guard let self = self else { return }
                 self.logDebugText(text: "Upload for data type '\(uploader.sampleDataType.keyName)' completed")
                 self.processNextUploader(forUploader: uploader)
-            }, onError: { error in
-                self.uploadDisposable = nil
+            }, onError: { [weak self] error in
+                guard let self = self else { return }
                 self.logDebugText(text: "Data Type '\(uploader.sampleDataType.keyName)' upload failed with error: \(error)")
                 guard let sampleUploadError = error as? HealthSampleUploaderError else {
                     assertionFailure("Unexpected error type")
@@ -125,31 +136,32 @@ class HealthSampleUploadManager {
                 }
                 switch sampleUploadError {
                 case .internalError, .fetchDataError, .unexpectedDataType, .uploadServerError:
+                    self.logDebugText(text: "Upload error: \(sampleUploadError)")
                     self.processNextUploader(forUploader: uploader)
                 case .uploadConnectivityError:
+                    self.logDebugText(text: "Upload connectivity error. Try to re-upload")
                     // Restart the same upload. At the beginning of the method, if connection is still unavailable,
-                    // the upload sequence will be unscheduled.
+                    // the upload sequence will be stopped.
                     self.startUpload(forUploader: uploader)
                 }
-            })
+            }).disposed(by: self.disposeBag)
     }
     
     private func processNextUploader(forUploader uploader: HealthSampleUploader) {
-        self.storage.lastCompletedUploaderDataType = uploader.sampleDataType
+        self.storage.pendingUploadDataType = nil
         if let nextUploader = self.uploaders.getNextUploader(forDataType: uploader.sampleDataType) {
             self.startUpload(forUploader: nextUploader)
         } else {
             self.logDebugText(text: "Upload sequence completed")
             self.storage.lastUploadSequenceCompletionDate = Date()
-            // This data is reset since it's only needed to restore interrupted uploads.
-            self.storage.lastCompletedUploaderDataType = nil
+            self.uploadSequenceScheduledOrRunning = false
             self.scheduleUploadSequence()
         }
     }
     
     private func getPendingUploader() -> HealthSampleUploader? {
-        if let lastCompletedUploaderDataType = self.storage.lastCompletedUploaderDataType {
-            return self.uploaders.getNextUploader(forDataType: lastCompletedUploaderDataType)
+        if let pendingUploadDataType = self.storage.pendingUploadDataType {
+            return self.uploaders.getUploader(forDataType: pendingUploadDataType)
         } else {
             return nil
         }
@@ -172,6 +184,10 @@ extension Array where Element == HealthSampleUploader {
             return nil
         }
         return self[nextUploaderIndex]
+    }
+    
+    func getUploader(forDataType dataType: HealthDataType) -> HealthSampleUploader? {
+        return self.first(where: { $0.sampleDataType == dataType })
     }
 }
 

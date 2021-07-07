@@ -59,13 +59,16 @@ struct Constants {
         }()
     }
     struct HealthKit {
-        static let SamplesStartDateTimeInThePast: TimeInterval = 7 * 24 * 60 * 60 // 1 week
         #if DEBUG
         // Test Values
         static let UploadSequenceTimeInterval: TimeInterval = 60// 1 min
+        static let SamplesStartDateTimeInThePast: TimeInterval = 7 * 24 * 60 * 60 // 1 week
+        static let PendingUploadExpireTimeInterval: TimeInterval = 60// 1 min
         #else
         // Production Values
         static let UploadSequenceTimeInterval: TimeInterval = 60 * 60 // 1 hour
+        static let SamplesStartDateTimeInThePast: TimeInterval = 7 * 24 * 60 * 60 // 1 week
+        static let PendingUploadExpireTimeInterval: TimeInterval = 10 * 60// 10 min
         #endif
         static let ConnectionAvailabilityForUpload: [ReachabilityServiceType] = [.wifi, .cellular]
     }

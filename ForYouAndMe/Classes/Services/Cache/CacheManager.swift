@@ -23,9 +23,10 @@ class CacheManager: CacheService {
         case batchEventUploaderDate
         case batchEventUploaderRecordInterval
         // HealthUploader keys
-        case lastCompletedUploaderDataType
+        case pendingUploadDataType
         case lastSampleUploadAnchor
         case lastUploadSequenceCompletionDate
+        case lastUploadSequenceStartingDate
         case firstSuccessfulSampleUploadDate
     }
     
@@ -265,14 +266,19 @@ extension CacheManager: HealthSampleUploadManagerStorage {
         set { self.save(encodable: newValue, forKey: CacheManagerKey.lastUploadSequenceCompletionDate.rawValue) }
     }
     
-    var lastCompletedUploaderDataType: HealthDataType? {
+    var lastUploadSequenceStartingDate: Date? {
+        get { self.load(forKey: CacheManagerKey.lastUploadSequenceStartingDate.rawValue) }
+        set { self.save(encodable: newValue, forKey: CacheManagerKey.lastUploadSequenceStartingDate.rawValue) }
+    }
+    
+    var pendingUploadDataType: HealthDataType? {
         get {
-            guard let dataTypeString = self.getString(forKey: CacheManagerKey.lastCompletedUploaderDataType.rawValue) else {
+            guard let dataTypeString = self.getString(forKey: CacheManagerKey.pendingUploadDataType.rawValue) else {
                 return nil
             }
             return HealthDataType(rawValue: dataTypeString)
         }
-        set { self.saveString(newValue?.rawValue, forKey: CacheManagerKey.lastCompletedUploaderDataType.rawValue) }
+        set { self.saveString(newValue?.rawValue, forKey: CacheManagerKey.pendingUploadDataType.rawValue) }
     }
 }
 
@@ -281,8 +287,9 @@ extension CacheManager: HealthSampleUploadManagerStorage {
 #if DEBUG
 extension CacheManager {
     func resetHealthKitCache() {
-        self.lastCompletedUploaderDataType = nil
+        self.pendingUploadDataType = nil
         self.lastUploadSequenceCompletionDate = nil
+        self.lastUploadSequenceStartingDate = nil
         self.firstSuccessfulSampleUploadDate = nil
         HealthDataType.allCases.forEach { dataType in
             self.reset(forKey: CacheManagerKey.getLastSampleUploadAnchorKey(forHealthDataTypeIdentifier: dataType))
