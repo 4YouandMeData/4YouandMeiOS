@@ -83,9 +83,8 @@ class HealthSampleUploadManager {
             self.storage.lastCompletedUploaderDataType = nil
         }
         
-        self.uploadSequenceTimerDisposable = Observable<Int>.timer(.seconds(dueTimeSeconds),
-                              period: .seconds(Int(Constants.HealthKit.UploadSequenceTimeInterval)),
-                              scheduler: MainScheduler.asyncInstance)
+        self.uploadSequenceTimerDisposable = Observable<Int>
+            .timer(.seconds(dueTimeSeconds), scheduler: MainScheduler.asyncInstance)
             .subscribe(onNext: { [weak self] _ in
                 guard let self = self else { return }
                 self.startUploadSequence()
@@ -144,6 +143,7 @@ class HealthSampleUploadManager {
             self.storage.lastUploadSequenceCompletionDate = Date()
             // This data is reset since it's only needed to restore interrupted uploads.
             self.storage.lastCompletedUploaderDataType = nil
+            self.scheduleUploadSequence()
         }
     }
     
