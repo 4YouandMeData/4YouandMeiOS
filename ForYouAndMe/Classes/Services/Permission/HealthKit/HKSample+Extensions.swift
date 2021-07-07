@@ -306,7 +306,7 @@ fileprivate extension HealthDataType {
         case .distanceDownhillSnowSports: return HKUnit.defaultLongDistance
         case .basalEnergyBurned: return HKUnit.defaultEnergy
         case .activeEnergyBurned: return HKUnit.defaultEnergy
-        case .flightsClimbed: return HKUnit.defaultCountOnTime
+        case .flightsClimbed: return HKUnit.defaultCount
         case .nikeFuel: return HKUnit.defaultCount
         case .appleExerciseTime: return HKUnit.defaultTime
         case .appleStandHour: return nil

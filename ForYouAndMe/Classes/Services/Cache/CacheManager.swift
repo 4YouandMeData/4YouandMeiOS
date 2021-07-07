@@ -275,3 +275,19 @@ extension CacheManager: HealthSampleUploadManagerStorage {
         set { self.saveString(newValue?.rawValue, forKey: CacheManagerKey.lastCompletedUploaderDataType.rawValue) }
     }
 }
+
+// MARK: - Debug
+
+#if DEBUG
+extension CacheManager {
+    func resetHealthKitCache() {
+        self.lastCompletedUploaderDataType = nil
+        self.lastUploadSequenceCompletionDate = nil
+        HealthDataType.allCases.forEach { dataType in
+            self.reset(forKey: CacheManagerKey.getLastSampleUploadAnchorKey(forHealthDataTypeIdentifier: dataType))
+        }
+        print("HealthSampleUpload cache purged")
+    }
+}
+
+#endif

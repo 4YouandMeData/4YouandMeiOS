@@ -21,6 +21,9 @@ struct Constants {
         static let InformedConsentWithoutQuestions: Bool = false
         static let CheckGlobalStrings: Bool = false
         static let CheckGlobalColors: Bool = false
+        // Added in the About You page. When pressed, HealthKit upload cache is cleared, allowing
+        // to test the entire upload flow.
+        static let EnableHealthKitCachePurgeButton: Bool = true
     }
     struct Network {
         static var BaseUrl: String { ProjectInfo.ApiBaseUrl }
@@ -57,8 +60,14 @@ struct Constants {
     }
     struct HealthKit {
         static let SamplesStartDateTimeInThePast: TimeInterval = 7 * 24 * 60 * 60 // 1 week
+        #if DEBUG
+        // Test Values
+        static let UploadSequenceTimeInterval: TimeInterval = 60// 1 min
+        #else
+        // Production Values
         static let UploadSequenceTimeInterval: TimeInterval = 60 * 60 // 1 hour
-        static let ConnectionAvailabilityForUpload: [ReachabilityServiceType] = [.wifi]
+        #endif
+        static let ConnectionAvailabilityForUpload: [ReachabilityServiceType] = [.wifi, .cellular]
     }
     struct Misc {
         static let EnableGlobalConfigCache = false

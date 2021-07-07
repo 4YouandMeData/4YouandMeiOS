@@ -126,6 +126,21 @@ class AboutYouViewController: UIViewController {
             self.scrollStackView.stackView.addArrangedSubview(surveySchedule)
         }
         
+        #if DEBUG
+        if Constants.Test.EnableHealthKitCachePurgeButton {
+            self.scrollStackView.stackView.addLineSeparator(lineColor: ColorPalette.color(withType: .inactive),
+                                                            inset: 21,
+                                                            isVertical: false)
+            let healthKitCachePurgeButton = GenericListItemView(withTitle: "Debug - Purge Healthkit cache",
+                                                                image: UIImage(),
+                                                                colorType: .primary,
+                                                                gestureCallback: {
+                                                                    Services.shared.storageServices.resetHealthKitCache()
+                                                                })
+            self.scrollStackView.stackView.addArrangedSubview(healthKitCachePurgeButton)
+        }
+        #endif
+        
         self.scrollStackView.stackView.addBlankSpace(space: 57)
         let disclaimerFooter = StringsProvider.string(forKey: .disclaimerFooter)
         self.scrollStackView.stackView.addLabel(withText: disclaimerFooter,

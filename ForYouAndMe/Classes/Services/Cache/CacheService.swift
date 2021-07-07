@@ -13,4 +13,8 @@ protocol CacheService {
     var deviceUDID: String? { get set }
     var firstUserAbsoluteLocation: UserLocation? { get set }
     var excludedUserDataAggregationIds: [String]? { get set }
+    
+    #if DEBUG
+    func resetHealthKitCache()
+    #endif
 }
