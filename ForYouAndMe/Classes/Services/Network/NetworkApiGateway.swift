@@ -384,7 +384,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             return "v1/phone_events"
         // Health
         case .sendHealthData:
-            return "v1/health_data" // TODO: Replace with correct endpoint
+            return "v1/integration_datas"
         }
     }
     
@@ -655,7 +655,8 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             let dataParams: [String: Any] = ["data": params]
             return .requestParameters(parameters: ["phone_event": dataParams], encoding: JSONEncoding.default)
         case .sendHealthData(let healthData):
-            return .requestParameters(parameters: ["health_data": healthData], encoding: JSONEncoding.default)
+            let dataParams: [String: Any] = ["data": healthData]
+            return .requestParameters(parameters: ["integration_data": dataParams], encoding: JSONEncoding.default)
         }
     }
     
