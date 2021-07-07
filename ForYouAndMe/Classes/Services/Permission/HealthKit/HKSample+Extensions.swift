@@ -53,7 +53,7 @@ extension HKSample {
             // HKQuantitySample
             result["sampleClass"] = "quantity"
             if let unit = dataType.unit {
-                result["quantity"] = quantitySample.quantity.getStringValue(forUnit: unit)
+                result["quantity"] = quantitySample.quantity.getDictionary(forUnit: unit)
             } else {
                 assertionFailure("Missing Unit")
                 result["quantity"] = "missingUnit"
@@ -69,11 +69,11 @@ extension HKSample {
             result["sampleClass"] = "electrocardiogram"
             result["numberOfVoltageMeasurements"] = electrocardiogram.numberOfVoltageMeasurements
             if let samplingFrequency = electrocardiogram.samplingFrequency {
-                result["samplingFrequency"] = samplingFrequency.getStringValue(forUnit: HKUnit.hertz())
+                result["samplingFrequency"] = samplingFrequency.getDictionary(forUnit: HKUnit.hertz())
             }
             result["classification"] = electrocardiogram.classification.stringValue
             if let averageHeartRate = electrocardiogram.averageHeartRate {
-                result["averageHeartRate"] = averageHeartRate.getStringValue(forUnit: HKUnit.defaultCountOnTime)
+                result["averageHeartRate"] = averageHeartRate.getDictionary(forUnit: HKUnit.defaultCountOnTime)
             }
             result["symptomsStatus"] = electrocardiogram.symptomsStatus.stringValue
         } else if let correlationSample = self as? HKCorrelation {
@@ -87,16 +87,16 @@ extension HKSample {
             }
             result["duration"] = workoutSample.duration
             if let totalEnergyBurned = workoutSample.totalEnergyBurned {
-                result["totalEnergyBurned"] = totalEnergyBurned.getStringValue(forUnit: HKUnit.defaultEnergy)
+                result["totalEnergyBurned"] = totalEnergyBurned.getDictionary(forUnit: HKUnit.defaultEnergy)
             }
             if let totalDistance = workoutSample.totalDistance {
-                result["totalDistance"] = totalDistance.getStringValue(forUnit: HKUnit.defaultShortDistance)
+                result["totalDistance"] = totalDistance.getDictionary(forUnit: HKUnit.defaultShortDistance)
             }
             if let totalSwimmingStrokeCount = workoutSample.totalSwimmingStrokeCount {
-                result["totalSwimmingStrokeCount"] = totalSwimmingStrokeCount.getStringValue(forUnit: HKUnit.defaultCount)
+                result["totalSwimmingStrokeCount"] = totalSwimmingStrokeCount.getDictionary(forUnit: HKUnit.defaultCount)
             }
             if let totalFlightsClimbed = workoutSample.totalFlightsClimbed {
-                result["totalFlightsClimbed"] = totalFlightsClimbed.getStringValue(forUnit: HKUnit.defaultCountOnTime)
+                result["totalFlightsClimbed"] = totalFlightsClimbed.getDictionary(forUnit: HKUnit.defaultCountOnTime)
             }
         } else if let heartBeatSeriesSample = self as? HKHeartbeatSeriesSample {
             result["sampleClass"] = "heartBeatSeries"
@@ -194,12 +194,15 @@ extension HKQuantityAggregationStyle {
 }
 
 extension HKQuantity {
-    func getStringValue(forUnit unit: HKUnit) -> String {
+    func getDictionary(forUnit unit: HKUnit) -> [String: Any] {
         guard self.is(compatibleWith: unit) else {
             assertionFailure("Incompatibile Unit")
-            return "incompatibileUnit"
+            return ["unit": "incompatibileUnit"]
         }
-        return "\(self.doubleValue(for: unit))"
+        var result: [String: Any] = [:]
+        result["value"] = self.doubleValue(for: unit)
+        result["unit"] = unit.unitString
+        return result
     }
 }
 
