@@ -177,8 +177,8 @@
       "ABOUT_YOU_REVIEW_CONSENT": "Review Consent",
       "ABOUT_YOU_PERMISSIONS": "Permissions",
       "ABOUT_YOU_DISCLAIMER": "You are currently participating in the BUMP pregnancy research study. If for any reason you no longer wish to continue participating in the study, you can elect to leave this study by contacting the study team.",
-      "ABOUT_YOU_DAILY_SURVEY_TIMING_TITLE_BUTTON" = "Save",
-      "DAILY_SURVEY_TIMING_HIDDEN" = "0",
+      "ABOUT_YOU_DAILY_SURVEY_TIMING_TITLE_BUTTON": "Save",
+      "DAILY_SURVEY_TIMING_HIDDEN": "0",
       "PERMISSION_DENIED": "Permission denied",
       "PERMISSION_SETTINGS": "Settings",
       "PERMISSION_CANCEL": "Cancel",
@@ -209,7 +209,8 @@
       "USER_DATA_FILTER_SELECT_ALL_BUTTON": "Select All",
       "USER_DATA_FILTER_SAVE_BUTTON": "Save",
       "TAB_USER_DATA_EMPTY_FILTER_MESSAGE": "No graphs are selected to be shown on this page. Please select one or more graph from the configuration page.",
-      "TAB_USER_DATA_EMPTY_FILTER_BUTTON": "Graphs configuration",
+      "TAB_USER_DATA_EMPTY_FILTER_BUTTON": "Graphs configuration"
     },
-    "country_codes": ["US", "GB", "IT"]
+    "country_codes": ["US", "GB", "IT"],
+    "pincode_login": false
 }
