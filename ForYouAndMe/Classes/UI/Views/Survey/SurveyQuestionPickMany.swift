@@ -44,7 +44,8 @@ class SurveyQuestionPickMany: UIView {
             let checkBox = GenericCheckboxView(isDefaultChecked: false, styleCategory: .primary)
             checkBox.tag = Int(option.id) ?? -1
             checkBox.isCheckedSubject
-                .subscribe(onNext: { check in
+                .subscribe(onNext: { [weak self] check in
+                    guard let self = self else { return }
                     if check {
                         if option.isNone == true {
                             let isNotNoneOptions = options?.filter({$0.isNone == false || $0.isNone == nil})
@@ -68,10 +69,24 @@ class SurveyQuestionPickMany: UIView {
                     }
                     if option.isOther == true {
                         let isOtherView = self.getIsOtherView(tag: option.id)
-                        UIView.animate(withDuration: 0.2) {
-                            isOtherView?.isHidden = !check
-                            let textfield = isOtherView?.findViews(subclassOf: GenericTextFieldView.self).first
-                            textfield?.text = ""
+                        UIView.animate(withDuration: 0.2) { [weak self, weak isOtherView] in
+                            guard let isOtherView = isOtherView else { return }
+                            let hideOtherView = !check
+                            // Need to avoid re-assigning the same value to isHidden for views inside UIStackView.
+                            // It will cause views to be hidden or not to be hidden correctly sometimes (FYAM-791).
+                            // In our case, this happened only when in particular cases and only if animating.
+                            // Seems related to this Apple bug: http://www.openradar.me/25087688
+                            // See this discussion:
+                            // https://stackoverflow.com/questions/43831695/stackview-ishidden-attribute-not-updating-as-expected
+                            if isOtherView.isHidden != hideOtherView {
+                                isOtherView.isHidden = hideOtherView
+                                let textfield = isOtherView.findViews(subclassOf: GenericTextFieldView.self).first
+                                textfield?.text = ""
+                                if !check {
+                                    self?.endEditing(true)
+                                }
+                                self?.stackView.layoutIfNeeded()
+                            }
                         }
                     }
                     self.answers.updateValue(check, forKey: "\(checkBox.tag)")
@@ -108,24 +123,21 @@ class SurveyQuestionPickMany: UIView {
             self.stackView.addArrangedSubview(horizontalStackView)
             self.stackView.addBlankSpace(space: 20)
             if option.isOther == true {
-                let horizontalStackView = UIStackView()
-                horizontalStackView.axis = .horizontal
-                let tag = Int(String(repeating: option.id, count: 3))
-                horizontalStackView.tag = tag ?? 111
                 // Label
                 let answerTextField = GenericTextFieldView(keyboardType: .default, styleCategory: .primary)
                 answerTextField.delegate = self
                 answerTextField.textField.placeholder = StringsProvider.string(forKey: .placeholderOtherField)
                 let answerContainerView = UIView()
+                let tag = Int(String(repeating: option.id, count: 3))
+                answerContainerView.tag = tag ?? 111
                 answerContainerView.addSubview(answerTextField)
                 answerTextField.autoPinEdge(toSuperviewEdge: .leading)
                 answerTextField.autoPinEdge(toSuperviewEdge: .trailing)
                 answerTextField.autoPinEdge(toSuperviewEdge: .top, withInset: 0, relation: .greaterThanOrEqual)
                 answerTextField.autoPinEdge(toSuperviewEdge: .bottom, withInset: 0, relation: .greaterThanOrEqual)
                 answerTextField.autoAlignAxis(toSuperviewAxis: .horizontal)
-                horizontalStackView.addArrangedSubview(answerContainerView)
-                horizontalStackView.isHidden = true
-                self.stackView.addArrangedSubview(horizontalStackView)
+                answerContainerView.isHidden = true
+                self.stackView.addArrangedSubview(answerContainerView)
             }
         })
     }
