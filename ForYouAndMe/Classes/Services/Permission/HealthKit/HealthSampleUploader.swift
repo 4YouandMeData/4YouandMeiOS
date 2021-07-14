@@ -100,7 +100,9 @@ class HealthSampleUploader {
     
     private func logDebugText(text: String) {
         #if DEBUG
-        print("HealthSampleUploader.\(self.sampleDataType.keyName) - \(text)")
+        if Constants.HealthKit.EnableDebugLog {
+            print("HealthSampleUploader.\(self.sampleDataType.keyName) - \(text)")
+        }
         #endif
     }
 }

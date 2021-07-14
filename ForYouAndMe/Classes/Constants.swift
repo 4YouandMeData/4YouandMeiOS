@@ -70,6 +70,7 @@ struct Constants {
         static let SamplesStartDateTimeInThePast: TimeInterval = 7 * 24 * 60 * 60 // 1 week
         static let PendingUploadExpireTimeInterval: TimeInterval = 10 * 60// 10 min
         #endif
+        static let EnableDebugLog: Bool = false
         static let ConnectionAvailabilityForUpload: [ReachabilityServiceType] = [.wifi, .cellular]
     }
     struct Misc {

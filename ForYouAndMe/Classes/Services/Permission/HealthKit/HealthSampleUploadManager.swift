@@ -169,7 +169,9 @@ class HealthSampleUploadManager {
     
     private func logDebugText(text: String) {
         #if DEBUG
-        print("HealthSampleUploadManager - \(text)")
+        if Constants.HealthKit.EnableDebugLog {
+            print("HealthSampleUploadManager - \(text)")
+        }
         #endif
     }
 }

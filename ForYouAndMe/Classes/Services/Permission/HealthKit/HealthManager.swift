@@ -147,8 +147,22 @@ class HealthManager: HealthService {
             }
         }
         networkDelegate.uploadHealthNetworkData(data)
-            .do(onSuccess: { _ in print("HealthManager - Characteristics Data sent successfully") },
-                onError: { error in print("HealthManager - Characteristics Data sending failed with error: \(error)") })
+            .do(
+                onSuccess: { _ in
+                    #if DEBUG
+                    if Constants.HealthKit.EnableDebugLog {
+                        print("HealthManager - Characteristics Data sent successfully")
+                    }
+                    #endif
+                },
+                onError: { error in
+                    #if DEBUG
+                    if Constants.HealthKit.EnableDebugLog {
+                        print("HealthManager - Characteristics Data sending failed with error: \(error)")
+                    }
+                    #endif
+                }
+            )
             .subscribe()
             .disposed(by: self.disposeBag)
     }
