@@ -21,6 +21,7 @@ class OptInSectionCoordinator {
     private let disposeBag = DisposeBag()
     
     private let healthService: HealthService
+    private let deviceService: DeviceService
     
     var answers: [Question: PossibleAnswer] = [:]
     
@@ -30,6 +31,7 @@ class OptInSectionCoordinator {
         self.repository = Services.shared.repository
         self.navigator = Services.shared.navigator
         self.healthService = Services.shared.healthService
+        self.deviceService = Services.shared.deviceService
         self.sectionData = sectionData
         self.navigationController = navigationController
         self.completionCallback = completionCallback
@@ -102,6 +104,10 @@ extension OptInSectionCoordinator: OptInPermissionCoordinator {
                 switch systemPermission {
                 case .health: return result.flatMap { self.healthService.requestPermissions().catchErrorJustReturn(()) }
                 case .location: return result.flatMap {
+                    guard self.deviceService.locationServicesAvailable else {
+                        // location services not enabled for this study: do nothing (no native permission popup should be shown)
+                        return Single.just(())
+                    }
                     let permission: Permission = Constants.Misc.DefaultLocationPermission
                     return granted ? permission.request().catchErrorJustReturn(()) : Single.just(())
                 }

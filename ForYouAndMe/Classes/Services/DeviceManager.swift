@@ -31,24 +31,28 @@ class DeviceManager: NSObject {
     private let repository: Repository
     private let reachability: ReachabilityService & BatchEventUploaderReachability
     
-    private let locationManager = CLLocationManager()
+    private let locationManager: CLLocationManager?
     
     private let waitingForLocationUpdate = ExpiringValue<Bool>(withDefaultValue: false, expiryTime: Constants.Misc.WaitingTimeForLocation)
     
     private let disposeBag = DisposeBag()
     
     init(repository: Repository,
+         locationServicesAvailable: Bool,
          storage: BatchEventUploaderStorage & CacheService,
          reachability: ReachabilityService & BatchEventUploaderReachability) {
         self.repository = repository
+        self.locationManager = locationServicesAvailable ? CLLocationManager() : nil
         self.storage = storage
         self.reachability = reachability
         super.init()
         
         UIDevice.current.isBatteryMonitoringEnabled = true
         
-        self.locationManager.desiredAccuracy = kCLLocationAccuracyBest
-        self.locationManager.delegate = self
+        if let locationManager = self.locationManager {
+            locationManager.desiredAccuracy = kCLLocationAccuracyBest
+            locationManager.delegate = self
+        }
         
         self.addApplicationDidBecomeActiveObserver()
     }
@@ -73,6 +77,12 @@ class DeviceManager: NSObject {
                                     return self.sendDeviceData(deviceData: deviceData)
                                 })
             
+            guard let locationManager = self.locationManager else {
+                print("DeviceManager - Location Services not expected for this study. Add Startup Record")
+                self.addRecordData()
+                return
+            }
+            
             if CLLocationManager.locationServicesEnabled(), Constants.Misc.DefaultLocationPermission.isAuthorized {
                 print("DeviceManager - Location Enabled. Deferred Startup record to first updated location")
                 self.waitingForLocationUpdate.setValue(value: true,
@@ -80,10 +90,10 @@ class DeviceManager: NSObject {
                                                         print("DeviceManager - No location update arrived in time. Send Startup Record")
                                                         self?.addRecordData()
                                                        })
-                self.locationManager.startUpdatingLocation()
+                locationManager.startUpdatingLocation()
             } else {
                 print("DeviceManager - Location Disabled. Add Startup Record")
-                self.locationManager.stopUpdatingLocation()
+                locationManager.stopUpdatingLocation()
                 self.addRecordData()
             }
         }
@@ -108,17 +118,20 @@ class DeviceManager: NSObject {
     
     private func addRecordData() {
         if self.uploader.setupCompleted, self.repository.isLoggedIn {
-            
             let location: UserLocation? = {
+                guard let locationManager = self.locationManager else {
+                    return nil
+                }
+                
                 if Constants.Misc.TrackRelativeLocation {
                     if let firstUserAbsoluteLocation = self.storage.firstUserAbsoluteLocation,
-                       let currentAbsoluteLocation = self.locationManager.location?.coordinate.userLocation {
+                       let currentAbsoluteLocation = locationManager.location?.coordinate.userLocation {
                         return currentAbsoluteLocation.getLocation(relativeTo: firstUserAbsoluteLocation)
                     } else {
                         return nil
                     }
                 } else {
-                    return self.locationManager.location?.coordinate.userLocation
+                    return locationManager.location?.coordinate.userLocation
                 }
             }()
             print("DeviceManager - Add Record Data. Current Location: \(String(describing: location))")
@@ -175,12 +188,19 @@ class DeviceManager: NSObject {
 // MARK: - DeviceService
 
 extension DeviceManager: DeviceService {
+    
+    var locationServicesAvailable: Bool { return self.locationManager != nil }
+    
     func onLocationPermissionChanged() {
+        guard let locationManager = self.locationManager else {
+            return
+        }
+        
         if Constants.Misc.DefaultLocationPermission.isAuthorized {
-            self.locationManager.stopUpdatingLocation()
-            self.locationManager.startUpdatingLocation()
+            locationManager.stopUpdatingLocation()
+            locationManager.startUpdatingLocation()
         } else {
-            self.locationManager.stopUpdatingLocation()
+            locationManager.stopUpdatingLocation()
         }
     }
 }

@@ -14,6 +14,7 @@ public class PermissionViewController: UIViewController {
     private let navigator: AppNavigator
     private let analytics: AnalyticsService
     private let healthService: HealthService
+    private let deviceService: DeviceService
     private let disposeBag: DisposeBag = DisposeBag()
     
     private lazy var scrollStackView: ScrollStackView = {
@@ -26,6 +27,7 @@ public class PermissionViewController: UIViewController {
         self.navigator = Services.shared.navigator
         self.analytics = Services.shared.analytics
         self.healthService = Services.shared.healthService
+        self.deviceService = Services.shared.deviceService
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -68,17 +70,18 @@ public class PermissionViewController: UIViewController {
     private func refreshStatus() {
         
         self.scrollStackView.stackView.arrangedSubviews.forEach({ $0.removeFromSuperview() })
-        
-        let permissionLocation: Permission = Constants.Misc.DefaultLocationPermission
 
-        let locationTitle = StringsProvider.string(forKey: .permissionLocationDescription)
-        let locationItem = PermissionItemView(withTitle: locationTitle,
-                                              isAuthorized: permissionLocation.isAuthorized,
-                                              iconName: .locationIcon,
-                                              gestureCallback: { [weak self] in
-                                                self?.handleLocationPermission(permission: permissionLocation)
-        })
-        self.scrollStackView.stackView.addArrangedSubview(locationItem)
+        if self.deviceService.locationServicesAvailable {
+            let permissionLocation: Permission = Constants.Misc.DefaultLocationPermission
+            let locationTitle = StringsProvider.string(forKey: .permissionLocationDescription)
+            let locationItem = PermissionItemView(withTitle: locationTitle,
+                                                  isAuthorized: permissionLocation.isAuthorized,
+                                                  iconName: .locationIcon,
+                                                  gestureCallback: { [weak self] in
+                                                    self?.handleLocationPermission(permission: permissionLocation)
+                                                  })
+            self.scrollStackView.stackView.addArrangedSubview(locationItem)
+        }
         
         let notificationPermission: Permission = .notification
         let notificationTitle = StringsProvider.string(forKey: .permissionPushNotificationDescription)
