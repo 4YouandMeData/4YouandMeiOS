@@ -9,4 +9,5 @@ import Foundation
 
 protocol DeviceService {
     func onLocationPermissionChanged()
+    var locationServicesAvailable: Bool { get }
 }

@@ -16,6 +16,7 @@ protocol InitializableService {
 
 struct ServicesSetupData {
     let showDefaultUserInfo: Bool
+    let enableLocationServices: Bool
     let healthReadDataTypes: [HealthDataType]
 }
 
@@ -87,7 +88,10 @@ class Services {
         let navigator = AppNavigator(withRepository: repository, analytics: analytics, deeplinkService: deeplinkService, window: window)
         self.services.append(navigator)
         
-        let deviceService = DeviceManager(repository: repository, storage: storage, reachability: reachabilityService)
+        let deviceService = DeviceManager(repository: repository,
+                                          locationServicesAvailable: servicesSetupData.enableLocationServices,
+                                          storage: storage,
+                                          reachability: reachabilityService)
         self.services.append(deviceService)
         
         // Add services circular dependences

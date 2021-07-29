@@ -1,4 +1,50 @@
 
+## Release 0.66.0
+
+- allow to optionally exclude location services as project settings.
+
+## Release 0.65.0
+
+- HealthKit - Added flag for debug log.
+
+- fixed global config mock data.
+
+- HealthKit upload data - General refactor. Added expiry date for pending uploads.
+
+- HealthKit data upload - Fixed test purge cache method.
+
+- HealthKit data upload - Handled upload sequence start during an active upload sequence.
+
+- HealthKit data upload - Added clear cache button in About You page. Fixed unit type for flightsClimbed quantity type. Added celluar to available reachability states for upload.
+
+- HealthKit data upload - updated endpoint url and request body structure.
+
+- HealthKit data upload - Sent unit for HKQuantity type data
+
+- fixed issues for HEALTHKIT compilation condition not defined.
+
+- HealthKit data upload - Fixed wrong upload flow reset when connection become active. Fixed wrong caching for first start date. Removed wrong check on permission for data share.
+
+- HealthKit: added workout samples.
+
+- converted HKSample to dictionary.
+
+- Created manager to handle upload of HealthKit samples.
+
+- uploaded health data of characteristics type on entering foreground and after health permissions are decided.
+
+- Added health permission item in Permission page.
+
+- Added support for HealthKit permissions in the opt-in section. Notified possible unhandled errors to Firebase.
+
+- Added HealthKit capability. Restored HealthManager class with conditional implementation. Defined HealthReadType enum.
+
+- fixed overlapping text in Pick many. 
+
+- Fixed missing keyboard dismiss when other option is deselected.
+
+- fixed truncated title for long titles in header of About You detail pages.
+
 ## Release 0.64.0
 
 - User Data Filters - added filter item views. Added clear and select all buttons.

@@ -36,6 +36,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         self.window = FYAMManager.startup(withFontStyleMap: fontStyleMap,
                                           showDefaultUserInfo: true,
                                           checkResourcesAvailability: true,
+                                          enableLocationServices: true,
                                           healthReadDataTypes: HealthDataType.allCases)
         return true
     }
