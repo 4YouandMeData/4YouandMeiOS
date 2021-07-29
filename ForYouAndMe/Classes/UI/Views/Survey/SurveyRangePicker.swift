@@ -5,11 +5,13 @@
 //  Created by Giuseppe Lapenta on 29/09/2020.
 //
 
+import StepSlider
+
 class SurveyRangePicker: UIView {
     
     private var surveyQuestion: SurveyQuestion
     private var currentValue: UILabel = UILabel()
-    private var slider: Slider = Slider()
+    private var slider: StepSlider = StepSlider()
     private weak var delegate: SurveyQuestionProtocol?
     
     init(surveyQuestion: SurveyQuestion, delegate: SurveyQuestionProtocol) {
@@ -41,10 +43,14 @@ class SurveyRangePicker: UIView {
         stackView.addBlankSpace(space: 40)
         
         self.slider.addTarget(self, action: #selector(self.changeValue(_:)), for: .valueChanged)
-        self.slider.minimumValue = Float(minimum)
-        self.slider.maximumValue = Float(maximum)
-        self.slider.value = Float(minimum)
-        self.slider.setup()
+        self.slider.maxCount = UInt(maximum)
+        self.slider.setIndex(UInt(minimum), animated: false)
+        let minTrackStartColor = ColorPalette.color(withType: .primary)
+        let maxTrackEndColor = ColorPalette.color(withType: .inactive)
+        self.slider.trackColor = maxTrackEndColor
+        self.slider.sliderCircleColor = minTrackStartColor
+        self.slider.tintColor = minTrackStartColor
+        
         stackView.addArrangedSubview(self.slider)
         
         stackView.addBlankSpace(space: 20)
@@ -75,10 +81,10 @@ class SurveyRangePicker: UIView {
         fatalError("init(coder:) has not been implemented")
     }
     
-    @objc private func changeValue(_ sender: UISlider) {
+    @objc private func changeValue(_ sender: StepSlider) {
         
-        let answer = Int(sender.value)
+        let answer = Int(sender.index)
         self.currentValue.text = "\(answer)"
-        self.delegate?.answerDidChange(self.surveyQuestion, answer: Int(sender.value))
+        self.delegate?.answerDidChange(self.surveyQuestion, answer: Int(sender.index))
     }
 }
