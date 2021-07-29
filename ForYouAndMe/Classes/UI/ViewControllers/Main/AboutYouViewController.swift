@@ -83,20 +83,20 @@ class AboutYouViewController: UIViewController {
         self.scrollStackView.stackView.addLineSeparator(lineColor: ColorPalette.color(withType: .inactive),
                                                         inset: 21,
                                                         isVertical: false)
-        
-        if OnboardingSectionProvider.userConsentSectionExists {
-            let consentTitle = StringsProvider.string(forKey: .aboutYouReviewConsent)
-            let reviewConsent = GenericListItemView(withTitle: consentTitle,
-                                                    image: ImagePalette.templateImage(withName: .reviewConsentIcon) ?? UIImage(),
-                                                    colorType: .primary,
-                                                    gestureCallback: { [weak self] in
-                                                        guard let navigationController = self?.navigationController else {
-                                                            fatalError("Navigation Controller is not present")
-                                                        }
-                                                        self?.navigator.showReviewConsent(navigationController: navigationController)
-                                                    })
-            self.scrollStackView.stackView.addArrangedSubview(reviewConsent)
-        }
+        // TODO: temporaly disabled
+//        if OnboardingSectionProvider.userConsentSectionExists {
+//            let consentTitle = StringsProvider.string(forKey: .aboutYouReviewConsent)
+//            let reviewConsent = GenericListItemView(withTitle: consentTitle,
+//                                                    image: ImagePalette.templateImage(withName: .reviewConsentIcon) ?? UIImage(),
+//                                                    colorType: .primary,
+//                                                    gestureCallback: { [weak self] in
+//                                                        guard let navigationController = self?.navigationController else {
+//                                                            fatalError("Navigation Controller is not present")
+//                                                        }
+//                                                        self?.navigator.showReviewConsent(navigationController: navigationController)
+//                                                    })
+//            self.scrollStackView.stackView.addArrangedSubview(reviewConsent)
+//        }
         
         let permissionTitle = StringsProvider.string(forKey: .aboutYouPermissions)
         let permissions = GenericListItemView(withTitle: permissionTitle,
