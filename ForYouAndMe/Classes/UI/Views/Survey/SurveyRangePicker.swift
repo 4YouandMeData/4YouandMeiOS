@@ -83,7 +83,7 @@ class SurveyRangePicker: UIView {
     
     @objc private func changeValue(_ sender: StepSlider) {
         
-        let answer = Int(sender.index)
+        let answer = (self.surveyQuestion.minimum ?? 0) + Int(sender.index)
         self.currentValue.text = "\(answer)"
         self.delegate?.answerDidChange(self.surveyQuestion, answer: Int(sender.index))
     }
