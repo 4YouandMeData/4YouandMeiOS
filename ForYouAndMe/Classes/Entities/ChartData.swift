@@ -7,10 +7,14 @@
 
 import Foundation
 
+typealias ChartDataContent = [Double?]
+typealias ChartDataXLabels = [String]
+typealias ChartDataYLabels = [String]
+
 struct ChartData {
-    let data: [Double?]
-    let xLabels: [String]
-    let yLabels: [String]
+    let data: ChartDataContent
+    let xLabels: ChartDataXLabels
+    let yLabels: ChartDataYLabels
 }
 
 extension ChartData: Decodable {

@@ -293,9 +293,9 @@ class UserDataViewController: UIViewController {
             filteredUserDataAggregations.forEach { userDataAggragation in
                 let testChartView = UserDataChartView(title: userDataAggragation.title ?? "",
                                                       plotColor: userDataAggragation.color ?? ColorPalette.color(withType: .primary),
-                                                      data: userDataAggragation.chartData.data,
-                                                      xLabels: userDataAggragation.chartData.xLabels,
-                                                      yLabels: userDataAggragation.chartData.yLabels,
+                                                      data: userDataAggragation.chartDataContent,
+                                                      xLabels: userDataAggragation.chartDataXlabels,
+                                                      yLabels: userDataAggragation.chartDataYlabels,
                                                       studyPeriod: self.currentPeriod)
                 self.chartStackView.addArrangedSubview(testChartView)
             }
