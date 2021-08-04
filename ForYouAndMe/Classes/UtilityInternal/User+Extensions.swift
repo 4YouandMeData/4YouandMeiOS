@@ -51,4 +51,8 @@ extension User {
     mutating func updateUserInfoParameters(_ userInfoParameters: [UserInfoParameter]) {
         self.customData = userInfoParameters
     }
+    
+    func getHasAgreedTo(systemPermission: SystemPermission) -> Bool {
+        return self.agreedPermissions.contains(systemPermission)
+    }
 }

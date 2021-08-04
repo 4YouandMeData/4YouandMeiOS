@@ -26,6 +26,7 @@
       "phone_number": "+39 333 939 7085",
       "updated_at": "2020-10-02T14:43:34.458Z",
       "on_boarding_completed": true,
+      "agreed_permissions": ["location", "health"],
       "custom_data": [
         {
           "value": "2",

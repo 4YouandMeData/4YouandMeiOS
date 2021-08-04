@@ -12,6 +12,7 @@ public class PermissionViewController: UIViewController {
     
     private var titleString: String
     private let navigator: AppNavigator
+    private let repository: Repository
     private let analytics: AnalyticsService
     private let healthService: HealthService
     private let deviceService: DeviceService
@@ -25,6 +26,7 @@ public class PermissionViewController: UIViewController {
     init(withTitle title: String) {
         self.titleString = title
         self.navigator = Services.shared.navigator
+        self.repository = Services.shared.repository
         self.analytics = Services.shared.analytics
         self.healthService = Services.shared.healthService
         self.deviceService = Services.shared.deviceService
@@ -71,7 +73,7 @@ public class PermissionViewController: UIViewController {
         
         self.scrollStackView.stackView.arrangedSubviews.forEach({ $0.removeFromSuperview() })
 
-        if self.deviceService.locationServicesAvailable {
+        if self.deviceService.locationServicesAvailable, self.repository.currentUser?.getHasAgreedTo(systemPermission: .location) ?? false {
             let permissionLocation: Permission = Constants.Misc.DefaultLocationPermission
             let locationTitle = StringsProvider.string(forKey: .permissionLocationDescription)
             let locationItem = PermissionItemView(withTitle: locationTitle,
@@ -95,7 +97,7 @@ public class PermissionViewController: UIViewController {
         
         self.scrollStackView.stackView.addArrangedSubview(pushItem)
         
-        if self.healthService.serviceAvailable {
+        if self.healthService.serviceAvailable, self.repository.currentUser?.getHasAgreedTo(systemPermission: .health) ?? false {
             let healthItemTitle = StringsProvider.string(forKey: .permissionHealthDescription)
             let healthItem = PermissionItemView(withTitle: healthItemTitle,
                                                 isAuthorized: nil,

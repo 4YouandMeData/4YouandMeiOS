@@ -16,6 +16,8 @@ struct User: Codable {
     let daysInStudy: Int
     let identities: [String]
     let points: Int
+    @ExcludeInvalidCodable
+    var agreedPermissions: [SystemPermission]
     @TimeZoneCodable
     var timeZone: TimeZone?
     @FailableCodable
@@ -32,6 +34,7 @@ extension User: JSONAPIMappable {
         case daysInStudy = "days_in_study"
         case identities
         case points
+        case agreedPermissions = "agreed_permissions"
         case timeZone = "time_zone"
         case customData = "custom_data"
     }
