@@ -1,4 +1,22 @@
 
+## Release 0.69.0
+
+- Temporary converted Bodyport data from kg to lbs.
+
+- shown permission items in permissions page based on agreed permissions.
+
+## Release 0.68.0
+
+- add minimum to index survey
+
+## Release 0.67.0
+
+- Remove Informed Consent from About You Page
+
+- Modify Range Slider
+
+- Add StepSlider pod
+
 ## Release 0.66.0
 
 - allow to optionally exclude location services as project settings.
