@@ -14,7 +14,7 @@ class UserDataFilterViewController: UIViewController {
     private let repository: Repository
     private let analytics: AnalyticsService
     
-    private let userDataAggregationFilterDataSet: Set<UserDataAggregationFilter>
+    private let userDataAggregationFilterData: [UserDataAggregationFilter]
     
     private let disposeBag = DisposeBag()
     
@@ -99,12 +99,12 @@ class UserDataFilterViewController: UIViewController {
     private var itemViewsByIds: [String: GenericTextCheckboxView] = [:]
     private var excludedUserDataAggregationIds: Set<String>
     
-    init(withUserDataAggregationFilterDataSet userDataAggregationFilterDataSet: Set<UserDataAggregationFilter>) {
+    init(withUserDataAggregationFilterData userDataAggregationFilterData: [UserDataAggregationFilter]) {
         self.navigator = Services.shared.navigator
         self.repository = Services.shared.repository
         self.storage = Services.shared.storageServices
         self.analytics = Services.shared.analytics
-        self.userDataAggregationFilterDataSet = userDataAggregationFilterDataSet
+        self.userDataAggregationFilterData = userDataAggregationFilterData
         self.excludedUserDataAggregationIds = (self.storage.excludedUserDataAggregationIds ?? []).toSet
         super.init(nibName: nil, bundle: nil)
     }
@@ -135,7 +135,7 @@ class UserDataFilterViewController: UIViewController {
         self.scrollStackView.stackView.addArrangedSubview(self.toolbarView)
         
         // filters
-        self.userDataAggregationFilterDataSet.forEach { userDataAggregationFilterItem in
+        self.userDataAggregationFilterData.forEach { userDataAggregationFilterItem in
             let isActive = false == self.excludedUserDataAggregationIds.contains(userDataAggregationFilterItem.identifier)
             let itemView = GenericTextCheckboxView(isDefaultChecked: isActive,
                                                    styleCategory: .primary(fontStyle: .paragraph, textFirst: true))
@@ -175,7 +175,7 @@ class UserDataFilterViewController: UIViewController {
     }
     
     @objc private func clearButtonPressed() {
-        self.excludedUserDataAggregationIds = self.userDataAggregationFilterDataSet.map { $0.identifier }.toSet
+        self.excludedUserDataAggregationIds = self.userDataAggregationFilterData.map { $0.identifier }.toSet
         self.updateToolBar()
         self.updateItemViews()
     }
@@ -193,7 +193,7 @@ class UserDataFilterViewController: UIViewController {
         self.selectAllButton.isHidden = true
         
         // Show select all only when every option is unselected, otherwise show clear
-        if self.excludedUserDataAggregationIds.count == self.userDataAggregationFilterDataSet.count {
+        if self.excludedUserDataAggregationIds.count == self.userDataAggregationFilterData.count {
             self.selectAllButton.isHidden = false
         } else {
             self.clearButton.isHidden = false

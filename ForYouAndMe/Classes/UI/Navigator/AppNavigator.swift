@@ -482,8 +482,8 @@ class AppNavigator {
     
     // MARK: User Data
     
-    public func showUserDataFilter(presenter: UIViewController, userDataAggregationFilterDataSet: Set<UserDataAggregationFilter>) {
-        let viewController = UserDataFilterViewController(withUserDataAggregationFilterDataSet: userDataAggregationFilterDataSet)
+    public func showUserDataFilter(presenter: UIViewController, userDataAggregationFilterData: [UserDataAggregationFilter]) {
+        let viewController = UserDataFilterViewController(withUserDataAggregationFilterData: userDataAggregationFilterData)
         viewController.modalPresentationStyle = .fullScreen
         presenter.present(viewController, animated: true, completion: nil)
     }

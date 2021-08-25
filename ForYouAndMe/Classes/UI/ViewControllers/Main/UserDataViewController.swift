@@ -155,7 +155,7 @@ class UserDataViewController: UIViewController {
     }()
     
     // Stored so they can be used by the filter page
-    private var userDataAggregationFilterDataSet: Set<UserDataAggregationFilter> = Set()
+    private var userDataAggregationFilterData: [UserDataAggregationFilter] = []
     
     private let navigator: AppNavigator
     private let repository: Repository
@@ -281,7 +281,7 @@ class UserDataViewController: UIViewController {
     }
     
     private func refreshCharts(withUserDataAggregations userDataAggregations: [UserDataAggregation]) {
-        self.userDataAggregationFilterDataSet = userDataAggregations.filterDataSet
+        self.userDataAggregationFilterData = userDataAggregations.filterData
         self.filterButton.isHidden = false
         self.emptyByFilterView.isHidden = true
         self.chartStackView.arrangedSubviews.forEach({ $0.removeFromSuperview() })
@@ -316,7 +316,7 @@ class UserDataViewController: UIViewController {
     }
     
     private func showFilters() {
-        self.navigator.showUserDataFilter(presenter: self, userDataAggregationFilterDataSet: self.userDataAggregationFilterDataSet)
+        self.navigator.showUserDataFilter(presenter: self, userDataAggregationFilterData: self.userDataAggregationFilterData)
     }
 }
 

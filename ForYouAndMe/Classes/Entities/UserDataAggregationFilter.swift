@@ -28,12 +28,12 @@ extension UserDataAggregationFilter: Hashable, Equatable {
 }
 
 extension Array where Element == UserDataAggregation {
-    var filterDataSet: Set<UserDataAggregationFilter> {
+    var filterData: [UserDataAggregationFilter] {
         return self.compactMap {
             guard let title = $0.title else {
                 return nil
             }
             return UserDataAggregationFilter(withIdentifier: $0.id, title: title)
-        }.toSet
+        }.uniqued
     }
 }

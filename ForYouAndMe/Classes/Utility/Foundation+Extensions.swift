@@ -34,3 +34,11 @@ public extension Array where Element: Hashable {
         return Set(self)
     }
 }
+
+extension Sequence where Element: Hashable {
+    
+    var uniqued: [Element] {
+        var set = Set<Element>()
+        return self.filter { set.insert($0).inserted }
+    }
+}
