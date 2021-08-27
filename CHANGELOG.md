@@ -3,6 +3,10 @@
 
 - Your Data: fixed wrong order in filter items.
 
+## Release 0.70.0
+
+- Fix timezone
+
 ## Release 0.69.0
 
 - Temporary converted Bodyport data from kg to lbs.
