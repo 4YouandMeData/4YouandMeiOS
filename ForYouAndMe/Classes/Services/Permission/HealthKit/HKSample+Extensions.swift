@@ -38,7 +38,7 @@ extension HKSample {
             result["device"] = device.dictionary
         }
         if let metadata = self.metadata {
-            result["metadata"] = metadata
+            result["metadata"] = metadata.dictionaryFromMetadata
         }
         
         // HKSample
@@ -114,6 +114,24 @@ extension HKSample {
 }
 
 // MARK: - HKObject
+
+// Metadata
+fileprivate extension Dictionary where Key == String, Value == Any {
+    var dictionaryFromMetadata: [String: Any] {
+        return self.compactMapValues { value in
+            // TODO: For each standard key that expects HKQuantity as value, encode if based on the expected HKUnit.
+            if value is String || value is NSString || value is NSNumber || value is Bool || value is Int {
+                return value
+            } else if let timeZone = value as? NSTimeZone {
+                return timeZone.description
+            } else if let date = value as? Date {
+                return date.sampleDateTimeString
+            } else {
+                return nil
+            }
+        }
+    }
+}
 
 extension HKSourceRevision {
     var dictionary: [String: Any] {
@@ -254,7 +272,7 @@ extension HKWorkoutEvent {
         result["endDate"] = self.dateInterval.end.sampleDateTimeString
         result["duration"] = self.dateInterval.duration
         if let metadata = self.metadata {
-            result["metadata"] = metadata
+            result["metadata"] = metadata.dictionaryFromMetadata
         }
         return result
     }

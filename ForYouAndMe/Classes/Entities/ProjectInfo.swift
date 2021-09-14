@@ -7,8 +7,6 @@
 
 import Foundation
 
-protocol AnyType {}
-
 class ProjectInfo {
     
     private enum ProjectInfoKey: String, CaseIterable {
