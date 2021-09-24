@@ -30,7 +30,7 @@ enum NavigationBarStyleCategory: StyleCategory {
             bar.isHidden = hidden
             bar.isTranslucent = false
             bar.setBackgroundImage(UIImage(), for: UIBarMetrics.default)
-            bar.barTintColor = ColorPalette.color(withType: .secondary)
+            bar.setBackgroundColor(ColorPalette.color(withType: .secondary))
             bar.tintColor = ColorPalette.color(withType: .primaryText)
             bar.prefersLargeTitles = false
             bar.shadowImage = UIImage() // Remove Separator line
@@ -42,7 +42,7 @@ enum NavigationBarStyleCategory: StyleCategory {
             bar.isHidden = hidden
             bar.isTranslucent = false
             bar.setBackgroundImage(UIImage(), for: UIBarMetrics.default)
-            bar.barTintColor = ColorPalette.color(withType: .active)
+            bar.setBackgroundColor(ColorPalette.color(withType: .active))
             bar.tintColor = ColorPalette.color(withType: .secondary)
             bar.prefersLargeTitles = false
             bar.shadowImage = UIImage() // Remove Separator line
@@ -67,6 +67,18 @@ enum NavigationBarStyleCategory: StyleCategory {
 }
 
 fileprivate extension UINavigationBar {
+    func setBackgroundColor(_ color: UIColor) {
+        self.barTintColor = color
+        if #available(iOS 15.0, *) {
+            let appearance = UINavigationBarAppearance()
+            appearance.configureWithOpaqueBackground()
+            appearance.backgroundColor = color
+            
+            self.standardAppearance = appearance
+            self.scrollEdgeAppearance = appearance
+        }
+    }
+    
     func addGradient(type: GradientViewType) {
         let gradient = CAGradientLayer()
         var bounds = self.bounds

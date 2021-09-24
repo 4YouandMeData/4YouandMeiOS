@@ -303,8 +303,8 @@ class AppNavigator {
         tabBarController.tabBar.isTranslucent = false
         
         // Colors
+        tabBarController.tabBar.setBackgroundColor(ColorPalette.color(withType: .secondary))
         tabBarController.tabBar.tintColor = ColorPalette.color(withType: .primaryText)
-        tabBarController.tabBar.barTintColor = ColorPalette.color(withType: .secondary)
         tabBarController.tabBar.unselectedItemTintColor = ColorPalette.color(withType: .secondaryMenu)
         
         // Remove top line
@@ -817,5 +817,21 @@ extension Observable {
     func addProgress() -> Observable<Element> {
         self.do(onSubscribe: { AppNavigator.pushProgressHUD() },
                 onDispose: { AppNavigator.popProgressHUD() })
+    }
+}
+
+// MARK: - Extension(UIViewController)
+
+fileprivate extension UITabBar {
+    func setBackgroundColor(_ color: UIColor) {
+        self.barTintColor = color
+        if #available(iOS 15.0, *) {
+            let appearance = UITabBarAppearance()
+            appearance.configureWithOpaqueBackground()
+            appearance.backgroundColor = color
+            
+            self.standardAppearance = appearance
+            self.scrollEdgeAppearance = appearance
+        }
     }
 }
