@@ -18,10 +18,9 @@ enum NavigationBarStyleCategory: StyleCategory {
         case .primary(let hidden): return Style<UINavigationBar> { bar in
             bar.isHidden = hidden
             bar.isTranslucent = false
-            bar.addGradient(type: .primaryBackground)
+            bar.addGradient(type: .primaryBackground, removeShadow: true)
             bar.tintColor = ColorPalette.color(withType: .secondary)
             bar.prefersLargeTitles = false
-            bar.shadowImage = UIImage() // Remove Separator line
             bar.titleTextAttributes = [.foregroundColor: ColorPalette.color(withType: .secondaryText),
                                        .font: FontPalette.fontStyleData(forStyle: .paragraph).font]
             Self.adaptStatusBar(forColor: ColorPalette.color(withType: .primary))
@@ -29,11 +28,9 @@ enum NavigationBarStyleCategory: StyleCategory {
         case .secondary(let hidden): return Style<UINavigationBar> { bar in
             bar.isHidden = hidden
             bar.isTranslucent = false
-            bar.setBackgroundImage(UIImage(), for: UIBarMetrics.default)
-            bar.setBackgroundColor(ColorPalette.color(withType: .secondary))
+            bar.setBackgroundColor(ColorPalette.color(withType: .secondary), removeShadow: true)
             bar.tintColor = ColorPalette.color(withType: .primaryText)
             bar.prefersLargeTitles = false
-            bar.shadowImage = UIImage() // Remove Separator line
             bar.titleTextAttributes = [.foregroundColor: ColorPalette.color(withType: .primaryText),
                                        .font: FontPalette.fontStyleData(forStyle: .paragraph).font]
             Self.adaptStatusBar(forColor: ColorPalette.color(withType: .secondary))
@@ -41,11 +38,9 @@ enum NavigationBarStyleCategory: StyleCategory {
         case .active(let hidden): return Style<UINavigationBar> { bar in
             bar.isHidden = hidden
             bar.isTranslucent = false
-            bar.setBackgroundImage(UIImage(), for: UIBarMetrics.default)
-            bar.setBackgroundColor(ColorPalette.color(withType: .active))
+            bar.setBackgroundColor(ColorPalette.color(withType: .active), removeShadow: true)
             bar.tintColor = ColorPalette.color(withType: .secondary)
             bar.prefersLargeTitles = false
-            bar.shadowImage = UIImage() // Remove Separator line
             bar.titleTextAttributes = [.foregroundColor: ColorPalette.color(withType: .secondaryText),
                                        .font: FontPalette.fontStyleData(forStyle: .paragraph).font]
             Self.adaptStatusBar(forColor: ColorPalette.color(withType: .active))
@@ -67,19 +62,30 @@ enum NavigationBarStyleCategory: StyleCategory {
 }
 
 fileprivate extension UINavigationBar {
-    func setBackgroundColor(_ color: UIColor) {
+    func setBackgroundColor(_ color: UIColor, removeShadow: Bool) {
         self.barTintColor = color
+        self.setBackgroundImage(UIImage(), for: UIBarMetrics.default)
+        
+        if removeShadow {
+            self.shadowImage = UIImage()
+        }
+        
         if #available(iOS 15.0, *) {
             let appearance = UINavigationBarAppearance()
             appearance.configureWithOpaqueBackground()
             appearance.backgroundColor = color
+            appearance.backgroundImage = UIImage()
+            
+            if removeShadow {
+                appearance.shadowColor = .clear
+            }
             
             self.standardAppearance = appearance
             self.scrollEdgeAppearance = appearance
         }
     }
     
-    func addGradient(type: GradientViewType) {
+    func addGradient(type: GradientViewType, removeShadow: Bool) {
         let gradient = CAGradientLayer()
         var bounds = self.bounds
         bounds.size.height += UIApplication.shared.windows.first?.windowScene?.statusBarManager?.statusBarFrame.height ?? 0
@@ -87,9 +93,25 @@ fileprivate extension UINavigationBar {
         gradient.colors = type.colors.map { $0.cgColor }
         gradient.startPoint = type.startPoint
         gradient.endPoint = type.endPoint
+        
+        if removeShadow {
+            self.shadowImage = UIImage()
+        }
 
         if let image = self.getImageFrom(gradientLayer: gradient) {
             self.setBackgroundImage(image, for: UIBarMetrics.default)
+            if #available(iOS 15.0, *) {
+                let appearance = UINavigationBarAppearance()
+                appearance.configureWithOpaqueBackground()
+                appearance.backgroundImage = image
+                
+                if removeShadow {
+                    appearance.shadowColor = .clear
+                }
+                
+                self.standardAppearance = appearance
+                self.scrollEdgeAppearance = appearance
+            }
         }
     }
     
