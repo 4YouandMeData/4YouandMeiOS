@@ -820,7 +820,7 @@ extension Observable {
     }
 }
 
-// MARK: - Extension(UIViewController)
+// MARK: - Extension(UITabBar)
 
 fileprivate extension UITabBar {
     func setBackgroundColor(_ color: UIColor) {

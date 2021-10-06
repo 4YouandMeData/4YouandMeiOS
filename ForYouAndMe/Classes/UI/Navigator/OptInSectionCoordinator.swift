@@ -102,7 +102,9 @@ extension OptInSectionCoordinator: OptInPermissionCoordinator {
         let systemPermissionRequests: Single<()> = optInPermission.systemPermissions
             .reduce(Single.just(())) { (result, systemPermission) in
                 switch systemPermission {
-                case .health: return result.flatMap { self.healthService.requestPermissions().catchErrorJustReturn(()) }
+                case .health: return result.flatMap {
+                    return granted ? self.healthService.requestPermissions().catchErrorJustReturn(()) : Single.just(())
+                }
                 case .location: return result.flatMap {
                     guard self.deviceService.locationServicesAvailable else {
                         // location services not enabled for this study: do nothing (no native permission popup should be shown)
