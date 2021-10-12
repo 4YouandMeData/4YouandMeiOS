@@ -99,6 +99,7 @@ class Services {
         notificationService.notificationTokenDelegate = repository
         #if HEALTHKIT
         healthService.networkDelegate = repository
+        healthService.clearanceDelegate = repository
         #endif
         
         // Assign concreate services

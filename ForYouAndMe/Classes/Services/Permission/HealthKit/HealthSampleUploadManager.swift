@@ -8,12 +8,17 @@
 import Foundation
 import RxSwift
 
+protocol HealthSampleUploadManagerClearanceDelegate: AnyObject {
+    var healthManagerCanRun: Bool { get }
+}
+
 protocol HealthSampleUploadManagerReachability {
     var isCurrentlyReachableForHealthSampleUpload: Bool { get }
     func getIsReachableForHealthSampleUploadObserver() -> Observable<Bool>
 }
 
 protocol HealthSampleUploadManagerStorage {
+    var uploadStartDate: Date? { get set }
     var lastUploadSequenceCompletionDate: Date? { get set }
     var lastUploadSequenceStartingDate: Date? { get set }
     var pendingUploadDataType: HealthDataType? { get set }
@@ -25,6 +30,7 @@ import HealthKit
 class HealthSampleUploadManager {
     
     private var storage: HealthSampleUploadManagerStorage
+    weak var clearanceDelegate: HealthSampleUploadManagerClearanceDelegate?
     
     private var uploadSequenceScheduledOrRunning: Bool = false
     
@@ -42,6 +48,9 @@ class HealthSampleUploadManager {
             .filter { $0.isValid }
         self.uploaders = sampleTypes.map { HealthSampleUploader(withSampleDataType: $0, storage: storage) }
         self.logDebugText(text: "Initialized with \(self.uploaders.count) uploaders")
+        if nil == self.storage.uploadStartDate {
+            self.storage.uploadStartDate = Date(timeIntervalSinceNow: -Constants.HealthKit.SamplesStartDateTimeInThePast)
+        }
     }
     
     public func setNetworkDelegate(_ networkDelegate: HealthSampleUploaderNetworkDelegate) {
@@ -91,6 +100,18 @@ class HealthSampleUploadManager {
     }
     
     private func startUploadSequence() {
+        guard let clearanceDelegate = self.clearanceDelegate else {
+            assertionFailure("Missing Clearance Delegate")
+            return
+        }
+        guard clearanceDelegate.healthManagerCanRun else {
+            self.logDebugText(text: "Upload sequence has no clearance")
+            self.storage.lastUploadSequenceCompletionDate = Date()
+            self.uploadSequenceScheduledOrRunning = false
+            self.scheduleUploadSequence()
+            return
+        }
+        
         self.logDebugText(text: "Upload sequence started")
         
         // If too much time has passed from the sequence start and, in that case, restart from the beginning (drop the pending upload)
@@ -121,8 +142,13 @@ class HealthSampleUploadManager {
             return
         }
         
+        guard let startDate = self.storage.uploadStartDate else {
+            assertionFailure("Upload start date has not been initialized")
+            return
+        }
+        
         self.logDebugText(text: "Upload for data type '\(uploader.sampleDataType.keyName)' started")
-        uploader.run()
+        uploader.run(startDate: startDate)
             .subscribe(onSuccess: { [weak self] in
                 guard let self = self else { return }
                 self.logDebugText(text: "Upload for data type '\(uploader.sampleDataType.keyName)' completed")

@@ -14,6 +14,8 @@ protocol HealthManagerNetworkDelegate: HealthSampleUploaderNetworkDelegate {
     func uploadHealthNetworkData(_ healthNetworkData: HealthNetworkData) -> Single<()>
 }
 
+protocol HealthManagerClearanceDelegate: HealthSampleUploadManagerClearanceDelegate {}
+
 typealias HealthManagerStorage = HealthSampleUploadManagerStorage & HealthSampleUploaderStorage
 typealias HealthManagerReachability = HealthSampleUploadManagerReachability
 
@@ -33,8 +35,17 @@ class HealthManager: HealthService {
         }
     }
     
+    public weak var clearanceDelegate: HealthSampleUploadManagerClearanceDelegate? {
+        didSet {
+            if let clearanceDelegate = self.clearanceDelegate {
+                self.healthSampleUploadManager.clearanceDelegate = clearanceDelegate
+            }
+        }
+    }
+    
     private let readDataTypes: [HealthDataType]
     private let analyticsService: AnalyticsService
+    
     private let healthStore = HKHealthStore()
     
     private let healthSampleUploadManager: HealthSampleUploadManager
@@ -135,6 +146,14 @@ class HealthManager: HealthService {
     private func processCharacteristicTypes() {
         guard let networkDelegate = self.networkDelegate else {
             assertionFailure("Missing Network Delegate")
+            return
+        }
+        guard let clearanceDelegate = self.clearanceDelegate else {
+            assertionFailure("Missing Clearance Delegate")
+            return
+        }
+        guard clearanceDelegate.healthManagerCanRun else {
+            print("HealthManager - Characteristics Data has no clearance")
             return
         }
         let data: [String: String] = self.readDataTypes.reduce([:]) { result, type in

@@ -13,7 +13,6 @@ protocol HealthSampleUploaderNetworkDelegate: AnyObject {
 }
 
 protocol HealthSampleUploaderStorage {
-    var firstSuccessfulSampleUploadDate: Date? { get set }
     func saveLastSampleUploadAnchor<T: NSSecureCoding>(_ anchor: T?, forDataType dateType: HealthDataType)
     func loadLastSampleUploadAnchor<T: NSSecureCoding & NSObject>(forDataType dateType: HealthDataType) -> T?
 }
@@ -48,7 +47,7 @@ class HealthSampleUploader {
         self.sampleDataType = sampleDataType
     }
     
-    public func run() -> Single<()> {
+    public func run(startDate: Date) -> Single<()> {
         guard let networkDelegate = self.networkDelegate else {
             assertionFailure("Missing Network Delegate")
             return Single.error(HealthSampleUploaderError.internalError)
@@ -59,8 +58,6 @@ class HealthSampleUploader {
             return Single.error(HealthSampleUploaderError.unexpectedDataType)
         }
         
-        let startDate = self.storage.firstSuccessfulSampleUploadDate
-            ?? Date(timeIntervalSinceNow: -Constants.HealthKit.SamplesStartDateTimeInThePast)
         let endDate = Date()
         
         return Single<HealthQueryResult>.create { singleEvent in
@@ -90,9 +87,6 @@ class HealthSampleUploader {
         .do(onSuccess: { anchor in
             if let anchor = anchor {
                 self.storage.saveLastSampleUploadAnchor(anchor, forDataType: self.sampleDataType)
-            }
-            if self.storage.firstSuccessfulSampleUploadDate == nil {
-                self.storage.firstSuccessfulSampleUploadDate = startDate
             }
         })
         .toVoid()

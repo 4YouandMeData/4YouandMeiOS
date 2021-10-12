@@ -424,6 +424,8 @@ extension RepositoryImpl: NotificationTokenDelegate {
     }
 }
 
+// MARK: - HealthManagerNetworkDelegate
+
 extension RepositoryImpl: HealthManagerNetworkDelegate {
     func uploadHealthNetworkData(_ healthNetworkData: HealthNetworkData) -> Single<()> {
         return self.api.send(request: ApiRequest(serviceRequest: .sendHealthData(healthData: healthNetworkData)))
@@ -439,6 +441,12 @@ extension RepositoryImpl: HealthManagerNetworkDelegate {
                 }
             }
     }
+}
+
+// MARK: - HealthManagerClearanceDelegate
+
+extension RepositoryImpl: HealthManagerClearanceDelegate {
+    var healthManagerCanRun: Bool { self.currentUser?.getHasAgreedTo(systemPermission: .health) ?? false }
 }
 
 // MARK: - Extension(PrimitiveSequence)

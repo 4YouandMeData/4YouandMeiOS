@@ -244,7 +244,7 @@ extension CacheManager.CacheManagerKey {
 }
 
 extension CacheManager: HealthSampleUploaderStorage {
-    var firstSuccessfulSampleUploadDate: Date? {
+    var uploadStartDate: Date? {
         get { self.load(forKey: CacheManagerKey.firstSuccessfulSampleUploadDate.rawValue) }
         set { self.save(encodable: newValue, forKey: CacheManagerKey.firstSuccessfulSampleUploadDate.rawValue) }
     }
@@ -290,7 +290,7 @@ extension CacheManager {
         self.pendingUploadDataType = nil
         self.lastUploadSequenceCompletionDate = nil
         self.lastUploadSequenceStartingDate = nil
-        self.firstSuccessfulSampleUploadDate = nil
+        self.uploadStartDate = nil
         HealthDataType.allCases.forEach { dataType in
             self.reset(forKey: CacheManagerKey.getLastSampleUploadAnchorKey(forHealthDataTypeIdentifier: dataType))
         }
