@@ -18,6 +18,7 @@ struct ServicesSetupData {
     let showDefaultUserInfo: Bool
     let enableLocationServices: Bool
     let healthReadDataTypes: [HealthDataType]
+    let appleWatchAlternativeIntegrations: [Integration]
 }
 
 class Services {
@@ -82,7 +83,8 @@ class Services {
                                         storage: storage,
                                         notificationService: notificationService,
                                         analyticsService: analytics,
-                                        showDefaultUserInfo: servicesSetupData.showDefaultUserInfo)
+                                        showDefaultUserInfo: servicesSetupData.showDefaultUserInfo,
+                                        appleWatchAlternativeIntegrations: servicesSetupData.appleWatchAlternativeIntegrations)
         self.services.append(repository)
         
         let navigator = AppNavigator(withRepository: repository, analytics: analytics, deeplinkService: deeplinkService, window: window)

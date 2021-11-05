@@ -7,7 +7,7 @@
 
 import Foundation
 
-enum Integration: String {
+public enum Integration: String {
     case oura
     case fitbit
     case garmin
@@ -43,5 +43,9 @@ enum Integration: String {
     
     var apiOAuthDeauthorizeUrl: URL {
         return Constants.Url.ApiOAuthDeauthorizationBaseUrl.appendingPathComponent(self.rawValue)
+    }
+    
+    var strategyPrefix: String {
+        return self.rawValue
     }
 }

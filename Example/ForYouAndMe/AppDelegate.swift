@@ -35,6 +35,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         }
         self.window = FYAMManager.startup(withFontStyleMap: fontStyleMap,
                                           showDefaultUserInfo: true,
+                                          appleWatchAlternativeIntegrations: [.garmin, .fitbit],
                                           checkResourcesAvailability: true,
                                           enableLocationServices: true,
                                           healthReadDataTypes: HealthDataType.allCases)

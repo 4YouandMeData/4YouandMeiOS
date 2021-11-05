@@ -24,6 +24,7 @@ class RepositoryImpl {
     private let notificationService: NotificationService
     private let analyticsService: AnalyticsService
     private let showDefaultUserInfo: Bool
+    private let appleWatchAlternativeIntegrations: [Integration]
     
     private let disposeBag = DisposeBag()
     
@@ -31,12 +32,14 @@ class RepositoryImpl {
          storage: RepositoryStorage,
          notificationService: NotificationService,
          analyticsService: AnalyticsService,
-         showDefaultUserInfo: Bool) {
+         showDefaultUserInfo: Bool,
+         appleWatchAlternativeIntegrations: [Integration]) {
         self.api = api
         self.storage = storage
         self.notificationService = notificationService
         self.analyticsService = analyticsService
         self.showDefaultUserInfo = showDefaultUserInfo
+        self.appleWatchAlternativeIntegrations = appleWatchAlternativeIntegrations
     }
     
     // MARK: - Private Methods
@@ -334,6 +337,19 @@ extension RepositoryImpl: Repository {
     
     func getUserDataAggregation(period: StudyPeriod) -> Single<[UserDataAggregation]> {
         return self.api.send(request: ApiRequest(serviceRequest: .getUserDataAggregation(period: period)))
+            .map { (data: [UserDataAggregation]) in
+                if self.currentUser?.getHasAgreedTo(systemPermission: .health) ?? false {
+                    // If the user has agreed to use Apple Watch, remove all data coming from the alternative integrations
+                    return data.filter { item in
+                        false == self.appleWatchAlternativeIntegrations.contains(where: { item.strategy.hasPrefix($0.strategyPrefix) })
+                    }
+                } else {
+                    // If the user has NOT agreed to use Apple Watch, remove all data coming from Apple Watch
+                    return data.filter {
+                        false == $0.strategy.hasPrefix(Constants.HealthKit.AppleWatchUserDataAggregationStrategyPrefix)
+                    }
+                }
+            }
             .handleError()
     }
     

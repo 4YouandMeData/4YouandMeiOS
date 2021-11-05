@@ -15,6 +15,7 @@ public class FYAMManager {
     
     public static func startup(withFontStyleMap fontStyleMap: FontStyleMap,
                                showDefaultUserInfo: Bool,
+                               appleWatchAlternativeIntegrations: [Integration],
                                checkResourcesAvailability: Bool = false,
                                enableLocationServices: Bool = true,
                                healthReadDataTypes: [HealthDataType] = []) -> UIWindow {
@@ -41,7 +42,8 @@ public class FYAMManager {
         // Prepare Logic
         let servicesSetupData = ServicesSetupData(showDefaultUserInfo: showDefaultUserInfo,
                                                   enableLocationServices: enableLocationServices,
-                                                  healthReadDataTypes: healthReadDataTypes)
+                                                  healthReadDataTypes: healthReadDataTypes,
+                                                  appleWatchAlternativeIntegrations: appleWatchAlternativeIntegrations)
         Services.shared.setup(withWindow: window, servicesSetupData: servicesSetupData)
         
         return window

@@ -72,6 +72,8 @@ struct Constants {
         #endif
         static let EnableDebugLog: Bool = false
         static let ConnectionAvailabilityForUpload: [ReachabilityServiceType] = [.wifi, .cellular]
+        
+        static let AppleWatchUserDataAggregationStrategyPrefix: String = "apple_watch"
     }
     struct Misc {
         static let EnableGlobalConfigCache = false
