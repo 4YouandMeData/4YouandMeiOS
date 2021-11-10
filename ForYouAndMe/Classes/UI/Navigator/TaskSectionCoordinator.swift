@@ -11,6 +11,12 @@ import RxSwift
 
 class TaskSectionCoordinator: NSObject, PagedActivitySectionCoordinator {
     
+    // MARK: - Coordinator
+    var hidesBottomBarWhenPushed: Bool = false
+    
+    // MARK: - PagedSectionCoordinator
+    var addAbortOnboardingButton: Bool = false
+    
     // MARK: - ActivitySectionCoordinator
     let taskIdentifier: String
     let navigator: AppNavigator

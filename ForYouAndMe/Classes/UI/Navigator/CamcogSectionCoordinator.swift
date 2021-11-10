@@ -10,6 +10,12 @@ import RxSwift
 
 class CamcogSectionCoordinator: NSObject, PagedActivitySectionCoordinator {
     
+    // MARK: - Coordinator
+    var hidesBottomBarWhenPushed: Bool = false
+    
+    // MARK: - PagedSectionCoordinator
+    var addAbortOnboardingButton: Bool = false
+    
     // MARK: - ActivitySectionCoordinator
     let completionCallback: NotificationCallback
     let taskIdentifier: String

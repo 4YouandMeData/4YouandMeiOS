@@ -9,6 +9,12 @@ import Foundation
 
 class InformedConsentSectionCoordinator {
     
+    // MARK: - Coordinator
+    var hidesBottomBarWhenPushed: Bool = false
+    
+    // MARK: - PagedSectionCoordinator
+    var addAbortOnboardingButton: Bool = true
+    
     public unowned var navigationController: UINavigationController
     
     private let sectionData: InformedConsentSection
@@ -49,20 +55,23 @@ class InformedConsentSectionCoordinator {
                                         defaultButtonFirstLabel: nil,
                                         defaultButtonSecondLabel: nil)
         let viewController = InfoPageViewController(withPageData: infoPageData, coordinator: self)
-        self.navigationController.pushViewController(viewController, animated: true)
+        self.navigationController.pushViewController(viewController,
+                                                     hidesBottomBarWhenPushed: self.hidesBottomBarWhenPushed,
+                                                     animated: true)
     }
     
     private func showQuestion(_ question: Question) {
         self.currentPage = nil
         self.currentQuestion = question
         let viewController = QuestionViewController(withQuestion: question, coordinator: self)
-        self.navigationController.pushViewController(viewController, animated: true)
+        self.navigationController.pushViewController(viewController,
+                                                     hidesBottomBarWhenPushed: self.hidesBottomBarWhenPushed,
+                                                     animated: true)
     }
 }
 
 extension InformedConsentSectionCoordinator: PagedSectionCoordinator {
     
-    var isOnboarding: Bool { true }
     var pages: [Page] { self.sectionData.pages }
     
     func getStartingPage() -> UIViewController {

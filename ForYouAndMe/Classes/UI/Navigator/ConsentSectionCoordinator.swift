@@ -9,6 +9,9 @@ import Foundation
 
 class ConsentSectionCoordinator {
     
+    // MARK: - Coordinator
+    var hidesBottomBarWhenPushed: Bool = false
+    
     public unowned var navigationController: UINavigationController
     
     private let sectionData: ConsentSection

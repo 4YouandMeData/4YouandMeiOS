@@ -25,6 +25,12 @@ enum IntegrationSpecialLinkBehaviour: CaseIterable {
 
 class IntegrationSectionCoordinator {
     
+    // MARK: - Coordinator
+    var hidesBottomBarWhenPushed: Bool = false
+    
+    // MARK: - PagedSectionCoordinator
+    var addAbortOnboardingButton: Bool = true
+    
     public unowned var navigationController: UINavigationController
     
     private let navigator: AppNavigator
@@ -44,7 +50,6 @@ class IntegrationSectionCoordinator {
 
 extension IntegrationSectionCoordinator: PagedSectionCoordinator {
     
-    var isOnboarding: Bool { true }
     var pages: [Page] { self.sectionData.pages }
     
     func getStartingPage() -> UIViewController {
@@ -53,7 +58,9 @@ extension IntegrationSectionCoordinator: PagedSectionCoordinator {
     
     func showPage(_ page: Page) {
         let viewController = IntegrationPageViewController(withPage: page, coordinator: self, backwardNavigation: true)
-        self.navigationController.pushViewController(viewController, animated: true)
+        self.navigationController.pushViewController(viewController,
+                                                     hidesBottomBarWhenPushed: self.hidesBottomBarWhenPushed,
+                                                     animated: true)
     }
     
     func performCustomPrimaryButtonNavigation(page: Page) -> Bool {

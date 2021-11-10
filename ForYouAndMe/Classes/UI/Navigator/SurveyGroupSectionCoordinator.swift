@@ -10,6 +10,12 @@ import RxSwift
 
 class SurveyGroupSectionCoordinator: PagedActivitySectionCoordinator {
     
+    // MARK: - Coordinator
+    var hidesBottomBarWhenPushed: Bool = false
+    
+    // MARK: - PagedSectionCoordinator
+    var addAbortOnboardingButton: Bool = false
+    
     // MARK: - ActivitySectionCoordinator
     let taskIdentifier: String
     let completionCallback: NotificationCallback
@@ -73,7 +79,9 @@ class SurveyGroupSectionCoordinator: PagedActivitySectionCoordinator {
         let surveyStartingViewController = self.getSurveyViewController(forSurvey: survey,
                                                                         navigationController: self.navigationController,
                                                                         isFirstStartingPage: false)
-        self.navigationController.pushViewController(surveyStartingViewController, animated: true)
+        self.navigationController.pushViewController(surveyStartingViewController,
+                                                     hidesBottomBarWhenPushed: self.hidesBottomBarWhenPushed,
+                                                     animated: true)
     }
     
     private func onSurveyCompleted(_ survey: SurveyTask, answers: [SurveyResult]) {

@@ -10,6 +10,12 @@ import RxSwift
 
 class VideoDiarySectionCoordinator: NSObject, PagedActivitySectionCoordinator {
     
+    // MARK: - Coordinator
+    var hidesBottomBarWhenPushed: Bool = false
+    
+    // MARK: - PagedSectionCoordinator
+    var addAbortOnboardingButton: Bool = false
+    
     // MARK: - ActivitySectionCoordinator
     let taskIdentifier: String
     let completionCallback: NotificationCallback
@@ -23,7 +29,7 @@ class VideoDiarySectionCoordinator: NSObject, PagedActivitySectionCoordinator {
     var currentlyRescheduledTimes: Int
     var maxRescheduleTimes: Int
     var coreViewController: UIViewController? { VideoDiaryRecorderViewController(taskIdentifier: self.taskIdentifier,
-                                                                                coordinator: self) }
+                                                                                 coordinator: self) }
     
     private let analytics: AnalyticsService
     

@@ -10,6 +10,12 @@ import RxSwift
 
 class ConsentUserDataSectionCoordinator {
     
+    // MARK: - Coordinator
+    var hidesBottomBarWhenPushed: Bool = false
+    
+    // MARK: - PagedSectionCoordinator
+    var addAbortOnboardingButton: Bool = true
+    
     public unowned var navigationController: UINavigationController
     
     private let repository: Repository
@@ -38,15 +44,21 @@ class ConsentUserDataSectionCoordinator {
     // MARK: - Private Methods
     
     private func showEnterUserEmail() {
-        self.navigationController.pushViewController(UserEmailViewController(coordinator: self), animated: true)
+        self.navigationController.pushViewController(UserEmailViewController(coordinator: self),
+                                                     hidesBottomBarWhenPushed: self.hidesBottomBarWhenPushed,
+                                                     animated: true)
     }
     
     private func showUserEmailValidation(email: String) {
-        self.navigationController.pushViewController(UserEmailVerificationViewController(email: email, coordinator: self), animated: true)
+        self.navigationController.pushViewController(UserEmailVerificationViewController(email: email, coordinator: self),
+                                                     hidesBottomBarWhenPushed: self.hidesBottomBarWhenPushed,
+                                                     animated: true)
     }
     
     private func showUserDigitalSignature() {
-        self.navigationController.pushViewController(UserSignatureViewController(coordinator: self), animated: true)
+        self.navigationController.pushViewController(UserSignatureViewController(coordinator: self),
+                                                     hidesBottomBarWhenPushed: self.hidesBottomBarWhenPushed,
+                                                     animated: true)
     }
     
     private func submitUserData() {
@@ -115,7 +127,6 @@ extension ConsentUserDataSectionCoordinator: UserSignatureCoordinator {
 
 extension ConsentUserDataSectionCoordinator: PagedSectionCoordinator {
     
-    var isOnboarding: Bool { true }
     var pages: [Page] { self.sectionData.pages }
     
     func getStartingPage() -> UIViewController {

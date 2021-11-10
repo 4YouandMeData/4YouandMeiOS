@@ -9,6 +9,12 @@ import Foundation
 
 class SurveySectionCoordinator {
     
+    // MARK: - Coordinator
+    var hidesBottomBarWhenPushed: Bool = false
+    
+    // MARK: - PagedSectionCoordinator
+    var addAbortOnboardingButton: Bool = false
+    
     typealias SurveySectionCallback = (UINavigationController, SurveyTask, [SurveyResult]) -> Void
     
     public unowned var navigationController: UINavigationController
@@ -76,7 +82,9 @@ class SurveySectionCoordinator {
         if let successPage = self.sectionData.successPage {
             let infoPageData = InfoPageData.createResultPageData(withPage: successPage)
             let viewController = InfoPageViewController(withPageData: infoPageData, coordinator: self)
-            self.navigationController.pushViewController(viewController, animated: true)
+            self.navigationController.pushViewController(viewController,
+                                                         hidesBottomBarWhenPushed: self.hidesBottomBarWhenPushed,
+                                                         animated: true)
         } else {
             self.completionCallback(self.navigationController, self.sectionData, self.results)
         }
@@ -84,7 +92,9 @@ class SurveySectionCoordinator {
     
     private func showQuestion(_ question: SurveyQuestion) {
         let viewController = self.getQuestionPage(question)
-        self.navigationController.pushViewController(viewController, animated: true)
+        self.navigationController.pushViewController(viewController,
+                                                     hidesBottomBarWhenPushed: self.hidesBottomBarWhenPushed,
+                                                     animated: true)
     }
     
     private func showNextSurveyQuestion(questionId: String) {
@@ -105,7 +115,6 @@ class SurveySectionCoordinator {
 
 extension SurveySectionCoordinator: PagedSectionCoordinator {
     
-    var isOnboarding: Bool { true }
     var pages: [Page] { self.sectionData.pages }
     
     func performCustomPrimaryButtonNavigation(page: Page) -> Bool {

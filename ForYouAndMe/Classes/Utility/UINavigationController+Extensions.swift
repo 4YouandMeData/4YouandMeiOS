@@ -10,11 +10,19 @@ import UIKit
 extension UINavigationController {
     
     func pushViewController(_ viewController: UIViewController,
+                            hidesBottomBarWhenPushed: Bool,
+                            animated: Bool) {
+        viewController.hidesBottomBarWhenPushed = hidesBottomBarWhenPushed
+        self.pushViewController(viewController, animated: animated)
+    }
+    
+    func pushViewController(_ viewController: UIViewController,
+                            hidesBottomBarWhenPushed: Bool,
                             animated: Bool,
                             completion: (() -> Void)?) {
         CATransaction.begin()
         CATransaction.setCompletionBlock(completion)
-        pushViewController(viewController, animated: animated)
+        self.pushViewController(viewController, animated: animated)
         CATransaction.commit()
     }
     

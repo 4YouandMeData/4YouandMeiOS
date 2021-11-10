@@ -9,4 +9,5 @@ import UIKit
 
 protocol Coordinator {
     func getStartingPage() -> UIViewController
+    var hidesBottomBarWhenPushed: Bool { get set }
 }

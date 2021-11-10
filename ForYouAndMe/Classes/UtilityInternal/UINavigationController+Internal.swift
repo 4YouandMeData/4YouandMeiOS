@@ -29,6 +29,7 @@ extension UINavigationController {
                                         guard let self = self else { return }
                                         let viewController = viewForData(loadedData)
                                         self.pushViewController(viewController,
+                                                                hidesBottomBarWhenPushed: hidesBottomBarWhenPushed,
                                                                 animated: false,
                                                                 completion: { [weak self] in
                                                                     guard let self = self else { return }
@@ -37,7 +38,8 @@ extension UINavigationController {
                                       })
         let loadingViewController = LoadingViewController(loadingMode: .genericLoad(loadingInfo: loadingInfo,
                                                                                     allowBack: allowBackwardNavigation))
-        loadingViewController.hidesBottomBarWhenPushed = hidesBottomBarWhenPushed
-        self.pushViewController(loadingViewController, animated: true)
+        self.pushViewController(loadingViewController,
+                                hidesBottomBarWhenPushed: hidesBottomBarWhenPushed,
+                                animated: true)
     }
 }

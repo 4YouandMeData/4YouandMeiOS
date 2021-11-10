@@ -20,6 +20,7 @@ enum InternalDeeplinkKey: String {
     case faq
     case rewards
     case contacts
+    case consent
 }
 
 class AppNavigator {
@@ -74,13 +75,18 @@ class AppNavigator {
         // Convenient entry point to test each app module atomically,
         // without going through all the official flow
         #if DEBUG
-        if let testSection = Constants.Test.StartingOnboardingSection {
+        if let testSection = Constants.Test.StartingOnboardingSection,
+           let sectionDriver = OnboardingSectionProvider.onboardingSectionDriver {
             let testNavigationViewController = UINavigationController(rootViewController: UIViewController())
             
             testNavigationViewController.preventPopWithSwipe()
             self.window.rootViewController = testNavigationViewController
             
-            self.startOnboardingSection(section: testSection, navigationController: testNavigationViewController)
+            self.startOnboardingSection(section: testSection,
+                                        sectionDriver: sectionDriver,
+                                        navigationController: testNavigationViewController,
+                                        hidesBottomBarWhenPushed: false,
+                                        addAbortOnboardingButton: true)
             return
         }
         #endif
@@ -219,18 +225,31 @@ class AppNavigator {
             assertionFailure("Missing UINavigationController")
             return
         }
-        if let firstSection = OnboardingSectionProvider.firstOnboardingSection {
-            self.startOnboardingSection(section: firstSection, navigationController: navigationController)
+        if let sectionDriver = OnboardingSectionProvider.onboardingSectionDriver,
+           let firstSection = sectionDriver.firstOnboardingSection {
+            self.startOnboardingSection(section: firstSection,
+                                        sectionDriver: sectionDriver,
+                                        navigationController: navigationController,
+                                        hidesBottomBarWhenPushed: false,
+                                        addAbortOnboardingButton: true)
         } else {
             self.goHome()
         }
     }
     
-    private func startOnboardingSection(section: OnboardingSection, navigationController: UINavigationController) {
+    private func startOnboardingSection(section: OnboardingSection,
+                                        sectionDriver: OnboardingSectionDriver,
+                                        navigationController: UINavigationController,
+                                        hidesBottomBarWhenPushed: Bool,
+                                        addAbortOnboardingButton: Bool) {
         let completionCallback: NavigationControllerCallback = { [weak self] navigationController in
             guard let self = self else { return }
-            if let nextSection = OnboardingSectionProvider.getNextOnboardingSection(forOnboardingSection: section) {
-                self.startOnboardingSection(section: nextSection, navigationController: navigationController)
+            if let nextSection = sectionDriver.getNextOnboardingSection(forOnboardingSection: section) {
+                self.startOnboardingSection(section: nextSection,
+                                            sectionDriver: sectionDriver,
+                                            navigationController: navigationController,
+                                            hidesBottomBarWhenPushed: hidesBottomBarWhenPushed,
+                                            addAbortOnboardingButton: addAbortOnboardingButton)
             } else {
                 self.repository.notifyOnboardingCompleted()
                     .addProgress()
@@ -246,20 +265,38 @@ class AppNavigator {
         }
         if let syncCoordinator = section.getSyncCoordinator(withNavigationController: navigationController,
                                                             completionCallback: completionCallback) {
-            self.currentCoordinator = syncCoordinator
-            navigationController.pushViewController(syncCoordinator.getStartingPage(), animated: true)
+            self.setCurrentCoordinator(syncCoordinator,
+                                       hidesBottomBarWhenPushed: hidesBottomBarWhenPushed,
+                                       addAbortOnboardingButton: addAbortOnboardingButton)
+            navigationController.pushViewController(syncCoordinator.getStartingPage(),
+                                                    hidesBottomBarWhenPushed: hidesBottomBarWhenPushed,
+                                                    animated: true)
         } else if let asyncCoordinatorRequest = section.getAsyncCoordinatorRequest(withNavigationController: navigationController,
                                                                                    completionCallback: completionCallback,
                                                                                    repository: self.repository) {
-            navigationController.loadViewForRequest(asyncCoordinatorRequest) { coordinator -> UIViewController in
-                self.currentCoordinator = coordinator
+            navigationController.loadViewForRequest(asyncCoordinatorRequest,
+                                                    hidesBottomBarWhenPushed: hidesBottomBarWhenPushed,
+                                                    allowBackwardNavigation: false,
+                                                    viewForData: { coordinator -> UIViewController in
+                self.setCurrentCoordinator(coordinator,
+                                           hidesBottomBarWhenPushed: hidesBottomBarWhenPushed,
+                                           addAbortOnboardingButton: addAbortOnboardingButton)
                 return coordinator.getStartingPage()
-            }
+            })
         } else {
             assertionFailure("Section has neither a syncCoorindator nor an asyncCoordinator")
             self.currentCoordinator = nil
             self.goHome()
         }
+    }
+    
+    private func setCurrentCoordinator(_ coordinator: Coordinator, hidesBottomBarWhenPushed: Bool, addAbortOnboardingButton: Bool) {
+        var coordinator = coordinator
+        coordinator.hidesBottomBarWhenPushed = hidesBottomBarWhenPushed
+        if var pagedSectionCoordinator = coordinator as? PagedSectionCoordinator {
+            pagedSectionCoordinator.addAbortOnboardingButton = addAbortOnboardingButton
+        }
+        self.currentCoordinator = coordinator
     }
     
     // MARK: Consent
@@ -290,8 +327,9 @@ class AppNavigator {
                                                            onFailureCallback: { _ in
                                                             navigationController.popViewController(animated: true)
                                                            })
-        viewController.hidesBottomBarWhenPushed = true
-        navigationController.pushViewController(viewController, animated: true)
+        navigationController.pushViewController(viewController,
+                                                hidesBottomBarWhenPushed: true,
+                                                animated: true)
     }
     
     // MARK: Home
@@ -682,8 +720,9 @@ class AppNavigator {
                 assertionFailure("Missing UINavigationController")
                 return
             }
-            viewController.hidesBottomBarWhenPushed = true
-            navController.pushViewController(viewController, animated: true)
+            navController.pushViewController(viewController,
+                                             hidesBottomBarWhenPushed: true,
+                                             animated: true)
         }
     }
     
@@ -699,6 +738,7 @@ class AppNavigator {
         case .faq: self.openStudyInfoPage(studyInfoPage: .faq, presenter: presenter)
         case .rewards: self.openStudyInfoPage(studyInfoPage: .reward, presenter: presenter)
         case .contacts: self.openStudyInfoPage(studyInfoPage: .contacts, presenter: presenter)
+        case .consent: self.openConsent(presenter: presenter)
         }
     }
     
@@ -728,6 +768,25 @@ class AppNavigator {
                 guard let self = self else { return }
                 self.handleError(error: error, presenter: presenter)
             }).disposed(by: self.disposeBag)
+    }
+    
+    private func openConsent(presenter: UIViewController) {
+        guard let navigationController = presenter.navigationController else {
+            assertionFailure("Missing Navigation Controller")
+            return
+        }
+        
+        let sectionDriver = OnboardingSectionDriver(onboardingSectionGroups: [.consent])
+        if let firstSection = sectionDriver.firstOnboardingSection {
+            self.startOnboardingSection(section: firstSection,
+                                        sectionDriver: sectionDriver,
+                                        navigationController: navigationController,
+                                        hidesBottomBarWhenPushed: true,
+                                        addAbortOnboardingButton: false)
+        } else {
+            assertionFailure("Missing first section for consent flow")
+            self.handleError(error: nil, presenter: presenter)
+        }
     }
 }
 

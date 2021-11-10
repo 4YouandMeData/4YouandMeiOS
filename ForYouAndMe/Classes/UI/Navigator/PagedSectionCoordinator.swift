@@ -10,7 +10,7 @@ import Foundation
 protocol PagedSectionCoordinator: PageCoordinator {
     var navigationController: UINavigationController { get }
     var pages: [Page] { get }
-    var isOnboarding: Bool { get }
+    var addAbortOnboardingButton: Bool { get set }
     
     func showPage(_ page: Page)
     func showLinkedPage(forPageRef pageRef: PageRef)
@@ -26,15 +26,19 @@ protocol PagedSectionCoordinator: PageCoordinator {
 extension PagedSectionCoordinator {
     
     func showPage(_ page: Page) {
-        let infoPageData = InfoPageData.createInfoPageData(withPage: page, isOnboarding: self.isOnboarding)
+        let infoPageData = InfoPageData.createInfoPageData(withPage: page, addAbortOnboardingButton: self.addAbortOnboardingButton)
         let viewController = InfoPageViewController(withPageData: infoPageData, coordinator: self)
-        self.navigationController.pushViewController(viewController, animated: true)
+        self.navigationController.pushViewController(viewController,
+                                                     hidesBottomBarWhenPushed: self.hidesBottomBarWhenPushed,
+                                                     animated: true)
     }
     
     func showResultPage(_ page: Page) {
         let infoPageData = InfoPageData.createResultPageData(withPage: page)
         let viewController = InfoPageViewController(withPageData: infoPageData, coordinator: self)
-        self.navigationController.pushViewController(viewController, animated: true)
+        self.navigationController.pushViewController(viewController,
+                                                     hidesBottomBarWhenPushed: self.hidesBottomBarWhenPushed,
+                                                     animated: true)
     }
     
     func showLinkedPage(forPageRef pageRef: PageRef) {

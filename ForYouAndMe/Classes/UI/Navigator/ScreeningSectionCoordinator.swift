@@ -9,6 +9,12 @@ import Foundation
 
 class ScreeningSectionCoordinator {
     
+    // MARK: - Coordinator
+    var hidesBottomBarWhenPushed: Bool = false
+    
+    // MARK: - PagedSectionCoordinator
+    var addAbortOnboardingButton: Bool = true
+    
     public unowned var navigationController: UINavigationController
     
     private let sectionData: ScreeningSection
@@ -35,7 +41,9 @@ class ScreeningSectionCoordinator {
     
     private func showQuestions() {
         let viewController = BooleanQuestionsViewController(withQuestions: self.sectionData.questions, coordinator: self)
-        self.navigationController.pushViewController(viewController, animated: true)
+        self.navigationController.pushViewController(viewController,
+                                                     hidesBottomBarWhenPushed: self.hidesBottomBarWhenPushed,
+                                                     animated: true)
     }
     
     private func showSuccess() {
@@ -57,7 +65,6 @@ class ScreeningSectionCoordinator {
 
 extension ScreeningSectionCoordinator: PagedSectionCoordinator {
     
-    var isOnboarding: Bool { true }
     var pages: [Page] { self.sectionData.pages }
     
     func performCustomPrimaryButtonNavigation(page: Page) -> Bool {

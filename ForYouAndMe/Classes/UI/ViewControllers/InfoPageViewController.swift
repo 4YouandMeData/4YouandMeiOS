@@ -37,9 +37,9 @@ struct InfoPageData {
                             defaultButtonSecondLabel: nil)
     }
     
-    static func createInfoPageData(withPage page: Page, isOnboarding: Bool) -> InfoPageData {
+    static func createInfoPageData(withPage page: Page, addAbortOnboardingButton: Bool) -> InfoPageData {
         return InfoPageData(page: page,
-                            addAbortOnboardingButton: isOnboarding,
+                            addAbortOnboardingButton: addAbortOnboardingButton,
                             addCloseButton: false,
                             allowBackwardNavigation: true,
                             bodyTextAlignment: .left,

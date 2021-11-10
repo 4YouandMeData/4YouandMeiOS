@@ -9,6 +9,9 @@ import UIKit
 
 class IntroVideoSectionCoordinator {
     
+    // MARK: - Coordinator
+    var hidesBottomBarWhenPushed: Bool = false
+    
     public unowned var navigationController: UINavigationController
 
     private let completionCallback: NavigationControllerCallback

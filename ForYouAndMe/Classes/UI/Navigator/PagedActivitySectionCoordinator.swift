@@ -23,7 +23,6 @@ protocol PagedActivitySectionCoordinator: ActivitySectionCoordinator, PagedSecti
 
 extension PagedActivitySectionCoordinator {
     
-    var isOnboarding: Bool { false }
     var activityPresenter: UIViewController? { self.activitySectionViewController }
     
     var pages: [Page] { self.pagedSectionData.pages }
@@ -52,7 +51,9 @@ extension PagedActivitySectionCoordinator {
             }
             return
         }
-        self.navigationController.pushViewController(coreViewController, animated: true)
+        self.navigationController.pushViewController(coreViewController,
+                                                     hidesBottomBarWhenPushed: self.hidesBottomBarWhenPushed,
+                                                     animated: true)
     }
     
     var navigationController: UINavigationController {
@@ -88,7 +89,9 @@ extension PagedActivitySectionCoordinator {
             let data = InfoPageData.createResultPageData(withPage: successPage)
             let successViewController = InfoPageViewController(withPageData: data,
                                                               coordinator: self)
-            self.navigationController.pushViewController(successViewController, animated: true)
+            self.navigationController.pushViewController(successViewController,
+                                                         hidesBottomBarWhenPushed: self.hidesBottomBarWhenPushed,
+                                                         animated: true)
         } else {
             self.completionCallback()
         }

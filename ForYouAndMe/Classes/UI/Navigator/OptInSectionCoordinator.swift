@@ -10,6 +10,12 @@ import RxSwift
 
 class OptInSectionCoordinator {
     
+    // MARK: - Coordinator
+    var hidesBottomBarWhenPushed: Bool = false
+    
+    // MARK: - PagedSectionCoordinator
+    var addAbortOnboardingButton: Bool = true
+    
     public unowned var navigationController: UINavigationController
     
     private let repository: Repository
@@ -49,13 +55,14 @@ class OptInSectionCoordinator {
     
     private func showOptInPermission(_ optInPermission: OptInPermission) {
         let viewController = OptInPermissionViewController(withOptInPermission: optInPermission, coordinator: self)
-        self.navigationController.pushViewController(viewController, animated: true)
+        self.navigationController.pushViewController(viewController,
+                                                     hidesBottomBarWhenPushed: self.hidesBottomBarWhenPushed,
+                                                     animated: true)
     }
 }
 
 extension OptInSectionCoordinator: PagedSectionCoordinator {
     
-    var isOnboarding: Bool { true }
     var pages: [Page] { self.sectionData.pages }
     
     func getStartingPage() -> UIViewController {

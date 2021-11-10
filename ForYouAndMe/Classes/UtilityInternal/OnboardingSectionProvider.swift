@@ -9,19 +9,30 @@ import Foundation
 
 class OnboardingSectionProvider {
     
-    private static var onboardingSectionGroups: [OnboardingSectionGroup] = []
+    static var onboardingSectionDriver: OnboardingSectionDriver?
     
-    static var userConsentSectionExists: Bool { onboardingSectionGroups.contains(.consent) }
+    static var userConsentSectionExists: Bool { onboardingSectionDriver?.userConsentSectionExists ?? false }
     
-    static var firstOnboardingSection: OnboardingSection? {
+    static func initialize(withOnboardingSectionGroups onboardingSectionGroups: [OnboardingSectionGroup]) {
+        self.onboardingSectionDriver = OnboardingSectionDriver(onboardingSectionGroups: onboardingSectionGroups)
+    }
+}
+
+struct OnboardingSectionDriver {
+    
+    var userConsentSectionExists: Bool { self.onboardingSectionGroups.contains(.consent) }
+    
+    var firstOnboardingSection: OnboardingSection? {
         return self.getFirstSectionFromFirstNonEmptyGroup(forStartingGroupIndex: 0)
     }
     
-    static func initialize(withOnboardingSectionGroups onboardingSectionGroups: [OnboardingSectionGroup]) {
+    private let onboardingSectionGroups: [OnboardingSectionGroup]
+    
+    init(onboardingSectionGroups: [OnboardingSectionGroup]) {
         self.onboardingSectionGroups = onboardingSectionGroups
     }
     
-    static func getNextOnboardingSection(forOnboardingSection onboardingSection: OnboardingSection) -> OnboardingSection? {
+    func getNextOnboardingSection(forOnboardingSection onboardingSection: OnboardingSection) -> OnboardingSection? {
         guard let currentGroupIndex = self.onboardingSectionGroups.firstIndex(where: { $0.sections.contains(onboardingSection) }) else {
             // No group containing the given section has been found
             return nil
@@ -36,7 +47,7 @@ class OnboardingSectionProvider {
         }
     }
     
-    static private func getFirstSectionFromFirstNonEmptyGroup(forStartingGroupIndex startingGroupIndex: Int) -> OnboardingSection? {
+    private func getFirstSectionFromFirstNonEmptyGroup(forStartingGroupIndex startingGroupIndex: Int) -> OnboardingSection? {
         var section: OnboardingSection?
         var currentGroupIndex = startingGroupIndex
         while section == nil, currentGroupIndex < self.onboardingSectionGroups.count {
