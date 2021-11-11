@@ -20,7 +20,7 @@ enum InternalDeeplinkKey: String {
     case faq
     case rewards
     case contacts
-    case consent
+    case consent = "new_consent_version_available"
 }
 
 class AppNavigator {
