@@ -180,7 +180,7 @@ struct FeedResolvedTemplate: Decodable {
             dateFormatterGet.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZ"
             let someDate = resolvedString
             if dateFormatterGet.date(from: someDate) != nil {
-                self.resolved = dateFormatterGet.date(from: someDate)?.string(withFormat: "MMM dd")
+                self.resolved = dateFormatterGet.date(from: someDate)?.string(withFormat: "MMM dd", timeZone: TimeZone(abbreviation: "UTC"))
             } else {
                 self.resolved = resolvedString
             }
