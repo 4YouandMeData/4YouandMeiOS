@@ -1,4 +1,38 @@
 
+- ProjectInfo_sample file added
+
+## Release 0.78.0
+
+## Release 0.77.0
+
+- correct message in feed reward
+
+- Updated expected notifiable tile link_url for consent flow.
+
+- shown consent section group for new notifiable type "consent".
+
+## Release 0.76.0
+
+- Your Data: excluded Apple Watch data if HealthKit Opt-in permission has not been granted, otherwise excluded data from study-specific alternative integrations.
+
+## Release 0.75.0
+
+- HealthKit: uploaded data only if health opt-in has been granted.
+
+- Opt-In: fixed health permission always asked, even it has been opt-out.
+
+## Release 0.74.0
+
+- Fixed primary style of UINavigationBar.
+
+## Release 0.73.0
+
+- Fixed UITabBar and UINavigationBar background color on iOS 15.
+
+## Release 0.72.0
+
+- Fixed HealthKit encoding crash. Minor file reorganization.
+
 ## Release 0.71.0
 
 - Your Data: fixed wrong order in filter items.
