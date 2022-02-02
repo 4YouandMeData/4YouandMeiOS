@@ -43,10 +43,12 @@ To run the example project:
 4.  open `ForYouAndMe.xcworkspace` (**not the .xcodeproj file!**) with the latest version of XCode.
     
 5.  in XCode select the `ForYouAndMe` project on the left panel and choose `Signing & Capabilities` tab and enter personal provisioning profile or choose `Automatically manage signing` and enter `Team`
+
+6.  On the `Signing & Capabilities` tab also ensure that your app Bundle Identifier matches with the created Firebase app id.
     
-6.  Navigate - using _Finder_ on _Mac_, or _Windows Explorer_ on _Windows_ - to `/Example/ForYouAndMe` folder and rename the `ProjectInfo_sample.plist` to `ProjectInfo.plist`.
+7.  Navigate - using _Finder_ on _Mac_, or _Windows Explorer_ on _Windows_ - to `/Example/ForYouAndMe` folder and rename the `ProjectInfo_sample.plist` to `ProjectInfo.plist`.
     
-7.  in XCode open `ProjectInfo.plist` file and fill the property values with the following:
+8.  in XCode open `ProjectInfo.plist` file and fill the property values with the following:
     
     1.  `api_base_url` base url of the server that provides your remote APIs(ex.: https://api.example.com).
         
@@ -56,9 +58,9 @@ To run the example project:
         
     4.  `pin_code_suffix` (only needed in studies that use the pin login) pin code suffix needed for your study, or to `none` if pin code is not supported for your study.
         
-8.  select the connected iPhone device or a simulator and run the app.
+9.  select the connected iPhone device or a simulator and run the app.
     
-9.  in XCode select the `ForYouAndMe` project on the left panel, choose `General` tab and, in the `Display Name` field enter the app name you want to be displayed on the device.
+10.  in XCode select the `ForYouAndMe` project on the left panel, choose `General` tab and, in the `Display Name` field enter the app name you want to be displayed on the device.
     
 
 **Create a study app from scratch**
