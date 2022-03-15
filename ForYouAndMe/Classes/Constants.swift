@@ -79,7 +79,8 @@ struct Constants {
         static let EnableGlobalConfigCache = false
         static let PhoneValidationCodeDigitCount: Int = 6
         static let EmailValidationCodeDigitCount: Int = 6
-        static let FeedPageSize: Int? = 20
+        static let FeedPageSize: Int? = 10
+        static let TaskPageSize: Int? = 20
         static let VideoDiaryMaxDurationSeconds: TimeInterval = 120.0
         static let VideoDiaryCaptureSessionPreset: AVCaptureSession.Preset = .hd1280x720
         // Server limit is 20 but AVAssetExportSession.fileLengthLimit can be exceeded by 1 or 2 MB

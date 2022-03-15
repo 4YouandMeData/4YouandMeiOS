@@ -15,7 +15,7 @@ class TaskViewController: UIViewController {
                                     navigator: self.navigator,
                                     tableView: self.tableView,
                                     delegate: self,
-                                    pageSize: Constants.Misc.FeedPageSize,
+                                    pageSize: Constants.Misc.TaskPageSize,
                                     pullToRefresh: true)
     }()
     
