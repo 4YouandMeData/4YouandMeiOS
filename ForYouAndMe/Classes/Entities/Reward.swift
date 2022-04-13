@@ -17,8 +17,8 @@ struct Reward {
     var body: String?
     @NilIfEmptyString
     var points: String?
-    @ImageDecodable
-    var image: UIImage?
+    @URLDecodable
+    var image: URL?
     @NilIfEmptyString
     var buttonText: String?
     @NilIfEmptyString

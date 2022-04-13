@@ -1,5 +1,7 @@
 PODS:
   - Alamofire (5.4.1)
+  - AlamofireImage (4.2.0):
+    - Alamofire (~> 5.4)
   - BLZJapx/Codable (3.0.1):
     - BLZJapx/Core
   - BLZJapx/CodableMoya (3.0.1):
@@ -80,7 +82,8 @@ PODS:
     - GoogleUtilities/Environment (~> 7.0)
     - GoogleUtilities/Reachability (~> 7.0)
     - GoogleUtilities/UserDefaults (~> 7.0)
-  - ForYouAndMe (0.65.0):
+  - ForYouAndMe (0.79.0):
+    - AlamofireImage (~> 4.1)
     - BLZJapx/RxCodableMoya (~> 3.0.0)
     - Charts (~> 3.6.0)
     - CountryPickerView (~> 3.1.2)
@@ -202,6 +205,7 @@ DEPENDENCIES:
 SPEC REPOS:
   trunk:
     - Alamofire
+    - AlamofireImage
     - BLZJapx
     - Charts
     - CountryPickerView
@@ -247,6 +251,7 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   Alamofire: 2291f7d21ca607c491dd17642e5d40fdcda0e65c
+  AlamofireImage: 34a2d90b0e5fe6a5605f85ae4b7b01e784c60192
   BLZJapx: 021bd68d387cacb057ee791403098bbc4e40b4b8
   Charts: b1e3a1f5a1c9ba5394438ca3b91bd8c9076310af
   CountryPickerView: 383c09949f7455de9892db7ce3400b10da090150
@@ -259,7 +264,7 @@ SPEC CHECKSUMS:
   FirebaseInstallations: 7f7ed0e7e27fb51f57291e1876e2ddb1524126c1
   FirebaseInstanceID: aaecc93b4528bbcafea12c477e26827719ca1183
   FirebaseMessaging: 7091222bfac24ca89c569c3c59e58390311e487f
-  ForYouAndMe: 6577311b14444eceb86a79c112d0a59fb66d874c
+  ForYouAndMe: d4d807970f39b77090aca0b8a687d12f52cf0714
   FYAMResearchKit: c79d2de80d301ac02ba9b303d97d35b083d4676b
   GoogleAppMeasurement: 57a0df93dc2feb5176b1bac06012dbd725191ba5
   GoogleDataTransport: 116c84c4bdeb76be2a7a46de51244368f9794eab
@@ -289,4 +294,4 @@ SPEC CHECKSUMS:
 
 PODFILE CHECKSUM: 0f2b224ad400963a279407f1f41be55b60dc49bf
 
-COCOAPODS: 1.10.1
+COCOAPODS: 1.11.3

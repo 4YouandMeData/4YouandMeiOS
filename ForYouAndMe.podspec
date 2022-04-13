@@ -38,6 +38,7 @@ Pod::Spec.new do |s|
   
   s.dependency 'Moya/RxSwift', '~> 14.0.0'
   s.dependency 'Moya-ModelMapper/RxSwift', '~> 10.0.0'
+  s.dependency 'AlamofireImage', '~> 4.1'
   s.dependency 'RxCocoa', '~> 5.1.1'
   s.dependency 'PureLayout', '~> 3.1.5'
   s.dependency 'SVProgressHUD', '~> 2.2.5'

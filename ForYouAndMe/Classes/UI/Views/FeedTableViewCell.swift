@@ -9,6 +9,8 @@ import UIKit
 
 class FeedTableViewCell: UITableViewCell {
     
+    private static let imageHeight: CGFloat = 56.0
+    
     private let gradientView: GradientView = {
         return GradientView(colors: [UIColor.white, UIColor.white],
                             locations: [0.0, 1.0],
@@ -19,7 +21,7 @@ class FeedTableViewCell: UITableViewCell {
     private lazy var feedImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.contentMode = .scaleAspectFit
-        imageView.autoSetDimension(.height, toSize: 56.0)
+        imageView.autoSetDimension(.height, toSize: Self.imageHeight)
         return imageView
     }()
     
@@ -93,7 +95,7 @@ class FeedTableViewCell: UITableViewCell {
         self.buttonPressedCallback = buttonPressedCallback
         
         self.updateGradientView(startColor: data.startColor, endColor: data.endColor, singleColor: data.cardColor)
-        self.setFeedImage(image: data.image)
+        self.setFeedImage(imageUrl: data.image)
         self.setFeedTitle(text: data.title)
         self.setFeedDescription(text: data.body)
         
@@ -111,7 +113,7 @@ class FeedTableViewCell: UITableViewCell {
         self.buttonPressedCallback = buttonPressedCallback
         
         self.updateGradientView(startColor: data.startColor, endColor: data.endColor, singleColor: data.cardColor)
-        self.setFeedImage(image: data.image)
+        self.setFeedImage(imageUrl: data.image)
         self.setFeedTitle(text: data.title)
         self.setFeedDescription(text: data.body)
         
@@ -124,7 +126,7 @@ class FeedTableViewCell: UITableViewCell {
         self.buttonPressedCallback = buttonPressedCallback
         
         self.updateGradientView(startColor: data.startColor, endColor: data.endColor, singleColor: data.cardColor)
-        self.setFeedImage(image: data.image)
+        self.setFeedImage(imageUrl: data.image)
         self.setFeedTitle(text: data.title)
         self.setFeedDescription(text: data.body)
         
@@ -142,7 +144,7 @@ class FeedTableViewCell: UITableViewCell {
         self.buttonPressedCallback = buttonPressedCallback
         
         self.updateGradientView(startColor: data.startColor, endColor: data.endColor, singleColor: data.cardColor)
-        self.setFeedImage(image: data.image)
+        self.setFeedImage(imageUrl: data.image)
         self.setFeedTitle(text: data.title)
         self.setFeedDescription(text: data.body)
         
@@ -160,7 +162,7 @@ class FeedTableViewCell: UITableViewCell {
         self.buttonPressedCallback = buttonPressedCallback
         
         self.updateGradientView(startColor: data.startColor, endColor: data.endColor, singleColor: data.cardColor)
-        self.setFeedImage(image: data.image)
+        self.setFeedImage(imageUrl: data.image)
         self.setFeedTitle(text: data.title)
         self.setFeedDescription(text: data.body)
         
@@ -204,10 +206,12 @@ class FeedTableViewCell: UITableViewCell {
         }
     }
     
-    private func setFeedImage(image: UIImage?) {
-        if let image = image {
+    private func setFeedImage(imageUrl: URL?) {
+        if let imageUrl = imageUrl {
             self.feedImageView.isHidden = false
-            self.feedImageView.image = image
+            self.feedImageView.loadAsyncImage(withURL: imageUrl,
+                                              placeHolderImage: Constants.Resources.AsyncImagePlaceholder,
+                                              targetSize: CGSize(width: UIScreen.main.bounds.width, height: Self.imageHeight))
         } else {
             self.feedImageView.isHidden = true
         }

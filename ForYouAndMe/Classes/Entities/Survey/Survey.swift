@@ -15,8 +15,8 @@ struct Survey {
     var title: String?
     @NilIfEmptyString
     var body: String?
-    @ImageDecodable
-    var image: UIImage?
+    @URLDecodable
+    var image: URL?
     @NilIfEmptyString
     var buttonText: String?
     
