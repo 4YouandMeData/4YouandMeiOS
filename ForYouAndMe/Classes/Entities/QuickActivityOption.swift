@@ -13,10 +13,10 @@ struct QuickActivityOption {
     
     @NilIfEmptyString
     var label: String?
-    @ImageDecodable
-    var image: UIImage?
-    @ImageDecodable
-    var selectedImage: UIImage?
+    @URLDecodable
+    var image: URL?
+    @URLDecodable
+    var selectedImage: URL?
 }
 
 extension QuickActivityOption: JSONAPIMappable {

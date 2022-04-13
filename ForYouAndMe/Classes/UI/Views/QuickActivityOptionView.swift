@@ -65,7 +65,9 @@ class QuickActivityOptionView: UIView {
     
     public func display(item: QuickActivityOption, isSelected: Bool, tapCallback: @escaping NotificationCallback) {
         self.tapCallback = tapCallback
-        self.imageView.image = isSelected ? item.selectedImage : item.image
+        self.imageView.loadAsyncImage(withURL: isSelected ? item.selectedImage : item.image,
+                                      placeHolderImage: Constants.Resources.AsyncImagePlaceholder,
+                                      targetSize: CGSize(width: UIScreen.main.bounds.width, height: Self.maxImageHeight))
         self.textLabel.attributedText = NSAttributedString.create(withText: item.label ?? "",
                                                                   fontStyle: .header3,
                                                                   colorType: .secondaryText)

@@ -57,6 +57,7 @@ struct Constants {
             }
             return "Version: \(version) (\(buildNumber))"
         }()
+        static let AsyncImagePlaceholder: UIImage? = nil
     }
     struct HealthKit {
         #if DEBUG

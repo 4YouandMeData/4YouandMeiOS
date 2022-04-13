@@ -221,6 +221,25 @@ struct ImageDecodable: Decodable, OptionalCodingWrapper {
 }
 
 @propertyWrapper
+struct URLDecodable: Decodable, OptionalCodingWrapper {
+    
+    var wrappedValue: URL?
+    
+    init(wrappedValue: URL?) {
+        self.wrappedValue = wrappedValue
+    }
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        if let urlString = try? container.decode(String.self) {
+            self.wrappedValue = URL(string: urlString)
+        } else {
+            self.wrappedValue = nil
+        }
+    }
+}
+
+@propertyWrapper
 struct ColorDecodable: Decodable, OptionalCodingWrapper {
     
     var wrappedValue: UIColor?
