@@ -731,6 +731,8 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             params["page"] = paginationInfo.pageIndex + 1 // Server starts to count from 1
             params["per_page"] = paginationInfo.pageSize
         }
+        // Needed by the server so it knows that the client supports images as url
+        params["url_images_encoding"] = 1
         let encoding = URLEncoding(destination: .queryString, arrayEncoding: .noBrackets, boolEncoding: .literal)
         return .requestParameters(parameters: params, encoding: encoding)
     }
