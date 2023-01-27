@@ -22,6 +22,7 @@ PODS:
   - Charts (4.1.0):
     - Charts/Core (= 4.1.0)
   - Charts/Core (4.1.0):
+    - SwiftAlgorithms (~> 1.0)
   - CountryPickerView (3.1.3)
   - FBSnapshotTestCase (2.1.4):
     - FBSnapshotTestCase/SwiftSupport (= 2.1.4)
@@ -82,7 +83,7 @@ PODS:
     - GoogleUtilities/Environment (~> 7.0)
     - GoogleUtilities/Reachability (~> 7.0)
     - GoogleUtilities/UserDefaults (~> 7.0)
-  - ForYouAndMe (0.79.0):
+  - ForYouAndMe (0.82.0):
     - AlamofireImage (~> 4.1)
     - BLZJapx/RxCodableMoya (~> 3.0.0)
     - Charts (~> 4.1.0)
@@ -187,6 +188,7 @@ PODS:
     - RxSwiftExt/Core
   - StepSlider (1.8.0)
   - SVProgressHUD (2.2.5)
+  - SwiftAlgorithms (1.0.0)
   - SwiftLint (0.42.0)
   - TPKeyboardAvoiding (1.3.5)
   - UberSignature (1.0.3):
@@ -240,6 +242,7 @@ SPEC REPOS:
     - RxSwiftExt
     - StepSlider
     - SVProgressHUD
+    - SwiftAlgorithms
     - SwiftLint
     - TPKeyboardAvoiding
     - UberSignature
@@ -264,7 +267,7 @@ SPEC CHECKSUMS:
   FirebaseInstallations: 7f7ed0e7e27fb51f57291e1876e2ddb1524126c1
   FirebaseInstanceID: aaecc93b4528bbcafea12c477e26827719ca1183
   FirebaseMessaging: 7091222bfac24ca89c569c3c59e58390311e487f
-  ForYouAndMe: d4d807970f39b77090aca0b8a687d12f52cf0714
+  ForYouAndMe: 639081fe003e7d6e63424b3d36d188dd6ce2de2b
   FYAMResearchKit: c79d2de80d301ac02ba9b303d97d35b083d4676b
   GoogleAppMeasurement: 57a0df93dc2feb5176b1bac06012dbd725191ba5
   GoogleDataTransport: 116c84c4bdeb76be2a7a46de51244368f9794eab
@@ -287,6 +290,7 @@ SPEC CHECKSUMS:
   RxSwiftExt: 4ca80336f43c28f11a2825cdd2fc61dd6c044697
   StepSlider: 890db727e779fa99cb32afffc5887c1109e151f4
   SVProgressHUD: 1428aafac632c1f86f62aa4243ec12008d7a51d6
+  SwiftAlgorithms: 38dda4731d19027fdeee1125f973111bf3386b53
   SwiftLint: 4fa9579c63416865179bc416f0a92d55f009600d
   TPKeyboardAvoiding: d55b3ea7b362540af8fcf36aa3ed2e87bf210cc6
   UberSignature: 93a5860a83211569d6d25b586e0fcad8aa163144
