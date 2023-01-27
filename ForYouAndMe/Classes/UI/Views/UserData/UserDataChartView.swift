@@ -133,7 +133,7 @@ class UserDataChartView: UIView {
     private func setupUI() {
         
         // General Settings
-        self.chartView.chartDescription?.enabled = false
+        self.chartView.chartDescription.enabled = false
         self.chartView.dragEnabled = false
         self.chartView.setScaleEnabled(false)
         self.chartView.pinchZoomEnabled = false
@@ -274,7 +274,7 @@ class UserDataChartView: UIView {
 }
 
 /// Customised x-axis formmater to render the x-axis strings with format based on the study type and period type.
-class XAxisValueFormatter: NSObject, IAxisValueFormatter {
+class XAxisValueFormatter: NSObject, AxisValueFormatter {
     private let studyPeriod: StudyPeriod
     private let xLabels: [String]
     
@@ -308,7 +308,7 @@ class XAxisValueFormatter: NSObject, IAxisValueFormatter {
     }
 }
 
-class YAxisValueFormatter: NSObject, IAxisValueFormatter {
+class YAxisValueFormatter: NSObject, AxisValueFormatter {
     private let yLabels: [String]
     
     init(yLabels: [String]) {

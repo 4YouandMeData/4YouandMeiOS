@@ -55,7 +55,7 @@ Pod::Spec.new do |s|
   s.dependency 'UberSignature', '~> 1.0.3'
   s.dependency 'RxSwiftExt', '~> 5.2.0'
   s.dependency 'FYAMResearchKit', '~> 3.0.0'
-  s.dependency 'Charts', '~> 3.6.0'
+  s.dependency 'Charts', '~> 4.1.0'
   s.dependency 'StepSlider', '~> 1.8.0'
 
   
