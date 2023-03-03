@@ -8,6 +8,8 @@
 import Foundation
 import UIKit
 import AVFoundation
+import GPUImage
+
 
 protocol CameraViewDelegate: AnyObject {
     func hasFinishedRecording(fileURL: URL?, error: Error?)
@@ -18,6 +20,11 @@ protocol CameraViewDelegate: AnyObject {
 }
 
 enum FlashMode {
+    case off
+    case on
+}
+
+enum FilterMode {
     case off
     case on
 }
@@ -61,10 +68,13 @@ class CameraView: UIView {
     
     var recordedVideoExtension = ""
     var flashMode = FlashMode.off
+    var filterMode = FilterMode.off
     var allVideoURLs: [URL] = []
-    var previewLayer: AVCaptureVideoPreviewLayer?
-    var mergedFileType = AVFileType.mp4
+    //var previewLayer: AVCaptureVideoPreviewLayer?
+    var renderView: RenderView!
+
     
+    var mergedFileType = AVFileType.mp4
     private var captureSession: AVCaptureSession?
     private var frontCamera: AVCaptureDevice?
     private var rearCamera: AVCaptureDevice?
@@ -75,6 +85,19 @@ class CameraView: UIView {
     private var isCameraInitialized: Bool = false
     
     private var mergedFileName = ""
+    
+    //// CAMERA FILTERS
+    ///
+    let saturationFilter = SaturationAdjustment()
+    let sobelEdgeFilter = ThresholdSobelEdgeDetection()
+    lazy var lineGenerator: LineGenerator = {
+        let gen = LineGenerator(size: self.fbSize)
+        gen.lineWidth = 5
+        return gen
+    }()
+    var cameraPreview: Camera? = nil
+
+    
     
     init() {
         super.init(frame: .zero)
@@ -87,7 +110,6 @@ class CameraView: UIView {
     }
     
     // MARK: - Public Methods
-    
     func switchCamera() throws {
         if let currentCameraPosition = self.currentCameraPosition, let captureSession = self.captureSession, captureSession.isRunning {
             captureSession.beginConfiguration()
@@ -164,9 +186,32 @@ class CameraView: UIView {
             }
         }
     }
+    
+    // enable - disable filters
+    func toggleFilters() throws {
+        if let currentCameraPosition = self.currentCameraPosition, currentCameraPosition == .back, let rearCamera = self.rearCamera {
+            self.withDeviceLock(on: rearCamera) { (rearCamera) in
+                if rearCamera.isTorchAvailable { // Check for exception
+                    if self.filterMode == .off {
+                        if rearCamera.isTorchModeSupported(.on) {
+                            rearCamera.torchMode = .on
+                            self.filterMode = .on
+                        }
+                    } else {
+                        if rearCamera.isTorchModeSupported(.off) {
+                            rearCamera.torchMode = .off
+                            self.filterMode = .off
+                        }
+                    }
+                }
+            }
+        }
+    }
      
     func updateVideoPreviewLayerFrame() {
-        self.previewLayer?.frame = self.bounds
+        //self.previewLayer?.frame = self.bounds
+        self.renderView?.frame = self.bounds
+        print("call: updateVideoPreviewLayerFrame")
     }
     
     func mergeRecordedVideos() {
@@ -193,6 +238,7 @@ class CameraView: UIView {
             
             videoTrack.preferredTransform = assetVideoTrack.preferredTransform
             let range = CMTimeRangeMake(start: CMTime.zero, duration: asset.duration)
+            
             do {
                 try videoTrack.insertTimeRange(range, of: assetVideoTrack, at: totalTime)
                 guard let assetAudioTrack = asset.tracks(withMediaType: .audio).first else {
@@ -293,6 +339,7 @@ class CameraView: UIView {
                     do {
                         // Everything in async. Delegate the error
                         self?.createCaptureSession()
+                        
                         try self?.addCameraPreviewLayer()
                         try self?.configureCaptureDevices()
                         try self?.configureDeviceInputs()
@@ -383,16 +430,35 @@ class CameraView: UIView {
         captureSession.commitConfiguration()
     }
     
+    
     private func addCameraPreviewLayer() throws {
         guard let captureSession = self.captureSession else { throw CaptureSessionError.captureSessionIsMissing }
         
-        self.previewLayer = AVCaptureVideoPreviewLayer(session: captureSession)
-        self.previewLayer?.videoGravity = AVLayerVideoGravity.resizeAspectFill
-        self.previewLayer?.connection?.videoOrientation = .portrait
+        self.renderView = RenderView()
+        //self.previewLayer = AVCaptureVideoPreviewLayer(session: captureSession)
+        //self.previewLayer?.videoGravity = AVLayerVideoGravity.resizeAspectFill
+        //self.previewLayer?.connection?.videoOrientation = .portrait
+        
+        ///// @@@@camera
+        
+        self.cameraPreview = try Camera(sessionPreset:.vga640x480)
+        self.cameraPreview.runBenchmark = true
+        //self.cameraPreview.delegate = self
+        self.cameraPreview --> saturationFilter --> sobelEdgeFilter --> renderView
+        lineGenerator --> sobelEdgeFilter
+        
+        ///// @@@@camera
+        
         DispatchQueue.main.async {
+            /*
             self.previewLayer?.frame = self.bounds
             if let previewLayer = self.previewLayer {
                 self.layer.addSublayer(previewLayer)
+            }
+             */
+            self.renderView?.frame = self.bounds
+            if let renderView = self.renderView {
+                self.layer.addSublayer(renderView)
             }
         }
     }
@@ -520,3 +586,5 @@ extension CameraView: AVCaptureFileOutputRecordingDelegate {
         }
     }
 }
+
+

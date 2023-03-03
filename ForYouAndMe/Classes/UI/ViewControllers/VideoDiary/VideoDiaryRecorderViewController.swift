@@ -81,6 +81,15 @@ public class VideoDiaryRecorderViewController: UIViewController {
         return button
     }()
     
+    private lazy var filterButton: UIButton = {
+        let button = UIButton()
+        button.autoSetDimension(.width, toSize: 44.0)
+        button.setImage(ImagePalette.image(withName: .flashOff), for: .normal)
+        button.addTarget(self, action: #selector(self.filterCameraPressed), for: .touchUpInside)
+        return button
+    }()
+    
+    
     private lazy var switchCameraButton: UIButton = {
         let button = UIButton()
         button.autoSetDimension(.width, toSize: 44.0)
@@ -405,6 +414,15 @@ public class VideoDiaryRecorderViewController: UIViewController {
                 self.playerView.playVideo()
             }
             self.currentState = .submitted(submitDate: submitDate, isPlaying: !isPlaying)
+        }
+    }
+    
+    @objc private func filterCameraPressed() {
+        do {
+            //try self.cameraView.toggleFilter()
+            self.updateLightButton()
+        } catch {
+            debugPrint(error)
         }
     }
     
