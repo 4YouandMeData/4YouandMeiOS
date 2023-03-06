@@ -32,6 +32,8 @@ enum ImageName: String, CaseIterable {
     case cameraSwitch = "camera_switch"
     case flashOff = "flash_off"
     case flashOn = "flash_on"
+    case filterOff = "filter_off"
+    case filterOn = "filter_on"
     case circular = "circular"
     case clearCircular = "clear_circular"
     case fitbitIcon = "fitbit_icon"

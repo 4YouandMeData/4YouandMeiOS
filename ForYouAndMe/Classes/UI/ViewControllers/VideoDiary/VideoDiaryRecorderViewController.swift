@@ -84,11 +84,11 @@ public class VideoDiaryRecorderViewController: UIViewController {
     private lazy var filterButton: UIButton = {
         let button = UIButton()
         button.autoSetDimension(.width, toSize: 44.0)
-        button.setImage(ImagePalette.image(withName: .flashOff), for: .normal)
+        button.contentMode = .scaleAspectFit
+        button.setImage(ImagePalette.image(withName: .filterOff), for: .normal)
         button.addTarget(self, action: #selector(self.filterCameraPressed), for: .touchUpInside)
         return button
     }()
-    
     
     private lazy var switchCameraButton: UIButton = {
         let button = UIButton()
@@ -101,10 +101,17 @@ public class VideoDiaryRecorderViewController: UIViewController {
     private lazy var toolbar: UIView = {
         let view = UIView()
 
+        // Flash button
         view.addSubview(self.lightButton)
         self.lightButton.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets(top: 0, left: 16.0, bottom: 0, right: 0.0),
                                                       excludingEdge: .trailing)
         
+        // Filter button
+        view.addSubview(self.filterButton)
+        self.filterButton.autoPinEdge(toSuperviewEdge: .top)
+        self.filterButton.autoPinEdge(.leading, to: .trailing, of: self.lightButton, withOffset: 8.0, relation: .greaterThanOrEqual)
+        
+        // Switch camera
         view.addSubview(self.switchCameraButton)
         self.switchCameraButton.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets(top: 0, left: 0.0, bottom: 0, right: 16.0),
                                                       excludingEdge: .leading)
@@ -261,6 +268,14 @@ public class VideoDiaryRecorderViewController: UIViewController {
         }
     }
     
+    private func updateFilterButton() {
+        if self.cameraView.filterMode == .on {
+            self.filterButton.setImage(ImagePalette.image(withName: .filterOn), for: .normal)
+        } else {
+            self.filterButton.setImage(ImagePalette.image(withName: .filterOff), for: .normal)
+        }
+    }
+    
     private func updateLightButton() {
         guard let currentCameraPosition = self.cameraView.currentCameraPosition, currentCameraPosition == .back else {
             self.lightButton.isHidden = true
@@ -332,7 +347,7 @@ public class VideoDiaryRecorderViewController: UIViewController {
     }
     
     private func stopRecording() {
-        AppNavigator.pushProgressHUD()
+        //AppNavigator.pushProgressHUD()
         self.recordTrackingTimer?.invalidate()
         self.currentState = .record(isRecording: false)
         self.cameraView.stopRecording()
@@ -419,8 +434,8 @@ public class VideoDiaryRecorderViewController: UIViewController {
     
     @objc private func filterCameraPressed() {
         do {
-            //try self.cameraView.toggleFilter()
-            self.updateLightButton()
+            try self.cameraView.toggleFilters()
+            self.updateFilterButton()
         } catch {
             debugPrint(error)
         }

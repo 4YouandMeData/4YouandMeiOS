@@ -72,7 +72,8 @@ class CameraView: UIView {
     var allVideoURLs: [URL] = []
     //var previewLayer: AVCaptureVideoPreviewLayer?
     var renderView: RenderView = RenderView()
-
+    var ovalMask: UIView!
+    
     var mergedFileType = AVFileType.mp4
     private var captureSession: AVCaptureSession?
     private var frontCamera: AVCaptureDevice?
@@ -87,9 +88,8 @@ class CameraView: UIView {
     
     // ---------- CAMERA FILTERS ----------
     let saturationFilter = SaturationAdjustment()
-    let adaptiveThresholdFilter = AdaptiveThreshold() //threesold filter
-    var videoCamera: Camera? = nil // instance of "filtered" camera preview
-
+    let adaptiveThresholdFilter = AdaptiveThreshold() // threesold filter
+    var videoCamera: Camera! // instance of "filtered" camera preview
     
     init() {
         super.init(frame: .zero)
@@ -102,23 +102,24 @@ class CameraView: UIView {
         fatalError("init(coder:) has not been implemented")
     }
     
-    
     // MARK: - Public Methods
     func switchCamera() throws {
-        if let currentCameraPosition = self.currentCameraPosition, let captureSession = self.captureSession, captureSession.isRunning {
-            captureSession.beginConfiguration()
+      //  if let currentCameraPosition = self.currentCameraPosition, let captureSession = self.captureSession, captureSession.isRunning {
+            //captureSession.beginConfiguration()
+        
             if currentCameraPosition == .front {
-                try self.switchTo(camera: self.rearCamera)
+               // try self.switchTo(camera: self.rearCamera)
                 self.currentCameraPosition = .back
             } else {
-                try self.switchTo(camera: self.frontCamera)
+               // try self.switchTo(camera: self.frontCamera)
                 self.currentCameraPosition = .front
                 self.flashMode = .off
             }
-            captureSession.commitConfiguration()
-        } else {
-            throw CaptureSessionError.captureSessionIsMissing
-        }
+        self.reinitializeCamera()
+            // captureSession.commitConfiguration()
+       // } else {
+        //    throw CaptureSessionError.captureSessionIsMissing
+        //}
     }
     
     func setOutputFileURL(fileURL: URL? = nil) throws {
@@ -183,27 +184,16 @@ class CameraView: UIView {
     
     // enable - disable filters
     func toggleFilters() throws {
-        if let currentCameraPosition = self.currentCameraPosition, currentCameraPosition == .back, let rearCamera = self.rearCamera {
-            self.withDeviceLock(on: rearCamera) { (rearCamera) in
-                if rearCamera.isTorchAvailable { // Check for exception
-                    if self.filterMode == .off {
-                        if rearCamera.isTorchModeSupported(.on) {
-                            rearCamera.torchMode = .on
-                            self.filterMode = .on
-                        }
-                    } else {
-                        if rearCamera.isTorchModeSupported(.off) {
-                            rearCamera.torchMode = .off
-                            self.filterMode = .off
-                        }
-                    }
-                }
-            }
-        }
+        self.filterMode = self.filterMode == .on ? .off : .on
+        /* if let camera = self.videoCamera {
+                camera.stopCapture()
+                self.requireCameraFilters()
+                camera.startCapture()
+        } */
+        self.reinitializeCamera()
     }
      
     func updateVideoPreviewLayerFrame() {
-        //self.previewLayer?.frame = self.bounds
         self.renderView.frame = self.bounds
         print("call: updateVideoPreviewLayerFrame")
     }
@@ -424,24 +414,7 @@ class CameraView: UIView {
         captureSession.commitConfiguration()
     }
     
-    
-    private func addCameraPreviewLayer() throws {
-        do {
-            guard self.captureSession != nil else { throw CaptureSessionError.captureSessionIsMissing }
-            self.adaptiveThresholdFilter.blurRadiusInPixels = 1.0
-            self.adaptiveThresholdFilter.addTarget(self.renderView)
-            self.videoCamera?.addTarget(self.adaptiveThresholdFilter)
-            self.videoCamera?.startCapture() // start GPUImage camera preview filtering
-        } catch {
-            fatalError("Could not initialize rendering pipeline: \(error)")
-        }
-                
-        DispatchQueue.main.async {
-            self.renderView.frame = self.bounds // update gpuimage:renderview bounds
-            self.addSubview(self.renderView) // add gpuimage's camera preview view to current view
-        }
-    }
-    
+  
     private func switchTo(camera: AVCaptureDevice?) throws {
         guard let captureSession = self.captureSession,
             let camera = camera,
@@ -566,19 +539,108 @@ extension CameraView: AVCaptureFileOutputRecordingDelegate {
     }
 }
 
-
-
 // Extension used to enable utility GPUImage methods
 extension CameraView {
     
     // Initialization of GPUImage Camera preview instance
-    func initFilteredCamera(){
+    func initFilteredCamera() {
+        AppNavigator.pushProgressHUD()
         do {
-            videoCamera = try Camera(sessionPreset:.hd1920x1080, location:.backFacing)
-            videoCamera!.runBenchmark = true
+            videoCamera = try Camera(sessionPreset: .hd1920x1080, location: currentCameraPosition == .front ? .frontFacing : .backFacing)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 3){
+                AppNavigator.popProgressHUD()
+            }
+            // videoCamera!.runBenchmark = true
         } catch {
             videoCamera = nil
             print("Couldn't initialize camera with error: \(error)")
         }
+    }
+    
+    // Add Camera Preview
+    private func addCameraPreviewLayer() throws {
+        do {
+            guard self.captureSession != nil else { throw CaptureSessionError.captureSessionIsMissing }
+            self.requireCameraFilters()
+            self.videoCamera?.startCapture() // start GPUImage camera preview filtering
+        } catch {
+            fatalError("Could not initialize rendering pipeline: \(error)")
+        }
+                
+        DispatchQueue.main.async {
+            if self.ovalMask == nil {
+                let ovalRadius = self.bounds.width/2 - 10
+                self.ovalMask = self.createOverlay(radius: ovalRadius )
+            } else {
+                self.ovalMask.removeFromSuperview()
+            }
+            self.renderView.frame = self.bounds // update gpuimage:renderview bounds
+            self.renderView.removeFromSuperview()
+            self.addSubview(self.renderView) // add gpuimage's camera preview view to current view
+            self.addSubview(self.ovalMask) // oval mask
+            self.setNeedsDisplay()
+            self.layoutIfNeeded()
+        }
+    }
+    
+    // Definition of current filter
+    func requireCameraFilters() {
+        self.videoCamera.removeAllTargets()
+        self.adaptiveThresholdFilter.removeAllTargets()
+        self.saturationFilter.removeAllTargets()
+        if filterMode == .on {
+            self.adaptiveThresholdFilter.blurRadiusInPixels = 1.0
+            self.adaptiveThresholdFilter.addTarget(self.renderView)
+            self.videoCamera?.addTarget(self.adaptiveThresholdFilter)
+        } else {
+            self.saturationFilter.saturation = 1.0
+            self.saturationFilter.addTarget(self.renderView)
+            self.videoCamera?.addTarget(self.saturationFilter)
+        }
+    }
+    
+    // Reinitialization of camera filters : stop -> remove all targets -> init camera -> add to parent view
+    func reinitializeCamera() {
+        do{
+            self.videoCamera.stopCapture()
+            self.videoCamera.removeAllTargets()
+            self.videoCamera = nil
+            
+            self.initFilteredCamera() // reinitialize camera
+            try self.addCameraPreviewLayer() // add preview layer on this view
+        } catch {
+            print("Couldn't reinitialize camera with error: \(error)")
+        }
+    }
+    
+    
+    // Oval mask
+    func createOverlay(radius: CGFloat) -> UIView
+    {
+        let overlayView = UIView(frame: self.frame)
+        overlayView.alpha = 0.6
+        overlayView.backgroundColor = UIColor.black
+
+        // Create a path with the rectangle in it.
+        let path = CGMutablePath()
+        let offsetX = 30
+        let originX = ((Int(self.frame.width)/2) / 2) - offsetX/2
+        let originY = (self.frame.height/2) / 2
+ 
+        let rectangle = CGRect(x: CGFloat(originX), y: originY, width: self.frame.width/2 + CGFloat(offsetX), height: self.frame.height/2)
+        path.addEllipse(in: rectangle)
+        
+        path.addRect(CGRect(x: 0, y: 0, width: overlayView.frame.width, height: overlayView.frame.height))
+
+        let maskLayer = CAShapeLayer()
+        maskLayer.backgroundColor = UIColor.black.cgColor
+        maskLayer.path = path
+        maskLayer.fillRule = CAShapeLayerFillRule.evenOdd
+
+        // Release the path since it's not covered by ARC.
+        overlayView.layer.mask = maskLayer
+        overlayView.clipsToBounds = true
+
+        return overlayView
     }
 }
