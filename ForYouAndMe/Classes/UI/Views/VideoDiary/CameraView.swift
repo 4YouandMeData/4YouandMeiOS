@@ -6,9 +6,9 @@
 //
 
 import Foundation
-import UIKit
 import AVFoundation
-import GPUImage
+import UIKit
+import EVGPUImage2
 
 
 protocol CameraViewDelegate: AnyObject {
@@ -71,9 +71,8 @@ class CameraView: UIView {
     var filterMode = FilterMode.off
     var allVideoURLs: [URL] = []
     //var previewLayer: AVCaptureVideoPreviewLayer?
-    var renderView: RenderView!
+    var renderView: RenderView = RenderView()
 
-    
     var mergedFileType = AVFileType.mp4
     private var captureSession: AVCaptureSession?
     private var frontCamera: AVCaptureDevice?
@@ -86,21 +85,15 @@ class CameraView: UIView {
     
     private var mergedFileName = ""
     
-    //// CAMERA FILTERS
-    ///
+    // ---------- CAMERA FILTERS ----------
     let saturationFilter = SaturationAdjustment()
-    let sobelEdgeFilter = ThresholdSobelEdgeDetection()
-    lazy var lineGenerator: LineGenerator = {
-        let gen = LineGenerator(size: self.fbSize)
-        gen.lineWidth = 5
-        return gen
-    }()
-    var cameraPreview: Camera? = nil
+    let adaptiveThresholdFilter = AdaptiveThreshold() //threesold filter
+    var videoCamera: Camera? = nil // instance of "filtered" camera preview
 
-    
     
     init() {
         super.init(frame: .zero)
+        self.initFilteredCamera()
         self.prepareCameraView()
         self.addObservers()
     }
@@ -108,6 +101,7 @@ class CameraView: UIView {
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
+    
     
     // MARK: - Public Methods
     func switchCamera() throws {
@@ -210,7 +204,7 @@ class CameraView: UIView {
      
     func updateVideoPreviewLayerFrame() {
         //self.previewLayer?.frame = self.bounds
-        self.renderView?.frame = self.bounds
+        self.renderView.frame = self.bounds
         print("call: updateVideoPreviewLayerFrame")
     }
     
@@ -344,7 +338,7 @@ class CameraView: UIView {
                         try self?.configureCaptureDevices()
                         try self?.configureDeviceInputs()
                         try self?.configureOutput()
-                        self?.captureSession?.startRunning()
+                        //self?.captureSession?.startRunning()
                         try self?.setOutputFileURL()
                         self?.isCameraInitialized = true
                     } catch let error {
@@ -432,34 +426,19 @@ class CameraView: UIView {
     
     
     private func addCameraPreviewLayer() throws {
-        guard let captureSession = self.captureSession else { throw CaptureSessionError.captureSessionIsMissing }
-        
-        self.renderView = RenderView()
-        //self.previewLayer = AVCaptureVideoPreviewLayer(session: captureSession)
-        //self.previewLayer?.videoGravity = AVLayerVideoGravity.resizeAspectFill
-        //self.previewLayer?.connection?.videoOrientation = .portrait
-        
-        ///// @@@@camera
-        
-        self.cameraPreview = try Camera(sessionPreset:.vga640x480)
-        self.cameraPreview.runBenchmark = true
-        //self.cameraPreview.delegate = self
-        self.cameraPreview --> saturationFilter --> sobelEdgeFilter --> renderView
-        lineGenerator --> sobelEdgeFilter
-        
-        ///// @@@@camera
-        
+        do {
+            guard self.captureSession != nil else { throw CaptureSessionError.captureSessionIsMissing }
+            self.adaptiveThresholdFilter.blurRadiusInPixels = 1.0
+            self.adaptiveThresholdFilter.addTarget(self.renderView)
+            self.videoCamera?.addTarget(self.adaptiveThresholdFilter)
+            self.videoCamera?.startCapture() // start GPUImage camera preview filtering
+        } catch {
+            fatalError("Could not initialize rendering pipeline: \(error)")
+        }
+                
         DispatchQueue.main.async {
-            /*
-            self.previewLayer?.frame = self.bounds
-            if let previewLayer = self.previewLayer {
-                self.layer.addSublayer(previewLayer)
-            }
-             */
-            self.renderView?.frame = self.bounds
-            if let renderView = self.renderView {
-                self.layer.addSublayer(renderView)
-            }
+            self.renderView.frame = self.bounds // update gpuimage:renderview bounds
+            self.addSubview(self.renderView) // add gpuimage's camera preview view to current view
         }
     }
     
@@ -588,3 +567,18 @@ extension CameraView: AVCaptureFileOutputRecordingDelegate {
 }
 
 
+
+// Extension used to enable utility GPUImage methods
+extension CameraView {
+    
+    // Initialization of GPUImage Camera preview instance
+    func initFilteredCamera(){
+        do {
+            videoCamera = try Camera(sessionPreset:.hd1920x1080, location:.backFacing)
+            videoCamera!.runBenchmark = true
+        } catch {
+            videoCamera = nil
+            print("Couldn't initialize camera with error: \(error)")
+        }
+    }
+}
