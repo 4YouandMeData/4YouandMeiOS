@@ -14,10 +14,10 @@ Pod::Spec.new do |s|
                        ForYouAndMe is a framework aimed to easily develop an app for research study
   DESC
 
-  s.homepage         = 'https://github.com/4youandme/4YouandmeiOS'
+  s.homepage         = 'https://github.com/4YouandMeData/4YouandMeiOS'
   s.license          = { :type => 'MIT', :file => 'LICENSE' }
   s.author           = { 'LeonardoPasseri' => 'leonardo@balzo.eu' }
-  s.source           = { :git => 'https://github.com/4youandme/4YouandmeiOS.git', :tag => s.version.to_s }
+  s.source           = { :git => 'https://github.com/4YouandMeData/4YouandMeiOS.git', :tag => s.version.to_s }
 
   s.cocoapods_version = '>= 1.6.0'
   
