@@ -367,11 +367,11 @@ extension RepositoryImpl: Repository {
                 if let currentUserPhase = self.currentUserPhase, changedUserInfoParameters.count > 0 {
                     var request = Single.just(())
                     for userParameterRequest in changedUserInfoParameters {
-                        if let phaseNameIndex = userParameterRequest.phaseNameIndex,
-                           phaseNameIndex >= 0,
-                           phaseNameIndex < self.phaseNames.count,
+                        if let phaseType = userParameterRequest.phaseType,
+                           phaseType >= 0,
+                           phaseType < self.phaseNames.count,
                            userParameterRequest.value.nilIfEmpty != nil {
-                            let phaseName = self.phaseNames[phaseNameIndex]
+                            let phaseName = self.phaseNames[phaseType]
                             if let phase = self.study?.phases?.getPhase(withName: phaseName) {
                                 request = request.flatMap { () in
                                     return self

@@ -22,7 +22,7 @@ struct UserInfoParameter: Codable {
     let identifier: String
     let name: String
     let value: String?
-    let phaseNameIndex: Int?
+    let phaseType: PhaseType?
     let type: UserInfoParameterType
     let items: [UserInfoParameterItem]
     
@@ -37,7 +37,7 @@ struct UserInfoParameter: Codable {
         return UserInfoParameter(identifier: parameter.identifier,
                                  name: parameter.name,
                                  value: value,
-                                 phaseNameIndex: parameter.phaseNameIndex,
+                                 phaseType: parameter.phaseType,
                                  type: parameter.type,
                                  items: parameter.items)
     }
@@ -48,7 +48,7 @@ extension UserInfoParameter {
         case identifier
         case name
         case value
-        case phaseNameIndex = "phase"
+        case phaseType = "phase"
         case type
         case items
     }

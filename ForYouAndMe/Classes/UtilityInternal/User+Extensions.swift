@@ -9,42 +9,53 @@ import Foundation
 
 extension User {
     
-    var feedTimeInterval: TimeInterval? {
-        guard let date = self.feedDate else {
+    func getFeedTimeInterval(repository: Repository) -> TimeInterval? {
+        
+        guard let date = self.getFeedDate(repository: repository) else {
             return nil
         }
-        let referenceDate = date.addingTimeInterval(-(60 * 60 * 24 * 280))
-        let interval = Date().timeIntervalSince(referenceDate)
-        guard interval > 0 else {
-            return nil
+        switch repository.currentPhaseType {
+        case Constants.UserInfo.PostDeliveryPhaseType:
+            return Date().timeIntervalSince(date)
+        default:
+            let referenceDate = date.addingTimeInterval(-(60 * 60 * 24 * 280))
+            let interval = Date().timeIntervalSince(referenceDate)
+            guard interval > 0 else {
+                return nil
+            }
+            return interval
         }
-        return interval
     }
     
-    var feedTitle: String {
-        guard let interval = self.feedTimeInterval else {
+    func getFeedTitle(repository: Repository) -> String {
+        guard let interval = self.getFeedTimeInterval(repository: repository) else {
             return ""
         }
-        let trimester = Int((interval / (60 * 60 * 24 * 31 * 3)).rounded(.up))
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .ordinal
-        guard let trimesterOrdinal = formatter.string(from: NSNumber(value: trimester)) else {
-            return ""
+        switch repository.currentPhaseType {
+        case Constants.UserInfo.PostDeliveryPhaseType: return StringsProvider.string(forKey: .tabFeedTitlePhase1)
+        default:
+            let trimester = Int((interval / (60 * 60 * 24 * 31 * 3)).rounded(.up))
+            let formatter = NumberFormatter()
+            formatter.numberStyle = .ordinal
+            guard let trimesterOrdinal = formatter.string(from: NSNumber(value: trimester)) else {
+                return ""
+            }
+            return StringsProvider.string(forKey: .tabFeedTitle, withParameters: [trimesterOrdinal.uppercased()])
         }
-        return StringsProvider.string(forKey: .tabFeedTitle, withParameters: [trimesterOrdinal.uppercased()])
     }
     
-    var feedSubtitle: String {
-        guard let interval = self.feedTimeInterval else {
+    func getFeedSubtitle(repository: Repository) -> String {
+        guard let interval = self.getFeedTimeInterval(repository: repository) else {
             return ""
         }
         let week = Int((interval / (60 * 60 * 24 * 7)).rounded(.up))
         return StringsProvider.string(forKey: .tabFeedSubtitle, withParameters: ["\(week)"])
     }
     
-    var feedDate: Date? {
+    func getFeedDate(repository: Repository) -> Date? {
+        let identifier = Constants.UserInfo.getFeedDateIdentifier(phaseType: repository.currentPhaseType)
         return self.customData?
-            .first(where: {$0.identifier == Constants.UserInfo.FeedTitleParameterIdentifier && $0.type == .date})?
+            .first(where: {$0.identifier == identifier && $0.type == .date})?
             .currentDate
     }
     

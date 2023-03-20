@@ -176,10 +176,10 @@ class UserInfoViewController: UIViewController {
             .first(where: { self.parameterTextFieldMap[$0] == textField })
         if let currentPhaseName = self.repository.currentUserPhase?.phase.name,
            let userInfoParameter = userInfoParameter,
-           let phaseNameIndex = userInfoParameter.phaseNameIndex,
-           phaseNameIndex >= 0,
-           phaseNameIndex < self.repository.phaseNames.count,
-           self.repository.phaseNames[phaseNameIndex] == currentPhaseName {
+           let phaseType = userInfoParameter.phaseType,
+           phaseType >= 0,
+           phaseType < self.repository.phaseNames.count,
+           self.repository.phaseNames[phaseType] == currentPhaseName {
             return false
         }
         return true

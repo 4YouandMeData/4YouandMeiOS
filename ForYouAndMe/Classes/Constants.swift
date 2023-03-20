@@ -146,12 +146,21 @@ struct Constants {
     
     struct UserInfo {
         // TODO: Wipe out this awful thing when the backend is ready for something more generic...
-        static let FeedTitleParameterIdentifier = "1"
-        static let DeliveryParameterIdentifier = "2"
+        static let PreDeliveryParameterIdentifier = "1"
+        static let PostDeliveryParameterIdentifier = "2"
+        static let PreDeliveryPhaseType: PhaseType = 0
+        static let PostDeliveryPhaseType: PhaseType = 1
         static let UserInfoParameterDescriptions: [String: String] = [
-            Self.FeedTitleParameterIdentifier: "YOUR_DUE_DATE",
-            Self.DeliveryParameterIdentifier: "YOUR_DELIVERY_DATE"
+            Self.PreDeliveryParameterIdentifier: "YOUR_DUE_DATE",
+            Self.PostDeliveryParameterIdentifier: "YOUR_DELIVERY_DATE"
         ]
+        static func getFeedDateIdentifier(phaseType: PhaseType?) -> String {
+            switch phaseType {
+            case PreDeliveryPhaseType: return Self.PreDeliveryParameterIdentifier
+            case PostDeliveryPhaseType: return Self.PostDeliveryParameterIdentifier
+            default: return Self.PreDeliveryParameterIdentifier
+            }
+        }
         static func getUserInfoParameterDescriptionFormat(userInfoParameterId: String) -> String {
             guard let paramVariable = UserInfoParameterDescriptions[userInfoParameterId] else {
                 return ""
@@ -160,16 +169,16 @@ struct Constants {
         }
         static var DefaultUserInfoParameters: [UserInfoParameter] {
             let userInfoParameters: [UserInfoParameter] = [
-                UserInfoParameter(identifier: Self.FeedTitleParameterIdentifier,
+                UserInfoParameter(identifier: Self.PreDeliveryParameterIdentifier,
                                   name: "Your due date",
                                   value: nil,
-                                  phaseNameIndex: nil,
+                                  phaseType: nil,
                                   type: .date,
                                   items: []),
-                UserInfoParameter(identifier: Self.DeliveryParameterIdentifier,
+                UserInfoParameter(identifier: Self.PostDeliveryParameterIdentifier,
                                   name: "Your delivery date",
                                   value: nil,
-                                  phaseNameIndex: 1,
+                                  phaseType: Self.PostDeliveryPhaseType,
                                   type: .date,
                                   items: [])
 //                UserInfoParameter(identifier: "2",

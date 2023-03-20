@@ -120,8 +120,8 @@ class FeedViewController: UIViewController {
                     assertionFailure("Missing current user")
                     return
                 }
-                self.headerView.setTitleText(user.feedTitle)
-                self.headerView.setSubtitleText(user.feedSubtitle)
+                self.headerView.setTitleText(user.getFeedTitle(repository: self.repository))
+                self.headerView.setSubtitleText(user.getFeedSubtitle(repository: self.repository))
                 self.tableViewHeaderView.setPoints(user.points)
             }, onError: { error in
                 print("FeedViewController - Error refreshing user: \(error.localizedDescription)")
