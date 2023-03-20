@@ -102,6 +102,15 @@ class UserInfoViewController: UIViewController {
                            colorType: .fourthText,
                            textAlignment: .left)
         self.textFieldStackView.addBlankSpace(space: 8.0)
+        let descriptionKeyText = Constants.UserInfo.getUserInfoParameterDescriptionFormat(userInfoParameterId: parameter.identifier)
+        let descriptionText = StringsProvider.fullStringMap[descriptionKeyText].nilIfEmpty
+        if let descriptionText = descriptionText {
+            self.textFieldStackView.addLabel(withText: descriptionText,
+                                             fontStyle: .paragraph,
+                                             colorType: .fourthText,
+                                             textAlignment: .left)
+            self.textFieldStackView.addBlankSpace(space: 8.0)
+        }
         let textFieldView = GenericTextFieldView(keyboardType: .default, styleCategory: .primary)
         textFieldView.delegate = self
         

@@ -147,6 +147,17 @@ struct Constants {
     struct UserInfo {
         // TODO: Wipe out this awful thing when the backend is ready for something more generic...
         static let FeedTitleParameterIdentifier = "1"
+        static let DeliveryParameterIdentifier = "2"
+        static let UserInfoParameterDescriptions: [String: String] = [
+            Self.FeedTitleParameterIdentifier: "YOUR_DUE_DATE",
+            Self.DeliveryParameterIdentifier: "YOUR_DELIVERY_DATE"
+        ]
+        static func getUserInfoParameterDescriptionFormat(userInfoParameterId: String) -> String {
+            guard let paramVariable = UserInfoParameterDescriptions[userInfoParameterId] else {
+                return ""
+            }
+            return "STUDY_INFO_\(paramVariable)_EXTRA"
+        }
         static var DefaultUserInfoParameters: [UserInfoParameter] {
             let userInfoParameters: [UserInfoParameter] = [
                 UserInfoParameter(identifier: Self.FeedTitleParameterIdentifier,
@@ -155,7 +166,7 @@ struct Constants {
                                   phaseNameIndex: nil,
                                   type: .date,
                                   items: []),
-                UserInfoParameter(identifier: "2",
+                UserInfoParameter(identifier: Self.DeliveryParameterIdentifier,
                                   name: "Your delivery date",
                                   value: nil,
                                   phaseNameIndex: 1,
