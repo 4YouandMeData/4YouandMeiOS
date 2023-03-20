@@ -154,9 +154,26 @@ class UserInfoViewController: UIViewController {
     private func updateTextFields(pageState: PageState) {
         self.textFieldStackView.arrangedSubviews.forEach { view in
             if let textFieldView = view as? GenericTextFieldView {
-                textFieldView.update(withPageState: pageState)
+                textFieldView.update(withPageState: self.canEditField(textField: textFieldView.textField)
+                                     ? pageState
+                                     : .read)
             }
         }
+    }
+    
+    private func canEditField(textField: UITextField) -> Bool {
+        // User Info Parameters belonging to the current phase cannot be edited. Design choice.
+        let userInfoParameter = self.parameterTextFieldMap.keys
+            .first(where: { self.parameterTextFieldMap[$0] == textField })
+        if let currentPhaseName = self.repository.currentUserPhase?.phase.name,
+           let userInfoParameter = userInfoParameter,
+           let phaseNameIndex = userInfoParameter.phaseNameIndex,
+           phaseNameIndex >= 0,
+           phaseNameIndex < self.repository.phaseNames.count,
+           self.repository.phaseNames[phaseNameIndex] == currentPhaseName {
+            return false
+        }
+        return true
     }
     
     // MARK: - Actions

@@ -19,18 +19,6 @@ class RepositoryImpl {
     // InitializableService
     var isInitialized: Bool = false
     
-    var phaseNames: [String] {
-        return self.storage.globalConfig?.phaseNames ?? []
-    }
-    
-    var currentUserPhase: UserPhase? {
-        guard let userPhases = self.currentUser?.userPhases else {
-            return nil
-        }
-        let sortedUserPhases = userPhases.sort(byNames: self.phaseNames)
-        return sortedUserPhases.first(where: { $0.endAt == nil }) ?? sortedUserPhases.last
-    }
-    
     var study: Study?
     
     private let api: ApiGateway
@@ -105,11 +93,23 @@ extension RepositoryImpl: Repository {
         return self.storage.globalConfig?.pinCodeLogin
     }
     
+    var currentUserPhase: UserPhase? {
+        guard let userPhases = self.currentUser?.userPhases else {
+            return nil
+        }
+        let sortedUserPhases = userPhases.sort(byNames: self.phaseNames)
+        return sortedUserPhases.first(where: { $0.endAt == nil }) ?? sortedUserPhases.last
+    }
+    
     var currentPhaseType: PhaseType? {
         guard let currentUserPhase = self.currentUserPhase else {
             return nil
         }
         return self.phaseNames.firstIndex(of: currentUserPhase.phase.name)
+    }
+    
+    var phaseNames: [String] {
+        return self.storage.globalConfig?.phaseNames ?? []
     }
     
     func logOut() {
@@ -483,7 +483,7 @@ extension RepositoryImpl: Repository {
         if self.showDefaultUserInfo {
             var customData = user.customData ?? []
             let defaultData = Constants.UserInfo.DefaultUserInfoParameters
-            let missingCustomData = defaultData.filter { customData.contains($0) }
+            let missingCustomData = defaultData.filter { !customData.contains($0) }
             customData.append(contentsOf: missingCustomData)
             customData.sort { userDataParameter1, userDataParameter2 in
                 defaultData.firstIndex(of: userDataParameter1) ?? 0 < defaultData.firstIndex(of: userDataParameter2) ?? 0

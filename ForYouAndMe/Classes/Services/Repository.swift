@@ -49,6 +49,8 @@ protocol Repository: AnyObject {
     var isLoggedIn: Bool { get }
     var isPinCodeLogin: Bool? { get }
     var currentPhaseType: PhaseType? { get }
+    var currentUserPhase: UserPhase? { get }
+    var phaseNames: [String] { get }
     func logOut()
     func submitPhoneNumber(phoneNumber: String) -> Single<()>
     func verifyPhoneNumber(phoneNumber: String, validationCode: String) -> Single<User>
