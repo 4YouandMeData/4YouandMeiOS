@@ -73,19 +73,23 @@ enum TemplateImageName: String, CaseIterable {
 
 public class ImagePalette {
     
-    static func image(withName name: ImageName) -> UIImage? {
-        return Self.image(withName: name.rawValue)
+    static func image(withName name: ImageName, forPhaseType phaseType: PhaseType? = nil) -> UIImage? {
+        return Self.image(withName: name.rawValue, forPhaseType: phaseType)
     }
     
-    static func templateImage(withName name: TemplateImageName) -> UIImage? {
-        return Self.image(withName: name.rawValue)?.withRenderingMode(.alwaysTemplate)
+    static func templateImage(withName name: TemplateImageName, forPhaseType phaseType: PhaseType? = nil) -> UIImage? {
+        return Self.image(withName: name.rawValue, forPhaseType: phaseType)?.withRenderingMode(.alwaysTemplate)
     }
     
-    private static func image(withName name: String) -> UIImage? {
-        if let image = UIImage(named: name) {
+    private static func image(withName name: String, forPhaseType phaseType: PhaseType? = nil) -> UIImage? {
+        var completeName = name
+        if let phaseType = phaseType {
+            completeName += "_phase_\(phaseType)"
+        }
+        if let image = UIImage(named: completeName) {
             return image
         } else if let podBundle = PodUtils.getPodResourceBundle(withName: Constants.Resources.DefaultBundleName) {
-            return UIImage(named: name, in: podBundle, with: nil)
+            return UIImage(named: completeName, in: podBundle, with: nil)
         } else {
             return nil
         }

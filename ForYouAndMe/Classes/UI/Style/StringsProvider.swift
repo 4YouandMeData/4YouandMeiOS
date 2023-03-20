@@ -206,6 +206,12 @@ enum StringKey: String, CaseIterable, CodingKey {
     case instagramOauthTitle = "OAUTH_INSTAGRAM"
     case rescueTimeOauthTitle = "OAUTH_RESCUETIME"
     
+    // Phase
+    case phaseSwitchMessage = "PHASE_SWITCH_PROMPT"
+    case phaseSwitchButtonConfirm = "PHASE_SWITCH_BUTTON_YES"
+    case phaseSwitchButtonCancel = "PHASE_SWITCH_BUTTON_NO"
+    case phaseNames = "STUDY_PHASES"
+    
     var defaultValue: String {
         switch self {
         case .setupErrorTitle: return "Uh, oh!"

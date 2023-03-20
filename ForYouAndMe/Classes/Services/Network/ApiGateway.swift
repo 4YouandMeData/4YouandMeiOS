@@ -20,6 +20,7 @@ struct TaskNetworkResultFile {
 enum DefaultService {
     // Misc
     case getGlobalConfig
+    case getStudy
     // Login
     case submitPhoneNumber(phoneNumber: String)
     case verifyPhoneNumber(phoneNumber: String, validationCode: String)
@@ -71,6 +72,9 @@ enum DefaultService {
     case sendDeviceData(deviceData: DeviceData)
     // Health
     case sendHealthData(healthData: HealthNetworkData)
+    // User Phase
+    case createUserPhase(phaseId: String)
+    case updateUserPhase(userPhaseId: String)
 }
 
 struct ApiRequest {

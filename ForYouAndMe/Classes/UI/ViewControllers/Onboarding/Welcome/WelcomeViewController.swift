@@ -13,6 +13,7 @@ class WelcomeViewController: UIViewController {
     
     private let navigator: AppNavigator
     private let analytics: AnalyticsService
+    private let repository: Repository
     
     private lazy var continueButton: UIButton = {
         let button = UIButton()
@@ -22,9 +23,12 @@ class WelcomeViewController: UIViewController {
         return button
     }()
     
+    private var headerImageView: UIImageView?
+    
     init() {
         self.navigator = Services.shared.navigator
         self.analytics = Services.shared.analytics
+        self.repository = Services.shared.repository
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -47,13 +51,14 @@ class WelcomeViewController: UIViewController {
 
         stackView.addHeaderImage(image: ImagePalette.image(withName: .fyamLogoSpecific))
         stackView.addBlankSpace(space: 64.0)
-        stackView.addHeaderImage(image: ImagePalette.image(withName: .mainLogo))
+        self.headerImageView = stackView.addHeaderImage(image: ImagePalette.image(withName: .mainLogo))
         stackView.addArrangedSubview(UIView())
         stackView.addArrangedSubview(self.continueButton)
     }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        self.headerImageView?.syncWithPhase(repository: self.repository, imageName: .mainLogo)
         self.analytics.track(event: .recordScreen(screenName: AnalyticsScreens.getStarted.rawValue,
                                                   screenClass: String(describing: type(of: self))))
         self.navigationController?.navigationBar.apply(style: NavigationBarStyleCategory.primary(hidden: false).style)

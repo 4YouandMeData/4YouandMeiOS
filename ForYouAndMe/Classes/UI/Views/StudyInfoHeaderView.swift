@@ -9,7 +9,12 @@ import UIKit
 
 class StudyInfoHeaderView: UIView {
     
+    private var headerImageView: UIImageView?
+    
+    private let repository: Repository
+    
     init() {
+        self.repository = Services.shared.repository
         super.init(frame: .zero)
         
         self.addGradientView(GradientView(type: .primaryBackground))
@@ -18,7 +23,7 @@ class StudyInfoHeaderView: UIView {
         stackView.axis = .vertical
         stackView.spacing = 44.0
         
-        stackView.addHeaderImage(image: ImagePalette.image(withName: .mainLogo), height: 120.0)
+        self.headerImageView = stackView.addHeaderImage(image: ImagePalette.image(withName: .mainLogo), height: 120.0)
         stackView.addLabel(withText: StringsProvider.string(forKey: .tabStudyInfoTitle),
                            fontStyle: .title,
                            colorType: .secondaryText)
@@ -32,5 +37,11 @@ class StudyInfoHeaderView: UIView {
     
     required init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+    
+    // MARK: - Public Methods
+    
+    public func onViewAppear() {
+        self.headerImageView?.syncWithPhase(repository: self.repository, imageName: .mainLogo)
     }
 }

@@ -1,0 +1,97 @@
+{
+  "data": {
+    "id": "1",
+    "type": "study",
+    "attributes": {
+      "name": "BUMP",
+      "description": "Bump app",
+      "slug": "bump",
+      "created_at": "2020-04-30T09:27:23.574Z",
+      "updated_at": "2022-04-20T12:19:28.744Z"
+    },
+    "relationships": {
+      "study_configuration": {
+        "data": {
+          "id": "1",
+          "type": "study_configuration"
+        }
+      },
+      "sites": {
+        "data": []
+      },
+      "study_phases": {
+        "data": [
+          {
+            "id": "1",
+            "type": "study_phase"
+          },
+          {
+            "id": "2",
+            "type": "study_phase"
+          }
+        ]
+      }
+    }
+  },
+  "included": [
+    {
+      "id": "1",
+      "type": "study_phase",
+      "attributes": {
+        "name": "BUMP",
+        "position": 1
+      },
+      "relationships": {
+        "study": {
+          "data": {
+            "id": "1",
+            "type": "study"
+          }
+        },
+        "pages": {
+          "data": []
+        },
+        "information_page": {
+          "data": null
+        },
+        "faq_page": {
+          "data": {
+            "id": "1744",
+            "type": "page"
+          }
+        },
+        "reward_page": {
+          "data": null
+        }
+      }
+    },
+    {
+      "id": "2",
+      "type": "study_phase",
+      "attributes": {
+        "name": "BUMP-PP",
+        "position": 2
+      },
+      "relationships": {
+        "study": {
+          "data": {
+            "id": "1",
+            "type": "study"
+          }
+        },
+        "pages": {
+          "data": []
+        },
+        "information_page": {
+          "data": null
+        },
+        "faq_page": {
+          "data": null
+        },
+        "reward_page": {
+          "data": null
+        }
+      }
+    }
+  ]
+}

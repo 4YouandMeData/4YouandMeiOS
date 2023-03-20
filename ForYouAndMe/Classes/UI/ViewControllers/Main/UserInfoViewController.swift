@@ -14,6 +14,8 @@ class UserInfoViewController: UIViewController {
     
     fileprivate enum PageState { case read, edit }
     
+    private let headerView = UserInfoHeaderView()
+    
     private lazy var textFieldStackView: UIStackView = {
         let stackView = UIStackView.create(withAxis: .vertical)
         return stackView
@@ -66,9 +68,8 @@ class UserInfoViewController: UIViewController {
         stackView.autoAlignAxis(toSuperviewAxis: .vertical)
         
         // Header View
-        let headerView = UserInfoHeaderView()
-        headerView.setTitle(self.pageTitle)
-        stackView.addArrangedSubview(headerView)
+        self.headerView.setTitle(self.pageTitle)
+        stackView.addArrangedSubview(self.headerView)
         stackView.addArrangedSubview(self.textFieldStackView,
                                      horizontalInset: Constants.Style.DefaultHorizontalMargins)
         
@@ -87,6 +88,7 @@ class UserInfoViewController: UIViewController {
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        self.headerView.onViewAppear()
         
         self.navigationController?.navigationBar.apply(style: NavigationBarStyleCategory.primary(hidden: false).style)
         self.addCustomBackButton()
@@ -180,11 +182,16 @@ class UserInfoViewController: UIViewController {
             return UserInfoParameterRequest(parameter: parameter, value: value)
         }
         
+        let currentPhaseType = self.repository.currentPhaseType
+        
         self.repository.sendUserInfoParameters(userParameterRequests: userInfoParameterRequests)
             .addProgress()
             .subscribe(onSuccess: { [weak self] _ in
                 guard let self = self else { return }
                 self.pageState.accept(.read)
+                if let newPhaseType = self.repository.currentPhaseType, newPhaseType != currentPhaseType {
+                    self.navigator.showSwitchPhaseAlert(presenter: self)
+                }
                 }, onError: { [weak self] error in
                     guard let self = self else { return }
                     self.navigator.handleError(error: error, presenter: self)

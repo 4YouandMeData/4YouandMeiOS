@@ -43,8 +43,11 @@ class FeedHeaderView: UIView {
     
     private let profileButtonPressed: NotificationCallback
     
+    private let repository: Repository
+    
     init(profileButtonPressed: @escaping NotificationCallback) {
         self.profileButtonPressed = profileButtonPressed
+        self.repository = Services.shared.repository
         super.init(frame: .zero)
         
         self.autoSetDimension(.height, toSize: Self.height)
@@ -85,6 +88,10 @@ class FeedHeaderView: UIView {
     public func setSubtitleText(_ subtitle: String) {
         self.subtitleLabel.attributedText = NSAttributedString.create(withText: subtitle,
                                                                       attributedTextStyle: self.subtitleLabelAttributedTextStyle)
+    }
+    
+    public func onViewAppear() {
+        self.profileButton.syncWithPhase(repository: self.repository, imageName: .mainLogo)
     }
     
     // MARK: - Actions

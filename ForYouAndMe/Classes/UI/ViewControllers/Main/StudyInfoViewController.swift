@@ -17,6 +17,8 @@ class StudyInfoViewController: UIViewController {
     
     private let disposeBag = DisposeBag()
     
+    private let headerView = StudyInfoHeaderView()
+    
     private lazy var scrollStackView: ScrollStackView = {
         let scrollStackView = ScrollStackView(axis: .vertical, horizontalInset: 0.0)
         return scrollStackView
@@ -43,9 +45,8 @@ class StudyInfoViewController: UIViewController {
         self.view.backgroundColor = ColorPalette.color(withType: .secondary)
         
         // Header View
-        let headerView = StudyInfoHeaderView()
-        self.view.addSubview(headerView)
-        headerView.autoPinEdgesToSuperviewEdges(with: .zero, excludingEdge: .bottom)
+        self.view.addSubview(self.headerView)
+        self.headerView.autoPinEdgesToSuperviewEdges(with: .zero, excludingEdge: .bottom)
         
         // ScrollStackView
         self.view.addSubview(self.scrollStackView)
@@ -56,6 +57,7 @@ class StudyInfoViewController: UIViewController {
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        self.headerView.onViewAppear()
         self.analytics.track(event: .switchTab(StringsProvider.string(forKey: .tabStudyInfo)))
         self.analytics.track(event: .recordScreen(screenName: AnalyticsScreens.studyInfo.rawValue,
                                                   screenClass: String(describing: type(of: self))))

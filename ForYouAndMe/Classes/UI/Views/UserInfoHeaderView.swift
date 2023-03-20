@@ -9,6 +9,8 @@ import UIKit
 
 class UserInfoHeaderView: UIView {
     
+    private var headerImageView: UIImageView?
+    
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.numberOfLines = 0
@@ -17,7 +19,10 @@ class UserInfoHeaderView: UIView {
     
     private let titleLabelAttributedTextStyle = AttributedTextStyle(fontStyle: .title, colorType: .secondaryText)
     
+    private let repository: Repository
+    
     init() {
+        self.repository = Services.shared.repository
         super.init(frame: .zero)
         
         self.addGradientView(GradientView(type: .primaryBackground))
@@ -26,7 +31,7 @@ class UserInfoHeaderView: UIView {
         stackView.axis = .vertical
         stackView.spacing = 39.0
         
-        stackView.addHeaderImage(image: ImagePalette.image(withName: .mainLogo), height: 100.0)
+        self.headerImageView = stackView.addHeaderImage(image: ImagePalette.image(withName: .mainLogo), height: 100.0)
         stackView.addArrangedSubview(self.titleLabel)
         
         self.addSubview(stackView)
@@ -45,5 +50,9 @@ class UserInfoHeaderView: UIView {
     public func setTitle(_ text: String) {
         self.titleLabel.attributedText = NSAttributedString.create(withText: text,
                                                                    attributedTextStyle: self.titleLabelAttributedTextStyle)
+    }
+    
+    public func onViewAppear() {
+        self.headerImageView?.syncWithPhase(repository: self.repository, imageName: .mainLogo)
     }
 }

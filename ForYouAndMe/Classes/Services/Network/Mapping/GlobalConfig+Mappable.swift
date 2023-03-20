@@ -18,6 +18,7 @@ extension GlobalConfig: Mappable {
         try self.integrationDatas = map.from("supported_integrations", transformation: Mapper.extractIntegrationData)
         try self.onboardingSectionGroups = self.requiredStringMap.extractOnboardingSectionGroups()
         try self.pinCodeLogin = map.from("pincode_login")
+        self.phaseNames = self.requiredStringMap.extractPhaseNames()
     }
 }
 
@@ -107,5 +108,13 @@ fileprivate extension RequiredStringMap {
         }
         let onboardingSectionGroupStrings = onboardingSectionGroupListString.split(separator: ";")
         return onboardingSectionGroupStrings.compactMap { OnboardingSectionGroup(rawValue: String($0)) }
+    }
+    
+    func extractPhaseNames() -> [String] {
+        guard let phasesListString = self[.phaseNames] else {
+            return []
+        }
+        let phaseStrings = phasesListString.split(separator: ";")
+        return phaseStrings.compactMap { String($0) }
     }
 }

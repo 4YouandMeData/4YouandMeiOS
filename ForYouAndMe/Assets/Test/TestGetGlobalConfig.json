@@ -209,8 +209,13 @@
       "USER_DATA_FILTER_SELECT_ALL_BUTTON": "Select All",
       "USER_DATA_FILTER_SAVE_BUTTON": "Save",
       "TAB_USER_DATA_EMPTY_FILTER_MESSAGE": "No graphs are selected to be shown on this page. Please select one or more graph from the configuration page.",
-      "TAB_USER_DATA_EMPTY_FILTER_BUTTON": "Graphs configuration"
+      "TAB_USER_DATA_EMPTY_FILTER_BUTTON": "Graphs configuration",
+      "PHASE_SWITCH_PROMPT": "Thank you for entering this information. Would you like to learn more about the postpartum period of the study?",
+      "PHASE_SWITCH_BUTTON_YES": "No, thanks",
+      "PHASE_SWITCH_BUTTON_NO": "Yes, I have time now",
+      "STUDY_PHASES": "BUMP;BUMP-PD"
     },
     "country_codes": ["US", "GB", "IT"],
-    "pincode_login": false
+    "pincode_login": false,
+    "phases": ["0", "1"],
 }

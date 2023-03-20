@@ -70,7 +70,8 @@ public extension UIStackView {
         self.addArrangedSubview(label, horizontalInset: horizontalInset)
     }
     
-    func addHeaderImage(image: UIImage?, height: CGFloat? = nil, horizontalInset: CGFloat = 0) {
+    @discardableResult
+    func addHeaderImage(image: UIImage?, height: CGFloat? = nil, horizontalInset: CGFloat = 0) -> UIImageView {
         let imageContainerView = UIView()
         imageContainerView.backgroundColor = UIColor.clear
         let imageView = UIImageView()
@@ -86,6 +87,7 @@ public extension UIStackView {
             imageView.autoSetDimension(.height, toSize: height)
         }
         self.addArrangedSubview(imageContainerView)
+        return imageView
     }
     
     func addTextualSeparator(lineColor: UIColor,

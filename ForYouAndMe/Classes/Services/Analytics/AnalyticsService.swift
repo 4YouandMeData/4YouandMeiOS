@@ -127,6 +127,7 @@ extension DefaultService {
     var requestName: String {
         switch self {
         case .getGlobalConfig: return "Get Configuration"
+        case .getStudy: return "Get Study"
         // Login
         case .submitPhoneNumber: return "Verify Phone Number"
         case .verifyPhoneNumber: return "Login"
@@ -178,6 +179,9 @@ extension DefaultService {
         case .sendDeviceData: return "Send Phone Events"
         // Health
         case .sendHealthData: return "Send Health Data"
+        // Phase
+        case .createUserPhase: return "Create User Phase"
+        case .updateUserPhase: return "Update User Phase"
         }
     }
 }

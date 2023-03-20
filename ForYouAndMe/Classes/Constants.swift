@@ -147,16 +147,24 @@ struct Constants {
     struct UserInfo {
         // TODO: Wipe out this awful thing when the backend is ready for something more generic...
         static let FeedTitleParameterIdentifier = "1"
-        static let DefaultUserInfoParameters: [UserInfoParameter] = {
+        static var DefaultUserInfoParameters: [UserInfoParameter] {
             let userInfoParameters: [UserInfoParameter] = [
                 UserInfoParameter(identifier: Self.FeedTitleParameterIdentifier,
                                   name: "Your due date",
                                   value: nil,
+                                  phaseNameIndex: nil,
+                                  type: .date,
+                                  items: []),
+                UserInfoParameter(identifier: "2",
+                                  name: "Your delivery date",
+                                  value: nil,
+                                  phaseNameIndex: 1,
                                   type: .date,
                                   items: [])
 //                UserInfoParameter(identifier: "2",
 //                                  name: "Your baby's gender",
 //                                  value: nil,
+//                                  phaseNameIndex: nil,
 //                                  type: .items,
 //                                  items: [
 //                                    UserInfoParameterItem(identifier: "1", value: "It's a Boy!"),
@@ -165,11 +173,12 @@ struct Constants {
 //                UserInfoParameter(identifier: "3",
 //                                  name: "Your baby's name",
 //                                  value: nil,
+//                                  phaseNameIndex: nil,
 //                                  type: .string,
 //                                  items: [])
             ]
             return userInfoParameters
-        }()
+        }
     }
 }
 

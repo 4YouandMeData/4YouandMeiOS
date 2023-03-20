@@ -302,6 +302,8 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         // Misc
         case .getGlobalConfig:
             return "/v1/studies/\(studyId)/configuration"
+        case .getStudy:
+            return "/v1/studies/\(studyId)"
         // Login
         case .submitPhoneNumber:
             return "/v1/studies/\(studyId)/auth/verify_phone_number"
@@ -385,6 +387,11 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         // Health
         case .sendHealthData:
             return "v1/integration_datas"
+        // Phase
+        case .createUserPhase(let phaseId):
+            return "v1/study_phases/\(phaseId)/user_study_phases"
+        case .updateUserPhase(let userPhaseId):
+            return "v1/user_study_phases/\(userPhaseId)"
         }
     }
     
@@ -394,43 +401,46 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
     var method: Moya.Method {
         switch self {
         case .getGlobalConfig,
-             .getScreeningSection,
-             .getInformedConsentSection,
-             .getConsentSection,
-             .getOptInSection,
-             .getUserConsentSection,
-             .getIntegrationSection,
-             .getStudyInfoSection,
-             .getFeeds,
-             .getTasks,
-             .getTask,
-             .getSurvey,
-             .getUser,
-             .getUserData,
-             .getUserSettings,
-             .getUserDataAggregation:
+                .getStudy,
+                .getScreeningSection,
+                .getInformedConsentSection,
+                .getConsentSection,
+                .getOptInSection,
+                .getUserConsentSection,
+                .getIntegrationSection,
+                .getStudyInfoSection,
+                .getFeeds,
+                .getTasks,
+                .getTask,
+                .getSurvey,
+                .getUser,
+                .getUserData,
+                .getUserSettings,
+                .getUserDataAggregation:
             return .get
         case .submitPhoneNumber,
-             .verifyPhoneNumber,
-             .emailLogin,
-             .createUserConsent,
-             .notifyOnboardingCompleted,
-             .sendOptInPermission,
-             .sendAnswer,
-             .sendDeviceData,
-             .sendHealthData:
+                .verifyPhoneNumber,
+                .emailLogin,
+                .createUserConsent,
+                .notifyOnboardingCompleted,
+                .sendOptInPermission,
+                .sendAnswer,
+                .sendDeviceData,
+                .sendHealthData,
+                .createUserPhase:
             return .post
         case .verifyEmail,
-             .resendConfirmationEmail,
-             .updateUserConsent,
-             .sendTaskResultData,
-             .sendTaskResultFile,
-             .sendUserInfoParameters,
-             .sendUserTimeZone,
-             .sendUserSettings,
-             .sendPushToken,
-             .sendSurveyTaskResultData,
-             .delayTask:
+                .resendConfirmationEmail,
+                .updateUserConsent,
+                .sendTaskResultData,
+                .sendTaskResultFile,
+                .sendUserInfoParameters,
+                .sendUserTimeZone,
+                .sendUserSettings,
+                .sendPushToken,
+                .sendSurveyTaskResultData,
+                .delayTask,
+                .updateUserPhase:
             return .patch
         }
     }
@@ -439,6 +449,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         switch self {
         // Misc
         case .getGlobalConfig: return Bundle.getTestData(from: "TestGetGlobalConfig")
+        case .getStudy: return Bundle.getTestData(from: "TestGetStudy")
         // Login
         case .submitPhoneNumber: return "{}".utf8Encoded
         case .verifyPhoneNumber, .emailLogin:
@@ -512,27 +523,32 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         case .sendDeviceData: return "{}".utf8Encoded
         // Health
         case .sendHealthData: return "{}".utf8Encoded
+        // User Phase
+        case .createUserPhase: return "{}".utf8Encoded
+        case .updateUserPhase: return "{}".utf8Encoded
         }
     }
     
     var task: Task {
         switch self {
         case .getGlobalConfig,
-             .getScreeningSection,
-             .getInformedConsentSection,
-             .getConsentSection,
-             .getOptInSection,
-             .getStudyInfoSection,
-             .getUserConsentSection,
-             .resendConfirmationEmail,
-             .getIntegrationSection,
-             .getTask,
-             .getSurvey,
-             .getUser,
-             .getUserSettings,
-             .getUserData,
-             .getUserDataAggregation,
-             .delayTask:
+                .getStudy,
+                .getScreeningSection,
+                .getInformedConsentSection,
+                .getConsentSection,
+                .getOptInSection,
+                .getStudyInfoSection,
+                .getUserConsentSection,
+                .resendConfirmationEmail,
+                .getIntegrationSection,
+                .getTask,
+                .getSurvey,
+                .getUser,
+                .getUserSettings,
+                .getUserData,
+                .getUserDataAggregation,
+                .delayTask,
+                .createUserPhase:
             return .requestPlain
         case .submitPhoneNumber(let phoneNumber):
             var params: [String: Any] = [:]
@@ -657,6 +673,9 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         case .sendHealthData(let healthData):
             let dataParams: [String: Any] = ["data": healthData]
             return .requestParameters(parameters: ["integration_data": dataParams], encoding: JSONEncoding.default)
+        case .updateUserPhase:
+            let dataParams: [String: Any] = ["end_at": Date()]
+            return .requestParameters(parameters: ["user_study_phase": dataParams], encoding: JSONEncoding.default)
         }
     }
     
@@ -680,42 +699,45 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
     var authorizationType: AuthorizationType? {
         switch self {
         case .getGlobalConfig,
-             .submitPhoneNumber,
-             .emailLogin,
-             .verifyPhoneNumber:
+                .getStudy,
+                .submitPhoneNumber,
+                .emailLogin,
+                .verifyPhoneNumber:
             return nil
         case .getScreeningSection,
-             .getInformedConsentSection,
-             .getConsentSection,
-             .getOptInSection,
-             .sendOptInPermission,
-             .getUserConsentSection,
-             .createUserConsent,
-             .updateUserConsent,
-             .notifyOnboardingCompleted,
-             .getStudyInfoSection,
-             .verifyEmail,
-             .resendConfirmationEmail,
-             .getIntegrationSection,
-             .sendAnswer,
-             .getFeeds,
-             .getTasks,
-             .getTask,
-             .sendTaskResultData,
-             .sendTaskResultFile,
-             .getUser,
-             .sendUserTimeZone,
-             .sendUserInfoParameters,
-             .getUserSettings,
-             .sendUserSettings,
-             .getUserData,
-             .getUserDataAggregation,
-             .getSurvey,
-             .sendSurveyTaskResultData,
-             .sendPushToken,
-             .delayTask,
-             .sendDeviceData,
-             .sendHealthData:
+                .getInformedConsentSection,
+                .getConsentSection,
+                .getOptInSection,
+                .sendOptInPermission,
+                .getUserConsentSection,
+                .createUserConsent,
+                .updateUserConsent,
+                .notifyOnboardingCompleted,
+                .getStudyInfoSection,
+                .verifyEmail,
+                .resendConfirmationEmail,
+                .getIntegrationSection,
+                .sendAnswer,
+                .getFeeds,
+                .getTasks,
+                .getTask,
+                .sendTaskResultData,
+                .sendTaskResultFile,
+                .getUser,
+                .sendUserTimeZone,
+                .sendUserInfoParameters,
+                .getUserSettings,
+                .sendUserSettings,
+                .getUserData,
+                .getUserDataAggregation,
+                .getSurvey,
+                .sendSurveyTaskResultData,
+                .sendPushToken,
+                .delayTask,
+                .sendDeviceData,
+                .sendHealthData,
+                .createUserPhase,
+                .updateUserPhase:
             return .bearer
         }
     }

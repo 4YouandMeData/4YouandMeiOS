@@ -22,9 +22,17 @@ struct User: Codable {
     var timeZone: TimeZone?
     @FailableCodable
     var customData: [UserInfoParameter]?
+    let userPhases: [UserPhase]?
 }
 
 extension User: JSONAPIMappable {
+    static var includeList: String? = """
+user_study_phases,\
+user_study_phases.end_at,\
+user_study_phases.study_phase,\
+user_study_phases.study_phase.name
+"""
+    
     enum CodingKeys: String, CodingKey {
         case id
         case type
@@ -37,5 +45,6 @@ extension User: JSONAPIMappable {
         case agreedPermissions = "agreed_permissions"
         case timeZone = "time_zone"
         case customData = "custom_data"
+        case userPhases = "user_study_phases"
     }
 }

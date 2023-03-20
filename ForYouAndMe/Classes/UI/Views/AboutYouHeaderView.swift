@@ -18,7 +18,12 @@ class AboutYouHeaderView: UIView {
         return button
     }()
     
+    private var headerImageView: UIImageView?
+    
+    private let repository: Repository
+    
     init() {
+        self.repository = Services.shared.repository
         super.init(frame: .zero)
         
         self.addGradientView(GradientView(type: .primaryBackground))
@@ -33,7 +38,7 @@ class AboutYouHeaderView: UIView {
         closeButton.autoPinEdgesToSuperviewEdges(with: .zero, excludingEdge: .trailing)
         stackView.addArrangedSubview(closeButtonContainerView)
 
-        stackView.addHeaderImage(image: ImagePalette.image(withName: .mainLogo), height: 100.0)
+        self.headerImageView = stackView.addHeaderImage(image: ImagePalette.image(withName: .mainLogo), height: 100.0)
         stackView.addLabel(withText: StringsProvider.string(forKey: .profileTitle),
                            fontStyle: .title,
                            colorType: .secondaryText)
@@ -47,5 +52,11 @@ class AboutYouHeaderView: UIView {
     
     required init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+    
+    // MARK: - Public Methods
+    
+    public func onViewAppear() {
+        self.headerImageView?.syncWithPhase(repository: self.repository, imageName: .mainLogo)
     }
 }

@@ -18,6 +18,8 @@ class AboutYouViewController: UIViewController {
         return scrollStackView
     }()
     
+    private let headerView = AboutYouHeaderView()
+    
     init() {
         self.navigator = Services.shared.navigator
         self.repository = Services.shared.repository
@@ -39,14 +41,13 @@ class AboutYouViewController: UIViewController {
         self.view.backgroundColor = ColorPalette.color(withType: .secondary)
         
         // Header View
-        let headerView = AboutYouHeaderView()
-        self.view.addSubview(headerView)
-        headerView.autoPinEdgesToSuperviewEdges(with: .zero, excludingEdge: .bottom)
-        headerView.closeButton.addTarget(self, action: #selector(self.closeButtonDidPressed), for: .touchUpInside)
+        self.view.addSubview(self.headerView)
+        self.headerView.autoPinEdgesToSuperviewEdges(with: .zero, excludingEdge: .bottom)
+        self.headerView.closeButton.addTarget(self, action: #selector(self.closeButtonDidPressed), for: .touchUpInside)
         // ScrollStackView
         self.view.addSubview(self.scrollStackView)
         self.scrollStackView.autoPinEdgesToSuperviewEdges(with: .zero, excludingEdge: .top)
-        self.scrollStackView.autoPinEdge(.top, to: .bottom, of: headerView, withOffset: 30)
+        self.scrollStackView.autoPinEdge(.top, to: .bottom, of: self.headerView, withOffset: 30)
         
         if let userInfoParameters = self.repository.currentUser?.customData, userInfoParameters.count > 0 {
             let userInfoTitle = StringsProvider.string(forKey: .aboutYouUserInfo)
@@ -152,6 +153,7 @@ class AboutYouViewController: UIViewController {
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        self.headerView.onViewAppear()
         self.analytics.track(event: .recordScreen(screenName: AnalyticsScreens.aboutYou.rawValue,
                                                   screenClass: String(describing: type(of: self))))
         self.navigationController?.navigationBar.apply(style: NavigationBarStyleCategory.primary(hidden: true).style)

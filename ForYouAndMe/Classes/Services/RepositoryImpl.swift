@@ -19,6 +19,20 @@ class RepositoryImpl {
     // InitializableService
     var isInitialized: Bool = false
     
+    var phaseNames: [String] {
+        return self.storage.globalConfig?.phaseNames ?? []
+    }
+    
+    var currentUserPhase: UserPhase? {
+        guard let userPhases = self.currentUser?.userPhases else {
+            return nil
+        }
+        let sortedUserPhases = userPhases.sort(byNames: self.phaseNames)
+        return sortedUserPhases.first(where: { $0.endAt == nil }) ?? sortedUserPhases.last
+    }
+    
+    var study: Study?
+    
     private let api: ApiGateway
     private var storage: RepositoryStorage
     private let notificationService: NotificationService
@@ -62,7 +76,14 @@ class RepositoryImpl {
                 IntegrationProvider.initialize(withIntegrationDatas: globalConfig.integrationDatas)
                 OnboardingSectionProvider.initialize(withOnboardingSectionGroups: globalConfig.onboardingSectionGroups)
             })
-            .map { _ in () }
+            .toVoid()
+    }
+    
+    private func fetchStudy() -> Single<()> {
+        return self.api.send(request: ApiRequest(serviceRequest: .getStudy))
+            .do(onSuccess: { self.study = $0 })
+            .handleError()
+            .toVoid()
     }
 }
 
@@ -82,6 +103,13 @@ extension RepositoryImpl: Repository {
     
     var isPinCodeLogin: Bool? {
         return self.storage.globalConfig?.pinCodeLogin
+    }
+    
+    var currentPhaseType: PhaseType? {
+        guard let currentUserPhase = self.currentUserPhase else {
+            return nil
+        }
+        return self.phaseNames.firstIndex(of: currentUserPhase.phase.name)
     }
     
     func logOut() {
@@ -319,13 +347,64 @@ extension RepositoryImpl: Repository {
             .flatMap { user in self.updateNotificationRegistrationToken(user: user) }
             .map { self.handleUserInfo($0) }
             .do(onSuccess: { self.saveUser($0) })
+            .flatMap { user in self.sanitizePhase().map { user } }
     }
     
     func sendUserInfoParameters(userParameterRequests: [UserInfoParameterRequest]) -> Single<User> {
+        let oldUserInfoParameters = self.currentUser?.customData ?? []
         return self.api.send(request: ApiRequest(serviceRequest: .sendUserInfoParameters(paramenters: userParameterRequests)))
             .handleError()
             .map { self.handleUserInfo($0) }
             .do(onSuccess: { self.saveUser($0) })
+            .flatMap { user in
+                let newUserInfoParameters = user.customData ?? []
+                let changedUserInfoParameters = Self.getChangedUserInfoParameters(oldUserInfoParameters: oldUserInfoParameters,
+                                                                                  newUserInfoParameters: newUserInfoParameters)
+                // The absense of phase could be due to the absense of phases in the study
+                // or because of an incoherence. In the former case, we skip the phase logic,
+                // while in the latter we rely on the subsequent sanitizePhase method to try
+                // to resolve the incoherence
+                if let currentUserPhase = self.currentUserPhase, changedUserInfoParameters.count > 0 {
+                    var request = Single.just(())
+                    for userParameterRequest in changedUserInfoParameters {
+                        if let phaseNameIndex = userParameterRequest.phaseNameIndex,
+                           phaseNameIndex >= 0,
+                           phaseNameIndex < self.phaseNames.count,
+                           userParameterRequest.value.nilIfEmpty != nil {
+                            let phaseName = self.phaseNames[phaseNameIndex]
+                            if let phase = self.study?.phases?.getPhase(withName: phaseName) {
+                                request = request.flatMap { () in
+                                    return self
+                                        .updateUserPhase(userPhaseId: currentUserPhase.id)
+                                        .flatMap { self.createUserPhase(phaseId: phase.id) }
+                                }
+                            }
+                        }
+                    }
+                    return request.flatMap { self.refreshUser() }
+                } else {
+                    return Single.just(user)
+                }
+            }
+            .flatMap { user in self.sanitizePhase().map { user } }
+            
+    }
+    
+    // MARK: - Phase
+    
+    func createUserPhase(phaseId: String) -> Single<()> {
+        return self.api.send(request: ApiRequest(serviceRequest: .createUserPhase(phaseId: phaseId)))
+            .handleError()
+    }
+    
+    func updateUserPhase(userPhaseId: String) -> Single<()> {
+        return self.api.send(request: ApiRequest(serviceRequest: .updateUserPhase(userPhaseId: userPhaseId)))
+            .handleError()
+    }
+    
+    func sanitizePhase() -> Single<()> {
+        // TODO: Implement phase sanitization logic
+        return Single.just(())
     }
     
     // MARK: - User Data
@@ -401,8 +480,15 @@ extension RepositoryImpl: Repository {
     
     private func handleUserInfo(_ user: User) -> User {
         var user = user
-        if self.showDefaultUserInfo && (user.customData ?? []).count == 0 {
-            user.customData = Constants.UserInfo.DefaultUserInfoParameters
+        if self.showDefaultUserInfo {
+            var customData = user.customData ?? []
+            let defaultData = Constants.UserInfo.DefaultUserInfoParameters
+            let missingCustomData = defaultData.filter { customData.contains($0) }
+            customData.append(contentsOf: missingCustomData)
+            customData.sort { userDataParameter1, userDataParameter2 in
+                defaultData.firstIndex(of: userDataParameter1) ?? 0 < defaultData.firstIndex(of: userDataParameter2) ?? 0
+            }
+            user.customData = customData
         }
         return user
     }
@@ -424,6 +510,24 @@ extension RepositoryImpl: Repository {
     
     private func saveUser(_ user: User) {
         self.storage.user = user
+    }
+    
+    private static func getChangedUserInfoParameters(
+        oldUserInfoParameters: [UserInfoParameter],
+        newUserInfoParameters: [UserInfoParameter]
+    ) -> [UserInfoParameter] {
+        return newUserInfoParameters.reduce([]) { partialResult, newUserInfoParameter in
+            var changedUserInfoParameters = partialResult
+            if let oldUserInfoParameter = oldUserInfoParameters
+                .first(where: { newUserInfoParameter.identifier == $0.identifier }) {
+                if oldUserInfoParameter.value != newUserInfoParameter.value {
+                    changedUserInfoParameters.append(newUserInfoParameter)
+                }
+            } else {
+                changedUserInfoParameters.append(newUserInfoParameter)
+            }
+            return changedUserInfoParameters
+        }
     }
 }
 
@@ -501,7 +605,7 @@ fileprivate extension PrimitiveSequence where Trait == SingleTrait {
 extension RepositoryImpl: InitializableService {
     func initialize() -> Single<()> {
         
-        var requests = self.fetchGlobalConfig()
+        var requests = Single<()>.zip([self.fetchGlobalConfig(), self.fetchStudy()]).toVoid()
         
         if self.isLoggedIn {
             requests = requests.flatMap {

@@ -16,6 +16,7 @@ struct GlobalConfig {
     let integrationDatas: [IntegrationData]
     let onboardingSectionGroups: [OnboardingSectionGroup]
     let pinCodeLogin: Bool
+    let phaseNames: [String]
 }
 
 extension GlobalConfig: Codable {
@@ -27,6 +28,7 @@ extension GlobalConfig: Codable {
         case integrationDatasArray
         case onboardingSectionGroupsArray
         case pincodeLogin
+        case phaseNamesArray
     }
     
     init(from decoder: Decoder) throws {
@@ -39,6 +41,7 @@ extension GlobalConfig: Codable {
         self.integrationDatas = try container.decode(Array<IntegrationData>.self, forKey: .integrationDatasArray)
         self.onboardingSectionGroups = try container.decode(Array<OnboardingSectionGroup>.self, forKey: .onboardingSectionGroupsArray)
         self.pinCodeLogin = try container.decode(Bool.self, forKey: .pincodeLogin)
+        self.phaseNames = try container.decode(Array<String>.self, forKey: .phaseNamesArray)
     }
 
     func encode(to encoder: Encoder) throws {
@@ -50,5 +53,6 @@ extension GlobalConfig: Codable {
         try container.encode(self.integrationDatas, forKey: .integrationDatasArray)
         try container.encode(self.onboardingSectionGroups, forKey: .onboardingSectionGroupsArray)
         try container.encode(self.pinCodeLogin, forKey: .pincodeLogin)
+        try container.encode(self.phaseNames, forKey: .phaseNamesArray)
     }
 }

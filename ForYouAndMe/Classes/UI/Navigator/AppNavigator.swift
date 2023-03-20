@@ -557,6 +557,18 @@ class AppNavigator {
         navigationController.pushViewController(permissionViewController, animated: true)
     }
     
+    public func showSwitchPhaseAlert(presenter: UIViewController) {
+        let cancelAction = UIAlertAction(title: StringsProvider.string(forKey: .phaseSwitchButtonCancel), style: .cancel, handler: nil)
+        let confirmAction = UIAlertAction(title: StringsProvider.string(forKey: .phaseSwitchButtonConfirm), style: .default, handler: { _ in
+            PermissionsOpener.openSettings()
+        })
+        
+        presenter.showAlert(withTitle: StringsProvider.string(forKey: .genericInfoTitle),
+                            message: StringsProvider.string(forKey: .phaseSwitchMessage),
+                            actions: [cancelAction, confirmAction],
+                            tintColor: ColorPalette.color(withType: .primary))
+    }
+    
     // MARK: Progress HUD
     
     public static func pushProgressHUD() {
@@ -686,7 +698,7 @@ class AppNavigator {
         
         let cancelAction = UIAlertAction(title: StringsProvider.string(forKey: .permissionCancel), style: .cancel, handler: nil)
         let settingsAction = UIAlertAction(title: StringsProvider.string(forKey: .permissionSettings), style: .default, handler: { _ in
-            PermissionsOpener.openSettings()
+            self.openStudyInfoPage(studyInfoPage: .faq, presenter: presenter)
         })
         
         presenter.showAlert(withTitle: StringsProvider.string(forKey: .permissionDeniedTitle),
