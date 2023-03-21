@@ -13,6 +13,7 @@ struct Phase: Codable {
     let id: String
     let type: String
     let name: String
+    let faqPage: Page?
 }
 
 extension Phase: JSONAPIMappable {
@@ -20,6 +21,14 @@ extension Phase: JSONAPIMappable {
         case id
         case type
         case name
+        case faqPage = "faq_page"
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(self.id, forKey: .id)
+        try container.encode(self.type, forKey: .type)
+        try container.encode(self.name, forKey: .name)
     }
 }
 

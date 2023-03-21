@@ -244,6 +244,13 @@ extension RepositoryImpl: Repository {
     
     func getStudyInfoSection() -> Single<StudyInfoSection> {
         return self.api.send(request: ApiRequest(serviceRequest: .getStudyInfoSection))
+            .map { (studyInfoSection: StudyInfoSection) in
+                var studyInfoSection = studyInfoSection
+                if let phaseIndex = self.currentPhaseIndex, let phaseFaqPage = self.getPhase(forPhaseIndex: phaseIndex)?.faqPage {
+                    studyInfoSection.faqPage = phaseFaqPage
+                }
+                return studyInfoSection
+            }
             .handleError()
     }
     
@@ -367,9 +374,7 @@ extension RepositoryImpl: Repository {
                         // Change phase only if the current parameter has a phase index and a not nil and not empty value is set
                         if let phaseIndex = userParameterRequest.phaseIndex, userParameterRequest.value.nilIfEmpty != nil {
                             // Throw an error if phase index cannot be converted to a phase to a phase name
-                            if phaseIndex >= 0,
-                               phaseIndex < self.phaseNames.count,
-                               let phase = self.study?.phases?.getPhase(withName: self.phaseNames[phaseIndex]) {
+                            if let phase = self.getPhase(forPhaseIndex: phaseIndex) {
                                 request = request.flatMap { () in
                                     return self
                                         .updateUserPhase(userPhaseId: currentUserPhase.id)
@@ -544,6 +549,13 @@ extension RepositoryImpl: Repository {
     
     private func saveUser(_ user: User) {
         self.storage.user = user
+    }
+    
+    private func getPhase(forPhaseIndex phaseIndex: PhaseIndex) -> Phase? {
+        guard phaseIndex >= 0, phaseIndex < self.phaseNames.count else {
+            return nil
+        }
+        return self.study?.phases?.getPhase(withName: self.phaseNames[phaseIndex])
     }
     
     private static func getChangedUserInfoParameters(

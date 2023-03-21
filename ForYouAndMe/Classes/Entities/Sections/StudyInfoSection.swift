@@ -13,7 +13,7 @@ struct StudyInfoSection {
     
     let pages: [Page]
     let rewardPage: Page?
-    let faqPage: Page?
+    var faqPage: Page?
     let contactsPage: Page?
 }
 
