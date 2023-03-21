@@ -354,7 +354,7 @@ extension RepositoryImpl: Repository {
             .flatMap { user in self.updateNotificationRegistrationToken(user: user) }
             .map { self.handleUserInfo($0) }
             .do(onSuccess: { self.saveUser($0) })
-            .sanitizePhaseOnSuccess(repositoryImpl: self)
+            .flatMap { user in self.sanitizePhase().map { user } }
     }
     
     func sendUserInfoParameters(userParameterRequests: [UserInfoParameterRequest]) -> Single<User> {
@@ -386,14 +386,12 @@ extension RepositoryImpl: Repository {
                         }
                     }
                     return request
-                        .catchError { _ in self.sanitizePhase() }
+                        .catchError { error in self.sanitizePhase().flatMap { Single.error(error) } }
                         .flatMap { self.refreshUser() }
                 } else {
                     return Single.just(user)
                 }
             }
-            .sanitizePhaseOnSuccess(repositoryImpl: self)
-            
     }
     
     private func sharedSendUserInfoParameters(userParameterRequests: [UserInfoParameterRequest]) -> Single<User> {
@@ -643,12 +641,6 @@ fileprivate extension PrimitiveSequence where Trait == SingleTrait {
                 analyticsService.track(event: .serverError(apiError: error))
             }
         })
-    }
-    
-    func sanitizePhaseOnSuccess(repositoryImpl: RepositoryImpl) -> Single<Element> {
-        return self.flatMap { element in
-            repositoryImpl.sanitizePhase().map { element }
-        }
     }
 }
 
