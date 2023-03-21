@@ -56,7 +56,7 @@ class AboutYouHeaderView: UIView {
     
     // MARK: - Public Methods
     
-    public func onViewAppear() {
+    public func refreshUI() {
         self.headerImageView?.syncWithPhase(repository: self.repository, imageName: .mainLogo)
     }
 }

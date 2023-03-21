@@ -10,12 +10,12 @@ import Foundation
 extension UIButton {
     
     func syncWithPhase(repository: Repository, templateImageName: TemplateImageName) {
-        let image = ImagePalette.templateImage(withName: templateImageName, forPhaseType: repository.currentPhaseType)
+        let image = ImagePalette.templateImage(withName: templateImageName, forPhaseIndex: repository.currentPhaseIndex)
         self.setImage(image, for: .normal)
     }
     
     func syncWithPhase(repository: Repository, imageName: ImageName) {
-        let image = ImagePalette.image(withName: imageName, forPhaseType: repository.currentPhaseType)
+        let image = ImagePalette.image(withName: imageName, forPhaseIndex: repository.currentPhaseIndex)
         self.setImage(image, for: .normal)
     }
 }

@@ -73,18 +73,18 @@ enum TemplateImageName: String, CaseIterable {
 
 public class ImagePalette {
     
-    static func image(withName name: ImageName, forPhaseType phaseType: PhaseType? = nil) -> UIImage? {
-        return Self.image(withName: name.rawValue, forPhaseType: phaseType)
+    static func image(withName name: ImageName, forPhaseIndex phaseIndex: PhaseIndex? = nil) -> UIImage? {
+        return Self.image(withName: name.rawValue, forPhaseIndex: phaseIndex)
     }
     
-    static func templateImage(withName name: TemplateImageName, forPhaseType phaseType: PhaseType? = nil) -> UIImage? {
-        return Self.image(withName: name.rawValue, forPhaseType: phaseType)?.withRenderingMode(.alwaysTemplate)
+    static func templateImage(withName name: TemplateImageName, forPhaseIndex phaseIndex: PhaseIndex? = nil) -> UIImage? {
+        return Self.image(withName: name.rawValue, forPhaseIndex: phaseIndex)?.withRenderingMode(.alwaysTemplate)
     }
     
-    private static func image(withName name: String, forPhaseType phaseType: PhaseType? = nil) -> UIImage? {
+    private static func image(withName name: String, forPhaseIndex phaseIndex: PhaseIndex? = nil) -> UIImage? {
         var completeName = name
-        if let phaseType = phaseType {
-            completeName += "_phase_\(phaseType)"
+        if let phaseIndex = phaseIndex {
+            completeName += "_phase_\(phaseIndex)"
         }
         if let image = UIImage(named: completeName) {
             return image

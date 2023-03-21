@@ -48,7 +48,7 @@ protocol Repository: AnyObject {
     var accessToken: String? { get }
     var isLoggedIn: Bool { get }
     var isPinCodeLogin: Bool? { get }
-    var currentPhaseType: PhaseType? { get }
+    var currentPhaseIndex: PhaseIndex? { get }
     var currentUserPhase: UserPhase? { get }
     var phaseNames: [String] { get }
     func logOut()

@@ -90,7 +90,7 @@ class FeedHeaderView: UIView {
                                                                       attributedTextStyle: self.subtitleLabelAttributedTextStyle)
     }
     
-    public func onViewAppear() {
+    public func refreshUI() {
         self.profileButton.syncWithPhase(repository: self.repository, imageName: .mainLogo)
     }
     

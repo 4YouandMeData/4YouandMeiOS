@@ -153,7 +153,7 @@ class AboutYouViewController: UIViewController {
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        self.headerView.onViewAppear()
+        self.headerView.refreshUI()
         self.analytics.track(event: .recordScreen(screenName: AnalyticsScreens.aboutYou.rawValue,
                                                   screenClass: String(describing: type(of: self))))
         self.navigationController?.navigationBar.apply(style: NavigationBarStyleCategory.primary(hidden: true).style)

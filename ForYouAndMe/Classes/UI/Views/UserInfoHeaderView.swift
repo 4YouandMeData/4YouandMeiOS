@@ -52,7 +52,7 @@ class UserInfoHeaderView: UIView {
                                                                    attributedTextStyle: self.titleLabelAttributedTextStyle)
     }
     
-    public func onViewAppear() {
+    public func refreshUI() {
         self.headerImageView?.syncWithPhase(repository: self.repository, imageName: .mainLogo)
     }
 }

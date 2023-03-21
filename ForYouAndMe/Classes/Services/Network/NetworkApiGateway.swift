@@ -547,8 +547,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
                 .getUserSettings,
                 .getUserData,
                 .getUserDataAggregation,
-                .delayTask,
-                .createUserPhase:
+                .delayTask:
             return .requestPlain
         case .submitPhoneNumber(let phoneNumber):
             var params: [String: Any] = [:]
@@ -674,7 +673,14 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             let dataParams: [String: Any] = ["data": healthData]
             return .requestParameters(parameters: ["integration_data": dataParams], encoding: JSONEncoding.default)
         case .updateUserPhase:
-            let dataParams: [String: Any] = ["end_at": Date()]
+            let dateString = ISO8601Strategy.encode(Date())
+            let dataParams: [String: Any] = ["end_at": dateString]
+            return .requestParameters(parameters: ["user_study_phase": dataParams], encoding: JSONEncoding.default)
+        case .createUserPhase:
+            let dateString = ISO8601Strategy.encode(Date())
+            var dataParams: [String: Any] = [:]
+            dataParams["start_at"] = dateString
+            dataParams["custom_data"] = [String: Any]()
             return .requestParameters(parameters: ["user_study_phase": dataParams], encoding: JSONEncoding.default)
         }
     }

@@ -7,7 +7,7 @@
 
 import Foundation
 
-typealias PhaseType = Int
+typealias PhaseIndex = Int
 
 struct Phase: Codable {
     let id: String
@@ -33,6 +33,8 @@ struct UserPhase: Codable {
     let id: String
     let type: String
     @FailableDateValue<ISO8601Strategy>
+    var startAt: Date?
+    @FailableDateValue<ISO8601Strategy>
     var endAt: Date?
     var phase: Phase
 }
@@ -41,6 +43,7 @@ extension UserPhase: JSONAPIMappable {
     enum CodingKeys: String, CodingKey {
         case id
         case type
+        case startAt = "start_at"
         case endAt = "end_at"
         case phase = "study_phase"
     }

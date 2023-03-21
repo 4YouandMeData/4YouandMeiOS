@@ -212,8 +212,8 @@
       "TAB_USER_DATA_EMPTY_FILTER_MESSAGE": "No graphs are selected to be shown on this page. Please select one or more graph from the configuration page.",
       "TAB_USER_DATA_EMPTY_FILTER_BUTTON": "Graphs configuration",
       "PHASE_SWITCH_PROMPT": "Thank you for entering this information. Would you like to learn more about the postpartum period of the study?",
-      "PHASE_SWITCH_BUTTON_YES": "No, thanks",
-      "PHASE_SWITCH_BUTTON_NO": "Yes, I have time now",
+      "PHASE_SWITCH_BUTTON_YES": "Yes, I have time now",
+      "PHASE_SWITCH_BUTTON_NO": "No, thanks",
       "STUDY_PHASES": "BUMP;BUMP-PD",
       "STUDY_INFO_YOUR_DUE_DATE_EXTRA": "Additional information about due date",
       "STUDY_INFO_YOUR_DELIVERY_DATE_EXTRA": "Additional information about delivery date"

@@ -16,7 +16,7 @@ struct Study: Codable {
 
 extension Study: JSONAPIMappable {
     static var includeList: String? = """
-        study_phases.name
+study_phases.name
 """
     
     enum CodingKeys: String, CodingKey {

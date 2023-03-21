@@ -148,19 +148,12 @@ struct Constants {
         // TODO: Wipe out this awful thing when the backend is ready for something more generic...
         static let PreDeliveryParameterIdentifier = "1"
         static let PostDeliveryParameterIdentifier = "2"
-        static let PreDeliveryPhaseType: PhaseType = 0
-        static let PostDeliveryPhaseType: PhaseType = 1
+        static let PreDeliveryPhaseIndex: PhaseIndex = 0
+        static let PostDeliveryPhaseIndex: PhaseIndex = 1
         static let UserInfoParameterDescriptions: [String: String] = [
             Self.PreDeliveryParameterIdentifier: "YOUR_DUE_DATE",
             Self.PostDeliveryParameterIdentifier: "YOUR_DELIVERY_DATE"
         ]
-        static func getFeedDateIdentifier(phaseType: PhaseType?) -> String {
-            switch phaseType {
-            case PreDeliveryPhaseType: return Self.PreDeliveryParameterIdentifier
-            case PostDeliveryPhaseType: return Self.PostDeliveryParameterIdentifier
-            default: return Self.PreDeliveryParameterIdentifier
-            }
-        }
         static func getUserInfoParameterDescriptionFormat(userInfoParameterId: String) -> String {
             guard let paramVariable = UserInfoParameterDescriptions[userInfoParameterId] else {
                 return ""
@@ -172,13 +165,13 @@ struct Constants {
                 UserInfoParameter(identifier: Self.PreDeliveryParameterIdentifier,
                                   name: "Your due date",
                                   value: nil,
-                                  phaseType: nil,
+                                  phaseIndex: nil,
                                   type: .date,
                                   items: []),
                 UserInfoParameter(identifier: Self.PostDeliveryParameterIdentifier,
                                   name: "Your delivery date",
                                   value: nil,
-                                  phaseType: Self.PostDeliveryPhaseType,
+                                  phaseIndex: Self.PostDeliveryPhaseIndex,
                                   type: .date,
                                   items: [])
 //                UserInfoParameter(identifier: "2",

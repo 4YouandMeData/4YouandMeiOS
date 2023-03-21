@@ -560,7 +560,7 @@ class AppNavigator {
     public func showSwitchPhaseAlert(presenter: UIViewController) {
         let cancelAction = UIAlertAction(title: StringsProvider.string(forKey: .phaseSwitchButtonCancel), style: .cancel, handler: nil)
         let confirmAction = UIAlertAction(title: StringsProvider.string(forKey: .phaseSwitchButtonConfirm), style: .default, handler: { _ in
-            PermissionsOpener.openSettings()
+            self.openStudyInfoPage(studyInfoPage: .faq, presenter: presenter)
         })
         
         presenter.showAlert(withTitle: StringsProvider.string(forKey: .genericInfoTitle),

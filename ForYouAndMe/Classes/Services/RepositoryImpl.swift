@@ -101,7 +101,7 @@ extension RepositoryImpl: Repository {
         return sortedUserPhases.first(where: { $0.endAt == nil }) ?? sortedUserPhases.last
     }
     
-    var currentPhaseType: PhaseType? {
+    var currentPhaseIndex: PhaseIndex? {
         guard let currentUserPhase = self.currentUserPhase else {
             return nil
         }
@@ -347,15 +347,12 @@ extension RepositoryImpl: Repository {
             .flatMap { user in self.updateNotificationRegistrationToken(user: user) }
             .map { self.handleUserInfo($0) }
             .do(onSuccess: { self.saveUser($0) })
-            .flatMap { user in self.sanitizePhase().map { user } }
+            .sanitizePhaseOnSuccess(repositoryImpl: self)
     }
     
     func sendUserInfoParameters(userParameterRequests: [UserInfoParameterRequest]) -> Single<User> {
         let oldUserInfoParameters = self.currentUser?.customData ?? []
-        return self.api.send(request: ApiRequest(serviceRequest: .sendUserInfoParameters(paramenters: userParameterRequests)))
-            .handleError()
-            .map { self.handleUserInfo($0) }
-            .do(onSuccess: { self.saveUser($0) })
+        return self.sharedSendUserInfoParameters(userParameterRequests: userParameterRequests)
             .flatMap { user in
                 let newUserInfoParameters = user.customData ?? []
                 let changedUserInfoParameters = Self.getChangedUserInfoParameters(oldUserInfoParameters: oldUserInfoParameters,
@@ -367,27 +364,40 @@ extension RepositoryImpl: Repository {
                 if let currentUserPhase = self.currentUserPhase, changedUserInfoParameters.count > 0 {
                     var request = Single.just(())
                     for userParameterRequest in changedUserInfoParameters {
-                        if let phaseType = userParameterRequest.phaseType,
-                           phaseType >= 0,
-                           phaseType < self.phaseNames.count,
-                           userParameterRequest.value.nilIfEmpty != nil {
-                            let phaseName = self.phaseNames[phaseType]
-                            if let phase = self.study?.phases?.getPhase(withName: phaseName) {
+                        // Change phase only if the current parameter has a phase index and a not nil and not empty value is set
+                        if let phaseIndex = userParameterRequest.phaseIndex, userParameterRequest.value.nilIfEmpty != nil {
+                            // Throw an error if phase index cannot be converted to a phase to a phase name
+                            if phaseIndex >= 0,
+                               phaseIndex < self.phaseNames.count,
+                               let phase = self.study?.phases?.getPhase(withName: self.phaseNames[phaseIndex]) {
                                 request = request.flatMap { () in
                                     return self
                                         .updateUserPhase(userPhaseId: currentUserPhase.id)
                                         .flatMap { self.createUserPhase(phaseId: phase.id) }
                                 }
+                            } else {
+                                return Single.error(RepositoryError.remoteServerError)
                             }
                         }
                     }
-                    return request.flatMap { self.refreshUser() }
+                    return request
+                        .catchError { _ in self.sanitizePhase() }
+                        .flatMap { self.refreshUser() }
                 } else {
                     return Single.just(user)
                 }
             }
-            .flatMap { user in self.sanitizePhase().map { user } }
+            .sanitizePhaseOnSuccess(repositoryImpl: self)
             
+    }
+    
+    private func sharedSendUserInfoParameters(userParameterRequests: [UserInfoParameterRequest]) -> Single<User> {
+        return self.api.send(request: ApiRequest(serviceRequest: .sendUserInfoParameters(paramenters: userParameterRequests)))
+            .handleError()
+        // TODO: Restore original implementation when user patch return phase data
+            .map { (user: User) in self.handleUserInfo(self.currentUser!, customData: user.customData ?? []) }
+        //    .map { self.handleUserInfo($0, customData: $0.customData) }
+            .do(onSuccess: { self.saveUser($0) })
     }
     
     // MARK: - Phase
@@ -403,8 +413,32 @@ extension RepositoryImpl: Repository {
     }
     
     func sanitizePhase() -> Single<()> {
-        // TODO: Implement phase sanitization logic
-        return Single.just(())
+        // This is currently super-specific for the Bump study.
+        // TODO: Generalize!!!!
+        // If the delivery date is set, but we are in 'Pre-delivery' phase,
+        // remove the post-delivery entry from custom data.
+        let deliveryDateUserInfoParameter = self.currentUser?.customData?
+            .first(where: { $0.identifier == Constants.UserInfo.PostDeliveryParameterIdentifier })
+        if self.currentPhaseIndex == Constants.UserInfo.PreDeliveryPhaseIndex,
+           deliveryDateUserInfoParameter?.value.nilIfEmpty != nil {
+            let userParameterRequests: [UserInfoParameterRequest] = (self.currentUser?.customData ?? [])
+                .reduce([]) { userParameterRequests, userInfoParameter in
+                    var userParameterRequests = userParameterRequests
+                    if userInfoParameter.identifier != Constants.UserInfo.PostDeliveryParameterIdentifier {
+                        userParameterRequests.append(UserInfoParameterRequest(parameter: userInfoParameter,
+                                                                              value: userInfoParameter.value))
+                    }
+                return userParameterRequests
+            }
+            return self.sharedSendUserInfoParameters(userParameterRequests: userParameterRequests)
+                .toVoid()
+                .do(onSuccess: { debugPrint("Repository - Phase Sanitization Successful") })
+                .do(onError: { error in debugPrint("Repository - Phase Sanitization Failed. Error: \(error.localizedDescription)") })
+                .catchErrorJustReturn(())
+        } else {
+            return Single.just(())
+                .do(onSuccess: { debugPrint("Repository - Phase Sanitization Not Needed") })
+        }
     }
     
     // MARK: - User Data
@@ -478,10 +512,10 @@ extension RepositoryImpl: Repository {
         }
     }
     
-    private func handleUserInfo(_ user: User) -> User {
+    private func handleUserInfo(_ user: User, customData: [UserInfoParameter]? = nil) -> User {
         var user = user
         if self.showDefaultUserInfo {
-            var customData = user.customData ?? []
+            var customData = customData ?? user.customData ?? []
             let defaultData = Constants.UserInfo.DefaultUserInfoParameters
             let missingCustomData = defaultData.filter { !customData.contains($0) }
             customData.append(contentsOf: missingCustomData)
@@ -516,8 +550,8 @@ extension RepositoryImpl: Repository {
         oldUserInfoParameters: [UserInfoParameter],
         newUserInfoParameters: [UserInfoParameter]
     ) -> [UserInfoParameter] {
-        return newUserInfoParameters.reduce([]) { partialResult, newUserInfoParameter in
-            var changedUserInfoParameters = partialResult
+        return newUserInfoParameters.reduce([]) { changedUserInfoParameters, newUserInfoParameter in
+            var changedUserInfoParameters = changedUserInfoParameters
             if let oldUserInfoParameter = oldUserInfoParameters
                 .first(where: { newUserInfoParameter.identifier == $0.identifier }) {
                 if oldUserInfoParameter.value != newUserInfoParameter.value {
@@ -597,6 +631,12 @@ fileprivate extension PrimitiveSequence where Trait == SingleTrait {
                 analyticsService.track(event: .serverError(apiError: error))
             }
         })
+    }
+    
+    func sanitizePhaseOnSuccess(repositoryImpl: RepositoryImpl) -> Single<Element> {
+        return self.flatMap { element in
+            repositoryImpl.sanitizePhase().map { element }
+        }
     }
 }
 

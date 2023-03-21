@@ -32,7 +32,7 @@ class UserInfoViewController: UIViewController {
     }()
     
     private let pageTitle: String
-    private let userInfoParameters: [UserInfoParameter]
+    private var userInfoParameters: [UserInfoParameter]
     
     private let pageState: BehaviorRelay<PageState> = BehaviorRelay<PageState>(value: .read)
     private let navigator: AppNavigator
@@ -88,7 +88,7 @@ class UserInfoViewController: UIViewController {
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        self.headerView.onViewAppear()
+        self.headerView.refreshUI()
         
         self.navigationController?.navigationBar.apply(style: NavigationBarStyleCategory.primary(hidden: false).style)
         self.addCustomBackButton()
@@ -176,10 +176,10 @@ class UserInfoViewController: UIViewController {
             .first(where: { self.parameterTextFieldMap[$0] == textField })
         if let currentPhaseName = self.repository.currentUserPhase?.phase.name,
            let userInfoParameter = userInfoParameter,
-           let phaseType = userInfoParameter.phaseType,
-           phaseType >= 0,
-           phaseType < self.repository.phaseNames.count,
-           self.repository.phaseNames[phaseType] == currentPhaseName {
+           let phaseIndex = userInfoParameter.phaseIndex,
+           phaseIndex >= 0,
+           phaseIndex < self.repository.phaseNames.count,
+           self.repository.phaseNames[phaseIndex] == currentPhaseName {
             return false
         }
         return true
@@ -208,14 +208,15 @@ class UserInfoViewController: UIViewController {
             return UserInfoParameterRequest(parameter: parameter, value: value)
         }
         
-        let currentPhaseType = self.repository.currentPhaseType
+        let currentPhaseIndex = self.repository.currentPhaseIndex
         
         self.repository.sendUserInfoParameters(userParameterRequests: userInfoParameterRequests)
             .addProgress()
             .subscribe(onSuccess: { [weak self] _ in
                 guard let self = self else { return }
                 self.pageState.accept(.read)
-                if let newPhaseType = self.repository.currentPhaseType, newPhaseType != currentPhaseType {
+                self.headerView.refreshUI()
+                if let newPhaseIndex = self.repository.currentPhaseIndex, newPhaseIndex != currentPhaseIndex {
                     self.navigator.showSwitchPhaseAlert(presenter: self)
                 }
                 }, onError: { [weak self] error in

@@ -10,10 +10,10 @@ import Foundation
 extension UIImageView {
     
     func syncWithPhase(repository: Repository, templateImageName: TemplateImageName) {
-        self.image = ImagePalette.templateImage(withName: templateImageName, forPhaseType: repository.currentPhaseType)
+        self.image = ImagePalette.templateImage(withName: templateImageName, forPhaseIndex: repository.currentPhaseIndex)
     }
     
     func syncWithPhase(repository: Repository, imageName: ImageName) {
-        self.image = ImagePalette.image(withName: imageName, forPhaseType: repository.currentPhaseType)
+        self.image = ImagePalette.image(withName: imageName, forPhaseIndex: repository.currentPhaseIndex)
     }
 }

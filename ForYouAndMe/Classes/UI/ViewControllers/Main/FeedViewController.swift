@@ -90,7 +90,7 @@ class FeedViewController: UIViewController {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         
-        self.headerView.onViewAppear()
+        self.headerView.refreshUI()
         
         self.navigationController?.navigationBar.apply(style: NavigationBarStyleCategory.primary(hidden: true).style)
         self.analytics.track(event: .switchTab(StringsProvider.string(forKey: .tabFeed)))

@@ -57,7 +57,7 @@ class StudyInfoViewController: UIViewController {
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        self.headerView.onViewAppear()
+        self.headerView.refreshUI()
         self.analytics.track(event: .switchTab(StringsProvider.string(forKey: .tabStudyInfo)))
         self.analytics.track(event: .recordScreen(screenName: AnalyticsScreens.studyInfo.rawValue,
                                                   screenClass: String(describing: type(of: self))))

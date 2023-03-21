@@ -28,6 +28,7 @@ struct User: Codable {
 extension User: JSONAPIMappable {
     static var includeList: String? = """
 user_study_phases,\
+user_study_phases.start_at,\
 user_study_phases.end_at,\
 user_study_phases.study_phase,\
 user_study_phases.study_phase.name
