@@ -698,7 +698,7 @@ class AppNavigator {
         
         let cancelAction = UIAlertAction(title: StringsProvider.string(forKey: .permissionCancel), style: .cancel, handler: nil)
         let settingsAction = UIAlertAction(title: StringsProvider.string(forKey: .permissionSettings), style: .default, handler: { _ in
-            self.openStudyInfoPage(studyInfoPage: .faq, presenter: presenter)
+            PermissionsOpener.openSettings()
         })
         
         presenter.showAlert(withTitle: StringsProvider.string(forKey: .permissionDeniedTitle),
