@@ -151,7 +151,6 @@ struct Constants {
         static let PreDeliveryPhaseIndex: PhaseIndex = 0
         static let PostDeliveryPhaseIndex: PhaseIndex = 1
         static let UserInfoParameterDescriptions: [String: String] = [
-            Self.PreDeliveryParameterIdentifier: "YOUR_DUE_DATE",
             Self.PostDeliveryParameterIdentifier: "YOUR_DELIVERY_DATE"
         ]
         static func getUserInfoParameterDescriptionFormat(userInfoParameterId: String) -> String {
