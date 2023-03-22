@@ -394,56 +394,6 @@ extension RepositoryImpl: Repository {
             }
     }
     
-    private func sharedSendUserInfoParameters(userParameterRequests: [UserInfoParameterRequest]) -> Single<User> {
-        return self.api.send(request: ApiRequest(serviceRequest: .sendUserInfoParameters(paramenters: userParameterRequests)))
-            .handleError()
-        // TODO: Restore original implementation when user patch return phase data
-            .map { (user: User) in self.handleUserInfo(self.currentUser!, customData: user.customData ?? []) }
-        //    .map { self.handleUserInfo($0, customData: $0.customData) }
-            .do(onSuccess: { self.saveUser($0) })
-    }
-    
-    // MARK: - Phase
-    
-    func createUserPhase(phaseId: String) -> Single<()> {
-        return self.api.send(request: ApiRequest(serviceRequest: .createUserPhase(phaseId: phaseId)))
-            .handleError()
-    }
-    
-    func updateUserPhase(userPhaseId: String) -> Single<()> {
-        return self.api.send(request: ApiRequest(serviceRequest: .updateUserPhase(userPhaseId: userPhaseId)))
-            .handleError()
-    }
-    
-    func sanitizePhase() -> Single<()> {
-        // This is currently super-specific for the Bump study.
-        // TODO: Generalize!!!!
-        // If the delivery date is set, but we are in 'Pre-delivery' phase,
-        // remove the post-delivery entry from custom data.
-        let deliveryDateUserInfoParameter = self.currentUser?.customData?
-            .first(where: { $0.identifier == Constants.UserInfo.PostDeliveryParameterIdentifier })
-        if self.currentPhaseIndex == Constants.UserInfo.PreDeliveryPhaseIndex,
-           deliveryDateUserInfoParameter?.value.nilIfEmpty != nil {
-            let userParameterRequests: [UserInfoParameterRequest] = (self.currentUser?.customData ?? [])
-                .reduce([]) { userParameterRequests, userInfoParameter in
-                    var userParameterRequests = userParameterRequests
-                    if userInfoParameter.identifier != Constants.UserInfo.PostDeliveryParameterIdentifier {
-                        userParameterRequests.append(UserInfoParameterRequest(parameter: userInfoParameter,
-                                                                              value: userInfoParameter.value))
-                    }
-                return userParameterRequests
-            }
-            return self.sharedSendUserInfoParameters(userParameterRequests: userParameterRequests)
-                .toVoid()
-                .do(onSuccess: { debugPrint("Repository - Phase Sanitization Successful") })
-                .do(onError: { error in debugPrint("Repository - Phase Sanitization Failed. Error: \(error.localizedDescription)") })
-                .catchErrorJustReturn(())
-        } else {
-            return Single.just(())
-                .do(onSuccess: { debugPrint("Repository - Phase Sanitization Not Needed") })
-        }
-    }
-    
     // MARK: - User Data
     
     func getUserData() -> Single<UserData> {
@@ -549,13 +499,6 @@ extension RepositoryImpl: Repository {
         self.storage.user = user
     }
     
-    private func getPhase(forPhaseIndex phaseIndex: PhaseIndex) -> Phase? {
-        guard phaseIndex >= 0, phaseIndex < self.phaseNames.count else {
-            return nil
-        }
-        return self.study?.phases?.getPhase(withName: self.phaseNames[phaseIndex])
-    }
-    
     private static func getChangedUserInfoParameters(
         oldUserInfoParameters: [UserInfoParameter],
         newUserInfoParameters: [UserInfoParameter]
@@ -571,6 +514,61 @@ extension RepositoryImpl: Repository {
                 changedUserInfoParameters.append(newUserInfoParameter)
             }
             return changedUserInfoParameters
+        }
+    }
+    
+    private func getPhase(forPhaseIndex phaseIndex: PhaseIndex) -> Phase? {
+        guard phaseIndex >= 0, phaseIndex < self.phaseNames.count else {
+            return nil
+        }
+        return self.study?.phases?.getPhase(withName: self.phaseNames[phaseIndex])
+    }
+    
+    private func sharedSendUserInfoParameters(userParameterRequests: [UserInfoParameterRequest]) -> Single<User> {
+        return self.api.send(request: ApiRequest(serviceRequest: .sendUserInfoParameters(paramenters: userParameterRequests)))
+            .handleError()
+        // TODO: Restore original implementation when user patch return phase data
+            .map { (user: User) in self.handleUserInfo(self.currentUser!, customData: user.customData ?? []) }
+        //    .map { self.handleUserInfo($0, customData: $0.customData) }
+            .do(onSuccess: { self.saveUser($0) })
+    }
+    
+    private func createUserPhase(phaseId: String) -> Single<()> {
+        return self.api.send(request: ApiRequest(serviceRequest: .createUserPhase(phaseId: phaseId)))
+            .handleError()
+    }
+    
+    private func updateUserPhase(userPhaseId: String) -> Single<()> {
+        return self.api.send(request: ApiRequest(serviceRequest: .updateUserPhase(userPhaseId: userPhaseId)))
+            .handleError()
+    }
+    
+    private func sanitizePhase() -> Single<()> {
+        // This is currently super-specific for the Bump study.
+        // TODO: Generalize!!!!
+        // If the delivery date is set, but we are in 'Pre-delivery' phase,
+        // remove the post-delivery entry from custom data.
+        let deliveryDateUserInfoParameter = self.currentUser?.customData?
+            .first(where: { $0.identifier == Constants.UserInfo.PostDeliveryParameterIdentifier })
+        if self.currentPhaseIndex == Constants.UserInfo.PreDeliveryPhaseIndex,
+           deliveryDateUserInfoParameter?.value.nilIfEmpty != nil {
+            let userParameterRequests: [UserInfoParameterRequest] = (self.currentUser?.customData ?? [])
+                .reduce([]) { userParameterRequests, userInfoParameter in
+                    var userParameterRequests = userParameterRequests
+                    if userInfoParameter.identifier != Constants.UserInfo.PostDeliveryParameterIdentifier {
+                        userParameterRequests.append(UserInfoParameterRequest(parameter: userInfoParameter,
+                                                                              value: userInfoParameter.value))
+                    }
+                return userParameterRequests
+            }
+            return self.sharedSendUserInfoParameters(userParameterRequests: userParameterRequests)
+                .toVoid()
+                .do(onSuccess: { debugPrint("Repository - Phase Sanitization Successful") })
+                .do(onError: { error in debugPrint("Repository - Phase Sanitization Failed. Error: \(error.localizedDescription)") })
+                .catchErrorJustReturn(())
+        } else {
+            return Single.just(())
+                .do(onSuccess: { debugPrint("Repository - Phase Sanitization Not Needed") })
         }
     }
 }

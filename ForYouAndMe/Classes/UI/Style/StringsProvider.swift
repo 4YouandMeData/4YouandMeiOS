@@ -167,6 +167,10 @@ enum StringKey: String, CaseIterable, CodingKey {
     // User Info
     case userInfoButtonEdit = "PROFILE_USER_INFO_BUTTON_EDIT"
     case userInfoButtonSubmit = "PROFILE_USER_INFO_BUTTON_SUBMIT"
+    case userInfoPermanentAlertTitle = "PROFILE_USER_INFO_PERMANENT_ALERT_TITLE"
+    case userInfoPermanentAlertMessage = "PROFILE_USER_INFO_PERMANENT_ALERT_MESSAGE"
+    case userInfoPermanentAlertConfirm = "PROFILE_USER_INFO_PERMANENT_ALERT_CONFIRM"
+    case userInfoPermanentAlertCancel = "PROFILE_USER_INFO_PERMANENT_ALERT_CANCEL"
     // Permissions
     case permissionDeniedTitle = "PERMISSION_DENIED"
     case permissionSettings = "PERMISSION_SETTINGS"

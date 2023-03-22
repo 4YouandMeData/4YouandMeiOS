@@ -175,15 +175,31 @@ class UserInfoViewController: UIViewController {
         // User Info Parameters belonging to the current phase cannot be edited. Design choice.
         let userInfoParameter = self.parameterTextFieldMap.keys
             .first(where: { self.parameterTextFieldMap[$0] == textField })
-        if let currentPhaseName = self.repository.currentUserPhase?.phase.name,
-           let userInfoParameter = userInfoParameter,
-           let phaseIndex = userInfoParameter.phaseIndex,
-           phaseIndex >= 0,
-           phaseIndex < self.repository.phaseNames.count,
-           self.repository.phaseNames[phaseIndex] == currentPhaseName {
+        
+        if let phaseIndex = userInfoParameter?.phaseIndex,
+           let currentPhaseIndex = self.repository.currentPhaseIndex,
+           phaseIndex == currentPhaseIndex {
             return false
         }
         return true
+    }
+    
+    private func submit(userInfoParameterRequests: [UserInfoParameterRequest]) {
+        let currentPhaseIndex = self.repository.currentPhaseIndex
+        
+        self.repository.sendUserInfoParameters(userParameterRequests: userInfoParameterRequests)
+            .addProgress()
+            .subscribe(onSuccess: { [weak self] _ in
+                guard let self = self else { return }
+                self.pageState.accept(.read)
+                self.headerView.refreshUI()
+                if let newPhaseIndex = self.repository.currentPhaseIndex, newPhaseIndex != currentPhaseIndex {
+                    self.navigator.showSwitchPhaseAlert(presenter: self)
+                }
+                }, onError: { [weak self] error in
+                    guard let self = self else { return }
+                    self.navigator.handleError(error: error, presenter: self)
+            }).disposed(by: self.disposeBag)
     }
     
     // MARK: - Actions
@@ -209,21 +225,34 @@ class UserInfoViewController: UIViewController {
             return UserInfoParameterRequest(parameter: parameter, value: value)
         }
         
-        let currentPhaseIndex = self.repository.currentPhaseIndex
+        let isPermanentChange: Bool = userInfoParameterRequests.contains(where: { userInfoParameterRequest in
+            if nil == self.userInfoParameters.first(where: { userInfoParameterRequest.parameter.identifier == $0.identifier })?.value.nilIfEmpty,
+               nil != userInfoParameterRequest.value.nilIfEmpty,
+               let phaseIndex = userInfoParameterRequest.parameter.phaseIndex,
+               let currentPhaseIndex = self.repository.currentPhaseIndex,
+               phaseIndex != currentPhaseIndex
+            {
+                return true
+            } else {
+                return false
+            }
+        })
         
-        self.repository.sendUserInfoParameters(userParameterRequests: userInfoParameterRequests)
-            .addProgress()
-            .subscribe(onSuccess: { [weak self] _ in
-                guard let self = self else { return }
-                self.pageState.accept(.read)
-                self.headerView.refreshUI()
-                if let newPhaseIndex = self.repository.currentPhaseIndex, newPhaseIndex != currentPhaseIndex {
-                    self.navigator.showSwitchPhaseAlert(presenter: self)
-                }
-                }, onError: { [weak self] error in
-                    guard let self = self else { return }
-                    self.navigator.handleError(error: error, presenter: self)
-            }).disposed(by: self.disposeBag)
+        if isPermanentChange {
+            let actions: [UIAlertAction] = [
+                UIAlertAction(title: StringsProvider.string(forKey: .userInfoPermanentAlertConfirm),
+                              style: .default,
+                              handler: { [weak self] _ in self?.submit(userInfoParameterRequests: userInfoParameterRequests) }),
+                UIAlertAction(title: StringsProvider.string(forKey: .userInfoPermanentAlertCancel),
+                              style: .cancel,
+                              handler: nil)
+            ]
+            self.showAlert(withTitle: StringsProvider.string(forKey: .userInfoPermanentAlertTitle),
+                           message: StringsProvider.string(forKey: .userInfoPermanentAlertMessage),
+                           actions: actions)
+        } else {
+            self.submit(userInfoParameterRequests: userInfoParameterRequests)
+        }
     }
 }
 

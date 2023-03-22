@@ -32,6 +32,16 @@ extension Phase: JSONAPIMappable {
     }
 }
 
+extension Phase: Hashable, Equatable {
+    static func == (lhs: Phase, rhs: Phase) -> Bool {
+        return lhs.id == rhs.id
+    }
+    
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(self.id)
+    }
+}
+
 extension Array where Element == Phase {
     func getPhase(withName name: String) -> Phase? {
         self.first(where: { $0.name == name })
