@@ -93,3 +93,6 @@ iOSInjectionProject/
 GoogleService-Info.plist
 #Project Info file should be excluded
 ProjectInfo.plist
+.DS_Store
+/ForYouAndMe.zip
+/Example/Pods

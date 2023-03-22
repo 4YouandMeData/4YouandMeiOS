@@ -83,7 +83,8 @@ public class VideoDiaryRecorderViewController: UIViewController {
     
     private lazy var filterButton: UIButton = {
         let button = UIButton()
-        button.autoSetDimension(.width, toSize: 44.0)
+        button.autoSetDimension(.height, toSize: 30.0)
+        button.autoSetDimension(.width, toSize: 30.0)
         button.contentMode = .scaleAspectFit
         button.setImage(ImagePalette.image(withName: .filterOff), for: .normal)
         button.addTarget(self, action: #selector(self.filterCameraPressed), for: .touchUpInside)
@@ -100,7 +101,7 @@ public class VideoDiaryRecorderViewController: UIViewController {
     
     private lazy var toolbar: UIView = {
         let view = UIView()
-
+        
         // Flash button
         view.addSubview(self.lightButton)
         self.lightButton.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets(top: 0, left: 16.0, bottom: 0, right: 0.0),
@@ -109,12 +110,12 @@ public class VideoDiaryRecorderViewController: UIViewController {
         // Filter button
         view.addSubview(self.filterButton)
         self.filterButton.autoPinEdge(toSuperviewEdge: .top)
-        self.filterButton.autoPinEdge(.leading, to: .trailing, of: self.lightButton, withOffset: 8.0, relation: .greaterThanOrEqual)
+        self.filterButton.autoPinEdge(.leading, to: .trailing, of: self.lightButton, withOffset: 0.0, relation: .greaterThanOrEqual)
         
         // Switch camera
         view.addSubview(self.switchCameraButton)
         self.switchCameraButton.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets(top: 0, left: 0.0, bottom: 0, right: 16.0),
-                                                      excludingEdge: .leading)
+                                                             excludingEdge: .leading)
         
         view.addSubview(self.timeLabel)
         self.timeLabel.autoPinEdge(toSuperviewEdge: .top)
@@ -122,7 +123,7 @@ public class VideoDiaryRecorderViewController: UIViewController {
         self.timeLabel.autoAlignAxis(toSuperviewAxis: .vertical)
         self.timeLabel.autoPinEdge(.leading, to: .trailing, of: self.lightButton, withOffset: 16.0, relation: .greaterThanOrEqual)
         self.switchCameraButton.autoPinEdge(.trailing, to: .leading, of: self.timeLabel, withOffset: 16.0, relation: .greaterThanOrEqual)
-
+        
         return view
     }()
     
@@ -267,12 +268,22 @@ public class VideoDiaryRecorderViewController: UIViewController {
                                                                       attributedTextStyle: self.timeLabelAttributedTextStyle)
         }
     }
-    
+
     private func updateFilterButton() {
-        if self.cameraView.filterMode == .on {
-            self.filterButton.setImage(ImagePalette.image(withName: .filterOn), for: .normal)
-        } else {
-            self.filterButton.setImage(ImagePalette.image(withName: .filterOff), for: .normal)
+        
+        switch self.currentState {
+        case .record(let isRecording):
+            self.filterButton.isHidden = isRecording
+            return
+        case .review(_): // hide filter button during review or recording
+            self.filterButton.isHidden = true
+            return
+        default:
+            if self.cameraView.filterMode == .on {
+                self.filterButton.setImage(ImagePalette.image(withName: .filterOn), for: .normal)
+            } else {
+                self.filterButton.setImage(ImagePalette.image(withName: .filterOff), for: .normal)
+            }
         }
     }
     
@@ -318,12 +329,12 @@ public class VideoDiaryRecorderViewController: UIViewController {
                 guard let self = self else { return }
                 try? FileManager.default.removeItem(atPath: Constants.Task.VideoResultURL.path)
                 self.currentState = .submitted(submitDate: Date(), isPlaying: false)
-                }, onError: { [weak self] error in
-                    guard let self = self else { return }
-                    self.navigator.handleError(error: error,
-                                               presenter: self)
+            }, onError: { [weak self] error in
+                guard let self = self else { return }
+                self.navigator.handleError(error: error,
+                                           presenter: self)
             }).disposed(by: self.disposeBag)
-    }
+                }
     
     private func startRecording() {
         do {
@@ -331,13 +342,13 @@ public class VideoDiaryRecorderViewController: UIViewController {
             self.cameraView.recordedVideoExtension = self.videoExtension
             try self.cameraView.setOutputFileURL(fileURL: outputFileURL)
             self.recordTrackingTimer = Timer.scheduledTimer(timeInterval: Self.RecordTrackingTimeInterval,
-                                              target: self,
-                                              selector: #selector(self.fireTimer),
-                                              userInfo: nil,
-                                              repeats: true)
+                                                            target: self,
+                                                            selector: #selector(self.fireTimer),
+                                                            userInfo: nil,
+                                                            repeats: true)
             self.currentState = .record(isRecording: true)
             self.analytics.track(event: .videoDiaryAction(self.noOfPauses > 0 ?
-                                                            AnalyticsParameter.contact.rawValue :
+                                                          AnalyticsParameter.contact.rawValue :
                                                             AnalyticsParameter.recordingStarted.rawValue))
             
             self.cameraView.startRecording()
@@ -430,6 +441,7 @@ public class VideoDiaryRecorderViewController: UIViewController {
             }
             self.currentState = .submitted(submitDate: submitDate, isPlaying: !isPlaying)
         }
+        self.updateFilterButton()
     }
     
     @objc private func filterCameraPressed() {

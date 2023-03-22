@@ -130,6 +130,7 @@ enum StringKey: String, CaseIterable, CodingKey {
     case surveyButtonSkip = "SURVEY_BUTTON_SKIP"
     case surveyStepsCount = "SURVEY_STEPS_COUNT"
     // Video Diary
+    case videoDiaryRecorderInfoFilter = "VIDEO_DIARY_RECORDER_INFO_FILTER"
     case videoDiaryRecorderTitle = "VIDEO_DIARY_RECORDER_TITLE"
     case videoDiaryRecorderStartRecordingDescription = "VIDEO_DIARY_RECORDER_START_RECORDING_DESCRIPTION"
     case videoDiaryRecorderResumeRecordingDescription = "VIDEO_DIARY_RECORDER_RESUME_RECORDING_DESCRIPTION"

@@ -96,10 +96,25 @@ class VideoDiaryPlayerView: UIView {
     
     private let infoView: UIView = {
         let verticalStackView = UIStackView.create(withAxis: .vertical, spacing: 16.0)
+        
+        
+        
         verticalStackView.addLabel(withText: StringsProvider.string(forKey: .videoDiaryRecorderInfoTitle),
                                    fontStyle: .paragraph,
                                    colorType: .fourthText,
                                    textAlignment: .left)
+        
+        // Filter info : icon - text from remote
+        let filterIcon = ImagePalette.image(withName: .filterIcon)
+        let horizontalStackView = UIStackView.create(withAxis: .horizontal, spacing: 16)
+        horizontalStackView.addImage(withImage: filterIcon, color: .black, sizeDimension: 24)
+        horizontalStackView.addLabel(withText: StringsProvider.string(forKey: .videoDiaryRecorderInfoFilter),
+                                   fontStyle: .infoNote,
+                                   colorType: .primaryText,
+                                   textAlignment: .left)
+        verticalStackView.addArrangedSubview(horizontalStackView)
+        
+        
         verticalStackView.addLabel(withText: StringsProvider.string(forKey: .videoDiaryRecorderInfoBody),
                                    fontStyle: .paragraph,
                                    colorType: .primaryText,
