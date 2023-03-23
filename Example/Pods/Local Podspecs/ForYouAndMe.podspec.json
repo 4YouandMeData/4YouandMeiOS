@@ -1,9 +1,9 @@
 {
   "name": "ForYouAndMe",
-  "version": "0.82.0",
+  "version": "0.83.0",
   "summary": "Framework for research studies apps",
   "description": "ForYouAndMe is a framework aimed to easily develop an app for research study",
-  "homepage": "https://github.com/4youandme/4YouandmeiOS",
+  "homepage": "https://github.com/4YouandMeData/4YouandMeiOS",
   "license": {
     "type": "MIT",
     "file": "LICENSE"
@@ -12,8 +12,8 @@
     "LeonardoPasseri": "leonardo@balzo.eu"
   },
   "source": {
-    "git": "https://github.com/4youandme/4YouandmeiOS.git",
-    "tag": "0.82.0"
+    "git": "https://github.com/4YouandMeData/4YouandMeiOS.git",
+    "tag": "0.83.0"
   },
   "cocoapods_version": ">= 1.6.0",
   "pod_target_xcconfig": {
@@ -96,6 +96,9 @@
     ],
     "StepSlider": [
       "~> 1.8.0"
+    ],
+    "EVGPUImage2": [
+      "~> 0.2"
     ]
   },
   "static_framework": true,
