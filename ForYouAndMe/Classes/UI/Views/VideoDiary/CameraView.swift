@@ -10,7 +10,6 @@ import AVFoundation
 import UIKit
 import EVGPUImage2
 
-
 protocol CameraViewDelegate: AnyObject {
     func hasFinishedRecording(fileURL: URL?, error: Error?)
     func hasCaptureSessionErrorOccurred(error: CaptureSessionError)
@@ -70,17 +69,13 @@ class CameraView: UIView {
     var flashMode = FlashMode.off
     var filterMode = FilterMode.off
     var allVideoURLs: [URL] = []
-    //var previewLayer: AVCaptureVideoPreviewLayer?
     var renderView: RenderView = RenderView()
     var ovalMask: UIView!
     
     var mergedFileType = AVFileType.mp4
-    // private var captureSession: AVCaptureSession?
     private var frontCamera: AVCaptureDevice?
     private var rearCamera: AVCaptureDevice?
     private(set) var currentCameraPosition: AVCaptureDevice.Position?
-    // private var currentCameraInput: AVCaptureDeviceInput?
-    // private var captureOutput: AVCaptureMovieFileOutput?
     private var outputFileURL: URL?
     private var isCameraInitialized: Bool = false
     
@@ -94,7 +89,7 @@ class CameraView: UIView {
     
     var videoCamera: Camera! // instance of "filtered" camera preview
     // Camera recording
-    var movieOutput:MovieOutput? = nil
+    var movieOutput: MovieOutput?
     var isRecording = false
 
     init() {
@@ -109,22 +104,14 @@ class CameraView: UIView {
     
     // MARK: - Public Methods
     func switchCamera() throws {
-        //  if let currentCameraPosition = self.currentCameraPosition, let captureSession = self.captureSession, captureSession.isRunning {
-        //captureSession.beginConfiguration()
         
         if currentCameraPosition == .front {
-            // try self.switchTo(camera: self.rearCamera)
             self.currentCameraPosition = .back
         } else {
-            // try self.switchTo(camera: self.frontCamera)
             self.currentCameraPosition = .front
             self.flashMode = .off
         }
         self.reinitializeCamera()
-        // captureSession.commitConfiguration()
-        // } else {
-        //    throw CaptureSessionError.captureSessionIsMissing
-        //}
     }
     
     func setOutputFileURL(fileURL: URL? = nil) throws {
@@ -140,42 +127,26 @@ class CameraView: UIView {
         }
     }
     
-    func startRecording(delete:Bool = true) {
+    func startRecording(delete: Bool = true) {
         if delete {
             do {
-                try FileManager.default.removeItem(at:self.outputFileURL!)
+                try FileManager.default.removeItem(at: self.outputFileURL!)
             } catch {
                 print("Couldn't initialize movie, error: \(error)")
             }
         }
         
         do {
-            self.movieOutput = try MovieOutput(URL:self.outputFileURL!, size:Size(width:1080, height:1920), liveVideo:true)
+            let movieSize = Size(width: 1080, height: 1920)
+            self.movieOutput = try MovieOutput(URL: self.outputFileURL!, size: movieSize, liveVideo: true)
             videoCamera.audioEncodingTarget = movieOutput
             self.isRecording = true
             saturationFilter --> movieOutput!
             movieOutput!.startRecording()
-        }catch {
+        } catch {
             print("Couldn't start movie recording, error: \(error)")
 
         }
-        
-        
-        
-       /* guard let movieFileOutput = self.captureOutput else {
-            self.delegate?.hasCaptureOutputErrorOccurred(error: CaptureOutputError.noCaptureOutputDetected)
-            return
-        }
-        
-        if !movieFileOutput.isRecording {
-            guard let outputFileURL = self.outputFileURL else {
-                self.delegate?.hasCaptureOutputErrorOccurred(error: CaptureOutputError.noOutputFilePathDetected)
-                return
-            }
-            
-            movieFileOutput.startRecording(to: outputFileURL, recordingDelegate: self)
-        }
-        */
     }
     
     func stopRecording() {
@@ -184,17 +155,6 @@ class CameraView: UIView {
             self.videoCamera.audioEncodingTarget = nil
             self.movieOutput = nil
         }
-                
-        /*
-         guard let movieFileOutput = self.captureOutput else {
-             self.delegate?.hasCaptureOutputErrorOccurred(error: CaptureOutputError.noCaptureOutputDetected)
-             return
-         }
-         
-         if movieFileOutput.isRecording {
-             movieFileOutput.stopRecording()
-         }
-         */
     }
     
     func toggleFlash() throws {
@@ -364,41 +324,25 @@ class CameraView: UIView {
                         
                         try self?.addCameraPreviewLayer()
                         try self?.configureCaptureDevices()
-                        try self?.configureDeviceInputs()
-                        try self?.configureOutput()
-                        //self?.captureSession?.startRunning()
                         try self?.setOutputFileURL()
-                        self?.createCaptureSession()
                         self?.isCameraInitialized = true
                     } catch let error {
                         Async.mainQueue { [weak self] in
                             if let error = error as? CaptureSessionError {
-                             //   self?.delegate?.hasCaptureSessionErrorOccurred(error: error)
+                                self?.delegate?.hasCaptureSessionErrorOccurred(error: error)
                             } else if let error = error as? CaptureOutputError {
-                               //  self?.delegate?.hasCaptureOutputErrorOccurred(error: error)
+                                self?.delegate?.hasCaptureOutputErrorOccurred(error: error)
                             }
                         }
                     }
                 }
             })
         }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2){
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
             AppNavigator.popProgressHUD()
         }
     }
-    
-    private func createCaptureSession() {
-        /*self.captureSession = AVCaptureSession()
-        self.captureSession?.sessionPreset = Constants.Misc.VideoDiaryCaptureSessionPreset*/
-       /* do{
-            self.movieOutput = try MovieOutput(URL:self.outputFileURL!, size:Size(width:480, height:640), liveVideo:true)
-            videoCamera.audioEncodingTarget = movieOutput
-        } catch{
-            print(error)
-        }
-*/
-    }
-    
+
     private func configureCaptureDevices() throws {
         let session = AVCaptureDevice.DiscoverySession(deviceTypes: [.builtInWideAngleCamera], mediaType: .video, position: .unspecified)
         let cameras = session.devices
@@ -413,74 +357,6 @@ class CameraView: UIView {
         } else {
             throw CaptureSessionError.noCamerasAvailable
         }
-    }
-    
-    private func configureDeviceInputs() throws {
-      /*  guard let captureSession = self.captureSession else {
-            throw CaptureSessionError.captureSessionIsMissing
-        }
-        
-        captureSession.beginConfiguration()
-        // Because we can have only one camera as input
-        if let frontCamera = self.frontCamera {
-            let captureInput = try AVCaptureDeviceInput(device: frontCamera)
-            self.currentCameraInput = captureInput
-            if captureSession.canAddInput(captureInput) {
-                captureSession.addInput(captureInput)
-            }
-            self.currentCameraPosition = .front
-        } else if let rearCamera = self.rearCamera {
-            let captureInput = try AVCaptureDeviceInput(device: rearCamera)
-            self.currentCameraInput = captureInput
-            if captureSession.canAddInput(captureInput) {
-                captureSession.addInput(captureInput)
-            }
-            self.currentCameraPosition = .back
-        } else {
-            throw CaptureSessionError.noCamerasAvailable
-        }
-        
-        if let mic = AVCaptureDevice.default(for: .audio) {
-            let captureMic = try AVCaptureDeviceInput(device: mic)
-            if captureSession.canAddInput(captureMic) {
-                captureSession.addInput(captureMic)
-            }
-        }
-        captureSession.commitConfiguration()
-       */
-    }
-    
-    private func configureOutput() throws {
-        /*guard let captureSession = self.captureSession else {
-            throw CaptureSessionError.captureSessionIsMissing
-        }
-        
-        captureSession.beginConfiguration()
-        let captureOutput = AVCaptureMovieFileOutput()
-        if captureSession.canAddOutput(captureOutput) {
-            captureSession.addOutput(captureOutput)
-        }
-        self.captureOutput = captureOutput
-        captureSession.commitConfiguration()*/
-    }
-    
-    private func switchTo(camera: AVCaptureDevice?) throws {
-      /*  guard let captureSession = self.captureSession,
-              let camera = camera,
-              let currentCameraInput = self.currentCameraInput,
-              captureSession.inputs.contains(currentCameraInput) else {
-            throw CaptureSessionError.invalidOperation
-        }
-        
-        captureSession.removeInput(currentCameraInput)
-        self.currentCameraInput = try AVCaptureDeviceInput(device: camera)
-        if let currentCameraInput = self.currentCameraInput {
-            if captureSession.canAddInput(currentCameraInput) {
-                captureSession.addInput(currentCameraInput)
-            } else {
-                throw CaptureSessionError.invalidOperation
-            }
-        }*/
     }
     
     private func withDeviceLock(on device: AVCaptureDevice, block: (AVCaptureDevice) -> Void) {
@@ -531,26 +407,12 @@ class CameraView: UIView {
         }
     }
     
-    private func startSession() {
-       /* if let captureSession = self.captureSession, !captureSession.isRunning {
-            DispatchQueue(label: Self.cameraSessionQueue).async {
-                captureSession.startRunning()
-            }
-        }*/
-    }
-    
-    private func stopSession() {
-        /* if let captureSession = self.captureSession, captureSession.isRunning {
-            captureSession.stopRunning()
-        } */
-    }
-    
     // MARK: - Actions
     
     @objc private func willEnterForeground() {
         self.checkForAuthorization(completion: { [weak self] (error) in
             if let error = error {
-              //   self?.delegate?.hasCaptureSessionErrorOccurred(error: error)
+                 self?.delegate?.hasCaptureSessionErrorOccurred(error: error)
             } else {
                 if let isCameraInitialized = self?.isCameraInitialized {
                     if !isCameraInitialized {
@@ -558,7 +420,7 @@ class CameraView: UIView {
                     }
                 }
                 self?.isHardwareAuthorized {
-                    self?.startSession()
+                    // self?.startSession()
                 }
             }
         })
@@ -566,7 +428,7 @@ class CameraView: UIView {
     }
     
     @objc private func didEnterBackground() {
-        self.stopSession()
+        // self.stopSession()
     }
 }
 
@@ -598,7 +460,7 @@ extension CameraView {
             do {
                 let cameraDirection: PhysicalCameraLocation = self.currentCameraPosition == .front ? .frontFacing : .backFacing
                 self.videoCamera = try Camera(sessionPreset: .hd1920x1080, location: cameraDirection)
-                // guard self.captureSession != nil else { throw CaptureSessionError.captureSessionIsMissing }
+
                 self.requireCameraFilters()
                 self.videoCamera?.startCapture() // start GPUImage camera preview filtering
             } catch {
