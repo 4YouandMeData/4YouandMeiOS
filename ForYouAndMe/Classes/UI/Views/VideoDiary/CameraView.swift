@@ -6,8 +6,10 @@
 //
 
 import Foundation
-import UIKit
 import AVFoundation
+import UIKit
+import EVGPUImage2
+
 
 protocol CameraViewDelegate: AnyObject {
     func hasFinishedRecording(fileURL: URL?, error: Error?)
@@ -18,6 +20,11 @@ protocol CameraViewDelegate: AnyObject {
 }
 
 enum FlashMode {
+    case off
+    case on
+}
+
+enum FilterMode {
     case off
     case on
 }
@@ -61,21 +68,35 @@ class CameraView: UIView {
     
     var recordedVideoExtension = ""
     var flashMode = FlashMode.off
+    var filterMode = FilterMode.off
     var allVideoURLs: [URL] = []
-    var previewLayer: AVCaptureVideoPreviewLayer?
-    var mergedFileType = AVFileType.mp4
+    //var previewLayer: AVCaptureVideoPreviewLayer?
+    var renderView: RenderView = RenderView()
+    var ovalMask: UIView!
     
-    private var captureSession: AVCaptureSession?
+    var mergedFileType = AVFileType.mp4
+    // private var captureSession: AVCaptureSession?
     private var frontCamera: AVCaptureDevice?
     private var rearCamera: AVCaptureDevice?
     private(set) var currentCameraPosition: AVCaptureDevice.Position?
-    private var currentCameraInput: AVCaptureDeviceInput?
-    private var captureOutput: AVCaptureMovieFileOutput?
+    // private var currentCameraInput: AVCaptureDeviceInput?
+    // private var captureOutput: AVCaptureMovieFileOutput?
     private var outputFileURL: URL?
     private var isCameraInitialized: Bool = false
     
     private var mergedFileName = ""
     
+    // ---------- CAMERA FILTERS ----------
+    let saturationFilter = SaturationAdjustment()
+    let adaptiveThresholdFilter = SobelEdgeDetection() // threesold filter
+    let colorInversionFilter = ColorInversion() // color inversion
+    let contrastFilter = ContrastAdjustment()
+    
+    var videoCamera: Camera! // instance of "filtered" camera preview
+    // Camera recording
+    var movieOutput:MovieOutput? = nil
+    var isRecording = false
+
     init() {
         super.init(frame: .zero)
         self.prepareCameraView()
@@ -87,22 +108,23 @@ class CameraView: UIView {
     }
     
     // MARK: - Public Methods
-    
     func switchCamera() throws {
-        if let currentCameraPosition = self.currentCameraPosition, let captureSession = self.captureSession, captureSession.isRunning {
-            captureSession.beginConfiguration()
-            if currentCameraPosition == .front {
-                try self.switchTo(camera: self.rearCamera)
-                self.currentCameraPosition = .back
-            } else {
-                try self.switchTo(camera: self.frontCamera)
-                self.currentCameraPosition = .front
-                self.flashMode = .off
-            }
-            captureSession.commitConfiguration()
+        //  if let currentCameraPosition = self.currentCameraPosition, let captureSession = self.captureSession, captureSession.isRunning {
+        //captureSession.beginConfiguration()
+        
+        if currentCameraPosition == .front {
+            // try self.switchTo(camera: self.rearCamera)
+            self.currentCameraPosition = .back
         } else {
-            throw CaptureSessionError.captureSessionIsMissing
+            // try self.switchTo(camera: self.frontCamera)
+            self.currentCameraPosition = .front
+            self.flashMode = .off
         }
+        self.reinitializeCamera()
+        // captureSession.commitConfiguration()
+        // } else {
+        //    throw CaptureSessionError.captureSessionIsMissing
+        //}
     }
     
     func setOutputFileURL(fileURL: URL? = nil) throws {
@@ -112,14 +134,35 @@ class CameraView: UIView {
         } else {
             guard let fileURL = try self.returnDocumentsDirectoryFile(fileName: Self.videoFilenamePrefix,
                                                                       fileExtension: self.recordedVideoExtension) else {
-                                                                        throw VideoMergingError.failedToCreatePathForMergedVideo
+                throw VideoMergingError.failedToCreatePathForMergedVideo
             }
             self.outputFileURL = fileURL
         }
     }
     
-    func startRecording() {
-        guard let movieFileOutput = self.captureOutput else {
+    func startRecording(delete:Bool = true) {
+        if delete {
+            do {
+                try FileManager.default.removeItem(at:self.outputFileURL!)
+            } catch {
+                print("Couldn't initialize movie, error: \(error)")
+            }
+        }
+        
+        do {
+            self.movieOutput = try MovieOutput(URL:self.outputFileURL!, size:Size(width:1080, height:1920), liveVideo:true)
+            videoCamera.audioEncodingTarget = movieOutput
+            self.isRecording = true
+            saturationFilter --> movieOutput!
+            movieOutput!.startRecording()
+        }catch {
+            print("Couldn't start movie recording, error: \(error)")
+
+        }
+        
+        
+        
+       /* guard let movieFileOutput = self.captureOutput else {
             self.delegate?.hasCaptureOutputErrorOccurred(error: CaptureOutputError.noCaptureOutputDetected)
             return
         }
@@ -129,20 +172,29 @@ class CameraView: UIView {
                 self.delegate?.hasCaptureOutputErrorOccurred(error: CaptureOutputError.noOutputFilePathDetected)
                 return
             }
-
+            
             movieFileOutput.startRecording(to: outputFileURL, recordingDelegate: self)
         }
+        */
     }
     
     func stopRecording() {
-        guard let movieFileOutput = self.captureOutput else {
-            self.delegate?.hasCaptureOutputErrorOccurred(error: CaptureOutputError.noCaptureOutputDetected)
-            return
+        movieOutput?.finishRecording {
+            self.isRecording = false
+            self.videoCamera.audioEncodingTarget = nil
+            self.movieOutput = nil
         }
-
-        if movieFileOutput.isRecording {
-            movieFileOutput.stopRecording()
-        }
+                
+        /*
+         guard let movieFileOutput = self.captureOutput else {
+             self.delegate?.hasCaptureOutputErrorOccurred(error: CaptureOutputError.noCaptureOutputDetected)
+             return
+         }
+         
+         if movieFileOutput.isRecording {
+             movieFileOutput.stopRecording()
+         }
+         */
     }
     
     func toggleFlash() throws {
@@ -164,12 +216,25 @@ class CameraView: UIView {
             }
         }
     }
-     
+    
+    // enable - disable filters
+    func toggleFilters() throws {
+        self.filterMode = self.filterMode == .on ? .off : .on
+        /* if let camera = self.videoCamera {
+         camera.stopCapture()
+         self.requireCameraFilters()
+         camera.startCapture()
+         } */
+        self.reinitializeCamera()
+    }
+    
     func updateVideoPreviewLayerFrame() {
-        self.previewLayer?.frame = self.bounds
+        self.renderView.frame = self.bounds
+        print("call: updateVideoPreviewLayerFrame")
     }
     
     func mergeRecordedVideos() {
+                
         var totalTime = CMTimeMake(value: 0, timescale: 0)
         let composition = AVMutableComposition()
         guard let videoTrack = composition.addMutableTrack(withMediaType: .video,
@@ -180,6 +245,7 @@ class CameraView: UIView {
         
         guard let mergeExtensionName = self.mergedFileType.extensionName else {
             assertionFailure("Unexpected extension type. Add it to AVFileType extension")
+            
             self.delegate?.hasVideoMergingErrorOccurred(error: VideoMergingError.failedToHandleMergeFileExtension)
             return
         }
@@ -193,6 +259,7 @@ class CameraView: UIView {
             
             videoTrack.preferredTransform = assetVideoTrack.preferredTransform
             let range = CMTimeRangeMake(start: CMTime.zero, duration: asset.duration)
+            
             do {
                 try videoTrack.insertTimeRange(range, of: assetVideoTrack, at: totalTime)
                 guard let assetAudioTrack = asset.tracks(withMediaType: .audio).first else {
@@ -234,7 +301,7 @@ class CameraView: UIView {
                                                     outputFileType: self.mergedFileType) { [weak self] compatible in
             if compatible {
                 guard let exporter = AVAssetExportSession(asset: composition, presetName: exportPreset) else {
-                    self?.delegate?.hasVideoMergingErrorOccurred(error: VideoMergingError.failedToExportVideo)
+                     self?.delegate?.hasVideoMergingErrorOccurred(error: VideoMergingError.failedToExportVideo)
                     return
                 }
                 
@@ -242,7 +309,7 @@ class CameraView: UIView {
                 exporter.outputFileType = self?.mergedFileType
                 exporter.shouldOptimizeForNetworkUse = true
                 exporter.fileLengthLimit = Constants.Misc.VideoDiaryMaxFileSize
-                exporter.exportAsynchronously { [weak self] in
+                 exporter.exportAsynchronously { [weak self] in
                     // To execute the result of exporting in the main thread
                     Async.mainQueue { [weak self] in
                         switch exporter.status {
@@ -253,8 +320,9 @@ class CameraView: UIView {
                         }
                     }
                 }
+                
             } else {
-                self?.delegate?.hasVideoMergingErrorOccurred(error: VideoMergingError.failedToExportVideo)
+                 self?.delegate?.hasVideoMergingErrorOccurred(error: VideoMergingError.failedToExportVideo)
             }
         }
     }
@@ -266,7 +334,7 @@ class CameraView: UIView {
     
     private func isHardwareAuthorized(block: () -> Void) {
         if (AVCaptureDevice.authorizationStatus(for: .video) == .authorized),
-            (AVCaptureDevice.authorizationStatus(for: .audio) == .authorized) {
+           (AVCaptureDevice.authorizationStatus(for: .audio) == .authorized) {
             block()
         }
     }
@@ -283,40 +351,52 @@ class CameraView: UIView {
     }
     
     private func prepareCameraView() {
+        AppNavigator.pushProgressHUD()
         DispatchQueue(label: Self.cameraSessionQueue).async { [weak self] in
             self?.checkForAuthorization(completion: { (error) in
                 if let error = error {
                     Async.mainQueue { [weak self] in
-                        self?.delegate?.hasCaptureSessionErrorOccurred(error: error)
+                         self?.delegate?.hasCaptureSessionErrorOccurred(error: error)
                     }
                 } else {
                     do {
                         // Everything in async. Delegate the error
-                        self?.createCaptureSession()
+                        
                         try self?.addCameraPreviewLayer()
                         try self?.configureCaptureDevices()
                         try self?.configureDeviceInputs()
                         try self?.configureOutput()
-                        self?.captureSession?.startRunning()
+                        //self?.captureSession?.startRunning()
                         try self?.setOutputFileURL()
+                        self?.createCaptureSession()
                         self?.isCameraInitialized = true
                     } catch let error {
                         Async.mainQueue { [weak self] in
                             if let error = error as? CaptureSessionError {
-                                self?.delegate?.hasCaptureSessionErrorOccurred(error: error)
+                             //   self?.delegate?.hasCaptureSessionErrorOccurred(error: error)
                             } else if let error = error as? CaptureOutputError {
-                                self?.delegate?.hasCaptureOutputErrorOccurred(error: error)
+                               //  self?.delegate?.hasCaptureOutputErrorOccurred(error: error)
                             }
                         }
                     }
                 }
             })
         }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2){
+            AppNavigator.popProgressHUD()
+        }
     }
     
     private func createCaptureSession() {
-        self.captureSession = AVCaptureSession()
-        self.captureSession?.sessionPreset = Constants.Misc.VideoDiaryCaptureSessionPreset
+        /*self.captureSession = AVCaptureSession()
+        self.captureSession?.sessionPreset = Constants.Misc.VideoDiaryCaptureSessionPreset*/
+       /* do{
+            self.movieOutput = try MovieOutput(URL:self.outputFileURL!, size:Size(width:480, height:640), liveVideo:true)
+            videoCamera.audioEncodingTarget = movieOutput
+        } catch{
+            print(error)
+        }
+*/
     }
     
     private func configureCaptureDevices() throws {
@@ -336,7 +416,7 @@ class CameraView: UIView {
     }
     
     private func configureDeviceInputs() throws {
-        guard let captureSession = self.captureSession else {
+      /*  guard let captureSession = self.captureSession else {
             throw CaptureSessionError.captureSessionIsMissing
         }
         
@@ -367,10 +447,11 @@ class CameraView: UIView {
             }
         }
         captureSession.commitConfiguration()
+       */
     }
     
     private func configureOutput() throws {
-        guard let captureSession = self.captureSession else {
+        /*guard let captureSession = self.captureSession else {
             throw CaptureSessionError.captureSessionIsMissing
         }
         
@@ -380,28 +461,14 @@ class CameraView: UIView {
             captureSession.addOutput(captureOutput)
         }
         self.captureOutput = captureOutput
-        captureSession.commitConfiguration()
-    }
-    
-    private func addCameraPreviewLayer() throws {
-        guard let captureSession = self.captureSession else { throw CaptureSessionError.captureSessionIsMissing }
-        
-        self.previewLayer = AVCaptureVideoPreviewLayer(session: captureSession)
-        self.previewLayer?.videoGravity = AVLayerVideoGravity.resizeAspectFill
-        self.previewLayer?.connection?.videoOrientation = .portrait
-        DispatchQueue.main.async {
-            self.previewLayer?.frame = self.bounds
-            if let previewLayer = self.previewLayer {
-                self.layer.addSublayer(previewLayer)
-            }
-        }
+        captureSession.commitConfiguration()*/
     }
     
     private func switchTo(camera: AVCaptureDevice?) throws {
-        guard let captureSession = self.captureSession,
-            let camera = camera,
-            let currentCameraInput = self.currentCameraInput,
-            captureSession.inputs.contains(currentCameraInput) else {
+      /*  guard let captureSession = self.captureSession,
+              let camera = camera,
+              let currentCameraInput = self.currentCameraInput,
+              captureSession.inputs.contains(currentCameraInput) else {
             throw CaptureSessionError.invalidOperation
         }
         
@@ -413,7 +480,7 @@ class CameraView: UIView {
             } else {
                 throw CaptureSessionError.invalidOperation
             }
-        }
+        }*/
     }
     
     private func withDeviceLock(on device: AVCaptureDevice, block: (AVCaptureDevice) -> Void) {
@@ -465,17 +532,17 @@ class CameraView: UIView {
     }
     
     private func startSession() {
-        if let captureSession = self.captureSession, !captureSession.isRunning {
+       /* if let captureSession = self.captureSession, !captureSession.isRunning {
             DispatchQueue(label: Self.cameraSessionQueue).async {
                 captureSession.startRunning()
             }
-        }
+        }*/
     }
     
     private func stopSession() {
-        if let captureSession = self.captureSession, captureSession.isRunning {
+        /* if let captureSession = self.captureSession, captureSession.isRunning {
             captureSession.stopRunning()
-        }
+        } */
     }
     
     // MARK: - Actions
@@ -483,7 +550,7 @@ class CameraView: UIView {
     @objc private func willEnterForeground() {
         self.checkForAuthorization(completion: { [weak self] (error) in
             if let error = error {
-                self?.delegate?.hasCaptureSessionErrorOccurred(error: error)
+              //   self?.delegate?.hasCaptureSessionErrorOccurred(error: error)
             } else {
                 if let isCameraInitialized = self?.isCameraInitialized {
                     if !isCameraInitialized {
@@ -518,5 +585,118 @@ extension CameraView: AVCaptureFileOutputRecordingDelegate {
             }
             self.delegate?.hasFinishedRecording(fileURL: outputFileURL, error: error)
         }
+    }
+}
+
+// Extension used to enable utility GPUImage methods
+extension CameraView {
+    
+    // Add Camera Preview
+    private func addCameraPreviewLayer() throws {
+        
+        DispatchQueue.main.async {
+            do {
+                let cameraDirection: PhysicalCameraLocation = self.currentCameraPosition == .front ? .frontFacing : .backFacing
+                self.videoCamera = try Camera(sessionPreset: .hd1920x1080, location: cameraDirection)
+                // guard self.captureSession != nil else { throw CaptureSessionError.captureSessionIsMissing }
+                self.requireCameraFilters()
+                self.videoCamera?.startCapture() // start GPUImage camera preview filtering
+            } catch {
+                self.videoCamera = nil
+                
+                fatalError("Could not initialize rendering pipeline: \(error)")
+            }
+            
+            if self.ovalMask == nil {
+                let ovalRadius = self.bounds.width/2 - 10
+                self.ovalMask = self.createOverlay(radius: ovalRadius )
+            } else {
+                self.ovalMask.removeFromSuperview()
+            }
+            self.renderView.frame = self.bounds // update gpuimage:renderview bounds
+            self.renderView.removeFromSuperview()
+            self.addSubview(self.renderView) // add gpuimage's camera preview view to current view
+            self.addSubview(self.ovalMask) // oval mask
+            self.setNeedsDisplay()
+            self.layoutIfNeeded()
+            
+        }
+    }
+    
+    // Definition of current filter
+    func requireCameraFilters() {
+        self.videoCamera.removeAllTargets()
+        self.adaptiveThresholdFilter.removeAllTargets()
+        self.saturationFilter.removeAllTargets()
+        self.contrastFilter.removeAllTargets()
+        self.colorInversionFilter.removeAllTargets()
+        
+        if filterMode == .on {
+            self.saturationFilter.saturation = 1.0
+            adaptiveThresholdFilter.edgeStrength = 0.8
+            self.contrastFilter.contrast =  1.4
+            videoCamera --> saturationFilter --> adaptiveThresholdFilter --> colorInversionFilter --> contrastFilter --> renderView
+        } else {
+            self.saturationFilter.saturation = 1.0
+            videoCamera --> saturationFilter --> renderView
+    
+        }
+        
+        if(isRecording && movieOutput != nil ){ // Recover capture session
+            saturationFilter --> movieOutput!  
+            movieOutput!.startRecording()
+        }
+    }
+    
+    // Reinitialization of camera filters : stop -> remove all targets -> init camera -> add to parent view
+    func reinitializeCamera() {
+        if isRecording {
+            stopRecording()
+        }
+        do {
+            self.videoCamera.stopCapture()
+            self.videoCamera.removeAllTargets()
+            self.videoCamera = nil
+            
+            try self.addCameraPreviewLayer() // add preview layer on this view
+            
+            if isRecording { // recover recording session
+                self.startRecording(delete: false)
+            }
+        } catch {
+            print("Couldn't reinitialize camera with error: \(error)")
+        }
+    }
+    
+    // Oval mask
+    func createOverlay(radius: CGFloat) -> UIView {
+        let overlayView = UIView(frame: self.frame)
+        overlayView.alpha = 0.6
+        overlayView.backgroundColor = UIColor.black
+        
+        // Create a path with the rectangle in it.
+        let path = CGMutablePath()
+        // let offsetX = 30
+        let widthMax = self.frame.width/1.1
+        let heightMax = self.frame.height/1.4
+        
+        let originX = Int(self.frame.width)/2 - Int(widthMax)/2
+        let originY = Int(self.frame.height)/2 - Int(heightMax)/2 - 30
+        
+        let rectangle = CGRect(x: CGFloat(originX), y: CGFloat(originY), width: widthMax, height: heightMax)
+        path.addEllipse(in: rectangle)
+        
+        path.addRect(CGRect(x: 0, y: 0, width: overlayView.frame.width, height: overlayView.frame.height))
+        
+        let maskLayer = CAShapeLayer()
+        maskLayer.backgroundColor = UIColor.black.cgColor
+        maskLayer.path = path
+        maskLayer.fillRule = CAShapeLayerFillRule.evenOdd
+        
+        // Release the path since it's not covered by ARC.
+        overlayView.layer.mask = maskLayer
+        overlayView.clipsToBounds = true
+        
+        return overlayView
     }
 }

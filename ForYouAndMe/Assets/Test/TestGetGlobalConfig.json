@@ -143,6 +143,7 @@
       "SURVEY_BUTTON_DEFAULT": "START NOW",
       "SURVEY_BUTTON_SKIP": "Skip",
       "SURVEY_STEPS_COUNT": "Step {0} of {1}",
+      "VIDEO_DIARY_RECORDER_INFO_FILTER":"PRIVACY FILTER: You can toggle the privacy filter with the filter button above the video. It won't affect the actual recording.",
       "VIDEO_DIARY_RECORDER_TITLE": "Your video diaries",
       "VIDEO_DIARY_RECORDER_START_RECORDING_DESCRIPTION": "Tap to start recording",
       "VIDEO_DIARY_RECORDER_RESUME_RECORDING_DESCRIPTION": "Tap to resume recording",
