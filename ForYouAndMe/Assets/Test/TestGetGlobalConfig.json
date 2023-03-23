@@ -117,7 +117,6 @@
       "TAB_USER_DATA_TITLE": "Your Data",
       "TAB_STUDY_INFO_TITLE": "Study Info",
       "TAB_FEED_TITLE": "{0} TRIMESTER",
-      "TAB_FEED_TITLE_PHASE_2": "POSTPARTUM",
       "TAB_FEED_SUBTITLE": "Week {0}",
       "TAB_FEED_EMPTY_TITLE": "No tasks are available yet",
       "TAB_FEED_EMPTY_SUBTITLE": "Wait 24 hours and try again",
@@ -220,7 +219,9 @@
       "PHASE_SWITCH_BUTTON_NO": "No, thanks",
       "STUDY_PHASES": "BUMP;BUMP-PD",
       "STUDY_INFO_YOUR_DUE_DATE_EXTRA": "Additional information about due date",
-      "STUDY_INFO_YOUR_DELIVERY_DATE_EXTRA": "Additional information about delivery date"
+      "STUDY_INFO_YOUR_DELIVERY_DATE_EXTRA": "Additional information about delivery date",
+      "PHASE_2_TAB_FEED_TITLE": "POSTPARTUM",
+      "PHASE_2_TAB_FEED_HEADER_SUBTITLE": "Participation Overview"
     },
     "country_codes": ["US", "GB", "IT"],
     "pincode_login": false,

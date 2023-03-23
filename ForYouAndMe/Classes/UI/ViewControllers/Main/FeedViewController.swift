@@ -31,6 +31,7 @@ class FeedViewController: UIViewController {
     private lazy var tableViewHeaderView: FeedTableViewHeader = {
         let view = FeedTableViewHeader()
         view.setPoints(0)
+        view.refreshUI()
         return view
     }()
     
@@ -91,6 +92,7 @@ class FeedViewController: UIViewController {
         super.viewWillAppear(animated)
         
         self.headerView.refreshUI()
+        self.tableViewHeaderView.refreshUI()
         
         self.navigationController?.navigationBar.apply(style: NavigationBarStyleCategory.primary(hidden: true).style)
         self.analytics.track(event: .switchTab(StringsProvider.string(forKey: .tabFeed)))
@@ -123,6 +125,7 @@ class FeedViewController: UIViewController {
                 self.headerView.setTitleText(user.getFeedTitle(repository: self.repository))
                 self.headerView.setSubtitleText(user.getFeedSubtitle(repository: self.repository))
                 self.tableViewHeaderView.setPoints(user.points)
+                self.tableViewHeaderView.refreshUI()
             }, onError: { error in
                 print("FeedViewController - Error refreshing user: \(error.localizedDescription)")
             }).disposed(by: self.disposeBag)

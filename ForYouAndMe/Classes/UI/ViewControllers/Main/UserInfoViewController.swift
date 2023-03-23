@@ -226,12 +226,12 @@ class UserInfoViewController: UIViewController {
         }
         
         let isPermanentChange: Bool = userInfoParameterRequests.contains(where: { userInfoParameterRequest in
-            if nil == self.userInfoParameters.first(where: { userInfoParameterRequest.parameter.identifier == $0.identifier })?.value.nilIfEmpty,
+            if nil == self.userInfoParameters
+                .first(where: { userInfoParameterRequest.parameter.identifier == $0.identifier })?.value.nilIfEmpty,
                nil != userInfoParameterRequest.value.nilIfEmpty,
                let phaseIndex = userInfoParameterRequest.parameter.phaseIndex,
                let currentPhaseIndex = self.repository.currentPhaseIndex,
-               phaseIndex != currentPhaseIndex
-            {
+               phaseIndex != currentPhaseIndex {
                 return true
             } else {
                 return false

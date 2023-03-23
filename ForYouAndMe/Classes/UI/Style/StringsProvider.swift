@@ -83,7 +83,6 @@ enum StringKey: String, CaseIterable, CodingKey {
     case tabUserData = "TAB_USER_DATA"
     case tabStudyInfo = "TAB_STUDY_INFO"
     case tabFeedTitle = "TAB_FEED_TITLE"
-    case tabFeedTitlePhase1 = "TAB_FEED_TITLE_PHASE_2"
     case tabFeedSubtitle = "TAB_FEED_SUBTITLE"
     case tabTaskTitle = "TAB_TASK_TITLE"
     case tabUserDataTitle = "TAB_USER_DATA_TITLE"
@@ -243,8 +242,17 @@ class StringsProvider {
         self.requiredStringMap = requiredStringMap
     }
     
-    static func string(forKey key: StringKey, withParameters parameters: [String] = []) -> String {
-        let string = self.requiredStringMap[key] ?? key.defaultValue
+    static func string(forKey key: StringKey,
+                       withParameters parameters: [String] = [],
+                       forPhaseIndex phaseIndex: PhaseIndex? = nil) -> String {
+        let string = {
+            if let phaseIndex = phaseIndex, phaseIndex > 0 {
+                let fullStringMapKey = "PHASE_\(phaseIndex + 1)_" + key.rawValue
+                return self.fullStringMap[fullStringMapKey] ?? key.defaultValue
+            } else {
+                return self.requiredStringMap[key] ?? key.defaultValue
+            }
+        }()
         var formattedString = string
         for (index, element) in parameters.enumerated() {
             formattedString = formattedString.replacingOccurrences(of: "{\(index)}", with: element)

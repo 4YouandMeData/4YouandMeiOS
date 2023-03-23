@@ -465,10 +465,10 @@ extension RepositoryImpl: Repository {
         }
     }
     
-    private func handleUserInfo(_ user: User, customData: [UserInfoParameter]? = nil) -> User {
+    private func handleUserInfo(_ user: User) -> User {
         var user = user
         if self.showDefaultUserInfo {
-            var customData = customData ?? user.customData ?? []
+            var customData = user.customData ?? []
             let defaultData = Constants.UserInfo.DefaultUserInfoParameters
             let missingCustomData = defaultData.filter { !customData.contains($0) }
             customData.append(contentsOf: missingCustomData)
@@ -527,9 +527,7 @@ extension RepositoryImpl: Repository {
     private func sharedSendUserInfoParameters(userParameterRequests: [UserInfoParameterRequest]) -> Single<User> {
         return self.api.send(request: ApiRequest(serviceRequest: .sendUserInfoParameters(paramenters: userParameterRequests)))
             .handleError()
-        // TODO: Restore original implementation when user patch return phase data
-            .map { (user: User) in self.handleUserInfo(self.currentUser!, customData: user.customData ?? []) }
-        //    .map { self.handleUserInfo($0, customData: $0.customData) }
+            .map { self.handleUserInfo($0) }
             .do(onSuccess: { self.saveUser($0) })
     }
     

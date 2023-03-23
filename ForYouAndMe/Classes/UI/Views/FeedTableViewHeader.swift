@@ -16,6 +16,14 @@ class FeedTableViewHeader: UIView {
         return label
     }()
     
+    private let subtitleLabel: UILabel = {
+        let label = UILabel()
+        label.numberOfLines = 0
+        return label
+    }()
+    
+    private let repository: Repository
+    
     // MARK: - AttributedTextStyles
     
     private let pointsLabelAttributedTextStyle = AttributedTextStyle(fontStyle: .title,
@@ -23,6 +31,7 @@ class FeedTableViewHeader: UIView {
                                                                      textAlignment: .center)
     
     init() {
+        self.repository = Services.shared.repository
         super.init(frame: .zero)
         
         self.autoSetDimension(.height, toSize: Self.height)
@@ -41,10 +50,7 @@ class FeedTableViewHeader: UIView {
                                fontStyle: .paragraph,
                                color: ColorPalette.color(withType: .secondaryText).applyAlpha(0.6),
                                textAlignment: .left)
-        textStackView.addLabel(withText: StringsProvider.string(forKey: .tabFeedHeaderSubtitle),
-                               fontStyle: .title,
-                               colorType: .secondaryText,
-                               textAlignment: .left)
+        textStackView.addArrangedSubview(self.subtitleLabel)
         
         let pointsStackView = UIStackView.create(withAxis: .vertical, spacing: 2.0)
         pointsStackView.addArrangedSubview(self.pointsLabel)
@@ -74,5 +80,13 @@ class FeedTableViewHeader: UIView {
     public func setPoints(_ points: Int) {
         self.pointsLabel.attributedText = NSAttributedString.create(withText: "\(points)",
             attributedTextStyle: self.pointsLabelAttributedTextStyle)
+    }
+    
+    public func refreshUI() {
+        let text = StringsProvider.string(forKey: .tabFeedHeaderSubtitle, forPhaseIndex: self.repository.currentPhaseIndex)
+        self.subtitleLabel.attributedText = NSAttributedString.create(withText: text,
+                                                                      fontStyle: .title,
+                                                                      colorType: .secondaryText,
+                                                                      textAlignment: .left)
     }
 }

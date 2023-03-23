@@ -32,19 +32,28 @@ extension User {
     }
     
     func getFeedTitle(repository: Repository) -> String {
-        guard let interval = self.getFeedTimeInterval(repository: repository) else {
-            return ""
-        }
         switch repository.currentPhaseIndex {
-        case Constants.UserInfo.PostDeliveryPhaseIndex: return StringsProvider.string(forKey: .tabFeedTitlePhase1)
+        case Constants.UserInfo.PostDeliveryPhaseIndex:
+            return StringsProvider.string(forKey: .tabFeedTitle,
+                                          forPhaseIndex: repository.currentPhaseIndex)
         default:
-            let trimester = Int((interval / (60 * 60 * 24 * 31 * 3)).rounded(.up))
-            let formatter = NumberFormatter()
-            formatter.numberStyle = .ordinal
-            guard let trimesterOrdinal = formatter.string(from: NSNumber(value: trimester)) else {
+            guard let interval = self.getFeedTimeInterval(repository: repository) else {
                 return ""
             }
-            return StringsProvider.string(forKey: .tabFeedTitle, withParameters: [trimesterOrdinal.uppercased()])
+            
+            let parameters: [String] = {
+                let trimester = Int((interval / (60 * 60 * 24 * 31 * 3)).rounded(.up))
+                let formatter = NumberFormatter()
+                formatter.numberStyle = .ordinal
+                guard let trimesterOrdinal = formatter.string(from: NSNumber(value: trimester)) else {
+                    return []
+                }
+                return [trimesterOrdinal.uppercased()]
+            }()
+            
+            return StringsProvider.string(forKey: .tabFeedTitle,
+                                          withParameters: parameters,
+                                          forPhaseIndex: repository.currentPhaseIndex)
         }
     }
     
