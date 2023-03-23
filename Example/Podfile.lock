@@ -84,7 +84,7 @@ PODS:
     - GoogleUtilities/Environment (~> 7.0)
     - GoogleUtilities/Reachability (~> 7.0)
     - GoogleUtilities/UserDefaults (~> 7.0)
-  - ForYouAndMe (0.83.0):
+  - ForYouAndMe (0.84.0):
     - AlamofireImage (~> 4.1)
     - BLZJapx/RxCodableMoya (~> 3.0.0)
     - Charts (~> 4.1.0)
@@ -271,7 +271,7 @@ SPEC CHECKSUMS:
   FirebaseInstallations: 7f7ed0e7e27fb51f57291e1876e2ddb1524126c1
   FirebaseInstanceID: aaecc93b4528bbcafea12c477e26827719ca1183
   FirebaseMessaging: 7091222bfac24ca89c569c3c59e58390311e487f
-  ForYouAndMe: 7fe130c09e9af32ff0f808f382eabbb896f7dd91
+  ForYouAndMe: c2080caa012418ce5681516bc074bafb86b95139
   FYAMResearchKit: c79d2de80d301ac02ba9b303d97d35b083d4676b
   GoogleAppMeasurement: 57a0df93dc2feb5176b1bac06012dbd725191ba5
   GoogleDataTransport: 116c84c4bdeb76be2a7a46de51244368f9794eab
