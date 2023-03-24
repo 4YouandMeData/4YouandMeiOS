@@ -41,15 +41,14 @@ extension User {
                 return ""
             }
             
-            let parameters: [String] = {
-                let trimester = Int((interval / (60 * 60 * 24 * 31 * 3)).rounded(.up))
-                let formatter = NumberFormatter()
-                formatter.numberStyle = .ordinal
-                guard let trimesterOrdinal = formatter.string(from: NSNumber(value: trimester)) else {
-                    return []
-                }
-                return [trimesterOrdinal.uppercased()]
-            }()
+            var parameters: [String] = []
+            let trimester = Int((interval / (60 * 60 * 24 * 31 * 3)).rounded(.up))
+            let formatter = NumberFormatter()
+            formatter.numberStyle = .ordinal
+
+            if let trimesterOrdinal = formatter.string(from: NSNumber(value: trimester)) {
+                parameters = [trimesterOrdinal.uppercased()]
+            }
             
             return StringsProvider.string(forKey: .tabFeedTitle,
                                           withParameters: parameters,
