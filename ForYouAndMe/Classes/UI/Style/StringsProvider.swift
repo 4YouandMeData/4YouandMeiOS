@@ -121,6 +121,7 @@ enum StringKey: String, CaseIterable, CodingKey {
     case quickActivityButtonDefault = "QUICK_ACTIVITY_BUTTON_DEFAULT"
     case quickActivityButtonNext = "QUICK_ACTIVITY_BUTTON_NEXT"
     case quickActivityTotalNumber = "QUICK_ACTIVITIES_TOTAL_NUMBER"
+    case quickActivitiesRemaining = "QUICK_ACTIVITIES_REMAINING"
     // Notifiable
     case educationalButtonDefault = "EDUCATIONAL_BUTTON_DEFAULT"
     case rewardButtonDefault = "REWARD_BUTTON_DEFAULT"

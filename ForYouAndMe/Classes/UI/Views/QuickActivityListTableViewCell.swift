@@ -123,20 +123,27 @@ class QuickActivityListTableViewCell: UITableViewCell {
     
     private func updatePageControl() {
         var totalPagesCount = 4 // Default quick activity total number
-        if let dynamicTotalPageCount = Int(StringsProvider.string(forKey: .quickActivityTotalNumber)), dynamicTotalPageCount > 0 {
-            totalPagesCount = dynamicTotalPageCount
+        if let dynamicTotalPageCount = Int(StringsProvider.string(forKey: .quickActivityTotalNumber)) {
+            if dynamicTotalPageCount > 0 {
+                totalPagesCount = dynamicTotalPageCount
+            }
+            let currentPage = totalPagesCount - ((self.items.count - 1) % totalPagesCount)
+            
+            let currentPageAttributedText = NSMutableAttributedString.create(withText: "\(currentPage)",
+                                                                             fontStyle: .paragraph,
+                                                                             colorType: .primaryText)
+            let totalPageAttributedText =  NSAttributedString.create(withText: " / \(totalPagesCount)",
+                                                                     fontStyle: .paragraph,
+                                                                     color: ColorPalette.color(withType: .fourthText).applyAlpha(0.3))
+            let pageControlAttributedText = NSMutableAttributedString(attributedString: currentPageAttributedText)
+            pageControlAttributedText.append(totalPageAttributedText)
+            self.pageControlLabel.attributedText = pageControlAttributedText
+        } else {
+            let remainingText = StringsProvider.string(forKey: .quickActivitiesRemaining)
+            self.pageControlLabel.attributedText = NSMutableAttributedString.create(withText: "\(self.items.count) \(remainingText)",
+                                                                                    fontStyle: .paragraph,
+                                                                                    colorType: .primaryText)
         }
-        let currentPage = totalPagesCount - ((self.items.count - 1) % totalPagesCount)
-
-        let currentPageAttributedText = NSMutableAttributedString.create(withText: "\(currentPage)",
-               fontStyle: .paragraph,
-               colorType: .primaryText)
-        let totalPageAttributedText =  NSAttributedString.create(withText: " / \(totalPagesCount)",
-            fontStyle: .paragraph,
-            color: ColorPalette.color(withType: .fourthText).applyAlpha(0.3))
-        let pageControlAttributedText = NSMutableAttributedString(attributedString: currentPageAttributedText)
-        pageControlAttributedText.append(totalPageAttributedText)
-        self.pageControlLabel.attributedText = pageControlAttributedText
     }
 }
 

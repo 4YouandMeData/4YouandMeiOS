@@ -206,6 +206,7 @@
       "ONBOARDING_SECTION_LIST": "intro_video;screening;consent_group;integration",
       "RK_WALK_TASK_TITLE": "Walk",
       "QUICK_ACTIVITIES_TOTAL_NUMBER": "{0}",
+      "QUICK_ACTIVITIES_REMAINING": " remaining",
       "PERMISSION_LOCATION": "The BUMP app needs access to your phone's location",
       "PERMISSION_PUSH_NOTIFICATION": "Push Notification",
       "PERMISSION_HEALTH": "Health App",
