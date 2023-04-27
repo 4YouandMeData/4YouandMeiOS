@@ -9,6 +9,9 @@
 import UIKit
 import PhoneNumberKit
 import CountryPickerView
+#if canImport(Contacts)
+import Contacts
+#endif
 
 class PhoneNumberView: GenericTextFieldView {
     
@@ -23,7 +26,7 @@ class PhoneNumberView: GenericTextFieldView {
         return self.phoneNumberKit.format(phoneNumber, toType: .e164)
     }
     
-    public var countryCode: String = PhoneNumberKit.defaultRegionCode() {
+    public lazy var countryCode: String = Self.defaultRegionCode() {
         didSet {
             self.updateUI()
         }
@@ -153,6 +156,30 @@ class PhoneNumberView: GenericTextFieldView {
         return self.phoneNumberKit.isValidPhoneNumber(self.getCountryCodeNumber() + text,
                                                              withRegion: self.countryCode,
                                                              ignoreType: ignoreType)
+    }
+    
+    private class func defaultRegionCode() -> String {
+        #if canImport(Contacts)
+        if #available(iOS 9, macOS 10.11, macCatalyst 13.1, watchOS 2.0, *) {
+            // macCatalyst OS bug if language is set to Korean
+            //CNContactsUserDefaults.shared().countryCode will return ko instead of kr
+            // Failed parsing any phone number.
+            let countryCode = CNContactsUserDefaults.shared().countryCode.uppercased()
+            #if targetEnvironment(macCatalyst)
+            if "ko".caseInsensitiveCompare(countryCode) == .orderedSame {
+                return "KR"
+            }
+            #endif
+            return countryCode
+            
+        }
+        #endif
+        
+        let currentLocale = Locale.current
+        if let countryCode = (currentLocale as NSLocale).object(forKey: .countryCode) as? String {
+            return countryCode.uppercased()
+        }
+        return "US"
     }
 }
 
