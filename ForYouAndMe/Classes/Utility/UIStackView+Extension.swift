@@ -146,9 +146,10 @@ public extension UIStackView {
     
     func addLineSeparator(lineColor: UIColor,
                           inset: CGFloat = 0,
+                          space: CGFloat = 16,
                           isVertical: Bool) {
         
-        self.addBlankSpace(space: 16)
+        self.addBlankSpace(space: space)
         
         let lineViewBuilder: (() -> UIView) = {
             let lineContainerView = UIView()

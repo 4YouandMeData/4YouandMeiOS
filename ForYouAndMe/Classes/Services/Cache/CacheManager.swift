@@ -98,7 +98,14 @@ class CacheManager: CacheService {
     
     private func loadNSSecureCoding<T>(forKey key: String) -> T? where T: NSSecureCoding & NSObject {
         if let encodedData = self.mainUserDefaults.object(forKey: key) as? Data {
-            return try? NSKeyedUnarchiver.unarchivedObject(ofClass: T.self, from: encodedData)
+            let allowedClasses: [AnyClass] = [
+                T.self,
+                NSString.self,
+                NSDictionary.self,
+                NSDate.self
+            ]
+
+            return try? NSKeyedUnarchiver.unarchivedObject(ofClasses: allowedClasses, from: encodedData) as? T
         }
         return nil
     }

@@ -7,8 +7,9 @@
 
 import UIKit
 import RxSwift
+import WebKit
 
-class UserDataViewController: UIViewController {
+class UserDataViewController: UIViewController, WKNavigationDelegate, WKScriptMessageHandler {
     
     // MARK: - AttributedTextStyles
     
@@ -111,6 +112,19 @@ class UserDataViewController: UIViewController {
         return view
     }()
     
+    private lazy var webView: WKWebView = {
+        // Configura la WKWebView per supportare i messaggi JavaScript
+        let userContentController = WKUserContentController()
+        userContentController.add(self, name: "chartPointTapped")
+        
+        let configuration = WKWebViewConfiguration()
+        configuration.userContentController = userContentController
+        
+        let webView = WKWebView(frame: .zero, configuration: configuration)
+        webView.navigationDelegate = self
+        return webView
+    }()
+    
     private lazy var filterButton: UIView = {
         
         let size = CGSize(width: 44.0, height: 34.0)
@@ -193,10 +207,19 @@ class UserDataViewController: UIViewController {
         self.view.addSubview(headerView)
         headerView.autoPinEdgesToSuperviewEdges(with: .zero, excludingEdge: .bottom)
         
+        // Content (webview)
+        self.view.addSubview(self.webView)
+        self.webView.autoPinEdgesToSuperviewEdges(with: .zero, excludingEdge: .top)
+        self.webView.autoPinEdge(.top, to: .bottom, of: headerView)
+        self.webView.navigationDelegate = self
+        self.webView.scrollView.isScrollEnabled = true
+        self.loadWebViewWithSessionToken()
+        
         // ScrollStackView
-        self.view.addSubview(self.scrollStackView)
+        /* self.view.addSubview(self.scrollStackView)
         self.scrollStackView.autoPinEdgesToSuperviewEdges(with: .zero, excludingEdge: .top)
         self.scrollStackView.autoPinEdge(.top, to: .bottom, of: headerView)
+         */
         
         // Error View
         self.view.addSubview(self.errorView)
@@ -225,12 +248,13 @@ class UserDataViewController: UIViewController {
     private func setupemptyByFilterView() {
         self.view.addSubview(self.emptyByFilterView)
         self.emptyByFilterView.autoPinEdgesToSuperviewEdges(with: .zero, excludingEdge: .top)
-        self.summaryView.autoPinEdge(.bottom, to: .top, of: self.emptyByFilterView, withOffset: 0.0)
+        // self.summaryView.autoPinEdge(.bottom, to: .top, of: self.emptyByFilterView, withOffset: 0.0)
         self.emptyByFilterView.isHidden = true
     }
     
     private func refreshUI() {
-        let userDataRequest = self.repository.getUserData()
+        // TODO: Cambiare la logica per la gestione di questa vista
+        /*let userDataRequest = self.repository.getUserData()
         let userDataAggregationRequest = self.repository.getUserDataAggregation(period: self.currentPeriod)
         
         // Fetch both UserData and UserDataAggregation
@@ -249,6 +273,25 @@ class UserDataViewController: UIViewController {
                 // Show data on UI
                 self.refreshSummary(withUserData: userData)
                 self.refreshCharts(withUserDataAggregations: userDataAggregations)
+            }, onError: { [weak self] error in
+                guard let self = self else { return }
+                self.errorView.showViewWithError(error)
+            }).disposed(by: self.disposeBag)*/
+        
+        let userDataRequest = self.repository.getUserData()
+
+        userDataRequest
+            .addProgress()
+            .subscribe(onSuccess: { [weak self] _ in
+                guard let self = self else { return }
+                self.errorView.hideView()
+                // Prepare UI if needed
+                if false == self.isViewInitialized {
+                    
+                    // Setup here because it adds a constraint to summaryView
+                    self.setupemptyByFilterView()
+                }
+                // Nota: Rimuovi la chiamata a refreshCharts se non più necessaria
             }, onError: { [weak self] error in
                 guard let self = self else { return }
                 self.errorView.showViewWithError(error)
@@ -272,13 +315,14 @@ class UserDataViewController: UIViewController {
             }).disposed(by: self.disposeBag)
     }
     
-    private func refreshSummary(withUserData userData: UserData) {
+    // TODO: Cambiare la logica per la gestione di questa vista
+   /* private func refreshSummary(withUserData userData: UserData) {
         self.titleLabel.attributedText = NSAttributedString.create(withText: userData.title ?? "",
                                                                    attributedTextStyle: self.titleLabelAttributedTextStyle)
         self.subtitleLabel.attributedText = NSAttributedString.create(withText: userData.body ?? "",
                                                                       attributedTextStyle: self.subtitleLabelAttributedTextStyle)
         self.ratingView.rating = userData.stars
-    }
+    } */
     
     private func refreshCharts(withUserDataAggregations userDataAggregations: [UserDataAggregation]) {
         self.userDataAggregationFilterData = userDataAggregations.filterData
@@ -317,6 +361,96 @@ class UserDataViewController: UIViewController {
     
     private func showFilters() {
         self.navigator.showUserDataFilter(presenter: self, userDataAggregationFilterData: self.userDataAggregationFilterData)
+    }
+    
+    // MARK: WebView Methods
+    
+    private func loadWebViewWithSessionToken() {
+        
+        guard let url = URL(string: Constants.Network.YourDataUrlStr) else {
+            assertionFailure("Cannot retrieve url from given string: \(Constants.Network.YourDataUrlStr)")
+            self.navigator.handleError(error: nil, presenter: self)
+            return
+        }
+        
+        guard let domain = url.host else {
+            assertionFailure("Cannot retrieve domain from given url: \(Constants.Network.YourDataUrlStr)")
+            self.navigator.handleError(error: nil, presenter: self)
+            return
+        }
+        
+        guard let accessToken = self.repository.accessToken else {
+            assertionFailure("Cannot retrieve access token")
+            self.navigator.handleError(error: RepositoryError.userNotLoggedIn, presenter: self)
+            return
+        }
+        
+        let httpCookieProperties: [HTTPCookiePropertyKey: Any] = [
+            .domain: domain,
+            .path: "/",
+            .name: "token",
+            .value: "Bearer \(accessToken)",
+            .secure: "TRUE",
+            .expires: Date(timeIntervalSinceNow: 31556926)
+        ]
+        
+        guard let authenticationCookie = HTTPCookie(properties: httpCookieProperties) else {
+            assertionFailure("Couldn't create authentication cookie")
+            self.navigator.handleError(error: nil, presenter: self)
+            return
+        }
+
+        var request = URLRequest(url: url)
+        request.httpShouldHandleCookies = true
+        self.webView.configuration.websiteDataStore.httpCookieStore.setCookie(authenticationCookie, completionHandler: { [weak self] in
+            guard let self = self else { return }
+            print("ReactiveAuthWebViewController - Authentication cookie setup done")
+            self.webView.load(request)
+        })
+    }
+    
+    // Nel metodo webView(_:didFinish:)
+   func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+       // Inietta il listener JavaScript dopo il caricamento
+       injectChartEventListener()
+       self.handleChartPointTap(eventData: ["dataPointID": "1"])
+   }
+    
+    // Metodo per iniettare il listener JavaScript
+    private func injectChartEventListener() {
+        let script = """
+        document.addEventListener('chartPointTapped', function(event) {
+            window.webkit.messageHandlers.chartPointTapped.postMessage({
+                dataPointID: event.detail.dataPointID,
+            });
+        });
+        """
+        
+        webView.evaluateJavaScript(script, completionHandler: nil)
+    }
+    
+    // Implementazione del WKScriptMessageHandler
+    func userContentController(_ userContentController: WKUserContentController,
+                               didReceive message: WKScriptMessage) {
+        if message.name == "chartPointTapped",
+           let body = message.body as? [String: Any] {
+            handleChartPointTap(eventData: body)
+        }
+    }
+    
+    // Metodo per gestire l'evento di tap sul punto del grafico
+    private func handleChartPointTap(eventData: [String: Any]) {
+        let dataPointID = eventData["dataPointID"] as? NSNumber
+        
+        let noteViewController = DiaryNoteViewController(withDataPointID: "2")
+        noteViewController.modalPresentationStyle = .formSheet
+        
+//        let sheetController = UISheetPresentationController(presentedViewController: noteViewController, presenting: self)
+//        sheetController.detents = [.medium(), .large()]
+//        sheetController.preferredCornerRadius = 16
+        
+        present(noteViewController, animated: true)
+     
     }
 }
 

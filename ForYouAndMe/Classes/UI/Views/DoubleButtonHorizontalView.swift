@@ -8,10 +8,44 @@
 import Foundation
 
 enum DoubleButtonHorizontalStyleCategory: StyleCategory {
+    case primaryBackground(firstButtonPrimary: Bool, secondButtonPrimary: Bool)
     case secondaryBackground(firstButtonPrimary: Bool, secondButtonPrimary: Bool)
     
     var style: Style<DoubleButtonHorizontalView> {
         switch self {
+            
+        case .primaryBackground(let firstButtonPrimary, let secondButtonPrimary):
+            let buttonHeight: CGFloat = 46.0
+            return Style<DoubleButtonHorizontalView> { buttonView in
+                
+                buttonView.backgroundColor = ColorPalette.color(withType: .secondary)
+                
+                let primaryTextAttributedTextStyle = AttributedTextStyle(fontStyle: .header2, colorType: .gradientPrimaryEnd)
+                let secondaryTextAttributedTextStyle = AttributedTextStyle(fontStyle: .header2, colorType: .secondaryText)
+                
+                buttonView.firstButtonAttributedTextStyle =
+                    firstButtonPrimary
+                    ? secondaryTextAttributedTextStyle
+                    : primaryTextAttributedTextStyle
+                
+                buttonView.firstButton.apply(style:
+                    firstButtonPrimary
+                        ? ButtonTextStyleCategory.primaryBackground(customHeight: buttonHeight).style
+                        : ButtonTextStyleCategory.secondaryBackground(customHeight: buttonHeight).style)
+                
+                buttonView.secondButtonAttributedTextStyle =
+                    secondButtonPrimary
+                    ? secondaryTextAttributedTextStyle
+                    : primaryTextAttributedTextStyle
+                
+                buttonView.secondButton.apply(style:
+                    secondButtonPrimary
+                        ? ButtonTextStyleCategory.primaryBackground(customHeight: buttonHeight).style
+                        : ButtonTextStyleCategory.secondaryBackground(customHeight: buttonHeight).style)
+                
+                buttonView.addShadowLinear(goingDown: false)
+            }
+            
         case .secondaryBackground(let firstButtonPrimary, let secondButtonPrimary):
             
             let buttonHeight: CGFloat = 46.0
@@ -107,6 +141,7 @@ class DoubleButtonHorizontalView: UIView {
         }
         let attributedText = NSAttributedString.create(withText: text, attributedTextStyle: attributedTextStyle)
         self.firstButton.setAttributedTitle(attributedText, for: .normal)
+        self.firstButton.titleEdgeInsets = UIEdgeInsets(top: 0, left: 8, bottom: 0, right: 0)
     }
     
     public func setSecondButtonText(_ text: String) {
@@ -116,5 +151,16 @@ class DoubleButtonHorizontalView: UIView {
         }
         let attributedText = NSAttributedString.create(withText: text, attributedTextStyle: attributedTextStyle)
         self.secondButton.setAttributedTitle(attributedText, for: .normal)
+        self.secondButton.titleEdgeInsets = UIEdgeInsets(top: 0, left: 8, bottom: 0, right: 0)
+    }
+    
+    public func setFirstButtonImage(_ image: UIImage?) {
+        self.firstButton.setImage(image, for: .normal)
+        self.firstButton.imageEdgeInsets = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 8)
+    }
+        
+    public func setSecondButtonImage(_ image: UIImage?) {
+        self.secondButton.setImage(image, for: .normal)
+        self.secondButton.imageEdgeInsets = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 8)
     }
 }
