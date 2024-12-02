@@ -24,8 +24,17 @@ class DiaryNoteItemTableViewCell: UITableViewCell {
     
     private lazy var noteDescriptionLabel: UILabel = {
         let label = UILabel()
-        label.numberOfLines = 0
-        return label
+          label.numberOfLines = 2
+          return label
+      }()
+    
+    private lazy var arrowImageView: UIImageView = {
+        let imageView = UIImageView()
+        imageView.image = ImagePalette.templateImage(withName: .arrowRight)
+        imageView.tintColor = ColorPalette.color(withType: .gradientPrimaryEnd)
+        imageView.contentMode = .scaleAspectFit
+        imageView.autoSetDimensions(to: CGSize(width: 18, height: 18))
+        return imageView
     }()
     
     private var buttonPressedCallback: NotificationCallback?
@@ -36,32 +45,38 @@ class DiaryNoteItemTableViewCell: UITableViewCell {
         self.selectionStyle = .none
         self.backgroundColor = .clear
         
+        let backgroundView = UIStackView.create(withAxis: .vertical, spacing: 0.0)
+        
         let containerView = UIStackView()
         containerView.axis = .horizontal
+        containerView.alignment = .center
+        containerView.spacing = 8.0
         containerView.distribution = .fill
+        
+        backgroundView.addArrangedSubview(containerView)
+        containerView.autoPinEdgesToSuperviewEdges()
         
         containerView.addArrangedSubview(self.noteImageView, horizontalInset: 8.0)
         
         let textView = UIStackView()
         textView.axis = .vertical
-        textView.distribution = .fill
-        textView.addArrangedSubview(self.noteTitleLabel, horizontalInset: 16.0)
-        textView.addBlankSpace(space: 8.0)
-        textView.addArrangedSubview(self.noteDescriptionLabel, horizontalInset: 16.0)
-        textView.addBlankSpace(space: 8.0)
+        textView.spacing = 4.0
+        textView.alignment = .leading
+        textView.addArrangedSubview(self.noteTitleLabel)
+        textView.addArrangedSubview(self.noteDescriptionLabel)
         
         containerView.addArrangedSubview(textView)
+        containerView.addArrangedSubview(self.arrowImageView)
         
-        containerView.addImage(withImage: ImagePalette.templateImage(withName: .arrowRight) ?? UIImage(),
-                           color: ColorPalette.color(withType: .primaryText),
-                           sizeDimension: 32)
+        backgroundView.addLineSeparator(lineColor: ColorPalette.color(withType: .secondaryText),
+                                        space: 0.0,
+                                        isVertical: false)
         
-        self.contentView.addSubview(containerView)
-        containerView.backgroundColor = .red
-        containerView.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets(top: 0,
-                                                                  left: 0,
-                                                                  bottom: 0,
-                                                                  right: 0))
+        self.contentView.addSubview(backgroundView)
+        backgroundView.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets(top: 0,
+                                                                       left: Constants.Style.DefaultHorizontalMargins,
+                                                                       bottom: 0.0,
+                                                                       right: Constants.Style.DefaultBottomMargin))
     }
     
     required init?(coder aDecoder: NSCoder) {
@@ -107,7 +122,7 @@ class DiaryNoteItemTableViewCell: UITableViewCell {
     
     private func updateNoteDescription(_ description: String) {
         let attributedString = NSAttributedString.create(withText: description,
-                                                         fontStyle: .paragraph,
+                                                         fontStyle: .header3,
                                                          colorType: .primaryText,
                                                          textAlignment: .left,
                                                          underlined: false)

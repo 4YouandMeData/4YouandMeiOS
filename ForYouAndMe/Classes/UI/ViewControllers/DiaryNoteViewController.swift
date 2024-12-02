@@ -31,7 +31,7 @@ class DiaryNoteViewController: UIViewController {
     private lazy var headerView: UIView = {
         let containerView = UIView()
         
-        let stackView = UIStackView.create(withAxis: .vertical, spacing: 8.0 )
+        let stackView = UIStackView.create(withAxis: .vertical, spacing: 8.0)
         
         // Close button
         let closeButtonContainerView = UIView()
@@ -43,7 +43,7 @@ class DiaryNoteViewController: UIViewController {
                            fontStyle: .title,
                            colorType: .primaryText)
         
-        stackView.addLineSeparator(lineColor: ColorPalette.color(withType: .secondaryMenu), space: 8.0, isVertical: false)
+        stackView.addLineSeparator(lineColor: ColorPalette.color(withType: .secondaryMenu), space: 0, isVertical: false)
         
         containerView.addSubview(stackView)
         stackView.autoPinEdgesToSuperviewSafeArea(with: UIEdgeInsets(top: 25.0,
@@ -75,7 +75,7 @@ class DiaryNoteViewController: UIViewController {
     }()
     
     private lazy var tableView: UITableView = {
-        let tableView = UITableView(frame: .zero, style: .grouped)
+        let tableView = UITableView(frame: .zero, style: .plain)
         tableView.tableFooterView = UIView()
         tableView.registerCellsWithClass(DiaryNoteItemTableViewCell.self)
         tableView.contentInsetAdjustmentBehavior = .never
@@ -83,7 +83,6 @@ class DiaryNoteViewController: UIViewController {
         tableView.dataSource = self
         tableView.delegate = self
         
-        tableView.backgroundColor = .green
         tableView.separatorStyle = .none
         return tableView
     }()
@@ -246,6 +245,14 @@ extension DiaryNoteViewController: UITableViewDataSource {
         } else {
              assertionFailure("Unhandled Diary Note Item type: \(diaryNote.self)")
             return UITableViewCell()
+        }
+    }
+    
+    func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
+        if editingStyle == .delete {
+            diaryNoteItems.remove(at: indexPath.row)
+            tableView.deleteRows(at: [indexPath], with: .automatic)
+            self.updateUI()
         }
     }
 }
