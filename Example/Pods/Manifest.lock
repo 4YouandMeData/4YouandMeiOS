@@ -84,7 +84,7 @@ PODS:
     - GoogleUtilities/Environment (~> 7.0)
     - GoogleUtilities/Reachability (~> 7.0)
     - GoogleUtilities/UserDefaults (~> 7.0)
-  - ForYouAndMe (0.84.0):
+  - ForYouAndMe (0.89.0):
     - AlamofireImage (~> 4.1)
     - BLZJapx/RxCodableMoya (~> 3.0.0)
     - Charts (~> 4.1.0)
@@ -259,7 +259,7 @@ SPEC CHECKSUMS:
   Alamofire: 2291f7d21ca607c491dd17642e5d40fdcda0e65c
   AlamofireImage: 34a2d90b0e5fe6a5605f85ae4b7b01e784c60192
   BLZJapx: 021bd68d387cacb057ee791403098bbc4e40b4b8
-  Charts: 354f86803d11d9c35de280587fef50d1af063978
+  Charts: ce0768268078eee0336f122c3c4ca248e4e204c5
   CountryPickerView: 383c09949f7455de9892db7ce3400b10da090150
   EVGPUImage2: 1e057f25fbab811b8a9e98d19f96bbd5eb434913
   FBSnapshotTestCase: 094f9f314decbabe373b87cc339bea235a63e07a
@@ -271,7 +271,7 @@ SPEC CHECKSUMS:
   FirebaseInstallations: 7f7ed0e7e27fb51f57291e1876e2ddb1524126c1
   FirebaseInstanceID: aaecc93b4528bbcafea12c477e26827719ca1183
   FirebaseMessaging: 7091222bfac24ca89c569c3c59e58390311e487f
-  ForYouAndMe: c2080caa012418ce5681516bc074bafb86b95139
+  ForYouAndMe: d8a8b6538ebb7a71b7f4898082d0d6d47ed8ca4c
   FYAMResearchKit: c79d2de80d301ac02ba9b303d97d35b083d4676b
   GoogleAppMeasurement: 57a0df93dc2feb5176b1bac06012dbd725191ba5
   GoogleDataTransport: 116c84c4bdeb76be2a7a46de51244368f9794eab
@@ -297,9 +297,9 @@ SPEC CHECKSUMS:
   SwiftAlgorithms: 38dda4731d19027fdeee1125f973111bf3386b53
   SwiftLint: 4fa9579c63416865179bc416f0a92d55f009600d
   TPKeyboardAvoiding: d55b3ea7b362540af8fcf36aa3ed2e87bf210cc6
-  UberSignature: 93a5860a83211569d6d25b586e0fcad8aa163144
+  UberSignature: 99e67e9cf182f393b882a743801bc18690cca347
   Validator: 80a6f567220c962dfd2d9928ae98a8c1d164f6f4
 
 PODFILE CHECKSUM: 0f2b224ad400963a279407f1f41be55b60dc49bf
 
-COCOAPODS: 1.12.0
+COCOAPODS: 1.15.2
