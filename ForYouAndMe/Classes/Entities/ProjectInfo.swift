@@ -15,12 +15,14 @@ class ProjectInfo {
         case oauthBaseUrl = "oauth_base_url"
         case studyId = "study_id"
         case pinCodeSuffix = "pin_code_suffix"
+        case yourDataUrl = "your_data_url"
     }
     
     static var ApiBaseUrl: String { Self.getValue(forKey: .apiBaseUrl, defaultValue: "") }
     static var OauthBaseUrl: String { Self.getValue(forKey: .oauthBaseUrl, defaultValue: "") }
     static var StudyId: String { Self.getValue(forKey: .studyId, defaultValue: "") }
     static var PinCodeSuffix: String { Self.getValue(forKey: .pinCodeSuffix, defaultValue: "")}
+    static var YourDataUrl: String { Self.getValue(forKey: .yourDataUrl, defaultValue: "") }
     
     static func validate() {
         ProjectInfoKey.allCases.forEach { key in
@@ -29,6 +31,7 @@ class ProjectInfo {
             case .oauthBaseUrl: _ = Self.getValue(forKey: key, defaultValue: "")
             case .studyId: _ = Self.getValue(forKey: key, defaultValue: "")
             case .pinCodeSuffix: _ = Self.getValue(forKey: key, defaultValue: "")
+            case .yourDataUrl: _ = Self.getValue(forKey: key, defaultValue: "")
             }
         }
     }

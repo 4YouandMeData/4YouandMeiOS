@@ -130,6 +130,8 @@ enum StringKey: String, CaseIterable, CodingKey {
     case surveyButtonDefault = "SURVEY_BUTTON_DEFAULT"
     case surveyButtonSkip = "SURVEY_BUTTON_SKIP"
     case surveyStepsCount = "SURVEY_STEPS_COUNT"
+    // Diary Note
+    case diaryNoteTitle = "DIARY_NOTE_TITLE_DEFAULT"
     // Video Diary
     case videoDiaryRecorderInfoFilter = "VIDEO_DIARY_RECORDER_INFO_FILTER"
     case videoDiaryRecorderTitle = "VIDEO_DIARY_RECORDER_TITLE"
@@ -256,6 +258,16 @@ class StringsProvider {
             }
         }()
         var formattedString = string
+        for (index, element) in parameters.enumerated() {
+            formattedString = formattedString.replacingOccurrences(of: "{\(index)}", with: element)
+        }
+        return formattedString
+    }
+    
+    static func string(forText text: String,
+                       withParameters parameters: [String] = []) -> String {
+        
+        var formattedString = text
         for (index, element) in parameters.enumerated() {
             formattedString = formattedString.replacingOccurrences(of: "{\(index)}", with: element)
         }
