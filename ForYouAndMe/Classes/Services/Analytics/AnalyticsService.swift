@@ -172,6 +172,11 @@ extension DefaultService {
         case .getUserDataAggregation: return "Get User Data Aggragation"
         case .getUserSettings: return "Get User Settings"
         case .sendUserSettings: return "Send User Settings"
+        case .getDiaryNoteText: return "Get Diary Note Text"
+        case .getDiaryNoteAudio: return "Get Diary Note Audio"
+        case .sendDiaryNoteText: return "Send Diary Note Text"
+        case .sendDiaryNoteAudio: return "Send Diary Note Audio"
+        case .deleteDiaryNote: return "Delete Diary Note"
         // Survey
         case .getSurvey: return "Get Survey"
         case .sendSurveyTaskResultData: return "Send Survey Task Result Data"

@@ -392,6 +392,16 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             return "v1/study_phases/\(phaseId)/user_study_phases"
         case .updateUserPhase(let userPhaseId):
             return "v1/user_study_phases/\(userPhaseId)"
+        case .getDiaryNoteText(let diaryNoteId):
+            return ""
+        case .getDiaryNoteAudio(let diaryNoteId):
+            return ""
+        case .sendDiaryNoteText(let diaryNoteId, let text):
+            return ""
+        case .deleteDiaryNote(let diaryNoteId):
+            return ""
+        case .sendDiaryNoteAudio(let diaryNoteId, let audio):
+            return ""
         }
     }
     
@@ -416,7 +426,9 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
                 .getUser,
                 .getUserData,
                 .getUserSettings,
-                .getUserDataAggregation:
+                .getUserDataAggregation,
+                .getDiaryNoteText,
+                .getDiaryNoteAudio:
             return .get
         case .submitPhoneNumber,
                 .verifyPhoneNumber,
@@ -427,7 +439,9 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
                 .sendAnswer,
                 .sendDeviceData,
                 .sendHealthData,
-                .createUserPhase:
+                .createUserPhase,
+                .sendDiaryNoteText,
+                .sendDiaryNoteAudio:
             return .post
         case .verifyEmail,
                 .resendConfirmationEmail,
@@ -442,6 +456,8 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
                 .delayTask,
                 .updateUserPhase:
             return .patch
+        case .deleteDiaryNote:
+            return .delete
         }
     }
     
@@ -526,6 +542,11 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         // User Phase
         case .createUserPhase: return "{}".utf8Encoded
         case .updateUserPhase: return "{}".utf8Encoded
+        case .sendDiaryNoteText: return "{}".utf8Encoded
+        case .sendDiaryNoteAudio: return "{}".utf8Encoded
+        case .getDiaryNoteText: return "{}".utf8Encoded
+        case .getDiaryNoteAudio: return "{}".utf8Encoded
+        case .deleteDiaryNote: return "{}".utf8Encoded
         }
     }
     
@@ -547,7 +568,10 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
                 .getUserSettings,
                 .getUserData,
                 .getUserDataAggregation,
-                .delayTask:
+                .delayTask,
+                .getDiaryNoteText,
+                .getDiaryNoteAudio,
+                .deleteDiaryNote:
             return .requestPlain
         case .submitPhoneNumber(let phoneNumber):
             var params: [String: Any] = [:]
@@ -682,6 +706,12 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             dataParams["start_at"] = dateString
             dataParams["custom_data"] = [String: Any]()
             return .requestParameters(parameters: ["user_study_phase": dataParams], encoding: JSONEncoding.default)
+        case .sendDiaryNoteText(_, let text):
+            let params: [String: Any] = ["text": text]
+            return .requestParameters(parameters: ["diary_note": params], encoding: JSONEncoding.default)
+        case .sendDiaryNoteAudio(_, let audio):
+            let params: [String: Any] = ["note_audio": audio]
+            return .requestParameters(parameters: ["diary_note": params], encoding: JSONEncoding.default)
         }
     }
     
@@ -743,7 +773,12 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
                 .sendDeviceData,
                 .sendHealthData,
                 .createUserPhase,
-                .updateUserPhase:
+                .updateUserPhase,
+                .getDiaryNoteText,
+                .getDiaryNoteAudio,
+                .sendDiaryNoteText,
+                .sendDiaryNoteAudio,
+                .deleteDiaryNote:
             return .bearer
         }
     }

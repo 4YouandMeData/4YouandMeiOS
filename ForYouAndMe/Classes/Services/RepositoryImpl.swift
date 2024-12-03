@@ -341,6 +341,16 @@ extension RepositoryImpl: Repository {
             .handleError()
     }
     
+    func getDiaryNoteText(noteID: String) -> Single<DiaryNoteItem> {
+        return self.api.send(request: ApiRequest(serviceRequest: .getDiaryNoteText(noteId: noteID)))
+            .handleError()
+    }
+    
+    func getDiaryNoteAudio(noteID: String) -> Single<DiaryNoteItem> {
+        return self.api.send(request: ApiRequest(serviceRequest: .getDiaryNoteAudio(noteId: noteID)))
+            .handleError()
+    }
+    
     // MARK: - User
     
     var currentUser: User? {

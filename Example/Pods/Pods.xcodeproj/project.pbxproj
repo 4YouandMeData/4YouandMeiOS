@@ -234,7 +234,8 @@
 		0D8667CDD9600499DCD5D97A7574A838 /* ORKFormStep.h in Headers */ = {isa = PBXBuildFile; fileRef = 68EEEC202609A72C7B6C5BCBF194DE22 /* ORKFormStep.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		0D875A4D2CFDC0AC00C2BB07 /* DiaryNoteEmptyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D875A4C2CFDC09F00C2BB07 /* DiaryNoteEmptyView.swift */; };
 		0D875A4F2CFDEC9400C2BB07 /* DiaryNoteItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D875A4E2CFDEC8F00C2BB07 /* DiaryNoteItem.swift */; };
-		0D875A512CFDF74900C2BB07 /* DiaryNoteItemTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D875A502CFDF74200C2BB07 /* DiaryNoteItemTableViewCell.swift */; };
+		0D875A512CFDF74900C2BB07 /* DiaryNoteItemTextTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D875A502CFDF74200C2BB07 /* DiaryNoteItemTextTableViewCell.swift */; };
+		0D875A532CFE5DE900C2BB07 /* DiaryNoteItemAudioTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D875A522CFE5DE000C2BB07 /* DiaryNoteItemAudioTableViewCell.swift */; };
 		0DA1BDA131A9D8DF2BEE0E304D6BF821 /* FBLPromise+Always.h in Copy . Public Headers */ = {isa = PBXBuildFile; fileRef = 85C4FD48B6162F839098E44AA7560F7E /* FBLPromise+Always.h */; };
 		0DA39C6B79800DE0E4C51BA063A30976 /* ORKRangeOfMotionStepViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 166A7276F646A84F78263E3094B7426A /* ORKRangeOfMotionStepViewController.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
 		0DA92059BED751E415AD0CDEC1002295 /* LuminanceRangeReduction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 804B2D33845B3E4E69FBABA07A412F5A /* LuminanceRangeReduction.swift */; };
@@ -4222,7 +4223,8 @@
 		0D8514D72CFB782200476E62 /* DiaryNoteViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiaryNoteViewController.swift; sourceTree = "<group>"; };
 		0D875A4C2CFDC09F00C2BB07 /* DiaryNoteEmptyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiaryNoteEmptyView.swift; sourceTree = "<group>"; };
 		0D875A4E2CFDEC8F00C2BB07 /* DiaryNoteItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiaryNoteItem.swift; sourceTree = "<group>"; };
-		0D875A502CFDF74200C2BB07 /* DiaryNoteItemTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiaryNoteItemTableViewCell.swift; sourceTree = "<group>"; };
+		0D875A502CFDF74200C2BB07 /* DiaryNoteItemTextTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiaryNoteItemTextTableViewCell.swift; sourceTree = "<group>"; };
+		0D875A522CFE5DE000C2BB07 /* DiaryNoteItemAudioTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiaryNoteItemAudioTableViewCell.swift; sourceTree = "<group>"; };
 		0DB115464DFF8FEED48D3F19D16058DC /* Luminance_GL.fsh */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.glsl; name = Luminance_GL.fsh; path = framework/Source/Operations/Shaders/Luminance_GL.fsh; sourceTree = "<group>"; };
 		0DC13B0583B4D9DE45D3EE612F369CD4 /* AnimatedViewPortJob.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = AnimatedViewPortJob.swift; path = Source/Charts/Jobs/AnimatedViewPortJob.swift; sourceTree = "<group>"; };
 		0DD67E7F86139275681119781E19540D /* ORKActiveStep.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = ORKActiveStep.h; path = ResearchKit/ActiveTasks/ORKActiveStep.h; sourceTree = "<group>"; };
@@ -10224,7 +10226,8 @@
 		665C0B415DD3320A9FC5190BF6D14DD6 /* Views */ = {
 			isa = PBXGroup;
 			children = (
-				0D875A502CFDF74200C2BB07 /* DiaryNoteItemTableViewCell.swift */,
+				0D875A522CFE5DE000C2BB07 /* DiaryNoteItemAudioTableViewCell.swift */,
+				0D875A502CFDF74200C2BB07 /* DiaryNoteItemTextTableViewCell.swift */,
 				0D875A4C2CFDC09F00C2BB07 /* DiaryNoteEmptyView.swift */,
 				2E40C12F3116F94BB6B7E38A2A578727 /* AboutYouHeaderView.swift */,
 				38017D25C804DB44E8A2318514FB280B /* CustomSegmentView.swift */,
@@ -16035,6 +16038,7 @@
 				CF7714B86BE7494DBE1F4C669BAA9B21 /* Gradient+Extension.swift in Sources */,
 				BB5F47DF0093A31664B1EBB9DBF107BB /* GradientView.swift in Sources */,
 				346316110A3AB7E5E9D4B8B38F0440D3 /* HealthDataType.swift in Sources */,
+				0D875A532CFE5DE900C2BB07 /* DiaryNoteItemAudioTableViewCell.swift in Sources */,
 				1E54B3CF087F6BFD62D8DBC584F29357 /* HealthDataType+Characteristic.swift in Sources */,
 				229ADFB54E8501DF5CABDC3A29D6897A /* HealthManager.swift in Sources */,
 				15EF795BFF2E623B012428F513DF7A81 /* HealthSampleUploader.swift in Sources */,
@@ -16107,7 +16111,7 @@
 				01390E0CA8FB629150600B29B846C03F /* PopupViewController.swift in Sources */,
 				A91E408A3C9092713377EC4082589B94 /* PossibleAnswer.swift in Sources */,
 				314D0DBEF2C079EC2F19497159E79C43 /* PossibleAnswerTableViewCell.swift in Sources */,
-				0D875A512CFDF74900C2BB07 /* DiaryNoteItemTableViewCell.swift in Sources */,
+				0D875A512CFDF74900C2BB07 /* DiaryNoteItemTextTableViewCell.swift in Sources */,
 				52623C656372B964CB7DCC1DE5779F00 /* PrioritizedRequest.swift in Sources */,
 				98C0B5C44753A74141B6543C5DB55D97 /* ProjectInfo.swift in Sources */,
 				67CF6BE703A85D52D59AAE209F46C74F /* PropertyWrappers.swift in Sources */,
