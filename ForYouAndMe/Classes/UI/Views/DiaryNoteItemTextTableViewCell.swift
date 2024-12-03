@@ -7,7 +7,7 @@
 
 import UIKit
 
-class DiaryNoteItemTableViewCell: UITableViewCell {
+class DiaryNoteItemTextTableViewCell: UITableViewCell {
     
     private lazy var noteImageView: UIImageView = {
         let imageView = UIImageView()
