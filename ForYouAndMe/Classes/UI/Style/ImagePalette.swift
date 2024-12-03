@@ -55,6 +55,7 @@ enum ImageName: String, CaseIterable {
 }
 
 enum TemplateImageName: String, CaseIterable {
+    case audioPlayPreview = "audio_play_preview"
     case backButtonNavigation = "back_button_navigation"
     case checkboxOutline = "checkbox_outline"
     case checkboxFilled = "checkbox_filled"

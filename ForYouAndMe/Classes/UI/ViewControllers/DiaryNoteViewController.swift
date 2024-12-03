@@ -77,13 +77,12 @@ class DiaryNoteViewController: UIViewController {
     private lazy var tableView: UITableView = {
         let tableView = UITableView(frame: .zero, style: .plain)
         tableView.tableFooterView = UIView()
-        tableView.registerCellsWithClass(DiaryNoteItemTableViewCell.self)
+        tableView.registerCellsWithClass(DiaryNoteItemTextTableViewCell.self)
+        tableView.registerCellsWithClass(DiaryNoteItemAudioTableViewCell.self)
         tableView.contentInsetAdjustmentBehavior = .never
         tableView.backgroundView = self.diaryNoteEmptyView
         tableView.dataSource = self
         tableView.delegate = self
-        
-        tableView.separatorStyle = .none
         return tableView
     }()
     
@@ -198,29 +197,30 @@ extension DiaryNoteViewController: UITableViewDataSource {
         if let typeNote = diaryNote.diaryNoteType {
             switch typeNote {
             case .text:
-                guard let cell = tableView.dequeueReusableCellOfType(type: DiaryNoteItemTableViewCell.self, forIndexPath: indexPath) else {
+                guard let cell = tableView.dequeueReusableCellOfType(type: DiaryNoteItemTextTableViewCell.self,
+                                                                     forIndexPath: indexPath) else {
                     assertionFailure("DiaryNoteItem not registered")
                     return UITableViewCell()
                 }
                 cell.display(data: diaryNote, buttonPressedCallback: { () in
-                    //                self.repository.getSurvey(surveyId: survey.id)
-                    //                    .addProgress()
-                    //                    .subscribe(onSuccess: { [weak self] surveyGroup in
-                    //                        guard let self = self else { return }
-                    //                        guard let delegate = self.delegate else { return }
-                    //                        self.navigator.startSurveySection(withTask: feed,
-                    //                                                          surveyGroup: surveyGroup,
-                    //                                                          presenter: delegate.presenter)
-                    //                    }, onError: { [weak self] error in
-                    //                        guard let self = self else { return }
-                    //                        guard let delegate = self.delegate else { return }
-                    //                        self.navigator.handleError(error: error, presenter: delegate.presenter)
-                    //                    }).disposed(by: self.disposeBag)
+                    self.repository.getDiaryNoteText(noteID: diaryNote.id)
+                                .addProgress()
+                                .subscribe(onSuccess: { [weak self] surveyGroup in
+                                    guard let self = self else { return }
+//                                    self.navigator.startSurveySection(withTask: feed,
+//                                                                      surveyGroup: surveyGroup,
+//                                                                      presenter: delegate.presenter)
+                                }, onError: { [weak self] error in
+//                                    guard let self = self else { return }
+//                                    guard let delegate = self.delegate else { return }
+//                                    self.navigator.handleError(error: error, presenter: delegate.presenter)
+                                }).disposed(by: self.disposeBag)
                 })
                 return cell
                 
             case .audio:
-                guard let cell = tableView.dequeueReusableCellOfType(type: DiaryNoteItemTableViewCell.self, forIndexPath: indexPath) else {
+                guard let cell = tableView.dequeueReusableCellOfType(type: DiaryNoteItemAudioTableViewCell.self,
+                                                                     forIndexPath: indexPath) else {
                     assertionFailure("DiaryNoteItemTableViewCell not registered")
                     return UITableViewCell()
                 }
@@ -269,7 +269,7 @@ extension DiaryNoteViewController: UITableViewDelegate {
             case .text:
                 return 80 // Altezza variabile per le note di testo
             case .audio:
-                return 80 // Altezza fissa per le note audio
+                return 100 // Altezza fissa per le note audio
             case .none:
                 return UITableView.automaticDimension
             }

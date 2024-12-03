@@ -44,8 +44,9 @@ class DiaryNoteItemTextTableViewCell: UITableViewCell {
         
         self.selectionStyle = .none
         self.backgroundColor = .clear
+        self.separatorInset = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 16)
         
-        let backgroundView = UIStackView.create(withAxis: .vertical, spacing: 0.0)
+        let backgroundView = UIStackView.create(withAxis: .vertical, spacing: 8.0)
         
         let containerView = UIStackView()
         containerView.axis = .horizontal
@@ -68,15 +69,11 @@ class DiaryNoteItemTextTableViewCell: UITableViewCell {
         containerView.addArrangedSubview(textView)
         containerView.addArrangedSubview(self.arrowImageView)
         
-        backgroundView.addLineSeparator(lineColor: ColorPalette.color(withType: .secondaryText),
-                                        space: 0.0,
-                                        isVertical: false)
-        
         self.contentView.addSubview(backgroundView)
         backgroundView.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets(top: 0,
                                                                        left: Constants.Style.DefaultHorizontalMargins,
                                                                        bottom: 0.0,
-                                                                       right: Constants.Style.DefaultBottomMargin))
+                                                                       right: Constants.Style.DefaultHorizontalMargins))
     }
     
     required init?(coder aDecoder: NSCoder) {
@@ -87,19 +84,10 @@ class DiaryNoteItemTextTableViewCell: UITableViewCell {
     
     public func display(data: DiaryNoteItem, buttonPressedCallback: @escaping NotificationCallback) {
         self.buttonPressedCallback = buttonPressedCallback
-        
+
         self.updateNoteTitle(data.title ?? "")
         self.updateNoteDescription(data.body ?? "")
-        
-        let noteType = data.diaryNoteType
-        switch noteType {
-        case .text:
-            noteImageView.image = ImagePalette.image(withName: .textNoteListImage)
-        case .audio:
-            noteImageView.image = ImagePalette.image(withName: .audioNoteListImage)
-        default:
-            noteImageView.image = UIImage()
-        }
+        noteImageView.image = ImagePalette.image(withName: .textNoteListImage)
     }
     
     // MARK: - Actions

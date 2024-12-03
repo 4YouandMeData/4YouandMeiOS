@@ -526,6 +526,28 @@ class AppNavigator {
         presenter.present(viewController, animated: true, completion: nil)
     }
     
+    public func presentDiaryNote(dataPointId: String, presenter: UIViewController) {
+        let diaryNoteViewController = DiaryNoteViewController(withDataPointID: dataPointId)
+        let navigationViewController = UINavigationController(rootViewController: diaryNoteViewController)
+        navigationViewController.modalPresentationStyle = .formSheet
+        navigationViewController.preventPopWithSwipe()
+        presenter.present(navigationViewController, animated: true)
+    }
+    
+    public func openDiaryNoteText(diaryNoteId: String, presenter: UIViewController) {
+//        let diaryNoteTextViewController = DiaryNoteWriterViewController()
+//        let navigationController = UINavigationController(rootViewController: diaryNoteWriterViewController)
+//        navigationController.modalPresentationStyle = .fullScreen
+//        presenter.present(navigationController, animated: true, completion: nil)
+    }
+    
+    public func openDiaryNoteAudio(diaryNoteId: String, presenter: UIViewController) {
+//        let diaryNoteAudioViewController = DiaryNoteRecorderViewController()
+//        let navigationController = UINavigationController(rootViewController: diaryNoteRecorderViewController)
+//        navigationController.modalPresentationStyle = .fullScreen
+//        presenter.present(navigationController, animated: true, completion: nil)
+    }
+    
     // MARK: About You
     
     public func showAboutYouPage(presenter: UIViewController) {
