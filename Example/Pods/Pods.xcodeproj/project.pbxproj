@@ -236,6 +236,7 @@
 		0D875A4F2CFDEC9400C2BB07 /* DiaryNoteItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D875A4E2CFDEC8F00C2BB07 /* DiaryNoteItem.swift */; };
 		0D875A512CFDF74900C2BB07 /* DiaryNoteItemTextTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D875A502CFDF74200C2BB07 /* DiaryNoteItemTextTableViewCell.swift */; };
 		0D875A532CFE5DE900C2BB07 /* DiaryNoteItemAudioTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D875A522CFE5DE000C2BB07 /* DiaryNoteItemAudioTableViewCell.swift */; };
+		0D875A552CFF14B700C2BB07 /* DiaryNoteTextViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D875A542CFF14AF00C2BB07 /* DiaryNoteTextViewController.swift */; };
 		0DA1BDA131A9D8DF2BEE0E304D6BF821 /* FBLPromise+Always.h in Copy . Public Headers */ = {isa = PBXBuildFile; fileRef = 85C4FD48B6162F839098E44AA7560F7E /* FBLPromise+Always.h */; };
 		0DA39C6B79800DE0E4C51BA063A30976 /* ORKRangeOfMotionStepViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 166A7276F646A84F78263E3094B7426A /* ORKRangeOfMotionStepViewController.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
 		0DA92059BED751E415AD0CDEC1002295 /* LuminanceRangeReduction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 804B2D33845B3E4E69FBABA07A412F5A /* LuminanceRangeReduction.swift */; };
@@ -4225,6 +4226,7 @@
 		0D875A4E2CFDEC8F00C2BB07 /* DiaryNoteItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiaryNoteItem.swift; sourceTree = "<group>"; };
 		0D875A502CFDF74200C2BB07 /* DiaryNoteItemTextTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiaryNoteItemTextTableViewCell.swift; sourceTree = "<group>"; };
 		0D875A522CFE5DE000C2BB07 /* DiaryNoteItemAudioTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiaryNoteItemAudioTableViewCell.swift; sourceTree = "<group>"; };
+		0D875A542CFF14AF00C2BB07 /* DiaryNoteTextViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiaryNoteTextViewController.swift; sourceTree = "<group>"; };
 		0DB115464DFF8FEED48D3F19D16058DC /* Luminance_GL.fsh */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.glsl; name = Luminance_GL.fsh; path = framework/Source/Operations/Shaders/Luminance_GL.fsh; sourceTree = "<group>"; };
 		0DC13B0583B4D9DE45D3EE612F369CD4 /* AnimatedViewPortJob.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = AnimatedViewPortJob.swift; path = Source/Charts/Jobs/AnimatedViewPortJob.swift; sourceTree = "<group>"; };
 		0DD67E7F86139275681119781E19540D /* ORKActiveStep.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = ORKActiveStep.h; path = ResearchKit/ActiveTasks/ORKActiveStep.h; sourceTree = "<group>"; };
@@ -7810,6 +7812,7 @@
 		0ADE473FAB0A00085F8689E133D62B4E /* ViewControllers */ = {
 			isa = PBXGroup;
 			children = (
+				0D875A542CFF14AF00C2BB07 /* DiaryNoteTextViewController.swift */,
 				0D8514D72CFB782200476E62 /* DiaryNoteViewController.swift */,
 				69019770408500F941C63B516DBCF63A /* ActivitySectionViewController.swift */,
 				8460F68C7EFAD2F8618CD4B52009D445 /* BooleanQuestionsViewController.swift */,
@@ -16216,6 +16219,7 @@
 				DD19082E307FCD7673F4E0FFF549CA2C /* UserDataAggregationEmptyByFilterView.swift in Sources */,
 				C03C4FC05860D8473A37B33C3A0A2E90 /* UserDataAggregationErrorView.swift in Sources */,
 				C18C3178D9A68A85B40253B24933FF20 /* UserDataAggregationFilter.swift in Sources */,
+				0D875A552CFF14B700C2BB07 /* DiaryNoteTextViewController.swift in Sources */,
 				E5029B0FF95BFD3B86298CF7C707C5C7 /* UserDataChartView.swift in Sources */,
 				4C5C5A4215E5D4BC49A484AE945589FD /* UserDataFilterViewController.swift in Sources */,
 				072518EB99D282B7F6A9B83618E87E26 /* UserDataViewController.swift in Sources */,

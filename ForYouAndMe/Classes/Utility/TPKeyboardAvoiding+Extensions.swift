@@ -19,5 +19,4 @@ public extension TPKeyboardAvoidingScrollView {
         }
         return true
     }
-    
 }

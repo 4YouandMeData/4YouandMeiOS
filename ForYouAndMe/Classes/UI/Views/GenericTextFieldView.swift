@@ -37,8 +37,8 @@ class GenericTextFieldView: UIView {
     
     typealias GenericTextFieldViewValidation = ((String) -> Bool)
     
-    public fileprivate (set) var standardColor: UIColor = ColorPalette.color(withType: .secondaryText)
-    public fileprivate (set) var errorColor: UIColor = ColorPalette.color(withType: .primaryText)
+    public fileprivate(set) var standardColor: UIColor = ColorPalette.color(withType: .secondaryText)
+    public fileprivate(set) var errorColor: UIColor = ColorPalette.color(withType: .primaryText)
     
     public var validationCallback: GenericTextFieldViewValidation?
     public var maxCharacters: Int?

@@ -7,12 +7,20 @@
 
 import UIKit
 import RxSwift
+import RxCocoa
 
 class DiaryNoteTextViewController: UIViewController {
     
+    fileprivate enum PageState { case read, edit }
+    
+    private let pageState: BehaviorRelay<PageState> = BehaviorRelay<PageState>(value: .read)
     private let navigator: AppNavigator
     private let repository: Repository
     private let analytics: AnalyticsService
+        
+    public fileprivate(set) var standardColor: UIColor = ColorPalette.color(withType: .primaryText)
+    public fileprivate(set) var errorColor: UIColor = ColorPalette.color(withType: .primaryText)
+    public fileprivate(set) var inactiveColor: UIColor = ColorPalette.color(withType: .fourthText)
     
     private let disposeBag = DisposeBag()
     
@@ -51,9 +59,19 @@ class DiaryNoteTextViewController: UIViewController {
         return containerView
     }()
     
-    private lazy var textView: UIView = {
+    public lazy var textField: UITextField = {
+        let textField = UITextField()
+        textField.textColor = self.standardColor
+        textField.tintColor = self.standardColor
+        textField.font = FontPalette.fontStyleData(forStyle: .paragraph).font
+        textField.delegate = self
+        textField.borderStyle = .roundedRect
+        textField.placeholder = "Add title here"
+        return textField
+    }()
+    
+    private lazy var textView: UITextView = {
         
-        let container = UIView()
         // Text View
         let textView = UITextView()
         let style = NSMutableParagraphStyle()
@@ -65,7 +83,8 @@ class DiaryNoteTextViewController: UIViewController {
         textView.layer.borderWidth = 1
         textView.tintColor = ColorPalette.color(withType: .primary)
         textView.layer.borderColor = ColorPalette.color(withType: .inactive).cgColor
-        textView.backgroundColor = .red
+        textView.layer.cornerRadius = 8
+        textView.clipsToBounds = true
         
         // Toolbar
         let toolBar = UIToolbar()
@@ -79,32 +98,39 @@ class DiaryNoteTextViewController: UIViewController {
         
         toolBar.setItems([spaceButton, doneButton], animated: false)
         textView.inputAccessoryView = toolBar
-        container.addSubview(textView)
         
-        textView.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets(top: 0,
-                                                                 left: 12.0,
-                                                                 bottom: 0.0,
-                                                                 right: 12.0))
-        
-        return container
+        return textView
     }()
     
-    private lazy var footerView: UIView = {
+    private lazy var placeholderLabel: UILabel = {
+        let label = UILabel()
+        label.text = "Insert your note here"
+        label.font = FontPalette.fontStyleData(forStyle: .paragraph).font
+        label.textColor = ColorPalette.color(withType: .inactive)
+        label.sizeToFit()
+        return label
+    }()
+    
+    private var limitLabel: UILabel = {
+        let label = UILabel()
+        label.textAlignment = .right
+        label.font = FontPalette.fontStyleData(forStyle: .header3).font
+        label.textColor = ColorPalette.color(withType: .inactive)
+        return label
+    }()
+    
+    private lazy var footerView: GenericButtonView = {
         
-        let containerView = UIView()
-                
         let buttonView = GenericButtonView(withTextStyleCategory: .secondaryBackground())
-        buttonView.setButtonText(StringsProvider.string(forKey: .onboardingOptInSubmitButton))
+        buttonView.setButtonText("Save Note")
         buttonView.addTarget(target: self, action: #selector(self.editButtonPressed))
         
-        containerView.addSubview(buttonView)
-        buttonView.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets.zero)
-        
-        return containerView
+        return buttonView
     }()
     
     private var storage: CacheService
     private let dataPointID: String
+    private let maxCharacters: Int = 500
     
     init(withDataPointID dataPointID: String) {
         self.navigator = Services.shared.navigator
@@ -130,17 +156,57 @@ class DiaryNoteTextViewController: UIViewController {
         self.view.backgroundColor = ColorPalette.color(withType: .secondary)
         
         // Main Stack View
-        let stackView = UIStackView.create(withAxis: .vertical)
+        let stackView = UIStackView.create(withAxis: .vertical, spacing: 16.0)
         self.view.addSubview(stackView)
         stackView.autoPinEdgesToSuperviewEdges()
-                
         stackView.addArrangedSubview(self.headerView)
-        stackView.addArrangedSubview(self.textView)
-        stackView.addBlankSpace(space: 60.0)
-        stackView.addArrangedSubview(self.footerView)
         
-        self.textView.autoPinEdge(.top, to: .bottom, of: self.headerView)
-        self.updateUI()
+        // TextField
+        let containerTextField = UIView()
+        containerTextField.addSubview(self.textField)
+        stackView.addArrangedSubview(containerTextField)
+        self.textField.autoSetDimension(.height, toSize: 44.0)
+        self.textField.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets(top: 0,
+                                                                      left: 12.0,
+                                                                      bottom: 0,
+                                                                      right: 12.0))
+        
+        let containerTextView = UIView()
+        containerTextView.addSubview(self.textView)
+        self.textView.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets(top: 0,
+                                                                      left: 12.0,
+                                                                      bottom: 0,
+                                                                      right: 12.0))
+        // Limit label
+        containerTextView.addSubview(self.limitLabel)
+        self.limitLabel.autoPinEdge(.top, to: .bottom, of: self.textView)
+        self.limitLabel.autoPinEdge(.right, to: .right, of: self.textView)
+        self.limitLabel.autoPinEdge(.left, to: .left, of: self.textView)
+        self.limitLabel.text = "\(self.textView.text.count) / \(self.maxCharacters)"
+        stackView.addArrangedSubview(containerTextView)
+        containerTextView.autoPinEdge(.top, to: .bottom, of: self.textField, withOffset: 16.0)
+        
+        stackView.addBlankSpace(space: 60.0)
+        
+        // Footer
+        let containerFooterView = UIView()
+        containerFooterView.addSubview(self.footerView)
+        footerView.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets.zero)
+        stackView.addArrangedSubview(containerFooterView)
+                
+        // Placeholder label
+        self.textView.addSubview(self.placeholderLabel)
+        self.placeholderLabel.isHidden = !textView.text.isEmpty
+        self.placeholderLabel.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets(top: CGFloat(self.textView.font!.pointSize/2),
+                                                                              left: 5,
+                                                                              bottom: 10,
+                                                                              right: 10))
+        
+        self.pageState.subscribe(onNext: { [weak self] newPageState in
+            self?.updateNextButton(pageState: newPageState)
+            self?.updateTextFields(pageState: newPageState)
+            self?.view.endEditing(true)
+        }).disposed(by: self.disposeBag)
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -155,7 +221,11 @@ class DiaryNoteTextViewController: UIViewController {
     }
     
     @objc private func editButtonPressed() {
-        
+        self.pageState.accept(.edit)
+    }
+    
+    @objc private func confirmButtonPressed() {
+        self.pageState.accept(.read)
     }
     
     @objc private func doneButtonPressed() {
@@ -164,10 +234,65 @@ class DiaryNoteTextViewController: UIViewController {
     
     // MARK: - Private Methods
     
-    private func updateUI() {
+    private func updateNextButton(pageState: PageState) {
+        let button = self.footerView
+        switch pageState {
+        case .edit:
+            button.setButtonText("Confirm")
+            button.addTarget(target: self, action: #selector(self.confirmButtonPressed))
+        case .read:
+            button.setButtonText("Edit")
+            button.addTarget(target: self, action: #selector(self.editButtonPressed))
+        }
+    }
+
+    private func updateTextFields(pageState: PageState) {
+        let textField = self.textField
+        let textView = self.textView
+        switch pageState {
+        case .edit:
+            textView.isEditable = true
+            textView.isUserInteractionEnabled = true
+            textView.textColor = self.standardColor
+            textField.isUserInteractionEnabled = true
+            textField.textColor = self.standardColor
+        case .read:
+            textView.isEditable = false
+            textView.isUserInteractionEnabled = false
+            textView.textColor = self.inactiveColor
+            textField.isUserInteractionEnabled = false
+            textField.textColor = self.inactiveColor
+        }
     }
 }
 
 extension DiaryNoteTextViewController: UITextViewDelegate {
     
+    func textViewDidBeginEditing(_ textView: UITextView) {
+        self.placeholderLabel.isHidden = !textView.text.isEmpty
+    }
+    
+    func textViewDidChange(_ textView: UITextView) {
+        self.placeholderLabel.isHidden = !textView.text.isEmpty
+        self.limitLabel.text = "\(textView.text.count) / \(self.maxCharacters)"
+        if textView.text.count <= self.maxCharacters {
+            textView.layer.borderColor = ColorPalette.color(withType: .inactive).cgColor
+            self.limitLabel.textColor = ColorPalette.color(withType: .inactive)
+        } else {
+            textView.layer.borderColor = UIColor.red.cgColor
+            self.limitLabel.textColor = .red
+        }
+    }
+}
+
+extension DiaryNoteTextViewController: UITextFieldDelegate {
+
+    func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
+        let newString = textField.getNewString(forRange: range, replacementString: string)
+        return !(newString.count > self.maxCharacters)
+
+    }
+    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+        self.view.endEditing(true)
+    }
 }
