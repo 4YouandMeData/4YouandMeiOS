@@ -33,7 +33,7 @@ class DiaryNoteItemTextTableViewCell: UITableViewCell {
         imageView.image = ImagePalette.templateImage(withName: .arrowRight)
         imageView.tintColor = ColorPalette.color(withType: .gradientPrimaryEnd)
         imageView.contentMode = .scaleAspectFit
-        imageView.autoSetDimensions(to: CGSize(width: 18, height: 18))
+        imageView.autoSetDimensions(to: CGSize(width: 24, height: 24))
         return imageView
     }()
     
@@ -74,6 +74,13 @@ class DiaryNoteItemTextTableViewCell: UITableViewCell {
                                                                        left: Constants.Style.DefaultHorizontalMargins,
                                                                        bottom: 0.0,
                                                                        right: Constants.Style.DefaultHorizontalMargins))
+        
+        // Enable user interaction on the content view to make sure the cell responds to touch events
+        self.contentView.isUserInteractionEnabled = true
+        
+        // Add Tap Gesture Recognizer to the content view
+        let tapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(self.buttonPressed))
+        self.contentView.addGestureRecognizer(tapGestureRecognizer)
     }
     
     required init?(coder aDecoder: NSCoder) {

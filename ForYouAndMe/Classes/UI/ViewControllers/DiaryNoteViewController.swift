@@ -47,9 +47,9 @@ class DiaryNoteViewController: UIViewController {
         
         containerView.addSubview(stackView)
         stackView.autoPinEdgesToSuperviewSafeArea(with: UIEdgeInsets(top: 25.0,
-                                                                     left: Constants.Style.DefaultHorizontalMargins,
+                                                                     left: Constants.Style.DefaultHorizontalMargins/2,
                                                                      bottom: 0,
-                                                                     right: Constants.Style.DefaultHorizontalMargins))
+                                                                     right: Constants.Style.DefaultHorizontalMargins/2))
         return containerView
     }()
     
@@ -83,6 +83,7 @@ class DiaryNoteViewController: UIViewController {
         tableView.backgroundView = self.diaryNoteEmptyView
         tableView.dataSource = self
         tableView.delegate = self
+        tableView.estimatedRowHeight = 130.0
         return tableView
     }()
     
@@ -137,7 +138,7 @@ class DiaryNoteViewController: UIViewController {
     }
     
     deinit {
-        print("AboutYouViewController - deinit")
+        print("DiaryNoteViewController - deinit")
     }
     
     override func viewDidLoad() {
@@ -154,11 +155,12 @@ class DiaryNoteViewController: UIViewController {
         stackView.addArrangedSubview(self.tableView)
         stackView.addArrangedSubview(self.footerView)
         
-        tableView.autoPinEdge(toSuperviewEdge: .leading, withInset: 0)
-        tableView.autoPinEdge(toSuperviewEdge: .trailing, withInset: 0)
-        tableView.autoPinEdge(.top, to: .bottom, of: self.headerView)
-        tableView.autoPinEdge(.bottom, to: .top, of: self.footerView)
+        self.tableView.autoPinEdge(toSuperviewEdge: .leading, withInset: 0)
+        self.tableView.autoPinEdge(toSuperviewEdge: .trailing, withInset: 0)
+        self.tableView.autoPinEdge(.top, to: .bottom, of: self.headerView)
+        self.tableView.autoPinEdge(.bottom, to: .top, of: self.footerView)
         
+        self.tableView.reloadData()
         self.updateUI()
 
     }
@@ -178,6 +180,19 @@ class DiaryNoteViewController: UIViewController {
     
     private func updateUI() {
         self.tableView.backgroundView = diaryNoteItems.isEmpty ? self.diaryNoteEmptyView : nil
+    }
+    
+    private func loadItems() {
+        self.repository.getDiaryNoteText(noteID: "2")
+                        .addProgress()
+                        .subscribe(onSuccess: { [weak self] diaryNote in
+                            guard let self = self else { return }
+
+                        }, onError: { [weak self] error in
+                            guard let self = self else { return }
+//                            guard let delegate = self.delegate else { return }
+                            self.navigator.handleError(error: error, presenter: self)
+                        }).disposed(by: self.disposeBag)
     }
 }
 
@@ -199,45 +214,25 @@ extension DiaryNoteViewController: UITableViewDataSource {
             case .text:
                 guard let cell = tableView.dequeueReusableCellOfType(type: DiaryNoteItemTextTableViewCell.self,
                                                                      forIndexPath: indexPath) else {
-                    assertionFailure("DiaryNoteItem not registered")
+                    assertionFailure("DiaryNoteItemTextTableViewCell not registered")
                     return UITableViewCell()
                 }
-                cell.display(data: diaryNote, buttonPressedCallback: { () in
-                    self.repository.getDiaryNoteText(noteID: diaryNote.id)
-                                .addProgress()
-                                .subscribe(onSuccess: { [weak self] surveyGroup in
-                                    guard let self = self else { return }
-//                                    self.navigator.startSurveySection(withTask: feed,
-//                                                                      surveyGroup: surveyGroup,
-//                                                                      presenter: delegate.presenter)
-                                }, onError: { [weak self] error in
-//                                    guard let self = self else { return }
-//                                    guard let delegate = self.delegate else { return }
-//                                    self.navigator.handleError(error: error, presenter: delegate.presenter)
-                                }).disposed(by: self.disposeBag)
+                cell.display(data: diaryNote, buttonPressedCallback: { [weak self] in
+                    guard let self = self else { return }
+                    self.navigator.openDiaryNoteText(diaryNoteId: diaryNote.id,
+                                                     presenter: self)
                 })
                 return cell
                 
             case .audio:
                 guard let cell = tableView.dequeueReusableCellOfType(type: DiaryNoteItemAudioTableViewCell.self,
                                                                      forIndexPath: indexPath) else {
-                    assertionFailure("DiaryNoteItemTableViewCell not registered")
+                    assertionFailure("DiaryNoteItemAudioTableViewCell not registered")
                     return UITableViewCell()
                 }
-                cell.display(data: diaryNote, buttonPressedCallback: { () in
-                    //                self.repository.getSurvey(surveyId: survey.id)
-                    //                    .addProgress()
-                    //                    .subscribe(onSuccess: { [weak self] surveyGroup in
-                    //                        guard let self = self else { return }
-                    //                        guard let delegate = self.delegate else { return }
-                    //                        self.navigator.startSurveySection(withTask: feed,
-                    //                                                          surveyGroup: surveyGroup,
-                    //                                                          presenter: delegate.presenter)
-                    //                    }, onError: { [weak self] error in
-                    //                        guard let self = self else { return }
-                    //                        guard let delegate = self.delegate else { return }
-                    //                        self.navigator.handleError(error: error, presenter: delegate.presenter)
-                    //                    }).disposed(by: self.disposeBag)
+                cell.display(data: diaryNote, buttonPressedCallback: { [weak self] in
+                    guard let self = self else { return }
+                    self.navigator.openDiaryNoteAudio(diaryNoteId: diaryNote.id, presenter: self)
                 })
                 return cell
                 
@@ -258,10 +253,6 @@ extension DiaryNoteViewController: UITableViewDataSource {
 }
 
 extension DiaryNoteViewController: UITableViewDelegate {
-    
-    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        return tableView.deselectRow(at: indexPath, animated: true)
-    }
     
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
         let diaryNote = diaryNoteItems[indexPath.row]

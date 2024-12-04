@@ -49,7 +49,7 @@ class DiaryNoteItemAudioTableViewCell: UITableViewCell {
         imageView.image = ImagePalette.templateImage(withName: .arrowRight)
         imageView.tintColor = ColorPalette.color(withType: .gradientPrimaryEnd)
         imageView.contentMode = .scaleAspectFit
-        imageView.autoSetDimensions(to: CGSize(width: 18, height: 18))
+        imageView.autoSetDimensions(to: CGSize(width: 24, height: 24))
         return imageView
     }()
     

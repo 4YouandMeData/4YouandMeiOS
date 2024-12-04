@@ -535,10 +535,12 @@ class AppNavigator {
     }
     
     public func openDiaryNoteText(diaryNoteId: String, presenter: UIViewController) {
-//        let diaryNoteTextViewController = DiaryNoteWriterViewController()
-//        let navigationController = UINavigationController(rootViewController: diaryNoteWriterViewController)
-//        navigationController.modalPresentationStyle = .fullScreen
-//        presenter.present(navigationController, animated: true, completion: nil)
+        guard let navigationController = presenter.navigationController else {
+            assertionFailure("Missing UINavigationController")
+            return
+        }
+        let diaryNoteTextViewController = DiaryNoteTextViewController(withDataPointID: diaryNoteId)
+        navigationController.pushViewController(diaryNoteTextViewController, animated: true)
     }
     
     public func openDiaryNoteAudio(diaryNoteId: String, presenter: UIViewController) {
