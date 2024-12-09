@@ -98,6 +98,13 @@ class DiaryNoteItemAudioTableViewCell: UITableViewCell {
                                                                        left: Constants.Style.DefaultHorizontalMargins,
                                                                        bottom: 0.0,
                                                                        right: Constants.Style.DefaultHorizontalMargins))
+        
+        // Enable user interaction on the content view to make sure the cell responds to touch events
+        self.contentView.isUserInteractionEnabled = true
+        
+        // Add Tap Gesture Recognizer to the content view
+        let tapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(self.playButtonPressed))
+        self.contentView.addGestureRecognizer(tapGestureRecognizer)
     }
     
     required init?(coder aDecoder: NSCoder) {

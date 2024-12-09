@@ -544,10 +544,12 @@ class AppNavigator {
     }
     
     public func openDiaryNoteAudio(diaryNoteId: String, presenter: UIViewController) {
-//        let diaryNoteAudioViewController = DiaryNoteRecorderViewController()
-//        let navigationController = UINavigationController(rootViewController: diaryNoteRecorderViewController)
-//        navigationController.modalPresentationStyle = .fullScreen
-//        presenter.present(navigationController, animated: true, completion: nil)
+        guard let navigationController = presenter.navigationController else {
+            assertionFailure("Missing UINavigationController")
+            return
+        }
+        let diaryNoteAudioViewController = DiaryNoteAudioViewController(withDataPointID: diaryNoteId)
+        navigationController.pushViewController(diaryNoteAudioViewController, animated: true)
     }
     
     // MARK: About You

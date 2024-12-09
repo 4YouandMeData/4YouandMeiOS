@@ -21,25 +21,25 @@ enum GenericButtonTextStyleCategory: StyleCategory {
             buttonView.addGradientView(.init(type: .primaryBackground))
             buttonView.button.apply(style: ButtonTextStyleCategory.secondaryBackground(customHeight: nil).style)
             buttonView.buttonAttributedTextStyle = AttributedTextStyle(fontStyle: .header2, colorType: .tertiaryText)
-            if shadow {
-                buttonView.addShadowLinear(goingDown: false)
-            }
+                if shadow {
+                    buttonView.addShadowLinear(goingDown: false)
+                }
             }
         case .secondaryBackground(let shadow): return Style<GenericButtonView> { buttonView in
             buttonView.backgroundColor = ColorPalette.color(withType: .secondary)
             buttonView.button.apply(style: ButtonTextStyleCategory.primaryBackground(customHeight: nil).style)
             buttonView.buttonAttributedTextStyle = AttributedTextStyle(fontStyle: .header2, colorType: .secondaryText)
-            if shadow {
-                buttonView.addShadowLinear(goingDown: false)
-            }
+                if shadow {
+                    buttonView.addShadowLinear(goingDown: false)
+                }
             }
         case .transparentBackground(let shadow): return Style<GenericButtonView> { buttonView in
             buttonView.backgroundColor = .clear
             buttonView.button.apply(style: ButtonTextStyleCategory.primaryBackground(customHeight: nil).style)
             buttonView.buttonAttributedTextStyle = AttributedTextStyle(fontStyle: .header2, colorType: .secondaryText)
-            if shadow {
-                buttonView.addShadowLinear(goingDown: false)
-            }
+                if shadow {
+                    buttonView.addShadowLinear(goingDown: false)
+                }
             }
         case .feed: return Style<GenericButtonView> { buttonView in
             buttonView.backgroundColor = .clear

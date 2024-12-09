@@ -242,6 +242,7 @@
 		0DA92059BED751E415AD0CDEC1002295 /* LuminanceRangeReduction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 804B2D33845B3E4E69FBABA07A412F5A /* LuminanceRangeReduction.swift */; };
 		0DAC3719A659BA2BA14F8661094EB6A4 /* NotificationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABA36DBFBAE01E540D17E13D3F365480 /* NotificationManager.swift */; };
 		0DC6FFDC7CD09C23AB2835102DA9BFF6 /* MultiplyBlend_GLES.fsh in Resources */ = {isa = PBXBuildFile; fileRef = E1FABDC5E14A76BEA081C3719AE72754 /* MultiplyBlend_GLES.fsh */; };
+		0DD445E12D00B9140009D4A6 /* DiaryNoteAudioViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DD445E02D00B90E0009D4A6 /* DiaryNoteAudioViewController.swift */; };
 		0E035C0A2538308D1247A0DFB1526C8E /* SubtractBlend.swift in Sources */ = {isa = PBXBuildFile; fileRef = 789754CCF1BBAC705B7D69BC8779B56E /* SubtractBlend.swift */; };
 		0E19007D45A21195C917720DD16371B4 /* ORKDeprecated.m in Sources */ = {isa = PBXBuildFile; fileRef = 05EB5016BFEAD8B97808158E3D204C2B /* ORKDeprecated.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
 		0E1CDAD3C4CE26168BE9F485193CDFD3 /* Int+Custom.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0B98D5D1D21DFB2B4D5E938ECC69B84 /* Int+Custom.swift */; };
@@ -4229,6 +4230,7 @@
 		0D875A542CFF14AF00C2BB07 /* DiaryNoteTextViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiaryNoteTextViewController.swift; sourceTree = "<group>"; };
 		0DB115464DFF8FEED48D3F19D16058DC /* Luminance_GL.fsh */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.glsl; name = Luminance_GL.fsh; path = framework/Source/Operations/Shaders/Luminance_GL.fsh; sourceTree = "<group>"; };
 		0DC13B0583B4D9DE45D3EE612F369CD4 /* AnimatedViewPortJob.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = AnimatedViewPortJob.swift; path = Source/Charts/Jobs/AnimatedViewPortJob.swift; sourceTree = "<group>"; };
+		0DD445E02D00B90E0009D4A6 /* DiaryNoteAudioViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiaryNoteAudioViewController.swift; sourceTree = "<group>"; };
 		0DD67E7F86139275681119781E19540D /* ORKActiveStep.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = ORKActiveStep.h; path = ResearchKit/ActiveTasks/ORKActiveStep.h; sourceTree = "<group>"; };
 		0DDE30D520B927EF7687D6D17B5B88F8 /* DSL.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = DSL.swift; path = Sources/Quick/DSL/DSL.swift; sourceTree = "<group>"; };
 		0E3C38C5D0B505835BAB170878FB2D81 /* FIROptions.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = FIROptions.h; path = FirebaseCore/Sources/Public/FirebaseCore/FIROptions.h; sourceTree = "<group>"; };
@@ -7812,6 +7814,7 @@
 		0ADE473FAB0A00085F8689E133D62B4E /* ViewControllers */ = {
 			isa = PBXGroup;
 			children = (
+				0DD445E02D00B90E0009D4A6 /* DiaryNoteAudioViewController.swift */,
 				0D875A542CFF14AF00C2BB07 /* DiaryNoteTextViewController.swift */,
 				0D8514D72CFB782200476E62 /* DiaryNoteViewController.swift */,
 				69019770408500F941C63B516DBCF63A /* ActivitySectionViewController.swift */,
@@ -16064,6 +16067,7 @@
 				F169A8B3ACD99D7F343B437160511563 /* IntegrationSection.swift in Sources */,
 				556CB4F6B794DDD58629D2679DF9019E /* IntegrationSectionCoordinator.swift in Sources */,
 				360AF4DA92F684F7892022BD1D0673D4 /* InternalAnalyticsPlatform.swift in Sources */,
+				0DD445E12D00B9140009D4A6 /* DiaryNoteAudioViewController.swift in Sources */,
 				01D16E9D36523B27C6601794E8F84AA8 /* IntroVideoSectionCoordinator.swift in Sources */,
 				175AEF0143427904B360E521F79D7FA5 /* IntroVideoViewController.swift in Sources */,
 				EC383C3B7DC262F2EC4705FC33C59861 /* IntroViewController.swift in Sources */,

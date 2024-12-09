@@ -278,24 +278,24 @@ class UserDataViewController: UIViewController, WKNavigationDelegate, WKScriptMe
                 self.errorView.showViewWithError(error)
             }).disposed(by: self.disposeBag)*/
         
-        let userDataRequest = self.repository.getUserData()
-
-        userDataRequest
-            .addProgress()
-            .subscribe(onSuccess: { [weak self] _ in
-                guard let self = self else { return }
-                self.errorView.hideView()
-                // Prepare UI if needed
-                if false == self.isViewInitialized {
-                    
-                    // Setup here because it adds a constraint to summaryView
-                    self.setupemptyByFilterView()
-                }
-                // Nota: Rimuovi la chiamata a refreshCharts se non più necessaria
-            }, onError: { [weak self] error in
-                guard let self = self else { return }
-                self.errorView.showViewWithError(error)
-            }).disposed(by: self.disposeBag)
+//        let userDataRequest = self.repository.getUserData()
+//
+//        userDataRequest
+//            .addProgress()
+//            .subscribe(onSuccess: { [weak self] _ in
+//                guard let self = self else { return }
+//                self.errorView.hideView()
+//                // Prepare UI if needed
+//                if false == self.isViewInitialized {
+//                    
+//                    // Setup here because it adds a constraint to summaryView
+//                    self.setupemptyByFilterView()
+//                }
+//                // Nota: Rimuovi la chiamata a refreshCharts se non più necessaria
+//            }, onError: { [weak self] error in
+//                guard let self = self else { return }
+//                self.errorView.showViewWithError(error)
+//            }).disposed(by: self.disposeBag)
     }
     
     private func refreshCharts(withStudyPeriod studyPeriod: StudyPeriod) {
@@ -413,7 +413,7 @@ class UserDataViewController: UIViewController, WKNavigationDelegate, WKScriptMe
    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
        // Inietta il listener JavaScript dopo il caricamento
        injectChartEventListener()
-       self.handleChartPointTap(eventData: ["dataPointID": "1"])
+       handleChartPointTap(eventData: ["dataPoint": "1"])
    }
     
     // Metodo per iniettare il listener JavaScript
@@ -440,8 +440,11 @@ class UserDataViewController: UIViewController, WKNavigationDelegate, WKScriptMe
     
     // Metodo per gestire l'evento di tap sul punto del grafico
     private func handleChartPointTap(eventData: [String: Any]) {
-        _ = eventData["dataPointID"] as? String
-        self.navigator.presentDiaryNote(dataPointId: "2", presenter: self)
+        guard let dataPoint = eventData["dataPoint"] as? String else {
+            return
+        }
+        print("Datapoint: \(dataPoint)")
+        self.navigator.presentDiaryNote(dataPointId: dataPoint, presenter: self)
         
 //        let sheetController = UISheetPresentationController(presentedViewController: noteViewController, presenting: self)
 //        sheetController.detents = [.medium(), .large()]

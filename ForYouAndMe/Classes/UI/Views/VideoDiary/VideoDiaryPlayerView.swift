@@ -97,7 +97,6 @@ class VideoDiaryPlayerView: UIView {
     private let infoView: UIView = {
         let verticalStackView = UIStackView.create(withAxis: .vertical, spacing: 16.0)
         
-        
         verticalStackView.addLabel(withText: StringsProvider.string(forKey: .videoDiaryRecorderInfoTitle),
                                    fontStyle: .paragraph,
                                    colorType: .fourthText,
