@@ -198,11 +198,11 @@ class DiaryNoteViewController: UIViewController {
     }
     
     @objc private func createAudioDiaryNote() {
-        self.navigator.openDiaryNoteAudio(diaryNoteId: self.dataPointID, presenter: self)
+        self.navigator.openDiaryNoteAudio(diaryNoteId: nil, presenter: self)
     }
     
     @objc private func createTextDiaryNote() {
-        self.navigator.openDiaryNoteText(diaryNoteId: self.dataPointID, presenter: self)
+        self.navigator.openDiaryNoteText(diaryNoteId: nil, presenter: self)
     }
 }
 
