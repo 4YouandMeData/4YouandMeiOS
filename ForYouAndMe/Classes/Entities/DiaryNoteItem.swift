@@ -15,6 +15,9 @@ enum DiaryNoteItemType: String {
 struct DiaryNoteItem {
     let id: String
     let type: String
+    
+    @NilIfEmptyString
+    var diaryNoteId: String?
 
     @FailableEnumStringDecodable
     var diaryNoteType: DiaryNoteItemType?
@@ -56,7 +59,8 @@ extension DiaryNoteItem: JSONAPIMappable {
     enum CodingKeys: String, CodingKey {
         case id
         case type
-        case diaryNoteType = "diaryNoteType"
+        case diaryNoteId = "diary_notable_id"
+        case diaryNoteType = "diary_notable_type"
         case title
         case body = "description"
         case image

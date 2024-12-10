@@ -230,7 +230,7 @@
 		0D68306874E6508FC8D669A051A969DE /* WhiteBalance_GLES.fsh in Resources */ = {isa = PBXBuildFile; fileRef = 2CE07DCDF7AAE43878A619E8D8FA619B /* WhiteBalance_GLES.fsh */; };
 		0D6DE1A67E5AE9C732A567A9FAA169FF /* StretchDistortion_GL.fsh in Resources */ = {isa = PBXBuildFile; fileRef = CB3A608032F164433C3EE29BBA63D7F7 /* StretchDistortion_GL.fsh */; };
 		0D700AB87985FA17DB8B2E5B44137AA8 /* Circle_GLES.fsh in Resources */ = {isa = PBXBuildFile; fileRef = 977A367B1B07E4682DAFD0ECFA7C93AF /* Circle_GLES.fsh */; };
-		0D8514D82CFB783C00476E62 /* DiaryNoteViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D8514D72CFB782200476E62 /* DiaryNoteViewController.swift */; };
+		0D8514D82CFB783C00476E62 /* DiaryNotesViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D8514D72CFB782200476E62 /* DiaryNotesViewController.swift */; };
 		0D8667CDD9600499DCD5D97A7574A838 /* ORKFormStep.h in Headers */ = {isa = PBXBuildFile; fileRef = 68EEEC202609A72C7B6C5BCBF194DE22 /* ORKFormStep.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		0D875A4D2CFDC0AC00C2BB07 /* DiaryNoteEmptyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D875A4C2CFDC09F00C2BB07 /* DiaryNoteEmptyView.swift */; };
 		0D875A4F2CFDEC9400C2BB07 /* DiaryNoteItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D875A4E2CFDEC8F00C2BB07 /* DiaryNoteItem.swift */; };
@@ -4222,7 +4222,7 @@
 		0D6DB80E770F1044F178C622555B39E5 /* id.lproj */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = folder; name = id.lproj; path = ResearchKit/Localized/id.lproj; sourceTree = "<group>"; };
 		0D75385F740CAA349102ECC9BCA0C6EA /* FIRCLSByteUtility.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = FIRCLSByteUtility.h; path = Crashlytics/Shared/FIRCLSByteUtility.h; sourceTree = "<group>"; };
 		0D84BCAFA8752F8CEFB69C8DB053E8B6 /* FIRCLSDefines.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = FIRCLSDefines.h; path = Crashlytics/Crashlytics/Helpers/FIRCLSDefines.h; sourceTree = "<group>"; };
-		0D8514D72CFB782200476E62 /* DiaryNoteViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiaryNoteViewController.swift; sourceTree = "<group>"; };
+		0D8514D72CFB782200476E62 /* DiaryNotesViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiaryNotesViewController.swift; sourceTree = "<group>"; };
 		0D875A4C2CFDC09F00C2BB07 /* DiaryNoteEmptyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiaryNoteEmptyView.swift; sourceTree = "<group>"; };
 		0D875A4E2CFDEC8F00C2BB07 /* DiaryNoteItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiaryNoteItem.swift; sourceTree = "<group>"; };
 		0D875A502CFDF74200C2BB07 /* DiaryNoteItemTextTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiaryNoteItemTextTableViewCell.swift; sourceTree = "<group>"; };
@@ -7816,7 +7816,7 @@
 			children = (
 				0DD445E02D00B90E0009D4A6 /* DiaryNoteAudioViewController.swift */,
 				0D875A542CFF14AF00C2BB07 /* DiaryNoteTextViewController.swift */,
-				0D8514D72CFB782200476E62 /* DiaryNoteViewController.swift */,
+				0D8514D72CFB782200476E62 /* DiaryNotesViewController.swift */,
 				69019770408500F941C63B516DBCF63A /* ActivitySectionViewController.swift */,
 				8460F68C7EFAD2F8618CD4B52009D445 /* BooleanQuestionsViewController.swift */,
 				35855D0A172A2F79F0AA5F30F9D1CFFB /* DevicesIntegrationViewController.swift */,
@@ -15961,7 +15961,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				0D8514D82CFB783C00476E62 /* DiaryNoteViewController.swift in Sources */,
+				0D8514D82CFB783C00476E62 /* DiaryNotesViewController.swift in Sources */,
 				59308AF0B93C12FC05D2FC1704C8B060 /* AboutYouHeaderView.swift in Sources */,
 				ED36321E6749C39599E68238A8ECA87D /* AboutYouViewController.swift in Sources */,
 				4E619B706C124ABBEA66E6C519ABAEB5 /* Activity.swift in Sources */,

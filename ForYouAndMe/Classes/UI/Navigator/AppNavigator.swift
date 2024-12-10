@@ -526,15 +526,15 @@ class AppNavigator {
         presenter.present(viewController, animated: true, completion: nil)
     }
     
-    public func presentDiaryNote(dataPointId: String, presenter: UIViewController) {
-        let diaryNoteViewController = DiaryNoteViewController(withDataPointID: dataPointId)
+    public func presentDiaryNotes(dataPointId: String, presenter: UIViewController) {
+        let diaryNoteViewController = DiaryNotesViewController(withDataPointID: dataPointId)
         let navigationViewController = UINavigationController(rootViewController: diaryNoteViewController)
         navigationViewController.modalPresentationStyle = .formSheet
         navigationViewController.preventPopWithSwipe()
         presenter.present(navigationViewController, animated: true)
     }
     
-    public func openDiaryNoteText(diaryNoteId: String, presenter: UIViewController) {
+    public func openDiaryNoteText(diaryNoteId: String?, presenter: UIViewController) {
         guard let navigationController = presenter.navigationController else {
             assertionFailure("Missing UINavigationController")
             return
@@ -543,7 +543,7 @@ class AppNavigator {
         navigationController.pushViewController(diaryNoteTextViewController, animated: true)
     }
     
-    public func openDiaryNoteAudio(diaryNoteId: String, presenter: UIViewController) {
+    public func openDiaryNoteAudio(diaryNoteId: String?, presenter: UIViewController) {
         guard let navigationController = presenter.navigationController else {
             assertionFailure("Missing UINavigationController")
             return

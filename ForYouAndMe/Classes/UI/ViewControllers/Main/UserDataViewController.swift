@@ -444,7 +444,7 @@ class UserDataViewController: UIViewController, WKNavigationDelegate, WKScriptMe
             return
         }
         print("Datapoint: \(dataPoint)")
-        self.navigator.presentDiaryNote(dataPointId: dataPoint, presenter: self)
+        self.navigator.presentDiaryNotes(dataPointId: dataPoint, presenter: self)
         
 //        let sheetController = UISheetPresentationController(presentedViewController: noteViewController, presenting: self)
 //        sheetController.detents = [.medium(), .large()]

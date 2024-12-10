@@ -17,7 +17,7 @@ class DiaryNoteAudioViewController: UIViewController {
         case submitted(submitDate: Date, isPlaying: Bool)
     }
     
-    fileprivate enum PageState { case play, pause }
+    fileprivate enum PageState { case listen, create }
     
     private let navigator: AppNavigator
     private let repository: Repository
@@ -34,6 +34,7 @@ class DiaryNoteAudioViewController: UIViewController {
     
     private let totalTime = Constants.Misc.AudioDiaryMaxDurationSeconds
     private var recordDurationTime: TimeInterval = 0.0
+    private let pageState: PageState
     
     private lazy var closeButton: UIButton = {
         let button = UIButton()
@@ -119,10 +120,16 @@ class DiaryNoteAudioViewController: UIViewController {
         return label
     }()
     
+    private lazy var slider: UISlider = {
+        let slider = UISlider()
+        slider.minimumValue = 0
+        slider.maximumValue = 100
+        return slider
+    }()
+    
     private lazy var footerView: GenericButtonView = {
         
         let buttonView = GenericButtonView(withTextStyleCategory: .transparentBackground(shadow: false ))
-        buttonView.setButtonText("Save")
         buttonView.addTarget(target: self, action: #selector(self.saveButtonPressed))
         
         return buttonView
@@ -141,14 +148,16 @@ class DiaryNoteAudioViewController: UIViewController {
     }()
     
     private var storage: CacheService
-    private let dataPointID: String
+    private let dataPointID: String?
     private let maxCharacters: Int = 500
     
-    init(withDataPointID dataPointID: String) {
+    init(withDataPointID dataPointID: String?) {
         self.navigator = Services.shared.navigator
         self.repository = Services.shared.repository
         self.storage = Services.shared.storageServices
         self.analytics = Services.shared.analytics
+        
+        self.pageState = dataPointID == nil ? .create : .listen
         self.dataPointID = dataPointID
         
         super.init(nibName: nil, bundle: nil)
@@ -164,7 +173,6 @@ class DiaryNoteAudioViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
         self.view.backgroundColor = ColorPalette.color(withType: .secondary)
 
         self.view.addSubview(self.scrollView)
@@ -175,79 +183,7 @@ class DiaryNoteAudioViewController: UIViewController {
         stackView.autoPinEdges(toSuperviewMarginsExcludingEdge: .bottom)
         stackView.addArrangedSubview(self.headerView)
         
-        // StackView
-        let containerStackView = UIStackView.create(withAxis: .vertical)
-        self.scrollView.addSubview(containerStackView)
-        containerStackView.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets(top: 0.0,
-                                                                  left: Constants.Style.DefaultHorizontalMargins,
-                                                                  bottom: 0.0,
-                                                                  right: Constants.Style.DefaultHorizontalMargins))
-        containerStackView.autoAlignAxis(toSuperviewAxis: .vertical)
-        containerStackView.addBlankSpace(space: 50.0)
-        
-        // Image
-        containerStackView.addHeaderImage(image: ImagePalette.image(withName: .audioRecording), height: 80.0)
-        containerStackView.addBlankSpace(space: 70)
-        // Title
-        let timeLabelContainerView = UIView()
-        timeLabelContainerView.addSubview(self.timeLabel)
-        self.timeLabel.autoPinEdgesToSuperviewEdges()
-        self.timeLabel.autoAlignAxis(toSuperviewAxis: .vertical)
-        self.timeLabel.autoAlignAxis(toSuperviewAxis: .horizontal)
-        
-        self.timeLabel.setTime(currentTime: Int(self.recordDurationTime),
-                               totalTime: Int(totalTime),
-                               attributedTextStyle: self.totalTimeLabelAttributedTextStyle,
-                               currentTimeAttributedTextStyle: self.currentTimeLabelAttributedTextStyle)
-        containerStackView.addArrangedSubview(timeLabelContainerView)
-        
-        containerStackView.addBlankSpace(space: 120)
-        
-        let recordButton = UIButton()
-        let recordButtonImage = ImagePalette.image(withName: .audioRecButton)
-        recordButton.setImage(recordButtonImage, for: .normal)
-        recordButton.imageView?.contentMode = .scaleAspectFit
-        recordButton.addTarget(self, action: #selector (recordButtonTapped), for: .touchUpInside)
-        recordButton.contentEdgeInsets = UIEdgeInsets(top: 4.0, left: 4.0, bottom: 4.0, right: 4.0)
-        recordButton.autoSetDimension(.height, toSize: 68)
-        
-        containerStackView.addArrangedSubview(recordButton)
-        
-//        let containerTextView = UIView()
-//        containerTextView.addSubview(self.textView)
-//        self.textView.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets(top: 0,
-//                                                                      left: 12.0,
-//                                                                      bottom: 0,
-//                                                                      right: 12.0))
-        // Limit label
-//        containerTextView.addSubview(self.limitLabel)
-//        self.limitLabel.autoPinEdge(.top, to: .bottom, of: self.textView)
-//        self.limitLabel.autoPinEdge(.right, to: .right, of: self.textView)
-//        self.limitLabel.autoPinEdge(.left, to: .left, of: self.textView)
-//        self.limitLabel.text = "\(self.textView.text.count) / \(self.maxCharacters)"
-//        stackView.addArrangedSubview(containerTextView)
-//        
-//        stackView.addBlankSpace(space: 60.0)
-        
-        // Footer
-        self.view.addSubview(self.footerView)
-        footerView.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets.zero, excludingEdge: .top)
-        
-        self.scrollView.autoPinEdge(.top, to: .bottom, of: self.headerView)
-        self.scrollView.autoPinEdge(.leading, to: .leading, of: self.view)
-        self.scrollView.autoPinEdge(.trailing, to: .trailing, of: self.view)
-        self.scrollView.autoPinEdge(.bottom, to: .top, of: self.footerView)
-        
-//        scrollStackView.backgroundColor = .red
-//        scrollStackView.stackView.backgroundColor = .blue
-                
-        // Placeholder label
-//        self.textView.addSubview(self.placeholderLabel)
-//        self.placeholderLabel.isHidden = !textView.text.isEmpty
-//        self.placeholderLabel.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets(top: CGFloat(self.textView.font!.pointSize/2),
-//                                                                              left: 5,
-//                                                                              bottom: 10,
-//                                                                              right: 10))
+        self.refreshUI()
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -272,6 +208,141 @@ class DiaryNoteAudioViewController: UIViewController {
     }
     
     // MARK: - Private Methods
+    
+    private func refreshUI() {
+        switch self.pageState {
+        case .create:
+            // StackView
+            let containerStackView = UIStackView.create(withAxis: .vertical)
+            self.scrollView.addSubview(containerStackView)
+            containerStackView.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets(top: 0.0,
+                                                                      left: Constants.Style.DefaultHorizontalMargins,
+                                                                      bottom: 0.0,
+                                                                      right: Constants.Style.DefaultHorizontalMargins))
+            containerStackView.autoAlignAxis(toSuperviewAxis: .vertical)
+            containerStackView.addBlankSpace(space: 50.0)
+            
+            // Image
+            containerStackView.addHeaderImage(image: ImagePalette.image(withName: .audioRecording), height: 80.0)
+            containerStackView.addBlankSpace(space: 70)
+            // Title
+            let timeLabelContainerView = UIView()
+            timeLabelContainerView.addSubview(self.timeLabel)
+            self.timeLabel.autoPinEdgesToSuperviewEdges()
+            self.timeLabel.autoAlignAxis(toSuperviewAxis: .vertical)
+            self.timeLabel.autoAlignAxis(toSuperviewAxis: .horizontal)
+            
+            self.timeLabel.setTime(currentTime: Int(self.recordDurationTime),
+                                   totalTime: Int(totalTime),
+                                   attributedTextStyle: self.totalTimeLabelAttributedTextStyle,
+                                   currentTimeAttributedTextStyle: self.currentTimeLabelAttributedTextStyle)
+            containerStackView.addArrangedSubview(timeLabelContainerView)
+            
+            containerStackView.addBlankSpace(space: 120)
+            
+            let recordButton = UIButton()
+            let recordButtonImage = ImagePalette.image(withName: .audioRecButton)
+            recordButton.setImage(recordButtonImage, for: .normal)
+            recordButton.imageView?.contentMode = .scaleAspectFit
+            recordButton.addTarget(self, action: #selector (recordButtonTapped), for: .touchUpInside)
+            recordButton.contentEdgeInsets = UIEdgeInsets(top: 4.0, left: 4.0, bottom: 4.0, right: 4.0)
+            recordButton.autoSetDimension(.height, toSize: 68)
+            
+            containerStackView.addArrangedSubview(recordButton)
+            
+            // Footer
+            self.view.addSubview(self.footerView)
+            footerView.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets.zero, excludingEdge: .top)
+            
+            self.scrollView.autoPinEdge(.top, to: .bottom, of: self.headerView)
+            self.scrollView.autoPinEdge(.leading, to: .leading, of: self.view)
+            self.scrollView.autoPinEdge(.trailing, to: .trailing, of: self.view)
+            self.scrollView.autoPinEdge(.bottom, to: .top, of: self.footerView)
+            footerView.setButtonText("Save")
+            
+        case .listen:
+            // StackView
+            let containerStackView = UIStackView.create(withAxis: .vertical)
+            self.scrollView.addSubview(containerStackView)
+            containerStackView.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets(top: 0.0,
+                                                                      left: Constants.Style.DefaultHorizontalMargins,
+                                                                      bottom: 0.0,
+                                                                      right: Constants.Style.DefaultHorizontalMargins))
+            containerStackView.autoAlignAxis(toSuperviewAxis: .vertical)
+            containerStackView.addBlankSpace(space: 24.0)
+            let playButton = UIButton()
+            let recordButtonImage = ImagePalette.image(withName: .audioPlayButton)
+            playButton.setImage(recordButtonImage, for: .normal)
+            playButton.imageView?.contentMode = .scaleAspectFit
+            playButton.addTarget(self, action: #selector (recordButtonTapped), for: .touchUpInside)
+            playButton.contentEdgeInsets = UIEdgeInsets(top: 4.0, left: 4.0, bottom: 4.0, right: 4.0)
+            playButton.autoSetDimension(.height, toSize: 68)
+            
+            containerStackView.addArrangedSubview(playButton)
+            
+            containerStackView.addBlankSpace(space: 24.0)
+            
+            // Title
+            let timeLabelContainerView = UIView()
+            timeLabelContainerView.addSubview(self.timeLabel)
+            self.timeLabel.autoPinEdgesToSuperviewEdges()
+            self.timeLabel.autoAlignAxis(toSuperviewAxis: .vertical)
+            self.timeLabel.autoAlignAxis(toSuperviewAxis: .horizontal)
+            
+            self.timeLabel.setTime(currentTime: Int(self.recordDurationTime),
+                                   totalTime: Int(totalTime),
+                                   attributedTextStyle: self.totalTimeLabelAttributedTextStyle,
+                                   currentTimeAttributedTextStyle: self.currentTimeLabelAttributedTextStyle)
+            containerStackView.addArrangedSubview(timeLabelContainerView)
+            
+            containerStackView.addBlankSpace(space: 60)
+            
+            containerStackView.addArrangedSubview(self.slider)
+            self.slider.autoPinEdge(.leading, to: .leading, of: containerStackView, withOffset: 12.0)
+            self.slider.autoPinEdge(.trailing, to: .trailing, of: containerStackView, withOffset: 12.0)
+            
+            containerStackView.addBlankSpace(space: 60)
+            
+            let containerTextView = UIView()
+            containerTextView.addSubview(self.textView)
+            
+            self.textView.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets(top: 0,
+                                                                          left: 12.0,
+                                                                          bottom: 0,
+                                                                          right: 12.0))
+            // Limit label
+            containerTextView.addSubview(self.limitLabel)
+            self.limitLabel.textColor = .lightGray
+            self.limitLabel.autoPinEdge(.top, to: .bottom, of: self.textView)
+            self.limitLabel.autoPinEdge(.right, to: .right, of: self.textView)
+            self.limitLabel.autoPinEdge(.left, to: .left, of: self.textView)
+            self.limitLabel.text = "\(self.textView.text.count) / \(self.maxCharacters)"
+            containerStackView.addArrangedSubview(containerTextView)
+  
+            // Placeholder label
+            self.textView.addSubview(self.placeholderLabel)
+            self.placeholderLabel.isHidden = !textView.text.isEmpty
+            self.placeholderLabel.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets(top: CGFloat(self.textView.font!.pointSize/2),
+                                                                                  left: 5,
+                                                                                  bottom: 10,
+                                                                                  right: 10))
+            
+            // Footer
+            self.view.addSubview(self.footerView)
+            footerView.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets.zero, excludingEdge: .top)
+            
+            self.scrollView.autoPinEdge(.top, to: .bottom, of: self.headerView)
+            self.scrollView.autoPinEdge(.leading, to: .leading, of: self.view)
+            self.scrollView.autoPinEdge(.trailing, to: .trailing, of: self.view)
+            self.scrollView.autoPinEdge(.bottom, to: .top, of: self.footerView)
+            footerView.setButtonText("Delete")
+            
+            containerTextView.autoPinEdge(.top, to: .bottom, of: self.slider, withOffset: 30)
+            containerTextView.autoPinEdge(.leading, to: .leading, of: self.view)
+            containerTextView.autoPinEdge(.trailing, to: .trailing, of: self.view)
+            containerTextView.autoPinEdge(.bottom, to: .top, of: self.footerView, withOffset: -30)
+        }
+    }
 }
 
 extension DiaryNoteAudioViewController: UITextViewDelegate {

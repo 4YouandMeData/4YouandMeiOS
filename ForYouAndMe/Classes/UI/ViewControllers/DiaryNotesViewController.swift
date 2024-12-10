@@ -8,7 +8,7 @@
 import UIKit
 import RxSwift
 
-class DiaryNoteViewController: UIViewController {
+class DiaryNotesViewController: UIViewController {
     
     private let navigator: AppNavigator
     private let repository: Repository
@@ -206,7 +206,7 @@ class DiaryNoteViewController: UIViewController {
     }
 }
 
-extension DiaryNoteViewController: UITableViewDataSource {
+extension DiaryNotesViewController: UITableViewDataSource {
     
     func numberOfSections(in tableView: UITableView) -> Int {
         return 1
@@ -262,7 +262,7 @@ extension DiaryNoteViewController: UITableViewDataSource {
     }
 }
 
-extension DiaryNoteViewController: UITableViewDelegate {
+extension DiaryNotesViewController: UITableViewDelegate {
     
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
         let diaryNote = diaryNoteItems[indexPath.row]

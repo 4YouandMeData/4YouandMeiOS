@@ -129,10 +129,10 @@ class DiaryNoteTextViewController: UIViewController {
     }()
     
     private var storage: CacheService
-    private let dataPointID: String
+    private let dataPointID: String?
     private let maxCharacters: Int = 500
     
-    init(withDataPointID dataPointID: String) {
+    init(withDataPointID dataPointID: String?) {
         self.navigator = Services.shared.navigator
         self.repository = Services.shared.repository
         self.storage = Services.shared.storageServices
