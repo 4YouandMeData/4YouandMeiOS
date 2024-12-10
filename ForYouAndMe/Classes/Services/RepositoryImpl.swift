@@ -341,6 +341,11 @@ extension RepositoryImpl: Repository {
             .handleError()
     }
     
+    func getDiaryNotes(noteID: String) -> Single<[DiaryNoteItem]> {
+        return self.api.send(request: ApiRequest(serviceRequest: .getDiaryNotes(datetime: noteID)))
+            .handleError()
+    }
+    
     func getDiaryNoteText(noteID: String) -> Single<DiaryNoteItem> {
         return self.api.send(request: ApiRequest(serviceRequest: .getDiaryNoteText(noteId: noteID)))
             .handleError()

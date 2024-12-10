@@ -172,6 +172,7 @@ extension DefaultService {
         case .getUserDataAggregation: return "Get User Data Aggragation"
         case .getUserSettings: return "Get User Settings"
         case .sendUserSettings: return "Send User Settings"
+        case .getDiaryNotes: return "Get Diary Notes"
         case .getDiaryNoteText: return "Get Diary Note Text"
         case .getDiaryNoteAudio: return "Get Diary Note Audio"
         case .sendDiaryNoteText: return "Send Diary Note Text"

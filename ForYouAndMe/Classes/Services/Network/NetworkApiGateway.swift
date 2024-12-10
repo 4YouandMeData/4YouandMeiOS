@@ -392,6 +392,8 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             return "v1/study_phases/\(phaseId)/user_study_phases"
         case .updateUserPhase(let userPhaseId):
             return "v1/user_study_phases/\(userPhaseId)"
+        case .getDiaryNotes:
+            return "v1/diary_notes"
         case .getDiaryNoteText(let diaryNoteId):
             return ""
         case .getDiaryNoteAudio(let diaryNoteId):
@@ -427,6 +429,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
                 .getUserData,
                 .getUserSettings,
                 .getUserDataAggregation,
+                .getDiaryNotes,
                 .getDiaryNoteText,
                 .getDiaryNoteAudio:
             return .get
@@ -542,6 +545,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         // User Phase
         case .createUserPhase: return "{}".utf8Encoded
         case .updateUserPhase: return "{}".utf8Encoded
+        case .getDiaryNotes: return "{}".utf8Encoded
         case .sendDiaryNoteText: return "{}".utf8Encoded
         case .sendDiaryNoteAudio: return "{}".utf8Encoded
         case .getDiaryNoteText: return "{}".utf8Encoded
@@ -706,6 +710,8 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             dataParams["start_at"] = dateString
             dataParams["custom_data"] = [String: Any]()
             return .requestParameters(parameters: ["user_study_phase": dataParams], encoding: JSONEncoding.default)
+        case .getDiaryNotes(let datetime):
+            return self.getDatapointInformations(forDatapoint: datetime)
         case .sendDiaryNoteText(_, let text):
             let params: [String: Any] = ["text": text]
             return .requestParameters(parameters: ["diary_note": params], encoding: JSONEncoding.default)
@@ -774,6 +780,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
                 .sendHealthData,
                 .createUserPhase,
                 .updateUserPhase,
+                .getDiaryNotes,
                 .getDiaryNoteText,
                 .getDiaryNoteAudio,
                 .sendDiaryNoteText,
@@ -796,6 +803,19 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         }
         // Needed by the server so it knows that the client supports images as url
         params["url_images_encoding"] = 1
+        let encoding = URLEncoding(destination: .queryString, arrayEncoding: .noBrackets, boolEncoding: .literal)
+        return .requestParameters(parameters: params, encoding: encoding)
+    }
+    
+    private func getDatapointInformations(forDatapoint dataPoint: String) -> Task {
+        var params: [String: Any] = [:]
+                params["q"] = [
+                    ["datetime_ref_eq": dataPoint]
+//                    ["not_completed": true],
+//                    ["s": "from desc"]
+                ]
+        // Needed by the server so it knows that the client supports images as url
+//        params["url_images_encoding"] = 1
         let encoding = URLEncoding(destination: .queryString, arrayEncoding: .noBrackets, boolEncoding: .literal)
         return .requestParameters(parameters: params, encoding: encoding)
     }
