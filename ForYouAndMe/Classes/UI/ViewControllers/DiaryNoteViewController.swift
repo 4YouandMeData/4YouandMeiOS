@@ -62,11 +62,11 @@ class DiaryNoteViewController: UIViewController {
         
         buttonsView.setFirstButtonText("Record")
         buttonsView.setFirstButtonImage(ImagePalette.image(withName: .audioNote))
-//        buttonsView.addTargetToFirstButton(target: self, action: #selector(self.disagreeButtonPressed))
+        buttonsView.addTargetToFirstButton(target: self, action: #selector(self.createAudioDiaryNote))
         
         buttonsView.setSecondButtonText("Write")
         buttonsView.setSecondButtonImage(ImagePalette.image(withName: .textNote))
-//        buttonsView.addTargetToSecondButton(target: self, action: #selector(self.agreenButtonPressed))
+        buttonsView.addTargetToSecondButton(target: self, action: #selector(self.createTextDiaryNote))
         
         containerView.addSubview(buttonsView)
         buttonsView.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets.zero)
@@ -128,6 +128,7 @@ class DiaryNoteViewController: UIViewController {
             ]
         ]
         
+        self.dataPointID = "2"
         // Crea un array di oggetti DiaryNoteItem dai dati di test
         self.diaryNoteItems = diaryNoteItemsTestData.compactMap { DiaryNoteItem(from: $0) }
         super.init(nibName: nil, bundle: nil)
@@ -168,6 +169,7 @@ class DiaryNoteViewController: UIViewController {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         self.navigationController?.navigationBar.apply(style: NavigationBarStyleCategory.primary(hidden: true).style)
+//        self.loadItems()
     }
     
     // MARK: - Actions
@@ -183,7 +185,7 @@ class DiaryNoteViewController: UIViewController {
     }
     
     private func loadItems() {
-        self.repository.getDiaryNoteText(noteID: "2")
+        self.repository.getDiaryNotes(noteID: self.dataPointID)
                         .addProgress()
                         .subscribe(onSuccess: { [weak self] diaryNote in
                             guard let self = self else { return }
@@ -193,6 +195,14 @@ class DiaryNoteViewController: UIViewController {
 //                            guard let delegate = self.delegate else { return }
                             self.navigator.handleError(error: error, presenter: self)
                         }).disposed(by: self.disposeBag)
+    }
+    
+    @objc private func createAudioDiaryNote() {
+        self.navigator.openDiaryNoteAudio(diaryNoteId: self.dataPointID, presenter: self)
+    }
+    
+    @objc private func createTextDiaryNote() {
+        self.navigator.openDiaryNoteText(diaryNoteId: self.dataPointID, presenter: self)
     }
 }
 
