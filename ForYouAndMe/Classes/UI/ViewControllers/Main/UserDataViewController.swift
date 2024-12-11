@@ -445,11 +445,6 @@ class UserDataViewController: UIViewController, WKNavigationDelegate, WKScriptMe
         }
         print("Datapoint: \(dataPoint)")
         self.navigator.presentDiaryNotes(dataPointId: dataPoint, presenter: self)
-        
-//        let sheetController = UISheetPresentationController(presentedViewController: noteViewController, presenting: self)
-//        sheetController.detents = [.medium(), .large()]
-//        sheetController.preferredCornerRadius = 16
-     
     }
 }
 

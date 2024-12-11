@@ -169,7 +169,7 @@ class DiaryNotesViewController: UIViewController {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         self.navigationController?.navigationBar.apply(style: NavigationBarStyleCategory.primary(hidden: true).style)
-//        self.loadItems()
+        self.loadItems()
     }
     
     // MARK: - Actions
@@ -189,6 +189,9 @@ class DiaryNotesViewController: UIViewController {
                         .addProgress()
                         .subscribe(onSuccess: { [weak self] diaryNote in
                             guard let self = self else { return }
+                            self.diaryNoteItems = diaryNote
+                            print("DiaryNote: \(diaryNote)")
+                            self.tableView.reloadData()
 
                         }, onError: { [weak self] error in
                             guard let self = self else { return }
@@ -248,7 +251,7 @@ extension DiaryNotesViewController: UITableViewDataSource {
                 
             }
         } else {
-             assertionFailure("Unhandled Diary Note Item type: \(diaryNote.self)")
+            assertionFailure("Unhandled Diary Note Item type: \(diaryNote.self)")
             return UITableViewCell()
         }
     }

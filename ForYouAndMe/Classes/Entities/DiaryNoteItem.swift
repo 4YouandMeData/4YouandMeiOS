@@ -7,7 +7,7 @@
 
 import Foundation
 
-enum DiaryNoteItemType: String {
+enum DiaryNoteItemType: String, Decodable {
     case text
     case audio
 }
@@ -16,8 +16,8 @@ struct DiaryNoteItem {
     let id: String
     let type: String
     
-    @NilIfEmptyString
-    var diaryNoteId: String?
+    @DateValue<ISO8601Strategy>
+    var diaryNoteId: Date
 
     @FailableEnumStringDecodable
     var diaryNoteType: DiaryNoteItemType?
@@ -40,30 +40,49 @@ struct DiaryNoteItem {
            return nil
        }
        
-       self.id = id
-       self.type = type
-       self.diaryNoteType = DiaryNoteItemType(rawValue: dictionary["diaryNoteType"] as? String ?? "")
-       self.title = dictionary["title"] as? String
-       self.body = dictionary["body"] as? String
-       if let imageUrlString = dictionary["image"] as? String {
+        self.id = id
+        self.type = type
+        self.diaryNoteId = dictionary["diaryNoteId"] as? Date ?? Date()
+        self.diaryNoteType = DiaryNoteItemType(rawValue: dictionary["diaryNoteType"] as? String ?? "text")
+        self.title = dictionary["title"] as? String
+        self.body = dictionary["body"] as? String
+        if let imageUrlString = dictionary["image"] as? String {
            self.image = URL(string: imageUrlString)
-       } else {
+        } else {
            self.image = nil
-       }
-       self.urlString = dictionary["link_url"] as? String
+        }
+        self.urlString = dictionary["attachment"] as? String
     }
 }
 
 extension DiaryNoteItem: JSONAPIMappable {
     
+    static var includeList: String? = "diary_noteable"
+    
     enum CodingKeys: String, CodingKey {
         case id
         case type
-        case diaryNoteId = "diary_notable_id"
+        case diaryNoteId = "datetime_ref"
         case diaryNoteType = "diary_notable_type"
         case title
-        case body = "description"
+        case body
         case image
-        case urlString = "link_url"
+        case urlString = "attachment"
+    }
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.id = try container.decode(String.self, forKey: .id)
+        self.type = try container.decode(String.self, forKey: .type)
+        self.diaryNoteId = try container.decode(DateValue<ISO8601Strategy>.self, forKey: .diaryNoteId).wrappedValue
+        let diaryType = try? container.decodeIfPresent(String.self, forKey: .urlString)
+        if let diaryType {
+            self.diaryNoteType = .audio
+        } else {
+            self.diaryNoteType = .text
+        }
+        self.title = try? container.decodeIfPresent(String.self, forKey: .title)
+        self.body = try container.decode(String.self, forKey: .body)
+        self.image = try? container.decodeIfPresent(URL.self, forKey: .image)
     }
 }
