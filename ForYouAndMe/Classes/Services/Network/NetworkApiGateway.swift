@@ -715,6 +715,8 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         case .sendDiaryNoteText(_, let text):
             let params: [String: Any] = ["text": text]
             return .requestParameters(parameters: ["diary_note": params], encoding: JSONEncoding.default)
+        case .sendDiaryNoteText(let diaryItem):
+            return .requestJSONEncodable(diaryItem)
         case .sendDiaryNoteAudio(_, let audio):
             let params: [String: Any] = ["note_audio": audio]
             return .requestParameters(parameters: ["diary_note": params], encoding: JSONEncoding.default)
