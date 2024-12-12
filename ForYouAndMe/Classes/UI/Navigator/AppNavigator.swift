@@ -526,7 +526,7 @@ class AppNavigator {
         presenter.present(viewController, animated: true, completion: nil)
     }
     
-    public func presentDiaryNotes(dataPointId: String, presenter: UIViewController) {
+    public func presentDiaryNotes(dataPointId: String?, presenter: UIViewController) {
         let diaryNoteViewController = DiaryNotesViewController(withDataPointID: dataPointId)
         let navigationViewController = UINavigationController(rootViewController: diaryNoteViewController)
         navigationViewController.modalPresentationStyle = .formSheet

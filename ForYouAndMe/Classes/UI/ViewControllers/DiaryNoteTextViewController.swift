@@ -130,6 +130,7 @@ class DiaryNoteTextViewController: UIViewController {
     
     private var storage: CacheService
     private let dataPointID: String?
+    private var diaryNote: DiaryNoteItem? = nil
     private let maxCharacters: Int = 500
     
     init(withDataPointID dataPointID: String?) {
@@ -207,6 +208,8 @@ class DiaryNoteTextViewController: UIViewController {
             self?.updateTextFields(pageState: newPageState)
             self?.view.endEditing(true)
         }).disposed(by: self.disposeBag)
+        
+        self.loadNote()
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -225,7 +228,36 @@ class DiaryNoteTextViewController: UIViewController {
     }
     
     @objc private func confirmButtonPressed() {
-        self.pageState.accept(.read)
+        if let diaryNote, self.diaryNote != nil {
+            self.repository.updateDiaryNoteText(diaryNote: diaryNote)
+                .addProgress()
+                .subscribe(onSuccess: { [weak self] in
+                    guard let self = self else { return }
+                    self.navigationController?.popViewController(animated: true)
+                }, onError: { [weak self] error in
+                    guard let self = self else { return }
+                    self.navigator.handleError(error: error, presenter: self)
+                }).disposed(by: self.disposeBag)
+            self.pageState.accept(.read)
+        } else {
+            let newDiaryNote = DiaryNoteItem.init(id: "0",
+                                               type: "diary_note",
+                                               diaryNoteId: self.dataPointID?.date(withFormat: "yyyy-MM-dd'T'HH:mm:ss'Z'") ?? NSDate.now,
+                                               diaryNoteType: .text,
+                                               title: self.textField.text,
+                                               body: self.textView.text)
+
+            self.repository.sendDiaryNoteText(diaryNote: newDiaryNote)
+                .addProgress()
+                .subscribe(onSuccess: { [weak self] in
+                    guard let self = self else { return }
+                    self.navigationController?.popViewController(animated: true)
+                }, onError: { [weak self] error in
+                    guard let self = self else { return }
+                    self.navigator.handleError(error: error, presenter: self)
+                }).disposed(by: self.disposeBag)
+            self.pageState.accept(.read)
+        }
     }
     
     @objc private func doneButtonPressed() {
@@ -249,6 +281,7 @@ class DiaryNoteTextViewController: UIViewController {
     private func updateTextFields(pageState: PageState) {
         let textField = self.textField
         let textView = self.textView
+        self.placeholderLabel.isHidden = !textView.text.isEmpty
         switch pageState {
         case .edit:
             textView.isEditable = true
@@ -264,6 +297,23 @@ class DiaryNoteTextViewController: UIViewController {
             textField.textColor = self.inactiveColor
         }
     }
+    
+    private func loadNote() {
+        guard let dataPointID = self.dataPointID else { return }
+        
+        self.repository.getDiaryNoteText(noteID: dataPointID)
+            .addProgress()
+            .subscribe(onSuccess: { [weak self] diaryNoteText in
+                guard let self = self else { return }
+                self.diaryNote = diaryNoteText
+                self.textView.text = diaryNoteText.body
+                self.textField.text = diaryNoteText.title
+                self.updateTextFields(pageState: self.pageState.value)
+            }, onError: { [weak self] error in
+                guard let self = self else { return }
+                self.navigator.handleError(error: error, presenter: self)
+            }).disposed(by: self.disposeBag)
+    }
 }
 
 extension DiaryNoteTextViewController: UITextViewDelegate {
@@ -278,6 +328,7 @@ extension DiaryNoteTextViewController: UITextViewDelegate {
         if textView.text.count <= self.maxCharacters {
             textView.layer.borderColor = ColorPalette.color(withType: .inactive).cgColor
             self.limitLabel.textColor = ColorPalette.color(withType: .inactive)
+            self.diaryNote?.body = textView.text
         } else {
             textView.layer.borderColor = UIColor.red.cgColor
             self.limitLabel.textColor = .red
@@ -289,9 +340,14 @@ extension DiaryNoteTextViewController: UITextFieldDelegate {
 
     func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
         let newString = textField.getNewString(forRange: range, replacementString: string)
-        return !(newString.count > self.maxCharacters)
+        let returnKey = !(newString.count > self.maxCharacters)
+        if returnKey {
+            self.diaryNote?.title = newString
+        }
+        return returnKey
 
     }
+    
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
         self.view.endEditing(true)
     }

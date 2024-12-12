@@ -178,6 +178,7 @@ extension DefaultService {
         case .sendDiaryNoteText: return "Send Diary Note Text"
         case .sendDiaryNoteAudio: return "Send Diary Note Audio"
         case .deleteDiaryNote: return "Delete Diary Note"
+        case .updateDiaryNoteText: return "Update Diary Note Text"
         // Survey
         case .getSurvey: return "Get Survey"
         case .sendSurveyTaskResultData: return "Send Survey Task Result Data"

@@ -80,9 +80,12 @@ protocol Repository: AnyObject {
     func sendQuickActivityResult(quickActivityTaskId: String, quickActivityOption: QuickActivityOption) -> Single<()>
     func sendTaskResult(taskId: String, taskResult: TaskNetworkResult) -> Single<()>
     func delayTask(taskId: String) -> Single<()>
-    func getDiaryNotes(noteID: String) -> Single<[DiaryNoteItem]>
+    func getDiaryNotes() -> Single<[DiaryNoteItem]>
     func getDiaryNoteText(noteID: String) -> Single<DiaryNoteItem>
     func getDiaryNoteAudio(noteID: String) -> Single<DiaryNoteItem>
+    func sendDiaryNoteText(diaryNote: DiaryNoteItem) -> Single<()>
+    func updateDiaryNoteText(diaryNote: DiaryNoteItem) -> Single<()>
+    func deleteDiaryNote(noteID: String) -> Single<()>
     // User
     var currentUser: User? { get }
     func refreshUser() -> Single<User>

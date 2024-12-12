@@ -395,15 +395,17 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         case .getDiaryNotes:
             return "v1/diary_notes"
         case .getDiaryNoteText(let diaryNoteId):
-            return ""
+            return "v1/diary_notes/\(diaryNoteId)"
         case .getDiaryNoteAudio(let diaryNoteId):
-            return ""
-        case .sendDiaryNoteText(let diaryNoteId, let text):
-            return ""
+            return "v1/diary_notes/\(diaryNoteId)"
+        case .sendDiaryNoteText:
+            return "v1/diary_notes"
         case .deleteDiaryNote(let diaryNoteId):
-            return ""
+            return "v1/diary_notes/\(diaryNoteId)"
         case .sendDiaryNoteAudio(let diaryNoteId, let audio):
             return ""
+        case .updateDiaryNoteText(let diaryNoteId):
+            return "v1/diary_notes/\(diaryNoteId.id)"
         }
     }
     
@@ -457,7 +459,8 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
                 .sendPushToken,
                 .sendSurveyTaskResultData,
                 .delayTask,
-                .updateUserPhase:
+                .updateUserPhase,
+                .updateDiaryNoteText:
             return .patch
         case .deleteDiaryNote:
             return .delete
@@ -551,6 +554,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         case .getDiaryNoteText: return "{}".utf8Encoded
         case .getDiaryNoteAudio: return "{}".utf8Encoded
         case .deleteDiaryNote: return "{}".utf8Encoded
+        case .updateDiaryNoteText: return "{}".utf8Encoded
         }
     }
     
@@ -575,7 +579,8 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
                 .delayTask,
                 .getDiaryNoteText,
                 .getDiaryNoteAudio,
-                .deleteDiaryNote:
+                .deleteDiaryNote,
+                .getDiaryNotes:
             return .requestPlain
         case .submitPhoneNumber(let phoneNumber):
             var params: [String: Any] = [:]
@@ -710,11 +715,11 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             dataParams["start_at"] = dateString
             dataParams["custom_data"] = [String: Any]()
             return .requestParameters(parameters: ["user_study_phase": dataParams], encoding: JSONEncoding.default)
-        case .getDiaryNotes(let datetime):
-            return self.getDatapointInformations(forDatapoint: datetime)
-        case .sendDiaryNoteText(_, let text):
-            let params: [String: Any] = ["text": text]
-            return .requestParameters(parameters: ["diary_note": params], encoding: JSONEncoding.default)
+        case .updateDiaryNoteText(let diaryNote):
+            var dataParams: [String: Any] = [:]
+            dataParams["title"] = diaryNote.title
+            dataParams["body"] = diaryNote.body
+            return .requestParameters(parameters: ["diary_note": dataParams], encoding: JSONEncoding.default)
         case .sendDiaryNoteText(let diaryItem):
             return .requestJSONEncodable(diaryItem)
         case .sendDiaryNoteAudio(_, let audio):
@@ -787,7 +792,8 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
                 .getDiaryNoteAudio,
                 .sendDiaryNoteText,
                 .sendDiaryNoteAudio,
-                .deleteDiaryNote:
+                .deleteDiaryNote,
+                .updateDiaryNoteText:
             return .bearer
         }
     }

@@ -88,49 +88,18 @@ class DiaryNotesViewController: UIViewController {
     }()
     
     private var storage: CacheService
-    private var dataPointID: String
+    private var dataPointID: String?
     private var diaryNoteItems: [DiaryNoteItem]
     
-    init(withDataPointID dataPointID: String) {
+    init(withDataPointID dataPointID: String?) {
         self.navigator = Services.shared.navigator
         self.repository = Services.shared.repository
         self.storage = Services.shared.storageServices
         self.analytics = Services.shared.analytics
         self.dataPointID = dataPointID
         
-        let diaryNoteItemsTestData: [[String: Any]] = [
-            [
-                "id": "1",
-                "type": "text",
-                "diaryNoteType": "text",
-                "title": "A Day in the Park",
-                "body": "I had a great day at the park today. The weather was beautiful and I enjoyed a long walk.",
-                "image": "https://example.com/image1.jpg",
-                "urlString": "https://example.com/more-info"
-            ],
-            [
-                "id": "2",
-                "type": "audio",
-                "diaryNoteType": "audio",
-                "title": "Morning Thoughts",
-                "body": "Recorded my thoughts about today's plans.",
-                "image": "https://example.com/image2.jpg",
-                "urlString": ""
-            ],
-            [
-                "id": "3",
-                "type": "text",
-                "diaryNoteType": "text",
-                "title": "",
-                "body": "This entry only has a body with no title.",
-                "image": NSNull(),
-                "urlString": NSNull()
-            ]
-        ]
-        
-        self.dataPointID = "2"
+        self.diaryNoteItems = []
         // Crea un array di oggetti DiaryNoteItem dai dati di test
-        self.diaryNoteItems = diaryNoteItemsTestData.compactMap { DiaryNoteItem(from: $0) }
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -182,16 +151,16 @@ class DiaryNotesViewController: UIViewController {
     
     private func updateUI() {
         self.tableView.backgroundView = diaryNoteItems.isEmpty ? self.diaryNoteEmptyView : nil
+        self.tableView.reloadData()
     }
     
     private func loadItems() {
-        self.repository.getDiaryNotes(noteID: self.dataPointID)
+        self.repository.getDiaryNotes()
                         .addProgress()
                         .subscribe(onSuccess: { [weak self] diaryNote in
                             guard let self = self else { return }
                             self.diaryNoteItems = diaryNote
-                            print("DiaryNote: \(diaryNote)")
-                            self.tableView.reloadData()
+                            self.updateUI()
 
                         }, onError: { [weak self] error in
                             guard let self = self else { return }
@@ -258,9 +227,18 @@ extension DiaryNotesViewController: UITableViewDataSource {
     
     func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
         if editingStyle == .delete {
-            diaryNoteItems.remove(at: indexPath.row)
-            tableView.deleteRows(at: [indexPath], with: .automatic)
-            self.updateUI()
+            let diaryNote = diaryNoteItems[indexPath.row]
+            self.repository.deleteDiaryNote(noteID: diaryNote.id)
+                .addProgress()
+                .subscribe(onSuccess: { [weak self] in
+                    guard let self = self else { return }
+                    diaryNoteItems.remove(at: indexPath.row)
+                    tableView.deleteRows(at: [indexPath], with: .automatic)
+                    self.updateUI()
+                }, onError: { [weak self] error in
+                    guard let self = self else { return }
+                    self.navigator.handleError(error: error, presenter: self)
+                }).disposed(by: self.disposeBag)
         }
     }
 }

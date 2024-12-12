@@ -341,8 +341,8 @@ extension RepositoryImpl: Repository {
             .handleError()
     }
     
-    func getDiaryNotes(noteID: String) -> Single<[DiaryNoteItem]> {
-        return self.api.send(request: ApiRequest(serviceRequest: .getDiaryNotes(datetime: noteID)))
+    func getDiaryNotes() -> Single<[DiaryNoteItem]> {
+        return self.api.send(request: ApiRequest(serviceRequest: .getDiaryNotes))
             .handleError()
     }
     
@@ -353,6 +353,21 @@ extension RepositoryImpl: Repository {
     
     func getDiaryNoteAudio(noteID: String) -> Single<DiaryNoteItem> {
         return self.api.send(request: ApiRequest(serviceRequest: .getDiaryNoteAudio(noteId: noteID)))
+            .handleError()
+    }
+    
+    func sendDiaryNoteText(diaryNote: DiaryNoteItem) -> Single<()> {
+        return self.api.send(request: ApiRequest(serviceRequest: .sendDiaryNoteText(diaryItem: diaryNote)))
+            .handleError()
+    }
+    
+    func updateDiaryNoteText(diaryNote: DiaryNoteItem) -> Single<()> {
+        return self.api.send(request: ApiRequest(serviceRequest: .updateDiaryNoteText(diaryItem: diaryNote)))
+            .handleError()
+    }
+    
+    func deleteDiaryNote(noteID: String) -> Single<()> {
+        return self.api.send(request: ApiRequest(serviceRequest: .deleteDiaryNote(noteId: noteID)))
             .handleError()
     }
     
