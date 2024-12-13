@@ -878,11 +878,13 @@ fileprivate extension FileDataExtension {
     var name: String {
         switch self {
         case .mp4: return "mp4"
+        case .m4a: return "m4a"
         }
     }
     var mimeType: String {
         switch self {
         case .mp4: return "video/mp4"
+        case .m4a: return "audio/m4a"
         }
     }
 }

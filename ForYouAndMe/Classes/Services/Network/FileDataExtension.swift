@@ -9,4 +9,5 @@ import Foundation
 
 enum FileDataExtension {
     case mp4
+    case m4a
 }

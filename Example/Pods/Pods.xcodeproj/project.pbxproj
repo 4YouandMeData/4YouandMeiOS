@@ -230,6 +230,7 @@
 		0D68306874E6508FC8D669A051A969DE /* WhiteBalance_GLES.fsh in Resources */ = {isa = PBXBuildFile; fileRef = 2CE07DCDF7AAE43878A619E8D8FA619B /* WhiteBalance_GLES.fsh */; };
 		0D6DE1A67E5AE9C732A567A9FAA169FF /* StretchDistortion_GL.fsh in Resources */ = {isa = PBXBuildFile; fileRef = CB3A608032F164433C3EE29BBA63D7F7 /* StretchDistortion_GL.fsh */; };
 		0D700AB87985FA17DB8B2E5B44137AA8 /* Circle_GLES.fsh in Resources */ = {isa = PBXBuildFile; fileRef = 977A367B1B07E4682DAFD0ECFA7C93AF /* Circle_GLES.fsh */; };
+		0D753EF12D0C45F000EF00B3 /* AudioPlayerManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D753EF02D0C45EB00EF00B3 /* AudioPlayerManager.swift */; };
 		0D8514D82CFB783C00476E62 /* DiaryNotesViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D8514D72CFB782200476E62 /* DiaryNotesViewController.swift */; };
 		0D8667CDD9600499DCD5D97A7574A838 /* ORKFormStep.h in Headers */ = {isa = PBXBuildFile; fileRef = 68EEEC202609A72C7B6C5BCBF194DE22 /* ORKFormStep.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		0D875A4D2CFDC0AC00C2BB07 /* DiaryNoteEmptyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D875A4C2CFDC09F00C2BB07 /* DiaryNoteEmptyView.swift */; };
@@ -4221,6 +4222,7 @@
 		0D631E9908483F9525A6B3F36F16CC61 /* Quick.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Quick.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		0D6DB80E770F1044F178C622555B39E5 /* id.lproj */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = folder; name = id.lproj; path = ResearchKit/Localized/id.lproj; sourceTree = "<group>"; };
 		0D75385F740CAA349102ECC9BCA0C6EA /* FIRCLSByteUtility.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = FIRCLSByteUtility.h; path = Crashlytics/Shared/FIRCLSByteUtility.h; sourceTree = "<group>"; };
+		0D753EF02D0C45EB00EF00B3 /* AudioPlayerManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioPlayerManager.swift; sourceTree = "<group>"; };
 		0D84BCAFA8752F8CEFB69C8DB053E8B6 /* FIRCLSDefines.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = FIRCLSDefines.h; path = Crashlytics/Crashlytics/Helpers/FIRCLSDefines.h; sourceTree = "<group>"; };
 		0D8514D72CFB782200476E62 /* DiaryNotesViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiaryNotesViewController.swift; sourceTree = "<group>"; };
 		0D875A4C2CFDC09F00C2BB07 /* DiaryNoteEmptyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiaryNoteEmptyView.swift; sourceTree = "<group>"; };
@@ -12121,6 +12123,7 @@
 		EBAAA5ACBD53631FF46F9DF269C5ADA8 /* Helpers */ = {
 			isa = PBXGroup;
 			children = (
+				0D753EF02D0C45EB00EF00B3 /* AudioPlayerManager.swift */,
 				989A07066022A31AB8B68DCAE9DC8D08 /* FeedListManager.swift */,
 				29DF9DC31BE8CD067BAD7F96A9AF4581 /* OrientationManager.swift */,
 			);
@@ -16146,6 +16149,7 @@
 				4C7069CE4A45E998DC05176182619375 /* ScreeningSection.swift in Sources */,
 				E029360B2066C4A116983C22696CB5EC /* ScreeningSectionCoordinator.swift in Sources */,
 				6973D2DD2CD4F6AEB2F74DBAE0BF401E /* ScrollStackView.swift in Sources */,
+				0D753EF12D0C45F000EF00B3 /* AudioPlayerManager.swift in Sources */,
 				FFACBFDE61D51BD244DB8C00B71EFAA0 /* ServerErrors.swift in Sources */,
 				708BBBE5C83A192EB3539F2782F53121 /* Services.swift in Sources */,
 				1683FECDF8A8AB93318FB6EB96699069 /* SetupLaterViewController.swift in Sources */,

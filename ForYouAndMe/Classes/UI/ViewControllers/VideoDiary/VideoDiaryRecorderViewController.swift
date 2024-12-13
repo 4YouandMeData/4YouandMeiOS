@@ -642,6 +642,7 @@ fileprivate extension FileDataExtension {
     var avFileType: AVFileType {
         switch self {
         case .mp4: return .mp4
+        case .m4a: return .m4a
         }
     }
 }
