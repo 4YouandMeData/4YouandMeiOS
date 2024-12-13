@@ -8,20 +8,18 @@
 import UIKit
 import RxSwift
 import TPKeyboardAvoiding
+import RxRelay
+
+class ActionButton: UIButton {
+    var action: (() -> Void)?
+}
 
 class DiaryNoteAudioViewController: UIViewController {
-    
-    enum AudioDiaryState {
-        case record(isRecording: Bool)
-        case listen(isPlaying: Bool)
-        case submitted(submitDate: Date, isPlaying: Bool)
-    }
-    
-    fileprivate enum PageState { case listen, create }
     
     private let navigator: AppNavigator
     private let repository: Repository
     private let analytics: AnalyticsService
+    private let audioPlayerManager = AudioPlayerManager()
     
     private let disposeBag = DisposeBag()
     private let totalTimeLabelAttributedTextStyle = AttributedTextStyle(fontStyle: .title,
@@ -34,7 +32,6 @@ class DiaryNoteAudioViewController: UIViewController {
     
     private let totalTime = Constants.Misc.AudioDiaryMaxDurationSeconds
     private var recordDurationTime: TimeInterval = 0.0
-    private let pageState: PageState
     
     private lazy var closeButton: UIButton = {
         let button = UIButton()
@@ -127,6 +124,18 @@ class DiaryNoteAudioViewController: UIViewController {
         return slider
     }()
     
+    private lazy var recordButton: ActionButton = {
+        let recordButton = ActionButton()
+        let recordButtonImage = ImagePalette.image(withName: .audioRecButton)
+        recordButton.setImage(recordButtonImage, for: .normal)
+        recordButton.imageView?.contentMode = .scaleAspectFit
+        recordButton.addTarget(self, action: #selector(buttonTapped(_:)), for: .touchUpInside)
+        recordButton.contentEdgeInsets = UIEdgeInsets(top: 4.0, left: 4.0, bottom: 4.0, right: 4.0)
+        recordButton.autoSetDimension(.height, toSize: 68)
+        
+        return recordButton
+    }()
+    
     private lazy var footerView: GenericButtonView = {
         
         let buttonView = GenericButtonView(withTextStyleCategory: .transparentBackground(shadow: false ))
@@ -157,9 +166,7 @@ class DiaryNoteAudioViewController: UIViewController {
         self.storage = Services.shared.storageServices
         self.analytics = Services.shared.analytics
         
-        self.pageState = dataPointID == nil ? .create : .listen
         self.dataPointID = dataPointID
-        
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -183,7 +190,10 @@ class DiaryNoteAudioViewController: UIViewController {
         stackView.autoPinEdges(toSuperviewMarginsExcludingEdge: .bottom)
         stackView.addArrangedSubview(self.headerView)
         
-        self.refreshUI()
+        self.setupUI()
+        
+        self.audioPlayerManager.delegate = self
+        try? audioPlayerManager.setupAudioSession()
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -201,66 +211,19 @@ class DiaryNoteAudioViewController: UIViewController {
         self.textView.resignFirstResponder()
     }
     
-    @objc private func saveButtonPressed() {}
-    
-    @objc private func recordButtonTapped() {
+    @objc private func saveButtonPressed() {
         
+    }
+    
+    @objc private func buttonTapped(_ sender: ActionButton) {
+        sender.action?()
     }
     
     // MARK: - Private Methods
     
-    private func refreshUI() {
-        switch self.pageState {
-        case .create:
-            // StackView
-            let containerStackView = UIStackView.create(withAxis: .vertical)
-            self.scrollView.addSubview(containerStackView)
-            containerStackView.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets(top: 0.0,
-                                                                      left: Constants.Style.DefaultHorizontalMargins,
-                                                                      bottom: 0.0,
-                                                                      right: Constants.Style.DefaultHorizontalMargins))
-            containerStackView.autoAlignAxis(toSuperviewAxis: .vertical)
-            containerStackView.addBlankSpace(space: 50.0)
+    private func setupUI() {
+        if self.dataPointID != nil {
             
-            // Image
-            containerStackView.addHeaderImage(image: ImagePalette.image(withName: .audioRecording), height: 80.0)
-            containerStackView.addBlankSpace(space: 70)
-            // Title
-            let timeLabelContainerView = UIView()
-            timeLabelContainerView.addSubview(self.timeLabel)
-            self.timeLabel.autoPinEdgesToSuperviewEdges()
-            self.timeLabel.autoAlignAxis(toSuperviewAxis: .vertical)
-            self.timeLabel.autoAlignAxis(toSuperviewAxis: .horizontal)
-            
-            self.timeLabel.setTime(currentTime: Int(self.recordDurationTime),
-                                   totalTime: Int(totalTime),
-                                   attributedTextStyle: self.totalTimeLabelAttributedTextStyle,
-                                   currentTimeAttributedTextStyle: self.currentTimeLabelAttributedTextStyle)
-            containerStackView.addArrangedSubview(timeLabelContainerView)
-            
-            containerStackView.addBlankSpace(space: 120)
-            
-            let recordButton = UIButton()
-            let recordButtonImage = ImagePalette.image(withName: .audioRecButton)
-            recordButton.setImage(recordButtonImage, for: .normal)
-            recordButton.imageView?.contentMode = .scaleAspectFit
-            recordButton.addTarget(self, action: #selector (recordButtonTapped), for: .touchUpInside)
-            recordButton.contentEdgeInsets = UIEdgeInsets(top: 4.0, left: 4.0, bottom: 4.0, right: 4.0)
-            recordButton.autoSetDimension(.height, toSize: 68)
-            
-            containerStackView.addArrangedSubview(recordButton)
-            
-            // Footer
-            self.view.addSubview(self.footerView)
-            footerView.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets.zero, excludingEdge: .top)
-            
-            self.scrollView.autoPinEdge(.top, to: .bottom, of: self.headerView)
-            self.scrollView.autoPinEdge(.leading, to: .leading, of: self.view)
-            self.scrollView.autoPinEdge(.trailing, to: .trailing, of: self.view)
-            self.scrollView.autoPinEdge(.bottom, to: .top, of: self.footerView)
-            footerView.setButtonText("Save")
-            
-        case .listen:
             // StackView
             let containerStackView = UIStackView.create(withAxis: .vertical)
             self.scrollView.addSubview(containerStackView)
@@ -274,7 +237,6 @@ class DiaryNoteAudioViewController: UIViewController {
             let recordButtonImage = ImagePalette.image(withName: .audioPlayButton)
             playButton.setImage(recordButtonImage, for: .normal)
             playButton.imageView?.contentMode = .scaleAspectFit
-            playButton.addTarget(self, action: #selector (recordButtonTapped), for: .touchUpInside)
             playButton.contentEdgeInsets = UIEdgeInsets(top: 4.0, left: 4.0, bottom: 4.0, right: 4.0)
             playButton.autoSetDimension(.height, toSize: 68)
             
@@ -326,7 +288,6 @@ class DiaryNoteAudioViewController: UIViewController {
                                                                                   left: 5,
                                                                                   bottom: 10,
                                                                                   right: 10))
-            
             // Footer
             self.view.addSubview(self.footerView)
             footerView.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets.zero, excludingEdge: .top)
@@ -341,6 +302,58 @@ class DiaryNoteAudioViewController: UIViewController {
             containerTextView.autoPinEdge(.leading, to: .leading, of: self.view)
             containerTextView.autoPinEdge(.trailing, to: .trailing, of: self.view)
             containerTextView.autoPinEdge(.bottom, to: .top, of: self.footerView, withOffset: -30)
+            
+            // Footer
+            self.view.addSubview(self.footerView)
+            footerView.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets.zero, excludingEdge: .top)
+            
+            self.scrollView.autoPinEdge(.top, to: .bottom, of: self.headerView)
+            self.scrollView.autoPinEdge(.leading, to: .leading, of: self.view)
+            self.scrollView.autoPinEdge(.trailing, to: .trailing, of: self.view)
+            self.scrollView.autoPinEdge(.bottom, to: .top, of: self.footerView)
+            
+        } else {
+            // StackView
+            let containerStackView = UIStackView.create(withAxis: .vertical)
+            self.scrollView.addSubview(containerStackView)
+            containerStackView.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets(top: 0.0,
+                                                                      left: Constants.Style.DefaultHorizontalMargins,
+                                                                      bottom: 0.0,
+                                                                      right: Constants.Style.DefaultHorizontalMargins))
+            containerStackView.autoAlignAxis(toSuperviewAxis: .vertical)
+            containerStackView.addBlankSpace(space: 50.0)
+            
+            // Image
+            containerStackView.addHeaderImage(image: ImagePalette.image(withName: .audioRecording), height: 80.0)
+            containerStackView.addBlankSpace(space: 70)
+            // Title
+            let timeLabelContainerView = UIView()
+            timeLabelContainerView.addSubview(self.timeLabel)
+            self.timeLabel.autoPinEdgesToSuperviewEdges()
+            self.timeLabel.autoAlignAxis(toSuperviewAxis: .vertical)
+            self.timeLabel.autoAlignAxis(toSuperviewAxis: .horizontal)
+            
+            self.timeLabel.setTime(currentTime: Int(self.recordDurationTime),
+                                   totalTime: Int(totalTime),
+                                   attributedTextStyle: self.totalTimeLabelAttributedTextStyle,
+                                   currentTimeAttributedTextStyle: self.currentTimeLabelAttributedTextStyle)
+            containerStackView.addArrangedSubview(timeLabelContainerView)
+            containerStackView.addBlankSpace(space: 120)
+            containerStackView.addArrangedSubview(self.recordButton)
+            self.recordButton.action = { [weak self] in
+                self?.audioPlayerManager.handleTap()
+            }
+            
+            // Footer
+            self.view.addSubview(self.footerView)
+            footerView.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets.zero, excludingEdge: .top)
+            
+            self.scrollView.autoPinEdge(.top, to: .bottom, of: self.headerView)
+            self.scrollView.autoPinEdge(.leading, to: .leading, of: self.view)
+            self.scrollView.autoPinEdge(.trailing, to: .trailing, of: self.view)
+            self.scrollView.autoPinEdge(.bottom, to: .top, of: self.footerView)
+            
+            self.footerView.setButtonText("Save")
         }
     }
 }
@@ -373,5 +386,102 @@ extension DiaryNoteAudioViewController: UITextFieldDelegate {
     }
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
         self.view.endEditing(true)
+    }
+}
+
+extension DiaryNoteAudioViewController: AudioPlayerManagerDelegate {
+    func didPausePlaying() {
+        let playButtonImage = ImagePalette.image(withName: .audioPlayButton)
+        recordButton.setImage(playButtonImage, for: .normal)
+        recordButton.action = { [weak self] in
+            self?.audioPlayerManager.playRecordedAudio()
+        }
+        recordButton.imageView?.contentMode = .scaleAspectFit
+    }
+    
+    func didResumePlaying() {
+        let playButtonImage = ImagePalette.image(withName: .audioPauseButton)
+        recordButton.setImage(playButtonImage, for: .normal)
+        recordButton.action = { [weak self] in
+            self?.audioPlayerManager.pauseAudio()
+        }
+        recordButton.imageView?.contentMode = .scaleAspectFit
+    }
+    
+    func didUpdateRecordingTime(elapsedTime: TimeInterval) {
+        self.timeLabel.setRecordTime(currentTime: Int(elapsedTime),
+                                     attributedTextStyle: self.totalTimeLabelAttributedTextStyle,
+                                     currentTimeAttributedTextStyle: self.currentTimeLabelAttributedTextStyle)
+    }
+    
+    func didStartRecording() {
+        self.timeLabel.setTime(currentTime: 0,
+                               totalTime: Int(self.totalTime),
+                               attributedTextStyle: self.totalTimeLabelAttributedTextStyle,
+                               currentTimeAttributedTextStyle: self.currentTimeLabelAttributedTextStyle)
+        recordButton.action = { [weak self] in
+            self?.audioPlayerManager.handleTap()
+        }
+    }
+    
+    func didFinishRecording(fileURL: URL?, duration: TimeInterval?, error: (any Error)?) {
+        if let error {
+            self.showAlert(withTitle: "Error",
+                           message: error.localizedDescription,
+                           dismissButtonText: "OK")
+        }
+        
+        self.recordDurationTime = duration ?? 0
+        
+        self.timeLabel.setTime(currentTime: 0,
+                               totalTime: Int(duration ?? 0),
+                               attributedTextStyle: self.totalTimeLabelAttributedTextStyle,
+                               currentTimeAttributedTextStyle: self.currentTimeLabelAttributedTextStyle)
+        let playButtonImage = ImagePalette.image(withName: .audioPlayButton)
+        recordButton.setImage(playButtonImage, for: .normal)
+        recordButton.action = { [weak self] in
+            self?.audioPlayerManager.playRecordedAudio()
+        }
+        recordButton.imageView?.contentMode = .scaleAspectFit
+    }
+    
+    func didStartPlaying() {
+        self.timeLabel.setTime(currentTime: 0,
+                               totalTime: 0,
+                               attributedTextStyle: self.totalTimeLabelAttributedTextStyle,
+                               currentTimeAttributedTextStyle: self.currentTimeLabelAttributedTextStyle)
+        let pauseButtonImage = ImagePalette.image(withName: .audioPauseButton)
+        recordButton.setImage(pauseButtonImage, for: .normal)
+        recordButton.imageView?.contentMode = .scaleAspectFit
+        recordButton.action = { [weak self] in
+            self?.audioPlayerManager.pauseAudio()
+        }
+    }
+    
+    func didFinishPlaying(success: Bool) {
+        self.timeLabel.setTime(currentTime: 0,
+                               totalTime: 0,
+                               attributedTextStyle: self.totalTimeLabelAttributedTextStyle,
+                               currentTimeAttributedTextStyle: self.currentTimeLabelAttributedTextStyle)
+        let playButtonImage = ImagePalette.image(withName: .audioPlayButton)
+        recordButton.setImage(playButtonImage, for: .normal)
+        recordButton.imageView?.contentMode = .scaleAspectFit
+        recordButton.action = { [weak self] in
+            self?.audioPlayerManager.playRecordedAudio()
+        }
+    }
+    
+    func didEncounterError(error: AudioPlayerError) {
+        print("Error playing audio: \(error.localizedDescription)")
+    }
+    
+    func didUpdatePlaybackTime(currentTime: TimeInterval, totalTime: TimeInterval) {
+        self.timeLabel.setTime(currentTime: Int(currentTime),
+                               totalTime: Int(totalTime),
+                               attributedTextStyle: self.totalTimeLabelAttributedTextStyle,
+                               currentTimeAttributedTextStyle: self.currentTimeLabelAttributedTextStyle)
+        let pauseButtonImage = ImagePalette.image(withName: .audioPauseButton)
+        recordButton.setImage(pauseButtonImage, for: .normal)
+        recordButton.imageView?.contentMode = .scaleAspectFit
     }
 }

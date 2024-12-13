@@ -130,7 +130,7 @@ class DiaryNoteTextViewController: UIViewController {
     
     private var storage: CacheService
     private let dataPointID: String?
-    private var diaryNote: DiaryNoteItem? = nil
+    private var diaryNote: DiaryNoteItem?
     private let maxCharacters: Int = 500
     
     init(withDataPointID dataPointID: String?) {
