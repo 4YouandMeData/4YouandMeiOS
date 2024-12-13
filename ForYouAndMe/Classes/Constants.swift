@@ -84,7 +84,7 @@ struct Constants {
         static let FeedPageSize: Int? = 10
         static let TaskPageSize: Int? = 20
         static let VideoDiaryMaxDurationSeconds: TimeInterval = 120.0
-        static let AudioDiaryMaxDurationSeconds: TimeInterval = 120.0
+        static let AudioDiaryMaxDurationSeconds: TimeInterval = 600.0
         static let VideoDiaryCaptureSessionPreset: AVCaptureSession.Preset = .hd1280x720
         // Server limit is 20 but AVAssetExportSession.fileLengthLimit can be exceeded by 1 or 2 MB
         static let VideoDiaryMaxFileSize: Int64 = 1024 * 1024 * 18
@@ -135,6 +135,17 @@ struct Constants {
             let documentsDirectoryString = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)[0]
             var resultDirectory = URL(fileURLWithPath: documentsDirectoryString, isDirectory: true)
             resultDirectory.appendPathComponent(FilePath.videoResult.rawValue)
+            return resultDirectory
+        }()
+    }
+    
+    struct Note {
+        static let FileResultMimeType = "application/json"
+        
+        static let NoteResultURL: URL = {
+            let documentsDirectoryString = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)[0]
+            var resultDirectory = URL(fileURLWithPath: documentsDirectoryString, isDirectory: true)
+            resultDirectory.appendPathComponent(FilePath.diaryResult.rawValue)
             return resultDirectory
         }()
     }
@@ -199,6 +210,7 @@ struct Constants {
 enum FilePath: String {
     case taskResult = "TaskResult"
     case videoResult = "VideoResult"
+    case diaryResult = "DiaryResult"
 }
 
 enum BatchEventUploaderIdentifier: String {
