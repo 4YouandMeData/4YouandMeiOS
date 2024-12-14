@@ -66,4 +66,45 @@ extension UIStackView {
         self.addArrangedSubview(imageView, horizontalInset: horizontalInset)
     }
     
+    func addImage(withImage image: UIImage?,
+                  color: UIColor,
+                  imageDimension: CGFloat,
+                  circleColor: UIColor,
+                  circleDiameter: CGFloat,
+                  horizontalInset: CGFloat = 0) {
+        
+        // Create a container view for the circular background and the image
+        let containerView = UIView()
+        containerView.translatesAutoresizingMaskIntoConstraints = false
+        containerView.autoSetDimension(.width, toSize: circleDiameter)
+        containerView.autoSetDimension(.height, toSize: circleDiameter)
+        
+        // Create the circular background view
+        let circleView = UIView()
+        circleView.translatesAutoresizingMaskIntoConstraints = false
+        circleView.backgroundColor = circleColor
+        circleView.layer.cornerRadius = circleDiameter / 2
+        circleView.layer.masksToBounds = true
+        
+        containerView.addSubview(circleView)
+        circleView.autoAlignAxis(toSuperviewAxis: .horizontal)
+        circleView.autoAlignAxis(toSuperviewAxis: .vertical)
+        circleView.autoSetDimension(.width, toSize: circleDiameter)
+        circleView.autoSetDimension(.height, toSize: circleDiameter)
+        
+        // Add the imageView on top of the circular background
+        let imageView = UIImageView(image: image)
+        imageView.tintColor = color
+        imageView.contentMode = .scaleAspectFit
+        imageView.translatesAutoresizingMaskIntoConstraints = false
+        
+        containerView.addSubview(imageView)
+        imageView.autoAlignAxis(toSuperviewAxis: .horizontal)
+        imageView.autoAlignAxis(toSuperviewAxis: .vertical)
+        imageView.autoSetDimensions(to: CGSize(width: imageDimension, height: imageDimension))
+        
+        // Add the container view to the stack view
+        self.addArrangedSubview(containerView, horizontalInset: horizontalInset)
+    }
+    
 }

@@ -54,6 +54,7 @@ class AboutYouViewController: UIViewController {
             let userInfo = GenericListItemView(withTitle: userInfoTitle,
                                                image: ImagePalette.templateImage(withName: .userInfoIcon) ?? UIImage(),
                                                colorType: .primary,
+                                               style: .flatStyle,
                                                gestureCallback: { [weak self] in
                                                 guard let self = self else { return }
                                                 guard let navigationController = self.navigationController else {
@@ -72,6 +73,7 @@ class AboutYouViewController: UIViewController {
         let appsAndDevices = GenericListItemView(withTitle: appsAndDevicesTitle,
                                                  image: ImagePalette.templateImage(withName: .devicesIcon) ?? UIImage(),
                                                  colorType: .primary,
+                                                 style: .flatStyle,
                                                  gestureCallback: { [weak self] in
                                                     guard let navigationController = self?.navigationController else {
                                                         fatalError("Navigation Controller is not present")
@@ -103,6 +105,7 @@ class AboutYouViewController: UIViewController {
         let permissions = GenericListItemView(withTitle: permissionTitle,
                                               image: ImagePalette.templateImage(withName: .permissionIcon) ?? UIImage(),
                                               colorType: .primary,
+                                              style: .flatStyle,
                                               gestureCallback: { [weak self] in
                                                 guard let navigationController = self?.navigationController else {
                                                     fatalError("Navigation Controller is not present")
@@ -115,12 +118,13 @@ class AboutYouViewController: UIViewController {
         if Int(StringsProvider.string(forKey: .dailySurveyTimingHidden)) ?? 0 == 0 {
             let surveyScheduleTitle = StringsProvider.string(forKey: .aboutYouDailySurveyTiming)
             let surveySchedule = GenericListItemView(withTitle: surveyScheduleTitle,
-                                                  image: ImagePalette.templateImage(withName: .timingIcon) ?? UIImage(),
-                                                  colorType: .primary,
-                                                  gestureCallback: { [weak self] in
-                                                    guard let navigationController = self?.navigationController else {
-                                                        fatalError("Navigation Controller is not present")
-                                                    }
+                                                     image: ImagePalette.templateImage(withName: .timingIcon) ?? UIImage(),
+                                                     colorType: .primary,
+                                                     style: .flatStyle,
+                                                     gestureCallback: { [weak self] in
+                                                        guard let navigationController = self?.navigationController else {
+                                                            fatalError("Navigation Controller is not present")
+                                                        }
                                                     self?.navigator.showSurveySchedule(navigationController: navigationController,
                                                                                     title: surveyScheduleTitle)
                                                   })
@@ -135,6 +139,7 @@ class AboutYouViewController: UIViewController {
             let healthKitCachePurgeButton = GenericListItemView(withTitle: "Debug - Purge Healthkit cache",
                                                                 image: UIImage(),
                                                                 colorType: .primary,
+                                                                style: .flatStyle,
                                                                 gestureCallback: {
                                                                     Services.shared.storageServices.resetHealthKitCache()
                                                                 })

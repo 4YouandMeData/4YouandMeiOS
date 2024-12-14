@@ -86,6 +86,7 @@ class StudyInfoViewController: UIViewController {
         let aboutYou = GenericListItemView(withTitle: title,
                                            image: ImagePalette.templateImage(withName: .userInfoIcon) ?? UIImage(),
                                            colorType: .primary,
+                                           style: .flatStyle,
                                            gestureCallback: { [weak self] in
                                             self?.navigator.showAboutYouPage(presenter: self!)
                                            })
@@ -102,6 +103,7 @@ class StudyInfoViewController: UIViewController {
             let contactInformation = GenericListItemView(withTitle: title,
                                                          image: image,
                                                          colorType: .primary,
+                                                         style: .flatStyle,
                                                          gestureCallback: { [weak self] in
                                                             self?.showPage(page: contactPage!, isModal: false)
                                                          })
@@ -115,6 +117,7 @@ class StudyInfoViewController: UIViewController {
             let rewards = GenericListItemView(withTitle: title,
                                               image: image,
                                               colorType: .primary,
+                                              style: .flatStyle,
                                               gestureCallback: { [weak self] in
                                                 self?.showPage(page: rewardsPage!, isModal: false)
                                               })
@@ -128,6 +131,7 @@ class StudyInfoViewController: UIViewController {
             let faq = GenericListItemView(withTitle: title,
                                           image: image,
                                           colorType: .primary,
+                                          style: .flatStyle,
                                           gestureCallback: { [weak self] in
                                             self?.showPage(page: faqPage!, isModal: false)
                                           })

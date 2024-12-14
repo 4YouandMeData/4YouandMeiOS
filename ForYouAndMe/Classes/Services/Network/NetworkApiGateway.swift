@@ -583,8 +583,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
                 .delayTask,
                 .getDiaryNoteText,
                 .getDiaryNoteAudio,
-                .deleteDiaryNote,
-                .getDiaryNotes:
+                .deleteDiaryNote:
             return .requestPlain
         case .submitPhoneNumber(let phoneNumber):
             var params: [String: Any] = [:]
@@ -719,6 +718,13 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             dataParams["start_at"] = dateString
             dataParams["custom_data"] = [String: Any]()
             return .requestParameters(parameters: ["user_study_phase": dataParams], encoding: JSONEncoding.default)
+        case .getDiaryNotes:
+            var params: [String: Any] = [:]
+                    params["q"] = [
+                        ["sorts": "datetime_ref desc"]
+                    ]
+            let encoding = URLEncoding(destination: .queryString, arrayEncoding: .noBrackets, boolEncoding: .literal)
+            return .requestParameters(parameters: params, encoding: encoding)
         case .updateDiaryNoteText(let diaryNote):
             var dataParams: [String: Any] = [:]
             dataParams["title"] = diaryNote.title
@@ -840,12 +846,8 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
     private func getDatapointInformations(forDatapoint dataPoint: String) -> Task {
         var params: [String: Any] = [:]
                 params["q"] = [
-                    ["datetime_ref_eq": dataPoint]
-//                    ["not_completed": true],
-//                    ["s": "from desc"]
+                    ["order": "datetime_ref_desc"]
                 ]
-        // Needed by the server so it knows that the client supports images as url
-//        params["url_images_encoding"] = 1
         let encoding = URLEncoding(destination: .queryString, arrayEncoding: .noBrackets, boolEncoding: .literal)
         return .requestParameters(parameters: params, encoding: encoding)
     }

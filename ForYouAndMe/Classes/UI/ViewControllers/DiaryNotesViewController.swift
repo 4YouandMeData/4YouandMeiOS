@@ -61,11 +61,11 @@ class DiaryNotesViewController: UIViewController {
                                                                                         secondButtonPrimary: true))
         
         buttonsView.setFirstButtonText("Record")
-        buttonsView.setFirstButtonImage(ImagePalette.image(withName: .audioNote))
+        buttonsView.setFirstButtonImage(ImagePalette.templateImage(withName: .audioNote))
         buttonsView.addTargetToFirstButton(target: self, action: #selector(self.createAudioDiaryNote))
         
         buttonsView.setSecondButtonText("Write")
-        buttonsView.setSecondButtonImage(ImagePalette.image(withName: .textNote))
+        buttonsView.setSecondButtonImage(ImagePalette.templateImage(withName: .textNote))
         buttonsView.addTargetToSecondButton(target: self, action: #selector(self.createTextDiaryNote))
         
         containerView.addSubview(buttonsView)
@@ -176,11 +176,11 @@ class DiaryNotesViewController: UIViewController {
     }
     
     @objc private func createAudioDiaryNote() {
-        self.navigator.openDiaryNoteAudio(diaryNote: nil, presenter: self)
+        self.navigator.openDiaryNoteAudio(diaryNote: nil, presenter: self, isModal: false)
     }
     
     @objc private func createTextDiaryNote() {
-        self.navigator.openDiaryNoteText(diaryNoteId: nil, presenter: self)
+        self.navigator.openDiaryNoteText(diaryNoteId: nil, presenter: self, isModal: false)
     }
 }
 
@@ -208,7 +208,7 @@ extension DiaryNotesViewController: UITableViewDataSource {
                 cell.display(data: diaryNote, buttonPressedCallback: { [weak self] in
                     guard let self = self else { return }
                     self.navigator.openDiaryNoteText(diaryNoteId: diaryNote.id,
-                                                     presenter: self)
+                                                     presenter: self, isModal: false)
                 })
                 return cell
                 
@@ -220,7 +220,7 @@ extension DiaryNotesViewController: UITableViewDataSource {
                 }
                 cell.display(data: diaryNote, buttonPressedCallback: { [weak self] in
                     guard let self = self else { return }
-                    self.navigator.openDiaryNoteAudio(diaryNote: diaryNote, presenter: self)
+                    self.navigator.openDiaryNoteAudio(diaryNote: diaryNote, presenter: self, isModal: false)
                 })
                 return cell
                 

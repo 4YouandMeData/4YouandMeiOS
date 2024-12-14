@@ -17,7 +17,40 @@ class NoticedViewController: UIViewController {
     
     private let disposeBag = DisposeBag()
     
-    private let headerView = StudyInfoHeaderView()
+    private lazy var closeButton: UIButton = {
+        let button = UIButton()
+        button.setImage(ImagePalette.templateImage(withName: .closeButton), for: .normal)
+        button.tintColor = ColorPalette.color(withType: .primaryText)
+        button.autoSetDimension(.width, toSize: 32)
+        button.imageView?.contentMode = .scaleAspectFit
+        button.addTarget(self, action: #selector(self.closeButtonPressed), for: .touchUpInside)
+        return button
+    }()
+    
+    private lazy var headerView: UIView = {
+        let containerView = UIView()
+        
+        let stackView = UIStackView.create(withAxis: .vertical, spacing: 8.0)
+        
+        // Close button
+        let closeButtonContainerView = UIView()
+        closeButtonContainerView.addSubview(self.closeButton)
+        self.closeButton.autoPinEdgesToSuperviewEdges(with: .zero, excludingEdge: .trailing)
+        stackView.addArrangedSubview(closeButtonContainerView)
+
+        stackView.addLabel(withText: StringsProvider.string(forKey: .diaryNoteTitle),
+                           fontStyle: .title,
+                           colorType: .primaryText)
+        
+        stackView.addLineSeparator(lineColor: ColorPalette.color(withType: .secondaryMenu), space: 0, isVertical: false)
+        
+        containerView.addSubview(stackView)
+        stackView.autoPinEdgesToSuperviewSafeArea(with: UIEdgeInsets(top: 25.0,
+                                                                     left: Constants.Style.DefaultHorizontalMargins/2,
+                                                                     bottom: 0,
+                                                                     right: Constants.Style.DefaultHorizontalMargins/2))
+        return containerView
+    }()
     
     private lazy var scrollStackView: ScrollStackView = {
         let scrollStackView = ScrollStackView(axis: .vertical, horizontalInset: 0.0)
@@ -57,105 +90,50 @@ class NoticedViewController: UIViewController {
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        self.headerView.refreshUI()
-        self.analytics.track(event: .switchTab(StringsProvider.string(forKey: .tabStudyInfo)))
-        self.analytics.track(event: .recordScreen(screenName: AnalyticsScreens.studyInfo.rawValue,
-                                                  screenClass: String(describing: type(of: self))))
         self.navigationController?.navigationBar.apply(style: NavigationBarStyleCategory.primary(hidden: true).style)
-        self.repository.getStudyInfoSection().subscribe(onSuccess: { [weak self] infoSection in
-            guard let self = self else { return }
-            self.studyInfoSection = infoSection
-            self.refreshUI()
-        }, onError: { [weak self] error in
-            guard let self = self else { return }
-            print("StudyInfo View Controller - Error retrieve studyInfo page: \(error.localizedDescription)")
-            self.refreshUI()
-            self.navigator.handleError(error: error, presenter: self)
-        }).disposed(by: self.disposeBag)
-    }
-    
-    private func showPage(page: Page, isModal: Bool) {
-        self.navigator.showInfoDetailPage(presenter: self, page: page, isModal: isModal)
     }
     
     private func refreshUI() {
         
         self.scrollStackView.stackView.subviews.forEach({ $0.removeFromSuperview() })
         
-        let title = StringsProvider.string(forKey: .studyInfoAboutYou)
-        let aboutYou = GenericListItemView(withTitle: title,
-                                           image: ImagePalette.templateImage(withName: .userInfoIcon) ?? UIImage(),
-                                           colorType: .primary,
-                                           gestureCallback: { [weak self] in
-                                            self?.navigator.showAboutYouPage(presenter: self!)
-                                           })
-        self.scrollStackView.stackView.addArrangedSubview(aboutYou)
-        self.scrollStackView.stackView.addLineSeparator(lineColor: ColorPalette.color(withType: .inactive),
-                                                        inset: 21,
-                                                        isVertical: false)
+        var title = "Write a Note"
+        var image = ImagePalette.templateImage(withName: .textNote)
+
+        let writePage = GenericListItemView(withTitle: title,
+                                            image: image ?? UIImage(),
+                                            colorType: .primary,
+                                            style: .shadowStyle,
+                                            gestureCallback: { [weak self] in
+            guard let self = self else { return }
+            self.navigator.openDiaryNoteText(diaryNoteId: nil, presenter: self, isModal: true)
+        })
+        self.scrollStackView.stackView.addArrangedSubview(writePage)
         
-        let contactPage = self.studyInfoSection?.contactsPage
-        if  contactPage != nil {
-            
-            let title = contactPage?.title ?? StringsProvider.string(forKey: .studyInfoContactTitle)
-            let image = contactPage?.image ?? ImagePalette.templateImage(withName: .studyInfoContact) ?? UIImage()
-            let contactInformation = GenericListItemView(withTitle: title,
-                                                         image: image,
-                                                         colorType: .primary,
-                                                         gestureCallback: { [weak self] in
-                                                            self?.showPage(page: contactPage!, isModal: false)
-                                                         })
-            self.scrollStackView.stackView.addArrangedSubview(contactInformation)
-        }
-        
-        let rewardsPage = self.studyInfoSection?.rewardPage
-        if  rewardsPage != nil {
-            let title = rewardsPage?.title ?? StringsProvider.string(forKey: .studyInfoRewardsTitle)
-            let image = rewardsPage?.image ?? ImagePalette.templateImage(withName: .studyInfoRewards) ?? UIImage()
-            let rewards = GenericListItemView(withTitle: title,
-                                              image: image,
-                                              colorType: .primary,
-                                              gestureCallback: { [weak self] in
-                                                self?.showPage(page: rewardsPage!, isModal: false)
-                                              })
-            self.scrollStackView.stackView.addArrangedSubview(rewards)
-        }
-        
-        let faqPage = self.studyInfoSection?.faqPage
-        if  faqPage != nil {
-            let title = faqPage?.title ?? StringsProvider.string(forKey: .studyInfoFaqTitle)
-            let image = faqPage?.image ?? ImagePalette.templateImage(withName: .studyInfoFAQ) ?? UIImage()
-            let faq = GenericListItemView(withTitle: title,
-                                          image: image,
-                                          colorType: .primary,
-                                          gestureCallback: { [weak self] in
-                                            self?.showPage(page: faqPage!, isModal: false)
-                                          })
-            self.scrollStackView.stackView.addArrangedSubview(faq)
-        }
-        
-        self.scrollStackView.layoutIfNeeded()
-        
-        let footerHeight: CGFloat = 40.0
-        let offset = self.scrollStackView.scrollView.frame.height - self.scrollStackView.stackView.frame.height - footerHeight
-        let spacerView = UIView()
-        self.scrollStackView.stackView.addArrangedSubview(spacerView)
-        spacerView.autoSetDimension(.height, toSize: offset)
-        
-        let containerFooterView = UIView()
-        self.scrollStackView.stackView.addArrangedSubview(containerFooterView)
-        containerFooterView.autoSetDimension(.height, toSize: footerHeight)
-        
-        let versionLabel = UILabel()
-        versionLabel.font = FontPalette.fontStyleData(forStyle: .header3).font
-        versionLabel.textColor = ColorPalette.color(withType: .fourthText)
-        versionLabel.text = Constants.Resources.AppVersion ?? ""
-        versionLabel.numberOfLines = 0
-        containerFooterView.addSubview(versionLabel)
-        versionLabel.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets(top: 0.0,
-                                                                     left: Constants.Style.DefaultHorizontalMargins,
-                                                                     bottom: 16.0,
-                                                                     right: Constants.Style.DefaultHorizontalMargins),
-                                                  excludingEdge: .top)
+        title = "Record Audio"
+        image = ImagePalette.templateImage(withName: .audioNote)
+        let audioPage = GenericListItemView(withTitle: title,
+                                            image: image ?? UIImage() ,
+                                            colorType: .primary,
+                                            style: .shadowStyle,
+                                            gestureCallback: { [weak self] in
+            guard let self = self else { return }
+            self.navigator.openDiaryNoteAudio(diaryNote: nil, presenter: self, isModal: true)
+        })
+        self.scrollStackView.stackView.addArrangedSubview(audioPage)
+    
+        title = "Record Video"
+        image = ImagePalette.templateImage(withName: .videoIcon) ?? UIImage()
+        let videoPage = GenericListItemView(withTitle: title,
+                                            image: image ?? UIImage(),
+                                            colorType: .inactive,
+                                            style: .shadowStyle,
+                                            gestureCallback: {})
+        self.scrollStackView.stackView.addArrangedSubview(videoPage)
+    }
+    
+    // MARK: Actions
+    @objc private func closeButtonPressed() {
+        self.customCloseButtonPressed()
     }
 }

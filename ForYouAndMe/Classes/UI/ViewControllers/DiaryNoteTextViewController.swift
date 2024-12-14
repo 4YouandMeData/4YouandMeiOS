@@ -13,7 +13,7 @@ class DiaryNoteTextViewController: UIViewController {
     
     fileprivate enum PageState { case read, edit }
     
-    private let pageState: BehaviorRelay<PageState> = BehaviorRelay<PageState>(value: .read)
+    private let pageState: BehaviorRelay<PageState> = BehaviorRelay<PageState>(value: .edit)
     private let navigator: AppNavigator
     private let repository: Repository
     private let analytics: AnalyticsService
@@ -159,13 +159,15 @@ class DiaryNoteTextViewController: UIViewController {
         // Main Stack View
         let stackView = UIStackView.create(withAxis: .vertical, spacing: 16.0)
         self.view.addSubview(stackView)
-        stackView.autoPinEdgesToSuperviewEdges()
+        stackView.autoPinEdges(toSuperviewMarginsExcludingEdge: .bottom)
         stackView.addArrangedSubview(self.headerView)
         
+        let containerView = UIStackView.create(withAxis: .vertical, spacing: 16.0)
+        self.view.addSubview(containerView)
         // TextField
         let containerTextField = UIView()
         containerTextField.addSubview(self.textField)
-        stackView.addArrangedSubview(containerTextField)
+        containerView.addArrangedSubview(containerTextField)
         self.textField.autoSetDimension(.height, toSize: 44.0)
         self.textField.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets(top: 0,
                                                                       left: 12.0,
@@ -184,17 +186,19 @@ class DiaryNoteTextViewController: UIViewController {
         self.limitLabel.autoPinEdge(.right, to: .right, of: self.textView)
         self.limitLabel.autoPinEdge(.left, to: .left, of: self.textView)
         self.limitLabel.text = "\(self.textView.text.count) / \(self.maxCharacters)"
-        stackView.addArrangedSubview(containerTextView)
+        containerView.addArrangedSubview(containerTextView)
         containerTextView.autoPinEdge(.top, to: .bottom, of: self.textField, withOffset: 16.0)
         
-        stackView.addBlankSpace(space: 60.0)
+        containerView.addBlankSpace(space: 60.0)
         
         // Footer
-        let containerFooterView = UIView()
-        containerFooterView.addSubview(self.footerView)
-        footerView.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets.zero)
-        stackView.addArrangedSubview(containerFooterView)
-                
+        self.view.addSubview(self.footerView)
+        footerView.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets.zero, excludingEdge: .top)
+        containerView.autoPinEdge(.top, to: .bottom, of: self.headerView)
+        containerView.autoPinEdge(.leading, to: .leading, of: self.view)
+        containerView.autoPinEdge(.trailing, to: .trailing, of: self.view)
+        containerView.autoPinEdge(.bottom, to: .top, of: self.footerView)
+        
         // Placeholder label
         self.textView.addSubview(self.placeholderLabel)
         self.placeholderLabel.isHidden = !textView.text.isEmpty
@@ -220,7 +224,7 @@ class DiaryNoteTextViewController: UIViewController {
     // MARK: - Actions
     
     @objc private func closeButtonPressed() {
-        self.customBackButtonPressed()
+        self.genericCloseButtonPressed()
     }
     
     @objc private func editButtonPressed() {
@@ -233,7 +237,7 @@ class DiaryNoteTextViewController: UIViewController {
                 .addProgress()
                 .subscribe(onSuccess: { [weak self] in
                     guard let self = self else { return }
-                    self.navigationController?.popViewController(animated: true)
+                    self.closeButtonPressed()
                 }, onError: { [weak self] error in
                     guard let self = self else { return }
                     self.navigator.handleError(error: error, presenter: self)

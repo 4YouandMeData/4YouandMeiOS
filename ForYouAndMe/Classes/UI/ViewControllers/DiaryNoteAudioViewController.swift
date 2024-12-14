@@ -138,10 +138,10 @@ class DiaryNoteAudioViewController: UIViewController {
     }()
     
     private lazy var footerView: GenericButtonView = {
-        
+
         let buttonView = GenericButtonView(withTextStyleCategory: .transparentBackground(shadow: false ))
         buttonView.addTarget(target: self, action: #selector(self.saveButtonPressed))
-        
+
         return buttonView
     }()
     
@@ -205,7 +205,7 @@ class DiaryNoteAudioViewController: UIViewController {
     // MARK: - Actions
     
     @objc private func closeButtonPressed() {
-        self.customBackButtonPressed()
+        self.genericCloseButtonPressed()
     }
     
     @objc private func doneButtonPressed() {
@@ -225,7 +225,7 @@ class DiaryNoteAudioViewController: UIViewController {
             .subscribe(onSuccess: { [weak self] in
                 guard let self = self else { return }
                 try? FileManager.default.removeItem(atPath: Constants.Note.NoteResultURL.path)
-                self.navigationController?.popViewController(animated: true)
+                self.closeButtonPressed()
             }, onError: { [weak self] error in
                 guard let self = self else { return }
                 self.navigator.handleError(error: error,
@@ -308,6 +308,7 @@ class DiaryNoteAudioViewController: UIViewController {
                                                                           left: 12.0,
                                                                           bottom: 0,
                                                                           right: 12.0))
+            self.textView.isHidden = true
             // Limit label
             containerTextView.addSubview(self.limitLabel)
             self.limitLabel.textColor = .lightGray

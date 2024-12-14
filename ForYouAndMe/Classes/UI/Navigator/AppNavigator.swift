@@ -542,29 +542,49 @@ class AppNavigator {
         presenter.present(navigationViewController, animated: true)
     }
     
-    public func openDiaryNoteText(diaryNoteId: String?, presenter: UIViewController) {
-        guard let navigationController = presenter.navigationController else {
-            assertionFailure("Missing UINavigationController")
-            return
-        }
+    public func openDiaryNoteText(diaryNoteId: String?, presenter: UIViewController, isModal: Bool) {
         let diaryNoteTextViewController = DiaryNoteTextViewController(withDataPointID: diaryNoteId)
-        navigationController.pushViewController(diaryNoteTextViewController, animated: true)
+        
+        if isModal {
+            presenter.dismiss(animated: true) {
+                // Get the topmost view controller after dismissal
+                guard let topViewController = self.getTopMostViewController() else {
+                    assertionFailure("Unable to find a top-most view controller to present DiaryNoteTextViewController")
+                    return
+                }
+                topViewController.present(diaryNoteTextViewController, animated: true, completion: nil)
+            }
+        } else {
+            guard let navigationController = presenter.navigationController else {
+                assertionFailure("Missing UINavigationController")
+                return
+            }
+            
+            navigationController.pushViewController(diaryNoteTextViewController, animated: true)
+        }
     }
     
-    public func openDiaryNoteAudio(diaryNote: DiaryNoteItem?, presenter: UIViewController) {
-        guard let navigationController = presenter.navigationController else {
-            assertionFailure("Missing UINavigationController")
-            return
-        }
+    public func openDiaryNoteAudio(diaryNote: DiaryNoteItem?, presenter: UIViewController, isModal: Bool) {
         let diaryNoteAudioViewController = DiaryNoteAudioViewController(withDiaryNote: diaryNote)
-        navigationController.pushViewController(diaryNoteAudioViewController, animated: true)
+        if isModal {
+            presenter.dismiss(animated: true) {
+                guard let topViewController = self.getTopMostViewController() else {
+                    assertionFailure("Unable to find a top-most view controller to present DiaryNoteTextViewController")
+                    return
+                }
+                topViewController.modalPresentationStyle = .fullScreen
+                topViewController.present(diaryNoteAudioViewController, animated: true, completion: nil)
+            }
+        } else {
+            guard let navigationController = presenter.navigationController else {
+                assertionFailure("Missing UINavigationController")
+                return
+            }
+            navigationController.pushViewController(diaryNoteAudioViewController, animated: true)
+        }
     }
     
     public func openNoticedViewController(presenter: UIViewController) {
-        guard let navigationController = presenter.navigationController else {
-            assertionFailure("Missing UINavigationController")
-            return
-        }
         let noticedViewController = NoticedViewController()
         noticedViewController.modalPresentationStyle = .formSheet
         presenter.present(noticedViewController, animated: true)
@@ -760,6 +780,28 @@ class AppNavigator {
         presenter.showAlert(withTitle: StringsProvider.string(forKey: .permissionHealthSettingsTitle),
                             message: StringsProvider.string(forKey: .permissionHealthSettingsMessage),
                             actions: [cancelAction, settingsAction])
+    }
+    
+    // Helper function to get the top-most view controller
+    private func getTopMostViewController() -> UIViewController? {
+        guard let rootViewController = UIApplication.shared.windows.first?.rootViewController else {
+            return nil
+        }
+        return findTopViewController(from: rootViewController)
+    }
+
+    // Recursive function to traverse presented view controllers
+    private func findTopViewController(from rootViewController: UIViewController) -> UIViewController {
+        if let presentedViewController = rootViewController.presentedViewController {
+            return findTopViewController(from: presentedViewController)
+        }
+        if let navigationController = rootViewController as? UINavigationController {
+            return navigationController.visibleViewController ?? navigationController
+        }
+        if let tabBarController = rootViewController as? UITabBarController {
+            return tabBarController.selectedViewController ?? tabBarController
+        }
+        return rootViewController
     }
     
     // MARK: - Study Info
