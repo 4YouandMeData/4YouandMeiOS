@@ -84,7 +84,7 @@ PODS:
     - GoogleUtilities/Environment (~> 7.0)
     - GoogleUtilities/Reachability (~> 7.0)
     - GoogleUtilities/UserDefaults (~> 7.0)
-  - ForYouAndMe (0.89.0):
+  - ForYouAndMe (0.90.0):
     - AlamofireImage (~> 4.1)
     - BLZJapx/RxCodableMoya (~> 3.0.0)
     - Charts (~> 4.1.0)
@@ -274,7 +274,7 @@ SPEC CHECKSUMS:
   FirebaseInstallations: 7f7ed0e7e27fb51f57291e1876e2ddb1524126c1
   FirebaseInstanceID: aaecc93b4528bbcafea12c477e26827719ca1183
   FirebaseMessaging: 7091222bfac24ca89c569c3c59e58390311e487f
-  ForYouAndMe: 6e32c23d302520935e72ec10ddd396bb5d7ddea3
+  ForYouAndMe: 8aca7784fb3ff529200ebcbdb353a387791b29ab
   FYAMResearchKit: c79d2de80d301ac02ba9b303d97d35b083d4676b
   GoogleAppMeasurement: 57a0df93dc2feb5176b1bac06012dbd725191ba5
   GoogleDataTransport: 116c84c4bdeb76be2a7a46de51244368f9794eab
@@ -304,6 +304,6 @@ SPEC CHECKSUMS:
   UberSignature: 99e67e9cf182f393b882a743801bc18690cca347
   Validator: 80a6f567220c962dfd2d9928ae98a8c1d164f6f4
 
-PODFILE CHECKSUM: 0f2b224ad400963a279407f1f41be55b60dc49bf
+PODFILE CHECKSUM: 7e902ae1fdbdc910e1f147f6c02738aab8c56c2f
 
 COCOAPODS: 1.15.2
