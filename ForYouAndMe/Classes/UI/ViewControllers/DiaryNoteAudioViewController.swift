@@ -233,6 +233,19 @@ class DiaryNoteAudioViewController: UIViewController {
             }).disposed(by: self.disposeBag)
     }
     
+    @objc private func deleteButtonPressed() {
+        guard let diaryNoteItem = self.diaryNoteItem else { return }
+        self.repository.deleteDiaryNote(noteID: diaryNoteItem.id)
+            .addProgress()
+            .subscribe(onSuccess: { [weak self] in
+                guard let self = self else { return }
+                self.navigationController?.popViewController(animated: true)
+            }, onError: { [weak self] error in
+                guard let self = self else { return }
+                self.navigator.handleError(error: error, presenter: self)
+            }).disposed(by: self.disposeBag)
+    }
+    
     @objc private func buttonTapped(_ sender: ActionButton) {
         sender.action?()
     }
@@ -320,6 +333,7 @@ class DiaryNoteAudioViewController: UIViewController {
             self.scrollView.autoPinEdge(.trailing, to: .trailing, of: self.view)
             self.scrollView.autoPinEdge(.bottom, to: .top, of: self.footerView)
             footerView.setButtonText("Delete")
+            footerView.addTarget(target: self, action: #selector(self.deleteButtonPressed))
             
             containerTextView.autoPinEdge(.top, to: .bottom, of: self.slider, withOffset: 30)
             containerTextView.autoPinEdge(.leading, to: .leading, of: self.view)

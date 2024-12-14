@@ -154,6 +154,7 @@ class GenericButtonView: UIView {
     // MARK: - Public Methods
     
     public func addTarget(target: Any?, action: Selector) {
+        self.button.removeTarget(nil, action: nil, for: .allEvents)
         self.button.addTarget(target, action: action, for: .touchUpInside)
     }
     
