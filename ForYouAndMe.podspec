@@ -58,6 +58,7 @@ Pod::Spec.new do |s|
   s.dependency 'Charts', '~> 4.1.0'
   s.dependency 'StepSlider', '~> 1.8.0'
   s.dependency 'EVGPUImage2', '~> 0.2'
+  s.dependency 'JJFloatingActionButton', '~> 3.0.1'
 
   
   s.static_framework = true

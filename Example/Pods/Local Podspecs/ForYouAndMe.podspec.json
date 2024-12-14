@@ -99,6 +99,9 @@
     ],
     "EVGPUImage2": [
       "~> 0.2"
+    ],
+    "JJFloatingActionButton": [
+      "~> 3.0.1"
     ]
   },
   "static_framework": true,

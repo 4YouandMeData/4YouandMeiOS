@@ -94,6 +94,7 @@ PODS:
     - Firebase/Crashlytics (~> 7.2.0)
     - Firebase/Messaging (~> 7.2.0)
     - FYAMResearchKit (~> 3.0.0)
+    - JJFloatingActionButton (~> 3.0.1)
     - Moya-ModelMapper/RxSwift (~> 10.0.0)
     - Moya/RxSwift (~> 14.0.0)
     - OAuthSwift (~> 2.1.0)
@@ -135,6 +136,7 @@ PODS:
     - GoogleUtilities/Logger
   - GoogleUtilities/UserDefaults (7.3.1):
     - GoogleUtilities/Logger
+  - JJFloatingActionButton (3.0.1)
   - ModelMapper (10.0.1):
     - ModelMapper/Core (= 10.0.1)
   - ModelMapper/Core (10.0.1)
@@ -227,6 +229,7 @@ SPEC REPOS:
     - GoogleAppMeasurement
     - GoogleDataTransport
     - GoogleUtilities
+    - JJFloatingActionButton
     - ModelMapper
     - Moya
     - Moya-ModelMapper
@@ -271,11 +274,12 @@ SPEC CHECKSUMS:
   FirebaseInstallations: 7f7ed0e7e27fb51f57291e1876e2ddb1524126c1
   FirebaseInstanceID: aaecc93b4528bbcafea12c477e26827719ca1183
   FirebaseMessaging: 7091222bfac24ca89c569c3c59e58390311e487f
-  ForYouAndMe: d8a8b6538ebb7a71b7f4898082d0d6d47ed8ca4c
+  ForYouAndMe: 6e32c23d302520935e72ec10ddd396bb5d7ddea3
   FYAMResearchKit: c79d2de80d301ac02ba9b303d97d35b083d4676b
   GoogleAppMeasurement: 57a0df93dc2feb5176b1bac06012dbd725191ba5
   GoogleDataTransport: 116c84c4bdeb76be2a7a46de51244368f9794eab
   GoogleUtilities: e1d9ed4e544fc32a93e00e721400cbc3f377200d
+  JJFloatingActionButton: 6a20da0a36bc2c5e2097e754b5e765aa9e4b6365
   ModelMapper: 0f68dd4300d0e27290c70f66492c7f795da21bcf
   Moya: 5b45dacb75adb009f97fde91c204c1e565d31916
   Moya-ModelMapper: e3a478500921e7299804dc1ac550f1ebf3228ade
