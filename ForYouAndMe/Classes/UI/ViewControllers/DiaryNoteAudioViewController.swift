@@ -317,6 +317,7 @@ class DiaryNoteAudioViewController: UIViewController {
             self.limitLabel.autoPinEdge(.left, to: .left, of: self.textView)
             self.limitLabel.text = "\(self.textView.text.count) / \(self.maxCharacters)"
             containerStackView.addArrangedSubview(containerTextView)
+            self.limitLabel.isHidden = true
   
             // Placeholder label
             self.textView.addSubview(self.placeholderLabel)
