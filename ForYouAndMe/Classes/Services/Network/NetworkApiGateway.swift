@@ -245,11 +245,13 @@ fileprivate extension PrimitiveSequence where Trait == SingleTrait, Element == R
             .flatMap { response -> Single<Element> in
                 if 200 ... 299 ~= response.statusCode {
                     // Uncomment this to print the whole response data
-//                    print("Network Body: \(String(data: response.data, encoding: .utf8) ?? "")")
+                    print("Network Body: \(String(data: response.data, encoding: .utf8) ?? "")")
                     self.handleAccessToken(response: response, storage: api.storage)
                     return Single.just(response)
                 } else {
                     if 400 ... 499 ~= response.statusCode {
+                        // Uncomment this to print the whole response data
+                        print("Network Body: \(String(data: response.data, encoding: .utf8) ?? "")")
                         if let serverError = ServerErrorCode(rawValue: response.statusCode) {
                             switch serverError {
                             case .unauthorized:
@@ -270,6 +272,8 @@ fileprivate extension PrimitiveSequence where Trait == SingleTrait, Element == R
                                                                        parsedError: error))
                         }
                     }
+                    // Uncomment this to print the whole response data
+                    print("Network Body: \(String(data: response.data, encoding: .utf8) ?? "")")
                     return Single.error(ApiError.unexpectedError(pathUrl: request.serviceRequest.getPath(forStudyId: api.studyId),
                                                                  request: request,
                                                                  statusCode: response.statusCode,
