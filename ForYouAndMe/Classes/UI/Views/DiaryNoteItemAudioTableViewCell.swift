@@ -116,7 +116,7 @@ class DiaryNoteItemAudioTableViewCell: UITableViewCell {
     public func display(data: DiaryNoteItem, buttonPressedCallback: @escaping NotificationCallback) {
         self.buttonPressedCallback = buttonPressedCallback
         
-        self.updateNoteTitle(data.title ?? "")
+        self.updateNoteTitle(data.title ?? "Audio Recorded")
         
         noteImageView.image = ImagePalette.image(withName: .audioNoteListImage)
     }

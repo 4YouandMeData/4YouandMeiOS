@@ -7,6 +7,13 @@
 
 import Foundation
 
+typealias DiaryNoteData = [String: Any]
+
+struct DiaryNoteFile {
+    let data: Data
+    let fileExtension: FileDataExtension
+}
+
 enum DiaryNoteItemType: String, Codable {
     case text
     case audio
@@ -30,21 +37,6 @@ struct DiaryNoteItem: Codable {
 
     @NilIfEmptyString
     var urlString: String?
-    
-    init?(from dictionary: [String: Any]) {
-       guard let id = dictionary["id"] as? String,
-             let type = dictionary["type"] as? String else {
-           return nil
-       }
-       
-        self.id = id
-        self.type = type
-        self.diaryNoteId = dictionary["diaryNoteId"] as? Date ?? Date()
-        self.diaryNoteType = DiaryNoteItemType(rawValue: dictionary["diaryNoteType"] as? String ?? "text")
-        self.title = dictionary["title"] as? String
-        self.body = dictionary["body"] as? String
-        self.urlString = dictionary["attachment"] as? String
-    }
     
     init (id: String,
           type: String,
@@ -81,20 +73,26 @@ extension DiaryNoteItem: JSONAPIMappable {
         self.id = try container.decode(String.self, forKey: .id)
         self.type = try container.decode(String.self, forKey: .type)
         self.diaryNoteId = try container.decode(DateValue<ISO8601Strategy>.self, forKey: .diaryNoteId).wrappedValue
-        let diaryType = try? container.decodeIfPresent(String.self, forKey: .urlString)
-        if diaryType != nil {
+        
+        // Decode optional fields
+        self.title = try container.decodeIfPresent(String.self, forKey: .title)
+        self.body = try container.decodeIfPresent(String.self, forKey: .body)
+        
+        // Check for attachment
+        if let attachmentContainer = try? container.decodeIfPresent([String: String].self, forKey: .urlString),
+           let attachmentURL = attachmentContainer["url"] {
+            self.urlString = attachmentURL
             self.diaryNoteType = .audio
         } else {
+            self.urlString = nil
             self.diaryNoteType = .text
         }
-        self.title = try? container.decodeIfPresent(String.self, forKey: .title)
-        self.body = try container.decode(String.self, forKey: .body)
     }
     
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         
-        let formattedDate = diaryNoteId.string(withFormat: "yyyy-MM-dd'T'HH:mm:ss'Z'")
+        let formattedDate = diaryNoteId.string(withFormat: dateTimeFormat)
         try container.encode(formattedDate, forKey: .diaryNoteId)
         
         // Encode optional fields

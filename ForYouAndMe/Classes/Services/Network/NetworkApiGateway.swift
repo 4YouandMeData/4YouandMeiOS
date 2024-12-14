@@ -402,8 +402,8 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             return "v1/diary_notes"
         case .deleteDiaryNote(let diaryNoteId):
             return "v1/diary_notes/\(diaryNoteId)"
-        case .sendDiaryNoteAudio(let diaryNoteId, let audio):
-            return ""
+        case .sendDiaryNoteAudio(_, _):
+            return "v1/diary_notes"
         case .updateDiaryNoteText(let diaryNoteId):
             return "v1/diary_notes/\(diaryNoteId.id)"
         }
@@ -722,9 +722,21 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             return .requestParameters(parameters: ["diary_note": dataParams], encoding: JSONEncoding.default)
         case .sendDiaryNoteText(let diaryItem):
             return .requestJSONEncodable(diaryItem)
-        case .sendDiaryNoteAudio(_, let audio):
-            let params: [String: Any] = ["note_audio": audio]
-            return .requestParameters(parameters: ["diary_note": params], encoding: JSONEncoding.default)
+        case .sendDiaryNoteAudio(let diaryNoteId, _):
+            // Add parameters
+            var multipartBodyReq = self.multipartBody
+            
+            let parameters: [String: String] = [
+                "diary_note[datetime_ref]": diaryNoteId
+            ]
+            
+            for (key, value) in parameters {
+                let parameterData = MultipartFormData(provider: .data(value.data(using: .utf8)!),
+                                                      name: key)
+                multipartBodyReq.append(parameterData)
+            }
+            
+            return .uploadMultipart(multipartBodyReq)
         }
     }
     
@@ -734,6 +746,12 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             let imageDataProvider = MultipartFormData(provider: MultipartFormData.FormDataProvider.data(file.data),
                                                       name: "task[attachment]",
                                                       fileName: "VideoDiary.\(file.fileExtension.name)",
+                                                      mimeType: file.fileExtension.mimeType)
+            return [imageDataProvider]
+        case .sendDiaryNoteAudio(_, let file):
+            let imageDataProvider = MultipartFormData(provider: MultipartFormData.FormDataProvider.data(file.data),
+                                                      name: "diary_note[attachment]",
+                                                      fileName: "AudioNote.\(file.fileExtension.name)",
                                                       mimeType: file.fileExtension.mimeType)
             return [imageDataProvider]
         default:

@@ -20,6 +20,7 @@ class DiaryNoteAudioViewController: UIViewController {
     private let repository: Repository
     private let analytics: AnalyticsService
     private let audioPlayerManager = AudioPlayerManager()
+    private var audioFileURL: URL?
     
     private let disposeBag = DisposeBag()
     private let totalTimeLabelAttributedTextStyle = AttributedTextStyle(fontStyle: .title,
@@ -157,16 +158,16 @@ class DiaryNoteAudioViewController: UIViewController {
     }()
     
     private var storage: CacheService
-    private let dataPointID: String?
+    private let diaryNoteItem: DiaryNoteItem?
     private let maxCharacters: Int = 500
     
-    init(withDataPointID dataPointID: String?) {
+    init(withDiaryNote diaryNote: DiaryNoteItem?) {
         self.navigator = Services.shared.navigator
         self.repository = Services.shared.repository
         self.storage = Services.shared.storageServices
         self.analytics = Services.shared.analytics
         
-        self.dataPointID = dataPointID
+        self.diaryNoteItem = diaryNote
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -212,7 +213,24 @@ class DiaryNoteAudioViewController: UIViewController {
     }
     
     @objc private func saveButtonPressed() {
-        
+        AppNavigator.pushProgressHUD()
+        guard let audioUrl = self.audioFileURL, let audioData = try? Data.init(contentsOf: audioUrl) else {
+            assertionFailure("Couldn't transform result data to expected network representation")
+            return
+        }
+        let audioResultFile = DiaryNoteFile(data: audioData, fileExtension: .m4a)
+        let dateTime = Date().string(withFormat: dateTimeFormat)
+        self.repository.sendDiaryNoteAudio(diaryNoteRef: dateTime, file: audioResultFile)
+            .do(onDispose: { AppNavigator.popProgressHUD() })
+            .subscribe(onSuccess: { [weak self] in
+                guard let self = self else { return }
+                try? FileManager.default.removeItem(atPath: Constants.Note.NoteResultURL.path)
+                self.navigationController?.popViewController(animated: true)
+            }, onError: { [weak self] error in
+                guard let self = self else { return }
+                self.navigator.handleError(error: error,
+                                           presenter: self)
+            }).disposed(by: self.disposeBag)
     }
     
     @objc private func buttonTapped(_ sender: ActionButton) {
@@ -222,7 +240,9 @@ class DiaryNoteAudioViewController: UIViewController {
     // MARK: - Private Methods
     
     private func setupUI() {
-        if self.dataPointID != nil {
+        
+        // Diary Note is present and I want listen recorded audio
+        if self.diaryNoteItem != nil {
             
             // StackView
             let containerStackView = UIStackView.create(withAxis: .vertical)
@@ -233,14 +253,17 @@ class DiaryNoteAudioViewController: UIViewController {
                                                                       right: Constants.Style.DefaultHorizontalMargins))
             containerStackView.autoAlignAxis(toSuperviewAxis: .vertical)
             containerStackView.addBlankSpace(space: 24.0)
-            let playButton = UIButton()
             let recordButtonImage = ImagePalette.image(withName: .audioPlayButton)
-            playButton.setImage(recordButtonImage, for: .normal)
-            playButton.imageView?.contentMode = .scaleAspectFit
-            playButton.contentEdgeInsets = UIEdgeInsets(top: 4.0, left: 4.0, bottom: 4.0, right: 4.0)
-            playButton.autoSetDimension(.height, toSize: 68)
+            self.recordButton.setImage(recordButtonImage, for: .normal)
+            self.recordButton.imageView?.contentMode = .scaleAspectFit
+            self.recordButton.contentEdgeInsets = UIEdgeInsets(top: 4.0, left: 4.0, bottom: 4.0, right: 4.0)
+            self.recordButton.autoSetDimension(.height, toSize: 68)
+            self.recordButton.action = {
+                guard let diaryNoteItem = self.diaryNoteItem, let urlString = diaryNoteItem.urlString else { return }
+                self.audioPlayerManager.playAudio(from: URL(string: urlString)!)
+            }
             
-            containerStackView.addArrangedSubview(playButton)
+            containerStackView.addArrangedSubview(self.recordButton)
             
             containerStackView.addBlankSpace(space: 24.0)
             
@@ -394,7 +417,12 @@ extension DiaryNoteAudioViewController: AudioPlayerManagerDelegate {
         let playButtonImage = ImagePalette.image(withName: .audioPlayButton)
         recordButton.setImage(playButtonImage, for: .normal)
         recordButton.action = { [weak self] in
-            self?.audioPlayerManager.playRecordedAudio()
+            guard let self = self else { return }
+            guard let diaryNoteItem = self.diaryNoteItem, let urlString = diaryNoteItem.urlString else {
+                self.audioPlayerManager.playRecordedAudio()
+                return
+            }
+            self.audioPlayerManager.playAudio(from: URL(string: urlString)!)
         }
         recordButton.imageView?.contentMode = .scaleAspectFit
     }
@@ -432,7 +460,7 @@ extension DiaryNoteAudioViewController: AudioPlayerManagerDelegate {
         }
         
         self.recordDurationTime = duration ?? 0
-        
+        self.audioFileURL = fileURL
         self.timeLabel.setTime(currentTime: 0,
                                totalTime: Int(duration ?? 0),
                                attributedTextStyle: self.totalTimeLabelAttributedTextStyle,
@@ -467,7 +495,12 @@ extension DiaryNoteAudioViewController: AudioPlayerManagerDelegate {
         recordButton.setImage(playButtonImage, for: .normal)
         recordButton.imageView?.contentMode = .scaleAspectFit
         recordButton.action = { [weak self] in
-            self?.audioPlayerManager.playRecordedAudio()
+            guard let self = self else { return }
+            guard let diaryNoteItem = self.diaryNoteItem, let urlString = diaryNoteItem.urlString else {
+                self.audioPlayerManager.playRecordedAudio()
+                return
+            }
+            self.audioPlayerManager.playAudio(from: URL(string: urlString)!)
         }
     }
     

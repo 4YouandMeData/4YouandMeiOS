@@ -1,12 +1,8 @@
+// AudioPlayerManager.swift
+// Pods
 //
-//  AudioPlayerManager.swift
-//  Pods
+// Created by Giuseppe Lapenta on 13/12/24.
 //
-//  Created by Giuseppe Lapenta on 13/12/24.
-//
-
-import Foundation
-import AVFoundation
 
 import Foundation
 import AVFoundation
@@ -44,13 +40,19 @@ class AudioPlayerManager: NSObject {
     
     weak var delegate: AudioPlayerManagerDelegate?
     
+    static let audioFilenamePrefix = "Audio"
+    
+    private let audioExtension = "m4a"
+    
     private var audioRecorder: AVAudioRecorder?
     private var audioPlayer: AVAudioPlayer?
+    private var avPlayer: AVPlayer?
     private var audioSession: AVAudioSession = AVAudioSession.sharedInstance()
     private var audioFileURL: URL?
     private var playbackTimer: Timer?
     private var recordingTimer: Timer?
     private var recordingStartTime: Date?
+    private var streamingEndObserver: NSObjectProtocol?
     
     /// Current state of the audio manager
     private(set) var state: AudioPlayerState = .idle
@@ -89,23 +91,45 @@ class AudioPlayerManager: NSObject {
         }
         playAudio(from: url)
     }
+
+    /// Play audio from a remote URL or local URL
+    func playAudio(from url: URL) {
+        if url.isFileURL {
+            playLocalAudio(from: url)
+        } else {
+            playRemoteAudio(from: url)
+        }
+    }
     
     /// Pause the currently playing audio
     func pauseAudio() {
-        guard state == .playing else { return }
-        audioPlayer?.pause()
-        stopPlaybackTimer()
-        transition(to: .paused)
-        delegate?.didPausePlaying()
+        switch state {
+        case .playing:
+            audioPlayer?.pause()
+            avPlayer?.pause()
+            stopPlaybackTimer()
+            transition(to: .paused)
+            delegate?.didPausePlaying()
+        default:
+            break
+        }
     }
     
     /// Resume the paused audio
     func resumeAudio() {
-        guard state == .paused else { return }
-        audioPlayer?.play()
-        startPlaybackTimer()
-        transition(to: .playing)
-        delegate?.didResumePlaying()
+        switch state {
+        case .paused:
+            if let player = audioPlayer {
+                player.play()
+            } else if let player = avPlayer {
+                player.play()
+            }
+            startPlaybackTimer()
+            transition(to: .playing)
+            delegate?.didResumePlaying()
+        default:
+            break
+        }
     }
     
     /// Stop audio playback
@@ -113,6 +137,7 @@ class AudioPlayerManager: NSObject {
         switch state {
         case .playing, .paused:
             audioPlayer?.stop()
+            avPlayer?.pause()
             stopPlaybackTimer()
             transition(to: .idle)
             delegate?.didFinishPlaying(success: true)
@@ -128,11 +153,22 @@ class AudioPlayerManager: NSObject {
         state = newState
     }
     
+    private func setOutputFileURL() throws -> URL {
+        let outputFileName = "\(AudioPlayerManager.audioFilenamePrefix)"
+        var isDir: ObjCBool = false
+        let fileManager = FileManager.default
+        if !fileManager.fileExists(atPath: Constants.Note.NoteResultURL.path, isDirectory: &isDir) {
+            try fileManager.createDirectory(atPath: Constants.Note.NoteResultURL.path,
+                                            withIntermediateDirectories: false,
+                                            attributes: nil)
+        }
+        let fileURL = Constants.Note.NoteResultURL.appendingPathComponent(outputFileName).appendingPathExtension(self.audioExtension)
+        return fileURL
+    }
+    
     /// Set up the audio recorder with proper settings
     private func setupAudioRecorder() throws {
-        let fileName = "audio_\(UUID().uuidString).m4a"
-        let documentDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
-        audioFileURL = documentDirectory.appendingPathComponent(fileName)
+        audioFileURL = try self.setOutputFileURL()
         
         let settings: [String: Any] = [
             AVFormatIDKey: Int(kAudioFormatMPEG4AAC),
@@ -171,7 +207,7 @@ class AudioPlayerManager: NSObject {
     }
     
     /// Play audio from a local URL
-    private func playAudio(from url: URL) {
+    private func playLocalAudio(from url: URL) {
         guard state == .idle else { return }
         
         do {
@@ -186,6 +222,39 @@ class AudioPlayerManager: NSObject {
         }
     }
     
+    /// Play audio from a remote URL
+    private func playRemoteAudio(from url: URL) {
+        guard state == .idle || state == .paused else { return }
+        
+        if avPlayer == nil || avPlayer?.currentItem?.asset != AVURLAsset(url: url) {
+            avPlayer = AVPlayer(url: url)
+            addStreamingEndObserver()
+        } else {
+            avPlayer?.seek(to: .zero)
+        }
+        avPlayer?.play()
+        transition(to: .playing)
+        delegate?.didStartPlaying()
+        startPlaybackTimerForAVPlayer()
+    }
+    
+    /// Add observer for streaming end
+    private func addStreamingEndObserver() {
+        streamingEndObserver = NotificationCenter.default.addObserver(
+            forName: .AVPlayerItemDidPlayToEndTime,
+            object: avPlayer?.currentItem,
+            queue: .main) { [weak self] _ in
+            self?.handleStreamingEnd()
+        }
+    }
+    
+    /// Handle streaming end
+    private func handleStreamingEnd() {
+        stopPlaybackTimer()
+        transition(to: .idle)
+        delegate?.didFinishPlaying(success: true)
+    }
+    
     /// Start a timer to update playback progress
     private func startPlaybackTimer() {
         playbackTimer?.invalidate()
@@ -194,14 +263,24 @@ class AudioPlayerManager: NSObject {
             self.delegate?.didUpdatePlaybackTime(currentTime: player.currentTime, totalTime: player.duration)
         }
     }
-    
-    /// Stop the playback timer
+
+    private func startPlaybackTimerForAVPlayer() {
+        playbackTimer?.invalidate()
+        playbackTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
+            guard let self = self, let currentItem = self.avPlayer?.currentItem else { return }
+            let currentTime = CMTimeGetSeconds(currentItem.currentTime())
+            let totalTime = CMTimeGetSeconds(currentItem.duration)
+            if !currentTime.isNaN && !totalTime.isNaN {
+                self.delegate?.didUpdatePlaybackTime(currentTime: currentTime, totalTime: totalTime)
+            }
+        }
+    }
+
     private func stopPlaybackTimer() {
         playbackTimer?.invalidate()
         playbackTimer = nil
     }
-    
-    /// Start a timer to update recording time
+
     private func startRecordingTimer() {
         recordingTimer?.invalidate()
         recordingTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
@@ -210,11 +289,18 @@ class AudioPlayerManager: NSObject {
             self.delegate?.didUpdateRecordingTime(elapsedTime: elapsedTime)
         }
     }
-    
-    /// Stop the recording timer
+
     private func stopRecordingTimer() {
         recordingTimer?.invalidate()
         recordingTimer = nil
+    }
+
+    deinit {
+        stopPlaybackTimer()
+        stopRecordingTimer()
+        if let observer = streamingEndObserver {
+            NotificationCenter.default.removeObserver(observer)
+        }
     }
 }
 
@@ -229,7 +315,7 @@ extension AudioPlayerManager: AVAudioRecorderDelegate {
             delegate?.didEncounterError(error: .recordingUnavailable)
         }
     }
-    
+
     /// Calculate the duration of an audio file
     private func calculateAudioDuration(url: URL?) -> TimeInterval? {
         guard let url = url else { return nil }
@@ -245,8 +331,8 @@ extension AudioPlayerManager: AVAudioRecorderDelegate {
 // MARK: - AVAudioPlayerDelegate
 extension AudioPlayerManager: AVAudioPlayerDelegate {
     func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
-        transition(to: .idle)
         stopPlaybackTimer()
+        transition(to: .idle)
         delegate?.didFinishPlaying(success: flag)
     }
 }

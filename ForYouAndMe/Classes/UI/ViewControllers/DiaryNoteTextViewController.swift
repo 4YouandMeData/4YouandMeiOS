@@ -241,11 +241,11 @@ class DiaryNoteTextViewController: UIViewController {
             self.pageState.accept(.read)
         } else {
             let newDiaryNote = DiaryNoteItem.init(id: "0",
-                                               type: "diary_note",
-                                               diaryNoteId: self.dataPointID?.date(withFormat: "yyyy-MM-dd'T'HH:mm:ss'Z'") ?? NSDate.now,
-                                               diaryNoteType: .text,
-                                               title: self.textField.text,
-                                               body: self.textView.text)
+                                                  type: "diary_note",
+                                                  diaryNoteId: self.dataPointID?.date(withFormat: dateTimeFormat) ?? Date(),
+                                                  diaryNoteType: .text,
+                                                  title: self.textField.text,
+                                                  body: self.textView.text)
 
             self.repository.sendDiaryNoteText(diaryNote: newDiaryNote)
                 .addProgress()

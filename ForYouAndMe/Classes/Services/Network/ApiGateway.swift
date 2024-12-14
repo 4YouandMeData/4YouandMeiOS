@@ -60,7 +60,7 @@ enum DefaultService {
     case getDiaryNoteAudio(noteId: String)
     case sendDiaryNoteText(diaryItem: DiaryNoteItem)
     case updateDiaryNoteText(diaryItem: DiaryNoteItem)
-    case sendDiaryNoteAudio(noteId: String, audio: Data)
+    case sendDiaryNoteAudio(noteId: String, attachment: DiaryNoteFile)
     case deleteDiaryNote(noteId: String)
     // User
     case getUser

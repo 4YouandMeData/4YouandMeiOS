@@ -334,7 +334,7 @@ public class VideoDiaryRecorderViewController: UIViewController {
                 self.navigator.handleError(error: error,
                                            presenter: self)
             }).disposed(by: self.disposeBag)
-                }
+    }
     
     private func startRecording() {
         do {

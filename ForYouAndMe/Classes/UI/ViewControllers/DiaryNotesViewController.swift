@@ -170,7 +170,7 @@ class DiaryNotesViewController: UIViewController {
     }
     
     @objc private func createAudioDiaryNote() {
-        self.navigator.openDiaryNoteAudio(diaryNoteId: nil, presenter: self)
+        self.navigator.openDiaryNoteAudio(diaryNote: nil, presenter: self)
     }
     
     @objc private func createTextDiaryNote() {
@@ -214,7 +214,7 @@ extension DiaryNotesViewController: UITableViewDataSource {
                 }
                 cell.display(data: diaryNote, buttonPressedCallback: { [weak self] in
                     guard let self = self else { return }
-                    self.navigator.openDiaryNoteAudio(diaryNoteId: diaryNote.id, presenter: self)
+                    self.navigator.openDiaryNoteAudio(diaryNote: diaryNote, presenter: self)
                 })
                 return cell
                 

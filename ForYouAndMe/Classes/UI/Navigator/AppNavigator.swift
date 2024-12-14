@@ -543,12 +543,12 @@ class AppNavigator {
         navigationController.pushViewController(diaryNoteTextViewController, animated: true)
     }
     
-    public func openDiaryNoteAudio(diaryNoteId: String?, presenter: UIViewController) {
+    public func openDiaryNoteAudio(diaryNote: DiaryNoteItem?, presenter: UIViewController) {
         guard let navigationController = presenter.navigationController else {
             assertionFailure("Missing UINavigationController")
             return
         }
-        let diaryNoteAudioViewController = DiaryNoteAudioViewController(withDataPointID: diaryNoteId)
+        let diaryNoteAudioViewController = DiaryNoteAudioViewController(withDiaryNote: diaryNote)
         navigationController.pushViewController(diaryNoteAudioViewController, animated: true)
     }
     
