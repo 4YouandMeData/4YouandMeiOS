@@ -559,8 +559,9 @@ class AppNavigator {
                 assertionFailure("Missing UINavigationController")
                 return
             }
-            
-            navigationController.pushViewController(diaryNoteTextViewController, animated: true)
+            navigationController.pushViewController(diaryNoteTextViewController,
+                                                    hidesBottomBarWhenPushed: true,
+                                                    animated: true)
         }
     }
     
@@ -580,7 +581,9 @@ class AppNavigator {
                 assertionFailure("Missing UINavigationController")
                 return
             }
-            navigationController.pushViewController(diaryNoteAudioViewController, animated: true)
+            navigationController.pushViewController(diaryNoteAudioViewController,
+                                                    hidesBottomBarWhenPushed: true,
+                                                    animated: true)
         }
     }
     
