@@ -200,7 +200,9 @@ class AudioPlayerManager: NSObject {
     /// Stop recording audio
     private func stopRecording() {
         guard state == .recording else { return }
-        audioRecorder?.stop()
+        DispatchQueue.main.async { [weak self] in
+            self?.audioRecorder?.stop()
+        }
         recordingStartTime = nil
         stopRecordingTimer()
         transition(to: .idle)
