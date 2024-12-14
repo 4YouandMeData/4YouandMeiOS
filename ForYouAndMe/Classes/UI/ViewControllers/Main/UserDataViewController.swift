@@ -24,6 +24,7 @@ class UserDataViewController: UIViewController, WKNavigationDelegate, WKScriptMe
         // Configura la WKWebView per supportare i messaggi JavaScript
         let userContentController = WKUserContentController()
         userContentController.add(self, name: "chartPointTapped")
+        userContentController.add(self, name: "chartFullScreenTapped")
         
         let configuration = WKWebViewConfiguration()
         configuration.userContentController = userContentController
@@ -32,8 +33,7 @@ class UserDataViewController: UIViewController, WKNavigationDelegate, WKScriptMe
         webView.navigationDelegate = self
         return webView
     }()
-    
-    
+
     // Stored so they can be used by the filter page
     private let navigator: AppNavigator
     private let repository: Repository
@@ -139,18 +139,21 @@ class UserDataViewController: UIViewController, WKNavigationDelegate, WKScriptMe
 //       injectChartEventListener()
    }
     
-    // Metodo per iniettare il listener JavaScript
-    private func injectChartEventListener() {
-        let script = """
-        document.addEventListener('chartPointTapped', function(event) {
-            window.webkit.messageHandlers.chartPointTapped.postMessage({
-                dataPointID: event.detail.dataPointID,
-            });
-        });
-        """
-        
-        webView.evaluateJavaScript(script, completionHandler: nil)
-    }
+//    // Metodo per iniettare il listener JavaScript
+//    private func injectChartEventListener() {
+//        let script = """
+//        document.addEventListener('chartPointTapped', function(event) {
+//            window.webkit.messageHandlers.chartPointTapped.postMessage({
+//                dataPointID: event.detail.dataPointID,
+//            });
+//            window.webkit.messageHandlers.chartPointTapped.postMessage({
+//                dataPointID: event.detail.dataPointID,
+//            });
+//        });
+//        """
+//        
+//        webView.evaluateJavaScript(script, completionHandler: nil)
+//    }
     
     // Implementazione del WKScriptMessageHandler
     func userContentController(_ userContentController: WKUserContentController,
@@ -158,6 +161,10 @@ class UserDataViewController: UIViewController, WKNavigationDelegate, WKScriptMe
         if message.name == "chartPointTapped",
            let body = message.body as? [String: Any] {
             handleChartPointTap(eventData: body)
+        }
+        if message.name == "chartFullScreenTapped",
+           let body = message.body as? [String: Any] {
+            print(body)
         }
     }
     
