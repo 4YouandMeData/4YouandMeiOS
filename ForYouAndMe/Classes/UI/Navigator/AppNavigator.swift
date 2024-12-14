@@ -560,6 +560,16 @@ class AppNavigator {
         navigationController.pushViewController(diaryNoteAudioViewController, animated: true)
     }
     
+    public func openNoticedViewController(presenter: UIViewController) {
+        guard let navigationController = presenter.navigationController else {
+            assertionFailure("Missing UINavigationController")
+            return
+        }
+        let noticedViewController = NoticedViewController()
+        noticedViewController.modalPresentationStyle = .formSheet
+        presenter.present(noticedViewController, animated: true)
+    }
+    
     // MARK: About You
     
     public func showAboutYouPage(presenter: UIViewController) {

@@ -358,7 +358,7 @@ public class VideoDiaryRecorderViewController: UIViewController {
     }
     
     private func stopRecording() {
-        //AppNavigator.pushProgressHUD()
+        // AppNavigator.pushProgressHUD()
         self.recordTrackingTimer?.invalidate()
         self.currentState = .record(isRecording: false)
         self.cameraView.stopRecording()

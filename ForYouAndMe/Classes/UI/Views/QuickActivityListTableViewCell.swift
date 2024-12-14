@@ -123,8 +123,7 @@ class QuickActivityListTableViewCell: UITableViewCell {
     
     private func updatePageControl() {
         var totalPagesCount = 4 // Default quick activity total number
-        if (StringsProvider.string(forKey: .quickActivitiesRemaining).isEmpty)
-        {
+        if (StringsProvider.string(forKey: .quickActivitiesRemaining).isEmpty) {
             if let dynamicTotalPageCount = Int(StringsProvider.string(forKey: .quickActivityTotalNumber)) {
                 if dynamicTotalPageCount > 0 {
                     totalPagesCount = dynamicTotalPageCount
