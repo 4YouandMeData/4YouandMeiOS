@@ -56,6 +56,8 @@ enum ImageName: String, CaseIterable {
     case audioRecButton = "audio_recorder_button"
     case audioPauseButton = "audio_pause"
     case audioPlayButton = "audio_play"
+    case noteGeneric = "note_generic_image"
+    case riflectionIcon = "riflection_image"
 }
 
 enum TemplateImageName: String, CaseIterable {

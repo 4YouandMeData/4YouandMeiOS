@@ -7,6 +7,7 @@
 
 import UIKit
 import RxSwift
+import JJFloatingActionButton
 
 class FeedViewController: UIViewController {
     
@@ -85,11 +86,30 @@ class FeedViewController: UIViewController {
         self.view.addSubview(self.tableView)
         self.tableView.autoPinEdgesToSuperviewEdges(with: .zero, excludingEdge: .top)
         self.tableView.autoPinEdge(.top, to: .bottom, of: self.headerView)
+        
+        let actionButton = JJFloatingActionButton()
+        let actionItemRiflection = actionButton.addItem()
+        actionItemRiflection.titleLabel.text = "Start a reflection"
+        actionItemRiflection.imageView.image = ImagePalette.image(withName: .riflectionIcon)
+        actionItemRiflection.buttonColor = ColorPalette.color(withType: .inactive)
+        
+        let actionNoticed = actionButton.addItem()
+        actionNoticed.titleLabel.text = "I Have Noticed"
+        actionNoticed.imageView.image = ImagePalette.image(withName: .noteGeneric)
+        actionNoticed.buttonColor = ColorPalette.color(withType: .primary)
+        actionNoticed.action = { [weak self] _ in
+            guard let self = self else { return }
+            self.navigator.openNoticedViewController(presenter: self)
+        }
+
+        view.addSubview(actionButton)
+        actionButton.display(inViewController: self)
+        actionButton.buttonColor = ColorPalette.color(withType: .primary)
     }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        
+
         self.headerView.refreshUI()
         self.tableViewHeaderView.refreshUI()
         
