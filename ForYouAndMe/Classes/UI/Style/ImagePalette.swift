@@ -67,6 +67,7 @@ enum TemplateImageName: String, CaseIterable {
     case radioButtonOutline = "radio_button_outline"
     case tabFeed = "tab_feed"
     case tabTask = "tab_task"
+    case tabDiary = "tab_diary"
     case tabUserData = "tab_user_data"
     case tabStudyInfo = "tab_study_info"
     case studyInfoContact = "contact_icon"

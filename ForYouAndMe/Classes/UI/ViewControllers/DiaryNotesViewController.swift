@@ -116,21 +116,27 @@ class DiaryNotesViewController: UIViewController {
         
         self.view.backgroundColor = ColorPalette.color(withType: .secondary)
         
-        // Main Stack View
-        let stackView = UIStackView.create(withAxis: .vertical)
-        self.view.addSubview(stackView)
-        stackView.autoPinEdgesToSuperviewEdges()
+        // Header View
+        let headerView = SingleTextHeaderView()
+        headerView.setTitleText(StringsProvider.string(forKey: .diaryNoteTitle))
         
-        stackView.addArrangedSubview(self.headerView)
-        stackView.addArrangedSubview(self.tableView)
-        stackView.addArrangedSubview(self.footerView)
+        self.view.addSubview(headerView)
+        headerView.autoPinEdgesToSuperviewEdges(with: .zero, excludingEdge: .bottom)
         
-        self.tableView.autoPinEdge(toSuperviewEdge: .leading, withInset: 0)
-        self.tableView.autoPinEdge(toSuperviewEdge: .trailing, withInset: 0)
-        self.tableView.autoPinEdge(.top, to: .bottom, of: self.headerView)
-        self.tableView.autoPinEdge(.bottom, to: .top, of: self.footerView)
+        self.view.addSubview(self.tableView)
+        self.tableView.autoPinEdgesToSuperviewEdges(with: .zero, excludingEdge: .top)
+        self.tableView.autoPinEdge(.top, to: .bottom, of: headerView)
         
-        self.tableView.reloadData()
+//
+//        stackView.addArrangedSubview(self.tableView)
+//        stackView.addArrangedSubview(self.footerView)
+//        
+//        self.tableView.autoPinEdge(toSuperviewEdge: .leading, withInset: 0)
+//        self.tableView.autoPinEdge(toSuperviewEdge: .trailing, withInset: 0)
+//        self.tableView.autoPinEdge(.top, to: .bottom, of: headerView)
+//        self.tableView.autoPinEdge(.bottom, to: .top, of: self.footerView)
+//        
+//        self.tableView.reloadData()
         self.updateUI()
 
     }

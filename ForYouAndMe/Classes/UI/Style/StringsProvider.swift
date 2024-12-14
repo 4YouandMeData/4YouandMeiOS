@@ -80,6 +80,7 @@ enum StringKey: String, CaseIterable, CodingKey {
     // Main
     case tabFeed = "TAB_FEED"
     case tabTask = "TAB_TASK"
+    case tabDiary = "TAB_DIARY"
     case tabUserData = "TAB_USER_DATA"
     case tabStudyInfo = "TAB_STUDY_INFO"
     case tabFeedTitle = "TAB_FEED_TITLE"

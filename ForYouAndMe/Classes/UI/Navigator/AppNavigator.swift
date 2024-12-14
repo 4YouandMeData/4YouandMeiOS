@@ -25,7 +25,7 @@ enum InternalDeeplinkKey: String {
 
 class AppNavigator {
     
-    enum MainTab: Int, CaseIterable { case feed = 0, task = 1, userData = 2, studyInfo = 3 }
+    enum MainTab: Int, CaseIterable { case feed = 0, task = 1, diaryNote = 2, userData = 3, studyInfo = 4 }
     enum StudyInfoPage { case faq, reward, contacts }
     
     static let defaultStartingTab: MainTab = .feed
@@ -373,6 +373,14 @@ class AppNavigator {
                 taskNavigationController.tabBarItem.title = StringsProvider.string(forKey: .tabTask)
                 taskNavigationController.tabBarItem.setTitleTextAttributes([.font: titleFont], for: .normal)
                 viewControllers.append(taskNavigationController)
+            case .diaryNote:
+                let diaryNoteViewController = DiaryNotesViewController(withDataPointID: nil)
+                let diaryNoteNavigationController = UINavigationController(rootViewController: diaryNoteViewController)
+                diaryNoteNavigationController.preventPopWithSwipe()
+                diaryNoteNavigationController.tabBarItem.image = ImagePalette.templateImage(withName: .tabDiary)
+                diaryNoteNavigationController.tabBarItem.title = StringsProvider.string(forKey: .tabDiary)
+                diaryNoteNavigationController.tabBarItem.setTitleTextAttributes([.font: titleFont], for: .normal)
+                viewControllers.append(diaryNoteNavigationController)
             case .userData:
                 let userDataViewController = UserDataViewController()
                 let userDataNavigationController = UINavigationController(rootViewController: userDataViewController)
