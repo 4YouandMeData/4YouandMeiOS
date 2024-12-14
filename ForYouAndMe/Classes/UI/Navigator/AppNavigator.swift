@@ -544,7 +544,7 @@ class AppNavigator {
     
     public func openDiaryNoteText(diaryNoteId: String?, presenter: UIViewController, isModal: Bool) {
         let diaryNoteTextViewController = DiaryNoteTextViewController(withDataPointID: diaryNoteId)
-        
+        diaryNoteTextViewController.modalPresentationStyle = .fullScreen
         if isModal {
             presenter.dismiss(animated: true) {
                 // Get the topmost view controller after dismissal
@@ -566,13 +566,13 @@ class AppNavigator {
     
     public func openDiaryNoteAudio(diaryNote: DiaryNoteItem?, presenter: UIViewController, isModal: Bool) {
         let diaryNoteAudioViewController = DiaryNoteAudioViewController(withDiaryNote: diaryNote)
+        diaryNoteAudioViewController.modalPresentationStyle = .fullScreen
         if isModal {
             presenter.dismiss(animated: true) {
                 guard let topViewController = self.getTopMostViewController() else {
                     assertionFailure("Unable to find a top-most view controller to present DiaryNoteTextViewController")
                     return
                 }
-                topViewController.modalPresentationStyle = .fullScreen
                 topViewController.present(diaryNoteAudioViewController, animated: true, completion: nil)
             }
         } else {
