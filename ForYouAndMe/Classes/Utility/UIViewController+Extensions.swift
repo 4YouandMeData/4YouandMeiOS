@@ -39,11 +39,13 @@ extension UIViewController {
         }
     }
     
-    @objc func genericCloseButtonPressed() {
+    @objc func genericCloseButtonPressed(completion: (() -> Void)?) {
         if let navigationController = self.navigationController {
             navigationController.popViewController(animated: true)
         } else {
-            self.dismiss(animated: true)
+            self.dismiss(animated: true) {
+                completion?()
+            }
         }
     }
 }

@@ -14,6 +14,7 @@ import SafariServices
 enum InternalDeeplinkKey: String {
     case feed
     case task
+    case diary
     case userData = "your_data"
     case studyInfo = "study_info"
     case aboutYou = "about_you"
@@ -25,7 +26,7 @@ enum InternalDeeplinkKey: String {
 
 class AppNavigator {
     
-    enum MainTab: Int, CaseIterable { case feed = 0, task = 1, diaryNote = 2, userData = 3, studyInfo = 4 }
+    enum MainTab: Int, CaseIterable { case feed = 0, task = 1, diary = 2, userData = 3, studyInfo = 4 }
     enum StudyInfoPage { case faq, reward, contacts }
     
     static let defaultStartingTab: MainTab = .feed
@@ -373,7 +374,7 @@ class AppNavigator {
                 taskNavigationController.tabBarItem.title = StringsProvider.string(forKey: .tabTask)
                 taskNavigationController.tabBarItem.setTitleTextAttributes([.font: titleFont], for: .normal)
                 viewControllers.append(taskNavigationController)
-            case .diaryNote:
+            case .diary:
                 let diaryNoteViewController = DiaryNotesViewController(withDataPointID: nil)
                 let diaryNoteNavigationController = UINavigationController(rootViewController: diaryNoteViewController)
                 diaryNoteNavigationController.preventPopWithSwipe()
@@ -412,6 +413,16 @@ class AppNavigator {
         }) else { return }
         self.analytics.track(event: .switchTab(StringsProvider.string(forKey: .tabFeed)))
         tabBarController.selectedIndex = feedViewControllerIndex
+    }
+    
+    public func switchToDiaryTab(presenter: UIViewController) {
+        let viewController = self.getTopMostViewController()
+        guard let tabBarController = viewController?.tabBarController else { return }
+        guard let viewControllerIndex = tabBarController.viewControllers?.firstIndex(where: { viewController in
+            (viewController as? UINavigationController)?.viewControllers.first is DiaryNotesViewController
+        }) else { return }
+        self.analytics.track(event: .switchTab(StringsProvider.string(forKey: .tabDiary)))
+        tabBarController.selectedIndex = viewControllerIndex
     }
     
     // MARK: Task
@@ -833,6 +844,7 @@ class AppNavigator {
         switch key {
         case .feed: self.goToMainTab(tab: .feed, presenter: presenter)
         case .task: self.goToMainTab(tab: .task, presenter: presenter)
+        case .diary: self.goToMainTab(tab: .diary, presenter: presenter)
         case .userData: self.goToMainTab(tab: .userData, presenter: presenter)
         case .studyInfo: self.goToMainTab(tab: .studyInfo, presenter: presenter)
         case .aboutYou: self.showAboutYouPage(presenter: presenter)

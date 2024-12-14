@@ -205,7 +205,9 @@ class DiaryNoteAudioViewController: UIViewController {
     // MARK: - Actions
     
     @objc private func closeButtonPressed() {
-        self.genericCloseButtonPressed()
+        self.genericCloseButtonPressed(completion: {
+            self.navigator.switchToDiaryTab(presenter: self)
+        })
     }
     
     @objc private func doneButtonPressed() {

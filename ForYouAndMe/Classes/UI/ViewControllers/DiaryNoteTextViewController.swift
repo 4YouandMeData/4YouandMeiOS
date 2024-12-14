@@ -13,7 +13,7 @@ class DiaryNoteTextViewController: UIViewController {
     
     fileprivate enum PageState { case read, edit }
     
-    private let pageState: BehaviorRelay<PageState> = BehaviorRelay<PageState>(value: .edit)
+    private let pageState: BehaviorRelay<PageState> = BehaviorRelay<PageState>(value: .read)
     private let navigator: AppNavigator
     private let repository: Repository
     private let analytics: AnalyticsService
@@ -224,7 +224,9 @@ class DiaryNoteTextViewController: UIViewController {
     // MARK: - Actions
     
     @objc private func closeButtonPressed() {
-        self.genericCloseButtonPressed()
+        self.genericCloseButtonPressed(completion: {
+            self.navigator.switchToDiaryTab(presenter: self)
+        })
     }
     
     @objc private func editButtonPressed() {
@@ -255,7 +257,7 @@ class DiaryNoteTextViewController: UIViewController {
                 .addProgress()
                 .subscribe(onSuccess: { [weak self] in
                     guard let self = self else { return }
-                    self.navigationController?.popViewController(animated: true)
+                    self.closeButtonPressed()
                 }, onError: { [weak self] error in
                     guard let self = self else { return }
                     self.navigator.handleError(error: error, presenter: self)
@@ -303,7 +305,11 @@ class DiaryNoteTextViewController: UIViewController {
     }
     
     private func loadNote() {
-        guard let dataPointID = self.dataPointID else { return }
+        
+        guard let dataPointID = self.dataPointID else {
+            self.pageState.accept(.edit)
+            return
+        }
         
         self.repository.getDiaryNoteText(noteID: dataPointID)
             .addProgress()

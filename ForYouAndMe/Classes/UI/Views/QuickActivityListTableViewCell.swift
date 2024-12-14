@@ -140,7 +140,7 @@ class QuickActivityListTableViewCell: UITableViewCell {
                 pageControlAttributedText.append(totalPageAttributedText)
                 self.pageControlLabel.attributedText = pageControlAttributedText
             }
-        }else {
+        } else {
             let remainingText = StringsProvider.string(forKey: .quickActivitiesRemaining)
             self.pageControlLabel.attributedText = NSMutableAttributedString.create(withText: "\(self.items.count) \(remainingText)",
                                                                                     fontStyle: .paragraph,
