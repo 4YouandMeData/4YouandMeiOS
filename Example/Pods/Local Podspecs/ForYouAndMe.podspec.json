@@ -99,9 +99,6 @@
     ],
     "EVGPUImage2": [
       "~> 0.2"
-    ],
-    "Floaty": [
-      "~> 4.2.0"
     ]
   },
   "static_framework": true,

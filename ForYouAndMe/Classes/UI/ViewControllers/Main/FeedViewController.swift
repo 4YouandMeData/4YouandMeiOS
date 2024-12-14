@@ -76,7 +76,6 @@ class FeedViewController: UIViewController {
         super.viewDidLoad()
         
         // TODO: Handle secondary color background when pull to refresh (should be primary gradient)
-        
         self.view.backgroundColor = ColorPalette.color(withType: .secondary)
         
         // Header View
