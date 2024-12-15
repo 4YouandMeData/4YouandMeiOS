@@ -15,7 +15,7 @@ protocol AudioPlayerManagerDelegate: AnyObject {
     func didResumePlaying()
     func didFinishPlaying(success: Bool)
     func didEncounterError(error: AudioPlayerError)
-    func didUpdatePlaybackTime(currentTime: TimeInterval, totalTime: TimeInterval)
+    func didUpdatePlaybackTime(currentTime: TimeInterval, totalTime: TimeInterval, isPlaying: Bool)
     func didUpdateRecordingTime(elapsedTime: TimeInterval)
 }
 
@@ -121,10 +121,11 @@ class AudioPlayerManager: NSObject {
         case .paused:
             if let player = audioPlayer {
                 player.play()
+                startPlaybackTimer()
             } else if let player = avPlayer {
                 player.play()
+                startPlaybackTimerForAVPlayer()
             }
-            startPlaybackTimer()
             transition(to: .playing)
             delegate?.didResumePlaying()
         default:
@@ -260,9 +261,13 @@ class AudioPlayerManager: NSObject {
     /// Start a timer to update playback progress
     private func startPlaybackTimer() {
         playbackTimer?.invalidate()
-        playbackTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
+        DispatchQueue.main.async { [weak self] in
             guard let self = self, let player = self.audioPlayer else { return }
-            self.delegate?.didUpdatePlaybackTime(currentTime: player.currentTime, totalTime: player.duration)
+            self.delegate?.didUpdatePlaybackTime(currentTime: player.currentTime, totalTime: player.duration, isPlaying: true)
+        }
+        playbackTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
+            guard let self = self, let player = self.audioPlayer else { return }
+            self.delegate?.didUpdatePlaybackTime(currentTime: player.currentTime, totalTime: player.duration, isPlaying: true)
         }
     }
 
@@ -273,7 +278,7 @@ class AudioPlayerManager: NSObject {
             let currentTime = CMTimeGetSeconds(currentItem.currentTime())
             let totalTime = CMTimeGetSeconds(currentItem.duration)
             if !currentTime.isNaN && !totalTime.isNaN {
-                self.delegate?.didUpdatePlaybackTime(currentTime: currentTime, totalTime: totalTime)
+                self.delegate?.didUpdatePlaybackTime(currentTime: currentTime, totalTime: totalTime, isPlaying: true)
             }
         }
     }
@@ -285,7 +290,7 @@ class AudioPlayerManager: NSObject {
 
     private func startRecordingTimer() {
         recordingTimer?.invalidate()
-        recordingTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
+        recordingTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
             guard let self = self, let startTime = self.recordingStartTime else { return }
             let elapsedTime = Date().timeIntervalSince(startTime)
             self.delegate?.didUpdateRecordingTime(elapsedTime: elapsedTime)
@@ -297,6 +302,7 @@ class AudioPlayerManager: NSObject {
         recordingTimer = nil
     }
 
+    /// Deinitializes the AudioPlayerManager by cleaning up timers and observers.
     deinit {
         stopPlaybackTimer()
         stopRecordingTimer()
@@ -338,3 +344,27 @@ extension AudioPlayerManager: AVAudioPlayerDelegate {
         delegate?.didFinishPlaying(success: flag)
     }
 }
+
+extension AudioPlayerManager {
+    
+    /// Metodo per spostare la riproduzione dell'audio a un determinato tempo
+    func seek(to time: TimeInterval) {
+        if let player = audioPlayer {
+            // AVAudioPlayer
+            player.currentTime = time
+        } else if let player = avPlayer {
+            // AVPlayer
+            let cmTime = CMTime(seconds: time, preferredTimescale: CMTimeScale(NSEC_PER_SEC))
+            player.seek(to: cmTime) { [weak self] _ in
+                guard let self = self, let currentItem = self.avPlayer?.currentItem else { return }
+                let currentTime = CMTimeGetSeconds(currentItem.currentTime())
+                let totalTime = CMTimeGetSeconds(currentItem.duration)
+                if !currentTime.isNaN && !totalTime.isNaN {
+                    let isPlaying = self.state == .playing
+                    self.delegate?.didUpdatePlaybackTime(currentTime: currentTime, totalTime: totalTime, isPlaying: isPlaying)
+                }
+            }
+        }
+    }
+}
+

@@ -122,6 +122,16 @@ class DiaryNoteAudioViewController: UIViewController {
         let slider = UISlider()
         slider.minimumValue = 0
         slider.maximumValue = 100
+        if let originalThumbImage = ImagePalette.image(withName: .circular) {
+            let thumbWithShadow = originalThumbImage.withShadow(shadowColor: .black,
+                                                                 shadowOffset: CGSize(width: 0, height: 2),
+                                                                 shadowBlur: 4,
+                                                                 shadowOpacity: 0.3)
+            slider.setThumbImage(thumbWithShadow, for: .normal)
+            slider.setThumbImage(thumbWithShadow, for: .highlighted)
+        }
+        slider.tintColor = ColorPalette.color(withType: .primary)
+        slider.addTarget(self, action: #selector(self.onSliderValChanged(slider:event:)), for: .valueChanged)
         return slider
     }()
     
@@ -143,7 +153,6 @@ class DiaryNoteAudioViewController: UIViewController {
 
         let buttonView = GenericButtonView(withTextStyleCategory: .transparentBackground(shadow: false ))
         buttonView.addTarget(target: self, action: #selector(self.saveButtonPressed))
-        buttonView.setButtonEnabled(enabled: false)
         return buttonView
     }()
     
@@ -254,6 +263,11 @@ class DiaryNoteAudioViewController: UIViewController {
         sender.action?()
     }
     
+    @objc private func onSliderValChanged(slider: UISlider, event: UIEvent) {
+        let seekTime = TimeInterval(slider.value)
+        audioPlayerManager.seek(to: seekTime)
+    }
+    
     // MARK: - Private Methods
     
     private func setupUI() {
@@ -341,6 +355,7 @@ class DiaryNoteAudioViewController: UIViewController {
             self.scrollView.autoPinEdge(.trailing, to: .trailing, of: self.view)
             self.scrollView.autoPinEdge(.bottom, to: .top, of: self.footerView)
             footerView.setButtonText("Delete")
+            self.footerView.setButtonEnabled(enabled: true)
             footerView.addTarget(target: self, action: #selector(self.deleteButtonPressed))
             
             containerTextView.autoPinEdge(.top, to: .bottom, of: self.slider, withOffset: 30)
@@ -399,6 +414,7 @@ class DiaryNoteAudioViewController: UIViewController {
             self.scrollView.autoPinEdge(.bottom, to: .top, of: self.footerView)
             
             self.footerView.setButtonText("Save")
+            self.footerView.setButtonEnabled(enabled: false)
         }
     }
 }
@@ -428,11 +444,11 @@ extension DiaryNoteAudioViewController: AudioPlayerManagerDelegate {
         recordButton.setImage(playButtonImage, for: .normal)
         recordButton.action = { [weak self] in
             guard let self = self else { return }
-            guard let diaryNoteItem = self.diaryNoteItem, let urlString = diaryNoteItem.urlString else {
+            guard let diaryNoteItem = self.diaryNoteItem, let _ = diaryNoteItem.urlString else {
                 self.audioPlayerManager.playRecordedAudio()
                 return
             }
-            self.audioPlayerManager.playAudio(from: URL(string: urlString)!)
+            self.audioPlayerManager.resumeAudio()
         }
         recordButton.imageView?.contentMode = .scaleAspectFit
     }
@@ -473,6 +489,7 @@ extension DiaryNoteAudioViewController: AudioPlayerManagerDelegate {
         
         self.footerView.setButtonEnabled(enabled: true)
         self.recordDurationTime = duration ?? 0
+        self.slider.maximumValue = Float(duration ?? 0)
         self.audioFileURL = fileURL
         self.timeLabel.setTime(currentTime: 0,
                                totalTime: Int(duration ?? 0),
@@ -501,9 +518,10 @@ extension DiaryNoteAudioViewController: AudioPlayerManagerDelegate {
     
     func didFinishPlaying(success: Bool) {
         self.timeLabel.setTime(currentTime: 0,
-                               totalTime: 0,
+                               totalTime: Int(self.recordDurationTime),
                                attributedTextStyle: self.totalTimeLabelAttributedTextStyle,
                                currentTimeAttributedTextStyle: self.currentTimeLabelAttributedTextStyle)
+        self.slider.value = self.slider.maximumValue
         let playButtonImage = ImagePalette.image(withName: .audioPlayButton)
         recordButton.setImage(playButtonImage, for: .normal)
         recordButton.imageView?.contentMode = .scaleAspectFit
@@ -513,6 +531,7 @@ extension DiaryNoteAudioViewController: AudioPlayerManagerDelegate {
                 self.audioPlayerManager.playRecordedAudio()
                 return
             }
+            self.slider.value = Float(0)
             self.audioPlayerManager.playAudio(from: URL(string: urlString)!)
         }
     }
@@ -521,13 +540,26 @@ extension DiaryNoteAudioViewController: AudioPlayerManagerDelegate {
         print("Error playing audio: \(error.localizedDescription)")
     }
     
-    func didUpdatePlaybackTime(currentTime: TimeInterval, totalTime: TimeInterval) {
-        self.timeLabel.setTime(currentTime: Int(currentTime),
-                               totalTime: Int(totalTime),
-                               attributedTextStyle: self.totalTimeLabelAttributedTextStyle,
-                               currentTimeAttributedTextStyle: self.currentTimeLabelAttributedTextStyle)
-        let pauseButtonImage = ImagePalette.image(withName: .audioPauseButton)
-        recordButton.setImage(pauseButtonImage, for: .normal)
-        recordButton.imageView?.contentMode = .scaleAspectFit
+    func didUpdatePlaybackTime(currentTime: TimeInterval, totalTime: TimeInterval, isPlaying: Bool) {
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+            // Aggiornamento della timeLabel e del UISlider
+            self.timeLabel.setTime(currentTime: Int(currentTime),
+                                   totalTime: Int(totalTime),
+                                   attributedTextStyle: self.totalTimeLabelAttributedTextStyle,
+                                   currentTimeAttributedTextStyle: self.currentTimeLabelAttributedTextStyle)
+            if isPlaying {
+                let pauseButtonImage = ImagePalette.image(withName: .audioPauseButton)
+                self.recordButton.setImage(pauseButtonImage, for: .normal)
+                self.recordButton.imageView?.contentMode = .scaleAspectFit
+            }
+            
+            if totalTime > 0 {
+                self.recordDurationTime = totalTime
+                self.slider.maximumValue = Float(totalTime)
+            }
+            print("currentTime: \(currentTime), totalTime: \(totalTime)")
+            self.slider.value = Float(currentTime)
+        }
     }
 }
