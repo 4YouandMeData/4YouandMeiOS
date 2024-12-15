@@ -44,7 +44,6 @@ extension UILabel {
                        currentTimeAttributedTextStyle: AttributedTextStyle? = nil) {
         let currentSeconds = currentTime % 60
         let currentMinutes = (currentTime / 60) % 60
-        let currentHours = (currentTime / 3600)
         
         let currentTimeText = String(format: "%0.2d:%0.2d", currentMinutes, currentSeconds)
         

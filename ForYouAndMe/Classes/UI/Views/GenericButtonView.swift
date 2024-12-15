@@ -158,6 +158,10 @@ class GenericButtonView: UIView {
         self.button.addTarget(target, action: action, for: .touchUpInside)
     }
     
+    public func removeTarget() {
+        self.button.removeTarget(nil, action: nil, for: .allEvents)
+    }
+    
     public func setButtonText(_ text: String) {
         guard let attributedTextStyle = self.buttonAttributedTextStyle else {
             assertionFailure("Setting a text without attributed text style")

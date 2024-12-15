@@ -24,7 +24,7 @@ Pod::Spec.new do |s|
   s.pod_target_xcconfig = { 'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'arm64' }
   s.user_target_xcconfig = { 'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'arm64' }
   
-  s.ios.deployment_target = '15.0'
+  s.ios.deployment_target = '15.6'
   
   s.swift_version = "5.2"
 
@@ -41,7 +41,7 @@ Pod::Spec.new do |s|
   s.dependency 'AlamofireImage', '~> 4.1'
   s.dependency 'RxCocoa', '~> 5.1.1'
   s.dependency 'PureLayout', '~> 3.1.5'
-  s.dependency 'SVProgressHUD', '~> 2.2.5'
+  s.dependency 'SVProgressHUD', '~> 2.3.1'
   s.dependency 'TPKeyboardAvoiding', '~> 1.3.3'
   s.dependency 'OAuthSwift', '~> 2.1.0'
   s.dependency 'ReachabilitySwift', '~> 5.0.0'

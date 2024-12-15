@@ -131,7 +131,9 @@ class DiaryNoteAudioViewController: UIViewController {
         recordButton.setImage(recordButtonImage, for: .normal)
         recordButton.imageView?.contentMode = .scaleAspectFit
         recordButton.addTarget(self, action: #selector(buttonTapped(_:)), for: .touchUpInside)
-        recordButton.contentEdgeInsets = UIEdgeInsets(top: 4.0, left: 4.0, bottom: 4.0, right: 4.0)
+        var config = recordButton.configuration ?? UIButton.Configuration.plain()
+        config.contentInsets = NSDirectionalEdgeInsets(top: 4.0, leading: 4.0, bottom: 4.0, trailing: 4.0)
+        recordButton.configuration = config
         recordButton.autoSetDimension(.height, toSize: 68)
         
         return recordButton
@@ -271,7 +273,9 @@ class DiaryNoteAudioViewController: UIViewController {
             let recordButtonImage = ImagePalette.image(withName: .audioPlayButton)
             self.recordButton.setImage(recordButtonImage, for: .normal)
             self.recordButton.imageView?.contentMode = .scaleAspectFit
-            self.recordButton.contentEdgeInsets = UIEdgeInsets(top: 4.0, left: 4.0, bottom: 4.0, right: 4.0)
+            var config = self.recordButton.configuration ?? UIButton.Configuration.plain()
+            config.contentInsets = NSDirectionalEdgeInsets(top: 4.0, leading: 4.0, bottom: 4.0, trailing: 4.0)
+            self.recordButton.configuration = config
             self.recordButton.autoSetDimension(.height, toSize: 68)
             self.recordButton.action = {
                 guard let diaryNoteItem = self.diaryNoteItem, let urlString = diaryNoteItem.urlString else { return }
