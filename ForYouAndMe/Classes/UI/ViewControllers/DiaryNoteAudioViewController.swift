@@ -143,7 +143,7 @@ class DiaryNoteAudioViewController: UIViewController {
 
         let buttonView = GenericButtonView(withTextStyleCategory: .transparentBackground(shadow: false ))
         buttonView.addTarget(target: self, action: #selector(self.saveButtonPressed))
-
+        buttonView.setButtonEnabled(enabled: false)
         return buttonView
     }()
     
@@ -481,6 +481,7 @@ extension DiaryNoteAudioViewController: AudioPlayerManagerDelegate {
                            dismissButtonText: "OK")
         }
         
+        self.footerView.setButtonEnabled(enabled: true)
         self.recordDurationTime = duration ?? 0
         self.audioFileURL = fileURL
         self.timeLabel.setTime(currentTime: 0,

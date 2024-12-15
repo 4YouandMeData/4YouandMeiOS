@@ -77,7 +77,9 @@ class GenericButtonView: UIView {
     
     fileprivate let button: UIButton = {
         let button = UIButton()
-        button.contentEdgeInsets = UIEdgeInsets(top: 0.0, left: 18.0, bottom: 0.0, right: 18.0)
+        var config = button.configuration ?? UIButton.Configuration.plain()
+        config.contentInsets = NSDirectionalEdgeInsets(top: 0.0, leading: 18.0, bottom: 0.0, trailing: 18.0)
+        button.configuration = config
         return button
     }()
     
