@@ -91,9 +91,6 @@
     "FYAMResearchKit": [
       "~> 3.0.0"
     ],
-    "Charts": [
-      "~> 4.1.0"
-    ],
     "StepSlider": [
       "~> 1.8.0"
     ],

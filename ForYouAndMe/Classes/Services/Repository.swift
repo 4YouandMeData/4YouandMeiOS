@@ -93,7 +93,6 @@ protocol Repository: AnyObject {
     func sendUserInfoParameters(userParameterRequests: [UserInfoParameterRequest]) -> Single<User>
     // User Data
     func getUserData() -> Single<UserData>
-    func getUserDataAggregation(period: StudyPeriod) -> Single<[UserDataAggregation]>
     func getUserSettings() -> Single<UserSettings>
     func sendUserSettings(seconds: Int) -> Single<()>
     // Survey

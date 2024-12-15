@@ -374,8 +374,6 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         // User Data
         case .getUserData:
             return "v1/studies/\(studyId)/your_data"
-        case .getUserDataAggregation(let period):
-            return "v1/studies/\(studyId)/user_data_aggregations/\(period.networkValue)"
         case .getUserSettings:
             return "/v1/user_setting"
         case .sendUserSettings:
@@ -434,7 +432,6 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
                 .getUser,
                 .getUserData,
                 .getUserSettings,
-                .getUserDataAggregation,
                 .getDiaryNotes,
                 .getDiaryNoteText,
                 .getDiaryNoteAudio:
@@ -534,12 +531,6 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
                 : Bundle.getTestData(from: "TestGetUserNoOnboarding")
         // User Data
         case .getUserData: return Bundle.getTestData(from: "TestGetUserData")
-        case .getUserDataAggregation(let period):
-            switch period {
-            case .week: return Bundle.getTestData(from: "TestGetUserDataAggregationWeek")
-            case .month: return Bundle.getTestData(from: "TestGetUserDataAggregationMonth")
-            case .year: return Bundle.getTestData(from: "TestGetUserDataAggregationYear")
-            }
         case .sendUserSettings: return "{}".utf8Encoded
         case .getUserSettings: return "{}".utf8Encoded
         // Survey
@@ -579,7 +570,6 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
                 .getUser,
                 .getUserSettings,
                 .getUserData,
-                .getUserDataAggregation,
                 .delayTask,
                 .getDiaryNoteText,
                 .getDiaryNoteAudio,
@@ -806,7 +796,6 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
                 .getUserSettings,
                 .sendUserSettings,
                 .getUserData,
-                .getUserDataAggregation,
                 .getSurvey,
                 .sendSurveyTaskResultData,
                 .sendPushToken,
@@ -909,16 +898,6 @@ fileprivate extension FileDataExtension {
         switch self {
         case .mp4: return "video/mp4"
         case .m4a: return "audio/m4a"
-        }
-    }
-}
-
-fileprivate extension StudyPeriod {
-    var networkValue: String {
-        switch self {
-        case .week: return "last_week"
-        case .month: return "last_month"
-        case .year: return "last_year"
         }
     }
 }

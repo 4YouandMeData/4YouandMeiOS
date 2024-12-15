@@ -169,7 +169,6 @@ extension DefaultService {
         case .sendPushToken: return "Add Firebase Token"
         // User Data
         case .getUserData: return "Get Your Data"
-        case .getUserDataAggregation: return "Get User Data Aggragation"
         case .getUserSettings: return "Get User Settings"
         case .sendUserSettings: return "Send User Settings"
         case .getDiaryNotes: return "Get Diary Notes"

@@ -69,7 +69,6 @@ enum DefaultService {
     case sendPushToken(token: String)
     // User Data
     case getUserData
-    case getUserDataAggregation(period: StudyPeriod)
     case getUserSettings
     case sendUserSettings(settings: Int)
     // Survey

@@ -436,24 +436,6 @@ extension RepositoryImpl: Repository {
             .handleError()
     }
     
-    func getUserDataAggregation(period: StudyPeriod) -> Single<[UserDataAggregation]> {
-        return self.api.send(request: ApiRequest(serviceRequest: .getUserDataAggregation(period: period)))
-            .map { (data: [UserDataAggregation]) in
-                if self.currentUser?.getHasAgreedTo(systemPermission: .health) ?? false {
-                    // If the user has agreed to use Apple Watch, remove all data coming from the alternative integrations
-                    return data.filter { item in
-                        false == self.appleWatchAlternativeIntegrations.contains(where: { item.strategy.hasPrefix($0.strategyPrefix) })
-                    }
-                } else {
-                    // If the user has NOT agreed to use Apple Watch, remove all data coming from Apple Watch
-                    return data.filter {
-                        false == $0.strategy.hasPrefix(Constants.HealthKit.AppleWatchUserDataAggregationStrategyPrefix)
-                    }
-                }
-            }
-            .handleError()
-    }
-    
     func getUserSettings() -> Single<(UserSettings)> {
         return self.api.send(request: ApiRequest(serviceRequest: .getUserSettings))
             .handleError()

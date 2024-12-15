@@ -2,7 +2,6 @@ ${PODS_ROOT}/Target Support Files/Pods-ForYouAndMe_Example/Pods-ForYouAndMe_Exam
 ${BUILT_PRODUCTS_DIR}/Alamofire/Alamofire.framework
 ${BUILT_PRODUCTS_DIR}/AlamofireImage/AlamofireImage.framework
 ${BUILT_PRODUCTS_DIR}/BLZJapx/Japx.framework
-${BUILT_PRODUCTS_DIR}/Charts/Charts.framework
 ${BUILT_PRODUCTS_DIR}/CountryPickerView/CountryPickerView.framework
 ${BUILT_PRODUCTS_DIR}/EVGPUImage2/EVGPUImage2.framework
 ${BUILT_PRODUCTS_DIR}/FYAMResearchKit/ResearchKit.framework
@@ -29,7 +28,6 @@ ${BUILT_PRODUCTS_DIR}/RxSwift/RxSwift.framework
 ${BUILT_PRODUCTS_DIR}/RxSwiftExt/RxSwiftExt.framework
 ${BUILT_PRODUCTS_DIR}/SVProgressHUD/SVProgressHUD.framework
 ${BUILT_PRODUCTS_DIR}/StepSlider/StepSlider.framework
-${BUILT_PRODUCTS_DIR}/SwiftAlgorithms/Algorithms.framework
 ${BUILT_PRODUCTS_DIR}/TPKeyboardAvoiding/TPKeyboardAvoiding.framework
 ${BUILT_PRODUCTS_DIR}/UberSignature/UberSignature.framework
 ${BUILT_PRODUCTS_DIR}/Validator/Validator.framework
