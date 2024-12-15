@@ -85,6 +85,7 @@ class UserDataViewController: UIViewController, WKNavigationDelegate, WKScriptMe
         self.analytics.track(event: .switchTab(StringsProvider.string(forKey: .tabUserData)))
         self.analytics.track(event: .recordScreen(screenName: AnalyticsScreens.yourData.rawValue,
                                                   screenClass: String(describing: type(of: self))))
+        self.webView.reload()
     }
     
     // MARK: WebView Methods
