@@ -59,16 +59,16 @@ class DiaryNoteTextViewController: UIViewController {
         return containerView
     }()
     
-    public lazy var textField: UITextField = {
-        let textField = UITextField()
-        textField.textColor = self.standardColor
-        textField.tintColor = self.standardColor
-        textField.font = FontPalette.fontStyleData(forStyle: .paragraph).font
-        textField.delegate = self
-        textField.borderStyle = .roundedRect
-        textField.placeholder = "Add title here"
-        return textField
-    }()
+//    public lazy var textField: UITextField = {
+//        let textField = UITextField()
+//        textField.textColor = self.standardColor
+//        textField.tintColor = self.standardColor
+//        textField.font = FontPalette.fontStyleData(forStyle: .paragraph).font
+//        textField.delegate = self
+//        textField.borderStyle = .roundedRect
+//        textField.placeholder = "Add title here"
+//        return textField
+//    }()
     
     private lazy var textView: UITextView = {
         
@@ -164,15 +164,15 @@ class DiaryNoteTextViewController: UIViewController {
         
         let containerView = UIStackView.create(withAxis: .vertical, spacing: 16.0)
         self.view.addSubview(containerView)
-        // TextField
-        let containerTextField = UIView()
-        containerTextField.addSubview(self.textField)
-        containerView.addArrangedSubview(containerTextField)
-        self.textField.autoSetDimension(.height, toSize: 44.0)
-        self.textField.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets(top: 0,
-                                                                      left: 12.0,
-                                                                      bottom: 0,
-                                                                      right: 12.0))
+//        // TextField
+//        let containerTextField = UIView()
+//        containerTextField.addSubview(self.textField)
+//        containerView.addArrangedSubview(containerTextField)
+//        self.textField.autoSetDimension(.height, toSize: 44.0)
+//        self.textField.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets(top: 0,
+//                                                                      left: 12.0,
+//                                                                      bottom: 0,
+//                                                                      right: 12.0))
         
         let containerTextView = UIView()
         containerTextView.addSubview(self.textView)
@@ -187,7 +187,7 @@ class DiaryNoteTextViewController: UIViewController {
         self.limitLabel.autoPinEdge(.left, to: .left, of: self.textView)
         self.limitLabel.text = "\(self.textView.text.count) / \(self.maxCharacters)"
         containerView.addArrangedSubview(containerTextView)
-        containerTextView.autoPinEdge(.top, to: .bottom, of: self.textField, withOffset: 16.0)
+        containerTextView.autoPinEdge(.top, to: .bottom, of: self.headerView, withOffset: 16.0)
         
         containerView.addBlankSpace(space: 60.0)
         
@@ -250,7 +250,7 @@ class DiaryNoteTextViewController: UIViewController {
                                                   type: "diary_note",
                                                   diaryNoteId: self.dataPointID?.date(withFormat: dateTimeFormat) ?? Date(),
                                                   diaryNoteType: .text,
-                                                  title: self.textField.text,
+                                                  title: "",
                                                   body: self.textView.text)
 
             self.repository.sendDiaryNoteText(diaryNote: newDiaryNote)
@@ -285,7 +285,7 @@ class DiaryNoteTextViewController: UIViewController {
     }
 
     private func updateTextFields(pageState: PageState) {
-        let textField = self.textField
+//        let textField = self.textField
         let textView = self.textView
         self.placeholderLabel.isHidden = !textView.text.isEmpty
         switch pageState {
@@ -293,14 +293,14 @@ class DiaryNoteTextViewController: UIViewController {
             textView.isEditable = true
             textView.isUserInteractionEnabled = true
             textView.textColor = self.standardColor
-            textField.isUserInteractionEnabled = true
-            textField.textColor = self.standardColor
+//            textField.isUserInteractionEnabled = true
+//            textField.textColor = self.standardColor
         case .read:
             textView.isEditable = false
             textView.isUserInteractionEnabled = false
             textView.textColor = self.inactiveColor
-            textField.isUserInteractionEnabled = false
-            textField.textColor = self.inactiveColor
+//            textField.isUserInteractionEnabled = false
+//            textField.textColor = self.inactiveColor
         }
     }
     
@@ -317,7 +317,7 @@ class DiaryNoteTextViewController: UIViewController {
                 guard let self = self else { return }
                 self.diaryNote = diaryNoteText
                 self.textView.text = diaryNoteText.body
-                self.textField.text = diaryNoteText.title
+//                self.textField.text = diaryNoteText.title
                 self.updateTextFields(pageState: self.pageState.value)
             }, onError: { [weak self] error in
                 guard let self = self else { return }
@@ -346,19 +346,19 @@ extension DiaryNoteTextViewController: UITextViewDelegate {
     }
 }
 
-extension DiaryNoteTextViewController: UITextFieldDelegate {
-
-    func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
-        let newString = textField.getNewString(forRange: range, replacementString: string)
-        let returnKey = !(newString.count > self.maxCharacters)
-        if returnKey {
-            self.diaryNote?.title = newString
-        }
-        return returnKey
-
-    }
-    
-    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
-        self.view.endEditing(true)
-    }
-}
+// extension DiaryNoteTextViewController: UITextFieldDelegate {
+//
+//    func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
+//        let newString = textField.getNewString(forRange: range, replacementString: string)
+//        let returnKey = !(newString.count > self.maxCharacters)
+//        if returnKey {
+//            self.diaryNote?.title = newString
+//        }
+//        return returnKey
+//
+//    }
+//    
+//    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+//        self.view.endEditing(true)
+//    }
+// }
