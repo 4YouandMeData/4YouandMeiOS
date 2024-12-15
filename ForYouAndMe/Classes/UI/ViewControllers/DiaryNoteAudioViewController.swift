@@ -422,18 +422,6 @@ extension DiaryNoteAudioViewController: UITextViewDelegate {
     }
 }
 
-extension DiaryNoteAudioViewController: UITextFieldDelegate {
-
-    func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
-        let newString = textField.getNewString(forRange: range, replacementString: string)
-        return !(newString.count > self.maxCharacters)
-
-    }
-    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
-        self.view.endEditing(true)
-    }
-}
-
 extension DiaryNoteAudioViewController: AudioPlayerManagerDelegate {
     func didPausePlaying() {
         let playButtonImage = ImagePalette.image(withName: .audioPlayButton)
@@ -469,6 +457,8 @@ extension DiaryNoteAudioViewController: AudioPlayerManagerDelegate {
                                totalTime: Int(self.totalTime),
                                attributedTextStyle: self.totalTimeLabelAttributedTextStyle,
                                currentTimeAttributedTextStyle: self.currentTimeLabelAttributedTextStyle)
+        let pauseButtonImage = ImagePalette.image(withName: .audioPauseButton)
+        recordButton.setImage(pauseButtonImage, for: .normal)
         recordButton.action = { [weak self] in
             self?.audioPlayerManager.handleTap()
         }
