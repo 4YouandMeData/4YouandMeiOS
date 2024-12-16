@@ -29,6 +29,7 @@ struct Constants {
         static var BaseUrl: String { ProjectInfo.ApiBaseUrl }
         static var StudyId: String { ProjectInfo.StudyId }
         static let ApiBaseUrlStr = "\(BaseUrl)/api"
+        static let CharPageUrlStr = "\(BaseUrl)/web_view/charts/"
         static var YourDataUrlStr: String { ProjectInfo.YourDataUrl }
     }
     

@@ -104,7 +104,16 @@ class WebViewViewController: UIViewController {
         self.analytics.track(event: .recordScreen(screenName: AnalyticsScreens.browser.rawValue,
                                                   screenClass: String(describing: type(of: self))))
         self.navigationController?.navigationBar.apply(style: NavigationBarStyleCategory.secondary(hidden: false).style)
-        self.addCustomCloseButton()
+        self.addCustomCloseButton(withImage: ImagePalette.templateImage(withName: .closeButton)) {
+            if let navigationController = self.navigationController {
+                navigationController.dismiss(animated: true)
+                OrientationManager.resetOrientationToDefault()
+            } else {
+                self.dismiss(animated: true) {
+                    OrientationManager.resetOrientationToDefault()
+                }
+            }
+        }
     }
     
     // MARK: - Actions

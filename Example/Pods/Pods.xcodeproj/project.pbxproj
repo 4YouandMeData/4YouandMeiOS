@@ -199,6 +199,7 @@
 		0CCC2C20C8E459D3BC81F4306BDB51A2 /* ORKAudioRecorder.h in Headers */ = {isa = PBXBuildFile; fileRef = 52DC2A87BDA0C57CD85EA54B397E1A5F /* ORKAudioRecorder.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		0CD5E2EBA8912FBCF322ABDAAE659119 /* DatePickerHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57AB02C944DC6F0FD7B87017B240DFE4 /* DatePickerHandler.swift */; };
 		0CF2D2DF44815BD099ACBAAE9F78C8B2 /* ORKReactionTimeViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4BB4EC498C128E66162622503BADAC7A /* ORKReactionTimeViewController.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
+		0D23A4182D106F90000112D8 /* UIBarButtonItem+ActionHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D23A4172D106F7E000112D8 /* UIBarButtonItem+ActionHandler.swift */; };
 		0D657B042D0F010F00582238 /* UIImage+Shadow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D657B032D0F010300582238 /* UIImage+Shadow.swift */; };
 		0D6C7EA1B12048E35C3B01467994A5A1 /* ORKInstructionStepViewController.h in Headers */ = {isa = PBXBuildFile; fileRef = 3269291E3C4C6FD0EAFCAE7500A42AB0 /* ORKInstructionStepViewController.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		0D890CA061A901A7494C9739E344522D /* FIRCLSMachOSlice.h in Headers */ = {isa = PBXBuildFile; fileRef = E63CE2345C2F11417366A7BDDBC42062 /* FIRCLSMachOSlice.h */; settings = {ATTRIBUTES = (Project, ); }; };
@@ -4036,6 +4037,7 @@
 		0CFE5FB3445CB9AA4CD22713B39C8458 /* FIRCLSAllocate.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = FIRCLSAllocate.h; path = Crashlytics/Crashlytics/Helpers/FIRCLSAllocate.h; sourceTree = "<group>"; };
 		0D17C51984FF7227F32D31FC74E84E6A /* FIRInstanceIDBackupExcludedPlist.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = FIRInstanceIDBackupExcludedPlist.m; path = Firebase/InstanceID/FIRInstanceIDBackupExcludedPlist.m; sourceTree = "<group>"; };
 		0D1F62BE14534F13168FD485F23D847C /* ORKBarGraphChartView.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = ORKBarGraphChartView.m; path = ResearchKit/Charts/ORKBarGraphChartView.m; sourceTree = "<group>"; };
+		0D23A4172D106F7E000112D8 /* UIBarButtonItem+ActionHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIBarButtonItem+ActionHandler.swift"; sourceTree = "<group>"; };
 		0D25FE36AC8EDF91B3F0704C761C3A5B /* FIRCLSApplicationIdentifierModel.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = FIRCLSApplicationIdentifierModel.m; path = Crashlytics/Crashlytics/Settings/Models/FIRCLSApplicationIdentifierModel.m; sourceTree = "<group>"; };
 		0D39600258DA4A908B8C956EAB55F91D /* UserInfoHeaderView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = UserInfoHeaderView.swift; sourceTree = "<group>"; };
 		0D4C43310468DAEF75A260BE375589F6 /* ORKObserver.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = ORKObserver.h; path = ResearchKit/Common/ORKObserver.h; sourceTree = "<group>"; };
@@ -9129,6 +9131,7 @@
 		534D4E90E3BF9445B90B6AEE93D17F63 /* UtilityInternal */ = {
 			isa = PBXGroup;
 			children = (
+				0D23A4172D106F7E000112D8 /* UIBarButtonItem+ActionHandler.swift */,
 				0D657B032D0F010300582238 /* UIImage+Shadow.swift */,
 				29601BCDF559E22C31250442D9EC2FC5 /* Activity+Extensions.swift */,
 				FE5933A5A9C7D940974C1228353BBB85 /* CountryCodeProvider.swift */,
@@ -14826,6 +14829,7 @@
 				F569BF12908EE2D3E5635FA57BBD3949 /* IntegrationProvider.swift in Sources */,
 				34D39B6E37483282311B5A9E61309E0B /* IntegrationSection.swift in Sources */,
 				54D2D21078EA578C478708D418301623 /* IntegrationSectionCoordinator.swift in Sources */,
+				0D23A4182D106F90000112D8 /* UIBarButtonItem+ActionHandler.swift in Sources */,
 				4D2085B57705C8B36E75C4DA5894EC9C /* InternalAnalyticsPlatform.swift in Sources */,
 				9425E6CBDD9745C12275EBB683148608 /* IntroVideoSectionCoordinator.swift in Sources */,
 				D0DB037E35DBBB8CCF45845A213520E9 /* IntroVideoViewController.swift in Sources */,

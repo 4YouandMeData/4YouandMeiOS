@@ -9,21 +9,51 @@
 import UIKit
 
 extension UIViewController {
-    func addCustomBackButton(withImage image: UIImage?) {
+    func addCustomBackButton(withImage image: UIImage?, action: (() -> Void)? = nil) {
         assert(self.navigationController != nil, "Missing UINavigationController")
         if let image = image {
-            self.navigationItem.leftBarButtonItem = UIBarButtonItem(image: image,
-            style: .plain, target: self,
-            action: #selector(self.customBackButtonPressed))
+            let button = UIBarButtonItem(image: image, style: .plain) { [weak self] in
+                if let action = action {
+                    action()
+                } else {
+                    self?.navigationController?.popViewController(animated: true)
+                }
+            }
+            self.navigationItem.leftBarButtonItem = button
         }
     }
     
-    func addCustomCloseButton(withImage image: UIImage?) {
+    func addCustomCloseButton(withImage image: UIImage?, action: (() -> Void)? = nil) {
         assert(self.navigationController != nil, "Missing UINavigationController")
         if let image = image {
-            self.navigationItem.leftBarButtonItem = UIBarButtonItem(image: image,
-            style: .plain, target: self,
-            action: #selector(self.customCloseButtonPressed))
+            let button = UIBarButtonItem(image: image, style: .plain) { [weak self] in
+                if let action = action {
+                    action()
+                } else {
+                    if let navigationController = self?.navigationController {
+                        navigationController.dismiss(animated: true)
+                    } else {
+                        self?.dismiss(animated: true)
+                    }
+                }
+            }
+            self.navigationItem.leftBarButtonItem = button
+        }
+    }
+    
+    func addGenericCloseButton(withImage image: UIImage?, completion: (() -> Void)?) {
+        assert(self.navigationController != nil, "Missing UINavigationController")
+        if let image = image {
+            let button = UIBarButtonItem(image: image, style: .plain) { [weak self] in
+                if let navigationController = self?.navigationController {
+                    navigationController.popViewController(animated: true)
+                } else {
+                    self?.dismiss(animated: true) {
+                        completion?()
+                    }
+                }
+            }
+            self.navigationItem.leftBarButtonItem = button
         }
     }
     

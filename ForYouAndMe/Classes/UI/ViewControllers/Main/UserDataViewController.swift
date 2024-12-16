@@ -165,7 +165,10 @@ class UserDataViewController: UIViewController, WKNavigationDelegate, WKScriptMe
         }
         if message.name == "chartFullScreenTapped",
            let body = message.body as? [String: Any] {
-            print(body)
+            guard let chartId = body["chartId"] as? NSNumber else {return}
+            let chartUrl = Constants.Network.CharPageUrlStr + chartId.stringValue
+            self.navigator.openWebView(withTitle: "", url: URL(string: chartUrl)!, presenter: self)
+            OrientationManager.lockOrientation(.landscape)
         }
     }
     

@@ -10,6 +10,7 @@ import Foundation
 import RxSwift
 
 extension UIViewController {
+    
     func addCustomBackButton() {
         self.addCustomBackButton(withImage: ImagePalette.templateImage(withName: .backButtonNavigation))
     }
