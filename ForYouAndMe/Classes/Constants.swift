@@ -82,7 +82,7 @@ struct Constants {
         static let PhoneValidationCodeDigitCount: Int = 6
         static let EmailValidationCodeDigitCount: Int = 6
         static let FeedPageSize: Int? = 10
-        static let TaskPageSize: Int? = 20
+        static let TaskPageSize: Int? = 10
         static let VideoDiaryMaxDurationSeconds: TimeInterval = 120.0
         static let AudioDiaryMaxDurationSeconds: TimeInterval = 600.0
         static let VideoDiaryCaptureSessionPreset: AVCaptureSession.Preset = .hd1280x720

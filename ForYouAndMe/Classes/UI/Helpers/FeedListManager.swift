@@ -65,7 +65,7 @@ struct FeedContent {
     }
     
     var itemCount: Int {
-        return self.quickActivities.count + self.feedItems.count
+        return self.quickActivities.count + self.feedItems.count + 1
     }
 }
 
