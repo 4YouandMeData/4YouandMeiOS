@@ -138,23 +138,17 @@ class UserDataViewController: UIViewController, WKNavigationDelegate, WKScriptMe
    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
        // Inietta il listener JavaScript dopo il caricamento
 //       injectChartEventListener()
+//       self.webView.evaluateJavaScript("document.body.innerHTML", completionHandler: { (value: Any!, error: Error!) -> Void in
+//           if error != nil {
+//               //Error logic
+//               return
+//           }
+//
+//           let result = value as? String
+//           print(result)
+//       })
+
    }
-    
-//    // Metodo per iniettare il listener JavaScript
-//    private func injectChartEventListener() {
-//        let script = """
-//        document.addEventListener('chartPointTapped', function(event) {
-//            window.webkit.messageHandlers.chartPointTapped.postMessage({
-//                dataPointID: event.detail.dataPointID,
-//            });
-//            window.webkit.messageHandlers.chartPointTapped.postMessage({
-//                dataPointID: event.detail.dataPointID,
-//            });
-//        });
-//        """
-//        
-//        webView.evaluateJavaScript(script, completionHandler: nil)
-//    }
     
     // Implementazione del WKScriptMessageHandler
     func userContentController(_ userContentController: WKUserContentController,

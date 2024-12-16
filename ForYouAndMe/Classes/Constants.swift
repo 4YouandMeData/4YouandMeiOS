@@ -10,6 +10,7 @@ import Foundation
 import AVFoundation
 
 struct Constants {
+    
     struct Test {
         static let NetworkStubsEnabled = false
         static let NetworkStubsDelay = 0.3

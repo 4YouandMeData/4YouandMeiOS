@@ -16,6 +16,7 @@ enum ButtonTextStyleCategory: StyleCategory {
     case feed
     case edit
     case clearSelectAll
+    case messages
     
     var style: Style<UIButton> {
         switch self {
@@ -71,7 +72,18 @@ enum ButtonTextStyleCategory: StyleCategory {
             button.backgroundColor = .clear
             button.setTitleColor(ColorPalette.color(withType: .primary), for: .normal)
             button.titleLabel?.font = FontPalette.fontStyleData(forStyle: .paragraph).font
-            button.contentEdgeInsets = UIEdgeInsets(top: 8.0, left: 8.0, bottom: 8.0, right: 8.0)
+            var config = UIButton.Configuration.plain()
+            config.contentInsets = NSDirectionalEdgeInsets(top: 8.0, leading: 8.0, bottom: 8.0, trailing: 8.0)
+            button.configuration = config
+            }
+        case .messages: return Style<UIButton> { button in
+            let buttonHeight = Constants.Style.EditButtonHeight
+            button.heightConstraintValue = buttonHeight
+            button.layer.cornerRadius = buttonHeight / 2.0
+            button.backgroundColor = (ColorPalette.color(withType: .secondary))
+            button.setTitleColor(ColorPalette.color(withType: .primary), for: .normal)
+            button.titleLabel?.font = FontPalette.fontStyleData(forStyle: .messages).font
+            button.addShadowButton()
             }
         }
     }

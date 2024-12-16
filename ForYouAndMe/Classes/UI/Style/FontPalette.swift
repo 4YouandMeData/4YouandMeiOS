@@ -29,6 +29,7 @@ public enum FontStyle: String, CaseIterable {
     case paragraph
     case infoNote
     case menu
+    case messages
     
     fileprivate var defaultData: FontStyleData {
         switch self {
@@ -38,6 +39,7 @@ public enum FontStyle: String, CaseIterable {
         case .header3: return FontStyleData(font: UIFont.systemFont(ofSize: 13.0, weight: .regular), lineSpacing: 3.0, uppercase: false)
         case .menu: return FontStyleData(font: UIFont.systemFont(ofSize: 13.0, weight: .regular), lineSpacing: 3.0, uppercase: true)
         case .infoNote: return FontStyleData(font: UIFont.systemFont(ofSize: 11.0, weight: .black), lineSpacing: 3.0, uppercase: false)
+        case .messages: return FontStyleData(font: UIFont.systemFont(ofSize: 7.0, weight: .black), lineSpacing: 0.0, uppercase: false)
         }
     }
 }

@@ -31,6 +31,15 @@ class FeedHeaderView: UIView {
         return button
     }()
     
+    private lazy var comingSoonButton: UIButton = {
+        let button = UIButton()
+        button.apply(style: ButtonTextStyleCategory.messages.style)
+        button.setTitle(MessageMap.getMessageContent(byKey: "feed")?.title, for: .normal)
+        button.addTarget(self, action: #selector(self.onComingSoonButtonPressed), for: .touchUpInside)
+        button.autoSetDimension(.width, toSize: 110)
+        return button
+    }()
+    
     // MARK: - AttributedTextStyles
     
     private let titleLabelAttributedTextStyle = AttributedTextStyle(fontStyle: .paragraph,
@@ -42,11 +51,14 @@ class FeedHeaderView: UIView {
                                                                        textAlignment: .center)
     
     private let profileButtonPressed: NotificationCallback
+    private let comingSoonButtonPressed: NotificationCallback
     
     private let repository: Repository
     
-    init(profileButtonPressed: @escaping NotificationCallback) {
+    init(profileButtonPressed: @escaping NotificationCallback,
+         comingSoonButtonPressed: @escaping NotificationCallback) {
         self.profileButtonPressed = profileButtonPressed
+        self.comingSoonButtonPressed = comingSoonButtonPressed
         self.repository = Services.shared.repository
         super.init(frame: .zero)
         
@@ -72,6 +84,8 @@ class FeedHeaderView: UIView {
         let emptySpaceView = UIView()
         emptySpaceView.autoSetDimension(.width, toSize: Self.buttonWidth)
         stackView.addArrangedSubview(emptySpaceView)
+        
+        stackView.addArrangedSubview(self.comingSoonButton)
     }
     
     required init?(coder aDecoder: NSCoder) {
@@ -98,5 +112,9 @@ class FeedHeaderView: UIView {
     
     @objc private func onProfileButtonPressed() {
         self.profileButtonPressed()
+    }
+    
+    @objc private func onComingSoonButtonPressed() {
+        self.comingSoonButtonPressed()
     }
 }

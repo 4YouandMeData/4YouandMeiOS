@@ -33,6 +33,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         if let font = UIFont(name: "Helvetica", size: 13.0) {
             fontStyleMap[.menu] = FontStyleData(font: font, lineSpacing: 3.0, uppercase: true)
         }
+        if let font = UIFont(name: "Helvetica-Bold", size: 11.0) {
+            fontStyleMap[.messages] = FontStyleData(font: font, lineSpacing: 3.0, uppercase: true)
+        }
         
         fontStyleMap[.infoNote] = FontStyleData(font: UIFont.boldSystemFont(ofSize: 11), lineSpacing: 3.0, uppercase: false)
         
