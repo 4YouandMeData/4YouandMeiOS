@@ -71,6 +71,7 @@ class WebViewViewController: UIViewController {
         self.view.addSubview(self.webView)
         self.webView.autoPinEdgesToSuperviewSafeArea()
         self.webView.navigationDelegate = self
+        self.webView.scrollView.bounces = false
         
         // Progress bar
         self.view.addSubview(self.progressView)
