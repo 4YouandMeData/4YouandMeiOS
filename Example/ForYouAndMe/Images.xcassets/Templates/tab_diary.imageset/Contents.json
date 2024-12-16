@@ -1,17 +1,17 @@
 {
   "images" : [
     {
-      "filename" : "Diary.png",
+      "filename" : "Diary on.png",
       "idiom" : "universal",
       "scale" : "1x"
     },
     {
-      "filename" : "Diary@2x.png",
+      "filename" : "Diary on@2x.png",
       "idiom" : "universal",
       "scale" : "2x"
     },
     {
-      "filename" : "Diary@3x.png",
+      "filename" : "Diary on@3x.png",
       "idiom" : "universal",
       "scale" : "3x"
     }
