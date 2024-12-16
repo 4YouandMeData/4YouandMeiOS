@@ -51,24 +51,30 @@ class FeedTableViewHeader: UIView {
                                color: ColorPalette.color(withType: .secondaryText).applyAlpha(0.6),
                                textAlignment: .left)
         textStackView.addArrangedSubview(self.subtitleLabel)
-        
-        let pointsStackView = UIStackView.create(withAxis: .vertical, spacing: 2.0)
-        pointsStackView.addArrangedSubview(self.pointsLabel)
-        let pointsDescriptionLabel = UILabel()
-        pointsDescriptionLabel.attributedText = NSAttributedString
-            .create(withText: StringsProvider.string(forKey: .tabFeedHeaderPoints),
-                    fontStyle: .header3,
-                    color: ColorPalette.color(withType: .secondaryText).applyAlpha(0.6))
-        pointsStackView.addArrangedSubview(pointsDescriptionLabel)
-        self.pointsLabel.setContentHuggingPriority(.defaultHigh, for: .horizontal)
-        self.pointsLabel.setContentCompressionResistancePriority(.defaultHigh, for: .horizontal)
-        pointsDescriptionLabel.setContentHuggingPriority(.defaultHigh, for: .horizontal)
-        pointsDescriptionLabel.setContentCompressionResistancePriority(.defaultHigh, for: .horizontal)
-        
-        stackView.alignment = .center
-        
         stackView.addArrangedSubview(textStackView)
-        stackView.addArrangedSubview(pointsStackView)
+        
+        let descriptionText = StringsProvider.string(forKey: .tabFeedHeaderPoints)
+        
+        if !descriptionText.isEmpty {
+            
+            let pointsStackView = UIStackView.create(withAxis: .vertical, spacing: 2.0)
+            pointsStackView.addArrangedSubview(self.pointsLabel)
+            
+            let pointsDescriptionLabel = UILabel()
+            pointsDescriptionLabel.attributedText = NSAttributedString
+                .create(withText: descriptionText,
+                        fontStyle: .header3,
+                        color: ColorPalette.color(withType: .secondaryText).applyAlpha(0.6))
+            pointsStackView.addArrangedSubview(pointsDescriptionLabel)
+            self.pointsLabel.setContentHuggingPriority(.defaultHigh, for: .horizontal)
+            self.pointsLabel.setContentCompressionResistancePriority(.defaultHigh, for: .horizontal)
+            pointsDescriptionLabel.setContentHuggingPriority(.defaultHigh, for: .horizontal)
+            pointsDescriptionLabel.setContentCompressionResistancePriority(.defaultHigh, for: .horizontal)
+            
+            stackView.alignment = .center
+            
+            stackView.addArrangedSubview(pointsStackView)
+        }
     }
     
     required init?(coder aDecoder: NSCoder) {
