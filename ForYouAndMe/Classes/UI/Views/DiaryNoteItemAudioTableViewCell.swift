@@ -22,26 +22,11 @@ class DiaryNoteItemAudioTableViewCell: UITableViewCell {
         return label
     }()
     
-    private lazy var playButton: UIButton = {
-        let button = UIButton()
-        button.setImage(ImagePalette.templateImage(withName: .audioPlayPreview), for: .normal)
-        button.autoSetDimensions(to: CGSize(width: 28, height: 28))
-        button.addTarget(self, action: #selector(self.playButtonPressed), for: .touchUpInside)
-        return button
-    }()
-    
     private lazy var timeLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 12)
         label.text = "00:00"
         return label
-    }()
-    
-    private lazy var slider: UISlider = {
-        let slider = UISlider()
-        slider.minimumValue = 0
-        slider.maximumValue = 100
-        return slider
     }()
     
     private lazy var arrowImageView: UIImageView = {
@@ -84,9 +69,7 @@ class DiaryNoteItemAudioTableViewCell: UITableViewCell {
         audioView.alignment = .center
         audioView.distribution = .fill
         audioView.spacing = 8.0
-        audioView.addArrangedSubview(self.playButton)
         audioView.addArrangedSubview(self.timeLabel)
-        audioView.addArrangedSubview(self.slider)
         
         playerView.addArrangedSubview(audioView)
         
