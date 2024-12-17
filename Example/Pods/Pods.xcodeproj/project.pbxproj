@@ -201,6 +201,7 @@
 		0CF2D2DF44815BD099ACBAAE9F78C8B2 /* ORKReactionTimeViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4BB4EC498C128E66162622503BADAC7A /* ORKReactionTimeViewController.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
 		0D23A4182D106F90000112D8 /* UIBarButtonItem+ActionHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D23A4172D106F7E000112D8 /* UIBarButtonItem+ActionHandler.swift */; };
 		0D23A41A2D10AA40000112D8 /* MessageInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D23A4192D10AA33000112D8 /* MessageInfo.swift */; };
+		0D23A41C2D114ABD000112D8 /* MessagesViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D23A41B2D114AB4000112D8 /* MessagesViewController.swift */; };
 		0D657B042D0F010F00582238 /* UIImage+Shadow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D657B032D0F010300582238 /* UIImage+Shadow.swift */; };
 		0D6C7EA1B12048E35C3B01467994A5A1 /* ORKInstructionStepViewController.h in Headers */ = {isa = PBXBuildFile; fileRef = 3269291E3C4C6FD0EAFCAE7500A42AB0 /* ORKInstructionStepViewController.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		0D890CA061A901A7494C9739E344522D /* FIRCLSMachOSlice.h in Headers */ = {isa = PBXBuildFile; fileRef = E63CE2345C2F11417366A7BDDBC42062 /* FIRCLSMachOSlice.h */; settings = {ATTRIBUTES = (Project, ); }; };
@@ -4040,6 +4041,7 @@
 		0D1F62BE14534F13168FD485F23D847C /* ORKBarGraphChartView.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = ORKBarGraphChartView.m; path = ResearchKit/Charts/ORKBarGraphChartView.m; sourceTree = "<group>"; };
 		0D23A4172D106F7E000112D8 /* UIBarButtonItem+ActionHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIBarButtonItem+ActionHandler.swift"; sourceTree = "<group>"; };
 		0D23A4192D10AA33000112D8 /* MessageInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageInfo.swift; sourceTree = "<group>"; };
+		0D23A41B2D114AB4000112D8 /* MessagesViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessagesViewController.swift; sourceTree = "<group>"; };
 		0D25FE36AC8EDF91B3F0704C761C3A5B /* FIRCLSApplicationIdentifierModel.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = FIRCLSApplicationIdentifierModel.m; path = Crashlytics/Crashlytics/Settings/Models/FIRCLSApplicationIdentifierModel.m; sourceTree = "<group>"; };
 		0D39600258DA4A908B8C956EAB55F91D /* UserInfoHeaderView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = UserInfoHeaderView.swift; sourceTree = "<group>"; };
 		0D4C43310468DAEF75A260BE375589F6 /* ORKObserver.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = ORKObserver.h; path = ResearchKit/Common/ORKObserver.h; sourceTree = "<group>"; };
@@ -9538,6 +9540,7 @@
 		75111344CAD9E755804AE8966498C47B /* ViewControllers */ = {
 			isa = PBXGroup;
 			children = (
+				0D23A41B2D114AB4000112D8 /* MessagesViewController.swift */,
 				F7B1755284DF6ABC32F00A6CCCC8422B /* ActivitySectionViewController.swift */,
 				D2A826DBD5818369EFA4D5B8C560B280 /* BooleanQuestionsViewController.swift */,
 				7115981E47863C8BE9B2673A5C54F0D3 /* DevicesIntegrationViewController.swift */,
@@ -14895,6 +14898,7 @@
 				076870DCEC092AA2713AD5FD9D819AB9 /* QuickActivity.swift in Sources */,
 				09371D1ECA74DD9BAD4B4F62350D0656 /* QuickActivityListTableViewCell.swift in Sources */,
 				833B3A7DC5BD6731C9F31C7EB11D92AF /* QuickActivityOption.swift in Sources */,
+				0D23A41C2D114ABD000112D8 /* MessagesViewController.swift in Sources */,
 				96EB736A8F2659A5187E97619AF5FA82 /* QuickActivityOptionView.swift in Sources */,
 				A1EBF8E36AD166CBB1F51C7C52B6E0A2 /* QuickActivityView.swift in Sources */,
 				627A5EF363EF7493DEEB76D714503E40 /* ReachabilityManager.swift in Sources */,

@@ -50,9 +50,11 @@ class WelcomeViewController: UIViewController {
                                                                      right: Constants.Style.DefaultHorizontalMargins))
 
         stackView.addHeaderImage(image: ImagePalette.image(withName: .fyamLogoSpecific))
-        stackView.addBlankSpace(space: 64.0)
+        stackView.addBlankSpace(space: 40)
         self.headerImageView = stackView.addHeaderImage(image: ImagePalette.image(withName: .mainLogo))
-        stackView.addArrangedSubview(UIView())
+        stackView.addBlankSpace(space: 30)
+        stackView.addHeaderImage(image: ImagePalette.image(withName: .cziLogo))
+        stackView.addBlankSpace(space: 66.0)
         stackView.addArrangedSubview(self.continueButton)
     }
     
