@@ -162,7 +162,7 @@ class PhoneNumberView: GenericTextFieldView {
         #if canImport(Contacts)
         if #available(iOS 9, macOS 10.11, macCatalyst 13.1, watchOS 2.0, *) {
             // macCatalyst OS bug if language is set to Korean
-            //CNContactsUserDefaults.shared().countryCode will return ko instead of kr
+            // CNContactsUserDefaults.shared().countryCode will return ko instead of kr
             // Failed parsing any phone number.
             let countryCode = CNContactsUserDefaults.shared().countryCode.uppercased()
             #if targetEnvironment(macCatalyst)

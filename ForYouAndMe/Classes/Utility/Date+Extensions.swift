@@ -16,6 +16,7 @@ public let dayTime = "HH"
 public let dayShort = "EEE"
 public let monthShort = "MMM d"
 public let yearShortDate = "MMM yy"
+public let literalDate = "MMMM dd yyyy"
 
 public extension Date {
     func string(withFormat format: String, timeZone: TimeZone? = nil, locale: Locale? = nil) -> String {

@@ -8,6 +8,11 @@
 import UIKit
 import RxSwift
 
+struct DiaryNoteSection {
+    let date: Date
+    var items: [DiaryNoteItem]
+}
+
 class DiaryNotesViewController: UIViewController {
     
     private let navigator: AppNavigator
@@ -17,7 +22,7 @@ class DiaryNotesViewController: UIViewController {
     private lazy var diaryNoteEmptyView = DiaryNoteEmptyView(withTopOffset: 8.0)
 
     private let disposeBag = DisposeBag()
-    
+        
     private lazy var closeButton: UIButton = {
         let button = UIButton()
         button.setImage(ImagePalette.templateImage(withName: .closeButton), for: .normal)
@@ -90,6 +95,7 @@ class DiaryNotesViewController: UIViewController {
     private var storage: CacheService
     private var dataPointID: String?
     private var diaryNoteItems: [DiaryNoteItem]
+    private var sections: [DiaryNoteSection] = []
     
     init(withDataPointID dataPointID: String?) {
         self.navigator = Services.shared.navigator
@@ -101,6 +107,8 @@ class DiaryNotesViewController: UIViewController {
         self.diaryNoteItems = []
         // Crea un array di oggetti DiaryNoteItem dai dati di test
         super.init(nibName: nil, bundle: nil)
+        
+        self.tableView.registerHeaderFooterViewWithClass(DiarySectionHeader.self)
     }
     
     required init?(coder: NSCoder) {
@@ -191,17 +199,36 @@ class DiaryNotesViewController: UIViewController {
     
     // MARK: - Private Methods
     
+    func createDiaryNoteSections(from diaryNotes: [DiaryNoteItem]) -> [DiaryNoteSection] {
+        let calendar = Calendar.current
+        
+        let groupedDictionary = Dictionary(grouping: diaryNotes) { (item) -> Date in
+            return calendar.startOfDay(for: item.diaryNoteId)
+        }
+        
+        let sortedDates = groupedDictionary.keys.sorted(by: { $1 < $0 })
+        
+        let sections: [DiaryNoteSection] = sortedDates.map { date in
+            let items = groupedDictionary[date]?.sorted(by: { $1.diaryNoteId < $0.diaryNoteId }) ?? []
+            return DiaryNoteSection(date: date, items: items)
+        }
+        
+        return sections
+    }
+    
     private func updateUI() {
         self.tableView.backgroundView = diaryNoteItems.isEmpty ? self.diaryNoteEmptyView : nil
         self.tableView.reloadData()
     }
     
     private func loadItems() {
+        
         self.repository.getDiaryNotes()
                         .addProgress()
                         .subscribe(onSuccess: { [weak self] diaryNote in
                             guard let self = self else { return }
                             self.diaryNoteItems = diaryNote
+                            self.sections = createDiaryNoteSections(from: diaryNote)
                             self.updateUI()
 
                         }, onError: { [weak self] error in
@@ -223,16 +250,16 @@ class DiaryNotesViewController: UIViewController {
 extension DiaryNotesViewController: UITableViewDataSource {
     
     func numberOfSections(in tableView: UITableView) -> Int {
-        return 1
+        return self.sections.count
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return self.diaryNoteItems.count
+        return sections[section].items.count
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         
-        let diaryNote = diaryNoteItems[indexPath.row]
+        let diaryNote = sections[indexPath.section].items[indexPath.row]
         if let typeNote = diaryNote.diaryNoteType {
             switch typeNote {
             case .text:
@@ -274,8 +301,16 @@ extension DiaryNotesViewController: UITableViewDataSource {
                 .addProgress()
                 .subscribe(onSuccess: { [weak self] in
                     guard let self = self else { return }
+                    self.sections[indexPath.section].items.remove(at: indexPath.row)
+                    if sections[indexPath.section].items.isEmpty {
+                        // Remove Section if not elements
+                        sections.remove(at: indexPath.section)
+                        tableView.deleteSections(IndexSet(integer: indexPath.section), with: .automatic)
+                    } else {
+                        
+                        tableView.deleteRows(at: [indexPath], with: .automatic)
+                    }
                     diaryNoteItems.remove(at: indexPath.row)
-                    tableView.deleteRows(at: [indexPath], with: .automatic)
                     self.updateUI()
                 }, onError: { [weak self] error in
                     guard let self = self else { return }
@@ -297,5 +332,24 @@ extension DiaryNotesViewController: UITableViewDelegate {
             case .none:
                 return UITableView.automaticDimension
             }
+    }
+    
+    func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
+        let sectionText = self.sections[section].date.string(withFormat: literalDate)
+        guard let cell = tableView.dequeueReusableHeaderFooterViewOfType(type: DiarySectionHeader.self) else {
+            assertionFailure("DiarySectionHeader not registered")
+            return UIView()
+        }
+        cell.display(text: sectionText)
+        return cell
+    }
+    
+    func tableView(_ tableView: UITableView, viewForFooterInSection section: Int) -> UIView? {
+        // Needed to remove the default blank footer under each section
+        return nil
+    }
+    
+    func tableView(_ tableView: UITableView, heightForFooterInSection section: Int) -> CGFloat {
+        return CGFloat.leastNormalMagnitude
     }
 }

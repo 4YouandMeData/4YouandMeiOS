@@ -202,6 +202,7 @@
 		0D23A4182D106F90000112D8 /* UIBarButtonItem+ActionHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D23A4172D106F7E000112D8 /* UIBarButtonItem+ActionHandler.swift */; };
 		0D23A41A2D10AA40000112D8 /* MessageInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D23A4192D10AA33000112D8 /* MessageInfo.swift */; };
 		0D23A41C2D114ABD000112D8 /* MessagesViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D23A41B2D114AB4000112D8 /* MessagesViewController.swift */; };
+		0D23A4862D11D15F000112D8 /* DiarySectionHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D23A4852D11D157000112D8 /* DiarySectionHeader.swift */; };
 		0D657B042D0F010F00582238 /* UIImage+Shadow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D657B032D0F010300582238 /* UIImage+Shadow.swift */; };
 		0D6C7EA1B12048E35C3B01467994A5A1 /* ORKInstructionStepViewController.h in Headers */ = {isa = PBXBuildFile; fileRef = 3269291E3C4C6FD0EAFCAE7500A42AB0 /* ORKInstructionStepViewController.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		0D890CA061A901A7494C9739E344522D /* FIRCLSMachOSlice.h in Headers */ = {isa = PBXBuildFile; fileRef = E63CE2345C2F11417366A7BDDBC42062 /* FIRCLSMachOSlice.h */; settings = {ATTRIBUTES = (Project, ); }; };
@@ -4042,6 +4043,7 @@
 		0D23A4172D106F7E000112D8 /* UIBarButtonItem+ActionHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIBarButtonItem+ActionHandler.swift"; sourceTree = "<group>"; };
 		0D23A4192D10AA33000112D8 /* MessageInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageInfo.swift; sourceTree = "<group>"; };
 		0D23A41B2D114AB4000112D8 /* MessagesViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessagesViewController.swift; sourceTree = "<group>"; };
+		0D23A4852D11D157000112D8 /* DiarySectionHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiarySectionHeader.swift; sourceTree = "<group>"; };
 		0D25FE36AC8EDF91B3F0704C761C3A5B /* FIRCLSApplicationIdentifierModel.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = FIRCLSApplicationIdentifierModel.m; path = Crashlytics/Crashlytics/Settings/Models/FIRCLSApplicationIdentifierModel.m; sourceTree = "<group>"; };
 		0D39600258DA4A908B8C956EAB55F91D /* UserInfoHeaderView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = UserInfoHeaderView.swift; sourceTree = "<group>"; };
 		0D4C43310468DAEF75A260BE375589F6 /* ORKObserver.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = ORKObserver.h; path = ResearchKit/Common/ORKObserver.h; sourceTree = "<group>"; };
@@ -7778,6 +7780,7 @@
 		1FFE584FBD4B3D772216CC6F1B8C5449 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				0D23A4852D11D157000112D8 /* DiarySectionHeader.swift */,
 				06F5DDD755F9E38CCA4E0F13FD9E97CC /* AboutYouHeaderView.swift */,
 				7CAFD87D84F772CEF57C5BE2B5BB714C /* CustomSegmentView.swift */,
 				730110AB20B73E10F675EC0924D35E15 /* DeviceItemView.swift */,
@@ -14993,6 +14996,7 @@
 				8627C49C08806A54A55CCC63F38FFE84 /* UserDataAggregation.swift in Sources */,
 				9060A70E70BA5CEF5246DAE649CC1599 /* UserDataAggregationEmptyByFilterView.swift in Sources */,
 				0881102A46668E970357CF2620652A7D /* UserDataAggregationErrorView.swift in Sources */,
+				0D23A4862D11D15F000112D8 /* DiarySectionHeader.swift in Sources */,
 				70AAC85E6F13E10DA2E3C18C0DBC053E /* UserDataAggregationFilter.swift in Sources */,
 				B2220E82BE0FC4FC586F67F5885B02E1 /* UserDataFilterViewController.swift in Sources */,
 				FCA5BDEF0CA1F37FF16C580063611D4F /* UserDataViewController.swift in Sources */,
