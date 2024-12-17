@@ -41,21 +41,23 @@ class WelcomeViewController: UIViewController {
         
         self.view.addGradientView(GradientView(type: .primaryBackground))
 
-        let stackView = UIStackView()
-        stackView.axis = .vertical
+        let stackView = UIStackView.create(withAxis: .vertical)
         self.view.addSubview(stackView)
-        stackView.autoPinEdgesToSuperviewSafeArea(with: UIEdgeInsets(top: 100.0,
+        stackView.autoPinEdgesToSuperviewSafeArea(with: UIEdgeInsets(top: 0,
                                                                      left: Constants.Style.DefaultHorizontalMargins,
-                                                                     bottom: 100.0,
+                                                                     bottom: 0,
                                                                      right: Constants.Style.DefaultHorizontalMargins))
 
-        stackView.addHeaderImage(image: ImagePalette.image(withName: .fyamLogoSpecific))
+        stackView.addImage(withImage: ImagePalette.image(withName: .fyamLogoSpecific),
+                           color: .clear,
+                           sizeDimension: 136)
         stackView.addBlankSpace(space: 40)
         self.headerImageView = stackView.addHeaderImage(image: ImagePalette.image(withName: .mainLogo))
-        stackView.addBlankSpace(space: 30)
+        stackView.addBlankSpace(space: 63)
         stackView.addHeaderImage(image: ImagePalette.image(withName: .cziLogo))
-        stackView.addBlankSpace(space: 66.0)
+        stackView.addBlankSpace(space: 66)
         stackView.addArrangedSubview(self.continueButton)
+        stackView.addBlankSpace(space: 50)
     }
     
     override func viewWillAppear(_ animated: Bool) {
