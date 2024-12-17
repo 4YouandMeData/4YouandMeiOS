@@ -53,6 +53,15 @@ class DiaryNotesViewController: UIViewController {
         return containerView
     }()
     
+    private lazy var comingSoonButton: UIButton = {
+        let button = UIButton()
+        button.apply(style: ButtonTextStyleCategory.messages.style)
+        button.setTitle(MessageMap.getMessageContent(byKey: "diary")?.title, for: .normal)
+        button.addTarget(self, action: #selector(self.comingSoonButtonPressed), for: .touchUpInside)
+        button.autoSetDimension(.width, toSize: 110)
+        return button
+    }()
+    
     private lazy var footerView: UIView = {
         
         let containerView = UIView()
@@ -127,6 +136,9 @@ class DiaryNotesViewController: UIViewController {
         self.tableView.autoPinEdgesToSuperviewEdges(with: .zero, excludingEdge: .top)
         self.tableView.autoPinEdge(.top, to: .bottom, of: headerView)
         
+        headerView.addSubview(self.comingSoonButton)
+        self.comingSoonButton.autoPinEdge(.bottom, to: .bottom, of: headerView, withOffset: -20.0)
+        self.comingSoonButton.autoPinEdge(.trailing, to: .trailing, of: headerView, withOffset: -12.0)
 //
 //        stackView.addArrangedSubview(self.tableView)
 //        stackView.addArrangedSubview(self.footerView)
@@ -151,6 +163,10 @@ class DiaryNotesViewController: UIViewController {
     
     @objc private func closeButtonPressed() {
         self.customCloseButtonPressed()
+    }
+    
+    @objc private func comingSoonButtonPressed() {
+        
     }
     
     // MARK: - Private Methods

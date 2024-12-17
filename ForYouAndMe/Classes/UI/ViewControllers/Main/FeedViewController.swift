@@ -135,7 +135,8 @@ class FeedViewController: UIViewController {
     }
     
     private func showMessage() {
-        
+        guard let message = MessageMap.getMessageContent(byKey: "feed") else {return}
+        self.navigator.openMessagePage(withTitle: message.title, body: message.body, presenter: self)
     }
     
     private func refreshUser() {

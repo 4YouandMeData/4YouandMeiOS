@@ -14,6 +14,7 @@ enum ImageName: String, CaseIterable {
     case fyamLogoSpecific = "fyam_logo_specific"
     case fyamLogoGeneric = "fyam_logo_generic"
     case mainLogo = "main_logo"
+    case cziLogo = "czi_logo"
     case nextButtonPrimary = "next_button_primary"
     case backButtonPrimary = "back_button_primary"
     case nextButtonSecondary = "next_button_secondary"

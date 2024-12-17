@@ -24,6 +24,15 @@ class StudyInfoViewController: UIViewController {
         return scrollStackView
     }()
     
+    private lazy var comingSoonButton: UIButton = {
+        let button = UIButton()
+        button.apply(style: ButtonTextStyleCategory.messages.style)
+        button.setTitle(MessageMap.getMessageContent(byKey: "settings")?.title, for: .normal)
+        button.addTarget(self, action: #selector(self.comingSoonButtonPressed), for: .touchUpInside)
+        button.autoSetDimension(.width, toSize: 110)
+        return button
+    }()
+    
     init() {
         self.navigator = Services.shared.navigator
         self.analytics = Services.shared.analytics
@@ -52,6 +61,11 @@ class StudyInfoViewController: UIViewController {
         self.view.addSubview(self.scrollStackView)
         self.scrollStackView.autoPinEdgesToSuperviewEdges(with: .zero, excludingEdge: .top)
         self.scrollStackView.autoPinEdge(.top, to: .bottom, of: headerView, withOffset: 30)
+        
+        headerView.addSubview(self.comingSoonButton)
+        self.comingSoonButton.autoPinEdge(.bottom, to: .bottom, of: headerView, withOffset: -37.0)
+        self.comingSoonButton.autoPinEdge(.trailing, to: .trailing, of: headerView, withOffset: -12.0)
+        
         self.refreshUI()
     }
     
@@ -161,5 +175,10 @@ class StudyInfoViewController: UIViewController {
                                                                      bottom: 16.0,
                                                                      right: Constants.Style.DefaultHorizontalMargins),
                                                   excludingEdge: .top)
+    }
+    
+    // MARK: Actions
+    @objc private func comingSoonButtonPressed() {
+        
     }
 }

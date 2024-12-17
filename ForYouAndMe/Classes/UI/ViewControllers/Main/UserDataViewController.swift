@@ -33,6 +33,15 @@ class UserDataViewController: UIViewController, WKNavigationDelegate, WKScriptMe
         webView.navigationDelegate = self
         return webView
     }()
+    
+    private lazy var comingSoonButton: UIButton = {
+        let button = UIButton()
+        button.apply(style: ButtonTextStyleCategory.messages.style)
+        button.setTitle(MessageMap.getMessageContent(byKey: "user_data")?.title, for: .normal)
+        button.addTarget(self, action: #selector(self.comingSoonButtonPressed), for: .touchUpInside)
+        button.autoSetDimension(.width, toSize: 110)
+        return button
+    }()
 
     // Stored so they can be used by the filter page
     private let navigator: AppNavigator
@@ -78,14 +87,26 @@ class UserDataViewController: UIViewController, WKNavigationDelegate, WKScriptMe
         self.webView.navigationDelegate = self
         self.webView.scrollView.isScrollEnabled = true
         self.loadWebViewWithSessionToken()
+        
+        headerView.addSubview(self.comingSoonButton)
+        self.comingSoonButton.autoPinEdge(.bottom, to: .bottom, of: headerView, withOffset: -20.0)
+        self.comingSoonButton.autoPinEdge(.trailing, to: .trailing, of: headerView, withOffset: -12.0)
     }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        
+        self.navigationController?.navigationBar.apply(style: NavigationBarStyleCategory.primary(hidden: true).style)
         self.analytics.track(event: .switchTab(StringsProvider.string(forKey: .tabUserData)))
         self.analytics.track(event: .recordScreen(screenName: AnalyticsScreens.yourData.rawValue,
                                                   screenClass: String(describing: type(of: self))))
         self.webView.reload()
+    }
+    
+    // MARK: Actions
+    
+    @objc private func comingSoonButtonPressed() {
+        
     }
     
     // MARK: WebView Methods

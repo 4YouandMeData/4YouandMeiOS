@@ -647,6 +647,12 @@ class AppNavigator {
                             tintColor: ColorPalette.color(withType: .primary))
     }
     
+    public func openMessagePage(withTitle title: String, body: String, presenter: UIViewController) {
+        let messageViewController = MessagesViewController(withTitle: title, body: body)
+        messageViewController.modalPresentationStyle = .formSheet
+        presenter.present(messageViewController, animated: true)
+    }
+    
     // MARK: Progress HUD
     
     public static func pushProgressHUD() {

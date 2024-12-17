@@ -27,6 +27,15 @@ class TaskViewController: UIViewController {
         return view
     }()
     
+    private lazy var comingSoonButton: UIButton = {
+        let button = UIButton()
+        button.apply(style: ButtonTextStyleCategory.messages.style)
+        button.setTitle(MessageMap.getMessageContent(byKey: "task")?.title, for: .normal)
+        button.addTarget(self, action: #selector(self.comingSoonButtonPressed), for: .touchUpInside)
+        button.autoSetDimension(.width, toSize: 110)
+        return button
+    }()
+    
     private lazy var tableView: UITableView = {
         let tableView = UITableView(frame: .zero, style: .grouped)
         tableView.tableFooterView = UIView()
@@ -81,6 +90,10 @@ class TaskViewController: UIViewController {
         self.view.addSubview(self.emptyView)
         self.emptyView.autoPinEdge(to: self.tableView)
         self.emptyView.isHidden = true
+        
+        headerView.addSubview(self.comingSoonButton)
+        self.comingSoonButton.autoPinEdge(.bottom, to: .bottom, of: headerView, withOffset: -20.0)
+        self.comingSoonButton.autoPinEdge(.trailing, to: .trailing, of: headerView, withOffset: -12.0)
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -97,6 +110,10 @@ class TaskViewController: UIViewController {
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         self.listManager.viewDidLayoutSubviews()
+    }
+    
+    @objc private func comingSoonButtonPressed() {
+        
     }
 }
 
