@@ -98,7 +98,7 @@ class NoticedViewController: UIViewController {
         self.scrollStackView.stackView.subviews.forEach({ $0.removeFromSuperview() })
         
         var title = "Write a Note"
-        var image = ImagePalette.templateImage(withName: .textNote)
+        var image = ImagePalette.image(withName: .textNote)
 
         let writePage = GenericListItemView(withTitle: title,
                                             image: image ?? UIImage(),
@@ -111,7 +111,7 @@ class NoticedViewController: UIViewController {
         self.scrollStackView.stackView.addArrangedSubview(writePage)
         
         title = "Record Audio"
-        image = ImagePalette.templateImage(withName: .audioNote)
+        image = ImagePalette.image(withName: .audioNote)
         let audioPage = GenericListItemView(withTitle: title,
                                             image: image ?? UIImage() ,
                                             colorType: .primary,

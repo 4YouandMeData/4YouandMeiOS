@@ -190,10 +190,9 @@ class UserDataViewController: UIViewController, WKNavigationDelegate, WKScriptMe
     
     // Metodo per gestire l'evento di tap sul punto del grafico
     private func handleChartPointTap(eventData: [String: Any]) {
-//        guard let dataPoint = eventData["dataPoint"] as? String else {
-//            return
-//        }
-//        print("Datapoint: \(dataPoint)")
-        self.navigator.presentDiaryNotes(dataPointId: nil, presenter: self)
+        guard let dataPoint = eventData["datetime_ref"] as? String else {
+            return
+        }
+        self.navigator.presentDiaryNotes(dataPointId: dataPoint, presenter: self)
     }
 }

@@ -70,11 +70,11 @@ class DiaryNotesViewController: UIViewController {
                                                                                         secondButtonPrimary: true))
         
         buttonsView.setFirstButtonText("Record")
-        buttonsView.setFirstButtonImage(ImagePalette.templateImage(withName: .audioNote))
+        buttonsView.setFirstButtonImage(ImagePalette.image(withName: .audioNote))
         buttonsView.addTargetToFirstButton(target: self, action: #selector(self.createAudioDiaryNote))
         
         buttonsView.setSecondButtonText("Write")
-        buttonsView.setSecondButtonImage(ImagePalette.templateImage(withName: .textNote))
+        buttonsView.setSecondButtonImage(ImagePalette.image(withName: .textNote))
         buttonsView.addTargetToSecondButton(target: self, action: #selector(self.createTextDiaryNote))
         
         containerView.addSubview(buttonsView)
@@ -125,30 +125,41 @@ class DiaryNotesViewController: UIViewController {
         
         self.view.backgroundColor = ColorPalette.color(withType: .secondary)
         
-        // Header View
-        let headerView = SingleTextHeaderView()
-        headerView.setTitleText(StringsProvider.string(forKey: .diaryNoteTitle))
+        if self.dataPointID == nil {
+            // Header View
+            let headerView = SingleTextHeaderView()
+            headerView.setTitleText(StringsProvider.string(forKey: .diaryNoteTitle))
+            
+            self.view.addSubview(headerView)
+            headerView.autoPinEdgesToSuperviewEdges(with: .zero, excludingEdge: .bottom)
+            
+            self.view.addSubview(self.tableView)
+            self.tableView.autoPinEdgesToSuperviewEdges(with: .zero, excludingEdge: .top)
+            self.tableView.autoPinEdge(.top, to: .bottom, of: headerView)
+            
+            headerView.addSubview(self.comingSoonButton)
+            self.comingSoonButton.autoPinEdge(.bottom, to: .bottom, of: headerView, withOffset: -20.0)
+            self.comingSoonButton.autoPinEdge(.trailing, to: .trailing, of: headerView, withOffset: -12.0)
+        } else {
+            
+            let containerView = UIView()
+            self.view.addSubview(containerView)
+            containerView.autoPinEdgesToSuperviewEdges()
+            
+            containerView.addSubview(self.headerView)
+            self.headerView.autoPinEdgesToSuperviewEdges(with: .zero, excludingEdge: .bottom)
+            containerView.addSubview(self.tableView)
+            containerView.addSubview(self.footerView)
+            self.footerView.autoPinEdgesToSuperviewEdges(with: .zero, excludingEdge: .top)
+            
+            self.tableView.autoPinEdge(toSuperviewEdge: .leading, withInset: 0)
+            self.tableView.autoPinEdge(toSuperviewEdge: .trailing, withInset: 0)
+            self.tableView.autoPinEdge(.top, to: .bottom, of: self.headerView)
+            self.tableView.autoPinEdge(.bottom, to: .top, of: self.footerView)
+            
+            self.tableView.reloadData()
+        }
         
-        self.view.addSubview(headerView)
-        headerView.autoPinEdgesToSuperviewEdges(with: .zero, excludingEdge: .bottom)
-        
-        self.view.addSubview(self.tableView)
-        self.tableView.autoPinEdgesToSuperviewEdges(with: .zero, excludingEdge: .top)
-        self.tableView.autoPinEdge(.top, to: .bottom, of: headerView)
-        
-        headerView.addSubview(self.comingSoonButton)
-        self.comingSoonButton.autoPinEdge(.bottom, to: .bottom, of: headerView, withOffset: -20.0)
-        self.comingSoonButton.autoPinEdge(.trailing, to: .trailing, of: headerView, withOffset: -12.0)
-//
-//        stackView.addArrangedSubview(self.tableView)
-//        stackView.addArrangedSubview(self.footerView)
-//        
-//        self.tableView.autoPinEdge(toSuperviewEdge: .leading, withInset: 0)
-//        self.tableView.autoPinEdge(toSuperviewEdge: .trailing, withInset: 0)
-//        self.tableView.autoPinEdge(.top, to: .bottom, of: headerView)
-//        self.tableView.autoPinEdge(.bottom, to: .top, of: self.footerView)
-//        
-//        self.tableView.reloadData()
         self.updateUI()
 
     }
