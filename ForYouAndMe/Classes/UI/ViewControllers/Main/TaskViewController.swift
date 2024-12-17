@@ -113,7 +113,8 @@ class TaskViewController: UIViewController {
     }
     
     @objc private func comingSoonButtonPressed() {
-        
+        guard let message = MessageMap.getMessageContent(byKey: "task") else {return}
+        self.navigator.openMessagePage(withTitle: message.title, body: message.body, presenter: self)
     }
 }
 

@@ -166,7 +166,8 @@ class DiaryNotesViewController: UIViewController {
     }
     
     @objc private func comingSoonButtonPressed() {
-        
+        guard let message = MessageMap.getMessageContent(byKey: "diary") else { return }
+        self.navigator.openMessagePage(withTitle: message.title, body: message.body, presenter: self)
     }
     
     // MARK: - Private Methods

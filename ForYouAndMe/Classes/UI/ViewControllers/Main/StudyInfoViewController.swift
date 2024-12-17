@@ -179,6 +179,7 @@ class StudyInfoViewController: UIViewController {
     
     // MARK: Actions
     @objc private func comingSoonButtonPressed() {
-        
+        guard let message = MessageMap.getMessageContent(byKey: "settings") else { return }
+        self.navigator.openMessagePage(withTitle: message.title, body: message.body, presenter: self)
     }
 }

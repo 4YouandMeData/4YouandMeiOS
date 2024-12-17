@@ -106,7 +106,8 @@ class UserDataViewController: UIViewController, WKNavigationDelegate, WKScriptMe
     // MARK: Actions
     
     @objc private func comingSoonButtonPressed() {
-        
+        guard let message = MessageMap.getMessageContent(byKey: "user_data") else { return }
+        self.navigator.openMessagePage(withTitle: message.title, body: message.body, presenter: self)
     }
     
     // MARK: WebView Methods
