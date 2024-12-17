@@ -17,7 +17,7 @@ struct MessageMap {
         "diary": MessageInfo(title: "COMING SOON #3", body: "Options to keep this information private or share beyond the device"),
         "user_data": MessageInfo(title: "COMING SOON #4", body: "Additional chart features and descriptions to follow"),
         "settings": MessageInfo(title: "COMING SOON #5", body: "Set your personalized notifications"),
-        "noticed": MessageInfo(title: "COMING SOON #6", body: "You can log a moment, feeling, experience, event, symptom or anything you like, whenever you like by clicking on the + button. You have the option to write a note, record an audio clip, or take a video to describe these moments. If you're not sure what to log, you might consider things that have happened to you throughout the day such as I ate waffles for breakfast, or I had a really stressful afternoon meeting at work. You might also consider logging moments that have just happened and have relevance to your unique condition, such as: 'I just fell when trying to reach for a glass'"),
+        "noticed": MessageInfo(title: "About \"I've Noticed\"", body: "You can log a moment, feeling, experience, event, symptom or anything you like, whenever you like by clicking on the + button. You have the option to write a note, record an audio clip, or take a video to describe these moments. If you're not sure what to log, you might consider things that have happened to you throughout the day such as I ate waffles for breakfast, or I had a really stressful afternoon meeting at work. You might also consider logging moments that have just happened and have relevance to your unique condition, such as: 'I just fell when trying to reach for a glass'"),
     ]
 }
 

@@ -12,7 +12,7 @@ class DiaryNoteItemTextTableViewCell: UITableViewCell {
     private lazy var noteImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.contentMode = .scaleAspectFit
-        imageView.autoSetDimensions(to: CGSize(width: 18, height: 18))
+        imageView.autoSetDimensions(to: CGSize(width: 22, height: 22))
         return imageView
     }()
     

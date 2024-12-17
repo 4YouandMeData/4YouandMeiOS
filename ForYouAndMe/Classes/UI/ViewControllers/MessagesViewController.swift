@@ -94,7 +94,8 @@ class MessagesViewController: UIViewController {
         self.scrollStackView.stackView.addLabel(text: self.bodyString,
                                                 font: FontPalette.fontStyleData(forStyle: .paragraph).font,
                                                 textColor: ColorPalette.color(withType: .primaryText),
-                                                textAlignment: .left)
+                                                textAlignment: .left,
+                                                lineSpacing: 12.0)
         
         self.scrollStackView.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets(top: 0.0,
                                                                       left: Constants.Style.DefaultHorizontalMargins/2,
