@@ -272,7 +272,7 @@ class FeedListManager: NSObject {
     
     private func updateHasContent(withFeedContent feedContent: FeedContent) {
         if let pageSize = self.pageSize {
-            self.hasMoreContent = !(feedContent.itemCount == 0 || feedContent.itemCount != pageSize)
+            self.hasMoreContent = (feedContent.itemCount == 0 || feedContent.itemCount >= pageSize)
         } else {
             self.hasMoreContent = false
         }
