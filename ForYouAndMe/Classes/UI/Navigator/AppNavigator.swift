@@ -375,7 +375,7 @@ class AppNavigator {
                 taskNavigationController.tabBarItem.setTitleTextAttributes([.font: titleFont], for: .normal)
                 viewControllers.append(taskNavigationController)
             case .diary:
-                let diaryNoteViewController = DiaryNotesViewController(withDataPointID: nil)
+                let diaryNoteViewController = DiaryNotesViewController(withDataPoint: nil, isFromChart: false)
                 let diaryNoteNavigationController = UINavigationController(rootViewController: diaryNoteViewController)
                 diaryNoteNavigationController.preventPopWithSwipe()
                 diaryNoteNavigationController.tabBarItem.image = ImagePalette.templateImage(withName: .tabDiary)
@@ -545,18 +545,23 @@ class AppNavigator {
         presenter.present(viewController, animated: true, completion: nil)
     }
     
-    public func presentDiaryNotes(dataPointId: String?, presenter: UIViewController) {
-        let diaryNoteViewController = DiaryNotesViewController(withDataPointID: dataPointId)
+    public func presentDiaryNotes(diaryNote: DiaryNoteItem?, presenter: UIViewController, isFromChart: Bool) {
+        let diaryNoteViewController = DiaryNotesViewController(withDataPoint: diaryNote, isFromChart: isFromChart)
         let navigationViewController = UINavigationController(rootViewController: diaryNoteViewController)
         navigationViewController.modalPresentationStyle = .formSheet
         navigationViewController.preventPopWithSwipe()
         presenter.present(navigationViewController, animated: true)
     }
     
-    public func openDiaryNoteText(diaryNoteId: String?, presenter: UIViewController, isModal: Bool) {
-        let diaryNoteTextViewController = DiaryNoteTextViewController(withDataPointID: diaryNoteId)
+    public func openDiaryNoteText(diaryNote: DiaryNoteItem?,
+                                  presenter: UIViewController,
+                                  isEditMode: Bool,
+                                  isFromChart: Bool) {
+        let diaryNoteTextViewController = DiaryNoteTextViewController(withDataPoint: diaryNote,
+                                                                      isEditMode: isEditMode,
+                                                                      isFromChart: isFromChart)
         diaryNoteTextViewController.modalPresentationStyle = .fullScreen
-        if isModal {
+        if !isFromChart {
             presenter.dismiss(animated: true) {
                 // Get the topmost view controller after dismissal
                 guard let topViewController = self.getTopMostViewController() else {
@@ -576,10 +581,15 @@ class AppNavigator {
         }
     }
     
-    public func openDiaryNoteAudio(diaryNote: DiaryNoteItem?, presenter: UIViewController, isModal: Bool) {
-        let diaryNoteAudioViewController = DiaryNoteAudioViewController(withDiaryNote: diaryNote)
+    public func openDiaryNoteAudio(diaryNote: DiaryNoteItem?,
+                                   presenter: UIViewController,
+                                   isEditMode: Bool,
+                                   isFromChart: Bool) {
+        let diaryNoteAudioViewController = DiaryNoteAudioViewController(withDiaryNote: diaryNote,
+                                                                        isEditMode: isEditMode,
+                                                                        isFromChart: isFromChart)
         diaryNoteAudioViewController.modalPresentationStyle = .fullScreen
-        if isModal {
+        if !isFromChart {
             presenter.dismiss(animated: true) {
                 guard let topViewController = self.getTopMostViewController() else {
                     assertionFailure("Unable to find a top-most view controller to present DiaryNoteTextViewController")

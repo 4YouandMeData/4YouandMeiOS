@@ -341,8 +341,8 @@ extension RepositoryImpl: Repository {
             .handleError()
     }
     
-    func getDiaryNotes() -> Single<[DiaryNoteItem]> {
-        return self.api.send(request: ApiRequest(serviceRequest: .getDiaryNotes))
+    func getDiaryNotes(diaryNote: DiaryNoteItem?, fromChart: Bool) -> Single<[DiaryNoteItem]> {
+        return self.api.send(request: ApiRequest(serviceRequest: .getDiaryNotes(diaryNote: diaryNote, fromChart: fromChart)))
             .handleError()
     }
     
@@ -356,13 +356,16 @@ extension RepositoryImpl: Repository {
             .handleError()
     }
     
-    func sendDiaryNoteText(diaryNote: DiaryNoteItem) -> Single<()> {
-        return self.api.send(request: ApiRequest(serviceRequest: .sendDiaryNoteText(diaryItem: diaryNote)))
+    func sendDiaryNoteText(diaryNote: DiaryNoteItem, fromChart: Bool) -> Single<()> {
+        return self.api.send(request: ApiRequest(serviceRequest: .sendDiaryNoteText(diaryItem: diaryNote, fromChart: fromChart)))
             .handleError()
     }
     
-    func sendDiaryNoteAudio(diaryNoteRef: String, file: DiaryNoteFile) -> Single<()> {
-        return self.api.send(request: ApiRequest(serviceRequest: .sendDiaryNoteAudio(noteId: diaryNoteRef, attachment: file)))
+    func sendDiaryNoteAudio(diaryNoteRef: DiaryNoteItem, file: DiaryNoteFile, fromChart: Bool) -> Single<()> {
+        return self.api.send(request:ApiRequest(serviceRequest:
+                .sendDiaryNoteAudio(noteId: diaryNoteRef,
+                                    attachment: file,
+                                    fromChart: fromChart)))
             .handleError()
     }
     

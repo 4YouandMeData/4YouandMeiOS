@@ -19,6 +19,11 @@ enum DiaryNoteItemType: String, Codable {
     case audio
 }
 
+struct DiaryNoteable: Codable {
+    let id: String
+    let type: String
+}
+
 struct DiaryNoteItem: Codable {
     let id: String
     let type: String
@@ -38,12 +43,19 @@ struct DiaryNoteItem: Codable {
     @NilIfEmptyString
     var urlString: String?
     
+    @NilIfEmptyString
+    var interval: String?
+    
+    @FailableCodable
+    var diaryNoteable: DiaryNoteable?
+    
     init (id: String,
           type: String,
           diaryNoteId: Date,
           diaryNoteType: DiaryNoteItemType,
           title: String?,
-          body: String?) {
+          body: String?,
+          interval: String?) {
         
         self.id = id
         self.type = type
@@ -51,6 +63,19 @@ struct DiaryNoteItem: Codable {
         self.diaryNoteType = diaryNoteType
         self.title = title
         self.body = body
+    }
+    
+    init(diaryNoteId: String?,
+         body: String?,
+         interval: String?,
+         diaryNoteable: DiaryNoteable?) {
+        
+        self.id = UUID().uuidString
+        self.type = "diary_note"
+        self.diaryNoteId = diaryNoteId?.date(withFormat: dateDataPointFormat) ?? Date()
+        self.body = body
+        self.interval = interval
+        self.diaryNoteable = diaryNoteable
     }
 }
 
@@ -62,10 +87,10 @@ extension DiaryNoteItem: JSONAPIMappable {
         case id
         case type
         case diaryNoteId = "datetime_ref"
-        case diaryNoteType = "diary_notable_type"
         case title
         case body
         case urlString = "attachment"
+        case diaryNoteable = "diary_noteable"
     }
     
     init(from decoder: Decoder) throws {
@@ -77,6 +102,7 @@ extension DiaryNoteItem: JSONAPIMappable {
         // Decode optional fields
         self.title = try container.decodeIfPresent(String.self, forKey: .title)
         self.body = try container.decodeIfPresent(String.self, forKey: .body)
+        self.diaryNoteable = try? container.decodeIfPresent(DiaryNoteable.self, forKey: .diaryNoteable)
         
         // Check for attachment
         if let attachmentContainer = try? container.decodeIfPresent([String: String].self, forKey: .urlString),
@@ -96,9 +122,9 @@ extension DiaryNoteItem: JSONAPIMappable {
         try container.encode(formattedDate, forKey: .diaryNoteId)
         
         // Encode optional fields
-        try container.encodeIfPresent(diaryNoteType?.rawValue, forKey: .diaryNoteType)
         try container.encodeIfPresent(title, forKey: .title)
         try container.encodeIfPresent(body, forKey: .body)
         try container.encodeIfPresent(urlString, forKey: .urlString)
+        try container.encodeIfPresent(diaryNoteable, forKey: .diaryNoteable)
     }
 }

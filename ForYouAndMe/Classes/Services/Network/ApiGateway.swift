@@ -55,12 +55,12 @@ enum DefaultService {
     case sendTaskResultData(taskId: String, resultData: TaskNetworkResultData)
     case sendTaskResultFile(taskId: String, resultFile: TaskNetworkResultFile)
     case delayTask(taskId: String)
-    case getDiaryNotes
+    case getDiaryNotes(diaryNote: DiaryNoteItem?, fromChart: Bool)
     case getDiaryNoteText(noteId: String)
     case getDiaryNoteAudio(noteId: String)
-    case sendDiaryNoteText(diaryItem: DiaryNoteItem)
+    case sendDiaryNoteText(diaryItem: DiaryNoteItem, fromChart: Bool)
     case updateDiaryNoteText(diaryItem: DiaryNoteItem)
-    case sendDiaryNoteAudio(noteId: String, attachment: DiaryNoteFile)
+    case sendDiaryNoteAudio(noteId: DiaryNoteItem, attachment: DiaryNoteFile, fromChart: Bool)
     case deleteDiaryNote(noteId: String)
     // User
     case getUser

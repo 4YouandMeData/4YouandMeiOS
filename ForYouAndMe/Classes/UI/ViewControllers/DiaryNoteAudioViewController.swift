@@ -171,13 +171,18 @@ class DiaryNoteAudioViewController: UIViewController {
     private var storage: CacheService
     private let diaryNoteItem: DiaryNoteItem?
     private let maxCharacters: Int = 500
+    private let isEditMode: Bool
+    private let isFromChart: Bool
     
-    init(withDiaryNote diaryNote: DiaryNoteItem?) {
+    init(withDiaryNote diaryNote: DiaryNoteItem?,
+         isEditMode: Bool,
+         isFromChart: Bool) {
         self.navigator = Services.shared.navigator
         self.repository = Services.shared.repository
         self.storage = Services.shared.storageServices
         self.analytics = Services.shared.analytics
-        
+        self.isEditMode = isEditMode
+        self.isFromChart = isFromChart
         self.diaryNoteItem = diaryNote
         super.init(nibName: nil, bundle: nil)
     }
@@ -227,13 +232,19 @@ class DiaryNoteAudioViewController: UIViewController {
     
     @objc private func saveButtonPressed() {
         AppNavigator.pushProgressHUD()
-        guard let audioUrl = self.audioFileURL, let audioData = try? Data.init(contentsOf: audioUrl) else {
+        guard let audioUrl = self.audioFileURL,
+              let audioData = try? Data.init(contentsOf: audioUrl) else {
             assertionFailure("Couldn't transform result data to expected network representation")
             return
         }
+         
         let audioResultFile = DiaryNoteFile(data: audioData, fileExtension: .m4a)
-        let dateTime = Date().string(withFormat: dateTimeFormat)
-        self.repository.sendDiaryNoteAudio(diaryNoteRef: dateTime, file: audioResultFile)
+        self.repository.sendDiaryNoteAudio(diaryNoteRef: diaryNoteItem ?? DiaryNoteItem(diaryNoteId: nil,
+                                                                                        body: nil,
+                                                                                        interval: nil,
+                                                                                        diaryNoteable: nil),
+                                           file: audioResultFile,
+                                           fromChart: false)
             .do(onDispose: { AppNavigator.popProgressHUD() })
             .subscribe(onSuccess: { [weak self] in
                 guard let self = self else { return }
@@ -273,7 +284,7 @@ class DiaryNoteAudioViewController: UIViewController {
     private func setupUI() {
         
         // Diary Note is present and I want listen recorded audio
-        if self.diaryNoteItem != nil {
+        if isEditMode {
             
             // StackView
             let containerStackView = UIStackView.create(withAxis: .vertical)

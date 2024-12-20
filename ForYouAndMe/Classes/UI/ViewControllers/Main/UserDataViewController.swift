@@ -193,6 +193,24 @@ class UserDataViewController: UIViewController, WKNavigationDelegate, WKScriptMe
         guard let dataPoint = eventData["datetime_ref"] as? String else {
             return
         }
-        self.navigator.presentDiaryNotes(dataPointId: dataPoint, presenter: self)
+        guard let interval = eventData["interval"] as? String else {
+            return
+        }
+        guard let diaryNoteableType = eventData["diary_noteable_type"] as? String else {
+            return
+        }
+        guard let diaryNoteableId = eventData["diary_noteable_id"] as? String else {
+            return
+        }
+        
+        let diaryNoteable = DiaryNoteable(id: diaryNoteableId,
+                                          type: diaryNoteableType)
+        
+        let diaryNote = DiaryNoteItem(diaryNoteId: dataPoint,
+                                      body: "",
+                                      interval: interval,
+                                      diaryNoteable: diaryNoteable)
+        
+        self.navigator.presentDiaryNotes(diaryNote: diaryNote, presenter: self, isFromChart: true)
     }
 }

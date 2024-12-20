@@ -59,17 +59,6 @@ class DiaryNoteTextViewController: UIViewController {
         return containerView
     }()
     
-//    public lazy var textField: UITextField = {
-//        let textField = UITextField()
-//        textField.textColor = self.standardColor
-//        textField.tintColor = self.standardColor
-//        textField.font = FontPalette.fontStyleData(forStyle: .paragraph).font
-//        textField.delegate = self
-//        textField.borderStyle = .roundedRect
-//        textField.placeholder = "Add title here"
-//        return textField
-//    }()
-    
     private lazy var textView: UITextView = {
         
         // Text View
@@ -129,16 +118,21 @@ class DiaryNoteTextViewController: UIViewController {
     }()
     
     private var storage: CacheService
-    private let dataPointID: String?
     private var diaryNote: DiaryNoteItem?
     private let maxCharacters: Int = 500
+    private let isEditMode: Bool
+    private let isFromChart: Bool
     
-    init(withDataPointID dataPointID: String?) {
+    init(withDataPoint dataPoint: DiaryNoteItem?,
+         isEditMode: Bool,
+         isFromChart: Bool) {
         self.navigator = Services.shared.navigator
         self.repository = Services.shared.repository
         self.storage = Services.shared.storageServices
         self.analytics = Services.shared.analytics
-        self.dataPointID = dataPointID
+        self.diaryNote = dataPoint
+        self.isEditMode = isEditMode
+        self.isFromChart = isFromChart
         
         super.init(nibName: nil, bundle: nil)
     }
@@ -164,15 +158,6 @@ class DiaryNoteTextViewController: UIViewController {
         
         let containerView = UIStackView.create(withAxis: .vertical, spacing: 16.0)
         self.view.addSubview(containerView)
-//        // TextField
-//        let containerTextField = UIView()
-//        containerTextField.addSubview(self.textField)
-//        containerView.addArrangedSubview(containerTextField)
-//        self.textField.autoSetDimension(.height, toSize: 44.0)
-//        self.textField.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets(top: 0,
-//                                                                      left: 12.0,
-//                                                                      bottom: 0,
-//                                                                      right: 12.0))
         
         let containerTextView = UIView()
         containerTextView.addSubview(self.textView)
@@ -234,35 +219,50 @@ class DiaryNoteTextViewController: UIViewController {
     }
     
     @objc private func confirmButtonPressed() {
-        if let diaryNote, self.diaryNote != nil {
-            self.repository.updateDiaryNoteText(diaryNote: diaryNote)
-                .addProgress()
-                .subscribe(onSuccess: { [weak self] in
-                    guard let self = self else { return }
-                    self.closeButtonPressed()
-                }, onError: { [weak self] error in
-                    guard let self = self else { return }
-                    self.navigator.handleError(error: error, presenter: self)
-                }).disposed(by: self.disposeBag)
-            self.pageState.accept(.read)
+        
+        if isEditMode {
+            if let diaryNote, self.diaryNote != nil {
+                self.repository.updateDiaryNoteText(diaryNote: diaryNote)
+                    .addProgress()
+                    .subscribe(onSuccess: { [weak self] in
+                        guard let self = self else { return }
+                        self.closeButtonPressed()
+                    }, onError: { [weak self] error in
+                        guard let self = self else { return }
+                        self.navigator.handleError(error: error, presenter: self)
+                    }).disposed(by: self.disposeBag)
+                self.pageState.accept(.read)
+            }
+                
         } else {
-            let newDiaryNote = DiaryNoteItem.init(id: "0",
-                                                  type: "diary_note",
-                                                  diaryNoteId: self.dataPointID?.date(withFormat: dateTimeFormat) ?? Date(),
-                                                  diaryNoteType: .text,
-                                                  title: "",
-                                                  body: self.textView.text)
+            if let diaryNote, self.diaryNote?.diaryNoteable != nil {
+                self.repository.sendDiaryNoteText(diaryNote: diaryNote, fromChart: true)
+                    .addProgress()
+                    .subscribe(onSuccess: { [weak self] in
+                        guard let self = self else { return }
+                        self.closeButtonPressed()
+                    }, onError: { [weak self] error in
+                        guard let self = self else { return }
+                        self.navigator.handleError(error: error, presenter: self)
+                    }).disposed(by: self.disposeBag)
+                self.pageState.accept(.read)
+            } else {
+                let newDiaryNote = DiaryNoteItem(diaryNoteId: self.diaryNote?.diaryNoteId.string(withFormat: dateTimeFormat),
+                                                 body: self.textView.text,
+                                                 interval: nil,
+                                                 diaryNoteable: nil)
 
-            self.repository.sendDiaryNoteText(diaryNote: newDiaryNote)
-                .addProgress()
-                .subscribe(onSuccess: { [weak self] in
-                    guard let self = self else { return }
-                    self.closeButtonPressed()
-                }, onError: { [weak self] error in
-                    guard let self = self else { return }
-                    self.navigator.handleError(error: error, presenter: self)
-                }).disposed(by: self.disposeBag)
-            self.pageState.accept(.read)
+                self.repository.sendDiaryNoteText(diaryNote: newDiaryNote, fromChart: false)
+                    .addProgress()
+                    .subscribe(onSuccess: { [weak self] in
+                        guard let self = self else { return }
+                        self.closeButtonPressed()
+                    }, onError: { [weak self] error in
+                        guard let self = self else { return }
+                        self.navigator.handleError(error: error, presenter: self)
+                    }).disposed(by: self.disposeBag)
+                self.pageState.accept(.read)
+            }
         }
     }
     
@@ -285,7 +285,6 @@ class DiaryNoteTextViewController: UIViewController {
     }
 
     private func updateTextFields(pageState: PageState) {
-//        let textField = self.textField
         let textView = self.textView
         self.placeholderLabel.isHidden = !textView.text.isEmpty
         switch pageState {
@@ -293,31 +292,26 @@ class DiaryNoteTextViewController: UIViewController {
             textView.isEditable = true
             textView.isUserInteractionEnabled = true
             textView.textColor = self.standardColor
-//            textField.isUserInteractionEnabled = true
-//            textField.textColor = self.standardColor
         case .read:
             textView.isEditable = false
             textView.isUserInteractionEnabled = false
             textView.textColor = self.inactiveColor
-//            textField.isUserInteractionEnabled = false
-//            textField.textColor = self.inactiveColor
         }
     }
     
     private func loadNote() {
         
-        guard let dataPointID = self.dataPointID else {
+        guard let dataPoint = self.diaryNote, ((self.diaryNote?.diaryNoteable) == nil) else {
             self.pageState.accept(.edit)
             return
         }
         
-        self.repository.getDiaryNoteText(noteID: dataPointID)
+        self.repository.getDiaryNoteText(noteID: dataPoint.id)
             .addProgress()
             .subscribe(onSuccess: { [weak self] diaryNoteText in
                 guard let self = self else { return }
                 self.diaryNote = diaryNoteText
                 self.textView.text = diaryNoteText.body
-//                self.textField.text = diaryNoteText.title
                 self.updateTextFields(pageState: self.pageState.value)
             }, onError: { [weak self] error in
                 guard let self = self else { return }
@@ -345,20 +339,3 @@ extension DiaryNoteTextViewController: UITextViewDelegate {
         }
     }
 }
-
-// extension DiaryNoteTextViewController: UITextFieldDelegate {
-//
-//    func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
-//        let newString = textField.getNewString(forRange: range, replacementString: string)
-//        let returnKey = !(newString.count > self.maxCharacters)
-//        if returnKey {
-//            self.diaryNote?.title = newString
-//        }
-//        return returnKey
-//
-//    }
-//    
-//    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
-//        self.view.endEditing(true)
-//    }
-// }

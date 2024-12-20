@@ -9,6 +9,7 @@
 import Foundation
 
 public let dateTimeFormat = "yyyy-MM-dd'T'HH:mm:ss'Z'"
+public let dateDataPointFormat = "yyyy-MM-dd HH:mm"
 public let dateFormat = "yyyy-MM-dd"
 public let timeFormat = "hh:mm a"
 public let utc = "UTC"

@@ -94,16 +94,19 @@ class DiaryNotesViewController: UIViewController {
     
     private var storage: CacheService
     private var dataPointID: String?
+    private var diaryNote: DiaryNoteItem?
     private var diaryNoteItems: [DiaryNoteItem]
     private var sections: [DiaryNoteSection] = []
+    private let isFromChart: Bool
     
-    init(withDataPointID dataPointID: String?) {
+    init(withDataPoint dataPoint: DiaryNoteItem?, isFromChart: Bool) {
         self.navigator = Services.shared.navigator
         self.repository = Services.shared.repository
         self.storage = Services.shared.storageServices
         self.analytics = Services.shared.analytics
-        self.dataPointID = dataPointID
-        
+        self.diaryNote = dataPoint
+        self.dataPointID = dataPoint?.diaryNoteId.string(withFormat: dateTimeFormat)
+        self.isFromChart = isFromChart
         self.diaryNoteItems = []
         // Crea un array di oggetti DiaryNoteItem dai dati di test
         super.init(nibName: nil, bundle: nil)
@@ -223,7 +226,8 @@ class DiaryNotesViewController: UIViewController {
     
     private func loadItems() {
         
-        self.repository.getDiaryNotes()
+        self.repository.getDiaryNotes(diaryNote: self.diaryNote,
+                                      fromChart: self.isFromChart)
                         .addProgress()
                         .subscribe(onSuccess: { [weak self] diaryNote in
                             guard let self = self else { return }
@@ -233,17 +237,22 @@ class DiaryNotesViewController: UIViewController {
 
                         }, onError: { [weak self] error in
                             guard let self = self else { return }
-//                            guard let delegate = self.delegate else { return }
                             self.navigator.handleError(error: error, presenter: self)
                         }).disposed(by: self.disposeBag)
     }
     
     @objc private func createAudioDiaryNote() {
-        self.navigator.openDiaryNoteAudio(diaryNote: nil, presenter: self, isModal: false)
+        self.navigator.openDiaryNoteAudio(diaryNote: diaryNote,
+                                          presenter: self,
+                                          isEditMode: false,
+                                          isFromChart: self.isFromChart)
     }
     
     @objc private func createTextDiaryNote() {
-        self.navigator.openDiaryNoteText(diaryNoteId: nil, presenter: self, isModal: false)
+        self.navigator.openDiaryNoteText(diaryNote: diaryNote,
+                                         presenter: self,
+                                         isEditMode: false,
+                                         isFromChart: self.isFromChart)
     }
 }
 
@@ -270,8 +279,10 @@ extension DiaryNotesViewController: UITableViewDataSource {
                 }
                 cell.display(data: diaryNote, buttonPressedCallback: { [weak self] in
                     guard let self = self else { return }
-                    self.navigator.openDiaryNoteText(diaryNoteId: diaryNote.id,
-                                                     presenter: self, isModal: false)
+                    self.navigator.openDiaryNoteText(diaryNote: diaryNote,
+                                                     presenter: self,
+                                                     isEditMode: true,
+                                                     isFromChart: isFromChart)
                 })
                 return cell
                 
@@ -283,7 +294,10 @@ extension DiaryNotesViewController: UITableViewDataSource {
                 }
                 cell.display(data: diaryNote, buttonPressedCallback: { [weak self] in
                     guard let self = self else { return }
-                    self.navigator.openDiaryNoteAudio(diaryNote: diaryNote, presenter: self, isModal: false)
+                    self.navigator.openDiaryNoteAudio(diaryNote: diaryNote,
+                                                      presenter: self,
+                                                      isEditMode: true,
+                                                      isFromChart: self.isFromChart)
                 })
                 return cell
                 

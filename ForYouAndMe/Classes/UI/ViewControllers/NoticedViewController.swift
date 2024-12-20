@@ -106,7 +106,7 @@ class NoticedViewController: UIViewController {
                                             style: .shadowStyle,
                                             gestureCallback: { [weak self] in
             guard let self = self else { return }
-            self.navigator.openDiaryNoteText(diaryNoteId: nil, presenter: self, isModal: true)
+            self.navigator.openDiaryNoteText(diaryNote: nil, presenter: self, isEditMode: false, isFromChart: false)
         })
         self.scrollStackView.stackView.addArrangedSubview(writePage)
         
@@ -118,7 +118,7 @@ class NoticedViewController: UIViewController {
                                             style: .shadowStyle,
                                             gestureCallback: { [weak self] in
             guard let self = self else { return }
-            self.navigator.openDiaryNoteAudio(diaryNote: nil, presenter: self, isModal: true)
+            self.navigator.openDiaryNoteAudio(diaryNote: nil, presenter: self, isEditMode: false, isFromChart: false)
         })
         self.scrollStackView.stackView.addArrangedSubview(audioPage)
     

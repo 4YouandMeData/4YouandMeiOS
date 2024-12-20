@@ -404,7 +404,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             return "v1/diary_notes"
         case .deleteDiaryNote(let diaryNoteId):
             return "v1/diary_notes/\(diaryNoteId)"
-        case .sendDiaryNoteAudio(_, _):
+        case .sendDiaryNoteAudio(_, _, _):
             return "v1/diary_notes"
         case .updateDiaryNoteText(let diaryNoteId):
             return "v1/diary_notes/\(diaryNoteId.id)"
@@ -708,26 +708,49 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             dataParams["start_at"] = dateString
             dataParams["custom_data"] = [String: Any]()
             return .requestParameters(parameters: ["user_study_phase": dataParams], encoding: JSONEncoding.default)
-        case .getDiaryNotes:
+        case .getDiaryNotes(let diaryNote, let fromChart):
             var params: [String: Any] = [:]
-                    params["q"] = [
-                        ["sorts": "datetime_ref desc"]
-                    ]
-            let encoding = URLEncoding(destination: .queryString, arrayEncoding: .noBrackets, boolEncoding: .literal)
+                var qDict: [String: Any] = [
+                    "sorts": "datetime_ref desc"
+                ]
+                
+                // Solo se fromChart è true inserisco i parametri in_chart_interval
+                if fromChart {
+                    if let dateString = diaryNote?.diaryNoteId.string(withFormat: dateTimeFormat) {
+                        qDict["in_chart_interval"] =  [dateString, diaryNote?.interval]
+                    }
+                }
+
+            params["q"] = qDict
+            let encoding = URLEncoding(destination: .queryString, arrayEncoding: .brackets, boolEncoding: .literal)
             return .requestParameters(parameters: params, encoding: encoding)
         case .updateDiaryNoteText(let diaryNote):
             var dataParams: [String: Any] = [:]
             dataParams["title"] = diaryNote.title
             dataParams["body"] = diaryNote.body
             return .requestParameters(parameters: ["diary_note": dataParams], encoding: JSONEncoding.default)
-        case .sendDiaryNoteText(let diaryItem):
-            return .requestJSONEncodable(diaryItem)
-        case .sendDiaryNoteAudio(let diaryNoteId, _):
+        case .sendDiaryNoteText(let diaryNote, let fromChart):
+            if fromChart {
+                var dataParams: [String: Any] = [:]
+                dataParams["body"] = diaryNote.body
+                dataParams["datetime_ref"] = diaryNote.diaryNoteId.string(withFormat: dateTimeFormat)
+                dataParams["diary_noteable_type"] = diaryNote.diaryNoteable?.type
+                dataParams["diary_noteable_id"] = diaryNote.diaryNoteable?.id
+                dataParams["interval"] = diaryNote.interval
+                return .requestParameters(parameters: ["diary_note": dataParams], encoding: JSONEncoding.default)
+            }
+            
+            return .requestJSONEncodable(diaryNote)
+        case .sendDiaryNoteAudio(let diaryNote, _, _):
             // Add parameters
             var multipartBodyReq = self.multipartBody
             
             let parameters: [String: String] = [
-                "diary_note[datetime_ref]": diaryNoteId
+                "diary_note[body]": diaryNote.body ?? "",
+                "diary_note[datetime_ref]": diaryNote.diaryNoteId.string(withFormat: dateTimeFormat),
+                "diary_note[diary_noteable_type]": diaryNote.diaryNoteable?.type ?? "",
+                "diary_note[diary_noteable_id]": diaryNote.diaryNoteable?.id ?? "",
+                "diary_note[interval]": diaryNote.interval ?? ""
             ]
             
             for (key, value) in parameters {
@@ -748,7 +771,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
                                                       fileName: "VideoDiary.\(file.fileExtension.name)",
                                                       mimeType: file.fileExtension.mimeType)
             return [imageDataProvider]
-        case .sendDiaryNoteAudio(_, let file):
+        case .sendDiaryNoteAudio(_, let file, let fromChart):
             let imageDataProvider = MultipartFormData(provider: MultipartFormData.FormDataProvider.data(file.data),
                                                       name: "diary_note[attachment]",
                                                       fileName: "AudioNote.\(file.fileExtension.name)",
