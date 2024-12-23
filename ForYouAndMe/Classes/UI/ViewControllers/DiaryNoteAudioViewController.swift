@@ -341,12 +341,12 @@ class DiaryNoteAudioViewController: UIViewController {
             
             let containerTextView = UIView()
             containerTextView.addSubview(self.textView)
+            self.textView.text = self.diaryNoteItem?.body
             
             self.textView.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets(top: 0,
                                                                           left: 12.0,
                                                                           bottom: 0,
                                                                           right: 12.0))
-            self.textView.isHidden = true
             // Limit label
             containerTextView.addSubview(self.limitLabel)
             self.limitLabel.textColor = .lightGray
@@ -355,7 +355,6 @@ class DiaryNoteAudioViewController: UIViewController {
             self.limitLabel.autoPinEdge(.left, to: .left, of: self.textView)
             self.limitLabel.text = "\(self.textView.text.count) / \(self.maxCharacters)"
             containerStackView.addArrangedSubview(containerTextView)
-            self.limitLabel.isHidden = true
   
             // Placeholder label
             self.textView.addSubview(self.placeholderLabel)

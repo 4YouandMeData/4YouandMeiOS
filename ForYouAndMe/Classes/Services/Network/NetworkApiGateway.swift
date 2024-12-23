@@ -771,7 +771,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
                                                       fileName: "VideoDiary.\(file.fileExtension.name)",
                                                       mimeType: file.fileExtension.mimeType)
             return [imageDataProvider]
-        case .sendDiaryNoteAudio(_, let file, let fromChart):
+        case .sendDiaryNoteAudio(_, let file, _):
             let imageDataProvider = MultipartFormData(provider: MultipartFormData.FormDataProvider.data(file.data),
                                                       name: "diary_note[attachment]",
                                                       fileName: "AudioNote.\(file.fileExtension.name)",
