@@ -233,6 +233,11 @@ class DiaryNoteAudioViewController: UIViewController {
     
     // MARK: - Actions
     
+    @objc private func editButtonPressed() {
+        self.pageState.accept(.edit)
+        self.textView.becomeFirstResponder()
+    }
+    
     @objc private func closeButtonPressed() {
         self.genericCloseButtonPressed(completion: {
             self.navigator.switchToDiaryTab(presenter: self)
@@ -271,7 +276,8 @@ class DiaryNoteAudioViewController: UIViewController {
     }
     
     @objc private func updateButtonPressed() {
-        if let diaryNote = self.diaryNoteItem {
+        if var diaryNote = self.diaryNoteItem {
+            diaryNote.body = self.textView.text
             self.repository.updateDiaryNoteText(diaryNote: diaryNote)
                 .addProgress()
                 .subscribe(onSuccess: { [weak self] in
@@ -368,6 +374,14 @@ class DiaryNoteAudioViewController: UIViewController {
             self.limitLabel.autoPinEdge(.left, to: .left, of: self.textView)
             self.limitLabel.text = "\(self.textView.text.count) / \(self.maxCharacters)"
             containerStackView.addArrangedSubview(containerTextView)
+            
+            let editButton = UIButton()
+            editButton.setImage(ImagePalette.image(withName: .editAudioNote), for: .normal)
+            editButton.addTarget(self, action: #selector(self.editButtonPressed), for: .touchUpInside)
+            containerTextView.addSubview(editButton)
+            editButton.autoPinEdge(.bottom, to: .bottom, of: self.textView, withOffset: -8.0)
+            editButton.autoPinEdge(.right, to: .right, of: self.textView, withOffset: -8.0)
+            editButton.autoSetDimension(.width, toSize: 24.0)
   
             // Placeholder label
             self.textView.addSubview(self.placeholderLabel)
