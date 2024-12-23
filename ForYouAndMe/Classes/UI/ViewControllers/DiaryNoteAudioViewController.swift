@@ -20,6 +20,7 @@ class DiaryNoteAudioViewController: UIViewController {
     private let repository: Repository
     private let analytics: AnalyticsService
     private let audioPlayerManager = AudioPlayerManager()
+    private let audioAssetManager = AudioAssetManager()
     private var audioFileURL: URL?
     
     private let disposeBag = DisposeBag()
@@ -318,10 +319,16 @@ class DiaryNoteAudioViewController: UIViewController {
             self.timeLabel.autoAlignAxis(toSuperviewAxis: .vertical)
             self.timeLabel.autoAlignAxis(toSuperviewAxis: .horizontal)
             
-            self.timeLabel.setTime(currentTime: Int(self.recordDurationTime),
-                                   totalTime: Int(totalTime),
-                                   attributedTextStyle: self.totalTimeLabelAttributedTextStyle,
-                                   currentTimeAttributedTextStyle: self.currentTimeLabelAttributedTextStyle)
+            if let urlString = diaryNoteItem?.urlString, let urlAudio = URL(string: urlString) {
+                audioAssetManager.fetchAudioDuration(from: urlAudio) { duration in
+                    self.recordDurationTime = duration ?? 0
+                    self.timeLabel.setTime(currentTime: 0,
+                                           totalTime: Int(self.recordDurationTime),
+                                           attributedTextStyle: self.totalTimeLabelAttributedTextStyle,
+                                           currentTimeAttributedTextStyle: self.currentTimeLabelAttributedTextStyle)
+                }
+            }
+            
             containerStackView.addArrangedSubview(timeLabelContainerView)
             
             containerStackView.addBlankSpace(space: 60)
@@ -384,6 +391,7 @@ class DiaryNoteAudioViewController: UIViewController {
             self.scrollView.autoPinEdge(.bottom, to: .top, of: self.footerView)
             
         } else {
+            // I want record a new audio
             // StackView
             let containerStackView = UIStackView.create(withAxis: .vertical)
             self.scrollView.addSubview(containerStackView)

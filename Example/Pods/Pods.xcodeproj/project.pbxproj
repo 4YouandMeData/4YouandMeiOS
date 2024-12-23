@@ -206,6 +206,7 @@
 		0D657B042D0F010F00582238 /* UIImage+Shadow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D657B032D0F010300582238 /* UIImage+Shadow.swift */; };
 		0D6C7EA1B12048E35C3B01467994A5A1 /* ORKInstructionStepViewController.h in Headers */ = {isa = PBXBuildFile; fileRef = 3269291E3C4C6FD0EAFCAE7500A42AB0 /* ORKInstructionStepViewController.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		0D890CA061A901A7494C9739E344522D /* FIRCLSMachOSlice.h in Headers */ = {isa = PBXBuildFile; fileRef = E63CE2345C2F11417366A7BDDBC42062 /* FIRCLSMachOSlice.h */; settings = {ATTRIBUTES = (Project, ); }; };
+		0D8D9CDF2D195567008D860B /* AudioAssetManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D8D9CDE2D195560008D860B /* AudioAssetManager.swift */; };
 		0D91BE9B8D0D3DB1E6C82236F2F45BC9 /* PhoneNumberFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0E175E5CBCB4CFF2F98628C9444B4A9 /* PhoneNumberFormatter.swift */; };
 		0D9A3AC2EFAFE1D691CF09ECC1A99AE0 /* TestGetUserDataAggregationYear.json in Resources */ = {isa = PBXBuildFile; fileRef = 49A0E18383F68821BC8A23BC3CABEFFD /* TestGetUserDataAggregationYear.json */; };
 		0DC117113DF6A4542171993A78D09604 /* Video+AlertError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84D0DB081743F341C9BF575E9B3C3CD2 /* Video+AlertError.swift */; };
@@ -4051,6 +4052,7 @@
 		0D631E9908483F9525A6B3F36F16CC61 /* Quick.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Quick.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		0D657B032D0F010300582238 /* UIImage+Shadow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIImage+Shadow.swift"; sourceTree = "<group>"; };
 		0D8D852BE24021BD8D0400135128E88A /* Answer.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Answer.swift; sourceTree = "<group>"; };
+		0D8D9CDE2D195560008D860B /* AudioAssetManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioAssetManager.swift; sourceTree = "<group>"; };
 		0D8E56D22CC8475FCB425CD61141A75F /* FIRInstallationsItem.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = FIRInstallationsItem.m; path = FirebaseInstallations/Source/Library/FIRInstallationsItem.m; sourceTree = "<group>"; };
 		0DAFC1299D9093491FB52C01F0A88855 /* Nimble-umbrella.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = "Nimble-umbrella.h"; sourceTree = "<group>"; };
 		0DDCDBC9D3689D5B17002365CF955F29 /* ToArray.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ToArray.swift; path = RxSwift/Observables/ToArray.swift; sourceTree = "<group>"; };
@@ -8781,6 +8783,7 @@
 		3FFA7A4198F4A0FDB943457BE015EA53 /* Helpers */ = {
 			isa = PBXGroup;
 			children = (
+				0D8D9CDE2D195560008D860B /* AudioAssetManager.swift */,
 				D858BC317398F1A816424B3D88990199 /* AudioPlayerManager.swift */,
 				C4312195312B32D6507B94317FFA1215 /* FeedListManager.swift */,
 				8DE6596D18DEBB5EBF82247CAF6427AE /* OrientationManager.swift */,
@@ -14828,6 +14831,7 @@
 				946A24F4349A95EB9168728407799EE1 /* ImagePalette.swift in Sources */,
 				9FB019F36241468A17477ABA89B08C4C /* InfoDetailHeaderView.swift in Sources */,
 				3321AE0ACA303A9080F175BFCDB41013 /* InfoDetailViewController.swift in Sources */,
+				0D8D9CDF2D195567008D860B /* AudioAssetManager.swift in Sources */,
 				E27A9017892E110687BE1095D59DFC54 /* InfoPageListViewController.swift in Sources */,
 				3B0C98E0F78DB89346A45A710A6E089B /* InfoPageViewController.swift in Sources */,
 				7C1969F6A8F012330002B8F62D2ADBAA /* InformedConsentSection.swift in Sources */,

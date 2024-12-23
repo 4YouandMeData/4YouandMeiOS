@@ -39,6 +39,26 @@ extension UILabel {
         self.attributedText = attributedText
     }
     
+    func setShortTime(duration: Int,
+                      attributedTextStyle: AttributedTextStyle) {
+        
+        let currentSeconds = duration % 60
+        let currentMinutes = (duration / 60) % 60
+        let currentHours = (duration / 3600)
+        
+        var currentTimeText = String(format: "%0.2d:%0.2d", currentMinutes, currentSeconds)
+        
+        if currentHours > 0 {
+            currentTimeText = String(format: "%0.1d:", currentHours) + currentTimeText
+        }
+        
+        let currentTimeAttributedTextStyle = attributedTextStyle
+        let currentTimeAttributedString = NSAttributedString.create(withText: currentTimeText,
+                                                                    attributedTextStyle: currentTimeAttributedTextStyle)
+        
+        self.attributedText = currentTimeAttributedString
+    }
+    
     func setRecordTime(currentTime: Int,
                        attributedTextStyle: AttributedTextStyle,
                        currentTimeAttributedTextStyle: AttributedTextStyle? = nil) {

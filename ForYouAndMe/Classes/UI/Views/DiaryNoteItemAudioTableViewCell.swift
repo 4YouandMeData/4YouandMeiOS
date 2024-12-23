@@ -98,10 +98,16 @@ class DiaryNoteItemAudioTableViewCell: UITableViewCell {
     
     public func display(data: DiaryNoteItem, buttonPressedCallback: @escaping NotificationCallback) {
         self.buttonPressedCallback = buttonPressedCallback
-        
         self.updateNoteTitle(data.title ?? "Audio Recorded")
-        
         noteImageView.image = ImagePalette.image(withName: .audioNoteListImage)
+        
+    }
+    
+    public func setTimeLabelFromDuration(_ duration: TimeInterval) {
+        self.timeLabel.setShortTime(duration: Int(duration),
+                                    attributedTextStyle: AttributedTextStyle(fontStyle: .header3,
+                                                                             colorType: .primaryText,
+                                                                             textAlignment: .left))
     }
     
     // MARK: - Actions

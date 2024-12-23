@@ -18,6 +18,7 @@ class DiaryNotesViewController: UIViewController {
     private let navigator: AppNavigator
     private let repository: Repository
     private let analytics: AnalyticsService
+    private let audioAssetManager: AudioAssetManager
     
     private lazy var diaryNoteEmptyView = DiaryNoteEmptyView(withTopOffset: 8.0)
 
@@ -108,6 +109,7 @@ class DiaryNotesViewController: UIViewController {
         self.dataPointID = dataPoint?.diaryNoteId.string(withFormat: dateTimeFormat)
         self.isFromChart = isFromChart
         self.diaryNoteItems = []
+        self.audioAssetManager = AudioAssetManager()
         // Crea un array di oggetti DiaryNoteItem dai dati di test
         super.init(nibName: nil, bundle: nil)
         
@@ -284,6 +286,7 @@ extension DiaryNotesViewController: UITableViewDataSource {
                                                      isEditMode: true,
                                                      isFromChart: isFromChart)
                 })
+                
                 return cell
                 
             case .audio:
@@ -299,6 +302,15 @@ extension DiaryNotesViewController: UITableViewDataSource {
                                                       isEditMode: true,
                                                       isFromChart: self.isFromChart)
                 })
+                
+                if let audioUrl = diaryNote.urlString {
+                    audioAssetManager.fetchAudioDuration(from: URL(string: audioUrl)!) { duration in
+                                    if let duration = duration {
+                                        cell.setTimeLabelFromDuration(duration)
+                                    }
+                                }
+                }
+                
                 return cell
                 
             }
