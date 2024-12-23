@@ -19,7 +19,7 @@ class DiaryNoteAudioViewController: UIViewController {
     fileprivate enum PageState { case read, edit }
     public fileprivate(set) var standardColor: UIColor = ColorPalette.color(withType: .primaryText)
     public fileprivate(set) var errorColor: UIColor = ColorPalette.color(withType: .primaryText)
-    public fileprivate(set) var inactiveColor: UIColor = ColorPalette.color(withType: .fourthText)
+    public fileprivate(set) var inactiveColor: UIColor = ColorPalette.color(withType: .inactive)
     
     private let navigator: AppNavigator
     private let repository: Repository
