@@ -46,6 +46,9 @@ struct DiaryNoteItem: Codable {
     @NilIfEmptyString
     var interval: String?
     
+    @NilIfEmptyString
+    var transcribeStatus: String?
+    
     @FailableCodable
     var diaryNoteable: DiaryNoteable?
     
@@ -91,6 +94,7 @@ extension DiaryNoteItem: JSONAPIMappable {
         case body
         case urlString = "attachment"
         case diaryNoteable = "diary_noteable"
+        case transcribeStatus = "transcribe_status"
     }
     
     init(from decoder: Decoder) throws {
@@ -113,6 +117,8 @@ extension DiaryNoteItem: JSONAPIMappable {
             self.urlString = nil
             self.diaryNoteType = .text
         }
+        
+        self.transcribeStatus = try? container.decodeIfPresent(String.self, forKey: .transcribeStatus)
     }
     
     func encode(to encoder: Encoder) throws {

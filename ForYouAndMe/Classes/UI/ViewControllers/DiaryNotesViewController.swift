@@ -333,7 +333,6 @@ extension DiaryNotesViewController: UITableViewDataSource {
                         sections.remove(at: indexPath.section)
                         tableView.deleteSections(IndexSet(integer: indexPath.section), with: .automatic)
                     } else {
-                        
                         tableView.deleteRows(at: [indexPath], with: .automatic)
                     }
                     diaryNoteItems.remove(at: indexPath.row)

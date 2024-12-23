@@ -207,6 +207,7 @@
 		0D6C7EA1B12048E35C3B01467994A5A1 /* ORKInstructionStepViewController.h in Headers */ = {isa = PBXBuildFile; fileRef = 3269291E3C4C6FD0EAFCAE7500A42AB0 /* ORKInstructionStepViewController.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		0D890CA061A901A7494C9739E344522D /* FIRCLSMachOSlice.h in Headers */ = {isa = PBXBuildFile; fileRef = E63CE2345C2F11417366A7BDDBC42062 /* FIRCLSMachOSlice.h */; settings = {ATTRIBUTES = (Project, ); }; };
 		0D8D9CDF2D195567008D860B /* AudioAssetManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D8D9CDE2D195560008D860B /* AudioAssetManager.swift */; };
+		0D8D9CE12D19C283008D860B /* LoadingTranscribeAudio.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D8D9CE02D19C270008D860B /* LoadingTranscribeAudio.swift */; };
 		0D91BE9B8D0D3DB1E6C82236F2F45BC9 /* PhoneNumberFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0E175E5CBCB4CFF2F98628C9444B4A9 /* PhoneNumberFormatter.swift */; };
 		0D9A3AC2EFAFE1D691CF09ECC1A99AE0 /* TestGetUserDataAggregationYear.json in Resources */ = {isa = PBXBuildFile; fileRef = 49A0E18383F68821BC8A23BC3CABEFFD /* TestGetUserDataAggregationYear.json */; };
 		0DC117113DF6A4542171993A78D09604 /* Video+AlertError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84D0DB081743F341C9BF575E9B3C3CD2 /* Video+AlertError.swift */; };
@@ -4053,6 +4054,7 @@
 		0D657B032D0F010300582238 /* UIImage+Shadow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIImage+Shadow.swift"; sourceTree = "<group>"; };
 		0D8D852BE24021BD8D0400135128E88A /* Answer.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Answer.swift; sourceTree = "<group>"; };
 		0D8D9CDE2D195560008D860B /* AudioAssetManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioAssetManager.swift; sourceTree = "<group>"; };
+		0D8D9CE02D19C270008D860B /* LoadingTranscribeAudio.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoadingTranscribeAudio.swift; sourceTree = "<group>"; };
 		0D8E56D22CC8475FCB425CD61141A75F /* FIRInstallationsItem.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = FIRInstallationsItem.m; path = FirebaseInstallations/Source/Library/FIRInstallationsItem.m; sourceTree = "<group>"; };
 		0DAFC1299D9093491FB52C01F0A88855 /* Nimble-umbrella.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = "Nimble-umbrella.h"; sourceTree = "<group>"; };
 		0DDCDBC9D3689D5B17002365CF955F29 /* ToArray.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ToArray.swift; path = RxSwift/Observables/ToArray.swift; sourceTree = "<group>"; };
@@ -7782,6 +7784,7 @@
 		1FFE584FBD4B3D772216CC6F1B8C5449 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				0D8D9CE02D19C270008D860B /* LoadingTranscribeAudio.swift */,
 				0D23A4852D11D157000112D8 /* DiarySectionHeader.swift */,
 				06F5DDD755F9E38CCA4E0F13FD9E97CC /* AboutYouHeaderView.swift */,
 				7CAFD87D84F772CEF57C5BE2B5BB714C /* CustomSegmentView.swift */,
@@ -14786,6 +14789,7 @@
 				76E8B97418CA357AAC8810E67E85808A /* DiaryNoteAudioViewController.swift in Sources */,
 				8EE3B5FCAC3E1976436DF0E54CBFF527 /* DiaryNoteEmptyView.swift in Sources */,
 				2113CA94D8DF61A7C7436B677062BBBE /* DiaryNoteItem.swift in Sources */,
+				0D8D9CE12D19C283008D860B /* LoadingTranscribeAudio.swift in Sources */,
 				73DD3FB101AA7CF86609DAB0F8FCAF3A /* DiaryNoteItemAudioTableViewCell.swift in Sources */,
 				9B5F4330B361897E70A994A6471A1912 /* DiaryNoteItemTextTableViewCell.swift in Sources */,
 				FD3ED76C396082B15A9D084937039A44 /* DiaryNotesViewController.swift in Sources */,

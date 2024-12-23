@@ -361,8 +361,8 @@ extension RepositoryImpl: Repository {
             .handleError()
     }
     
-    func sendDiaryNoteAudio(diaryNoteRef: DiaryNoteItem, file: DiaryNoteFile, fromChart: Bool) -> Single<()> {
-        return self.api.send(request:ApiRequest(serviceRequest:
+    func sendDiaryNoteAudio(diaryNoteRef: DiaryNoteItem, file: DiaryNoteFile, fromChart: Bool) -> Single<DiaryNoteItem> {
+        return self.api.send(request: ApiRequest(serviceRequest:
                 .sendDiaryNoteAudio(noteId: diaryNoteRef,
                                     attachment: file,
                                     fromChart: fromChart)))
