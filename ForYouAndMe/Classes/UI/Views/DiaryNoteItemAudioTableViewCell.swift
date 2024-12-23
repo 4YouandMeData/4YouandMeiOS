@@ -104,10 +104,18 @@ class DiaryNoteItemAudioTableViewCell: UITableViewCell {
     }
     
     public func setTimeLabelFromDuration(_ duration: TimeInterval) {
+        
+        let attibutedStyle = AttributedTextStyle(fontStyle: .header3,
+                                                 colorType: .primaryText,
+                                                 textAlignment: .left)
         self.timeLabel.setShortTime(duration: Int(duration),
-                                    attributedTextStyle: AttributedTextStyle(fontStyle: .header3,
-                                                                             colorType: .primaryText,
-                                                                             textAlignment: .left))
+                                    attributedTextStyle: attibutedStyle)
+        let totalTimeString = NSAttributedString.create(withText: "Total time: ",
+                                                        attributedTextStyle: attibutedStyle)
+        let string = NSMutableAttributedString(attributedString: totalTimeString)
+        string.append(self.timeLabel.attributedText ?? NSAttributedString())
+        self.timeLabel.attributedText = string
+        
     }
     
     // MARK: - Actions
