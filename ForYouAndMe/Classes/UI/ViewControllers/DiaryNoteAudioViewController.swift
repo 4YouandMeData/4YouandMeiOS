@@ -16,12 +16,18 @@ class ActionButton: UIButton {
 
 class DiaryNoteAudioViewController: UIViewController {
     
+    fileprivate enum PageState { case read, edit }
+    public fileprivate(set) var standardColor: UIColor = ColorPalette.color(withType: .primaryText)
+    public fileprivate(set) var errorColor: UIColor = ColorPalette.color(withType: .primaryText)
+    public fileprivate(set) var inactiveColor: UIColor = ColorPalette.color(withType: .fourthText)
+    
     private let navigator: AppNavigator
     private let repository: Repository
     private let analytics: AnalyticsService
     private let audioPlayerManager = AudioPlayerManager()
     private let audioAssetManager = AudioAssetManager()
     private var audioFileURL: URL?
+    private let pageState: BehaviorRelay<PageState> = BehaviorRelay<PageState>(value: .read)
     
     private let disposeBag = DisposeBag()
     private let totalTimeLabelAttributedTextStyle = AttributedTextStyle(fontStyle: .title,
@@ -212,6 +218,12 @@ class DiaryNoteAudioViewController: UIViewController {
         
         self.audioPlayerManager.delegate = self
         try? audioPlayerManager.setupAudioSession()
+        
+        self.pageState.subscribe(onNext: { [weak self] newPageState in
+            self?.updateNextButton(pageState: newPageState)
+            self?.updateTextFields(pageState: newPageState)
+            self?.view.endEditing(true)
+        }).disposed(by: self.disposeBag)
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -258,17 +270,18 @@ class DiaryNoteAudioViewController: UIViewController {
             }).disposed(by: self.disposeBag)
     }
     
-    @objc private func deleteButtonPressed() {
-//        guard let diaryNoteItem = self.diaryNoteItem else { return }
-//        self.repository.deleteDiaryNote(noteID: diaryNoteItem.id)
-//            .addProgress()
-//            .subscribe(onSuccess: { [weak self] in
-//                guard let self = self else { return }
-//                self.navigationController?.popViewController(animated: true)
-//            }, onError: { [weak self] error in
-//                guard let self = self else { return }
-//                self.navigator.handleError(error: error, presenter: self)
-//            }).disposed(by: self.disposeBag)
+    @objc private func updateButtonPressed() {
+        if let diaryNote = self.diaryNoteItem {
+            self.repository.updateDiaryNoteText(diaryNote: diaryNote)
+                .addProgress()
+                .subscribe(onSuccess: { [weak self] in
+                    guard let self = self else { return }
+                    self.closeButtonPressed()
+                }, onError: { [weak self] error in
+                    guard let self = self else { return }
+                    self.navigator.handleError(error: error, presenter: self)
+                }).disposed(by: self.disposeBag)
+        }
     }
     
     @objc private func buttonTapped(_ sender: ActionButton) {
@@ -373,7 +386,7 @@ class DiaryNoteAudioViewController: UIViewController {
             self.scrollView.autoPinEdge(.bottom, to: .top, of: self.footerView)
             footerView.setButtonText("Save")
             self.footerView.setButtonEnabled(enabled: false)
-            footerView.addTarget(target: self, action: #selector(self.deleteButtonPressed))
+            footerView.addTarget(target: self, action: #selector(self.updateButtonPressed))
             
             containerTextView.autoPinEdge(.top, to: .bottom, of: self.slider, withOffset: 30)
             containerTextView.autoPinEdge(.leading, to: .leading, of: self.view)
@@ -433,6 +446,31 @@ class DiaryNoteAudioViewController: UIViewController {
             
             self.footerView.setButtonText("Save")
             self.footerView.setButtonEnabled(enabled: false)
+        }
+    }
+    
+    private func updateNextButton(pageState: PageState) {
+        let button = self.footerView
+        switch pageState {
+        case .edit:
+            button.setButtonEnabled(enabled: true)
+        case .read:
+            button.setButtonEnabled(enabled: false)
+        }
+    }
+    
+    private func updateTextFields(pageState: PageState) {
+        let textView = self.textView
+        self.placeholderLabel.isHidden = !textView.text.isEmpty
+        switch pageState {
+        case .edit:
+            textView.isEditable = true
+            textView.isUserInteractionEnabled = true
+            textView.textColor = self.standardColor
+        case .read:
+            textView.isEditable = false
+            textView.isUserInteractionEnabled = false
+            textView.textColor = self.inactiveColor
         }
     }
 }
