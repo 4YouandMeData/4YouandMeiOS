@@ -16,15 +16,47 @@ enum LoadingTranscribeAudioStyleCategory: StyleCategory {
             
         case .loading:
             return Style<LoadingTranscribeAudio> { view in
+                // Configure for "loading" style
                 view.backgroundColor = ColorPalette.color(withType: .secondary)
                 view.layer.borderWidth = 1.0
                 view.layer.borderColor = ColorPalette.color(withType: .inactive).cgColor
                 view.layer.cornerRadius = 6.0
+               
+                view.activityIndicator.isHidden = false
+                view.activityIndicator.startAnimating()
+                view.imageView.isHidden = true
+               
+                view.primaryLabel.attributedText = NSAttributedString.create(
+                   withText: StringsProvider.string(forText: "Text format transcription in progress"),
+                   fontStyle: .paragraph,
+                   colorType: .primaryText
+               )
+                view.secondaryLabel.attributedText = NSAttributedString.create(
+                   withText: StringsProvider.string(forText: "Soon you will see your recorded audio transcribed here"),
+                   fontStyle: .header3,
+                   colorType: .primaryText
+               )
             }
         case .error:
                         
             return Style<LoadingTranscribeAudio> { view in
-                view.backgroundColor = ColorPalette.color(withType: .primary)
+                // Configure for "error" style
+                view.backgroundColor = ColorPalette.warningColor
+                view.layer.borderWidth = 2.0
+                view.layer.borderColor = ColorPalette.borderWarningColor.cgColor
+                view.layer.cornerRadius = 8.0
+                
+                view.activityIndicator.isHidden = true
+                view.activityIndicator.stopAnimating()
+                view.imageView.isHidden = false
+                view.imageView.image = ImagePalette.image(withName: .warningIcon)
+                
+                view.primaryLabel.attributedText = NSAttributedString.create(
+                    withText: StringsProvider.string(forText: "Unable to transcribe audio, something went wrong during transcription"),
+                    fontStyle: .paragraph,
+                    colorType: .primaryText
+                )
+                view.secondaryLabel.attributedText = nil
             }
         }
     }
@@ -32,42 +64,64 @@ enum LoadingTranscribeAudioStyleCategory: StyleCategory {
 
 class LoadingTranscribeAudio: UIView {
     
+    // MARK: - UI Components
+    private let stackView: UIStackView = {
+        let stackView = UIStackView()
+        stackView.axis = .vertical
+        stackView.alignment = .center
+        stackView.spacing = 8
+        return stackView
+    }()
+
+    fileprivate let activityIndicator: UIActivityIndicatorView = {
+        let indicator = UIActivityIndicatorView(style: .medium)
+        indicator.color = .gray
+        return indicator
+    }()
+
+    fileprivate let imageView: UIImageView = {
+        let imageView = UIImageView()
+        imageView.contentMode = .scaleAspectFit
+        imageView.tintColor = .orange
+        imageView.autoSetDimensions(to: CGSize(width: 32, height: 32))
+        imageView.isHidden = true // Hidden by default, shown only for "error" style
+        return imageView
+    }()
+
+    fileprivate let primaryLabel: UILabel = {
+        let label = UILabel()
+        label.numberOfLines = 0
+        label.textAlignment = .center
+        return label
+    }()
+
+    fileprivate let secondaryLabel: UILabel = {
+        let label = UILabel()
+        label.numberOfLines = 0
+        label.textAlignment = .center
+        return label
+    }()
+    
     init(initWithStyle styleCategory: LoadingTranscribeAudioStyleCategory) {
         
         super.init(frame: .zero)
         self.backgroundColor = ColorPalette.color(withType: .secondary)
-        
-        let stackView = UIStackView()
-        stackView.axis = .vertical
-        self.addSubview(stackView)
-        stackView.autoPinEdgesToSuperviewEdges()
-        
-        stackView.addBlankSpace(space: 8)
-        
-        let activityIndicator = UIActivityIndicatorView(style: .medium)
-        activityIndicator.color = .gray
-        stackView.addArrangedSubview(activityIndicator)
-        activityIndicator.startAnimating()
-        
-        stackView.addBlankSpace(space: 12.0)
-        
-        stackView.addLabel(withText: StringsProvider.string(
-            forText: "Text format transcription in progress"),
-                           fontStyle: .paragraph,
-                           colorType: .primaryText,
-                           horizontalInset: 8.0)
-        stackView.addBlankSpace(space: 10.0)
-        stackView.addLabel(withText: StringsProvider.string(
-            forText: "Soon you will see your recorded audio transcribed here"),
-                           fontStyle: .header3,
-                           colorType: .primaryText,
-                           horizontalInset: 8.0)
-        stackView.addBlankSpace(space: 8)
-        
+        self.setupUI()
         self.apply(style: styleCategory.style)
     }
     
     required init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+    
+    // MARK: - Setup UI
+    private func setupUI() {
+        self.addSubview(stackView)
+        self.stackView.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets(top: 16, left: 16, bottom: 16, right: 16))
+        
+        self.stackView.addArrangedSubview(activityIndicator)
+        self.stackView.addArrangedSubview(imageView)
+        self.stackView.addArrangedSubview(primaryLabel)
+        self.stackView.addArrangedSubview(secondaryLabel)
     }
 }
