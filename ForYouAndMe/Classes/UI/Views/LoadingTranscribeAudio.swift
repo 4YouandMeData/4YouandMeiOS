@@ -17,6 +17,9 @@ enum LoadingTranscribeAudioStyleCategory: StyleCategory {
         case .loading:
             return Style<LoadingTranscribeAudio> { view in
                 view.backgroundColor = ColorPalette.color(withType: .secondary)
+                view.layer.borderWidth = 1.0
+                view.layer.borderColor = ColorPalette.color(withType: .inactive).cgColor
+                view.layer.cornerRadius = 6.0
             }
         case .error:
                         
@@ -39,6 +42,8 @@ class LoadingTranscribeAudio: UIView {
         self.addSubview(stackView)
         stackView.autoPinEdgesToSuperviewEdges()
         
+        stackView.addBlankSpace(space: 8)
+        
         let activityIndicator = UIActivityIndicatorView(style: .medium)
         activityIndicator.color = .gray
         stackView.addArrangedSubview(activityIndicator)
@@ -57,6 +62,7 @@ class LoadingTranscribeAudio: UIView {
                            fontStyle: .header3,
                            colorType: .primaryText,
                            horizontalInset: 8.0)
+        stackView.addBlankSpace(space: 8)
         
         self.apply(style: styleCategory.style)
     }
