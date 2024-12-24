@@ -29,6 +29,10 @@ class DiaryNoteAudioViewController: UIViewController {
     private var audioFileURL: URL?
     private let pageState: BehaviorRelay<PageState> = BehaviorRelay<PageState>(value: .read)
     
+    private var pollingDisposable: Disposable?
+    private let pollingInterval: TimeInterval = 5.0 // Polling interval in seconds
+    private var isPollingActive: Bool = false
+    
     private let disposeBag = DisposeBag()
     private let totalTimeLabelAttributedTextStyle = AttributedTextStyle(fontStyle: .title,
                                                                         colorType: .primaryText,
@@ -278,6 +282,7 @@ class DiaryNoteAudioViewController: UIViewController {
                 self.diaryNoteItem = diaryNote
                 try? FileManager.default.removeItem(atPath: Constants.Note.NoteResultURL.path)
                 self.pageState.accept(.transcribe)
+                self.startPolling() // Start polling after successful creation
             }, onError: { [weak self] error in
                 guard let self = self else { return }
                 self.navigator.handleError(error: error,
@@ -495,6 +500,49 @@ class DiaryNoteAudioViewController: UIViewController {
         case .transcribe:
             textView.isHidden = false
         }
+    }
+    
+    // MARK: - Polling Methods
+
+    private func startPolling() {
+        guard let diaryNoteId = self.diaryNoteItem?.id, !isPollingActive else { return }
+
+        isPollingActive = true
+        pollingDisposable = Observable<Int>
+            .interval(RxTimeInterval.seconds(Int(pollingInterval)), scheduler: MainScheduler.instance)
+            .flatMapLatest { [weak self] _ -> Observable<DiaryNoteItem?> in
+                guard let self = self else { return Observable.just(nil) }
+                return self.repository.getDiaryNoteAudio(noteID: diaryNoteId).map { $0 as DiaryNoteItem? }
+                    .asObservable()
+            }
+            .subscribe(onNext: { [weak self] diaryNoteItem in
+                guard let self = self, let diaryNoteItem = diaryNoteItem else { return }
+                self.handlePollingResponse(diaryNoteItem: diaryNoteItem)
+            }, onError: { [weak self] error in
+                self?.stopPolling()
+                self?.handlePollingError(error)
+            })
+    }
+
+    private func stopPolling() {
+        pollingDisposable?.dispose()
+        pollingDisposable = nil
+        isPollingActive = false
+    }
+
+    private func handlePollingResponse(diaryNoteItem: DiaryNoteItem) {
+        if diaryNoteItem.transcribeStatus == "success" || diaryNoteItem.transcribeStatus == "error" {
+            self.diaryNoteItem = diaryNoteItem
+            self.stopPolling()
+            self.isEditMode = true
+            self.pageState.accept(.read)
+            self.setupUI()
+        }
+    }
+
+    private func handlePollingError(_ error: Error) {
+        print("Polling error: \(error.localizedDescription)")
+        // Optional: Show an error message to the user or retry
     }
 }
 
