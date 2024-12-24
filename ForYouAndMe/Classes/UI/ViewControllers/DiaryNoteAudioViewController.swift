@@ -204,6 +204,7 @@ class DiaryNoteAudioViewController: UIViewController {
     
     deinit {
         print("DiaryNoteTextViewController - deinit")
+        stopPolling()
     }
     
     override func viewDidLoad() {
@@ -232,10 +233,13 @@ class DiaryNoteAudioViewController: UIViewController {
         self.audioPlayerManager.delegate = self
         try? audioPlayerManager.setupAudioSession()
         
-        self.pageState.subscribe(onNext: { [weak self] newPageState in
-            self?.updateNextButton(pageState: newPageState)
-            self?.updateTextFields(pageState: newPageState)
-            self?.view.endEditing(true)
+        self.pageState
+            .observeOn(MainScheduler.instance)
+            .subscribe(onNext: { [weak self] newPageState in
+                print("PageState updated to: \(newPageState)")
+                self?.updateNextButton(pageState: newPageState)
+                self?.updateTextFields(pageState: newPageState)
+                self?.view.endEditing(true)
         }).disposed(by: self.disposeBag)
     }
     
@@ -277,12 +281,15 @@ class DiaryNoteAudioViewController: UIViewController {
                                            file: audioResultFile,
                                            fromChart: false)
             .do(onDispose: { AppNavigator.popProgressHUD() })
+            .observeOn(MainScheduler.instance)
             .subscribe(onSuccess: { [weak self] diaryNote in
                 guard let self = self else { return }
                 self.diaryNoteItem = diaryNote
                 try? FileManager.default.removeItem(atPath: Constants.Note.NoteResultURL.path)
-                self.pageState.accept(.transcribe)
-                self.startPolling() // Start polling after successful creation
+                DispatchQueue.main.async {
+                    self.pageState.accept(.transcribe)
+                    self.startPolling() // Start polling after successful creation
+                }
             }, onError: { [weak self] error in
                 guard let self = self else { return }
                 self.navigator.handleError(error: error,
@@ -377,9 +384,9 @@ class DiaryNoteAudioViewController: UIViewController {
         config.contentInsets = NSDirectionalEdgeInsets(top: 4.0, leading: 4.0, bottom: 4.0, trailing: 4.0)
         self.recordButton.configuration = config
         self.recordButton.autoSetDimension(.height, toSize: 68)
-        self.recordButton.action = {
-            guard let diaryNoteItem = self.diaryNoteItem, let urlString = diaryNoteItem.urlString else { return }
-            self.audioPlayerManager.playAudio(from: URL(string: urlString)!)
+        self.recordButton.action = { [weak self] in
+            guard let diaryNoteItem = self?.diaryNoteItem, let urlString = diaryNoteItem.urlString else { return }
+            self?.audioPlayerManager.playAudio(from: URL(string: urlString)!)
         }
         
         containerStackView.addArrangedSubview(self.recordButton)
