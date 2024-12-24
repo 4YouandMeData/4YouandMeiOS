@@ -106,5 +106,4 @@ extension UIStackView {
         // Add the container view to the stack view
         self.addArrangedSubview(containerView, horizontalInset: horizontalInset)
     }
-    
 }

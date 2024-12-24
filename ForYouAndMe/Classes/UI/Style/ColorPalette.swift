@@ -66,4 +66,6 @@ class ColorPalette {
     
     static var errorPrimaryColor = UIColor(hexRGB: 0x303740)
     static var errorSecondaryColor = UIColor(hexRGB: 0xFFFFFF)
+    static var borderWarningColor =  UIColor(hexRGB: 0xFFCC00)
+    static var warningColor = UIColor(hexRGB: 0xFEF5EB)
 }
