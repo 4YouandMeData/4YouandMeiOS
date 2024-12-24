@@ -15,11 +15,9 @@ enum LoadingTranscribeAudioStyleCategory: StyleCategory {
         switch self {
             
         case .loading:
-            let buttonHeight: CGFloat = 46.0
             return Style<LoadingTranscribeAudio> { view in
                 view.backgroundColor = ColorPalette.color(withType: .secondary)
             }
-            
         case .error:
                         
             return Style<LoadingTranscribeAudio> { view in
@@ -41,6 +39,13 @@ class LoadingTranscribeAudio: UIView {
         self.addSubview(stackView)
         stackView.autoPinEdgesToSuperviewEdges()
         
+        let activityIndicator = UIActivityIndicatorView(style: .medium)
+        activityIndicator.color = .gray
+        stackView.addArrangedSubview(activityIndicator)
+        activityIndicator.startAnimating()
+        
+        stackView.addBlankSpace(space: 12.0)
+        
         stackView.addLabel(withText: StringsProvider.string(
             forText: "Text format transcription in progress"),
                            fontStyle: .paragraph,
@@ -50,7 +55,7 @@ class LoadingTranscribeAudio: UIView {
         stackView.addLabel(withText: StringsProvider.string(
             forText: "Soon you will see your recorded audio transcribed here"),
                            fontStyle: .header3,
-                           colorType: .fourthText,
+                           colorType: .primaryText,
                            horizontalInset: 8.0)
         
         self.apply(style: styleCategory.style)
