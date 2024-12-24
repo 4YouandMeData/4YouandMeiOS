@@ -321,18 +321,16 @@ class DiaryNoteAudioViewController: UIViewController {
                                                                   bottom: 0.0,
                                                                   right: Constants.Style.DefaultHorizontalMargins))
         containerStackView.autoAlignAxis(toSuperviewAxis: .vertical)
+        
         if isEditMode {
             // Diary Note is present and I want listen recorded audio
             self.setupPlayerView(withContainer: containerStackView)
             let transcribeStatus = diaryNoteItem?.transcribeStatus
-            if transcribeStatus == "pending" {
+            if transcribeStatus == "pending" || transcribeStatus == "error"{
                 self.setupUITrascribe(withContainer: containerStackView)
             } else if transcribeStatus == "success" {
                 self.setupUIListen(withContainer: containerStackView)
-            } else if transcribeStatus == "error" {
-                
             }
-            
         } else {
             // I want record a new audio
             self.setupUIRecord(withContainer: containerStackView)
@@ -450,7 +448,11 @@ class DiaryNoteAudioViewController: UIViewController {
     
     private func setupUITrascribe(withContainer containerStackView: UIStackView) {
         
-        let loadingView = LoadingTranscribeAudio(initWithStyle: .loading)
+        let transcribeStatus = diaryNoteItem?.transcribeStatus == "pending" ?
+        LoadingTranscribeAudioStyleCategory.loading :
+        LoadingTranscribeAudioStyleCategory.error
+        
+        let loadingView = LoadingTranscribeAudio(initWithStyle: transcribeStatus)
         let containerLoadingView = UIView()
         containerLoadingView.addSubview(loadingView)
         loadingView.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets(top: 8.0,
@@ -481,10 +483,12 @@ class DiaryNoteAudioViewController: UIViewController {
         self.placeholderLabel.isHidden = !textView.text.isEmpty
         switch pageState {
         case .edit:
+            textView.isHidden = false
             textView.isEditable = true
             textView.isUserInteractionEnabled = true
             textView.textColor = self.standardColor
         case .read:
+            textView.isHidden = false
             textView.isEditable = false
             textView.isUserInteractionEnabled = false
             textView.textColor = self.inactiveColor
@@ -519,7 +523,8 @@ extension DiaryNoteAudioViewController: AudioPlayerManagerDelegate {
         recordButton.setImage(playButtonImage, for: .normal)
         recordButton.action = { [weak self] in
             guard let self = self else { return }
-            guard let diaryNoteItem = self.diaryNoteItem, let _ = diaryNoteItem.urlString else {
+            guard let diaryNoteItem = self.diaryNoteItem,
+                    diaryNoteItem.urlString != nil else {
                 self.audioPlayerManager.playRecordedAudio()
                 return
             }
