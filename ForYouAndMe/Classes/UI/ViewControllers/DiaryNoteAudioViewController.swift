@@ -464,6 +464,9 @@ class DiaryNoteAudioViewController: UIViewController {
         LoadingTranscribeAudioStyleCategory.loading :
         LoadingTranscribeAudioStyleCategory.error
         
+        if diaryNoteItem?.transcribeStatus == .pending {
+            self.startPolling()
+        }
         let loadingView = LoadingTranscribeAudio(initWithStyle: transcribeStatus)
         let containerLoadingView = UIView()
         containerLoadingView.addSubview(loadingView)
