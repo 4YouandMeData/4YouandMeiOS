@@ -338,9 +338,9 @@ class DiaryNoteAudioViewController: UIViewController {
             // Diary Note is present and I want listen recorded audio
             self.setupPlayerView(withContainer: containerStackView)
             let transcribeStatus = diaryNoteItem?.transcribeStatus
-            if transcribeStatus == "pending" || transcribeStatus == "error"{
+            if transcribeStatus == .pending || transcribeStatus == .error {
                 self.setupUITrascribe(withContainer: containerStackView)
-            } else if transcribeStatus == "success" {
+            } else if transcribeStatus == .success {
                 self.setupUIListen(withContainer: containerStackView)
             }
         } else {
@@ -460,7 +460,7 @@ class DiaryNoteAudioViewController: UIViewController {
     
     private func setupUITrascribe(withContainer containerStackView: UIStackView) {
         
-        let transcribeStatus = diaryNoteItem?.transcribeStatus == "pending" ?
+        let transcribeStatus = diaryNoteItem?.transcribeStatus == .pending ?
         LoadingTranscribeAudioStyleCategory.loading :
         LoadingTranscribeAudioStyleCategory.error
         
@@ -538,7 +538,7 @@ class DiaryNoteAudioViewController: UIViewController {
     }
 
     private func handlePollingResponse(diaryNoteItem: DiaryNoteItem) {
-        if diaryNoteItem.transcribeStatus == "success" || diaryNoteItem.transcribeStatus == "error" {
+        if diaryNoteItem.transcribeStatus == .success || diaryNoteItem.transcribeStatus == .error {
             self.diaryNoteItem = diaryNoteItem
             self.stopPolling()
             self.isEditMode = true

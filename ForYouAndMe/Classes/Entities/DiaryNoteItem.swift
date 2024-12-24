@@ -9,6 +9,12 @@ import Foundation
 
 typealias DiaryNoteData = [String: Any]
 
+enum TranscribeStatus: String, Codable {
+    case pending
+    case success
+    case error
+}
+
 struct DiaryNoteFile {
     let data: Data
     let fileExtension: FileDataExtension
@@ -46,8 +52,8 @@ struct DiaryNoteItem: Codable {
     @NilIfEmptyString
     var interval: String?
     
-    @NilIfEmptyString
-    var transcribeStatus: String?
+    @FailableCodable
+    var transcribeStatus: TranscribeStatus?
     
     @FailableCodable
     var diaryNoteable: DiaryNoteable?
@@ -118,7 +124,7 @@ extension DiaryNoteItem: JSONAPIMappable {
             self.diaryNoteType = .text
         }
         
-        self.transcribeStatus = try? container.decodeIfPresent(String.self, forKey: .transcribeStatus)
+        self.transcribeStatus = try? container.decodeIfPresent(TranscribeStatus.self, forKey: .transcribeStatus)
     }
     
     func encode(to encoder: Encoder) throws {
