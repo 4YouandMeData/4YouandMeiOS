@@ -484,6 +484,7 @@ class DiaryNoteAudioViewController: UIViewController {
         switch pageState {
         case .edit:
             button.setButtonEnabled(enabled: true)
+            button.addTarget(target: self, action: #selector(self.updateButtonPressed))
         case .read:
             button.setButtonEnabled(enabled: false)
         case .transcribe:
