@@ -16,7 +16,7 @@ class ActionButton: UIButton {
 
 class DiaryNoteAudioViewController: UIViewController {
     
-    fileprivate enum PageState { case read, edit, transcribe }
+    fileprivate enum PageState { case listen, record, edit, transcribe, saveRecord }
     public fileprivate(set) var standardColor: UIColor = ColorPalette.color(withType: .primaryText)
     public fileprivate(set) var errorColor: UIColor = ColorPalette.color(withType: .primaryText)
     public fileprivate(set) var inactiveColor: UIColor = ColorPalette.color(withType: .fourthText)
@@ -27,7 +27,7 @@ class DiaryNoteAudioViewController: UIViewController {
     private let audioPlayerManager = AudioPlayerManager()
     private let audioAssetManager = AudioAssetManager()
     private var audioFileURL: URL?
-    private let pageState: BehaviorRelay<PageState> = BehaviorRelay<PageState>(value: .read)
+    private let pageState: BehaviorRelay<PageState> = BehaviorRelay<PageState>(value: .listen)
     
     private var pollingDisposable: Disposable?
     private let pollingInterval: TimeInterval = 5.0 // Polling interval in seconds
@@ -163,7 +163,6 @@ class DiaryNoteAudioViewController: UIViewController {
     private lazy var footerView: GenericButtonView = {
 
         let buttonView = GenericButtonView(withTextStyleCategory: .transparentBackground(shadow: false ))
-        buttonView.addTarget(target: self, action: #selector(self.saveButtonPressed))
         return buttonView
     }()
     
@@ -344,6 +343,7 @@ class DiaryNoteAudioViewController: UIViewController {
                 self.setupUIListen(withContainer: containerStackView)
             }
         } else {
+            self.pageState.accept(.record)
             // I want record a new audio
             self.setupUIRecord(withContainer: containerStackView)
         }
@@ -483,14 +483,22 @@ class DiaryNoteAudioViewController: UIViewController {
         let button = self.footerView
         switch pageState {
         case .edit:
+            button.isHidden = false
             button.setButtonEnabled(enabled: true)
             button.addTarget(target: self, action: #selector(self.updateButtonPressed))
-        case .read:
-            button.setButtonEnabled(enabled: false)
-        case .transcribe:
+        case .listen:
+            button.isHidden = true
             self.isEditMode = true
-            button.setButtonEnabled(enabled: false)
+        case .transcribe:
+            button.isHidden = true
+            self.isEditMode = true
             self.setupUI()
+        case .record:
+            button.isHidden = true
+        case .saveRecord:
+            button.isHidden = false
+            button.setButtonEnabled(enabled: true)
+            button.addTarget(target: self, action: #selector(self.saveButtonPressed))
         }
     }
     
@@ -503,13 +511,15 @@ class DiaryNoteAudioViewController: UIViewController {
             textView.isEditable = true
             textView.isUserInteractionEnabled = true
             textView.textColor = self.standardColor
-        case .read:
+        case .listen:
             textView.isHidden = false
             textView.isEditable = false
             textView.isUserInteractionEnabled = false
             textView.textColor = self.inactiveColor
         case .transcribe:
             textView.isHidden = false
+        case .record, .saveRecord:
+            textView.isHidden = true
         }
     }
     
@@ -546,7 +556,7 @@ class DiaryNoteAudioViewController: UIViewController {
             self.diaryNoteItem = diaryNoteItem
             self.stopPolling()
             self.isEditMode = true
-            self.pageState.accept(.read)
+            self.pageState.accept(.listen)
             self.setupUI()
         }
     }
@@ -625,8 +635,7 @@ extension DiaryNoteAudioViewController: AudioPlayerManagerDelegate {
                            message: error.localizedDescription,
                            dismissButtonText: "OK")
         }
-        
-        self.footerView.setButtonEnabled(enabled: true)
+        self.pageState.accept(.saveRecord)
         self.recordDurationTime = duration ?? 0
         self.slider.maximumValue = Float(duration ?? 0)
         self.audioFileURL = fileURL
