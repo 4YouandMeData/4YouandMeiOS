@@ -13,6 +13,7 @@ class StudyInfoViewController: UIViewController {
     private let navigator: AppNavigator
     private let analytics: AnalyticsService
     private let repository: Repository
+    private let storage: CacheService
     private var studyInfoSection: StudyInfoSection?
     
     private let disposeBag = DisposeBag()
@@ -27,16 +28,23 @@ class StudyInfoViewController: UIViewController {
     private lazy var comingSoonButton: UIButton = {
         let button = UIButton()
         button.apply(style: ButtonTextStyleCategory.messages.style)
-//        button.setTitle(MessageMap.getMessageContent(byKey: "settings")?.title, for: .normal)
+        button.setTitle(self.messages.first?.title, for: .normal)
         button.addTarget(self, action: #selector(self.comingSoonButtonPressed), for: .touchUpInside)
         button.autoSetDimension(.width, toSize: 110)
+        button.isHidden = (self.messages.count < 1)
         return button
+    }()
+    
+    private lazy var messages: [MessageInfo] = {
+        let messages = self.storage.infoMessages?.messages(withLocation: .tabStudyInfo)
+        return messages ?? []
     }()
     
     init() {
         self.navigator = Services.shared.navigator
         self.analytics = Services.shared.analytics
         self.repository = Services.shared.repository
+        self.storage = Services.shared.storageServices
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -179,7 +187,6 @@ class StudyInfoViewController: UIViewController {
     
     // MARK: Actions
     @objc private func comingSoonButtonPressed() {
-//        guard let message = MessageMap.getMessageContent(byKey: "settings") else { return }
-//        self.navigator.openMessagePage(withTitle: message.title, body: message.body, presenter: self)
+        self.navigator.openMessagePage(withLocation: .tabStudyInfo, presenter: self)
     }
 }

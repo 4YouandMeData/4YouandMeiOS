@@ -37,10 +37,16 @@ class UserDataViewController: UIViewController, WKNavigationDelegate, WKScriptMe
     private lazy var comingSoonButton: UIButton = {
         let button = UIButton()
         button.apply(style: ButtonTextStyleCategory.messages.style)
-//        button.setTitle(MessageMap.getMessageContent(byKey: "user_data")?.title, for: .normal)
+        button.setTitle(self.messages.first?.title, for: .normal)
         button.addTarget(self, action: #selector(self.comingSoonButtonPressed), for: .touchUpInside)
         button.autoSetDimension(.width, toSize: 110)
+        button.isHidden = (self.messages.count < 1)
         return button
+    }()
+    
+    private lazy var messages: [MessageInfo] = {
+        let messages = self.storage.infoMessages?.messages(withLocation: .tabUserData)
+        return messages ?? []
     }()
 
     // Stored so they can be used by the filter page
@@ -106,8 +112,7 @@ class UserDataViewController: UIViewController, WKNavigationDelegate, WKScriptMe
     // MARK: Actions
     
     @objc private func comingSoonButtonPressed() {
-//        guard let message = MessageMap.getMessageContent(byKey: "user_data") else { return }
-//        self.navigator.openMessagePage(withTitle: message.title, body: message.body, presenter: self)
+        self.navigator.openMessagePage(withLocation: .tabUserData, presenter: self)
     }
     
     // MARK: WebView Methods

@@ -93,6 +93,11 @@ class DiaryNotesViewController: UIViewController {
         return tableView
     }()
     
+    private lazy var messages: [MessageInfo] = {
+        let messages = self.storage.infoMessages?.messages(withLocation: .tabDiary)
+        return messages ?? []
+    }()
+    
     private var storage: CacheService
     private var dataPointID: String?
     private var diaryNote: DiaryNoteItem?
@@ -143,9 +148,10 @@ class DiaryNotesViewController: UIViewController {
             
             let comingSoonButton = UIButton()
             comingSoonButton.apply(style: ButtonTextStyleCategory.messages.style)
-//            comingSoonButton.setTitle(MessageMap.getMessageContent(byKey: "diary")?.title, for: .normal)
+            comingSoonButton.setTitle(self.messages.first?.title, for: .normal)
             comingSoonButton.addTarget(self, action: #selector(self.comingSoonButtonPressed), for: .touchUpInside)
             comingSoonButton.autoSetDimension(.width, toSize: 110)
+            comingSoonButton.isHidden = (self.messages.count < 1)
             
             headerView.addSubview(comingSoonButton)
             comingSoonButton.autoPinEdge(.bottom, to: .bottom, of: headerView, withOffset: -20.0)
@@ -172,6 +178,8 @@ class DiaryNotesViewController: UIViewController {
             comingSoonButton.tintColor = ColorPalette.color(withType: .primary)
             comingSoonButton.addTarget(self, action: #selector(self.infoButtonPressed), for: .touchUpInside)
             comingSoonButton.autoSetDimension(.width, toSize: 24)
+            comingSoonButton.isHidden = (self.messages.count < 1)
+            
             self.headerView.addSubview(comingSoonButton)
             comingSoonButton.autoPinEdge(.bottom, to: .bottom, of: self.headerView, withOffset: -40.0)
             comingSoonButton.autoPinEdge(.trailing, to: .trailing, of: self.headerView, withOffset: -12.0)
@@ -193,13 +201,11 @@ class DiaryNotesViewController: UIViewController {
     }
     
     @objc private func comingSoonButtonPressed() {
-//        guard let message = MessageMap.getMessageContent(byKey: "diary") else { return }
-//        self.navigator.openMessagePage(withTitle: message.title, body: message.body, presenter: self)
+        self.navigator.openMessagePage(withLocation: .tabDiary, presenter: self)
     }
     
     @objc private func infoButtonPressed() {
-//        guard let message = MessageMap.getMessageContent(byKey: "noticed") else { return }
-//        self.navigator.openMessagePage(withTitle: message.title, body: message.body, presenter: self)
+        self.navigator.openMessagePage(withLocation: .pageChartDiary, presenter: self)
     }
     
     // MARK: - Private Methods
