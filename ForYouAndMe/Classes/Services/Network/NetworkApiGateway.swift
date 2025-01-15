@@ -245,7 +245,7 @@ fileprivate extension PrimitiveSequence where Trait == SingleTrait, Element == R
             .flatMap { response -> Single<Element> in
                 if 200 ... 299 ~= response.statusCode {
                     // Uncomment this to print the whole response data
-                    print("Network Body: \(String(data: response.data, encoding: .utf8) ?? "")")
+//                    print("Network Body: \(String(data: response.data, encoding: .utf8) ?? "")")
                     self.handleAccessToken(response: response, storage: api.storage)
                     return Single.just(response)
                 } else {
@@ -408,6 +408,8 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             return "v1/diary_notes"
         case .updateDiaryNoteText(let diaryNoteId):
             return "v1/diary_notes/\(diaryNoteId.id)"
+        case .getInfoMessages:
+            return "v1/studies/\(studyId)/app_info_messages"
         }
     }
     
@@ -434,6 +436,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
                 .getUserSettings,
                 .getDiaryNotes,
                 .getDiaryNoteText,
+                .getInfoMessages,
                 .getDiaryNoteAudio:
             return .get
         case .submitPhoneNumber,
@@ -512,6 +515,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         case .sendTaskResultData: return "{}".utf8Encoded
         case .sendTaskResultFile: return "{}".utf8Encoded
         case .delayTask: return "{}".utf8Encoded
+        case .getInfoMessages: return "{}".utf8Encoded
         // User
         case .getUser:
             return Constants.Test.OnboardingCompleted
@@ -573,6 +577,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
                 .delayTask,
                 .getDiaryNoteText,
                 .getDiaryNoteAudio,
+                .getInfoMessages,
                 .deleteDiaryNote:
             return .requestPlain
         case .submitPhoneNumber(let phoneNumber):
@@ -833,6 +838,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
                 .sendDiaryNoteText,
                 .sendDiaryNoteAudio,
                 .deleteDiaryNote,
+                .getInfoMessages,
                 .updateDiaryNoteText:
             return .bearer
         }

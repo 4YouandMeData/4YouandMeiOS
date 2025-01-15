@@ -56,6 +56,7 @@ class FeedViewController: UIViewController {
     private let repository: Repository
     private let analytics: AnalyticsService
     private let deeplinkService: DeeplinkService
+    private var cacheService: CacheService
     
     private let disposeBag = DisposeBag()
     
@@ -64,6 +65,7 @@ class FeedViewController: UIViewController {
         self.repository = Services.shared.repository
         self.analytics = Services.shared.analytics
         self.deeplinkService = Services.shared.deeplinkService
+        self.cacheService = Services.shared.storageServices
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -121,6 +123,7 @@ class FeedViewController: UIViewController {
                                                   screenClass: String(describing: type(of: self))))
         
         self.listManager.viewWillAppear()
+        self.getInfoMessages()
     }
     
     override func viewDidLayoutSubviews() {
@@ -135,8 +138,23 @@ class FeedViewController: UIViewController {
     }
     
     private func showMessage() {
-        guard let message = MessageMap.getMessageContent(byKey: "feed") else {return}
-        self.navigator.openMessagePage(withTitle: message.title, body: message.body, presenter: self)
+        self.navigator.openMessagePage(withLocation: .tabFeed, presenter: self)
+    }
+    
+    private func getInfoMessages() {
+        self.repository.getInfoMessages()
+                        .subscribe(onSuccess: { [weak self] infoMessages in
+                            guard let self = self else { return }
+                            self.cacheService.infoMessages = infoMessages
+                            if let infoMessage = infoMessages.firstMessage(withLocation: .tabFeed) {
+                                self.headerView.setComingSoonTitle(title: infoMessage.buttonText ?? "Coming Soon")
+                            } else {
+                                self.headerView.showComingSoonButton(show: false)
+                            }
+                        }, onError: { [weak self] error in
+                            guard let self = self else { return }
+                            self.navigator.handleError(error: error, presenter: self)
+                        }).disposed(by: self.disposeBag)
     }
     
     private func refreshUser() {

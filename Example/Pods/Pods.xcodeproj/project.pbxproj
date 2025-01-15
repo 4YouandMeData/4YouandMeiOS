@@ -206,6 +206,7 @@
 		0D657B042D0F010F00582238 /* UIImage+Shadow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D657B032D0F010300582238 /* UIImage+Shadow.swift */; };
 		0D6C7EA1B12048E35C3B01467994A5A1 /* ORKInstructionStepViewController.h in Headers */ = {isa = PBXBuildFile; fileRef = 3269291E3C4C6FD0EAFCAE7500A42AB0 /* ORKInstructionStepViewController.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		0D890CA061A901A7494C9739E344522D /* FIRCLSMachOSlice.h in Headers */ = {isa = PBXBuildFile; fileRef = E63CE2345C2F11417366A7BDDBC42062 /* FIRCLSMachOSlice.h */; settings = {ATTRIBUTES = (Project, ); }; };
+		0D8AAE5E2D38400C00125F90 /* MessagePageViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D8AAE5D2D38400900125F90 /* MessagePageViewController.swift */; };
 		0D8D9CDF2D195567008D860B /* AudioAssetManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D8D9CDE2D195560008D860B /* AudioAssetManager.swift */; };
 		0D8D9CE12D19C283008D860B /* LoadingTranscribeAudio.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D8D9CE02D19C270008D860B /* LoadingTranscribeAudio.swift */; };
 		0D91BE9B8D0D3DB1E6C82236F2F45BC9 /* PhoneNumberFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0E175E5CBCB4CFF2F98628C9444B4A9 /* PhoneNumberFormatter.swift */; };
@@ -4052,6 +4053,7 @@
 		0D5CAA44636BE548E7CFC70A2F2435B8 /* RxSwiftExt-Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = "RxSwiftExt-Info.plist"; sourceTree = "<group>"; };
 		0D631E9908483F9525A6B3F36F16CC61 /* Quick.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Quick.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		0D657B032D0F010300582238 /* UIImage+Shadow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIImage+Shadow.swift"; sourceTree = "<group>"; };
+		0D8AAE5D2D38400900125F90 /* MessagePageViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessagePageViewController.swift; sourceTree = "<group>"; };
 		0D8D852BE24021BD8D0400135128E88A /* Answer.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Answer.swift; sourceTree = "<group>"; };
 		0D8D9CDE2D195560008D860B /* AudioAssetManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioAssetManager.swift; sourceTree = "<group>"; };
 		0D8D9CE02D19C270008D860B /* LoadingTranscribeAudio.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoadingTranscribeAudio.swift; sourceTree = "<group>"; };
@@ -7784,6 +7786,7 @@
 		1FFE584FBD4B3D772216CC6F1B8C5449 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				0D8AAE5D2D38400900125F90 /* MessagePageViewController.swift */,
 				0D8D9CE02D19C270008D860B /* LoadingTranscribeAudio.swift */,
 				0D23A4852D11D157000112D8 /* DiarySectionHeader.swift */,
 				06F5DDD755F9E38CCA4E0F13FD9E97CC /* AboutYouHeaderView.swift */,
@@ -14836,6 +14839,7 @@
 				9FB019F36241468A17477ABA89B08C4C /* InfoDetailHeaderView.swift in Sources */,
 				3321AE0ACA303A9080F175BFCDB41013 /* InfoDetailViewController.swift in Sources */,
 				0D8D9CDF2D195567008D860B /* AudioAssetManager.swift in Sources */,
+				0D8AAE5E2D38400C00125F90 /* MessagePageViewController.swift in Sources */,
 				E27A9017892E110687BE1095D59DFC54 /* InfoPageListViewController.swift in Sources */,
 				3B0C98E0F78DB89346A45A710A6E089B /* InfoPageViewController.swift in Sources */,
 				7C1969F6A8F012330002B8F62D2ADBAA /* InformedConsentSection.swift in Sources */,

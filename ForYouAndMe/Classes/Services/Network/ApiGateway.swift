@@ -81,6 +81,8 @@ enum DefaultService {
     // User Phase
     case createUserPhase(phaseId: String)
     case updateUserPhase(userPhaseId: String)
+    // Info Message
+    case getInfoMessages
 }
 
 struct ApiRequest {

@@ -27,7 +27,7 @@ class StudyInfoViewController: UIViewController {
     private lazy var comingSoonButton: UIButton = {
         let button = UIButton()
         button.apply(style: ButtonTextStyleCategory.messages.style)
-        button.setTitle(MessageMap.getMessageContent(byKey: "settings")?.title, for: .normal)
+//        button.setTitle(MessageMap.getMessageContent(byKey: "settings")?.title, for: .normal)
         button.addTarget(self, action: #selector(self.comingSoonButtonPressed), for: .touchUpInside)
         button.autoSetDimension(.width, toSize: 110)
         return button
@@ -179,7 +179,7 @@ class StudyInfoViewController: UIViewController {
     
     // MARK: Actions
     @objc private func comingSoonButtonPressed() {
-        guard let message = MessageMap.getMessageContent(byKey: "settings") else { return }
-        self.navigator.openMessagePage(withTitle: message.title, body: message.body, presenter: self)
+//        guard let message = MessageMap.getMessageContent(byKey: "settings") else { return }
+//        self.navigator.openMessagePage(withTitle: message.title, body: message.body, presenter: self)
     }
 }

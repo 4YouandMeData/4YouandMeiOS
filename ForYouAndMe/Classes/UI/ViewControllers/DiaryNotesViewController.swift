@@ -143,7 +143,7 @@ class DiaryNotesViewController: UIViewController {
             
             let comingSoonButton = UIButton()
             comingSoonButton.apply(style: ButtonTextStyleCategory.messages.style)
-            comingSoonButton.setTitle(MessageMap.getMessageContent(byKey: "diary")?.title, for: .normal)
+//            comingSoonButton.setTitle(MessageMap.getMessageContent(byKey: "diary")?.title, for: .normal)
             comingSoonButton.addTarget(self, action: #selector(self.comingSoonButtonPressed), for: .touchUpInside)
             comingSoonButton.autoSetDimension(.width, toSize: 110)
             
@@ -193,13 +193,13 @@ class DiaryNotesViewController: UIViewController {
     }
     
     @objc private func comingSoonButtonPressed() {
-        guard let message = MessageMap.getMessageContent(byKey: "diary") else { return }
-        self.navigator.openMessagePage(withTitle: message.title, body: message.body, presenter: self)
+//        guard let message = MessageMap.getMessageContent(byKey: "diary") else { return }
+//        self.navigator.openMessagePage(withTitle: message.title, body: message.body, presenter: self)
     }
     
     @objc private func infoButtonPressed() {
-        guard let message = MessageMap.getMessageContent(byKey: "noticed") else { return }
-        self.navigator.openMessagePage(withTitle: message.title, body: message.body, presenter: self)
+//        guard let message = MessageMap.getMessageContent(byKey: "noticed") else { return }
+//        self.navigator.openMessagePage(withTitle: message.title, body: message.body, presenter: self)
     }
     
     // MARK: - Private Methods

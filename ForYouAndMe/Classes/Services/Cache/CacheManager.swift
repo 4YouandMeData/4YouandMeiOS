@@ -15,6 +15,7 @@ class CacheManager: CacheService {
         case accessToken
         case deviceUDID
         case userKey
+        case infoMessages
         case firstUserAbsoluteLocationKey
         case excludedUserDataAggregationIdsKey
         // BatchEventUploader keys
@@ -35,6 +36,11 @@ class CacheManager: CacheService {
     var user: User? {
         get {return self.load(forKey: CacheManagerKey.userKey.rawValue)}
         set {self.save(encodable: newValue, forKey: CacheManagerKey.userKey.rawValue)}
+    }
+    
+    var infoMessages: [MessageInfo]? {
+        get {return self.load(forKey: CacheManagerKey.infoMessages.rawValue)}
+        set {self.save(encodable: newValue, forKey: CacheManagerKey.infoMessages.rawValue)}
     }
     
     var deviceUDID: String? {

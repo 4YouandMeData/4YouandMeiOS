@@ -34,7 +34,7 @@ class FeedHeaderView: UIView {
     private lazy var comingSoonButton: UIButton = {
         let button = UIButton()
         button.apply(style: ButtonTextStyleCategory.messages.style)
-        button.setTitle(MessageMap.getMessageContent(byKey: "feed")?.title, for: .normal)
+//        button.setTitle(MessageMap.getMessageContent(byKey: "feed")?.title, for: .normal)
         button.addTarget(self, action: #selector(self.onComingSoonButtonPressed), for: .touchUpInside)
         button.autoSetDimension(.width, toSize: 110)
         return button
@@ -106,6 +106,14 @@ class FeedHeaderView: UIView {
     
     public func refreshUI() {
         self.profileButton.syncWithPhase(repository: self.repository, imageName: .mainLogo)
+    }
+    
+    public func setComingSoonTitle(title: String) {
+        self.comingSoonButton.setTitle(title, for: .normal)
+    }
+    
+    public func showComingSoonButton(show: Bool) {
+        self.comingSoonButton.isHidden = !show
     }
     
     // MARK: - Actions

@@ -12,6 +12,7 @@ import RxSwift
 protocol RepositoryStorage {
     var globalConfig: GlobalConfig? { get set }
     var user: User? { get set }
+    var infoMessages: [MessageInfo]? { get set }
 }
 
 class RepositoryImpl {
@@ -115,6 +116,10 @@ extension RepositoryImpl: Repository {
     func logOut() {
         self.storage.user = nil
         self.api.logOut()
+    }
+    
+    var infoMessages: [MessageInfo]? {
+        return self.storage.infoMessages
     }
     
     func sendFirebaseToken(token: String) -> Single<User> {
@@ -466,6 +471,10 @@ extension RepositoryImpl: Repository {
     func sendDeviceData(deviceData: DeviceData) -> Single<()> {
         return self.api.send(request: ApiRequest(serviceRequest: .sendDeviceData(deviceData: deviceData)))
             .handleError()
+    }
+    
+    func getInfoMessages() -> Single<[MessageInfo]> {
+        return self.api.send(request: ApiRequest(serviceRequest: .getInfoMessages)).handleError()
     }
     
     // MARK: - Private Methods

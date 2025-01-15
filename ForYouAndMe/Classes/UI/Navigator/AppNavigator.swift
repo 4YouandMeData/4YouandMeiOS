@@ -657,8 +657,8 @@ class AppNavigator {
                             tintColor: ColorPalette.color(withType: .primary))
     }
     
-    public func openMessagePage(withTitle title: String, body: String, presenter: UIViewController) {
-        let messageViewController = MessagesViewController(withTitle: title, body: body)
+    public func openMessagePage(withLocation location: MessageInfoParameter, presenter: UIViewController) {
+        let messageViewController = MessagesViewController(withLocation: location)
         messageViewController.modalPresentationStyle = .formSheet
         presenter.present(messageViewController, animated: true)
     }

@@ -13,11 +13,12 @@ class MessagesViewController: UIViewController {
     private let navigator: AppNavigator
     private let analytics: AnalyticsService
     private let repository: Repository
+    private let storage: CacheService
     
     private let disposeBag = DisposeBag()
-    private let titleString: String
-    private let bodyString: String
-    
+    private let messages: [MessageInfo]
+    private var currentIndex: Int = 0
+
     private lazy var closeButton: UIButton = {
         let button = UIButton()
         button.setImage(ImagePalette.templateImage(withName: .closeButton), for: .normal)
@@ -28,25 +29,32 @@ class MessagesViewController: UIViewController {
         return button
     }()
     
-    private lazy var scrollStackView: ScrollStackView = {
-        let scrollStackView = ScrollStackView(axis: .vertical, horizontalInset: 0.0)
-        return scrollStackView
+    private lazy var pageViewController: UIPageViewController = {
+         let pageVC = UIPageViewController(transitionStyle: .scroll, navigationOrientation: .horizontal, options: nil)
+         pageVC.dataSource = self
+         pageVC.delegate = self
+         return pageVC
+     }()
+    
+    private lazy var pageControl: UIPageControl = {
+        let pageControl = UIPageControl()
+        pageControl.numberOfPages = messages.count
+        pageControl.currentPage = 0
+        pageControl.pageIndicatorTintColor = .lightGray
+        pageControl.currentPageIndicatorTintColor = .black
+        pageControl.isUserInteractionEnabled = false
+        pageControl.isHidden = (messages.count <= 1)
+        return pageControl
     }()
     
-    private lazy var confirmButtonView: GenericButtonView = {
-        let view = GenericButtonView(withImageStyleCategory: .secondaryBackground)
-        view.addTarget(target: self, action: #selector(self.confirmButtonPressed))
-        return view
-    }()
-    
-    init(withTitle
-         title: String,
-         body: String) {
+    init(withLocation
+         location: MessageInfoParameter) {
         self.navigator = Services.shared.navigator
         self.analytics = Services.shared.analytics
         self.repository = Services.shared.repository
-        self.titleString = title
-        self.bodyString = body
+        self.storage = Services.shared.storageServices
+        
+        self.messages = self.storage.infoMessages?.messages(withLocation: location) ?? []
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -73,7 +81,7 @@ class MessagesViewController: UIViewController {
         self.closeButton.autoPinEdgesToSuperviewEdges(with: .zero, excludingEdge: .trailing)
         stackView.addArrangedSubview(closeButtonContainerView)
 
-        stackView.addLabel(withText: titleString,
+        stackView.addLabel(withText: self.messages.first?.title ?? "",
                            fontStyle: .title,
                            colorType: .primaryText)
         
@@ -89,20 +97,27 @@ class MessagesViewController: UIViewController {
         self.view.addSubview(containerView)
         containerView.autoPinEdgesToSuperviewEdges(with: .zero, excludingEdge: .bottom)
         
-        // ScrollStackView
-        self.view.addSubview(self.scrollStackView)
-        self.scrollStackView.stackView.addLabel(text: self.bodyString,
-                                                font: FontPalette.fontStyleData(forStyle: .paragraph).font,
-                                                textColor: ColorPalette.color(withType: .primaryText),
-                                                textAlignment: .left,
-                                                lineSpacing: 12.0)
+        // PageViewController
+        self.addChild(self.pageViewController)
+        self.view.addSubview(pageViewController.view)
+        self.pageViewController.didMove(toParent: self)
         
-        self.scrollStackView.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets(top: 0.0,
+        self.pageViewController.view.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets(top: 0.0,
                                                                       left: Constants.Style.DefaultHorizontalMargins/2,
-                                                                      bottom: 0,
+                                                                      bottom: 42,
                                                                       right: Constants.Style.DefaultHorizontalMargins/2),
                                                    excludingEdge: .top)
-        self.scrollStackView.autoPinEdge(.top, to: .bottom, of: containerView, withOffset: 30)
+        self.pageViewController.view.autoPinEdge(.top, to: .bottom, of: containerView, withOffset: 0)
+        
+        // Set Initial ViewController
+        if let firstMessage = messages.first {
+            let initialVC = MessagePageViewController(message: firstMessage)
+            pageViewController.setViewControllers([initialVC], direction: .forward, animated: true)
+        }
+        
+        self.view.addSubview(self.pageControl)
+        self.pageControl.autoAlignAxis(.vertical, toSameAxisOf: self.pageViewController.view)
+        self.pageControl.autoPinEdge(.bottom, to: .bottom, of: self.pageViewController.view, withOffset: 10)
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -117,5 +132,43 @@ class MessagesViewController: UIViewController {
     
     @objc private func confirmButtonPressed() {
         self.dismiss(animated: true)
+    }
+}
+
+// MARK: - UIPageViewControllerDataSource, UIPageViewControllerDelegate
+extension MessagesViewController: UIPageViewControllerDataSource, UIPageViewControllerDelegate {
+    
+    func pageViewController(_ pageViewController: UIPageViewController,
+                            viewControllerBefore viewController: UIViewController) -> UIViewController? {
+        guard let currentVC = viewController as? MessagePageViewController,
+              let currentIndex = messages.firstIndex(of: currentVC.message) else {
+            return nil
+        }
+        let previousIndex = currentIndex - 1
+        guard previousIndex >= 0 else { return nil }
+        return MessagePageViewController(message: messages[previousIndex])
+    }
+    
+    func pageViewController(_ pageViewController: UIPageViewController,
+                            viewControllerAfter viewController: UIViewController) -> UIViewController? {
+        guard let currentVC = viewController as? MessagePageViewController,
+              let currentIndex = messages.firstIndex(of: currentVC.message) else {
+            return nil
+        }
+        let nextIndex = currentIndex + 1
+        guard nextIndex < messages.count else { return nil }
+        return MessagePageViewController(message: messages[nextIndex])
+    }
+    
+    func pageViewController(_ pageViewController: UIPageViewController,
+                            didFinishAnimating finished: Bool,
+                            previousViewControllers: [UIViewController],
+                            transitionCompleted completed: Bool) {
+        
+        if completed, let visibleVC = pageViewController.viewControllers?.first as? MessagePageViewController,
+            let newIndex = messages.firstIndex(of: visibleVC.message) {
+            currentIndex = newIndex
+            pageControl.currentPage = newIndex
+        }
     }
 }
