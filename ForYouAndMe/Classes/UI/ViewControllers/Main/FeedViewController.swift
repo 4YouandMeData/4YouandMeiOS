@@ -91,7 +91,6 @@ class FeedViewController: UIViewController {
         self.tableView.autoPinEdgesToSuperviewEdges(with: .zero, excludingEdge: .top)
         self.tableView.autoPinEdge(.top, to: .bottom, of: self.headerView)
         
-        
         let actionButton = JJFloatingActionButton()
         let actionItemRiflection = actionButton.addItem()
         actionItemRiflection.titleLabel.text = "Start a reflection"

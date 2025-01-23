@@ -81,7 +81,7 @@ class MessagesViewController: UIViewController {
         self.closeButton.autoPinEdgesToSuperviewEdges(with: .zero, excludingEdge: .trailing)
         stackView.addArrangedSubview(closeButtonContainerView)
 
-        stackView.addLabel(withText: self.messages.first?.title ?? "",
+        stackView.addLabel(withText: "",
                            fontStyle: .title,
                            colorType: .primaryText)
         

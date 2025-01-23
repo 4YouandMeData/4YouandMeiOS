@@ -12,6 +12,15 @@ enum MessageInfoParameter: String, Codable {
     case tabUserData = "TAB_USER_DATA"
     case tabStudyInfo = "TAB_STUDY_INFO"
     case pageChartDiary = "PAGE_CHART_DIARY"
+    case pageIHaveNoticed = "PAGE_I_HAVE_NOTICED"
+    case unknown
+        
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        let stringValue = try container.decode(String.self)
+        
+        self = MessageInfoParameter(rawValue: stringValue) ?? .unknown
+    }
 }
 
 struct MessageInfo: Codable, Equatable {

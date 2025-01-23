@@ -55,9 +55,9 @@ class DeviceItemView: UIView {
 
         attributedString = NSAttributedString.create(withText: StringsProvider.string(forKey: titleKey),
                                                      fontStyle: .paragraph,
-                                                     colorType: (connected) ? .inactive : .secondaryText,
+                                                     colorType: .secondaryText,
                                                      textAlignment: .left,
-                                                     underlined: false)
+                                                     underlined: true)
         
         let connectLabel = UILabel()
         connectLabel.attributedText = attributedString
