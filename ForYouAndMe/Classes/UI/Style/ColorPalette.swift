@@ -26,6 +26,8 @@ enum ColorType: String, CaseIterable, CodingKey {
     case inactive = "deactive_color"
     case gradientPrimaryEnd = "primary_color_end"
     case gradientTertiaryEnd = "tertiary_color_end"
+    case fabColorDefault = "fab_color_default"
+    case fabOutlineColor = "fab_outline_color"
     
     var defaultColor: UIColor {
         switch self {
@@ -43,6 +45,8 @@ enum ColorType: String, CaseIterable, CodingKey {
         case .inactive: return UIColor(hexRGB: 0xDFDFDF)
         case .gradientPrimaryEnd: return UIColor(hexRGB: 0x0B99AE)
         case .gradientTertiaryEnd: return UIColor(hexRGB: 0x25B8C9)
+        case .fabColorDefault: return UIColor(hexRGB: 0xFFFFFF)
+        case .fabOutlineColor: return UIColor(hexRGB: 0xA5A5A5)
         }
     }
 }

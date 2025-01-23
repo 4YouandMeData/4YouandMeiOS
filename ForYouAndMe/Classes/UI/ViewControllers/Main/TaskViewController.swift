@@ -7,6 +7,7 @@
 
 import UIKit
 import RxSwift
+import JJFloatingActionButton
 
 class TaskViewController: UIViewController {
     
@@ -102,6 +103,33 @@ class TaskViewController: UIViewController {
         headerView.addSubview(self.comingSoonButton)
         self.comingSoonButton.autoPinEdge(.bottom, to: .bottom, of: headerView, withOffset: -20.0)
         self.comingSoonButton.autoPinEdge(.trailing, to: .trailing, of: headerView, withOffset: -12.0)
+        
+        
+        let actionButton = JJFloatingActionButton()
+        let actionItemRiflection = actionButton.addItem()
+        actionItemRiflection.titleLabel.text = "Start a reflection"
+        actionItemRiflection.imageView.image = ImagePalette.image(withName: .riflectionIcon)
+        actionItemRiflection.buttonColor = ColorPalette.color(withType: .inactive)
+        
+        let actionNoticed = actionButton.addItem()
+        actionNoticed.titleLabel.text = "I Have Noticed"
+        actionNoticed.imageView.image = ImagePalette.image(withName: .noteGeneric)
+        actionNoticed.buttonColor = ColorPalette.color(withType: .secondary)
+        actionNoticed.action = { [weak self] _ in
+            guard let self = self else { return }
+            self.navigator.openNoticedViewController(presenter: self)
+        }
+        
+        view.addSubview(actionButton)
+        actionButton.display(inViewController: self)
+        actionButton.buttonColor = ColorPalette.color(withType: .fabColorDefault)
+        actionButton.buttonImageColor = .black
+        actionButton.layoutIfNeeded()
+        let borderView = CircleBorderView(frame: actionButton.circleView.frame,
+                                          color: ColorPalette.color(withType: .fabOutlineColor),
+                                          borderWidth: 1.0)
+        
+        actionButton.addSubview(borderView)
     }
     
     override func viewWillAppear(_ animated: Bool) {

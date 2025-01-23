@@ -91,6 +91,7 @@ class FeedViewController: UIViewController {
         self.tableView.autoPinEdgesToSuperviewEdges(with: .zero, excludingEdge: .top)
         self.tableView.autoPinEdge(.top, to: .bottom, of: self.headerView)
         
+        
         let actionButton = JJFloatingActionButton()
         let actionItemRiflection = actionButton.addItem()
         actionItemRiflection.titleLabel.text = "Start a reflection"
@@ -100,15 +101,22 @@ class FeedViewController: UIViewController {
         let actionNoticed = actionButton.addItem()
         actionNoticed.titleLabel.text = "I Have Noticed"
         actionNoticed.imageView.image = ImagePalette.image(withName: .noteGeneric)
-        actionNoticed.buttonColor = ColorPalette.color(withType: .primary)
+        actionNoticed.buttonColor = ColorPalette.color(withType: .secondary)
         actionNoticed.action = { [weak self] _ in
             guard let self = self else { return }
             self.navigator.openNoticedViewController(presenter: self)
         }
-
+        
         view.addSubview(actionButton)
         actionButton.display(inViewController: self)
-        actionButton.buttonColor = ColorPalette.color(withType: .primary)
+        actionButton.buttonColor = ColorPalette.color(withType: .fabColorDefault)
+        actionButton.buttonImageColor = .black
+        actionButton.layoutIfNeeded()
+        let borderView = CircleBorderView(frame: actionButton.circleView.frame,
+                                          color: ColorPalette.color(withType: .fabOutlineColor),
+                                          borderWidth: 1.0)
+        
+        actionButton.addSubview(borderView)
     }
     
     override func viewWillAppear(_ animated: Bool) {
