@@ -1,30 +1,42 @@
 //
-//  VideoDiaryRecorderViewController.swift
-//  ForYouAndMe
+//  DiaryNoteVideoViewController.swift
+//  Pods
 //
-//  Created by Leonardo Passeri on 27/08/2020.
+//  Created by Giuseppe Lapenta on 23/01/25.
 //
 
 import UIKit
 import RxSwift
-import AVFoundation
+import TPKeyboardAvoiding
+import RxRelay
 
-enum VideoDiaryState {
-    case record(isRecording: Bool)
-    case review(isPlaying: Bool)
-    case submitted(submitDate: Date, isPlaying: Bool)
-}
-
-public class VideoDiaryRecorderViewController: UIViewController {
+class DiaryNoteVideoViewController: UIViewController {
     
     private static let HidePlayerButtonDelay: TimeInterval = 2.0
     private static let RecordTrackingTimeInterval: TimeInterval = 0.1
+    private let timeLabelAttributedTextStyle = AttributedTextStyle(fontStyle: .header2, colorType: .secondaryText)
     
-    private let taskIdentifier: String
-    private let coordinator: VideoDiarySectionCoordinator
-    private let repository: Repository
     private let navigator: AppNavigator
+    private let repository: Repository
     private let analytics: AnalyticsService
+    private var storage: CacheService
+    
+    private let disposeBag = DisposeBag()
+    
+    private var recordDurationTime: TimeInterval = 0.0
+    private var lastSuccessfulRecordDurationTime: TimeInterval = 0.0
+    private var noOfPauses: Int = 0
+    private let mergedVideoExtension: FileDataExtension = .mp4
+    private var recordMaxTimeExceeded: Bool { self.recordDurationTime >= Constants.Misc.VideoDiaryNoteMaxDurationSeconds }
+    private let videoExtension = "mov"
+    private var recordTrackingTimer: Timer?
+    private var hidePlayButtonTimer: Timer?
+    
+    private var currentState: VideoDiaryState = .record(isRecording: false) {
+        didSet {
+            self.updateUI()
+        }
+    }
     
     private lazy var cameraView: CameraView = {
         let view = CameraView()
@@ -37,34 +49,6 @@ public class VideoDiaryRecorderViewController: UIViewController {
         let view = PlayerView()
         view.delegate = self
         return view
-    }()
-    
-    private var recordDurationTime: TimeInterval = 0.0
-    private var lastSuccessfulRecordDurationTime: TimeInterval = 0.0
-    private var noOfPauses: Int = 0
-    private let videoExtension = "mov" // Extension of each video part
-    private let mergedVideoExtension: FileDataExtension = .mp4
-    private var recordTrackingTimer: Timer?
-    private var hidePlayButtonTimer: Timer?
-    private var recordMaxTimeExceeded: Bool { self.recordDurationTime >= Constants.Misc.VideoDiaryMaxDurationSeconds }
-    
-    private let disposeBag = DisposeBag()
-    
-    let stackView: UIStackView = {
-        let stackView = UIStackView.create(withAxis: .vertical)
-        return stackView
-    }()
-    
-    private lazy var videoDiaryPlayerView: VideoDiaryPlayerView = {
-        let view = VideoDiaryPlayerView(delegate: self)
-        return view
-    }()
-    
-    private lazy var playerButton: UIButton = {
-        let button = UIButton()
-        button.autoSetDimensions(to: CGSize(width: 96.0, height: 96.0))
-        button.addTarget(self, action: #selector(self.playerButtonPressed), for: .touchUpInside)
-        return button
     }()
     
     private lazy var timeLabel: UILabel = {
@@ -133,19 +117,27 @@ public class VideoDiaryRecorderViewController: UIViewController {
         return view
     }()
     
-    private var currentState: VideoDiaryState = .record(isRecording: false) {
-        didSet {
-            self.updateUI()
-        }
-    }
+    let stackView: UIStackView = {
+        let stackView = UIStackView.create(withAxis: .vertical)
+        return stackView
+    }()
     
-    private let timeLabelAttributedTextStyle = AttributedTextStyle(fontStyle: .header2, colorType: .secondaryText)
+    private lazy var videoDiaryPlayerView: VideoDiaryPlayerView = {
+        let view = VideoDiaryPlayerView(delegate: self)
+        return view
+    }()
     
-    init(taskIdentifier: String, coordinator: VideoDiarySectionCoordinator) {
-        self.taskIdentifier = taskIdentifier
-        self.coordinator = coordinator
-        self.repository = Services.shared.repository
+    private lazy var playerButton: UIButton = {
+        let button = UIButton()
+        button.autoSetDimensions(to: CGSize(width: 96.0, height: 96.0))
+        button.addTarget(self, action: #selector(self.playerButtonPressed), for: .touchUpInside)
+        return button
+    }()
+    
+    init() {
         self.navigator = Services.shared.navigator
+        self.repository = Services.shared.repository
+        self.storage = Services.shared.storageServices
         self.analytics = Services.shared.analytics
         super.init(nibName: nil, bundle: nil)
     }
@@ -154,9 +146,12 @@ public class VideoDiaryRecorderViewController: UIViewController {
         fatalError("init(coder:) has not been implemented")
     }
     
-    public override func viewDidLoad() {
+    deinit {
+        print("DiaryNoteTextViewController - deinit")
+    }
+    
+    override func viewDidLoad() {
         super.viewDidLoad()
-        
         self.view.backgroundColor = UIColor.black
         
         self.view.addSubview(self.cameraView)
@@ -202,218 +197,9 @@ public class VideoDiaryRecorderViewController: UIViewController {
         self.updateUI()
     }
     
-    public override func viewWillAppear(_ animated: Bool) {
+    override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        UIApplication.shared.isIdleTimerDisabled = true
         self.navigationController?.navigationBar.apply(style: NavigationBarStyleCategory.primary(hidden: true).style)
-    }
-    
-    public override func viewWillDisappear(_ animated: Bool) {
-        super.viewWillDisappear(animated)
-        UIApplication.shared.isIdleTimerDisabled = false
-    }
-    
-    // MARK: - Private Methods
-    
-    private func updateUI() {
-        self.invalidatedHidePlayerButtonTimer()
-        self.videoDiaryPlayerView.updateState(newState: self.currentState, recordDurationTime: self.recordDurationTime)
-        switch self.currentState {
-        case .record(let isRecording):
-            self.stackView.isUserInteractionEnabled = !isRecording
-            self.playerButton.isHidden = false
-            self.overlayView.isHidden = isRecording
-            self.cameraView.isHidden = false
-            self.playerView.isHidden = true
-            self.updateToolbar(currentTime: Int(self.recordDurationTime), isRunning: isRecording, isRecordState: true)
-            self.updatePlayerButton(isRunning: isRecording, isRecordState: true)
-        case .review(let isPlaying):
-            self.stackView.isUserInteractionEnabled = !isPlaying // Needed to allow tap on playerView
-            self.overlayView.isHidden = isPlaying
-            self.playerButton.isHidden = isPlaying
-            self.cameraView.isHidden = true
-            self.playerView.isHidden = false
-            self.updateToolbar(currentTime: Int(self.recordDurationTime), isRunning: isPlaying, isRecordState: false)
-            self.updatePlayerButton(isRunning: isPlaying, isRecordState: false)
-        case .submitted(_, let isPlaying):
-            self.stackView.isUserInteractionEnabled = !isPlaying // Needed to allow tap on playerView
-            self.overlayView.isHidden = isPlaying
-            self.playerButton.isHidden = isPlaying
-            self.cameraView.isHidden = true
-            self.playerView.isHidden = false
-            self.updateToolbar(currentTime: Int(self.recordDurationTime), isRunning: isPlaying, isRecordState: false)
-            self.updatePlayerButton(isRunning: isPlaying, isRecordState: false)
-        }
-    }
-    
-    private func updateToolbar(currentTime: Int, isRunning: Bool, isRecordState: Bool) {
-        self.updateTimeLabel(currentTime: currentTime, isRunning: isRunning, isRecordState: isRecordState)
-        if isRecordState {
-            self.updateLightButton()
-            // Switch camera during recording throw error 11818 from AVFoundation callback
-            self.switchCameraButton.isHidden = isRunning
-        } else {
-            self.lightButton.isHidden = true
-            self.switchCameraButton.isHidden = true
-        }
-    }
-    
-    private func updateTimeLabel(currentTime: Int, isRunning: Bool, isRecordState: Bool) {
-        if isRunning, isRecordState {
-            self.timeLabel.setTime(currentTime: currentTime,
-                                   totalTime: Int(Constants.Misc.VideoDiaryMaxDurationSeconds),
-                                   attributedTextStyle: self.timeLabelAttributedTextStyle)
-        } else {
-            self.timeLabel.attributedText = NSAttributedString.create(withText: StringsProvider.string(forKey: .videoDiaryRecorderTitle),
-                                                                      attributedTextStyle: self.timeLabelAttributedTextStyle)
-        }
-    }
-
-    private func updateFilterButton() {
-        
-        switch self.currentState {
-        case .record(let isRecording):
-            self.filterButton.isHidden = isRecording
-            return
-        case .review(_): // hide filter button during review or recording
-            self.filterButton.isHidden = true
-            return
-        default:
-            if self.cameraView.filterMode == .on {
-                self.filterButton.setImage(ImagePalette.image(withName: .filterOn), for: .normal)
-            } else {
-                self.filterButton.setImage(ImagePalette.image(withName: .filterOff), for: .normal)
-            }
-        }
-    }
-    
-    private func updateLightButton() {
-        guard let currentCameraPosition = self.cameraView.currentCameraPosition, currentCameraPosition == .back else {
-            self.lightButton.isHidden = true
-            return
-        }
-        self.lightButton.isHidden = false
-        if self.cameraView.flashMode == .on {
-            self.lightButton.setImage(ImagePalette.image(withName: .flashOn), for: .normal)
-        } else {
-            self.lightButton.setImage(ImagePalette.image(withName: .flashOff), for: .normal)
-        }
-    }
-    
-    private func updatePlayerButton(isRunning: Bool, isRecordState: Bool) {
-        if isRunning {
-            self.playerButton.setImage(ImagePalette.image(withName: .videoPause), for: .normal)
-        } else {
-            if isRecordState {
-                self.playerButton.setImage(ImagePalette.image(withName: .videoRecordResume), for: .normal)
-            } else {
-                self.playerButton.setImage(ImagePalette.image(withName: .videoPlay), for: .normal)
-            }
-        }
-    }
-    
-    private func sendResult() {
-        AppNavigator.pushProgressHUD()
-        guard let videoUrl = self.playerView.videoURL, let videoData = try? Data.init(contentsOf: videoUrl) else {
-            assertionFailure("Couldn't transform result data to expected network representation")
-            self.navigator.handleError(error: nil, presenter: self, onDismiss: { [weak self] in
-                self?.coordinator.onCancelTask()
-            })
-            return
-        }
-        let videoResultFile = TaskNetworkResultFile(data: videoData, fileExtension: self.mergedVideoExtension)
-        let taskNetworkResult = TaskNetworkResult(data: [:], attachedFile: videoResultFile)
-        self.repository.sendTaskResult(taskId: self.taskIdentifier, taskResult: taskNetworkResult)
-            .do(onDispose: { AppNavigator.popProgressHUD() })
-            .subscribe(onSuccess: { [weak self] in
-                guard let self = self else { return }
-                try? FileManager.default.removeItem(atPath: Constants.Task.VideoResultURL.path)
-                self.currentState = .submitted(submitDate: Date(), isPlaying: false)
-            }, onError: { [weak self] error in
-                guard let self = self else { return }
-                self.navigator.handleError(error: error,
-                                           presenter: self)
-            }).disposed(by: self.disposeBag)
-    }
-    
-    private func startRecording() {
-        do {
-            let outputFileURL = try self.setOutputFileURL()
-            self.cameraView.recordedVideoExtension = self.videoExtension
-            try self.cameraView.setOutputFileURL(fileURL: outputFileURL)
-            self.recordTrackingTimer = Timer.scheduledTimer(timeInterval: Self.RecordTrackingTimeInterval,
-                                                            target: self,
-                                                            selector: #selector(self.fireTimer),
-                                                            userInfo: nil,
-                                                            repeats: true)
-            self.currentState = .record(isRecording: true)
-            self.analytics.track(event: .videoDiaryAction(self.noOfPauses > 0 ?
-                                                          AnalyticsParameter.contact.rawValue :
-                                                            AnalyticsParameter.recordingStarted.rawValue))
-            
-            self.cameraView.startRecording()
-        } catch {
-            self.navigator.handleError(error: nil, presenter: self)
-        }
-    }
-    
-    private func stopRecording() {
-        // AppNavigator.pushProgressHUD()
-        self.recordTrackingTimer?.invalidate()
-        self.currentState = .record(isRecording: false)
-        self.cameraView.stopRecording()
-        self.noOfPauses += 1
-    }
-    
-    private func setOutputFileURL() throws -> URL {
-        let outputFileName = "\(CameraView.videoFilenamePrefix)\(self.noOfPauses)"
-        var isDir: ObjCBool = false
-        let fileManager = FileManager.default
-        if !fileManager.fileExists(atPath: Constants.Task.VideoResultURL.path, isDirectory: &isDir) {
-            try fileManager.createDirectory(atPath: Constants.Task.VideoResultURL.path,
-                                            withIntermediateDirectories: false,
-                                            attributes: nil)
-        }
-        let fileURL = Constants.Task.VideoResultURL.appendingPathComponent(outputFileName).appendingPathExtension(self.videoExtension)
-        return fileURL
-    }
-    
-    private func handleCompleteRecording() {
-        // Adding Progress HUD here so that the user interaction is disabled until the video is saved to documents directory
-        self.analytics.track(event: .videoDiaryAction(AnalyticsParameter.recordingPaused.rawValue))
-        AppNavigator.pushProgressHUD()
-        self.cameraView.mergeRecordedVideos()
-    }
-    
-    private func showPermissionAlert(withTitle title: String, message: String) {
-        let actions: [UIAlertAction] = [
-            UIAlertAction(title: StringsProvider.string(forKey: .videoDiaryMissingPermissionSettings),
-                          style: .default,
-                          handler: { [weak self] _ in self?.navigator.openSettings() }),
-            UIAlertAction(title: StringsProvider.string(forKey: .videoDiaryMissingPermissionDiscard),
-                          style: .destructive,
-                          handler: { [weak self] _ in self?.coordinator.onCancelTask() })
-        ]
-        self.showAlert(withTitle: title, message: message, actions: actions, tintColor: ColorPalette.color(withType: .primary))
-    }
-    
-    private func addApplicationWillResignObserver() {
-        NotificationCenter.default.addObserver(self,
-                                               selector: #selector(self.applicationWillResign),
-                                               name: UIApplication.willResignActiveNotification,
-                                               object: nil)
-    }
-    
-    internal func addApplicationDidBecomeActiveObserver() {
-        NotificationCenter.default.addObserver(self,
-                                               selector: #selector(self.applicationDidBecomeActive),
-                                               name: UIApplication.didBecomeActiveNotification,
-                                               object: nil)
-    }
-    
-    private func invalidatedHidePlayerButtonTimer() {
-        self.hidePlayButtonTimer?.invalidate()
-        self.hidePlayButtonTimer = nil
     }
     
     // MARK: - Actions
@@ -515,41 +301,255 @@ public class VideoDiaryRecorderViewController: UIViewController {
             }
         }
     }
-}
-
-extension VideoDiaryRecorderViewController: VideoDiaryPlayerViewDelegate {
-    func mainButtonPressed() {
+    
+    // MARK: - Private Methods
+    
+    private func updateUI() {
+        self.invalidatedHidePlayerButtonTimer()
+        self.videoDiaryPlayerView.updateState(newState: self.currentState, recordDurationTime: self.recordDurationTime)
         switch self.currentState {
-        case .record:
-            self.handleCompleteRecording()
-        case .review:
-            self.sendResult()
-        case .submitted:
-            self.coordinator.onRecordCompleted()
+        case .record(let isRecording):
+            self.stackView.isUserInteractionEnabled = !isRecording
+            self.playerButton.isHidden = false
+            self.overlayView.isHidden = isRecording
+            self.cameraView.isHidden = false
+            self.playerView.isHidden = true
+            self.updateToolbar(currentTime: Int(self.recordDurationTime), isRunning: isRecording, isRecordState: true)
+            self.updatePlayerButton(isRunning: isRecording, isRecordState: true)
+        case .review(let isPlaying):
+            self.stackView.isUserInteractionEnabled = !isPlaying // Needed to allow tap on playerView
+            self.overlayView.isHidden = isPlaying
+            self.playerButton.isHidden = isPlaying
+            self.cameraView.isHidden = true
+            self.playerView.isHidden = false
+            self.updateToolbar(currentTime: Int(self.recordDurationTime), isRunning: isPlaying, isRecordState: false)
+            self.updatePlayerButton(isRunning: isPlaying, isRecordState: false)
+        case .submitted(_, let isPlaying):
+            self.stackView.isUserInteractionEnabled = !isPlaying // Needed to allow tap on playerView
+            self.overlayView.isHidden = isPlaying
+            self.playerButton.isHidden = isPlaying
+            self.cameraView.isHidden = true
+            self.playerView.isHidden = false
+            self.updateToolbar(currentTime: Int(self.recordDurationTime), isRunning: isPlaying, isRecordState: false)
+            self.updatePlayerButton(isRunning: isPlaying, isRecordState: false)
         }
     }
     
-    func discardButtonPressed() {
-        if self.recordDurationTime > 0.0 {
-            let actions: [UIAlertAction] = [
-                UIAlertAction(title: StringsProvider.string(forKey: .videoDiaryDiscardCancel),
-                              style: .default,
-                              handler: nil),
-                UIAlertAction(title: StringsProvider.string(forKey: .videoDiaryDiscardConfirm),
-                              style: .destructive,
-                              handler: { [weak self] _ in self?.coordinator.onCancelTask() })
-            ]
-            self.showAlert(withTitle: StringsProvider.string(forKey: .videoDiaryDiscardTitle),
-                           message: StringsProvider.string(forKey: .videoDiaryDiscardBody),
-                           actions: actions,
-                           tintColor: ColorPalette.color(withType: .primary))
-        } else {
-            self.coordinator.onCancelTask()
+    private func showPermissionAlert(withTitle title: String, message: String) {
+        let actions: [UIAlertAction] = [
+            UIAlertAction(title: StringsProvider.string(forKey: .videoDiaryMissingPermissionSettings),
+                          style: .default,
+                          handler: { [weak self] _ in self?.navigator.openSettings() }),
+            UIAlertAction(title: StringsProvider.string(forKey: .videoDiaryMissingPermissionDiscard),
+                          style: .destructive,
+                          handler: { [weak self] _ in self?.dismiss(animated: true)/*self?.coordinator.onCancelTask()*/ })
+        ]
+        self.showAlert(withTitle: title, message: message, actions: actions, tintColor: ColorPalette.color(withType: .primary))
+    }
+    
+    private func addApplicationWillResignObserver() {
+        NotificationCenter.default.addObserver(self,
+                                               selector: #selector(self.applicationWillResign),
+                                               name: UIApplication.willResignActiveNotification,
+                                               object: nil)
+    }
+    
+    internal func addApplicationDidBecomeActiveObserver() {
+        NotificationCenter.default.addObserver(self,
+                                               selector: #selector(self.applicationDidBecomeActive),
+                                               name: UIApplication.didBecomeActiveNotification,
+                                               object: nil)
+    }
+    
+    private func invalidatedHidePlayerButtonTimer() {
+        self.hidePlayButtonTimer?.invalidate()
+        self.hidePlayButtonTimer = nil
+    }
+    
+    private func startRecording() {
+        do {
+            let outputFileURL = try self.setOutputFileURL()
+            self.cameraView.recordedVideoExtension = self.videoExtension
+            try self.cameraView.setOutputFileURL(fileURL: outputFileURL)
+            self.recordTrackingTimer = Timer.scheduledTimer(timeInterval: Self.RecordTrackingTimeInterval,
+                                                            target: self,
+                                                            selector: #selector(self.fireTimer),
+                                                            userInfo: nil,
+                                                            repeats: true)
+            self.currentState = .record(isRecording: true)
+            self.analytics.track(event: .videoDiaryAction(self.noOfPauses > 0 ?
+                                                          AnalyticsParameter.contact.rawValue :
+                                                            AnalyticsParameter.recordingStarted.rawValue))
+            
+            self.cameraView.startRecording()
+        } catch {
+            self.navigator.handleError(error: nil, presenter: self)
         }
+    }
+    
+    private func stopRecording() {
+        // AppNavigator.pushProgressHUD()
+        self.recordTrackingTimer?.invalidate()
+        self.currentState = .record(isRecording: false)
+        self.cameraView.stopRecording()
+        self.noOfPauses += 1
+    }
+    
+    private func updateToolbar(currentTime: Int, isRunning: Bool, isRecordState: Bool) {
+        self.updateTimeLabel(currentTime: currentTime, isRunning: isRunning, isRecordState: isRecordState)
+        if isRecordState {
+            self.updateLightButton()
+            // Switch camera during recording throw error 11818 from AVFoundation callback
+            self.switchCameraButton.isHidden = isRunning
+            self.lightButton.isHidden = false
+        } else {
+            self.lightButton.isHidden = true
+            self.switchCameraButton.isHidden = true
+        }
+    }
+    
+    private func updateTimeLabel(currentTime: Int, isRunning: Bool, isRecordState: Bool) {
+        if isRunning, isRecordState {
+            self.timeLabel.setTime(currentTime: currentTime,
+                                   totalTime: Int(Constants.Misc.VideoDiaryMaxDurationSeconds),
+                                   attributedTextStyle: self.timeLabelAttributedTextStyle)
+        } else {
+            self.timeLabel.attributedText = NSAttributedString.create(withText: StringsProvider.string(forKey: .videoDiaryRecorderTitle),
+                                                                      attributedTextStyle: self.timeLabelAttributedTextStyle)
+        }
+    }
+    
+    private func updateFilterButton() {
+        
+        switch self.currentState {
+        case .record(let isRecording):
+            self.filterButton.isHidden = isRecording
+            return
+        case .review(_): // hide filter button during review or recording
+            self.filterButton.isHidden = true
+            return
+        default:
+            if self.cameraView.filterMode == .on {
+                self.filterButton.setImage(ImagePalette.image(withName: .filterOn), for: .normal)
+            } else {
+                self.filterButton.setImage(ImagePalette.image(withName: .filterOff), for: .normal)
+            }
+        }
+    }
+    
+    private func updateLightButton() {
+        guard let currentCameraPosition = self.cameraView.currentCameraPosition, currentCameraPosition == .back else {
+            self.lightButton.isHidden = true
+            return
+        }
+        self.lightButton.isHidden = false
+        if self.cameraView.flashMode == .on {
+            self.lightButton.setImage(ImagePalette.image(withName: .flashOn), for: .normal)
+        } else {
+            self.lightButton.setImage(ImagePalette.image(withName: .flashOff), for: .normal)
+        }
+    }
+    
+    private func updatePlayerButton(isRunning: Bool, isRecordState: Bool) {
+        if isRunning {
+            self.playerButton.setImage(ImagePalette.image(withName: .videoPause), for: .normal)
+        } else {
+            if isRecordState {
+                self.playerButton.setImage(ImagePalette.image(withName: .videoRecordResume), for: .normal)
+            } else {
+                self.playerButton.setImage(ImagePalette.image(withName: .videoPlay), for: .normal)
+            }
+        }
+    }
+    
+    private func setOutputFileURL() throws -> URL {
+        let outputFileName = "\(CameraView.videoFilenamePrefix)\(self.noOfPauses)"
+        var isDir: ObjCBool = false
+        let fileManager = FileManager.default
+        if !fileManager.fileExists(atPath: Constants.Task.VideoResultURL.path, isDirectory: &isDir) {
+            try fileManager.createDirectory(atPath: Constants.Task.VideoResultURL.path,
+                                            withIntermediateDirectories: false,
+                                            attributes: nil)
+        }
+        let fileURL = Constants.Task.VideoResultURL.appendingPathComponent(outputFileName).appendingPathExtension(self.videoExtension)
+        return fileURL
+    }
+    
+    private func handleCompleteRecording() {
+        // Adding Progress HUD here so that the user interaction is disabled until the video is saved to documents directory
+        AppNavigator.pushProgressHUD()
+        self.cameraView.mergeRecordedVideos()
+    }
+    
+    private func sendResult() {
+        AppNavigator.pushProgressHUD()
+        guard let videoUrl = self.playerView.videoURL, let videoData = try? Data.init(contentsOf: videoUrl) else {
+            assertionFailure("Couldn't transform result data to expected network representation")
+            self.navigator.handleError(error: nil, presenter: self, onDismiss: { [weak self] in
+                self?.dismiss(animated: true)
+            })
+            return
+        }
+        let videoResultFile = DiaryNoteFile(data: videoData, fileExtension: self.mergedVideoExtension)
+        self.repository.sendDiaryNoteVideo(file: videoResultFile)
+            .do(onDispose: { AppNavigator.popProgressHUD() })
+            .observeOn(MainScheduler.instance)
+            .subscribe(onSuccess: { [weak self] diaryNote in
+                guard let self = self else { return }
+//                self.diaryNoteItem = diaryNote
+                self.onRecordCompleted()
+                DispatchQueue.main.async {
+//                    self.pageState.accept(.transcribe)
+                    self.startPolling() // Start polling after successful creation
+                }
+            }, onError: { [weak self] error in
+                guard let self = self else { return }
+                self.navigator.handleError(error: error,
+                                           presenter: self)
+            }).disposed(by: self.disposeBag)
+//        self.repository.sendTaskResult(taskId: self.taskIdentifier, taskResult: taskNetworkResult)
+//            .do(onDispose: { AppNavigator.popProgressHUD() })
+//            .subscribe(onSuccess: { [weak self] in
+//                guard let self = self else { return }
+//                try? FileManager.default.removeItem(atPath: Constants.Task.VideoResultURL.path)
+//                self.currentState = .submitted(submitDate: Date(), isPlaying: false)
+//            }, onError: { [weak self] error in
+//                guard let self = self else { return }
+//                self.navigator.handleError(error: error,
+//                                           presenter: self)
+//            }).disposed(by: self.disposeBag)
+    }
+    
+    public func onRecordCompleted() {
+        //TODO: gestire il caso in cui il video sia partito
+       try? FileManager.default.removeItem(atPath: Constants.Task.VideoResultURL.path)
+    }
+    
+    // MARK: - Polling Methods
+
+    private func startPolling() {
+        
+    }
+
+    private func stopPolling() {
+        
+    }
+
+    private func handlePollingResponse(diaryNoteItem: DiaryNoteItem) {
+        
+    }
+
+    private func handlePollingError(_ error: Error) {
+        print("Polling error: \(error.localizedDescription)")
+        // Optional: Show an error message to the user or retry
     }
 }
 
-extension VideoDiaryRecorderViewController: CameraViewDelegate {
+extension DiaryNoteVideoViewController: UITextViewDelegate {
+    
+}
+
+extension DiaryNoteVideoViewController: CameraViewDelegate {
     func hasCaptureSessionErrorOccurred(error: CaptureSessionError) {
         // Alert will not be displayed because the view has not appeared yet. That's why using Async with delay.
         Async.mainQueueWithDelay(1, closure: { [weak self] in
@@ -609,7 +609,7 @@ extension VideoDiaryRecorderViewController: CameraViewDelegate {
     }
 }
 
-extension VideoDiaryRecorderViewController: PlayerViewDelegate {
+extension DiaryNoteVideoViewController: PlayerViewDelegate {
     func hasFinishedPlaying() {
         switch self.currentState {
         case .record:
@@ -638,11 +638,34 @@ extension VideoDiaryRecorderViewController: PlayerViewDelegate {
     func sliderValueDidChange() {}
 }
 
-extension FileDataExtension {
-    var avFileType: AVFileType {
-        switch self {
-        case .mp4: return .mp4
-        case .m4a: return .m4a
+extension DiaryNoteVideoViewController: VideoDiaryPlayerViewDelegate {
+    func mainButtonPressed() {
+        switch self.currentState {
+        case .record:
+            self.handleCompleteRecording()
+        case .review:
+            self.sendResult()
+        case .submitted:
+            self.onRecordCompleted()
+        }
+    }
+    
+    func discardButtonPressed() {
+        if self.recordDurationTime > 0.0 {
+            let actions: [UIAlertAction] = [
+                UIAlertAction(title: StringsProvider.string(forKey: .videoDiaryDiscardCancel),
+                              style: .default,
+                              handler: nil),
+                UIAlertAction(title: StringsProvider.string(forKey: .videoDiaryDiscardConfirm),
+                              style: .destructive,
+                              handler: { [weak self] _ in self?.dismiss(animated: true)/*self?.coordinator.onCancelTask()*/ })
+            ]
+            self.showAlert(withTitle: StringsProvider.string(forKey: .videoDiaryDiscardTitle),
+                           message: StringsProvider.string(forKey: .videoDiaryDiscardBody),
+                           actions: actions,
+                           tintColor: ColorPalette.color(withType: .primary))
+        } else {
+            self.dismiss(animated: true)
         }
     }
 }

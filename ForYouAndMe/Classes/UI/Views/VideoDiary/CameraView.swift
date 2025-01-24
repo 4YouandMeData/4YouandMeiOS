@@ -259,34 +259,40 @@ class CameraView: UIView {
         AVAssetExportSession.determineCompatibility(ofExportPreset: exportPreset,
                                                     with: composition,
                                                     outputFileType: self.mergedFileType) { [weak self] compatible in
+            guard let self = self else { return }
+            
             if compatible {
                 guard let exporter = AVAssetExportSession(asset: composition, presetName: exportPreset) else {
-                     self?.delegate?.hasVideoMergingErrorOccurred(error: VideoMergingError.failedToExportVideo)
+                    self.delegate?.hasVideoMergingErrorOccurred(error: .failedToExportVideo)
                     return
                 }
                 
                 exporter.outputURL = mergedFileURL
-                exporter.outputFileType = self?.mergedFileType
+                exporter.outputFileType = self.mergedFileType
                 exporter.shouldOptimizeForNetworkUse = true
                 exporter.fileLengthLimit = Constants.Misc.VideoDiaryMaxFileSize
-                 exporter.exportAsynchronously { [weak self] in
-                    // To execute the result of exporting in the main thread
+                
+                // Background thread
+                exporter.exportAsynchronously {
+                    let status = exporter.status
+                    
                     Async.mainQueue { [weak self] in
-                        switch exporter.status {
+                        guard let self = self else { return }
+                        
+                        switch status {
                         case .completed:
-                            self?.delegate?.didFinishMergingVideo(mergedVideoURL: mergedFileURL)
+                            self.delegate?.didFinishMergingVideo(mergedVideoURL: mergedFileURL)
                         default:
-                            self?.delegate?.hasVideoMergingErrorOccurred(error: VideoMergingError.failedToExportVideo)
+                            self.delegate?.hasVideoMergingErrorOccurred(error: .failedToExportVideo)
                         }
                     }
                 }
-                
             } else {
-                 self?.delegate?.hasVideoMergingErrorOccurred(error: VideoMergingError.failedToExportVideo)
+                self.delegate?.hasVideoMergingErrorOccurred(error: .failedToExportVideo)
             }
         }
     }
-    
+
     private func returnDocumentsDirectoryFile(fileName: String, fileExtension: String) throws -> URL? {
         let fileURL = Constants.Task.VideoResultURL.appendingPathComponent(fileName).appendingPathExtension(fileExtension)
         return fileURL

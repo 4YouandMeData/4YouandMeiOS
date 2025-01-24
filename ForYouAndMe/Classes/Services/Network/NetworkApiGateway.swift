@@ -406,6 +406,8 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             return "v1/diary_notes/\(diaryNoteId)"
         case .sendDiaryNoteAudio(_, _, _):
             return "v1/diary_notes"
+        case .sendDiaryNoteVideo(_):
+            return "v1/diary_notes"
         case .updateDiaryNoteText(let diaryNoteId):
             return "v1/diary_notes/\(diaryNoteId.id)"
         case .getInfoMessages:
@@ -450,7 +452,8 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
                 .sendHealthData,
                 .createUserPhase,
                 .sendDiaryNoteText,
-                .sendDiaryNoteAudio:
+                .sendDiaryNoteAudio,
+                .sendDiaryNoteVideo:
             return .post
         case .verifyEmail,
                 .resendConfirmationEmail,
@@ -550,6 +553,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         case .getDiaryNotes: return "{}".utf8Encoded
         case .sendDiaryNoteText: return "{}".utf8Encoded
         case .sendDiaryNoteAudio: return "{}".utf8Encoded
+        case .sendDiaryNoteVideo: return "{}".utf8Encoded
         case .getDiaryNoteText: return "{}".utf8Encoded
         case .getDiaryNoteAudio: return "{}".utf8Encoded
         case .deleteDiaryNote: return "{}".utf8Encoded
@@ -765,6 +769,24 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             }
             
             return .uploadMultipart(multipartBodyReq)
+        case .sendDiaryNoteVideo(_):
+            var multipartBodyReq = self.multipartBody
+            
+            let parameters: [String: String] = [
+                "diary_note[body]": "",
+                "diary_note[datetime_ref]": Date().string(withFormat: dateTimeFormat),
+                "diary_note[diary_noteable_type]": "",
+                "diary_note[diary_noteable_id]": "",
+                "diary_note[interval]": ""
+            ]
+            
+            for (key, value) in parameters {
+                let parameterData = MultipartFormData(provider: .data(value.data(using: .utf8)!),
+                                                      name: key)
+                multipartBodyReq.append(parameterData)
+            }
+            
+            return .uploadMultipart(multipartBodyReq)
         }
     }
     
@@ -777,11 +799,17 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
                                                       mimeType: file.fileExtension.mimeType)
             return [imageDataProvider]
         case .sendDiaryNoteAudio(_, let file, _):
-            let imageDataProvider = MultipartFormData(provider: MultipartFormData.FormDataProvider.data(file.data),
+            let audioDataProvider = MultipartFormData(provider: MultipartFormData.FormDataProvider.data(file.data),
                                                       name: "diary_note[attachment]",
                                                       fileName: "AudioNote.\(file.fileExtension.name)",
                                                       mimeType: file.fileExtension.mimeType)
-            return [imageDataProvider]
+            return [audioDataProvider]
+        case .sendDiaryNoteVideo(let file):
+            let videoDataProvider = MultipartFormData(provider: MultipartFormData.FormDataProvider.data(file.data),
+                                                      name: "diary_note[attachment]",
+                                                      fileName: "VideoNote.\(file.fileExtension.name)",
+                                                      mimeType: file.fileExtension.mimeType)
+            return [videoDataProvider]
         default:
             return []
         }
@@ -837,6 +865,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
                 .getDiaryNoteAudio,
                 .sendDiaryNoteText,
                 .sendDiaryNoteAudio,
+                .sendDiaryNoteVideo,
                 .deleteDiaryNote,
                 .getInfoMessages,
                 .updateDiaryNoteText:

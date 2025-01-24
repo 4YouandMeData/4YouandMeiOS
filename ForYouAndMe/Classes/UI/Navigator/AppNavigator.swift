@@ -608,6 +608,18 @@ class AppNavigator {
         }
     }
     
+    public func openDiaryNoteVideo(presenter: UIViewController) {
+        let diaryNoteAudioViewController = DiaryNoteVideoViewController()
+        diaryNoteAudioViewController.modalPresentationStyle = .fullScreen
+        presenter.dismiss(animated: true) {
+            guard let topViewController = self.getTopMostViewController() else {
+                assertionFailure("Unable to find a top-most view controller to present DiaryNoteTextViewController")
+                return
+            }
+            topViewController.present(diaryNoteAudioViewController, animated: true, completion: nil)
+        }
+    }
+    
     public func openNoticedViewController(presenter: UIViewController) {
         let noticedViewController = NoticedViewController()
         noticedViewController.modalPresentationStyle = .formSheet

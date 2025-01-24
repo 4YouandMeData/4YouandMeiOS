@@ -126,9 +126,12 @@ class NoticedViewController: UIViewController {
         image = ImagePalette.templateImage(withName: .videoIcon) ?? UIImage()
         let videoPage = GenericListItemView(withTitle: title,
                                             image: image ?? UIImage(),
-                                            colorType: .inactive,
+                                            colorType: .primary,
                                             style: .shadowStyle,
-                                            gestureCallback: {})
+                                            gestureCallback: { [weak self] in
+            guard let self = self else { return }
+            self.navigator.openDiaryNoteVideo(presenter: self)
+        })
         self.scrollStackView.stackView.addArrangedSubview(videoPage)
     }
     

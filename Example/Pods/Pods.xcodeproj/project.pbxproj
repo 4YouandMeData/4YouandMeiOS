@@ -210,6 +210,7 @@
 		0D8D9CDF2D195567008D860B /* AudioAssetManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D8D9CDE2D195560008D860B /* AudioAssetManager.swift */; };
 		0D8D9CE12D19C283008D860B /* LoadingTranscribeAudio.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D8D9CE02D19C270008D860B /* LoadingTranscribeAudio.swift */; };
 		0D8DC6AD2D4258060003478F /* CircleBorderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D8DC6AC2D4257FF0003478F /* CircleBorderView.swift */; };
+		0D8DC6AF2D429EDE0003478F /* DiaryNoteVideoViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D8DC6AE2D429ECF0003478F /* DiaryNoteVideoViewController.swift */; };
 		0D91BE9B8D0D3DB1E6C82236F2F45BC9 /* PhoneNumberFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0E175E5CBCB4CFF2F98628C9444B4A9 /* PhoneNumberFormatter.swift */; };
 		0D9A3AC2EFAFE1D691CF09ECC1A99AE0 /* TestGetUserDataAggregationYear.json in Resources */ = {isa = PBXBuildFile; fileRef = 49A0E18383F68821BC8A23BC3CABEFFD /* TestGetUserDataAggregationYear.json */; };
 		0DC117113DF6A4542171993A78D09604 /* Video+AlertError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84D0DB081743F341C9BF575E9B3C3CD2 /* Video+AlertError.swift */; };
@@ -4059,6 +4060,7 @@
 		0D8D9CDE2D195560008D860B /* AudioAssetManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioAssetManager.swift; sourceTree = "<group>"; };
 		0D8D9CE02D19C270008D860B /* LoadingTranscribeAudio.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoadingTranscribeAudio.swift; sourceTree = "<group>"; };
 		0D8DC6AC2D4257FF0003478F /* CircleBorderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CircleBorderView.swift; sourceTree = "<group>"; };
+		0D8DC6AE2D429ECF0003478F /* DiaryNoteVideoViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiaryNoteVideoViewController.swift; sourceTree = "<group>"; };
 		0D8E56D22CC8475FCB425CD61141A75F /* FIRInstallationsItem.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = FIRInstallationsItem.m; path = FirebaseInstallations/Source/Library/FIRInstallationsItem.m; sourceTree = "<group>"; };
 		0DAFC1299D9093491FB52C01F0A88855 /* Nimble-umbrella.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = "Nimble-umbrella.h"; sourceTree = "<group>"; };
 		0DDCDBC9D3689D5B17002365CF955F29 /* ToArray.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ToArray.swift; path = RxSwift/Observables/ToArray.swift; sourceTree = "<group>"; };
@@ -9555,6 +9557,7 @@
 		75111344CAD9E755804AE8966498C47B /* ViewControllers */ = {
 			isa = PBXGroup;
 			children = (
+				0D8DC6AE2D429ECF0003478F /* DiaryNoteVideoViewController.swift */,
 				0D23A41B2D114AB4000112D8 /* MessagesViewController.swift */,
 				F7B1755284DF6ABC32F00A6CCCC8422B /* ActivitySectionViewController.swift */,
 				D2A826DBD5818369EFA4D5B8C560B280 /* BooleanQuestionsViewController.swift */,
@@ -14759,6 +14762,7 @@
 				7009F7A3170F87A00895AF0E0EF3D648 /* BatchEventUploader.swift in Sources */,
 				8B5D5898E3B759B1D0427911498AF6C2 /* BluetoothPermission.swift in Sources */,
 				31E8498EB03B9B4336840F5418321C66 /* BooleanQuestionsViewController.swift in Sources */,
+				0D8DC6AF2D429EDE0003478F /* DiaryNoteVideoViewController.swift in Sources */,
 				C979CE3BC11231B0D10802EB5883346D /* Bundle+Extensions.swift in Sources */,
 				589271C74E878A4B5D50D7533E13C919 /* ButtonStyles.swift in Sources */,
 				0D657B042D0F010F00582238 /* UIImage+Shadow.swift in Sources */,
