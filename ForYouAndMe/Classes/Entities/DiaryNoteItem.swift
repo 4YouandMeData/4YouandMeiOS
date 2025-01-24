@@ -23,6 +23,7 @@ struct DiaryNoteFile {
 enum DiaryNoteItemType: String, Codable {
     case text
     case audio
+    case video
 }
 
 struct DiaryNoteable: Codable {
@@ -118,7 +119,13 @@ extension DiaryNoteItem: JSONAPIMappable {
         if let attachmentContainer = try? container.decodeIfPresent([String: String].self, forKey: .urlString),
            let attachmentURL = attachmentContainer["url"] {
             self.urlString = attachmentURL
-            self.diaryNoteType = .audio
+            if let contentType = attachmentContainer["content_type"] {
+                if contentType.hasPrefix("video/") {
+                    self.diaryNoteType = .video
+                } else if contentType.hasPrefix("audio/") {
+                    self.diaryNoteType = .audio
+                }
+            }
         } else {
             self.urlString = nil
             self.diaryNoteType = .text

@@ -247,7 +247,7 @@ class VideoDiaryPlayerView: UIView {
         self.singleTimeLabel.isHidden = true
         self.recordedVideoFeedback.isHidden = true
         
-        let totalTime = Constants.Misc.VideoDiaryMaxDurationSeconds
+        let totalTime = Constants.Misc.VideoDiaryNoteMaxDurationSeconds
         
         switch newState {
         case .record(let isRecording):

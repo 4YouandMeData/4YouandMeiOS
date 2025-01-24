@@ -86,6 +86,7 @@ class DiaryNotesViewController: UIViewController {
         tableView.tableFooterView = UIView()
         tableView.registerCellsWithClass(DiaryNoteItemTextTableViewCell.self)
         tableView.registerCellsWithClass(DiaryNoteItemAudioTableViewCell.self)
+        tableView.registerCellsWithClass(DiaryNoteItemVideoTableViewCell.self)
         tableView.contentInsetAdjustmentBehavior = .never
         tableView.backgroundView = self.diaryNoteEmptyView
         tableView.dataSource = self
@@ -346,6 +347,29 @@ extension DiaryNotesViewController: UITableViewDataSource {
                 }
                 
                 return cell
+            case .video:
+                guard let cell = tableView.dequeueReusableCellOfType(type: DiaryNoteItemVideoTableViewCell.self,
+                                                                     forIndexPath: indexPath) else {
+                    assertionFailure("DiaryNoteItemAudioTableViewCell not registered")
+                    return UITableViewCell()
+                }
+                cell.display(data: diaryNote, buttonPressedCallback: { [weak self] in
+                    guard let self = self else { return }
+                    self.navigator.openDiaryNoteAudio(diaryNote: diaryNote,
+                                                      presenter: self,
+                                                      isEditMode: true,
+                                                      isFromChart: self.isFromChart)
+                })
+                
+                if let audioUrl = diaryNote.urlString {
+                    audioAssetManager.fetchAudioDuration(from: URL(string: audioUrl)!) { duration in
+                                    if let duration = duration {
+                                        cell.setTimeLabelFromDuration(duration)
+                                    }
+                                }
+                }
+                
+                return cell
                 
             }
         } else {
@@ -386,7 +410,7 @@ extension DiaryNotesViewController: UITableViewDelegate {
             switch diaryNote.diaryNoteType {
             case .text:
                 return 80 // Altezza variabile per le note di testo
-            case .audio:
+            case .audio, .video:
                 return 100 // Altezza fissa per le note audio
             case .none:
                 return UITableView.automaticDimension

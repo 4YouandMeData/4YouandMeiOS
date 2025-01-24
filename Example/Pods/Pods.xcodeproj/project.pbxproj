@@ -211,6 +211,7 @@
 		0D8D9CE12D19C283008D860B /* LoadingTranscribeAudio.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D8D9CE02D19C270008D860B /* LoadingTranscribeAudio.swift */; };
 		0D8DC6AD2D4258060003478F /* CircleBorderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D8DC6AC2D4257FF0003478F /* CircleBorderView.swift */; };
 		0D8DC6AF2D429EDE0003478F /* DiaryNoteVideoViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D8DC6AE2D429ECF0003478F /* DiaryNoteVideoViewController.swift */; };
+		0D8DC6B12D4403D10003478F /* DiaryNoteItemVideoTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D8DC6B02D4403C80003478F /* DiaryNoteItemVideoTableViewCell.swift */; };
 		0D91BE9B8D0D3DB1E6C82236F2F45BC9 /* PhoneNumberFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0E175E5CBCB4CFF2F98628C9444B4A9 /* PhoneNumberFormatter.swift */; };
 		0D9A3AC2EFAFE1D691CF09ECC1A99AE0 /* TestGetUserDataAggregationYear.json in Resources */ = {isa = PBXBuildFile; fileRef = 49A0E18383F68821BC8A23BC3CABEFFD /* TestGetUserDataAggregationYear.json */; };
 		0DC117113DF6A4542171993A78D09604 /* Video+AlertError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84D0DB081743F341C9BF575E9B3C3CD2 /* Video+AlertError.swift */; };
@@ -4061,6 +4062,7 @@
 		0D8D9CE02D19C270008D860B /* LoadingTranscribeAudio.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoadingTranscribeAudio.swift; sourceTree = "<group>"; };
 		0D8DC6AC2D4257FF0003478F /* CircleBorderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CircleBorderView.swift; sourceTree = "<group>"; };
 		0D8DC6AE2D429ECF0003478F /* DiaryNoteVideoViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiaryNoteVideoViewController.swift; sourceTree = "<group>"; };
+		0D8DC6B02D4403C80003478F /* DiaryNoteItemVideoTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiaryNoteItemVideoTableViewCell.swift; sourceTree = "<group>"; };
 		0D8E56D22CC8475FCB425CD61141A75F /* FIRInstallationsItem.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = FIRInstallationsItem.m; path = FirebaseInstallations/Source/Library/FIRInstallationsItem.m; sourceTree = "<group>"; };
 		0DAFC1299D9093491FB52C01F0A88855 /* Nimble-umbrella.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = "Nimble-umbrella.h"; sourceTree = "<group>"; };
 		0DDCDBC9D3689D5B17002365CF955F29 /* ToArray.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ToArray.swift; path = RxSwift/Observables/ToArray.swift; sourceTree = "<group>"; };
@@ -7790,6 +7792,7 @@
 		1FFE584FBD4B3D772216CC6F1B8C5449 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				0D8DC6B02D4403C80003478F /* DiaryNoteItemVideoTableViewCell.swift */,
 				0D8DC6AC2D4257FF0003478F /* CircleBorderView.swift */,
 				0D8AAE5D2D38400900125F90 /* MessagePageViewController.swift */,
 				0D8D9CE02D19C270008D860B /* LoadingTranscribeAudio.swift */,
@@ -14965,6 +14968,7 @@
 				36A6A56C23CE3888F51250B50F468998 /* SurveyQuestion.swift in Sources */,
 				4C2147F624EBB45E6D41C104F3A42779 /* SurveyQuestionDate.swift in Sources */,
 				F1EEF8D72AE0AAC69EA14858CC90E9BF /* SurveyQuestionNumerical.swift in Sources */,
+				0D8DC6B12D4403D10003478F /* DiaryNoteItemVideoTableViewCell.swift in Sources */,
 				B628FD2AA8450A514C60B2B40850B1D7 /* SurveyQuestionOption.swift in Sources */,
 				D5B768F474F32408012A6AB09F8181E5 /* SurveyQuestionPickerFactory.swift in Sources */,
 				FCD671F7661FD3403A1AC86D0E76EC13 /* SurveyQuestionPickMany.swift in Sources */,

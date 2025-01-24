@@ -1,0 +1,139 @@
+//
+//  DiaryNoteItemVideoTableViewCell.swift
+//  Pods
+//
+//  Created by Giuseppe Lapenta on 24/01/25.
+//
+
+import UIKit
+
+class DiaryNoteItemVideoTableViewCell: UITableViewCell {
+    
+    private lazy var noteImageView: UIImageView = {
+        let imageView = UIImageView()
+        imageView.contentMode = .scaleAspectFit
+        imageView.autoSetDimensions(to: CGSize(width: 22, height: 22))
+        return imageView
+    }()
+    
+    private lazy var noteTitleLabel: UILabel = {
+        let label = UILabel()
+        label.numberOfLines = 0
+        return label
+    }()
+    
+    private lazy var timeLabel: UILabel = {
+        let label = UILabel()
+        label.font = UIFont.systemFont(ofSize: 12)
+        label.text = "00:00"
+        return label
+    }()
+    
+    private lazy var arrowImageView: UIImageView = {
+        let imageView = UIImageView()
+        imageView.image = ImagePalette.templateImage(withName: .arrowRight)
+        imageView.tintColor = ColorPalette.color(withType: .gradientPrimaryEnd)
+        imageView.contentMode = .scaleAspectFit
+        imageView.autoSetDimensions(to: CGSize(width: 24, height: 24))
+        return imageView
+    }()
+    
+    private var buttonPressedCallback: NotificationCallback?
+    
+    override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
+        super.init(style: style, reuseIdentifier: reuseIdentifier)
+        
+        self.selectionStyle = .none
+        self.backgroundColor = .clear
+        self.separatorInset = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 16)
+        
+        let backgroundView = UIStackView.create(withAxis: .vertical, spacing: 8.0)
+        
+        let containerView = UIStackView.create(withAxis: .horizontal, spacing: 10.0)
+        containerView.distribution = .fill
+        containerView.alignment = .center
+        
+        backgroundView.addArrangedSubview(containerView)
+        containerView.autoPinEdgesToSuperviewEdges()
+        
+        containerView.addArrangedSubview(self.noteImageView, horizontalInset: 8.0)
+        
+        let playerView = UIStackView()
+        playerView.axis = .vertical
+        playerView.distribution = .fill
+        playerView.addArrangedSubview(self.noteTitleLabel)
+        playerView.spacing = 16.0
+        
+        let audioView = UIStackView()
+        audioView.axis = .horizontal
+        audioView.alignment = .center
+        audioView.distribution = .fill
+        audioView.spacing = 8.0
+        audioView.addArrangedSubview(self.timeLabel)
+        
+        playerView.addArrangedSubview(audioView)
+        
+        containerView.addArrangedSubview(playerView)
+        containerView.addArrangedSubview(self.arrowImageView)
+        
+        self.contentView.addSubview(backgroundView)
+        backgroundView.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets(top: 0,
+                                                                       left: Constants.Style.DefaultHorizontalMargins,
+                                                                       bottom: 0.0,
+                                                                       right: Constants.Style.DefaultHorizontalMargins))
+        
+        // Enable user interaction on the content view to make sure the cell responds to touch events
+        self.contentView.isUserInteractionEnabled = true
+        
+        // Add Tap Gesture Recognizer to the content view
+        let tapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(self.playButtonPressed))
+        self.contentView.addGestureRecognizer(tapGestureRecognizer)
+    }
+    
+    required init?(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    // MARK: - Public Methods
+    
+    public func display(data: DiaryNoteItem, buttonPressedCallback: @escaping NotificationCallback) {
+        self.buttonPressedCallback = buttonPressedCallback
+        self.updateNoteTitle(data.title ?? "Video Recorded")
+        noteImageView.image = ImagePalette.templateImage(withName: .videoIcon)
+        noteImageView.tintColor = .black
+    }
+    
+    public func setTimeLabelFromDuration(_ duration: TimeInterval) {
+        
+        let attibutedStyle = AttributedTextStyle(fontStyle: .header3,
+                                                 colorType: .primaryText,
+                                                 textAlignment: .left)
+        self.timeLabel.setShortTime(duration: Int(duration),
+                                    attributedTextStyle: attibutedStyle)
+        let totalTimeString = NSAttributedString.create(withText: "Total time: ",
+                                                        attributedTextStyle: attibutedStyle)
+        let string = NSMutableAttributedString(attributedString: totalTimeString)
+        string.append(self.timeLabel.attributedText ?? NSAttributedString())
+        self.timeLabel.attributedText = string
+        
+    }
+    
+    // MARK: - Actions
+    
+    @objc private func playButtonPressed() {
+        // Placeholder for play button action
+        self.buttonPressedCallback?()
+    }
+    
+    // MARK: - Private Methods
+    
+    private func updateNoteTitle(_ title: String) {
+        let attributedString = NSAttributedString.create(withText: title,
+                                                         fontStyle: .paragraph,
+                                                         colorType: .primaryText,
+                                                         textAlignment: .left,
+                                                         underlined: false)
+        
+        self.noteTitleLabel.attributedText = attributedString
+    }
+}
