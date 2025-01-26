@@ -15,7 +15,7 @@ protocol VideoDiaryPlayerViewDelegate: AnyObject {
 class VideoDiaryPlayerView: UIView {
     
     private weak var delegate: VideoDiaryPlayerViewDelegate?
-    
+    private var totalTime: TimeInterval
     // MARK: - Record
     
     private let instructionLabel: UILabel = {
@@ -204,7 +204,10 @@ class VideoDiaryPlayerView: UIView {
     private let singleTimeLabelAttributedTextStyle = AttributedTextStyle(fontStyle: .title,
                                                                          colorType: .primaryText)
     
-    init(delegate: VideoDiaryPlayerViewDelegate) {
+    init(delegate: VideoDiaryPlayerViewDelegate,
+         totalTime: TimeInterval) {
+        
+        self.totalTime = totalTime
         self.delegate = delegate
         super.init(frame: .zero)
         
@@ -246,8 +249,6 @@ class VideoDiaryPlayerView: UIView {
         self.discardButtonView.isHidden = true
         self.singleTimeLabel.isHidden = true
         self.recordedVideoFeedback.isHidden = true
-        
-        let totalTime = Constants.Misc.VideoDiaryNoteMaxDurationSeconds
         
         switch newState {
         case .record(let isRecording):
@@ -306,6 +307,8 @@ class VideoDiaryPlayerView: UIView {
                                                                                    fontStyle: .header3,
                                                                                    colorType: .primaryText)
             }
+        case .view(_):
+            self.isHidden = true
         }
     }
     

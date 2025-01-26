@@ -161,7 +161,6 @@ class DiaryNoteAudioViewController: UIViewController {
     }()
     
     private lazy var footerView: GenericButtonView = {
-
         let buttonView = GenericButtonView(withTextStyleCategory: .transparentBackground(shadow: false ))
         return buttonView
     }()

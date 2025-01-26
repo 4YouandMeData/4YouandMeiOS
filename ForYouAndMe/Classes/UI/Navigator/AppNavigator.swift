@@ -608,15 +608,29 @@ class AppNavigator {
         }
     }
     
-    public func openDiaryNoteVideo(presenter: UIViewController) {
-        let diaryNoteAudioViewController = DiaryNoteVideoViewController()
-        diaryNoteAudioViewController.modalPresentationStyle = .fullScreen
-        presenter.dismiss(animated: true) {
-            guard let topViewController = self.getTopMostViewController() else {
-                assertionFailure("Unable to find a top-most view controller to present DiaryNoteTextViewController")
+    public func openDiaryNoteVideo(diaryNote: DiaryNoteItem?,
+                                   isEdit: Bool,
+                                   presenter: UIViewController,
+                                   isFromChart: Bool) {
+        let diaryNoteVideoViewController = DiaryNoteVideoViewController(diaryNoteItem: diaryNote,
+                                                                        isEdit: isEdit)
+        diaryNoteVideoViewController.modalPresentationStyle = .fullScreen
+        if !isFromChart {
+            presenter.dismiss(animated: true) {
+                guard let topViewController = self.getTopMostViewController() else {
+                    assertionFailure("Unable to find a top-most view controller to present DiaryNoteTextViewController")
+                    return
+                }
+                topViewController.present(diaryNoteVideoViewController, animated: true, completion: nil)
+            }
+        } else {
+            guard let navigationController = presenter.navigationController else {
+                assertionFailure("Missing UINavigationController")
                 return
             }
-            topViewController.present(diaryNoteAudioViewController, animated: true, completion: nil)
+            navigationController.pushViewController(diaryNoteVideoViewController,
+                                                    hidesBottomBarWhenPushed: true,
+                                                    animated: true)
         }
     }
     

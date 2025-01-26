@@ -24,7 +24,7 @@ class PlayerView: UIView {
     
     var player: AVPlayer?
     var contentView: UIView?
-    var playerLayer: AVPlayerLayer?
+    var playerLayer = AVPlayerLayer()
     var videoURL: URL? {
         didSet {
             self.addVideoPlayer()
@@ -56,7 +56,9 @@ class PlayerView: UIView {
     private var timer: Timer?
     
     init() {
+        
         super.init(frame: .zero)
+        self.backgroundColor = .red
         
         self.addSubview(self.layerView)
         self.layerView.autoPinEdgesToSuperviewSafeArea(with: .zero, excludingEdge: .top)
@@ -80,6 +82,20 @@ class PlayerView: UIView {
     
     deinit {
         self.removePlayerObserver()
+    }
+    
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        
+        // Update playerLayer's frame so it doesn't overlap the slider
+        // Since CALayer doesn't use Auto Layout, we manually set its frame here.
+        playerLayer.frame = CGRect(
+            x: 0,
+            y: 0,
+            width: bounds.width,
+            height: bounds.height
+        )
+        playerLayer.backgroundColor = UIColor.black.cgColor
     }
     
     // MARK: - Public Methods
@@ -139,7 +155,7 @@ class PlayerView: UIView {
         let asset = AVAsset(url: videoURL)
         let duration = asset.duration
         self.durationTime = CMTimeGetSeconds(duration)
-        self.player = AVPlayer(url: videoURL)
+        let newPlayer = AVPlayer(url: videoURL)
         do {
             try AVAudioSession.sharedInstance().setCategory(AVAudioSession.Category.playback)
             do {
@@ -150,9 +166,10 @@ class PlayerView: UIView {
         } catch let error as NSError {
             debugPrint(error.localizedDescription)
         }
-        let playerLayer = AVPlayerLayer(player: self.player)
+        self.playerLayer.player = newPlayer
         playerLayer.videoGravity = .resizeAspectFill
         playerLayer.frame = self.bounds
+        self.player = newPlayer
         self.player?.seek(to: .zero)
         self.layerView.layer.addSublayer(playerLayer)
         self.slider.isHidden = false

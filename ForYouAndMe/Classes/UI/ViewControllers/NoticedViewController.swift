@@ -130,7 +130,10 @@ class NoticedViewController: UIViewController {
                                             style: .shadowStyle,
                                             gestureCallback: { [weak self] in
             guard let self = self else { return }
-            self.navigator.openDiaryNoteVideo(presenter: self)
+            self.navigator.openDiaryNoteVideo(diaryNote: nil,
+                                              isEdit: false,
+                                              presenter: self,
+                                              isFromChart: false)
         })
         self.scrollStackView.stackView.addArrangedSubview(videoPage)
     }

@@ -13,6 +13,7 @@ enum VideoDiaryState {
     case record(isRecording: Bool)
     case review(isPlaying: Bool)
     case submitted(submitDate: Date, isPlaying: Bool)
+    case view(isPlaying: Bool)
 }
 
 public class VideoDiaryRecorderViewController: UIViewController {
@@ -56,7 +57,8 @@ public class VideoDiaryRecorderViewController: UIViewController {
     }()
     
     private lazy var videoDiaryPlayerView: VideoDiaryPlayerView = {
-        let view = VideoDiaryPlayerView(delegate: self)
+        let view = VideoDiaryPlayerView(delegate: self,
+                                        totalTime: Constants.Misc.VideoDiaryMaxDurationSeconds)
         return view
     }()
     
@@ -236,6 +238,14 @@ public class VideoDiaryRecorderViewController: UIViewController {
             self.updateToolbar(currentTime: Int(self.recordDurationTime), isRunning: isPlaying, isRecordState: false)
             self.updatePlayerButton(isRunning: isPlaying, isRecordState: false)
         case .submitted(_, let isPlaying):
+            self.stackView.isUserInteractionEnabled = !isPlaying // Needed to allow tap on playerView
+            self.overlayView.isHidden = isPlaying
+            self.playerButton.isHidden = isPlaying
+            self.cameraView.isHidden = true
+            self.playerView.isHidden = false
+            self.updateToolbar(currentTime: Int(self.recordDurationTime), isRunning: isPlaying, isRecordState: false)
+            self.updatePlayerButton(isRunning: isPlaying, isRecordState: false)
+        case .view(let isPlaying):
             self.stackView.isUserInteractionEnabled = !isPlaying // Needed to allow tap on playerView
             self.overlayView.isHidden = isPlaying
             self.playerButton.isHidden = isPlaying
@@ -440,6 +450,13 @@ public class VideoDiaryRecorderViewController: UIViewController {
                 self.playerView.playVideo()
             }
             self.currentState = .submitted(submitDate: submitDate, isPlaying: !isPlaying)
+        case .view(let isPlaying):
+            if isPlaying {
+                self.playerView.pauseVideo()
+            } else {
+                self.playerView.playVideo()
+            }
+            self.currentState = .view(isPlaying: !isPlaying)
         }
         self.updateFilterButton()
     }
@@ -496,6 +513,10 @@ public class VideoDiaryRecorderViewController: UIViewController {
             if isPlaying {
                 self.playerView.playVideo()
             }
+        case .view(let isPlaying):
+            if isPlaying {
+                self.playerView.playVideo()
+            }
         }
     }
     
@@ -513,6 +534,10 @@ public class VideoDiaryRecorderViewController: UIViewController {
             if isPlaying {
                 self.playerView.pauseVideo()
             }
+        case .view(let isPlaying):
+            if isPlaying {
+                self.playerView.pauseVideo()
+            }
         }
     }
 }
@@ -526,6 +551,8 @@ extension VideoDiaryRecorderViewController: VideoDiaryPlayerViewDelegate {
             self.sendResult()
         case .submitted:
             self.coordinator.onRecordCompleted()
+        case .view:
+            return
         }
     }
     
@@ -618,6 +645,8 @@ extension VideoDiaryRecorderViewController: PlayerViewDelegate {
             self.currentState = .review(isPlaying: false)
         case .submitted(let submitDate, _):
             self.currentState = .submitted(submitDate: submitDate, isPlaying: false)
+        case .view:
+            self.currentState = .review(isPlaying: false)
         }
     }
     

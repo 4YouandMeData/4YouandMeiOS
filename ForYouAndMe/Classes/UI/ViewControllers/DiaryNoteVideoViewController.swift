@@ -15,6 +15,8 @@ class DiaryNoteVideoViewController: UIViewController {
     private static let HidePlayerButtonDelay: TimeInterval = 2.0
     private static let RecordTrackingTimeInterval: TimeInterval = 0.1
     private let timeLabelAttributedTextStyle = AttributedTextStyle(fontStyle: .header2, colorType: .secondaryText)
+    private var diaryNoteItem: DiaryNoteItem?
+    private let maxCharacters: Int = 500
     
     private let navigator: AppNavigator
     private let repository: Repository
@@ -31,12 +33,24 @@ class DiaryNoteVideoViewController: UIViewController {
     private let videoExtension = "mov"
     private var recordTrackingTimer: Timer?
     private var hidePlayButtonTimer: Timer?
+    private var isEdit: Bool
     
     private var currentState: VideoDiaryState = .record(isRecording: false) {
         didSet {
             self.updateUI()
         }
     }
+    
+    private lazy var scrollView: TPKeyboardAvoidingScrollView = {
+        let scrollView = TPKeyboardAvoidingScrollView()
+        scrollView.keyboardDismissMode = .interactive
+        return scrollView
+    }()
+    
+    private lazy var footerView: GenericButtonView = {
+        let buttonView = GenericButtonView(withTextStyleCategory: .transparentBackground(shadow: false ))
+        return buttonView
+    }()
     
     private lazy var cameraView: CameraView = {
         let view = CameraView()
@@ -123,7 +137,8 @@ class DiaryNoteVideoViewController: UIViewController {
     }()
     
     private lazy var videoDiaryPlayerView: VideoDiaryPlayerView = {
-        let view = VideoDiaryPlayerView(delegate: self)
+        let view = VideoDiaryPlayerView(delegate: self,
+                                        totalTime: Constants.Misc.VideoDiaryNoteMaxDurationSeconds)
         return view
     }()
     
@@ -134,11 +149,98 @@ class DiaryNoteVideoViewController: UIViewController {
         return button
     }()
     
-    init() {
+    private lazy var closeButton: UIButton = {
+        let button = UIButton()
+        button.setImage(ImagePalette.templateImage(withName: .backButtonNavigation), for: .normal)
+        button.tintColor = ColorPalette.color(withType: .primaryText)
+        button.autoSetDimension(.width, toSize: 32)
+        button.imageView?.contentMode = .scaleAspectFit
+        button.addTarget(self, action: #selector(self.closeButtonPressed), for: .touchUpInside)
+        return button
+    }()
+    
+    private lazy var headerView: UIView = {
+        let containerView = UIView()
+        
+        let stackView = UIStackView.create(withAxis: .vertical, spacing: 8.0)
+        
+        // Close button
+        let closeButtonContainerView = UIView()
+        closeButtonContainerView.addSubview(self.closeButton)
+        self.closeButton.autoPinEdgesToSuperviewEdges(with: .zero, excludingEdge: .trailing)
+        stackView.addArrangedSubview(closeButtonContainerView)
+
+        stackView.addLabel(withText: "Video Recording",
+                           fontStyle: .title,
+                           colorType: .primaryText)
+        
+        stackView.addLineSeparator(lineColor: ColorPalette.color(withType: .secondaryMenu), space: 0, isVertical: false)
+        
+        containerView.addSubview(stackView)
+        stackView.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets(top: 25.0,
+                                                                  left: Constants.Style.DefaultHorizontalMargins/2,
+                                                                  bottom: 0,
+                                                                  right: Constants.Style.DefaultHorizontalMargins/2))
+        return containerView
+    }()
+    
+    private lazy var textView: UITextView = {
+        
+        // Text View
+        let textView = UITextView()
+        let style = NSMutableParagraphStyle()
+        style.lineSpacing = 8
+        textView.typingAttributes = [.foregroundColor: ColorPalette.color(withType: .primaryText),
+                                     .font: FontPalette.fontStyleData(forStyle: .header3).font,
+                                     .paragraphStyle: style]
+        textView.delegate = self
+        textView.layer.borderWidth = 1
+        textView.tintColor = ColorPalette.color(withType: .primary)
+        textView.layer.borderColor = ColorPalette.color(withType: .inactive).cgColor
+        textView.layer.cornerRadius = 8
+        textView.clipsToBounds = true
+        
+        // Toolbar
+        let toolBar = UIToolbar()
+        toolBar.barStyle = .default
+        toolBar.isTranslucent = true
+        toolBar.tintColor = ColorPalette.color(withType: .primary)
+        toolBar.sizeToFit()
+        
+        let doneButton = UIBarButtonItem(barButtonSystemItem: .done, target: self, action: #selector(self.doneButtonPressed))
+        let spaceButton = UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil)
+        
+        toolBar.setItems([spaceButton, doneButton], animated: false)
+        textView.inputAccessoryView = toolBar
+        
+        return textView
+    }()
+    
+    private lazy var placeholderLabel: UILabel = {
+        let label = UILabel()
+        label.text = "Insert your note here"
+        label.font = FontPalette.fontStyleData(forStyle: .paragraph).font
+        label.textColor = ColorPalette.color(withType: .inactive)
+        label.sizeToFit()
+        return label
+    }()
+    
+    private var limitLabel: UILabel = {
+        let label = UILabel()
+        label.textAlignment = .right
+        label.font = FontPalette.fontStyleData(forStyle: .header3).font
+        label.textColor = ColorPalette.color(withType: .inactive)
+        return label
+    }()
+    
+    init(diaryNoteItem: DiaryNoteItem?,
+         isEdit: Bool) {
         self.navigator = Services.shared.navigator
         self.repository = Services.shared.repository
         self.storage = Services.shared.storageServices
         self.analytics = Services.shared.analytics
+        self.isEdit = isEdit
+        self.diaryNoteItem = diaryNoteItem
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -154,46 +256,119 @@ class DiaryNoteVideoViewController: UIViewController {
         super.viewDidLoad()
         self.view.backgroundColor = UIColor.black
         
-        self.view.addSubview(self.cameraView)
-        self.cameraView.autoPinEdgesToSuperviewEdges()
-        
-        self.view.addSubview(self.playerView)
-        self.playerView.autoPinEdgesToSuperviewEdges()
-        
-        // Overlay
-        self.view.addSubview(self.overlayView)
-        self.overlayView.autoPinEdgesToSuperviewEdges()
-        
-        self.view.addSubview(self.stackView)
-        self.stackView.autoPinEdgesToSuperviewSafeArea(with: .zero, excludingEdge: .bottom)
-        self.stackView.autoPinEdge(toSuperviewEdge: .bottom)
-        
-        let toolbarReferenceView = UIView()
-        let playerButtonReferenceView = UIView()
-        
-        self.stackView.addBlankSpace(space: 16.0)
-        self.stackView.addArrangedSubview(toolbarReferenceView)
-        self.stackView.addArrangedSubview(playerButtonReferenceView)
-        self.stackView.addArrangedSubview(self.videoDiaryPlayerView)
-        
-        // Cannot simply add playerButton as subview of the stackView, because isUserInteractionEnabled would be inherited.
-        // PlayerButtonReferenceView.isUserInteractionEnabled will be set to switched based on the playerView state
-        // to allow tap on playerView
-        self.view.addSubview(self.playerButton)
-        self.playerButton.autoAlignAxis(.vertical, toSameAxisOf: playerButtonReferenceView)
-        self.playerButton.autoAlignAxis(.horizontal, toSameAxisOf: playerButtonReferenceView)
-        
-        // Cannot simply add the toolbar as subview of the stackView, because isUserInteractionEnabled would be inherited
-        // and would prevent tap on playerView
-        self.view.addSubview(self.toolbar)
-        self.toolbar.autoPinEdge(.leading, to: .leading, of: toolbarReferenceView)
-        self.toolbar.autoPinEdge(.trailing, to: .trailing, of: toolbarReferenceView)
-        self.toolbar.autoPinEdge(.top, to: .top, of: toolbarReferenceView)
-        self.toolbar.autoPinEdge(.bottom, to: .bottom, of: toolbarReferenceView)
-        
-        self.addApplicationWillResignObserver()
-        self.addApplicationDidBecomeActiveObserver()
-        
+        if isEdit {
+            
+            self.view.backgroundColor = ColorPalette.color(withType: .secondary)
+            self.view.addSubview(self.headerView)
+            self.view.addSubview(self.scrollView)
+            self.view.addSubview(self.footerView)
+            
+            self.scrollView.addSubview(self.playerView)
+                        
+            self.headerView.autoPinEdges(toSuperviewMarginsExcludingEdge: .bottom)
+            self.footerView.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets.zero, excludingEdge: .top)
+            self.footerView.setButtonText("Save")
+            self.footerView.setButtonEnabled(enabled: false)
+            
+            self.scrollView.autoPinEdge(.top, to: .bottom, of: self.headerView)
+            self.scrollView.autoPinEdge(.leading, to: .leading, of: self.view)
+            self.scrollView.autoPinEdge(.trailing, to: .trailing, of: self.view)
+            self.scrollView.autoPinEdge(.bottom, to: .top, of: self.footerView)
+            
+            self.playerView.autoPinEdge(.leading, to: .leading, of: self.view)
+            self.playerView.autoPinEdge(.trailing, to: .trailing, of: self.view)
+            self.playerView.autoPinEdge(.top, to: .bottom, of: self.headerView)
+            self.playerView.autoSetDimension(.height, toSize: 320)
+            
+            let containerTextView = UIView()
+            containerTextView.addSubview(self.textView)
+            self.textView.text = self.diaryNoteItem?.body
+            
+            self.textView.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets(top: 0,
+                                                                          left: 12.0,
+                                                                          bottom: 0,
+                                                                          right: 12.0))
+            
+            // Limit label
+            containerTextView.addSubview(self.limitLabel)
+            self.limitLabel.textColor = .lightGray
+            self.limitLabel.autoPinEdge(.top, to: .bottom, of: self.textView)
+            self.limitLabel.autoPinEdge(.right, to: .right, of: self.textView)
+            self.limitLabel.autoPinEdge(.left, to: .left, of: self.textView)
+            self.limitLabel.text = "\(self.textView.text.count) / \(self.maxCharacters)"
+            
+            let editButton = UIButton()
+            editButton.setImage(ImagePalette.image(withName: .editAudioNote), for: .normal)
+            editButton.addTarget(self, action: #selector(self.editButtonPressed), for: .touchUpInside)
+            containerTextView.addSubview(editButton)
+            editButton.autoPinEdge(.bottom, to: .bottom, of: self.textView, withOffset: -8.0)
+            editButton.autoPinEdge(.right, to: .right, of: self.textView, withOffset: -8.0)
+            editButton.autoSetDimension(.width, toSize: 24.0)
+
+            // Placeholder label
+            self.textView.addSubview(self.placeholderLabel)
+            self.placeholderLabel.isHidden = !textView.text.isEmpty
+            self.placeholderLabel.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets(top: CGFloat(self.textView.font!.pointSize/2),
+                                                                                  left: 5,
+                                                                                  bottom: 10,
+                                                                                  right: 10))
+            self.scrollView.addSubview(containerTextView)
+            containerTextView.autoPinEdge(.top, to: .bottom, of: self.playerView, withOffset: 30)
+            containerTextView.autoPinEdge(.leading, to: .leading, of: self.view)
+            containerTextView.autoPinEdge(.trailing, to: .trailing, of: self.view)
+            containerTextView.autoPinEdge(.bottom, to: .top, of: self.footerView)
+            
+            self.playerView.addSubview(self.playerButton)
+            self.playerButton.autoAlignAxis(.vertical, toSameAxisOf: self.playerView)
+            self.playerButton.autoAlignAxis(.horizontal, toSameAxisOf: self.playerView)
+            
+            guard let videoURL = diaryNoteItem?.urlString else { return }
+            self.playerView.videoURL = URL(string: videoURL)
+            
+            self.currentState = .view(isPlaying: false)
+            
+        } else {
+            self.view.addSubview(self.cameraView)
+            self.cameraView.autoPinEdgesToSuperviewEdges()
+            
+            self.view.addSubview(self.playerView)
+            self.playerView.autoPinEdgesToSuperviewEdges()
+            
+            // Overlay
+            self.view.addSubview(self.overlayView)
+            self.overlayView.autoPinEdgesToSuperviewEdges()
+            
+            self.view.addSubview(self.stackView)
+            self.stackView.autoPinEdgesToSuperviewSafeArea(with: .zero, excludingEdge: .bottom)
+            self.stackView.autoPinEdge(toSuperviewEdge: .bottom)
+            
+            let toolbarReferenceView = UIView()
+            let playerButtonReferenceView = UIView()
+            
+            self.stackView.addBlankSpace(space: 16.0)
+            self.stackView.addArrangedSubview(toolbarReferenceView)
+            self.stackView.addArrangedSubview(playerButtonReferenceView)
+            self.stackView.addArrangedSubview(self.videoDiaryPlayerView)
+            
+            // Cannot simply add playerButton as subview of the stackView, because isUserInteractionEnabled would be inherited.
+            // PlayerButtonReferenceView.isUserInteractionEnabled will be set to switched based on the playerView state
+            // to allow tap on playerView
+            self.view.addSubview(self.playerButton)
+            self.playerButton.autoAlignAxis(.vertical, toSameAxisOf: playerButtonReferenceView)
+            self.playerButton.autoAlignAxis(.horizontal, toSameAxisOf: playerButtonReferenceView)
+            
+            // Cannot simply add the toolbar as subview of the stackView, because isUserInteractionEnabled would be inherited
+            // and would prevent tap on playerView
+            self.view.addSubview(self.toolbar)
+            self.toolbar.autoPinEdge(.leading, to: .leading, of: toolbarReferenceView)
+            self.toolbar.autoPinEdge(.trailing, to: .trailing, of: toolbarReferenceView)
+            self.toolbar.autoPinEdge(.top, to: .top, of: toolbarReferenceView)
+            self.toolbar.autoPinEdge(.bottom, to: .bottom, of: toolbarReferenceView)
+            
+            self.addApplicationWillResignObserver()
+            self.addApplicationDidBecomeActiveObserver()
+        }
+
         self.updateUI()
     }
     
@@ -226,6 +401,13 @@ class DiaryNoteVideoViewController: UIViewController {
                 self.playerView.playVideo()
             }
             self.currentState = .submitted(submitDate: submitDate, isPlaying: !isPlaying)
+        case .view(let isPlaying):
+            if isPlaying {
+                self.playerView.pauseVideo()
+            } else {
+                self.playerView.playVideo()
+            }
+            self.currentState = .view(isPlaying: !isPlaying)
         }
         self.updateFilterButton()
     }
@@ -282,6 +464,10 @@ class DiaryNoteVideoViewController: UIViewController {
             if isPlaying {
                 self.playerView.playVideo()
             }
+        case .view(let isPlaying):
+            if isPlaying {
+                self.playerView.playVideo()
+            }
         }
     }
     
@@ -299,7 +485,25 @@ class DiaryNoteVideoViewController: UIViewController {
             if isPlaying {
                 self.playerView.pauseVideo()
             }
+        case .view(let isPlaying):
+            if isPlaying {
+                self.playerView.playVideo()
+            }
         }
+    }
+    
+    @objc private func doneButtonPressed() {
+        self.textView.resignFirstResponder()
+    }
+    
+    @objc private func closeButtonPressed() {
+        self.genericCloseButtonPressed(completion: {
+            self.navigator.switchToDiaryTab(presenter: self)
+        })
+    }
+    
+    @objc private func editButtonPressed() {
+        self.textView.becomeFirstResponder()
     }
     
     // MARK: - Private Methods
@@ -331,6 +535,11 @@ class DiaryNoteVideoViewController: UIViewController {
             self.cameraView.isHidden = true
             self.playerView.isHidden = false
             self.updateToolbar(currentTime: Int(self.recordDurationTime), isRunning: isPlaying, isRecordState: false)
+            self.updatePlayerButton(isRunning: isPlaying, isRecordState: false)
+        case .view(let isPlaying):
+            self.overlayView.isHidden = isPlaying
+            self.playerButton.isHidden = isPlaying
+            self.playerView.isHidden = false
             self.updatePlayerButton(isRunning: isPlaying, isRecordState: false)
         }
     }
@@ -428,6 +637,8 @@ class DiaryNoteVideoViewController: UIViewController {
         case .review(_): // hide filter button during review or recording
             self.filterButton.isHidden = true
             return
+        case .view(_):
+            self.filterButton.isHidden = true
         default:
             if self.cameraView.filterMode == .on {
                 self.filterButton.setImage(ImagePalette.image(withName: .filterOn), for: .normal)
@@ -496,7 +707,7 @@ class DiaryNoteVideoViewController: UIViewController {
             .observeOn(MainScheduler.instance)
             .subscribe(onSuccess: { [weak self] diaryNote in
                 guard let self = self else { return }
-//                self.diaryNoteItem = diaryNote
+                self.diaryNoteItem = diaryNote
                 self.onRecordCompleted()
                 DispatchQueue.main.async {
 //                    self.pageState.accept(.transcribe)
@@ -507,17 +718,6 @@ class DiaryNoteVideoViewController: UIViewController {
                 self.navigator.handleError(error: error,
                                            presenter: self)
             }).disposed(by: self.disposeBag)
-//        self.repository.sendTaskResult(taskId: self.taskIdentifier, taskResult: taskNetworkResult)
-//            .do(onDispose: { AppNavigator.popProgressHUD() })
-//            .subscribe(onSuccess: { [weak self] in
-//                guard let self = self else { return }
-//                try? FileManager.default.removeItem(atPath: Constants.Task.VideoResultURL.path)
-//                self.currentState = .submitted(submitDate: Date(), isPlaying: false)
-//            }, onError: { [weak self] error in
-//                guard let self = self else { return }
-//                self.navigator.handleError(error: error,
-//                                           presenter: self)
-//            }).disposed(by: self.disposeBag)
     }
     
     public func onRecordCompleted() {
@@ -546,6 +746,22 @@ class DiaryNoteVideoViewController: UIViewController {
 }
 
 extension DiaryNoteVideoViewController: UITextViewDelegate {
+    
+    func textViewDidBeginEditing(_ textView: UITextView) {
+        self.placeholderLabel.isHidden = !textView.text.isEmpty
+    }
+    
+    func textViewDidChange(_ textView: UITextView) {
+        self.placeholderLabel.isHidden = !textView.text.isEmpty
+        self.limitLabel.text = "\(textView.text.count) / \(self.maxCharacters)"
+        if textView.text.count <= self.maxCharacters {
+            textView.layer.borderColor = ColorPalette.color(withType: .inactive).cgColor
+            self.limitLabel.textColor = ColorPalette.color(withType: .inactive)
+        } else {
+            textView.layer.borderColor = UIColor.red.cgColor
+            self.limitLabel.textColor = .red
+        }
+    }
     
 }
 
@@ -618,6 +834,8 @@ extension DiaryNoteVideoViewController: PlayerViewDelegate {
             self.currentState = .review(isPlaying: false)
         case .submitted(let submitDate, _):
             self.currentState = .submitted(submitDate: submitDate, isPlaying: false)
+        case .view:
+            self.currentState = .view(isPlaying: false)
         }
     }
     
@@ -647,6 +865,8 @@ extension DiaryNoteVideoViewController: VideoDiaryPlayerViewDelegate {
             self.sendResult()
         case .submitted:
             self.onRecordCompleted()
+        case .view:
+            return
         }
     }
     

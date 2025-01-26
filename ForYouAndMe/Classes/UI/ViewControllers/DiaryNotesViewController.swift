@@ -355,10 +355,10 @@ extension DiaryNotesViewController: UITableViewDataSource {
                 }
                 cell.display(data: diaryNote, buttonPressedCallback: { [weak self] in
                     guard let self = self else { return }
-                    self.navigator.openDiaryNoteAudio(diaryNote: diaryNote,
+                    self.navigator.openDiaryNoteVideo(diaryNote: diaryNote,
+                                                      isEdit: true,
                                                       presenter: self,
-                                                      isEditMode: true,
-                                                      isFromChart: self.isFromChart)
+                                                      isFromChart: false)
                 })
                 
                 if let audioUrl = diaryNote.urlString {
