@@ -61,7 +61,7 @@ enum DefaultService {
     case sendDiaryNoteText(diaryItem: DiaryNoteItem, fromChart: Bool)
     case updateDiaryNoteText(diaryItem: DiaryNoteItem)
     case sendDiaryNoteAudio(noteId: DiaryNoteItem, attachment: DiaryNoteFile, fromChart: Bool)
-    case sendDiaryNoteVideo(attachment: DiaryNoteFile)
+    case sendDiaryNoteVideo(noteId: DiaryNoteItem, attachment: DiaryNoteFile)
     case deleteDiaryNote(noteId: String)
     // User
     case getUser
