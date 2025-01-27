@@ -169,7 +169,10 @@ class AppNavigator {
     }
     
     public func showWalkThrough(presenter: UIViewController, studyInfoSection: StudyInfoSection) {
-        let walkthrough = WalkthroughViewController()
+        guard let walkthroughPage = studyInfoSection.walkThroughPage else {
+            return
+        }
+        let walkthrough = WalkthroughViewController(walkThroughPage: walkthroughPage)
         walkthrough.modalPresentationStyle = .fullScreen
         walkthrough.pages = studyInfoSection.pages
         presenter.present(walkthrough, animated: true)

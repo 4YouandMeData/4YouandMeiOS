@@ -24,6 +24,17 @@ class WalkthroughViewController: UIViewController {
         }
     }
     
+    var walkthroughPage: Page
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    init(walkThroughPage: Page) {
+        self.walkthroughPage = walkThroughPage
+        super.init(nibName: nil, bundle: nil)
+    }
+    
     // MARK: - Lifecycle
     
     override func viewDidLoad() {
@@ -41,16 +52,6 @@ class WalkthroughViewController: UIViewController {
         buttonSkip.autoPinEdge(toSuperviewSafeArea: .top, withInset: 30)
         
         self.setupScrollView()
-    }
-    
-    override func viewDidLayoutSubviews() {
-        super.viewDidLayoutSubviews()
-        
-        // If you need to adjust the contentSize after rotation or layout changes:
-        scrollView.contentSize = CGSize(
-            width: view.bounds.width * CGFloat(pages.count),
-            height: view.bounds.height
-        )
     }
     
     // MARK: - Scroll View Setup
@@ -71,7 +72,6 @@ class WalkthroughViewController: UIViewController {
     // MARK: - PageControl Setup
     
     private func setupPageControl() {
-        pageControl.numberOfPages = self.pages.count
         pageControl.currentPage = 0
         pageControl.pageIndicatorTintColor = ColorPalette.color(withType: .inactive)
         pageControl.currentPageIndicatorTintColor = ColorPalette.color(withType: .primary)
@@ -88,8 +88,15 @@ class WalkthroughViewController: UIViewController {
     // MARK: - UI Building
     
     private func setupPages() {
-        // Create a subview in scrollView for each WalkthroughPage
-        for (index, pageData) in pages.enumerated() {
+        var index = 0
+        var nextPage: Page? = self.walkthroughPage
+        while let currentPage = nextPage {
+            
+            scrollView.contentSize = CGSize(
+                width: view.bounds.width * CGFloat(index),
+                height: view.bounds.height
+            )
+            
             let pageContainer = UIView()
             scrollView.addSubview(pageContainer)
             
@@ -102,7 +109,7 @@ class WalkthroughViewController: UIViewController {
             
             // Image
             let imageView = UIImageView()
-            imageView.image = pageData.image
+            imageView.image = currentPage.image
             imageView.contentMode = .scaleAspectFit
             
             pageContainer.addSubview(imageView)
@@ -114,7 +121,7 @@ class WalkthroughViewController: UIViewController {
             
             // Title
             let titleLabel = UILabel()
-            titleLabel.text = pageData.title
+            titleLabel.text = currentPage.title
             titleLabel.textColor = ColorPalette.color(withType: .primaryText)
             titleLabel.textAlignment = .center
             titleLabel.font = FontPalette.fontStyleData(forStyle: .header2).font
@@ -126,7 +133,7 @@ class WalkthroughViewController: UIViewController {
 
             // Body
             let bodyLabel = UILabel()
-            bodyLabel.attributedText = pageData.body.htmlToAttributedString
+            bodyLabel.attributedText = currentPage.body.htmlToAttributedString
             bodyLabel.textColor = ColorPalette.color(withType: .primaryText)
             bodyLabel.textAlignment = .center
             bodyLabel.font = FontPalette.fontStyleData(forStyle: .paragraph).font
@@ -138,29 +145,25 @@ class WalkthroughViewController: UIViewController {
             bodyLabel.autoPinEdge(toSuperviewSafeArea: .bottom, withInset: 12.0, relation: .greaterThanOrEqual)
             
             // If it's the last page, add a "Close" button
-            if index == pages.count - 1 {
+            if currentPage.buttonFirstPage == nil {
                 let closeButton = GenericButtonView(withTextStyleCategory: .secondaryBackground(shadow: false))
                 closeButton.setButtonText("Start")
                 closeButton.addTarget(target: self, action: #selector(closeButtonTapped))
                 pageContainer.addSubview(closeButton)
                 closeButton.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets.zero, excludingEdge: .top)
             }
+            // Update the pageControl number of pages
+            self.pageControl.numberOfPages = index + 1
+            index += 1
+            nextPage = currentPage.buttonFirstPage?.getPage(fromPages: self.pages)
         }
     }
     
     /// Fetches remote pages from a JSON endpoint, then downloads images.
     private func setupUI() {
-        // Update the pageControl number of pages
-        self.pageControl.numberOfPages = self.pages.count
         // Build the UI for each page
         self.setupPages()
         self.setupPageControl()
-        
-        // Update scrollView content size after all subviews are laid out
-        self.scrollView.contentSize = CGSize(
-            width: self.view.bounds.width * CGFloat(self.pages.count),
-            height: self.view.bounds.height
-        )
     }
     
     // MARK: - Actions
