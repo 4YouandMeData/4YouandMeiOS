@@ -260,121 +260,10 @@ class DiaryNoteVideoViewController: UIViewController {
         self.view.backgroundColor = UIColor.black
         
         if isEditMode {
-            
-            self.view.backgroundColor = ColorPalette.color(withType: .secondary)
-            self.view.addSubview(self.headerView)
-            self.view.addSubview(self.scrollView)
-            self.view.addSubview(self.footerView)
-            
-            self.scrollView.addSubview(self.playerView)
-                        
-            self.headerView.autoPinEdges(toSuperviewMarginsExcludingEdge: .bottom)
-            self.footerView.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets.zero, excludingEdge: .top)
-            self.footerView.setButtonText("Save")
-            self.footerView.setButtonEnabled(enabled: false)
-            self.footerView.isHidden = true
-            self.footerView.addTarget(target: self, action: #selector(self.updateButtonPressed))
-            
-            self.scrollView.autoPinEdge(.top, to: .bottom, of: self.headerView)
-            self.scrollView.autoPinEdge(.leading, to: .leading, of: self.view)
-            self.scrollView.autoPinEdge(.trailing, to: .trailing, of: self.view)
-            self.scrollView.autoPinEdge(.bottom, to: .top, of: self.footerView)
-            
-            self.playerView.autoPinEdge(.leading, to: .leading, of: self.view)
-            self.playerView.autoPinEdge(.trailing, to: .trailing, of: self.view)
-            self.playerView.autoPinEdge(.top, to: .top, of: self.scrollView)
-            self.playerView.autoSetDimension(.height, toSize: 320)
-            
-            let containerTextView = UIView()
-            containerTextView.addSubview(self.textView)
-            self.textView.text = self.diaryNoteItem?.body
-            
-            self.textView.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets(top: 0,
-                                                                          left: 12.0,
-                                                                          bottom: 0,
-                                                                          right: 12.0))
-            
-            // Limit label
-            containerTextView.addSubview(self.limitLabel)
-            self.limitLabel.textColor = .lightGray
-            self.limitLabel.autoPinEdge(.top, to: .bottom, of: self.textView)
-            self.limitLabel.autoPinEdge(.right, to: .right, of: self.textView)
-            self.limitLabel.autoPinEdge(.left, to: .left, of: self.textView)
-            self.limitLabel.text = "\(self.textView.text.count) / \(self.maxCharacters)"
-            
-            let editButton = UIButton()
-            editButton.setImage(ImagePalette.image(withName: .editAudioNote), for: .normal)
-            editButton.addTarget(self, action: #selector(self.editButtonPressed), for: .touchUpInside)
-            containerTextView.addSubview(editButton)
-            editButton.autoPinEdge(.bottom, to: .bottom, of: self.textView, withOffset: -8.0)
-            editButton.autoPinEdge(.right, to: .right, of: self.textView, withOffset: -8.0)
-            editButton.autoSetDimension(.width, toSize: 24.0)
-
-            // Placeholder label
-            self.textView.addSubview(self.placeholderLabel)
-            self.placeholderLabel.isHidden = !textView.text.isEmpty
-            self.placeholderLabel.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets(top: CGFloat(self.textView.font!.pointSize/2),
-                                                                                  left: 5,
-                                                                                  bottom: 10,
-                                                                                  right: 10))
-            self.scrollView.addSubview(containerTextView)
-            containerTextView.autoPinEdge(.top, to: .bottom, of: self.playerView, withOffset: 30)
-            containerTextView.autoPinEdge(.leading, to: .leading, of: self.view)
-            containerTextView.autoPinEdge(.trailing, to: .trailing, of: self.view)
-            containerTextView.autoPinEdge(.bottom, to: .top, of: self.footerView)
-            
-            self.playerView.addSubview(self.playerButton)
-            self.playerButton.autoAlignAxis(.vertical, toSameAxisOf: self.playerView)
-            self.playerButton.autoAlignAxis(.horizontal, toSameAxisOf: self.playerView)
-            
-            guard let videoURL = diaryNoteItem?.urlString else { return }
-            self.playerView.videoURL = URL(string: videoURL)
-            
-            self.currentState = .view(isPlaying: false)
-            
+            self.setupUIVideoWatch()
         } else {
-            
-            self.view.addSubview(self.cameraView)
-            self.cameraView.autoPinEdgesToSuperviewEdges()
-            
-            self.view.addSubview(self.playerView)
-            self.playerView.autoPinEdgesToSuperviewEdges()
-            
-            // Overlay
-            self.view.addSubview(self.overlayView)
-            self.overlayView.autoPinEdgesToSuperviewEdges()
-            
-            self.view.addSubview(self.stackView)
-            self.stackView.autoPinEdgesToSuperviewSafeArea(with: .zero, excludingEdge: .bottom)
-            self.stackView.autoPinEdge(toSuperviewEdge: .bottom)
-            
-            let toolbarReferenceView = UIView()
-            let playerButtonReferenceView = UIView()
-            
-            self.stackView.addBlankSpace(space: 16.0)
-            self.stackView.addArrangedSubview(toolbarReferenceView)
-            self.stackView.addArrangedSubview(playerButtonReferenceView)
-            self.stackView.addArrangedSubview(self.videoDiaryPlayerView)
-            
-            // Cannot simply add playerButton as subview of the stackView, because isUserInteractionEnabled would be inherited.
-            // PlayerButtonReferenceView.isUserInteractionEnabled will be set to switched based on the playerView state
-            // to allow tap on playerView
-            self.view.addSubview(self.playerButton)
-            self.playerButton.autoAlignAxis(.vertical, toSameAxisOf: playerButtonReferenceView)
-            self.playerButton.autoAlignAxis(.horizontal, toSameAxisOf: playerButtonReferenceView)
-            
-            // Cannot simply add the toolbar as subview of the stackView, because isUserInteractionEnabled would be inherited
-            // and would prevent tap on playerView
-            self.view.addSubview(self.toolbar)
-            self.toolbar.autoPinEdge(.leading, to: .leading, of: toolbarReferenceView)
-            self.toolbar.autoPinEdge(.trailing, to: .trailing, of: toolbarReferenceView)
-            self.toolbar.autoPinEdge(.top, to: .top, of: toolbarReferenceView)
-            self.toolbar.autoPinEdge(.bottom, to: .bottom, of: toolbarReferenceView)
-            
-            self.addApplicationWillResignObserver()
-            self.addApplicationDidBecomeActiveObserver()
+            self.setupUIVideoRecord()
         }
-
         self.updateUI()
     }
     
@@ -530,6 +419,151 @@ class DiaryNoteVideoViewController: UIViewController {
     }
     
     // MARK: - Private Methods
+    
+    private func setupUIVideoWatch() {
+        
+        self.view.subviews.forEach { $0.removeFromSuperview() }
+        
+        self.view.backgroundColor = ColorPalette.color(withType: .secondary)
+        self.view.addSubview(self.headerView)
+        self.view.addSubview(self.scrollView)
+        self.view.addSubview(self.footerView)
+        
+        self.scrollView.addSubview(self.playerView)
+                    
+        self.headerView.autoPinEdges(toSuperviewMarginsExcludingEdge: .bottom)
+        self.footerView.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets.zero, excludingEdge: .top)
+        self.footerView.setButtonText("Save")
+        self.footerView.setButtonEnabled(enabled: false)
+        self.footerView.isHidden = true
+        self.footerView.addTarget(target: self, action: #selector(self.updateButtonPressed))
+        
+        self.scrollView.autoPinEdge(.top, to: .bottom, of: self.headerView)
+        self.scrollView.autoPinEdge(.leading, to: .leading, of: self.view)
+        self.scrollView.autoPinEdge(.trailing, to: .trailing, of: self.view)
+        self.scrollView.autoPinEdge(.bottom, to: .top, of: self.footerView)
+        
+        self.playerView.autoPinEdge(.leading, to: .leading, of: self.view)
+        self.playerView.autoPinEdge(.trailing, to: .trailing, of: self.view)
+        self.playerView.autoPinEdge(.top, to: .top, of: self.scrollView)
+        self.playerView.autoSetDimension(.height, toSize: 320)
+        
+        let containerTextView = UIView()
+        containerTextView.addSubview(self.textView)
+
+        if isPollingActive {
+            self.setupUITrascribe(withContainer: containerTextView)
+        } else {
+            self.textView.text = self.diaryNoteItem?.body
+            
+            self.textView.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets(top: 0,
+                                                                          left: 12.0,
+                                                                          bottom: 0,
+                                                                          right: 12.0))
+            
+            // Limit label
+            containerTextView.addSubview(self.limitLabel)
+            self.limitLabel.textColor = .lightGray
+            self.limitLabel.autoPinEdge(.top, to: .bottom, of: self.textView)
+            self.limitLabel.autoPinEdge(.right, to: .right, of: self.textView)
+            self.limitLabel.autoPinEdge(.left, to: .left, of: self.textView)
+            self.limitLabel.text = "\(self.textView.text.count) / \(self.maxCharacters)"
+            
+            let editButton = UIButton()
+            editButton.setImage(ImagePalette.image(withName: .editAudioNote), for: .normal)
+            editButton.addTarget(self, action: #selector(self.editButtonPressed), for: .touchUpInside)
+            containerTextView.addSubview(editButton)
+            editButton.autoPinEdge(.bottom, to: .bottom, of: self.textView, withOffset: -8.0)
+            editButton.autoPinEdge(.right, to: .right, of: self.textView, withOffset: -8.0)
+            editButton.autoSetDimension(.width, toSize: 24.0)
+
+            // Placeholder label
+            self.textView.addSubview(self.placeholderLabel)
+            self.placeholderLabel.isHidden = !textView.text.isEmpty
+            self.placeholderLabel.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets(top: CGFloat(self.textView.font!.pointSize/2),
+                                                                                  left: 5,
+                                                                                  bottom: 10,
+                                                                                  right: 10))
+        }
+        
+        self.scrollView.addSubview(containerTextView)
+
+        containerTextView.autoPinEdge(.top, to: .bottom, of: self.playerView, withOffset: 30)
+        containerTextView.autoPinEdge(.leading, to: .leading, of: self.view)
+        containerTextView.autoPinEdge(.trailing, to: .trailing, of: self.view)
+        containerTextView.autoPinEdge(.bottom, to: .top, of: self.footerView)
+        
+        self.playerView.addSubview(self.playerButton)
+        self.playerButton.autoAlignAxis(.vertical, toSameAxisOf: self.playerView)
+        self.playerButton.autoAlignAxis(.horizontal, toSameAxisOf: self.playerView)
+        
+        guard let videoURL = diaryNoteItem?.urlString else { return }
+        self.playerView.videoURL = URL(string: videoURL)
+        
+        self.currentState = .view(isPlaying: false)
+    }
+    
+    private func setupUITrascribe(withContainer containerStackView: UIView) {
+        
+        let transcribeStatus = diaryNoteItem?.transcribeStatus == .pending ?
+        LoadingTranscribeAudioStyleCategory.loading :
+        LoadingTranscribeAudioStyleCategory.error
+        
+        if diaryNoteItem?.transcribeStatus == .pending {
+            self.startPolling()
+        }
+        let loadingView = LoadingTranscribeAudio(initWithStyle: transcribeStatus)
+        containerStackView.addSubview(loadingView)
+        loadingView.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets(top: 8.0,
+                                                                    left: 26.0,
+                                                                    bottom: 8.0,
+                                                                    right: 26.0), excludingEdge: .bottom)
+    }
+    
+    private func setupUIVideoRecord() {
+        
+        self.view.subviews.forEach { $0.removeFromSuperview() }
+        
+        self.view.addSubview(self.cameraView)
+        self.cameraView.autoPinEdgesToSuperviewEdges()
+        
+        self.view.addSubview(self.playerView)
+        self.playerView.autoPinEdgesToSuperviewEdges()
+        
+        // Overlay
+        self.view.addSubview(self.overlayView)
+        self.overlayView.autoPinEdgesToSuperviewEdges()
+        
+        self.view.addSubview(self.stackView)
+        self.stackView.autoPinEdgesToSuperviewSafeArea(with: .zero, excludingEdge: .bottom)
+        self.stackView.autoPinEdge(toSuperviewEdge: .bottom)
+        
+        let toolbarReferenceView = UIView()
+        let playerButtonReferenceView = UIView()
+        
+        self.stackView.addBlankSpace(space: 16.0)
+        self.stackView.addArrangedSubview(toolbarReferenceView)
+        self.stackView.addArrangedSubview(playerButtonReferenceView)
+        self.stackView.addArrangedSubview(self.videoDiaryPlayerView)
+        
+        // Cannot simply add playerButton as subview of the stackView, because isUserInteractionEnabled would be inherited.
+        // PlayerButtonReferenceView.isUserInteractionEnabled will be set to switched based on the playerView state
+        // to allow tap on playerView
+        self.view.addSubview(self.playerButton)
+        self.playerButton.autoAlignAxis(.vertical, toSameAxisOf: playerButtonReferenceView)
+        self.playerButton.autoAlignAxis(.horizontal, toSameAxisOf: playerButtonReferenceView)
+        
+        // Cannot simply add the toolbar as subview of the stackView, because isUserInteractionEnabled would be inherited
+        // and would prevent tap on playerView
+        self.view.addSubview(self.toolbar)
+        self.toolbar.autoPinEdge(.leading, to: .leading, of: toolbarReferenceView)
+        self.toolbar.autoPinEdge(.trailing, to: .trailing, of: toolbarReferenceView)
+        self.toolbar.autoPinEdge(.top, to: .top, of: toolbarReferenceView)
+        self.toolbar.autoPinEdge(.bottom, to: .bottom, of: toolbarReferenceView)
+        
+        self.addApplicationWillResignObserver()
+        self.addApplicationDidBecomeActiveObserver()
+    }
     
     private func updateUI() {
         self.invalidatedHidePlayerButtonTimer()
@@ -736,10 +770,10 @@ class DiaryNoteVideoViewController: UIViewController {
                 guard let self = self else { return }
                 self.diaryNoteItem = diaryNote
                 self.onRecordCompleted()
-//                DispatchQueue.main.async {
-//                    self.pageState.accept(.transcribe)
-//                    self.startPolling() // Start polling after successful creation
-//                }
+                DispatchQueue.main.async {
+                    self.startPolling() // Start polling after successful creation
+                    self.setupUIVideoWatch()
+                }
             }, onError: { [weak self] error in
                 guard let self = self else { return }
                 self.navigator.handleError(error: error,
@@ -750,9 +784,6 @@ class DiaryNoteVideoViewController: UIViewController {
     public func onRecordCompleted() {
         // TODO: gestire il caso in cui il video sia partito
         try? FileManager.default.removeItem(atPath: Constants.Task.VideoResultURL.path)
-        self.genericCloseButtonPressed(completion: {
-            self.navigator.switchToDiaryTab(presenter: self)
-        })
     }
     
     // MARK: - Polling Methods
@@ -788,7 +819,6 @@ class DiaryNoteVideoViewController: UIViewController {
             self.diaryNoteItem = diaryNoteItem
             self.stopPolling()
             self.isEditMode = true
-    //            self.pageState.accept(.listen)
     //            self.setupUI()
         }
     }
