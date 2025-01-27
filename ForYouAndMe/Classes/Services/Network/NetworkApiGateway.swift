@@ -371,6 +371,8 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             return "v1/users/me"
         case .sendPushToken:
             return "v1/users/me/add_firebase_token"
+        case .sendWalthroughDone:
+            return "v1/users/me"
         // User Data
         case .getUserData:
             return "v1/studies/\(studyId)/your_data"
@@ -406,7 +408,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             return "v1/diary_notes/\(diaryNoteId)"
         case .sendDiaryNoteAudio(_, _, _):
             return "v1/diary_notes"
-        case .sendDiaryNoteVideo(_):
+        case .sendDiaryNoteVideo(_, _):
             return "v1/diary_notes"
         case .updateDiaryNoteText(let diaryNoteId):
             return "v1/diary_notes/\(diaryNoteId.id)"
@@ -464,6 +466,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
                 .sendUserTimeZone,
                 .sendUserSettings,
                 .sendPushToken,
+                .sendWalthroughDone,
                 .sendSurveyTaskResultData,
                 .delayTask,
                 .updateUserPhase,
@@ -536,6 +539,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             return Constants.Test.OnboardingCompleted
                 ? Bundle.getTestData(from: "TestGetUser")
                 : Bundle.getTestData(from: "TestGetUserNoOnboarding")
+        case .sendWalthroughDone: return "{}".utf8Encoded
         // User Data
         case .getUserData: return Bundle.getTestData(from: "TestGetUserData")
         case .sendUserSettings: return "{}".utf8Encoded
@@ -657,6 +661,10 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         case .sendPushToken(let token):
             var params: [String: Any] = [:]
             params["firebase_token"] = token
+            return .requestParameters(parameters: ["user": params], encoding: JSONEncoding.default)
+        case .sendWalthroughDone:
+            var params: [String: Any] = [:]
+            params["study_walkthrough_done"] = true
             return .requestParameters(parameters: ["user": params], encoding: JSONEncoding.default)
         case .sendUserTimeZone(let timeZoneIdentifier):
             return .requestParameters(parameters: ["time_zone": timeZoneIdentifier], encoding: JSONEncoding.default)
@@ -856,6 +864,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
                 .getSurvey,
                 .sendSurveyTaskResultData,
                 .sendPushToken,
+                .sendWalthroughDone,
                 .delayTask,
                 .sendDeviceData,
                 .sendHealthData,

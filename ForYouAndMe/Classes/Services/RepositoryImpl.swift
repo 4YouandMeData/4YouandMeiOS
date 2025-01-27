@@ -290,6 +290,11 @@ extension RepositoryImpl: Repository {
             .handleError()
     }
     
+    func sendWalkthroughDone() -> Single<()> {
+        return self.api.send(request: ApiRequest(serviceRequest: .sendWalthroughDone))
+            .handleError()
+    }
+    
     func notifyOnboardingCompleted() -> Single<()> {
         return self.api.send(request: ApiRequest(serviceRequest: .notifyOnboardingCompleted))
             .handleError()

@@ -70,6 +70,7 @@ protocol Repository: AnyObject {
     func verifyEmail(validationCode: String) -> Single<()>
     func resendConfirmationEmail() -> Single<()>
     func sendUserData(firstName: String, lastName: String, signatureImage: UIImage) -> Single<()>
+    func sendWalkthroughDone() -> Single<()>
     func notifyOnboardingCompleted() -> Single<()>
     // Integration Section
     func getIntegrationSection() -> Single<IntegrationSection>

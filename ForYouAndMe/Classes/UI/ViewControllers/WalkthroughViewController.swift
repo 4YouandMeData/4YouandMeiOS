@@ -6,9 +6,11 @@
 //
 
 import UIKit
-import PureLayout
+import RxSwift
 
 class WalkthroughViewController: UIViewController {
+    
+    private let repository: Repository
     
     // MARK: - UI Components
     
@@ -26,11 +28,14 @@ class WalkthroughViewController: UIViewController {
     
     var walkthroughPage: Page
     
+    private let disposeBag = DisposeBag()
+    
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
     
     init(walkThroughPage: Page) {
+        self.repository = Services.shared.repository
         self.walkthroughPage = walkThroughPage
         super.init(nibName: nil, bundle: nil)
     }
@@ -174,7 +179,14 @@ class WalkthroughViewController: UIViewController {
     }
     
     @objc private func closeButtonTapped() {
-        self.dismiss(animated: true, completion: nil)
+        self.repository.sendWalkthroughDone()
+            .addProgress()
+            .subscribe(onSuccess: { [weak self] in
+                guard let self = self else { return }
+                self.dismiss(animated: true)
+            }, onError: { error in
+                print("Repository - error updateFirebaseToken: \(error.localizedDescription)")
+            }).disposed(by: self.disposeBag)
     }
 }
 

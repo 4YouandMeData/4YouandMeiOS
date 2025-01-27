@@ -167,6 +167,7 @@ extension DefaultService {
         case .sendUserInfoParameters: return "Send User Info Parameters"
         case .sendUserTimeZone: return "Send User Device Time Zone"
         case .sendPushToken: return "Add Firebase Token"
+        case .sendWalthroughDone: return "Walkthrough Done"
         // User Data
         case .getUserData: return "Get Your Data"
         case .getUserSettings: return "Get User Settings"
