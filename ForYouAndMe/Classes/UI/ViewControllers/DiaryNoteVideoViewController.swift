@@ -277,7 +277,7 @@ class DiaryNoteVideoViewController: UIViewController {
             
             self.playerView.autoPinEdge(.leading, to: .leading, of: self.view)
             self.playerView.autoPinEdge(.trailing, to: .trailing, of: self.view)
-            self.playerView.autoPinEdge(.top, to: .bottom, of: self.headerView)
+            self.playerView.autoPinEdge(.top, to: .top, of: self.scrollView)
             self.playerView.autoSetDimension(.height, toSize: 320)
             
             let containerTextView = UIView()
