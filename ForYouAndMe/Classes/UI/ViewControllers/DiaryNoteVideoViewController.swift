@@ -33,7 +33,10 @@ class DiaryNoteVideoViewController: UIViewController {
     private let videoExtension = "mov"
     private var recordTrackingTimer: Timer?
     private var hidePlayButtonTimer: Timer?
-    private var isEdit: Bool
+    private var isEditMode: Bool
+    private var pollingDisposable: Disposable?
+    private let pollingInterval: TimeInterval = 5.0 // Polling interval in seconds
+    private var isPollingActive: Bool = false
     
     private var currentState: VideoDiaryState = .record(isRecording: false) {
         didSet {
@@ -239,7 +242,7 @@ class DiaryNoteVideoViewController: UIViewController {
         self.repository = Services.shared.repository
         self.storage = Services.shared.storageServices
         self.analytics = Services.shared.analytics
-        self.isEdit = isEdit
+        self.isEditMode = isEdit
         self.diaryNoteItem = diaryNoteItem
         super.init(nibName: nil, bundle: nil)
     }
@@ -256,7 +259,7 @@ class DiaryNoteVideoViewController: UIViewController {
         super.viewDidLoad()
         self.view.backgroundColor = UIColor.black
         
-        if isEdit {
+        if isEditMode {
             
             self.view.backgroundColor = ColorPalette.color(withType: .secondary)
             self.view.addSubview(self.headerView)
@@ -330,6 +333,7 @@ class DiaryNoteVideoViewController: UIViewController {
             self.currentState = .view(isPlaying: false)
             
         } else {
+            
             self.view.addSubview(self.cameraView)
             self.cameraView.autoPinEdgesToSuperviewEdges()
             
@@ -728,10 +732,10 @@ class DiaryNoteVideoViewController: UIViewController {
                 guard let self = self else { return }
                 self.diaryNoteItem = diaryNote
                 self.onRecordCompleted()
-                DispatchQueue.main.async {
+//                DispatchQueue.main.async {
 //                    self.pageState.accept(.transcribe)
-                    self.startPolling() // Start polling after successful creation
-                }
+//                    self.startPolling() // Start polling after successful creation
+//                }
             }, onError: { [weak self] error in
                 guard let self = self else { return }
                 self.navigator.handleError(error: error,
@@ -740,22 +744,49 @@ class DiaryNoteVideoViewController: UIViewController {
     }
     
     public func onRecordCompleted() {
-        //TODO: gestire il caso in cui il video sia partito
-       try? FileManager.default.removeItem(atPath: Constants.Task.VideoResultURL.path)
+        // TODO: gestire il caso in cui il video sia partito
+        try? FileManager.default.removeItem(atPath: Constants.Task.VideoResultURL.path)
+        self.genericCloseButtonPressed(completion: {
+            self.navigator.switchToDiaryTab(presenter: self)
+        })
     }
     
     // MARK: - Polling Methods
 
     private func startPolling() {
-        
+        guard let diaryNoteId = self.diaryNoteItem?.id, !isPollingActive else { return }
+
+        isPollingActive = true
+        pollingDisposable = Observable<Int>
+            .interval(RxTimeInterval.seconds(Int(pollingInterval)), scheduler: MainScheduler.instance)
+            .flatMapLatest { [weak self] _ -> Observable<DiaryNoteItem?> in
+                guard let self = self else { return Observable.just(nil) }
+                return self.repository.getDiaryNoteAudio(noteID: diaryNoteId).map { $0 as DiaryNoteItem? }
+                    .asObservable()
+            }
+            .subscribe(onNext: { [weak self] diaryNoteItem in
+                guard let self = self, let diaryNoteItem = diaryNoteItem else { return }
+                self.handlePollingResponse(diaryNoteItem: diaryNoteItem)
+            }, onError: { [weak self] error in
+                self?.stopPolling()
+                self?.handlePollingError(error)
+            })
     }
 
     private func stopPolling() {
-        
+        pollingDisposable?.dispose()
+        pollingDisposable = nil
+        isPollingActive = false
     }
 
     private func handlePollingResponse(diaryNoteItem: DiaryNoteItem) {
-        
+        if diaryNoteItem.transcribeStatus == .success || diaryNoteItem.transcribeStatus == .error {
+            self.diaryNoteItem = diaryNoteItem
+            self.stopPolling()
+            self.isEditMode = true
+    //            self.pageState.accept(.listen)
+    //            self.setupUI()
+        }
     }
 
     private func handlePollingError(_ error: Error) {

@@ -596,8 +596,7 @@ class AppNavigator {
                                    isEditMode: Bool,
                                    isFromChart: Bool) {
         let diaryNoteAudioViewController = DiaryNoteAudioViewController(withDiaryNote: diaryNote,
-                                                                        isEditMode: isEditMode,
-                                                                        isFromChart: isFromChart)
+                                                                        isEditMode: isEditMode)
         diaryNoteAudioViewController.modalPresentationStyle = .fullScreen
         if !isFromChart {
             presenter.dismiss(animated: true) {

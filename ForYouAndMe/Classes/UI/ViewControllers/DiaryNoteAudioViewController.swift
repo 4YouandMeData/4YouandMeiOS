@@ -181,17 +181,14 @@ class DiaryNoteAudioViewController: UIViewController {
     private var diaryNoteItem: DiaryNoteItem?
     private let maxCharacters: Int = 500
     private var isEditMode: Bool
-    private let isFromChart: Bool
     
     init(withDiaryNote diaryNote: DiaryNoteItem?,
-         isEditMode: Bool,
-         isFromChart: Bool) {
+         isEditMode: Bool) {
         self.navigator = Services.shared.navigator
         self.repository = Services.shared.repository
         self.storage = Services.shared.storageServices
         self.analytics = Services.shared.analytics
         self.isEditMode = isEditMode
-        self.isFromChart = isFromChart
         self.diaryNoteItem = diaryNote
         super.init(nibName: nil, bundle: nil)
     }
