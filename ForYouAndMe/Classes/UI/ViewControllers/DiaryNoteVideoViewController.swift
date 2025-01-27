@@ -400,6 +400,8 @@ class DiaryNoteVideoViewController: UIViewController {
     }
     
     @objc private func editButtonPressed() {
+        self.footerView.isHidden = false
+        self.textView.isEditable = true
         self.textView.becomeFirstResponder()
     }
     
@@ -410,7 +412,9 @@ class DiaryNoteVideoViewController: UIViewController {
                 .addProgress()
                 .subscribe(onSuccess: { [weak self] in
                     guard let self = self else { return }
-                    self.closeButtonPressed()
+                    self.textView.isEditable = false
+                    self.textView.isSelectable = false
+                    self.footerView.isHidden = true
                 }, onError: { [weak self] error in
                     guard let self = self else { return }
                     self.navigator.handleError(error: error, presenter: self)
@@ -450,12 +454,14 @@ class DiaryNoteVideoViewController: UIViewController {
         
         let containerTextView = UIView()
         containerTextView.addSubview(self.textView)
-
-        if isPollingActive {
+        
+        let transcribeStatus = diaryNoteItem?.transcribeStatus
+        if transcribeStatus == .pending || transcribeStatus == .error {
             self.setupUITrascribe(withContainer: containerTextView)
-        } else {
+        } else if transcribeStatus == .success {
+            self.textView.isEditable = false
+            self.textView.isSelectable = false
             self.textView.text = self.diaryNoteItem?.body
-            
             self.textView.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets(top: 0,
                                                                           left: 12.0,
                                                                           bottom: 0,
@@ -819,7 +825,7 @@ class DiaryNoteVideoViewController: UIViewController {
             self.diaryNoteItem = diaryNoteItem
             self.stopPolling()
             self.isEditMode = true
-    //            self.setupUI()
+            self.setupUIVideoWatch()
         }
     }
 
