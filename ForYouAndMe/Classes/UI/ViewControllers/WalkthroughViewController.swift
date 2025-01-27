@@ -41,6 +41,8 @@ class WalkthroughViewController: UIViewController {
         super.viewDidLoad()
         self.view.backgroundColor = ColorPalette.color(withType: .secondary)
         
+        self.setupScrollView()
+        
         let buttonSkip = UIButton()
         buttonSkip.setTitle(StringsProvider.string(forKey: .surveyButtonSkip).uppercased(), for: .normal)
         buttonSkip.setTitleColor(ColorPalette.color(withType: .primary), for: .normal)
@@ -50,8 +52,6 @@ class WalkthroughViewController: UIViewController {
         self.view.addSubview(buttonSkip)
         buttonSkip.autoPinEdge(toSuperviewSafeArea: .trailing, withInset: 22)
         buttonSkip.autoPinEdge(toSuperviewSafeArea: .top, withInset: 30)
-        
-        self.setupScrollView()
     }
     
     // MARK: - Scroll View Setup
@@ -170,11 +170,11 @@ class WalkthroughViewController: UIViewController {
     // MARK: - Actions
     
     @objc private func skipButtonPressed() {
-        dismiss(animated: true, completion: nil)
+        self.dismiss(animated: true, completion: nil)
     }
     
     @objc private func closeButtonTapped() {
-        dismiss(animated: true, completion: nil)
+        self.dismiss(animated: true, completion: nil)
     }
 }
 

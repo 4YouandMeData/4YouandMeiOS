@@ -103,8 +103,7 @@ class TaskViewController: UIViewController {
         headerView.addSubview(self.comingSoonButton)
         self.comingSoonButton.autoPinEdge(.bottom, to: .bottom, of: headerView, withOffset: -20.0)
         self.comingSoonButton.autoPinEdge(.trailing, to: .trailing, of: headerView, withOffset: -12.0)
-        
-        
+
         let actionButton = JJFloatingActionButton()
         let actionItemRiflection = actionButton.addItem()
         actionItemRiflection.titleLabel.text = "Start a reflection"
