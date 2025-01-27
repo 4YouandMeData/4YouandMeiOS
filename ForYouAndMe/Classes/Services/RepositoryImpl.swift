@@ -374,9 +374,10 @@ extension RepositoryImpl: Repository {
             .handleError()
     }
     
-    func sendDiaryNoteVideo(file: DiaryNoteFile) -> Single<DiaryNoteItem> {
+    func sendDiaryNoteVideo(diaryNoteRef: DiaryNoteItem, file: DiaryNoteFile) -> Single<DiaryNoteItem> {
         return self.api.send(request: ApiRequest(serviceRequest:
-                .sendDiaryNoteVideo(attachment: file)))
+                .sendDiaryNoteVideo(noteId: diaryNoteRef,
+                                    attachment: file)))
             .handleError()
     }
     

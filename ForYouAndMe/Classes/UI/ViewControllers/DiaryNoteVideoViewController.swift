@@ -725,7 +725,11 @@ class DiaryNoteVideoViewController: UIViewController {
             return
         }
         let videoResultFile = DiaryNoteFile(data: videoData, fileExtension: self.mergedVideoExtension)
-        self.repository.sendDiaryNoteVideo(file: videoResultFile)
+        self.repository.sendDiaryNoteVideo(diaryNoteRef: self.diaryNoteItem ?? DiaryNoteItem(diaryNoteId: nil,
+                                                                                             body: nil,
+                                                                                             interval: nil,
+                                                                                             diaryNoteable: nil),
+                                           file: videoResultFile)
             .do(onDispose: { AppNavigator.popProgressHUD() })
             .observeOn(MainScheduler.instance)
             .subscribe(onSuccess: { [weak self] diaryNote in

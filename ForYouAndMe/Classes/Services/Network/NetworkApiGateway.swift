@@ -769,15 +769,16 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             }
             
             return .uploadMultipart(multipartBodyReq)
-        case .sendDiaryNoteVideo(_):
+            
+        case .sendDiaryNoteVideo(let diaryNote, _):
             var multipartBodyReq = self.multipartBody
             
             let parameters: [String: String] = [
-                "diary_note[body]": "",
-                "diary_note[datetime_ref]": Date().string(withFormat: dateTimeFormat),
-                "diary_note[diary_noteable_type]": "",
-                "diary_note[diary_noteable_id]": "",
-                "diary_note[interval]": ""
+                "diary_note[body]": diaryNote.body ?? "",
+                "diary_note[datetime_ref]": diaryNote.diaryNoteId.string(withFormat: dateTimeFormat),
+                "diary_note[diary_noteable_type]": diaryNote.diaryNoteable?.type ?? "",
+                "diary_note[diary_noteable_id]": diaryNote.diaryNoteable?.id ?? "",
+                "diary_note[interval]": diaryNote.interval ?? ""
             ]
             
             for (key, value) in parameters {
@@ -804,7 +805,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
                                                       fileName: "AudioNote.\(file.fileExtension.name)",
                                                       mimeType: file.fileExtension.mimeType)
             return [audioDataProvider]
-        case .sendDiaryNoteVideo(let file):
+        case .sendDiaryNoteVideo(_, let file):
             let videoDataProvider = MultipartFormData(provider: MultipartFormData.FormDataProvider.data(file.data),
                                                       name: "diary_note[attachment]",
                                                       fileName: "VideoNote.\(file.fileExtension.name)",

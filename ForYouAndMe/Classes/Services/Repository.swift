@@ -85,7 +85,7 @@ protocol Repository: AnyObject {
     func getDiaryNoteAudio(noteID: String) -> Single<DiaryNoteItem>
     func sendDiaryNoteText(diaryNote: DiaryNoteItem, fromChart: Bool) -> Single<()>
     func sendDiaryNoteAudio(diaryNoteRef: DiaryNoteItem, file: DiaryNoteFile, fromChart: Bool) -> Single<DiaryNoteItem>
-    func sendDiaryNoteVideo(file: DiaryNoteFile) -> Single<DiaryNoteItem>
+    func sendDiaryNoteVideo(diaryNoteRef: DiaryNoteItem, file: DiaryNoteFile) -> Single<DiaryNoteItem>
     func updateDiaryNoteText(diaryNote: DiaryNoteItem) -> Single<()>
     func deleteDiaryNote(noteID: String) -> Single<()>
     // User
