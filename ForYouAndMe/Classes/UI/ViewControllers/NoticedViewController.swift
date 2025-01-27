@@ -13,6 +13,7 @@ class NoticedViewController: UIViewController {
     private let navigator: AppNavigator
     private let analytics: AnalyticsService
     private let repository: Repository
+    private var storage: CacheService
     private var studyInfoSection: StudyInfoSection?
     
     private let disposeBag = DisposeBag()
@@ -52,6 +53,11 @@ class NoticedViewController: UIViewController {
         return containerView
     }()
     
+    private lazy var messages: [MessageInfo] = {
+        let messages = self.storage.infoMessages?.messages(withLocation: .tabDiary)
+        return messages ?? []
+    }()
+    
     private lazy var scrollStackView: ScrollStackView = {
         let scrollStackView = ScrollStackView(axis: .vertical, horizontalInset: 0.0)
         return scrollStackView
@@ -61,6 +67,7 @@ class NoticedViewController: UIViewController {
         self.navigator = Services.shared.navigator
         self.analytics = Services.shared.analytics
         self.repository = Services.shared.repository
+        self.storage = Services.shared.storageServices
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -85,6 +92,18 @@ class NoticedViewController: UIViewController {
         self.view.addSubview(self.scrollStackView)
         self.scrollStackView.autoPinEdgesToSuperviewEdges(with: .zero, excludingEdge: .top)
         self.scrollStackView.autoPinEdge(.top, to: .bottom, of: headerView, withOffset: 30)
+        
+        let comingSoonButton = UIButton()
+        comingSoonButton.setImage(ImagePalette.templateImage(withName: .infoMessage), for: .normal)
+        comingSoonButton.tintColor = ColorPalette.color(withType: .primary)
+        comingSoonButton.addTarget(self, action: #selector(self.infoButtonPressed), for: .touchUpInside)
+        comingSoonButton.autoSetDimension(.width, toSize: 24)
+        comingSoonButton.isHidden = (self.messages.count < 1)
+        
+        self.headerView.addSubview(comingSoonButton)
+        comingSoonButton.autoPinEdge(.bottom, to: .bottom, of: self.headerView, withOffset: -40.0)
+        comingSoonButton.autoPinEdge(.trailing, to: .trailing, of: self.headerView, withOffset: -12.0)
+        
         self.refreshUI()
     }
     
@@ -141,5 +160,9 @@ class NoticedViewController: UIViewController {
     // MARK: Actions
     @objc private func closeButtonPressed() {
         self.customCloseButtonPressed()
+    }
+    
+    @objc private func infoButtonPressed() {
+        self.navigator.openMessagePage(withLocation: .pageChartDiary, presenter: self)
     }
 }
