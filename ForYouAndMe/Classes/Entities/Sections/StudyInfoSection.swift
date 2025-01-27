@@ -21,10 +21,12 @@ struct StudyInfoSection {
 extension StudyInfoSection: JSONAPIMappable {
     static var includeList: String? = """
 pages,\
+pages.link_1,\
 reward_page,\
 information_page,\
 faq_page,\
-walkthrough_page
+walkthrough_page,\
+walkthrough_page.link_1
 """
     
     enum CodingKeys: String, CodingKey {

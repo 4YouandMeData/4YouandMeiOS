@@ -93,7 +93,7 @@ class WalkthroughViewController: UIViewController {
         while let currentPage = nextPage {
             
             scrollView.contentSize = CGSize(
-                width: view.bounds.width * CGFloat(index),
+                width: view.bounds.width * CGFloat(index+1),
                 height: view.bounds.height
             )
             
@@ -156,6 +156,7 @@ class WalkthroughViewController: UIViewController {
             self.pageControl.numberOfPages = index + 1
             index += 1
             nextPage = currentPage.buttonFirstPage?.getPage(fromPages: self.pages)
+            print("Prova prova")
         }
     }
     
