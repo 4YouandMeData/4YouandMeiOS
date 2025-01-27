@@ -269,6 +269,8 @@ class DiaryNoteVideoViewController: UIViewController {
             self.footerView.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets.zero, excludingEdge: .top)
             self.footerView.setButtonText("Save")
             self.footerView.setButtonEnabled(enabled: false)
+            self.footerView.isHidden = true
+            self.footerView.addTarget(target: self, action: #selector(self.updateButtonPressed))
             
             self.scrollView.autoPinEdge(.top, to: .bottom, of: self.headerView)
             self.scrollView.autoPinEdge(.leading, to: .leading, of: self.view)
@@ -494,6 +496,8 @@ class DiaryNoteVideoViewController: UIViewController {
     
     @objc private func doneButtonPressed() {
         self.textView.resignFirstResponder()
+        self.footerView.isHidden = false
+        self.footerView.setButtonEnabled(enabled: true)
     }
     
     @objc private func closeButtonPressed() {
@@ -504,6 +508,21 @@ class DiaryNoteVideoViewController: UIViewController {
     
     @objc private func editButtonPressed() {
         self.textView.becomeFirstResponder()
+    }
+    
+    @objc private func updateButtonPressed() {
+        if var diaryNote = self.diaryNoteItem {
+            diaryNote.body = self.textView.text
+            self.repository.updateDiaryNoteText(diaryNote: diaryNote)
+                .addProgress()
+                .subscribe(onSuccess: { [weak self] in
+                    guard let self = self else { return }
+                    self.closeButtonPressed()
+                }, onError: { [weak self] error in
+                    guard let self = self else { return }
+                    self.navigator.handleError(error: error, presenter: self)
+                }).disposed(by: self.disposeBag)
+        }
     }
     
     // MARK: - Private Methods
