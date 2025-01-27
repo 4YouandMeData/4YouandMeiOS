@@ -168,6 +168,13 @@ class AppNavigator {
         navigationController.popToExpectedViewController(ofClass: WelcomeViewController.self, animated: true)
     }
     
+    public func showWalkThrough(presenter: UIViewController, studyInfoSection: StudyInfoSection) {
+        let walkthrough = WalkthroughViewController()
+        walkthrough.modalPresentationStyle = .fullScreen
+        walkthrough.pages = studyInfoSection.pages
+        presenter.present(walkthrough, animated: true)
+    }
+    
     // MARK: - Login
     
     public func showLogin(presenter: UIViewController) {

@@ -116,6 +116,8 @@ class FeedViewController: UIViewController {
                                           borderWidth: 1.0)
         
         actionButton.addSubview(borderView)
+        
+        self.checkForWalkThrough()
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -180,6 +182,25 @@ class FeedViewController: UIViewController {
             }, onError: { error in
                 print("FeedViewController - Error refreshing user: \(error.localizedDescription)")
             }).disposed(by: self.disposeBag)
+    }
+    
+    private func checkForWalkThrough() {
+        guard let user = self.repository.currentUser else {
+            assertionFailure("Missing current user")
+            return
+        }
+        
+        let walkThrough = user.studyWalkthroughDone
+        if !walkThrough {
+            self.repository.getStudyInfoSection().subscribe(onSuccess: { [weak self] infoSection in
+                guard let self = self else { return }
+                self.navigator.showWalkThrough(presenter: self,
+                                               studyInfoSection: infoSection)
+            }, onError: { [weak self] error in
+                guard let self = self else { return }
+                self.navigator.handleError(error: error, presenter: self)
+            }).disposed(by: self.disposeBag)
+        }
     }
 }
 

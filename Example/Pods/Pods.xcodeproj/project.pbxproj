@@ -212,6 +212,7 @@
 		0D8DC6AD2D4258060003478F /* CircleBorderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D8DC6AC2D4257FF0003478F /* CircleBorderView.swift */; };
 		0D8DC6AF2D429EDE0003478F /* DiaryNoteVideoViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D8DC6AE2D429ECF0003478F /* DiaryNoteVideoViewController.swift */; };
 		0D8DC6B12D4403D10003478F /* DiaryNoteItemVideoTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D8DC6B02D4403C80003478F /* DiaryNoteItemVideoTableViewCell.swift */; };
+		0D8DC6B52D46FD290003478F /* WalkthroughViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D8DC6B42D46FD220003478F /* WalkthroughViewController.swift */; };
 		0D91BE9B8D0D3DB1E6C82236F2F45BC9 /* PhoneNumberFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0E175E5CBCB4CFF2F98628C9444B4A9 /* PhoneNumberFormatter.swift */; };
 		0D9A3AC2EFAFE1D691CF09ECC1A99AE0 /* TestGetUserDataAggregationYear.json in Resources */ = {isa = PBXBuildFile; fileRef = 49A0E18383F68821BC8A23BC3CABEFFD /* TestGetUserDataAggregationYear.json */; };
 		0DC117113DF6A4542171993A78D09604 /* Video+AlertError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84D0DB081743F341C9BF575E9B3C3CD2 /* Video+AlertError.swift */; };
@@ -4063,6 +4064,7 @@
 		0D8DC6AC2D4257FF0003478F /* CircleBorderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CircleBorderView.swift; sourceTree = "<group>"; };
 		0D8DC6AE2D429ECF0003478F /* DiaryNoteVideoViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiaryNoteVideoViewController.swift; sourceTree = "<group>"; };
 		0D8DC6B02D4403C80003478F /* DiaryNoteItemVideoTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiaryNoteItemVideoTableViewCell.swift; sourceTree = "<group>"; };
+		0D8DC6B42D46FD220003478F /* WalkthroughViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkthroughViewController.swift; sourceTree = "<group>"; };
 		0D8E56D22CC8475FCB425CD61141A75F /* FIRInstallationsItem.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = FIRInstallationsItem.m; path = FirebaseInstallations/Source/Library/FIRInstallationsItem.m; sourceTree = "<group>"; };
 		0DAFC1299D9093491FB52C01F0A88855 /* Nimble-umbrella.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = "Nimble-umbrella.h"; sourceTree = "<group>"; };
 		0DDCDBC9D3689D5B17002365CF955F29 /* ToArray.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ToArray.swift; path = RxSwift/Observables/ToArray.swift; sourceTree = "<group>"; };
@@ -9560,6 +9562,7 @@
 		75111344CAD9E755804AE8966498C47B /* ViewControllers */ = {
 			isa = PBXGroup;
 			children = (
+				0D8DC6B42D46FD220003478F /* WalkthroughViewController.swift */,
 				0D8DC6AE2D429ECF0003478F /* DiaryNoteVideoViewController.swift */,
 				0D23A41B2D114AB4000112D8 /* MessagesViewController.swift */,
 				F7B1755284DF6ABC32F00A6CCCC8422B /* ActivitySectionViewController.swift */,
@@ -14810,6 +14813,7 @@
 				96A89EE3D18FD44E360A2B38F5448A04 /* DoubleButtonHorizontalView.swift in Sources */,
 				CC477420CA6BC47B9B550570DD8617CD /* DoubleButtonVerticalView.swift in Sources */,
 				E8F317D020445D5DCE8FC94F83A1187D /* DummyHealthManager.swift in Sources */,
+				0D8DC6B52D46FD290003478F /* WalkthroughViewController.swift in Sources */,
 				038E68EE4AAA5CE107E4E9E4903F896E /* Educational.swift in Sources */,
 				B740DF5AC1E97D101255F75D6E9E3E98 /* ExpiringValue.swift in Sources */,
 				AA947F87F3B71C922F7E3C67D885D144 /* Feed.swift in Sources */,

@@ -15,6 +15,7 @@ struct StudyInfoSection {
     let rewardPage: Page?
     var faqPage: Page?
     let contactsPage: Page?
+    let walkThroughPage: Page?
 }
 
 extension StudyInfoSection: JSONAPIMappable {
@@ -22,7 +23,8 @@ extension StudyInfoSection: JSONAPIMappable {
 pages,\
 reward_page,\
 information_page,\
-faq_page
+faq_page,\
+walkthrough_page
 """
     
     enum CodingKeys: String, CodingKey {
@@ -32,5 +34,6 @@ faq_page
         case rewardPage = "reward_page"
         case faqPage = "faq_page"
         case contactsPage = "information_page"
+        case walkThroughPage = "walkthrough_page"
     }
 }

@@ -23,6 +23,7 @@ struct User: Codable {
     @FailableCodable
     var customData: [UserInfoParameter]?
     let userPhases: [UserPhase]?
+    let studyWalkthroughDone: Bool
 }
 
 extension User: JSONAPIMappable {
@@ -47,5 +48,6 @@ user_study_phases.study_phase.name
         case timeZone = "time_zone"
         case customData = "custom_data"
         case userPhases = "user_study_phases"
+        case studyWalkthroughDone = "study_walkthrough_done"
     }
 }
