@@ -64,16 +64,19 @@ class DiaryNotesViewController: UIViewController {
         
         let containerView = UIView()
                 
-        let buttonsView = DoubleButtonHorizontalView(styleCategory: .primaryBackground(firstButtonPrimary: true,
+        let buttonsView = TripleButtonHorizontalView(styleCategory: .primaryBackground(firstButtonPrimary: true,
                                                                                         secondButtonPrimary: true))
         
-        buttonsView.setFirstButtonText("Record")
         buttonsView.setFirstButtonImage(ImagePalette.image(withName: .audioNote))
         buttonsView.addTargetToFirstButton(target: self, action: #selector(self.createAudioDiaryNote))
         
-        buttonsView.setSecondButtonText("Write")
         buttonsView.setSecondButtonImage(ImagePalette.image(withName: .textNote))
         buttonsView.addTargetToSecondButton(target: self, action: #selector(self.createTextDiaryNote))
+        
+        let videoIcon = ImagePalette.templateImage(withName: .videoIcon)
+        videoIcon?.withTintColor(ColorPalette.color(withType: .secondary), renderingMode: .alwaysOriginal)
+        buttonsView.setThirdButtonImage(ImagePalette.templateImage(withName: .videoIcon))
+        buttonsView.addTargetToThirdButton(target: self, action: #selector(self.createVideoNote))
         
         containerView.addSubview(buttonsView)
         buttonsView.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets.zero)
@@ -290,6 +293,13 @@ class DiaryNotesViewController: UIViewController {
                                          presenter: self,
                                          isEditMode: false,
                                          isFromChart: self.isFromChart)
+    }
+    
+    @objc private func createVideoNote() {
+        self.navigator.openDiaryNoteVideo(diaryNote: diaryNote,
+                                          isEdit: false,
+                                          presenter: self,
+                                          isFromChart: self.isFromChart)
     }
 }
 

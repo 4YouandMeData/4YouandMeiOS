@@ -213,6 +213,7 @@
 		0D8DC6AF2D429EDE0003478F /* DiaryNoteVideoViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D8DC6AE2D429ECF0003478F /* DiaryNoteVideoViewController.swift */; };
 		0D8DC6B12D4403D10003478F /* DiaryNoteItemVideoTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D8DC6B02D4403C80003478F /* DiaryNoteItemVideoTableViewCell.swift */; };
 		0D8DC6B52D46FD290003478F /* WalkthroughViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D8DC6B42D46FD220003478F /* WalkthroughViewController.swift */; };
+		0D8DC6B82D47A0950003478F /* TripleButtonHorizontalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D8DC6B72D47A08A0003478F /* TripleButtonHorizontalView.swift */; };
 		0D91BE9B8D0D3DB1E6C82236F2F45BC9 /* PhoneNumberFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0E175E5CBCB4CFF2F98628C9444B4A9 /* PhoneNumberFormatter.swift */; };
 		0D9A3AC2EFAFE1D691CF09ECC1A99AE0 /* TestGetUserDataAggregationYear.json in Resources */ = {isa = PBXBuildFile; fileRef = 49A0E18383F68821BC8A23BC3CABEFFD /* TestGetUserDataAggregationYear.json */; };
 		0DC117113DF6A4542171993A78D09604 /* Video+AlertError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84D0DB081743F341C9BF575E9B3C3CD2 /* Video+AlertError.swift */; };
@@ -4065,6 +4066,7 @@
 		0D8DC6AE2D429ECF0003478F /* DiaryNoteVideoViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiaryNoteVideoViewController.swift; sourceTree = "<group>"; };
 		0D8DC6B02D4403C80003478F /* DiaryNoteItemVideoTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiaryNoteItemVideoTableViewCell.swift; sourceTree = "<group>"; };
 		0D8DC6B42D46FD220003478F /* WalkthroughViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkthroughViewController.swift; sourceTree = "<group>"; };
+		0D8DC6B72D47A08A0003478F /* TripleButtonHorizontalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripleButtonHorizontalView.swift; sourceTree = "<group>"; };
 		0D8E56D22CC8475FCB425CD61141A75F /* FIRInstallationsItem.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = FIRInstallationsItem.m; path = FirebaseInstallations/Source/Library/FIRInstallationsItem.m; sourceTree = "<group>"; };
 		0DAFC1299D9093491FB52C01F0A88855 /* Nimble-umbrella.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = "Nimble-umbrella.h"; sourceTree = "<group>"; };
 		0DDCDBC9D3689D5B17002365CF955F29 /* ToArray.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ToArray.swift; path = RxSwift/Observables/ToArray.swift; sourceTree = "<group>"; };
@@ -7794,6 +7796,7 @@
 		1FFE584FBD4B3D772216CC6F1B8C5449 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				0D8DC6B72D47A08A0003478F /* TripleButtonHorizontalView.swift */,
 				0D8DC6B02D4403C80003478F /* DiaryNoteItemVideoTableViewCell.swift */,
 				0D8DC6AC2D4257FF0003478F /* CircleBorderView.swift */,
 				0D8AAE5D2D38400900125F90 /* MessagePageViewController.swift */,
@@ -14959,6 +14962,7 @@
 				10D231F04C3D5B286D2F6548B3886EB3 /* StringsProvider.swift in Sources */,
 				4A677456F76E930F08347998092B2028 /* Study.swift in Sources */,
 				308730B658E8CCD92B35C708B9202171 /* StudyInfoHeaderView.swift in Sources */,
+				0D8DC6B82D47A0950003478F /* TripleButtonHorizontalView.swift in Sources */,
 				C844B71A3670B3EFD8533686C20AA6A4 /* StudyInfoSection.swift in Sources */,
 				9524ADFD89D917CEEB8306D1B558BF1F /* StudyInfoViewController.swift in Sources */,
 				DBF4A040846F19179F73D1513E2DA9ED /* Style.swift in Sources */,
