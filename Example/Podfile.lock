@@ -2,6 +2,7 @@ PODS:
   - Alamofire (5.4.1)
   - AlamofireImage (4.2.0):
     - Alamofire (~> 5.4)
+  - BalzoGPUImage2 (0.2.1)
   - BLZJapx/Codable (3.0.1):
     - BLZJapx/Core
   - BLZJapx/CodableMoya (3.0.1):
@@ -20,7 +21,6 @@ PODS:
     - BLZJapx/Moya
     - Moya/RxSwift (~> 14.0)
   - CountryPickerView (3.1.3)
-  - EVGPUImage2 (0.2.0)
   - FBSnapshotTestCase (2.1.4):
     - FBSnapshotTestCase/SwiftSupport (= 2.1.4)
   - FBSnapshotTestCase/Core (2.1.4)
@@ -80,11 +80,11 @@ PODS:
     - GoogleUtilities/Environment (~> 7.0)
     - GoogleUtilities/Reachability (~> 7.0)
     - GoogleUtilities/UserDefaults (~> 7.0)
-  - ForYouAndMe (0.90.1):
+  - ForYouAndMe (0.92.2):
     - AlamofireImage (~> 4.1)
+    - BalzoGPUImage2 (~> 0.2.1)
     - BLZJapx/RxCodableMoya (~> 3.0.0)
     - CountryPickerView (~> 3.1.2)
-    - EVGPUImage2 (~> 0.2)
     - Firebase/Analytics (~> 7.2.0)
     - Firebase/Crashlytics (~> 7.2.0)
     - Firebase/Messaging (~> 7.2.0)
@@ -208,9 +208,9 @@ SPEC REPOS:
   trunk:
     - Alamofire
     - AlamofireImage
+    - BalzoGPUImage2
     - BLZJapx
     - CountryPickerView
-    - EVGPUImage2
     - FBSnapshotTestCase
     - Firebase
     - FirebaseAnalytics
@@ -255,9 +255,9 @@ EXTERNAL SOURCES:
 SPEC CHECKSUMS:
   Alamofire: 2291f7d21ca607c491dd17642e5d40fdcda0e65c
   AlamofireImage: 34a2d90b0e5fe6a5605f85ae4b7b01e784c60192
+  BalzoGPUImage2: ee8b3dd936584af13657c4c2ad49fa02ef35f98b
   BLZJapx: 021bd68d387cacb057ee791403098bbc4e40b4b8
   CountryPickerView: 383c09949f7455de9892db7ce3400b10da090150
-  EVGPUImage2: 1e057f25fbab811b8a9e98d19f96bbd5eb434913
   FBSnapshotTestCase: 094f9f314decbabe373b87cc339bea235a63e07a
   Firebase: 456eeacc158d8c58586b7871619a81bb9f27d4ae
   FirebaseAnalytics: 2673264e482b428df13786b59165ebf420881d7a
@@ -267,7 +267,7 @@ SPEC CHECKSUMS:
   FirebaseInstallations: 7f7ed0e7e27fb51f57291e1876e2ddb1524126c1
   FirebaseInstanceID: aaecc93b4528bbcafea12c477e26827719ca1183
   FirebaseMessaging: 7091222bfac24ca89c569c3c59e58390311e487f
-  ForYouAndMe: d028ce7d4e45bbc49c599b4c880b0633a970c258
+  ForYouAndMe: 6f5c808f987948bf905ba0590f51c3ae8efeccb7
   FYAMResearchKit: c79d2de80d301ac02ba9b303d97d35b083d4676b
   GoogleAppMeasurement: 57a0df93dc2feb5176b1bac06012dbd725191ba5
   GoogleDataTransport: 116c84c4bdeb76be2a7a46de51244368f9794eab

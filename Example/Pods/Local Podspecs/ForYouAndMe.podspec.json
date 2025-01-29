@@ -1,6 +1,6 @@
 {
   "name": "ForYouAndMe",
-  "version": "0.90.1",
+  "version": "0.92.2",
   "summary": "Framework for research studies apps",
   "description": "ForYouAndMe is a framework aimed to easily develop an app for research study",
   "homepage": "https://github.com/4YouandMeData/4YouandMeiOS",
@@ -13,7 +13,7 @@
   },
   "source": {
     "git": "https://github.com/4YouandMeData/4YouandMeiOS.git",
-    "tag": "0.90.1"
+    "tag": "0.92.2"
   },
   "cocoapods_version": ">= 1.6.0",
   "pod_target_xcconfig": {
@@ -94,8 +94,8 @@
     "StepSlider": [
       "~> 1.8.0"
     ],
-    "EVGPUImage2": [
-      "~> 0.2"
+    "BalzoGPUImage2": [
+      "~> 0.2.1"
     ],
     "JJFloatingActionButton": [
       "~> 3.0.1"

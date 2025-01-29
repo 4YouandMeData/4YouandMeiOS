@@ -56,7 +56,7 @@ Pod::Spec.new do |s|
   s.dependency 'RxSwiftExt', '~> 5.2.0'
   s.dependency 'FYAMResearchKit', '~> 3.0.0'
   s.dependency 'StepSlider', '~> 1.8.0'
-  s.dependency 'EVGPUImage2', '~> 0.2'
+  s.dependency 'BalzoGPUImage2', '~> 0.2.1'
   s.dependency 'JJFloatingActionButton', '~> 3.0.1'
 
   

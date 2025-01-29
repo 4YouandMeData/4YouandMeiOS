@@ -11,6 +11,6 @@
 #endif
 
 
-FOUNDATION_EXPORT double EVGPUImage2VersionNumber;
-FOUNDATION_EXPORT const unsigned char EVGPUImage2VersionString[];
+FOUNDATION_EXPORT double BalzoGPUImage2VersionNumber;
+FOUNDATION_EXPORT const unsigned char BalzoGPUImage2VersionString[];
 
