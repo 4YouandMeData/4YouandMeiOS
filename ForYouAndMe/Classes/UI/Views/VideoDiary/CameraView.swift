@@ -8,7 +8,7 @@
 import Foundation
 import AVFoundation
 import UIKit
-import EVGPUImage2
+import BalzoGPUImage2
 
 protocol CameraViewDelegate: AnyObject {
     func hasFinishedRecording(fileURL: URL?, error: Error?)
