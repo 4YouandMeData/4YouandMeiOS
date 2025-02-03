@@ -192,7 +192,8 @@ class FirebaseAnalyticsPlatform: AnalyticsPlatform {
     // MARK: Screens
     
     private func sendRecordScreen(screenName: String, screenClass: String) {
-        Analytics.setScreenName(screenName, screenClass: screenClass)
+        Analytics.logEvent(AnalyticsEventScreenView, parameters: [AnalyticsParameterScreenName: screenName,
+                                                                 AnalyticsParameterScreenClass: screenClass])
     }
     
     private func sendEvent(withEventName eventName: String, parameters: [String: Any]? = nil) {

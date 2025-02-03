@@ -1,6 +1,6 @@
 {
   "name": "ForYouAndMe",
-  "version": "0.92.2",
+  "version": "0.92.3",
   "summary": "Framework for research studies apps",
   "description": "ForYouAndMe is a framework aimed to easily develop an app for research study",
   "homepage": "https://github.com/4YouandMeData/4YouandMeiOS",
@@ -13,7 +13,7 @@
   },
   "source": {
     "git": "https://github.com/4YouandMeData/4YouandMeiOS.git",
-    "tag": "0.92.2"
+    "tag": "0.92.3"
   },
   "cocoapods_version": ">= 1.6.0",
   "pod_target_xcconfig": {
@@ -65,13 +65,13 @@
       "~> 3.2.1"
     ],
     "Firebase/Analytics": [
-      "~> 7.2.0"
+      "~> 11.7.0"
     ],
     "Firebase/Crashlytics": [
-      "~> 7.2.0"
+      "~> 11.7.0"
     ],
     "Firebase/Messaging": [
-      "~> 7.2.0"
+      "~> 11.7.0"
     ],
     "PhoneNumberKit": [
       "3.3.1"
