@@ -68,9 +68,9 @@ class SurveyGroupSectionCoordinator: PagedActivitySectionCoordinator {
                                          isFirstStartingPage: Bool) -> UIViewController {
         let coordinator = SurveySectionCoordinator(withSectionData: survey,
                                                    navigationController: navigationController,
-                                                   completionCallback: { [weak self] (_, survey, answers) in
+                                                   completionCallback: { [weak self] (_, survey, answers, target) in
                                                     guard let self = self else { return }
-                                                    self.onSurveyCompleted(survey, answers: answers)
+            self.onSurveyCompleted(survey, answers: answers, target: target)
                                                    })
         return coordinator.getStartingPage()
     }
@@ -84,19 +84,33 @@ class SurveyGroupSectionCoordinator: PagedActivitySectionCoordinator {
                                                      animated: true)
     }
     
-    private func onSurveyCompleted(_ survey: SurveyTask, answers: [SurveyResult]) {
+    private func onSurveyCompleted(_ survey: SurveyTask, answers: [SurveyResult], target: SurveyTarget? = nil) {
         self.answersForSurveys[survey] = answers
-        self.showNextSurvey(forCurrentSurvey: survey)
+        self.showNextSurvey(forCurrentSurvey: survey, target: target)
     }
     
-    private func showNextSurvey(forCurrentSurvey currentSurvey: SurveyTask) {
+    private func showNextSurvey(forCurrentSurvey currentSurvey: SurveyTask, target: SurveyTarget? = nil) {
         guard let currentSurveyIndex = self.sectionData.validSurveys.firstIndex(of: currentSurvey) else {
             assertionFailure("Missing survey in survey array")
             self.cancelSurveyGroup()
             return
         }
         
-        let nextCurrentSurveyIndex = currentSurveyIndex + 1
+        let nextCurrentSurveyIndex: Int
+            
+            if let blockId = target?.blockId,
+               !blockId.isEmpty {
+                // Cerco l’indice del SurveyTask che ha id == blockId
+                if let index = self.sectionData.validSurveys.firstIndex(where: { $0.id == blockId }) {
+                    nextCurrentSurveyIndex = index
+                } else {
+                    // Se non lo trovo, fallback sul successivo
+                    nextCurrentSurveyIndex = currentSurveyIndex + 1
+                }
+            } else {
+                // Se blockId è assente o vuoto, vado al successivo
+                nextCurrentSurveyIndex = currentSurveyIndex + 1
+            }
         if nextCurrentSurveyIndex == self.sectionData.validSurveys.count {
             var aggregatedAnswers: [SurveyResult] = []
             self.answersForSurveys.forEach { answersForSurvey in

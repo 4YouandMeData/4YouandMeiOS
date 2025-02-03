@@ -15,7 +15,7 @@ class SurveySectionCoordinator {
     // MARK: - PagedSectionCoordinator
     var addAbortOnboardingButton: Bool = false
     
-    typealias SurveySectionCallback = (UINavigationController, SurveyTask, [SurveyResult]) -> Void
+    typealias SurveySectionCallback = (UINavigationController, SurveyTask, [SurveyResult], SurveyTarget?) -> Void
     
     public unowned var navigationController: UINavigationController
     
@@ -78,7 +78,7 @@ class SurveySectionCoordinator {
         }
     }
     
-    private func showSuccess() {
+    private func showSuccess(target: SurveyTarget? = nil) {
         if let successPage = self.sectionData.successPage {
             let infoPageData = InfoPageData.createResultPageData(withPage: successPage)
             let viewController = InfoPageViewController(withPageData: infoPageData, coordinator: self)
@@ -86,7 +86,7 @@ class SurveySectionCoordinator {
                                                          hidesBottomBarWhenPushed: self.hidesBottomBarWhenPushed,
                                                          animated: true)
         } else {
-            self.completionCallback(self.navigationController, self.sectionData, self.results)
+            self.completionCallback(self.navigationController, self.sectionData, self.results, target)
         }
     }
     
@@ -119,7 +119,7 @@ extension SurveySectionCoordinator: PagedSectionCoordinator {
     
     func performCustomPrimaryButtonNavigation(page: Page) -> Bool {
         if self.sectionData.successPage?.id == page.id {
-            self.completionCallback(self.navigationController, self.sectionData, self.results)
+            self.completionCallback(self.navigationController, self.sectionData, self.results, nil)
             return true
         }
         return false
@@ -146,6 +146,44 @@ extension SurveySectionCoordinator: SurveyQuestionViewCoordinator {
         }
         
         // Skip logic
+        var matchingTarget = self.getMatchingTarget(result: result)
+        if let matchingTarget = matchingTarget {
+            if matchingTarget.questionId == Constants.Survey.TargetQuit {
+                self.showSuccess()
+            } else if matchingTarget.blockId != nil {
+                self.showSuccess(target: matchingTarget)
+            } else {
+                // Try to show the question specified in the matching target, starting to search it from the current question
+                // of the valid questions array. If it is not found, the next question is shown.
+                let validQuestions = self.sectionData.validQuestions
+                guard let currentQuestionIndex = validQuestions.firstIndex(of: result.question) else {
+                    assertionFailure("Missing current question in valid question array")
+                    self.showNextSurveyQuestion(questionId: result.question.id)
+                    return
+                }
+                let nextQuestionIndex = currentQuestionIndex + 1
+                if nextQuestionIndex < validQuestions.count {
+                    let remainingValidQuestions = validQuestions[nextQuestionIndex...]
+                    guard let question = remainingValidQuestions.first(where: { $0.id == matchingTarget.questionId }) else {
+                        print("SurveySectionCoordinator - Missing valid question in remining valid questions array")
+                        self.showNextSurveyQuestion(questionId: result.question.id)
+                        return
+                    }
+                    self.showQuestion(question)
+                } else {
+                    self.showNextSurveyQuestion(questionId: result.question.id)
+                }
+            }
+        } else {
+            self.showNextSurveyQuestion(questionId: result.question.id)
+        }
+    }
+    
+    func onSurveyQuestionSkipped(questionId: String) {
+        self.showNextSurveyQuestion(questionId: questionId)
+    }
+    
+    private func getMatchingTarget(result: SurveyResult) -> SurveyTarget? {
         var matchingTarget: SurveyTarget?
         switch result.question.questionType {
         case .numerical:
@@ -181,37 +219,6 @@ extension SurveySectionCoordinator: SurveyQuestionViewCoordinator {
             }
         }
         
-        if let matchingTarget = matchingTarget {
-            if matchingTarget.questionId == Constants.Survey.TargetQuit {
-                self.showSuccess()
-            } else {
-                // Try to show the question specified in the matching target, starting to search it from the current question
-                // of the valid questions array. If it is not found, the next question is shown.
-                let validQuestions = self.sectionData.validQuestions
-                guard let currentQuestionIndex = validQuestions.firstIndex(of: result.question) else {
-                    assertionFailure("Missing current question in valid question array")
-                    self.showNextSurveyQuestion(questionId: result.question.id)
-                    return
-                }
-                let nextQuestionIndex = currentQuestionIndex + 1
-                if nextQuestionIndex < validQuestions.count {
-                    let remainingValidQuestions = validQuestions[nextQuestionIndex...]
-                    guard let question = remainingValidQuestions.first(where: { $0.id == matchingTarget.questionId }) else {
-                        print("SurveySectionCoordinator - Missing valid question in remining valid questions array")
-                        self.showNextSurveyQuestion(questionId: result.question.id)
-                        return
-                    }
-                    self.showQuestion(question)
-                } else {
-                    self.showNextSurveyQuestion(questionId: result.question.id)
-                }
-            }
-        } else {
-            self.showNextSurveyQuestion(questionId: result.question.id)
-        }
-    }
-    
-    func onSurveyQuestionSkipped(questionId: String) {
-        self.showNextSurveyQuestion(questionId: questionId)
+        return matchingTarget
     }
 }

@@ -104,6 +104,6 @@ protocol Repository: AnyObject {
     func getStudyInfoSection() -> Single<StudyInfoSection>
     // Device Data
     func sendDeviceData(deviceData: DeviceData) -> Single<()>
-    //Info Messages
+    // Info Messages
     func getInfoMessages() -> Single<[MessageInfo]>
 }
