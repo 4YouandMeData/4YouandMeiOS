@@ -118,7 +118,7 @@ class WalkthroughViewController: UIViewController {
             imageView.contentMode = .scaleAspectFit
             
             pageContainer.addSubview(imageView)
-            imageView.autoPinEdge(toSuperviewSafeArea: .top, withInset: 64.0)
+            imageView.autoPinEdge(toSuperviewSafeArea: .top, withInset: 42.0)
             imageView.autoAlignAxis(toSuperviewAxis: .vertical)
             imageView.autoPinEdge(toSuperviewSafeArea: .leading)
             imageView.autoPinEdge(toSuperviewSafeArea: .trailing)
@@ -129,7 +129,7 @@ class WalkthroughViewController: UIViewController {
             titleLabel.text = currentPage.title
             titleLabel.textColor = ColorPalette.color(withType: .primaryText)
             titleLabel.textAlignment = .center
-            titleLabel.font = FontPalette.fontStyleData(forStyle: .header2).font
+            titleLabel.font = .boldSystemFont(ofSize: 20.0)
             
             pageContainer.addSubview(titleLabel)
             titleLabel.autoPinEdge(toSuperviewSafeArea: .leading, withInset: 12.0)
@@ -138,9 +138,17 @@ class WalkthroughViewController: UIViewController {
 
             // Body
             let bodyLabel = UILabel()
-            bodyLabel.attributedText = currentPage.body.htmlToAttributedString
+            
+            let attributeString = NSMutableAttributedString(string: currentPage.body.htmlToString)
+            let paragraphStyle = NSMutableParagraphStyle()
+            paragraphStyle.lineSpacing = 8.0
+            attributeString.addAttribute(.paragraphStyle,
+                                         value: paragraphStyle,
+                                         range: NSRange(location: 0, length: attributeString.length))
+            bodyLabel.attributedText = attributeString
             bodyLabel.textColor = ColorPalette.color(withType: .primaryText)
             bodyLabel.textAlignment = .center
+            bodyLabel.numberOfLines = 0
             bodyLabel.font = FontPalette.fontStyleData(forStyle: .paragraph).font
             
             pageContainer.addSubview(bodyLabel)
