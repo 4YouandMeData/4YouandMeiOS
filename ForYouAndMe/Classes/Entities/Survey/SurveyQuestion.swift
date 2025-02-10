@@ -55,6 +55,8 @@ struct SurveyQuestion {
     
     @FailableArrayExcludeInvalid
     var targets: [SurveyTarget]?
+    
+    let skippable: Bool
 }
 
 extension SurveyQuestion: JSONAPIMappable {
@@ -76,6 +78,7 @@ extension SurveyQuestion: JSONAPIMappable {
         case minimumDate = "min_date"
         case maximumDate = "max_date"
         case options = "possible_answers"
+        case skippable
         case targets
     }
 }

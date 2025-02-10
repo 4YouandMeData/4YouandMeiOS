@@ -137,15 +137,17 @@ class SurveyQuestionViewController: UIViewController,
     
     private func addSkipButton() {
         assert(self.navigationController != nil, "Missing UINavigationController")
-        let buttonItem = UIBarButtonItem(title: StringsProvider.string(forKey: .surveyButtonSkip),
-                                         style: .plain,
-                                         target: self,
-                                         action: #selector(self.skipButtonPressed))
-        buttonItem.setTitleTextAttributes([
-            .foregroundColor: ColorPalette.color(withType: .primary),
-            .font: FontPalette.fontStyleData(forStyle: .header3).font
-            ], for: .normal)
-        self.navigationItem.rightBarButtonItem = buttonItem
+        if self.pageData.question.skippable {
+            let buttonItem = UIBarButtonItem(title: StringsProvider.string(forKey: .surveyButtonSkip),
+                                             style: .plain,
+                                             target: self,
+                                             action: #selector(self.skipButtonPressed))
+            buttonItem.setTitleTextAttributes([
+                .foregroundColor: ColorPalette.color(withType: .primary),
+                .font: FontPalette.fontStyleData(forStyle: .header3).font
+                ], for: .normal)
+            self.navigationItem.rightBarButtonItem = buttonItem
+        }
     }
     
     private func updateConfirmButton() {
