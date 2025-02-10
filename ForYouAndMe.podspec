@@ -44,7 +44,7 @@ Pod::Spec.new do |s|
   s.dependency 'SVProgressHUD', '~> 2.3.1'
   s.dependency 'TPKeyboardAvoiding', '~> 1.3.3'
   s.dependency 'OAuthSwift', '~> 2.1.2'
-  s.dependency 'ReachabilitySwift', '~> 5.0.0'
+  s.dependency 'ReachabilitySwift', '~> 5.2.4'
   s.dependency 'Validator', '~> 3.2.1'
   s.dependency 'Firebase/Analytics', '~> 11.7.0'
   s.dependency 'Firebase/Crashlytics', '~> 11.7.0'
