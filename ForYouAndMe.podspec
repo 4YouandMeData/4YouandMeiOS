@@ -36,9 +36,10 @@ Pod::Spec.new do |s|
    
   s.frameworks = 'UIKit'
   
-  s.dependency 'Moya/RxSwift', '~> 14.0.0'
+  s.dependency 'Moya/RxSwift', '~> 15.0.0'
+  s.dependency 'Moya/ReactiveSwift', '~> 15.0.0'
   s.dependency 'AlamofireImage', '~> 4.3.0'
-  s.dependency 'RxCocoa', '~> 5.1.3'
+  s.dependency 'RxCocoa', '~> 6.0'
   s.dependency 'PureLayout', '~> 3.1.9'
   s.dependency 'SVProgressHUD', '~> 2.3.1'
   s.dependency 'TPKeyboardAvoiding', '~> 1.3.3'
@@ -51,7 +52,7 @@ Pod::Spec.new do |s|
   s.dependency 'PhoneNumberKit', '3.3.1'
   s.dependency 'CountryPickerView', '~> 3.1.2'
   s.dependency 'UberSignature', '~> 1.0.3'
-  s.dependency 'RxSwiftExt', '~> 5.2.0'
+  s.dependency 'RxSwiftExt', '~> 6.2.1'
   s.dependency 'FYAMResearchKit', '~> 3.0.0'
   s.dependency 'StepSlider', '~> 1.8.0'
   s.dependency 'BalzoGPUImage2', '~> 0.2.1'

@@ -35,13 +35,16 @@
   "frameworks": "UIKit",
   "dependencies": {
     "Moya/RxSwift": [
-      "~> 14.0.0"
+      "~> 15.0.0"
+    ],
+    "Moya/ReactiveSwift": [
+      "~> 15.0.0"
     ],
     "AlamofireImage": [
       "~> 4.3.0"
     ],
     "RxCocoa": [
-      "~> 5.1.3"
+      "~> 6.0"
     ],
     "PureLayout": [
       "~> 3.1.9"
@@ -80,7 +83,7 @@
       "~> 1.0.3"
     ],
     "RxSwiftExt": [
-      "~> 5.2.0"
+      "~> 6.2.1"
     ],
     "FYAMResearchKit": [
       "~> 3.0.0"

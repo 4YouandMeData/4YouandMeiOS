@@ -169,7 +169,7 @@ class FeedViewController: UIViewController {
     private func refreshUser() {
         self.repository.refreshUser()
             .toVoid()
-            .catchErrorJustReturn(())
+            .catchAndReturn(())
             .subscribe(onSuccess: { _ in
                 guard let user = self.repository.currentUser else {
                     assertionFailure("Missing current user")
@@ -179,7 +179,7 @@ class FeedViewController: UIViewController {
                 self.headerView.setSubtitleText(user.getFeedSubtitle(repository: self.repository))
                 self.tableViewHeaderView.setPoints(user.points)
                 self.tableViewHeaderView.refreshUI()
-            }, onError: { error in
+            }, onFailure: { error in
                 print("FeedViewController - Error refreshing user: \(error.localizedDescription)")
             }).disposed(by: self.disposeBag)
     }

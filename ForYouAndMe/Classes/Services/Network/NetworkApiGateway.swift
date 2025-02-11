@@ -34,12 +34,8 @@ class NetworkApiGateway: ApiGateway {
     }()
     
     lazy var accessTokenPlugin: PluginType = {
-        let tokenClosure: (AuthorizationType) -> String = { authorizationType in
-            switch authorizationType {
-            case .basic: return ""
-            case .bearer: return self.storage.accessToken ?? ""
-            case .custom: return ""
-            }
+        let tokenClosure: (TargetType) -> String = { authorizationType in
+            return self.storage.accessToken ?? ""
         }
         let accessTokenPlugin = AccessTokenPlugin(tokenClosure: tokenClosure)
         

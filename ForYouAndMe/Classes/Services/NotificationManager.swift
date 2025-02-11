@@ -41,12 +41,12 @@ class NotificationManager: NSObject, NotificationService {
     // MARK: - NotificationService
     
     func getRegistrationToken() -> Single<String?> {
-        return Single.create { singleEvent -> Disposable in
+        return Single.create { observer -> Disposable in
             Messaging.messaging().token { token, error in
               if nil != error {
-                singleEvent(.error(NotificationError.fetchRegistrationTokenError))
+                  observer(.failure(NotificationError.fetchRegistrationTokenError))
               } else {
-                singleEvent(.success(token))
+                  observer(.success(token))
               }
             }
             return Disposables.create()

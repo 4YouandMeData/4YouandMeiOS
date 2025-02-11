@@ -60,7 +60,7 @@ class HealthSampleUploader {
         
         let endDate = Date()
         
-        return Single<HealthQueryResult>.create { singleEvent in
+        return Single<HealthQueryResult>.create { observer in
             let datePredicate = HKQuery.predicateForSamples(withStart: startDate, end: endDate, options: [])
             let anchor: HKQueryAnchor? = self.storage.loadLastSampleUploadAnchor(forDataType: self.sampleDataType)
             let query = HKAnchoredObjectQuery(type: sampleType,
@@ -69,9 +69,9 @@ class HealthSampleUploader {
                                               limit: HKObjectQueryNoLimit,
                                               resultsHandler: { (_, samplesOrNil, _, newAnchor, errorOrNil) in
                                                 if let error = errorOrNil {
-                                                    singleEvent(.error(HealthSampleUploaderError.fetchDataError(underlyingError: error)))
+                                                    observer(.failure(HealthSampleUploaderError.fetchDataError(underlyingError: error)))
                                                 } else {
-                                                    singleEvent(.success(HealthQueryResult(anchor: newAnchor, samples: samplesOrNil ?? [])))
+                                                    observer(.success(HealthQueryResult(anchor: newAnchor, samples: samplesOrNil ?? [])))
                                                 }
                                               })
             self.healthStore.execute(query)

@@ -73,7 +73,7 @@ class HealthManager: HealthService {
     func requestPermissions() -> Single<()> {
         return self.checkHealthKitAvailability()
             .flatMap {
-                return Single.create { singleEvent -> Disposable in
+                return Single.create { observer -> Disposable in
                     // Background Thread
                     self.healthStore
                         .requestAuthorization(toShare: nil, read: self.readDataTypes.objectTypeSet, completion: { (success, error) in
@@ -81,13 +81,13 @@ class HealthManager: HealthService {
                         DispatchQueue.main.async {
                             if success {
                                 self.processCharacteristicTypes()
-                                singleEvent(.success(()))
+                                observer(.success(()))
                             } else {
                                 // Apple doc don't specify what could cause this error. Check if and when they occur.
                                 assertionFailure("Permission request error. Error \(String(describing: error?.localizedDescription))")
                                 let healthError = HealthError.permissionRequestError(underlyingError: error)
                                 self.analyticsService.track(event: .healthError(healthError: healthError))
-                                singleEvent(.error(healthError))
+                                observer(.failure(healthError))
                             }
                         }
                     })
@@ -99,7 +99,7 @@ class HealthManager: HealthService {
     func getIsAuthorizationStatusUndetermined() -> Single<Bool> {
         return self.checkHealthKitAvailability()
             .flatMap {
-                return Single.create { singleEvent -> Disposable in
+                return Single.create { observer -> Disposable in
                     // Background Thread
                     let readDataObjectTypeSet = self.readDataTypes.objectTypeSet
                     self.healthStore
@@ -111,9 +111,9 @@ class HealthManager: HealthService {
                                     assertionFailure("Get Request Authorization Status error. Error \(error.localizedDescription)")
                                     let healthError = HealthError.getPermissionRequestStatusError(underlyingError: error)
                                     self.analyticsService.track(event: .healthError(healthError: healthError))
-                                    singleEvent(.error(healthError))
+                                    observer(.failure(healthError))
                                 } else {
-                                    singleEvent(.success(status.isPermissionsUndetermined))
+                                    observer(.success(status.isPermissionsUndetermined))
                                 }
                             }
                         })

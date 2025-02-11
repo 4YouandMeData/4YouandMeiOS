@@ -133,14 +133,14 @@ enum PermissionsText {
      Request permission now
      */
     public func request() -> Single<()> {
-        return Single.create { singleEvent -> Disposable in
+        return Single.create { observer -> Disposable in
             let manager = Permission.manager(for: self)
             if let usageDescriptionKey = self.usageDescriptionKey,
                 Bundle.main.object(forInfoDictionaryKey: usageDescriptionKey) == nil {
                 print("Permissions Warning - \(usageDescriptionKey) for \(self.name) not found in Info.plist")
-                singleEvent(.error(PermissionError.missingPermissionDescription))
+                observer(.failure(PermissionError.missingPermissionDescription))
             } else {
-                manager.request(completion: { singleEvent(.success(())) })
+                manager.request(completion: { observer(.success(())) })
             }
             return Disposables.create()
         }
