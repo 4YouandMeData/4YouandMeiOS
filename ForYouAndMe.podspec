@@ -37,7 +37,6 @@ Pod::Spec.new do |s|
   s.frameworks = 'UIKit'
   
   s.dependency 'Moya/RxSwift', '~> 14.0.0'
-  s.dependency 'Moya-ModelMapper/RxSwift', '~> 10.0.0'
   s.dependency 'AlamofireImage', '~> 4.3.0'
   s.dependency 'RxCocoa', '~> 5.1.3'
   s.dependency 'PureLayout', '~> 3.1.9'
@@ -51,7 +50,6 @@ Pod::Spec.new do |s|
   s.dependency 'Firebase/Messaging', '~> 11.7.0'
   s.dependency 'PhoneNumberKit', '3.3.1'
   s.dependency 'CountryPickerView', '~> 3.1.2'
-  s.dependency 'BLZJapx/RxCodableMoya', '~> 3.0.0'
   s.dependency 'UberSignature', '~> 1.0.3'
   s.dependency 'RxSwiftExt', '~> 5.2.0'
   s.dependency 'FYAMResearchKit', '~> 3.0.0'

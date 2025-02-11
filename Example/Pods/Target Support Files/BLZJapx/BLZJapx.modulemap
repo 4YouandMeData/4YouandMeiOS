@@ -1,6 +1,0 @@
-framework module Japx {
-  umbrella header "BLZJapx-umbrella.h"
-
-  export *
-  module * { export * }
-}

@@ -7,7 +7,6 @@
 //
 
 import Foundation
-import Mapper
 
 extension GlobalConfig: Mappable {
     init(map: Mapper) throws {

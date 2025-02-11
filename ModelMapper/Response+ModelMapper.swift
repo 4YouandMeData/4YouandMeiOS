@@ -1,6 +1,5 @@
 import Foundation
 import Moya
-import Mapper
 
 public extension Response {
 

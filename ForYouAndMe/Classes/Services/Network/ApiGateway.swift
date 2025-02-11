@@ -8,8 +8,6 @@
 
 import Foundation
 import RxSwift
-import Mapper
-import Japx
 
 typealias TaskNetworkResultData = [String: Any]
 struct TaskNetworkResultFile {

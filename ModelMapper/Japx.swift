@@ -420,7 +420,9 @@ private extension Japx.Decoder {
                 
                 // Extract type-id pair from single object / array
                 guard let others = try relationshipParams.array(from: Consts.APIKeys.data) else {
+                    // swiftlint:disable force_cast
                     object.setObject(NSNull(), forKey: relationship.key as! NSCopying)
+                    // swiftlint:enable force_cast
                     return
                 }
                 
@@ -435,9 +437,13 @@ private extension Japx.Decoder {
                     .map { $0 is NSDictionary } ?? false
                 
                 if others.count == 1 && isObject {
+                    // swiftlint:disable force_cast
                     object.setObject(othersObjects.first as Any, forKey: relationship.key as! NSCopying)
+                    // swiftlint:enable force_cast
                 } else {
+                    // swiftlint:disable force_cast
                     object.setObject(othersObjects, forKey: relationship.key as! NSCopying)
+                    // swiftlint:enable force_cast
                 }
             }
             object.removeObject(forKey: Consts.APIKeys.relationships)
@@ -622,9 +628,13 @@ private extension NSDictionary {
     
     var mutable: NSMutableDictionary {
         if #available(iOS 10.0, *) {
+            // swiftlint:disable force_cast
             return self as? NSMutableDictionary ?? self.mutableCopy() as! NSMutableDictionary
+            // swiftlint:enable force_cast
         } else {
+            // swiftlint:disable force_cast
             return self.mutableCopy() as! NSMutableDictionary
+            // swiftlint:enable force_cast
         }
     }
     

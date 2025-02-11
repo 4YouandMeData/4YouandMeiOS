@@ -1,7 +1,6 @@
 import Foundation
 import RxSwift
 import Moya
-import Mapper
 #if !COCOAPODS
     import Moya_ModelMapper
 #endif

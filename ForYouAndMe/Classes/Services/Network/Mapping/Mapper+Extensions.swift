@@ -7,7 +7,6 @@
 //
 
 import Foundation
-import Mapper
 
 extension Optional where Wrapped == String {
     public var nilIfEmpty: String? {

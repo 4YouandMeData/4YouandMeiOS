@@ -1,7 +1,6 @@
 import Foundation
 import RxSwift
 import Moya
-import Mapper
 #if !COCOAPODS
     import Moya_ModelMapper
 #endif
@@ -44,7 +43,7 @@ public extension ObservableType where E == Response {
                     return Observable.just(object)
                 } catch {
                     return Observable.just(nil)
-                }   
+                }
             }
     }
     

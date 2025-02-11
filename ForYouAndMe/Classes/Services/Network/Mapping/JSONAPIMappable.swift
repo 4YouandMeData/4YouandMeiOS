@@ -6,7 +6,6 @@
 //
 
 import Foundation
-import Japx
 
 protocol JSONAPIMappable: JapxDecodable {
     static var includeList: String? { get }

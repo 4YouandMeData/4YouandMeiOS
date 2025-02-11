@@ -6,7 +6,6 @@
 //
 
 import Foundation
-import Mapper
 
 extension ResponseError: Mappable {
     init(map: Mapper) throws {

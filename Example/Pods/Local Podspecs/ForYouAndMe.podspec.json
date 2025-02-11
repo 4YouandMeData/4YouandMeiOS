@@ -1,6 +1,6 @@
 {
   "name": "ForYouAndMe",
-  "version": "0.92.7",
+  "version": "0.92.8",
   "summary": "Framework for research studies apps",
   "description": "ForYouAndMe is a framework aimed to easily develop an app for research study",
   "homepage": "https://github.com/4YouandMeData/4YouandMeiOS",
@@ -13,7 +13,7 @@
   },
   "source": {
     "git": "https://github.com/4YouandMeData/4YouandMeiOS.git",
-    "tag": "0.92.7"
+    "tag": "0.92.8"
   },
   "cocoapods_version": ">= 1.6.0",
   "pod_target_xcconfig": {
@@ -36,9 +36,6 @@
   "dependencies": {
     "Moya/RxSwift": [
       "~> 14.0.0"
-    ],
-    "Moya-ModelMapper/RxSwift": [
-      "~> 10.0.0"
     ],
     "AlamofireImage": [
       "~> 4.3.0"
@@ -78,9 +75,6 @@
     ],
     "CountryPickerView": [
       "~> 3.1.2"
-    ],
-    "BLZJapx/RxCodableMoya": [
-      "~> 3.0.0"
     ],
     "UberSignature": [
       "~> 1.0.3"
