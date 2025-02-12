@@ -217,28 +217,29 @@
 		0CD3B90DBB855222397B2FCCBCC49E2A /* GULOriginalIMPConvenienceMacros.h in Headers */ = {isa = PBXBuildFile; fileRef = 3773A055D3B0C123823C758844174C98 /* GULOriginalIMPConvenienceMacros.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		0CF2D2DF44815BD099ACBAAE9F78C8B2 /* ORKReactionTimeViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = E81900400260DB17D1A482B3986EE88D /* ORKReactionTimeViewController.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
 		0D0EF75BBBA102F78370ECE9D26C8260 /* FIRCLSHost.h in Headers */ = {isa = PBXBuildFile; fileRef = 22336B73DE32E4C8BC9A33131FC0F934 /* FIRCLSHost.h */; settings = {ATTRIBUTES = (Project, ); }; };
-		0D4318B02D5BCE4300F8796E /* JapxRxCodableMoya.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D4318A02D5BCE4300F8796E /* JapxRxCodableMoya.swift */; };
-		0D4318B32D5BCE4300F8796E /* URL+Convertible.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D4318AE2D5BCE4300F8796E /* URL+Convertible.swift */; };
-		0D4318B42D5BCE4300F8796E /* SignalProducerAvailability.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D4318A92D5BCE4300F8796E /* SignalProducerAvailability.swift */; };
-		0D4318B52D5BCE4300F8796E /* NSDictionary+Safety.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D4318A52D5BCE4300F8796E /* NSDictionary+Safety.swift */; };
-		0D4318B72D5BCE4300F8796E /* Transform.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D4318AC2D5BCE4300F8796E /* Transform.swift */; };
-		0D4318B82D5BCE4300F8796E /* Observable+ModelMapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D4318A62D5BCE4300F8796E /* Observable+ModelMapper.swift */; };
-		0D4318B92D5BCE4300F8796E /* Convertible.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D4318982D5BCE4300F8796E /* Convertible.swift */; };
-		0D4318BA2D5BCE4300F8796E /* Transform+Dictionary.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D4318AD2D5BCE4300F8796E /* Transform+Dictionary.swift */; };
-		0D4318BB2D5BCE4300F8796E /* ObservableAvailability.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D4318A72D5BCE4300F8796E /* ObservableAvailability.swift */; };
-		0D4318BC2D5BCE4300F8796E /* JapxCodableMoya.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D43189E2D5BCE4300F8796E /* JapxCodableMoya.swift */; };
-		0D4318BD2D5BCE4300F8796E /* JapxCodable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D43189D2D5BCE4300F8796E /* JapxCodable.swift */; };
-		0D4318BE2D5BCE4300F8796E /* Single+ModelMapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D4318AA2D5BCE4300F8796E /* Single+ModelMapper.swift */; };
-		0D4318BF2D5BCE4300F8796E /* MapperError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D4318A42D5BCE4300F8796E /* MapperError.swift */; };
-		0D4318C02D5BCE4300F8796E /* Mappable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D4318A22D5BCE4300F8796E /* Mappable.swift */; };
-		0D4318C12D5BCE4300F8796E /* Defaults+Convertible.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D43189A2D5BCE4300F8796E /* Defaults+Convertible.swift */; };
-		0D4318C22D5BCE4300F8796E /* DefaultConvertible.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D4318992D5BCE4300F8796E /* DefaultConvertible.swift */; };
-		0D4318C32D5BCE4300F8796E /* Response+ModelMapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D4318A82D5BCE4300F8796E /* Response+ModelMapper.swift */; };
-		0D4318C42D5BCE4300F8796E /* Mapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D4318A32D5BCE4300F8796E /* Mapper.swift */; };
-		0D4318C52D5BCE4300F8796E /* Float+Convertible.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D43189B2D5BCE4300F8796E /* Float+Convertible.swift */; };
-		0D4318C82D5BCEDD00F8796E /* SignalProducer+ModelMapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D4318C72D5BCEDD00F8796E /* SignalProducer+ModelMapper.swift */; };
-		0D4318CA2D5BCF8600F8796E /* Japx.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D4318C92D5BCF8600F8796E /* Japx.swift */; };
-		0D4318CC2D5BCFA000F8796E /* JapxMoya.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D4318CB2D5BCFA000F8796E /* JapxMoya.swift */; };
+		0D4318E52D5C95DF00F8796E /* Transform.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D4318E12D5C95DF00F8796E /* Transform.swift */; };
+		0D4318E62D5C95DF00F8796E /* SignalProducerAvailability.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D4318DF2D5C95DF00F8796E /* SignalProducerAvailability.swift */; };
+		0D4318E72D5C95DF00F8796E /* JapxCodableMoya.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D4318D32D5C95DF00F8796E /* JapxCodableMoya.swift */; };
+		0D4318E82D5C95DF00F8796E /* ObservableAvailability.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D4318DC2D5C95DF00F8796E /* ObservableAvailability.swift */; };
+		0D4318E92D5C95DF00F8796E /* MapperError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D4318D92D5C95DF00F8796E /* MapperError.swift */; };
+		0D4318EA2D5C95DF00F8796E /* Mapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D4318D82D5C95DF00F8796E /* Mapper.swift */; };
+		0D4318EB2D5C95DF00F8796E /* JapxCodable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D4318D22D5C95DF00F8796E /* JapxCodable.swift */; };
+		0D4318EC2D5C95DF00F8796E /* Observable+ModelMapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D4318DB2D5C95DF00F8796E /* Observable+ModelMapper.swift */; };
+		0D4318ED2D5C95DF00F8796E /* JapxRxMoya.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D4318D62D5C95DF00F8796E /* JapxRxMoya.swift */; };
+		0D4318EE2D5C95DF00F8796E /* NSDictionary+Safety.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D4318DA2D5C95DF00F8796E /* NSDictionary+Safety.swift */; };
+		0D4318EF2D5C95DF00F8796E /* JapxRxCodableMoya.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D4318D52D5C95DF00F8796E /* JapxRxCodableMoya.swift */; };
+		0D4318F02D5C95DF00F8796E /* JapxMoya.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D4318D42D5C95DF00F8796E /* JapxMoya.swift */; };
+		0D4318F12D5C95DF00F8796E /* Defaults+Convertible.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D4318CF2D5C95DF00F8796E /* Defaults+Convertible.swift */; };
+		0D4318F22D5C95DF00F8796E /* Transform+Dictionary.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D4318E22D5C95DF00F8796E /* Transform+Dictionary.swift */; };
+		0D4318F32D5C95DF00F8796E /* Convertible.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D4318CD2D5C95DF00F8796E /* Convertible.swift */; };
+		0D4318F42D5C95DF00F8796E /* Float+Convertible.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D4318D02D5C95DF00F8796E /* Float+Convertible.swift */; };
+		0D4318F52D5C95DF00F8796E /* SignalProducer+ModelMapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D4318DE2D5C95DF00F8796E /* SignalProducer+ModelMapper.swift */; };
+		0D4318F62D5C95DF00F8796E /* DefaultConvertible.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D4318CE2D5C95DF00F8796E /* DefaultConvertible.swift */; };
+		0D4318F72D5C95DF00F8796E /* Japx.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D4318D12D5C95DF00F8796E /* Japx.swift */; };
+		0D4318F82D5C95DF00F8796E /* Response+ModelMapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D4318DD2D5C95DF00F8796E /* Response+ModelMapper.swift */; };
+		0D4318F92D5C95DF00F8796E /* Mappable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D4318D72D5C95DF00F8796E /* Mappable.swift */; };
+		0D4318FA2D5C95DF00F8796E /* Single+ModelMapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D4318E02D5C95DF00F8796E /* Single+ModelMapper.swift */; };
+		0D4318FB2D5C95DF00F8796E /* URL+Convertible.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D4318E32D5C95DF00F8796E /* URL+Convertible.swift */; };
 		0D6C4CC3202F76DA559D71E4BE69995F /* FBLPromise+Catch.m in Sources */ = {isa = PBXBuildFile; fileRef = 7BED110233DD609E02DB58DB13821791 /* FBLPromise+Catch.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
 		0D6C7EA1B12048E35C3B01467994A5A1 /* ORKInstructionStepViewController.h in Headers */ = {isa = PBXBuildFile; fileRef = 79AD4B91F1500BBC0C294EF2366575A1 /* ORKInstructionStepViewController.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		0D7BC66AC352C2A3080CAFE2139E7C58 /* Window.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8690DC335686CA95D2DADFC5616CB425 /* Window.swift */; };
@@ -4264,28 +4265,29 @@
 		0CCE5FE561F3B280F6C7E95CD0FB8EAE /* ORKTowerOfHanoiStep.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = ORKTowerOfHanoiStep.m; path = ResearchKit/ActiveTasks/ORKTowerOfHanoiStep.m; sourceTree = "<group>"; };
 		0CE2796E06DF302D61F6C09035E65F84 /* HistogramAccumulation_GL.fsh */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.glsl; name = HistogramAccumulation_GL.fsh; path = framework/Source/Operations/Shaders/HistogramAccumulation_GL.fsh; sourceTree = "<group>"; };
 		0CF2CAF98C093E394D3C53DD1879D064 /* InformedConsentSectionCoordinator.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = InformedConsentSectionCoordinator.swift; sourceTree = "<group>"; };
-		0D4318982D5BCE4300F8796E /* Convertible.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Convertible.swift; sourceTree = "<group>"; };
-		0D4318992D5BCE4300F8796E /* DefaultConvertible.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DefaultConvertible.swift; sourceTree = "<group>"; };
-		0D43189A2D5BCE4300F8796E /* Defaults+Convertible.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Defaults+Convertible.swift"; sourceTree = "<group>"; };
-		0D43189B2D5BCE4300F8796E /* Float+Convertible.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Float+Convertible.swift"; sourceTree = "<group>"; };
-		0D43189D2D5BCE4300F8796E /* JapxCodable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JapxCodable.swift; sourceTree = "<group>"; };
-		0D43189E2D5BCE4300F8796E /* JapxCodableMoya.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JapxCodableMoya.swift; sourceTree = "<group>"; };
-		0D4318A02D5BCE4300F8796E /* JapxRxCodableMoya.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JapxRxCodableMoya.swift; sourceTree = "<group>"; };
-		0D4318A22D5BCE4300F8796E /* Mappable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Mappable.swift; sourceTree = "<group>"; };
-		0D4318A32D5BCE4300F8796E /* Mapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Mapper.swift; sourceTree = "<group>"; };
-		0D4318A42D5BCE4300F8796E /* MapperError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapperError.swift; sourceTree = "<group>"; };
-		0D4318A52D5BCE4300F8796E /* NSDictionary+Safety.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NSDictionary+Safety.swift"; sourceTree = "<group>"; };
-		0D4318A62D5BCE4300F8796E /* Observable+ModelMapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Observable+ModelMapper.swift"; sourceTree = "<group>"; };
-		0D4318A72D5BCE4300F8796E /* ObservableAvailability.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObservableAvailability.swift; sourceTree = "<group>"; };
-		0D4318A82D5BCE4300F8796E /* Response+ModelMapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Response+ModelMapper.swift"; sourceTree = "<group>"; };
-		0D4318A92D5BCE4300F8796E /* SignalProducerAvailability.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignalProducerAvailability.swift; sourceTree = "<group>"; };
-		0D4318AA2D5BCE4300F8796E /* Single+ModelMapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Single+ModelMapper.swift"; sourceTree = "<group>"; };
-		0D4318AC2D5BCE4300F8796E /* Transform.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Transform.swift; sourceTree = "<group>"; };
-		0D4318AD2D5BCE4300F8796E /* Transform+Dictionary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Transform+Dictionary.swift"; sourceTree = "<group>"; };
-		0D4318AE2D5BCE4300F8796E /* URL+Convertible.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "URL+Convertible.swift"; sourceTree = "<group>"; };
-		0D4318C72D5BCEDD00F8796E /* SignalProducer+ModelMapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SignalProducer+ModelMapper.swift"; sourceTree = "<group>"; };
-		0D4318C92D5BCF8600F8796E /* Japx.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Japx.swift; sourceTree = "<group>"; };
-		0D4318CB2D5BCFA000F8796E /* JapxMoya.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JapxMoya.swift; sourceTree = "<group>"; };
+		0D4318CD2D5C95DF00F8796E /* Convertible.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Convertible.swift; sourceTree = "<group>"; };
+		0D4318CE2D5C95DF00F8796E /* DefaultConvertible.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DefaultConvertible.swift; sourceTree = "<group>"; };
+		0D4318CF2D5C95DF00F8796E /* Defaults+Convertible.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Defaults+Convertible.swift"; sourceTree = "<group>"; };
+		0D4318D02D5C95DF00F8796E /* Float+Convertible.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Float+Convertible.swift"; sourceTree = "<group>"; };
+		0D4318D12D5C95DF00F8796E /* Japx.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Japx.swift; sourceTree = "<group>"; };
+		0D4318D22D5C95DF00F8796E /* JapxCodable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JapxCodable.swift; sourceTree = "<group>"; };
+		0D4318D32D5C95DF00F8796E /* JapxCodableMoya.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JapxCodableMoya.swift; sourceTree = "<group>"; };
+		0D4318D42D5C95DF00F8796E /* JapxMoya.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JapxMoya.swift; sourceTree = "<group>"; };
+		0D4318D52D5C95DF00F8796E /* JapxRxCodableMoya.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JapxRxCodableMoya.swift; sourceTree = "<group>"; };
+		0D4318D62D5C95DF00F8796E /* JapxRxMoya.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JapxRxMoya.swift; sourceTree = "<group>"; };
+		0D4318D72D5C95DF00F8796E /* Mappable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Mappable.swift; sourceTree = "<group>"; };
+		0D4318D82D5C95DF00F8796E /* Mapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Mapper.swift; sourceTree = "<group>"; };
+		0D4318D92D5C95DF00F8796E /* MapperError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapperError.swift; sourceTree = "<group>"; };
+		0D4318DA2D5C95DF00F8796E /* NSDictionary+Safety.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NSDictionary+Safety.swift"; sourceTree = "<group>"; };
+		0D4318DB2D5C95DF00F8796E /* Observable+ModelMapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Observable+ModelMapper.swift"; sourceTree = "<group>"; };
+		0D4318DC2D5C95DF00F8796E /* ObservableAvailability.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObservableAvailability.swift; sourceTree = "<group>"; };
+		0D4318DD2D5C95DF00F8796E /* Response+ModelMapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Response+ModelMapper.swift"; sourceTree = "<group>"; };
+		0D4318DE2D5C95DF00F8796E /* SignalProducer+ModelMapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SignalProducer+ModelMapper.swift"; sourceTree = "<group>"; };
+		0D4318DF2D5C95DF00F8796E /* SignalProducerAvailability.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignalProducerAvailability.swift; sourceTree = "<group>"; };
+		0D4318E02D5C95DF00F8796E /* Single+ModelMapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Single+ModelMapper.swift"; sourceTree = "<group>"; };
+		0D4318E12D5C95DF00F8796E /* Transform.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Transform.swift; sourceTree = "<group>"; };
+		0D4318E22D5C95DF00F8796E /* Transform+Dictionary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Transform+Dictionary.swift"; sourceTree = "<group>"; };
+		0D4318E32D5C95DF00F8796E /* URL+Convertible.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "URL+Convertible.swift"; sourceTree = "<group>"; };
 		0D56721AC5B8CD21088512ABF9575755 /* FIRCLSCallStackTree.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = FIRCLSCallStackTree.m; path = Crashlytics/Crashlytics/Helpers/FIRCLSCallStackTree.m; sourceTree = "<group>"; };
 		0D631E9908483F9525A6B3F36F16CC61 /* Quick.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Quick.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		0D6D1179C6E6CC3BBAEFF75B79F07CF4 /* ORKBodyContainerView.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = ORKBodyContainerView.m; path = ResearchKit/Common/ORKBodyContainerView.m; sourceTree = "<group>"; };
@@ -8020,31 +8022,32 @@
 			path = VideoDiary;
 			sourceTree = "<group>";
 		};
-		0D4318AF2D5BCE4300F8796E /* ModelMapper */ = {
+		0D4318E42D5C95DF00F8796E /* ModelMapper */ = {
 			isa = PBXGroup;
 			children = (
-				0D4318CB2D5BCFA000F8796E /* JapxMoya.swift */,
-				0D4318C92D5BCF8600F8796E /* Japx.swift */,
-				0D4318C72D5BCEDD00F8796E /* SignalProducer+ModelMapper.swift */,
-				0D4318982D5BCE4300F8796E /* Convertible.swift */,
-				0D4318992D5BCE4300F8796E /* DefaultConvertible.swift */,
-				0D43189A2D5BCE4300F8796E /* Defaults+Convertible.swift */,
-				0D43189B2D5BCE4300F8796E /* Float+Convertible.swift */,
-				0D43189D2D5BCE4300F8796E /* JapxCodable.swift */,
-				0D43189E2D5BCE4300F8796E /* JapxCodableMoya.swift */,
-				0D4318A02D5BCE4300F8796E /* JapxRxCodableMoya.swift */,
-				0D4318A22D5BCE4300F8796E /* Mappable.swift */,
-				0D4318A32D5BCE4300F8796E /* Mapper.swift */,
-				0D4318A42D5BCE4300F8796E /* MapperError.swift */,
-				0D4318A52D5BCE4300F8796E /* NSDictionary+Safety.swift */,
-				0D4318A62D5BCE4300F8796E /* Observable+ModelMapper.swift */,
-				0D4318A72D5BCE4300F8796E /* ObservableAvailability.swift */,
-				0D4318A82D5BCE4300F8796E /* Response+ModelMapper.swift */,
-				0D4318A92D5BCE4300F8796E /* SignalProducerAvailability.swift */,
-				0D4318AA2D5BCE4300F8796E /* Single+ModelMapper.swift */,
-				0D4318AC2D5BCE4300F8796E /* Transform.swift */,
-				0D4318AD2D5BCE4300F8796E /* Transform+Dictionary.swift */,
-				0D4318AE2D5BCE4300F8796E /* URL+Convertible.swift */,
+				0D4318CD2D5C95DF00F8796E /* Convertible.swift */,
+				0D4318CE2D5C95DF00F8796E /* DefaultConvertible.swift */,
+				0D4318CF2D5C95DF00F8796E /* Defaults+Convertible.swift */,
+				0D4318D02D5C95DF00F8796E /* Float+Convertible.swift */,
+				0D4318D12D5C95DF00F8796E /* Japx.swift */,
+				0D4318D22D5C95DF00F8796E /* JapxCodable.swift */,
+				0D4318D32D5C95DF00F8796E /* JapxCodableMoya.swift */,
+				0D4318D42D5C95DF00F8796E /* JapxMoya.swift */,
+				0D4318D52D5C95DF00F8796E /* JapxRxCodableMoya.swift */,
+				0D4318D62D5C95DF00F8796E /* JapxRxMoya.swift */,
+				0D4318D72D5C95DF00F8796E /* Mappable.swift */,
+				0D4318D82D5C95DF00F8796E /* Mapper.swift */,
+				0D4318D92D5C95DF00F8796E /* MapperError.swift */,
+				0D4318DA2D5C95DF00F8796E /* NSDictionary+Safety.swift */,
+				0D4318DB2D5C95DF00F8796E /* Observable+ModelMapper.swift */,
+				0D4318DC2D5C95DF00F8796E /* ObservableAvailability.swift */,
+				0D4318DD2D5C95DF00F8796E /* Response+ModelMapper.swift */,
+				0D4318DE2D5C95DF00F8796E /* SignalProducer+ModelMapper.swift */,
+				0D4318DF2D5C95DF00F8796E /* SignalProducerAvailability.swift */,
+				0D4318E02D5C95DF00F8796E /* Single+ModelMapper.swift */,
+				0D4318E12D5C95DF00F8796E /* Transform.swift */,
+				0D4318E22D5C95DF00F8796E /* Transform+Dictionary.swift */,
+				0D4318E32D5C95DF00F8796E /* URL+Convertible.swift */,
 			);
 			path = ModelMapper;
 			sourceTree = "<group>";
@@ -10371,7 +10374,7 @@
 		6886584DA09C9A5BD600C70ACCF1D456 /* ForYouAndMe */ = {
 			isa = PBXGroup;
 			children = (
-				0D4318AF2D5BCE4300F8796E /* ModelMapper */,
+				0D4318E42D5C95DF00F8796E /* ModelMapper */,
 				3071B68405DDCC786D9D8F8165C5594B /* Constants.swift */,
 				3BBA21CB32E71646CBF2E9BE1FB53F62 /* ForYouAndMe.xcassets */,
 				E6F35CCB4EE832B5E1BE2F6DC6898E37 /* FYAMManager.swift */,
@@ -17071,7 +17074,6 @@
 				5346D2AF94A06FBE5A6CC9F34B614715 /* GradientView.swift in Sources */,
 				672FFE4538B7776F4D84F1F01F13EC01 /* HealthDataType.swift in Sources */,
 				1239A0E3C75C05D99EA4293C1B39E77C /* HealthDataType+Characteristic.swift in Sources */,
-				0D4318CC2D5BCFA000F8796E /* JapxMoya.swift in Sources */,
 				F1D6A728CD721EDB0E35CCC231B69231 /* HealthManager.swift in Sources */,
 				ED6E4CD36E292D1ED74CBCA29A981405 /* HealthSampleUploader.swift in Sources */,
 				4CE2052CAC009563475C5B17AD77351C /* HealthSampleUploadManager.swift in Sources */,
@@ -17156,6 +17158,29 @@
 				EA00FFA07CE4E0EAD2D404914B2CC6BA /* QuestionViewController.swift in Sources */,
 				F8E0F5EF398B6285999DCFEB445E3D8C /* QuickActivity.swift in Sources */,
 				7514859F01AF238836B2456BB8BA5091 /* QuickActivityListTableViewCell.swift in Sources */,
+				0D4318E52D5C95DF00F8796E /* Transform.swift in Sources */,
+				0D4318E62D5C95DF00F8796E /* SignalProducerAvailability.swift in Sources */,
+				0D4318E72D5C95DF00F8796E /* JapxCodableMoya.swift in Sources */,
+				0D4318E82D5C95DF00F8796E /* ObservableAvailability.swift in Sources */,
+				0D4318E92D5C95DF00F8796E /* MapperError.swift in Sources */,
+				0D4318EA2D5C95DF00F8796E /* Mapper.swift in Sources */,
+				0D4318EB2D5C95DF00F8796E /* JapxCodable.swift in Sources */,
+				0D4318EC2D5C95DF00F8796E /* Observable+ModelMapper.swift in Sources */,
+				0D4318ED2D5C95DF00F8796E /* JapxRxMoya.swift in Sources */,
+				0D4318EE2D5C95DF00F8796E /* NSDictionary+Safety.swift in Sources */,
+				0D4318EF2D5C95DF00F8796E /* JapxRxCodableMoya.swift in Sources */,
+				0D4318F02D5C95DF00F8796E /* JapxMoya.swift in Sources */,
+				0D4318F12D5C95DF00F8796E /* Defaults+Convertible.swift in Sources */,
+				0D4318F22D5C95DF00F8796E /* Transform+Dictionary.swift in Sources */,
+				0D4318F32D5C95DF00F8796E /* Convertible.swift in Sources */,
+				0D4318F42D5C95DF00F8796E /* Float+Convertible.swift in Sources */,
+				0D4318F52D5C95DF00F8796E /* SignalProducer+ModelMapper.swift in Sources */,
+				0D4318F62D5C95DF00F8796E /* DefaultConvertible.swift in Sources */,
+				0D4318F72D5C95DF00F8796E /* Japx.swift in Sources */,
+				0D4318F82D5C95DF00F8796E /* Response+ModelMapper.swift in Sources */,
+				0D4318F92D5C95DF00F8796E /* Mappable.swift in Sources */,
+				0D4318FA2D5C95DF00F8796E /* Single+ModelMapper.swift in Sources */,
+				0D4318FB2D5C95DF00F8796E /* URL+Convertible.swift in Sources */,
 				9286BCEB5ABA66D1AD801BB85A90F218 /* QuickActivityOption.swift in Sources */,
 				C01AC67FEC4C87DFC738B30267764A6B /* QuickActivityOptionView.swift in Sources */,
 				D2664FAEE1D50DB589F6778585F5DE38 /* QuickActivityView.swift in Sources */,
@@ -17188,7 +17213,6 @@
 				08217FE13DE7CD9FFFD368CDFB41A105 /* StringsProvider.swift in Sources */,
 				2FF156ABB355EA1B426BF1DB4A7F12AF /* Study.swift in Sources */,
 				705419957D75BC791ABE65893B097DEC /* StudyInfoHeaderView.swift in Sources */,
-				0D4318C82D5BCEDD00F8796E /* SignalProducer+ModelMapper.swift in Sources */,
 				AE22CE9249E2A5F9B3229E69D4D2CEBC /* StudyInfoSection.swift in Sources */,
 				69C9EABBE2620AAF999825737099AD22 /* StudyInfoViewController.swift in Sources */,
 				0531F14B10B44AF3290DB654724523DE /* Style.swift in Sources */,
@@ -17234,7 +17258,6 @@
 				C77D3812273BABF9813D9C0B156AE677 /* UIImageView+Internal.swift in Sources */,
 				FA1ED639D57B7D41FD6C6CBFBDC102B1 /* UILabel+Internal.swift in Sources */,
 				5DDF53E9481ED10A0F83B97DF6C55C8F /* UILabelInteractionManager.swift in Sources */,
-				0D4318CA2D5BCF8600F8796E /* Japx.swift in Sources */,
 				7716BDFECAB9691669304B06A9A49DD0 /* UINavigationController+Extensions.swift in Sources */,
 				B92C3A16C6F9C91918669897426A465D /* UINavigationController+Internal.swift in Sources */,
 				5CAC9CAAD0CA31887F6362AC5AB6BEFF /* UIStackView+Extension.swift in Sources */,
@@ -17251,25 +17274,6 @@
 				F63E1DC829127BE20594B14D0FB6A673 /* UIViewController+Internal.swift in Sources */,
 				3D590663379383F87B92EEA64C074136 /* URL+Extensions.swift in Sources */,
 				1DD31536F46973B4759C0DD368C42E78 /* User.swift in Sources */,
-				0D4318B02D5BCE4300F8796E /* JapxRxCodableMoya.swift in Sources */,
-				0D4318B32D5BCE4300F8796E /* URL+Convertible.swift in Sources */,
-				0D4318B42D5BCE4300F8796E /* SignalProducerAvailability.swift in Sources */,
-				0D4318B52D5BCE4300F8796E /* NSDictionary+Safety.swift in Sources */,
-				0D4318B72D5BCE4300F8796E /* Transform.swift in Sources */,
-				0D4318B82D5BCE4300F8796E /* Observable+ModelMapper.swift in Sources */,
-				0D4318B92D5BCE4300F8796E /* Convertible.swift in Sources */,
-				0D4318BA2D5BCE4300F8796E /* Transform+Dictionary.swift in Sources */,
-				0D4318BB2D5BCE4300F8796E /* ObservableAvailability.swift in Sources */,
-				0D4318BC2D5BCE4300F8796E /* JapxCodableMoya.swift in Sources */,
-				0D4318BD2D5BCE4300F8796E /* JapxCodable.swift in Sources */,
-				0D4318BE2D5BCE4300F8796E /* Single+ModelMapper.swift in Sources */,
-				0D4318BF2D5BCE4300F8796E /* MapperError.swift in Sources */,
-				0D4318C02D5BCE4300F8796E /* Mappable.swift in Sources */,
-				0D4318C12D5BCE4300F8796E /* Defaults+Convertible.swift in Sources */,
-				0D4318C22D5BCE4300F8796E /* DefaultConvertible.swift in Sources */,
-				0D4318C32D5BCE4300F8796E /* Response+ModelMapper.swift in Sources */,
-				0D4318C42D5BCE4300F8796E /* Mapper.swift in Sources */,
-				0D4318C52D5BCE4300F8796E /* Float+Convertible.swift in Sources */,
 				6FEA923C86575075F292E1BB718B4623 /* User+Extensions.swift in Sources */,
 				3DD54604A8879F56942517A6D980F620 /* UserData.swift in Sources */,
 				EE43A1F6F820267F7ABB462E76D26FB7 /* UserDataAggregation.swift in Sources */,
