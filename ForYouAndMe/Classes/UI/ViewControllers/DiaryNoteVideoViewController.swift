@@ -173,7 +173,7 @@ class DiaryNoteVideoViewController: UIViewController {
         self.closeButton.autoPinEdgesToSuperviewEdges(with: .zero, excludingEdge: .trailing)
         stackView.addArrangedSubview(closeButtonContainerView)
 
-        stackView.addLabel(withText: "Video Recording",
+        stackView.addLabel(withText: StringsProvider.string(forKey: .diaryNoteCreateVideoTitle),
                            fontStyle: .title,
                            colorType: .primaryText)
         
@@ -415,7 +415,7 @@ class DiaryNoteVideoViewController: UIViewController {
                     self.textView.isEditable = false
                     self.textView.isSelectable = false
                     self.footerView.isHidden = true
-                }, onError: { [weak self] error in
+                }, onFailure: { [weak self] error in
                     guard let self = self else { return }
                     self.navigator.handleError(error: error, presenter: self)
                 }).disposed(by: self.disposeBag)
@@ -437,7 +437,7 @@ class DiaryNoteVideoViewController: UIViewController {
                     
         self.headerView.autoPinEdges(toSuperviewMarginsExcludingEdge: .bottom)
         self.footerView.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets.zero, excludingEdge: .top)
-        self.footerView.setButtonText("Save")
+        self.footerView.setButtonText(StringsProvider.string(forKey: .diaryNoteCreateVideoSave))
         self.footerView.setButtonEnabled(enabled: false)
         self.footerView.isHidden = true
         self.footerView.addTarget(target: self, action: #selector(self.updateButtonPressed))
@@ -771,7 +771,7 @@ class DiaryNoteVideoViewController: UIViewController {
                                                                                              diaryNoteable: nil),
                                            file: videoResultFile)
             .do(onDispose: { AppNavigator.popProgressHUD() })
-            .observeOn(MainScheduler.instance)
+            .observe(on: MainScheduler.instance)
             .subscribe(onSuccess: { [weak self] diaryNote in
                 guard let self = self else { return }
                 self.diaryNoteItem = diaryNote
@@ -780,7 +780,7 @@ class DiaryNoteVideoViewController: UIViewController {
                     self.startPolling() // Start polling after successful creation
                     self.setupUIVideoWatch()
                 }
-            }, onError: { [weak self] error in
+            }, onFailure: { [weak self] error in
                 guard let self = self else { return }
                 self.navigator.handleError(error: error,
                                            presenter: self)

@@ -164,12 +164,12 @@ class DiaryNotesViewController: UIViewController {
             
             let actionButton = JJFloatingActionButton()
             let actionItemRiflection = actionButton.addItem()
-            actionItemRiflection.titleLabel.text = "Start a reflection"
+            actionItemRiflection.titleLabel.text = StringsProvider.string(forKey: .diaryNoteFabReflection)
             actionItemRiflection.imageView.image = ImagePalette.image(withName: .riflectionIcon)
             actionItemRiflection.buttonColor = ColorPalette.color(withType: .inactive)
             
             let actionNoticed = actionButton.addItem()
-            actionNoticed.titleLabel.text = "I Have Noticed"
+            actionNoticed.titleLabel.text = StringsProvider.string(forKey: .diaryNoteFabNoticed)
             actionNoticed.imageView.image = ImagePalette.image(withName: .noteGeneric)
             actionNoticed.buttonColor = ColorPalette.color(withType: .secondary)
             actionNoticed.action = { [weak self] _ in
@@ -275,7 +275,7 @@ class DiaryNotesViewController: UIViewController {
                             self.sections = createDiaryNoteSections(from: diaryNote)
                             self.updateUI()
 
-                        }, onError: { [weak self] error in
+                        }, onFailure: { [weak self] error in
                             guard let self = self else { return }
                             self.navigator.handleError(error: error, presenter: self)
                         }).disposed(by: self.disposeBag)
@@ -405,7 +405,7 @@ extension DiaryNotesViewController: UITableViewDataSource {
                     }
                     diaryNoteItems.remove(at: indexPath.row)
                     self.updateUI()
-                }, onError: { [weak self] error in
+                }, onFailure: { [weak self] error in
                     guard let self = self else { return }
                     self.navigator.handleError(error: error, presenter: self)
                 }).disposed(by: self.disposeBag)

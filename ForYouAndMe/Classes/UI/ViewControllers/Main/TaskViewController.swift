@@ -106,12 +106,12 @@ class TaskViewController: UIViewController {
 
         let actionButton = JJFloatingActionButton()
         let actionItemRiflection = actionButton.addItem()
-        actionItemRiflection.titleLabel.text = "Start a reflection"
+        actionItemRiflection.titleLabel.text = StringsProvider.string(forKey: .diaryNoteFabReflection)
         actionItemRiflection.imageView.image = ImagePalette.image(withName: .riflectionIcon)
         actionItemRiflection.buttonColor = ColorPalette.color(withType: .inactive)
         
         let actionNoticed = actionButton.addItem()
-        actionNoticed.titleLabel.text = "I Have Noticed"
+        actionNoticed.titleLabel.text = StringsProvider.string(forKey: .diaryNoteFabNoticed)
         actionNoticed.imageView.image = ImagePalette.image(withName: .noteGeneric)
         actionNoticed.buttonColor = ColorPalette.color(withType: .secondary)
         actionNoticed.action = { [weak self] _ in

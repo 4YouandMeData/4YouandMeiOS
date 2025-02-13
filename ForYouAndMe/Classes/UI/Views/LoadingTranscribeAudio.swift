@@ -27,12 +27,12 @@ enum LoadingTranscribeAudioStyleCategory: StyleCategory {
                 view.imageView.isHidden = true
                
                 view.primaryLabel.attributedText = NSAttributedString.create(
-                   withText: StringsProvider.string(forText: "Text format transcription in progress"),
+                    withText: StringsProvider.string(forText: StringsProvider.string(forKey: .diaryNoteTranscribeTextTitle)),
                    fontStyle: .paragraph,
                    colorType: .primaryText
                )
                 view.secondaryLabel.attributedText = NSAttributedString.create(
-                   withText: StringsProvider.string(forText: "Soon you will see your recorded audio transcribed here"),
+                    withText: StringsProvider.string(forText: StringsProvider.string(forKey: .diaryNoteTranscribeTextDescription)),
                    fontStyle: .header3,
                    colorType: .primaryText
                )
@@ -52,7 +52,7 @@ enum LoadingTranscribeAudioStyleCategory: StyleCategory {
                 view.imageView.image = ImagePalette.image(withName: .warningIcon)
                 
                 view.primaryLabel.attributedText = NSAttributedString.create(
-                    withText: StringsProvider.string(forText: "Unable to transcribe audio, something went wrong during transcription"),
+                    withText: StringsProvider.string(forText: StringsProvider.string(forKey: .diaryNoteTranscribeTextError)),
                     fontStyle: .paragraph,
                     colorType: .primaryText
                 )

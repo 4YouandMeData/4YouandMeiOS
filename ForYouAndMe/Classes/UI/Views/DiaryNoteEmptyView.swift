@@ -21,12 +21,12 @@ class DiaryNoteEmptyView: UIView {
                                                excludingEdge: .bottom)
         
         stackView.addLabel(withText: StringsProvider.string(
-            forText: "You have not entered any notes yet "),
+            forText: StringsProvider.string(forKey: .diaryNoteEmptyViewTitle)),
                            fontStyle: .header2,
                            colorType: .primaryText)
         stackView.addBlankSpace(space: 20.0)
         stackView.addLabel(withText: StringsProvider.string(
-            forText: "Write or record a note, talk about your symptoms or how you feel by clicking on the buttons below."),
+            forText: StringsProvider.string(forKey: .diaryNoteEmptyViewDescription)),
                            fontStyle: .paragraph,
                            colorType: .primaryText)
     }

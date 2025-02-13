@@ -45,7 +45,7 @@ class DiaryNoteTextViewController: UIViewController {
         self.closeButton.autoPinEdgesToSuperviewEdges(with: .zero, excludingEdge: .trailing)
         stackView.addArrangedSubview(closeButtonContainerView)
 
-        stackView.addLabel(withText: "Text Note",
+        stackView.addLabel(withText: StringsProvider.string(forKey: .diaryNoteCreateTextTitle),
                            fontStyle: .title,
                            colorType: .primaryText)
         
@@ -111,7 +111,7 @@ class DiaryNoteTextViewController: UIViewController {
     private lazy var footerView: GenericButtonView = {
         
         let buttonView = GenericButtonView(withTextStyleCategory: .secondaryBackground())
-        buttonView.setButtonText("Save Note")
+        buttonView.setButtonText(StringsProvider.string(forKey: .diaryNoteCreateTextSave))
         buttonView.addTarget(target: self, action: #selector(self.editButtonPressed))
         
         return buttonView
@@ -227,7 +227,7 @@ class DiaryNoteTextViewController: UIViewController {
                     .subscribe(onSuccess: { [weak self] in
                         guard let self = self else { return }
                         self.closeButtonPressed()
-                    }, onError: { [weak self] error in
+                    }, onFailure: { [weak self] error in
                         guard let self = self else { return }
                         self.navigator.handleError(error: error, presenter: self)
                     }).disposed(by: self.disposeBag)
@@ -241,7 +241,7 @@ class DiaryNoteTextViewController: UIViewController {
                     .subscribe(onSuccess: { [weak self] in
                         guard let self = self else { return }
                         self.closeButtonPressed()
-                    }, onError: { [weak self] error in
+                    }, onFailure: { [weak self] error in
                         guard let self = self else { return }
                         self.navigator.handleError(error: error, presenter: self)
                     }).disposed(by: self.disposeBag)
@@ -257,7 +257,7 @@ class DiaryNoteTextViewController: UIViewController {
                     .subscribe(onSuccess: { [weak self] in
                         guard let self = self else { return }
                         self.closeButtonPressed()
-                    }, onError: { [weak self] error in
+                    }, onFailure: { [weak self] error in
                         guard let self = self else { return }
                         self.navigator.handleError(error: error, presenter: self)
                     }).disposed(by: self.disposeBag)
@@ -276,10 +276,10 @@ class DiaryNoteTextViewController: UIViewController {
         let button = self.footerView
         switch pageState {
         case .edit:
-            button.setButtonText("Confirm")
+            button.setButtonText(StringsProvider.string(forKey: .diaryNoteCreateTextConfirm))
             button.addTarget(target: self, action: #selector(self.confirmButtonPressed))
         case .read:
-            button.setButtonText("Edit")
+            button.setButtonText(StringsProvider.string(forKey: .diaryNoteCreateTextEdit))
             button.addTarget(target: self, action: #selector(self.editButtonPressed))
         }
     }
@@ -313,7 +313,7 @@ class DiaryNoteTextViewController: UIViewController {
                 self.diaryNote = diaryNoteText
                 self.textView.text = diaryNoteText.body
                 self.updateTextFields(pageState: self.pageState.value)
-            }, onError: { [weak self] error in
+            }, onFailure: { [weak self] error in
                 guard let self = self else { return }
                 self.navigator.handleError(error: error, presenter: self)
             }).disposed(by: self.disposeBag)

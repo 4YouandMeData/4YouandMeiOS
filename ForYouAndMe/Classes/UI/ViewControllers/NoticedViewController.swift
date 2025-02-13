@@ -116,7 +116,7 @@ class NoticedViewController: UIViewController {
         
         self.scrollStackView.stackView.subviews.forEach({ $0.removeFromSuperview() })
         
-        var title = "Write a Note"
+        var title = StringsProvider.string(forKey: .diaryNoteCreateText)
         var image = ImagePalette.image(withName: .textNote)
 
         let writePage = GenericListItemView(withTitle: title,
@@ -129,7 +129,7 @@ class NoticedViewController: UIViewController {
         })
         self.scrollStackView.stackView.addArrangedSubview(writePage)
         
-        title = "Record Audio"
+        title = StringsProvider.string(forKey: .diaryNoteRecordAudio)
         image = ImagePalette.image(withName: .audioNote)
         let audioPage = GenericListItemView(withTitle: title,
                                             image: image ?? UIImage() ,
@@ -141,7 +141,7 @@ class NoticedViewController: UIViewController {
         })
         self.scrollStackView.stackView.addArrangedSubview(audioPage)
     
-        title = "Record Video"
+        title = StringsProvider.string(forKey: .diaryNoteRecordVideo)
         image = ImagePalette.templateImage(withName: .videoIcon) ?? UIImage()
         let videoPage = GenericListItemView(withTitle: title,
                                             image: image ?? UIImage(),

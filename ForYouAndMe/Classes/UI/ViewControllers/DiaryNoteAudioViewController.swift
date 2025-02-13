@@ -66,7 +66,7 @@ class DiaryNoteAudioViewController: UIViewController {
         self.closeButton.autoPinEdgesToSuperviewEdges(with: .zero, excludingEdge: .trailing)
         stackView.addArrangedSubview(closeButtonContainerView)
 
-        stackView.addLabel(withText: "Audio Recording",
+        stackView.addLabel(withText: StringsProvider.string(forKey: .diaryNoteCreateAudioTitle),
                            fontStyle: .title,
                            colorType: .primaryText)
         
@@ -215,7 +215,7 @@ class DiaryNoteAudioViewController: UIViewController {
         // Footer
         self.view.addSubview(self.footerView)
         footerView.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets.zero, excludingEdge: .top)
-        footerView.setButtonText("Save")
+        footerView.setButtonText(StringsProvider.string(forKey: .diaryNoteCreateAudioSave))
         self.footerView.setButtonEnabled(enabled: false)
         
         self.setupUI()
@@ -229,9 +229,8 @@ class DiaryNoteAudioViewController: UIViewController {
         try? audioPlayerManager.setupAudioSession()
         
         self.pageState
-            .observeOn(MainScheduler.instance)
+            .observe(on: MainScheduler.instance)
             .subscribe(onNext: { [weak self] newPageState in
-                print("PageState updated to: \(newPageState)")
                 self?.updateNextButton(pageState: newPageState)
                 self?.updateTextFields(pageState: newPageState)
                 self?.view.endEditing(true)
@@ -276,7 +275,7 @@ class DiaryNoteAudioViewController: UIViewController {
                                            file: audioResultFile,
                                            fromChart: false)
             .do(onDispose: { AppNavigator.popProgressHUD() })
-            .observeOn(MainScheduler.instance)
+            .observe(on: MainScheduler.instance)
             .subscribe(onSuccess: { [weak self] diaryNote in
                 guard let self = self else { return }
                 self.diaryNoteItem = diaryNote
@@ -285,7 +284,7 @@ class DiaryNoteAudioViewController: UIViewController {
                     self.pageState.accept(.transcribe)
                     self.startPolling() // Start polling after successful creation
                 }
-            }, onError: { [weak self] error in
+            }, onFailure: { [weak self] error in
                 guard let self = self else { return }
                 self.navigator.handleError(error: error,
                                            presenter: self)
@@ -300,7 +299,7 @@ class DiaryNoteAudioViewController: UIViewController {
                 .subscribe(onSuccess: { [weak self] in
                     guard let self = self else { return }
                     self.closeButtonPressed()
-                }, onError: { [weak self] error in
+                }, onFailure: { [weak self] error in
                     guard let self = self else { return }
                     self.navigator.handleError(error: error, presenter: self)
                 }).disposed(by: self.disposeBag)
@@ -702,7 +701,6 @@ extension DiaryNoteAudioViewController: AudioPlayerManagerDelegate {
                 self.recordDurationTime = totalTime
                 self.slider.maximumValue = Float(totalTime)
             }
-            print("currentTime: \(currentTime), totalTime: \(totalTime)")
             self.slider.value = Float(currentTime)
         }
     }
