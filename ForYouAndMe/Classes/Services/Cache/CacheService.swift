@@ -17,5 +17,6 @@ protocol CacheService {
     
     #if DEBUG
     func resetHealthKitCache()
+    func uploadMirSpirometryData()
     #endif
 }

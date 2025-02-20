@@ -311,4 +311,28 @@ extension CacheManager {
     }
 }
 
+
+
+
+// MARK: Mir Spirometry
+extension CacheManager {
+    func uploadMirSpirometryData() {
+        
+        // Setup tasks:
+        // 1. Create new Task
+        // 2. Create new Permission for the device
+        
+        // device connection
+        // create session
+        // session complete, extract data
+        // convert data to JSON
+        // upload JSON to the server
+        
+        
+        
+        
+        
+        print("Upload Mir Spirometry Data")
+    }
+}
 #endif

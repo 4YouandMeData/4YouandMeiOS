@@ -2,10 +2,6 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>NSHealthShareUsageDescription</key>
-	<string>$(PRODUCT_NAME) will use your health data for further analysis.</string>
-	<key>NSHealthUpdateUsageDescription</key>
-	<string>$(PRODUCT_NAME) will update your health data based on your task results</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleExecutable</key>
@@ -48,6 +44,10 @@
 	<string>$(PRODUCT_NAME) captures photos and video during certain tasks.</string>
 	<key>NSContactsUsageDescription</key>
 	<string>$(PRODUCT_NAME) uses Contacts during certain tasks.</string>
+	<key>NSHealthShareUsageDescription</key>
+	<string>$(PRODUCT_NAME) will use your health data for further analysis.</string>
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>$(PRODUCT_NAME) will update your health data based on your task results</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 	<string>$(PRODUCT_NAME) will use your location to verify information such as how far you travelled and the speed at which you travelled, as described in the informed consent.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>

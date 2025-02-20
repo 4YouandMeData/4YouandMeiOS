@@ -136,14 +136,26 @@ class AboutYouViewController: UIViewController {
             self.scrollStackView.stackView.addLineSeparator(lineColor: ColorPalette.color(withType: .inactive),
                                                             inset: 21,
                                                             isVertical: false)
+
             let healthKitCachePurgeButton = GenericListItemView(withTitle: "Debug - Purge Healthkit cache",
                                                                 image: UIImage(),
                                                                 colorType: .primary,
                                                                 style: .flatStyle,
                                                                 gestureCallback: {
-                                                                    Services.shared.storageServices.resetHealthKitCache()
-                                                                })
+                Services.shared.storageServices.resetHealthKitCache()
+            })
+
+            let mirSpirometryButton = GenericListItemView(withTitle: "Debug - Mir Spirometr Upload",
+                                                          image: UIImage(),
+                                                          colorType: .primary,
+                                                          style: .flatStyle,
+                                                          gestureCallback: {
+                
+                Services.shared.storageServices.uploadMirSpirometryData()
+            })
+
             self.scrollStackView.stackView.addArrangedSubview(healthKitCachePurgeButton)
+            self.scrollStackView.stackView.addArrangedSubview(mirSpirometryButton)
         }
         #endif
         
