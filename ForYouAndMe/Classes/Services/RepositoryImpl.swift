@@ -133,7 +133,7 @@ extension RepositoryImpl: Repository {
     func submitPhoneNumber(phoneNumber: String) -> Single<()> {
         return self.api.send(request: ApiRequest(serviceRequest: .submitPhoneNumber(phoneNumber: phoneNumber)))
             .handleError()
-            .catchError({ error -> Single<()> in
+            .catch({ error -> Single<()> in
                 
                 if let errorCodeNumber = error
                     .getFirstServerError(forExpectedStatusCodes: SubmitPhoneNumberErrorCode.allCases.map { $0.rawValue }),
@@ -156,7 +156,7 @@ extension RepositoryImpl: Repository {
             .logServerError(excludingExpectedErrorCodes: VerifyPhoneNumberExpectedErrorCode.allCases.map { $0.rawValue },
                             analyticsService: self.analyticsService)
             .handleError(debugMode: true)
-            .catchError({ error -> Single<(User)> in
+            .catch({ error -> Single<(User)> in
                 if let errorCodeNumber = error
                     .getFirstServerError(forExpectedStatusCodes: VerifyPhoneNumberExpectedErrorCode.allCases.map { $0.rawValue }),
                     let errorCode = VerifyPhoneNumberExpectedErrorCode(rawValue: errorCodeNumber) {
@@ -178,7 +178,7 @@ extension RepositoryImpl: Repository {
     func emailLogin(email: String) -> Single<User> {
         return self.api.send(request: ApiRequest(serviceRequest: .emailLogin(email: email)))
             .handleError()
-            .catchError({ (error)-> Single<(User)> in
+            .catch({ (error)-> Single<(User)> in
                 if let errorCodeNumber = error
                     .getFirstServerError(forExpectedStatusCodes: EmailLoginErrorCode.allCases.map { $0.rawValue }),
                     let errorCode = EmailLoginErrorCode(rawValue: errorCodeNumber) {
@@ -264,7 +264,7 @@ extension RepositoryImpl: Repository {
     func verifyEmail(validationCode: String) -> Single<()> {
         return self.api.send(request: ApiRequest(serviceRequest: .verifyEmail(validationCode: validationCode)))
             .handleError()
-            .catchError({ error -> Single<()> in
+            .catch({ error -> Single<()> in
                 if let errorCodeNumber = error
                     .getFirstServerError(forExpectedStatusCodes: VerifyEmailErrorCode.allCases.map { $0.rawValue }),
                     let errorCode = VerifyEmailErrorCode(rawValue: errorCodeNumber) {
@@ -441,7 +441,7 @@ extension RepositoryImpl: Repository {
                         }
                     }
                     return request
-                        .catchError { error in self.sanitizePhase().flatMap { Single.error(error) } }
+                        .catch { error in self.sanitizePhase().flatMap { Single.error(error) } }
                         .flatMap { self.refreshUser() }
                 } else {
                     return Single.just(user)
@@ -500,7 +500,7 @@ extension RepositoryImpl: Repository {
                 .handleError()
                 // Update Time zone is ignored, not blocking operation
                 .do(onError: { error in print("Repository - error updateUserTimeZoneIfNeeded: \(error.localizedDescription)") })
-                .catchErrorJustReturn(user)
+                .catchAndReturn(user)
         } else {
             return Single.just(user)
         }
@@ -533,7 +533,7 @@ extension RepositoryImpl: Repository {
             }
             .handleError()
             .do(onError: { error in print("RepositoryImpl - Error while updating notification registration token. Error: \(error)") })
-            .catchErrorJustReturn(user)
+            .catchAndReturn(user)
     }
     
     private func saveUser(_ user: User) {
@@ -604,7 +604,7 @@ extension RepositoryImpl: Repository {
                 .toVoid()
                 .do(onSuccess: { debugPrint("Repository - Phase Sanitization Successful") })
                 .do(onError: { error in debugPrint("Repository - Phase Sanitization Failed. Error: \(error.localizedDescription)") })
-                .catchErrorJustReturn(())
+                .catchAndReturn(())
         } else {
             return Single.just(())
                 .do(onSuccess: { debugPrint("Repository - Phase Sanitization Not Needed") })
@@ -618,7 +618,7 @@ extension RepositoryImpl: NotificationTokenDelegate {
             self.sendFirebaseToken(token: token)
                 .subscribe { _ in
                     print("RepositoryImpl - Sent Registration Token to server due to token update")
-                } onError: { error in
+                } onFailure: { error in
                     print("RepositoryImpl - Error while sending Registration Token to server due to token update. Error: \(error)")
                 }.disposed(by: self.disposeBag)
         }
@@ -631,7 +631,7 @@ extension RepositoryImpl: HealthManagerNetworkDelegate {
     func uploadHealthNetworkData(_ healthNetworkData: HealthNetworkData) -> Single<()> {
         return self.api.send(request: ApiRequest(serviceRequest: .sendHealthData(healthData: healthNetworkData)))
             .handleError()
-            .catchError { error in
+            .catch { error in
                 guard let repositoryError = error as? RepositoryError else {
                     assertionFailure("Unexpected error type")
                     return Single.error(error)
@@ -658,7 +658,7 @@ fileprivate extension PrimitiveSequence where Trait == SingleTrait {
     }
     
     func handleServerError(debugMode: Bool = false) -> Single<Element> {
-        return self.catchError({ (error) -> Single<Element> in
+        return self.catch({ (error) -> Single<Element> in
             if let error = error as? ApiError {
                 if debugMode {
                     return Single.error(error.repositoryErrorDebugMode)
@@ -692,7 +692,7 @@ extension RepositoryImpl: InitializableService {
             requests = requests.flatMap {
                 self.refreshUser()
                     .toVoid()
-                    .catchErrorJustReturn(())
+                    .catchAndReturn(())
             }
         }
         

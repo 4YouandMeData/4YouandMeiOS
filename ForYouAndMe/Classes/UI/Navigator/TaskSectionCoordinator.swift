@@ -139,7 +139,7 @@ class TaskSectionCoordinator: NSObject, PagedActivitySectionCoordinator {
                 guard let self = self else { return }
                 self.deleteTaskResult(path: Constants.Task.TaskResultURL)
                 self.showSuccessPage()
-                }, onError: { [weak self] error in
+            }, onFailure: { [weak self] error in
                     guard let self = self else { return }
                     self.navigator.handleError(error: error,
                                                presenter: presenter,

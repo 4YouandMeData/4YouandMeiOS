@@ -159,7 +159,7 @@ public class UserEmailViewController: UIViewController {
                 self.emailFieldView.clearError(clearErrorText: true)
                 self.view.endEditing(true)
                 self.coordinator.onUserEmailSubmitted(email: self.emailFieldView.text)
-            }, onError: { [weak self] error in
+            }, onFailure: { [weak self] error in
                 guard let self = self else { return }
                 self.navigator.handleError(error: error, presenter: self)
             }).disposed(by: self.disposeBag)

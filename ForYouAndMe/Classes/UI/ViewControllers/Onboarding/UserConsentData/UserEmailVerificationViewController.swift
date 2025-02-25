@@ -173,7 +173,7 @@ public class UserEmailVerificationViewController: UIViewController {
                 self.codeTextFieldView.clearError(clearErrorText: true)
                 self.view.endEditing(true)
                 self.coordinator.onUserEmailVerified()
-            }, onError: { [weak self] error in
+            }, onFailure: { [weak self] error in
                 guard let self = self else { return }
                 if let error = error as? RepositoryError, case .wrongEmailValidationCode = error {
                     self.codeTextFieldView.setError(errorText: error.localizedDescription)
