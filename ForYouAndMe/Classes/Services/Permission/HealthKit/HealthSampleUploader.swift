@@ -47,40 +47,42 @@ class HealthSampleUploader {
         self.sampleDataType = sampleDataType
     }
     
-    public func run(startDate: Date) -> Single<()> {
+    public func run(startDate: Date, endDate: Date) -> Single<()> {
         guard let networkDelegate = self.networkDelegate else {
             assertionFailure("Missing Network Delegate")
             return Single.error(HealthSampleUploaderError.internalError)
         }
-        
+
         guard let sampleType = self.sampleDataType.sampleType else {
             assertionFailure("Current HealthDataType is not a sample type")
             return Single.error(HealthSampleUploaderError.unexpectedDataType)
         }
-        
-        let endDate = Date()
-        
+
         return Single<HealthQueryResult>.create { observer in
             let datePredicate = HKQuery.predicateForSamples(withStart: startDate, end: endDate, options: [])
             let anchor: HKQueryAnchor? = self.storage.loadLastSampleUploadAnchor(forDataType: self.sampleDataType)
+
             let query = HKAnchoredObjectQuery(type: sampleType,
                                               predicate: datePredicate,
                                               anchor: anchor,
-                                              limit: HKObjectQueryNoLimit,
-                                              resultsHandler: { (_, samplesOrNil, _, newAnchor, errorOrNil) in
-                                                if let error = errorOrNil {
-                                                    observer(.failure(HealthSampleUploaderError.fetchDataError(underlyingError: error)))
-                                                } else {
-                                                    observer(.success(HealthQueryResult(anchor: newAnchor, samples: samplesOrNil ?? [])))
-                                                }
-                                              })
+                                              limit: HKObjectQueryNoLimit) { _, samplesOrNil, _, newAnchor, errorOrNil in
+                if let error = errorOrNil {
+                    observer(.failure(HealthSampleUploaderError.fetchDataError(underlyingError: error)))
+                } else {
+                    observer(.success(HealthQueryResult(anchor: newAnchor, samples: samplesOrNil ?? [])))
+                }
+            }
+            
             self.healthStore.execute(query)
             return Disposables.create()
-        }.flatMap { result -> Single<HKQueryAnchor?> in
-            self.logDebugText(text: "\(result.samples.count) to upload")
+        }
+        .flatMap { result -> Single<HKQueryAnchor?> in
+            self.logDebugText(text: "Uploading \(result.samples.count) samples from \(startDate) to \(endDate)")
+            
             guard result.samples.count > 0 else {
                 return Single.just(result.anchor)
             }
+
             return networkDelegate.uploadHealthNetworkData(result.samples.getNetworkData(forDataType: self.sampleDataType))
                 .map { result.anchor }
         }
@@ -91,6 +93,7 @@ class HealthSampleUploader {
         })
         .toVoid()
     }
+
     
     private func logDebugText(text: String) {
         #if DEBUG

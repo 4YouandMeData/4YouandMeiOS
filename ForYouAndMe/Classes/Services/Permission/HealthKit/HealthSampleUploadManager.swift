@@ -135,43 +135,59 @@ class HealthSampleUploadManager {
     
     private func startUpload(forUploader uploader: HealthSampleUploader) {
         self.storage.pendingUploadDataType = uploader.sampleDataType
+
         guard self.reachability.isCurrentlyReachableForHealthSampleUpload else {
             self.logDebugText(text: "Upload sequence stopped due to not available connection")
-            // If network connection is not available, stop the upload sequence, waiting for connection to be re-established.
             self.uploadSequenceScheduledOrRunning = false
             return
         }
-        
-        guard let startDate = self.storage.uploadStartDate else {
+
+        guard var startDate = self.storage.uploadStartDate else {
             assertionFailure("Upload start date has not been initialized")
             return
         }
-        
-        self.logDebugText(text: "Upload for data type '\(uploader.sampleDataType.keyName)' started")
-        uploader.run(startDate: startDate)
-            .subscribe(onSuccess: { [weak self] in
-                guard let self = self else { return }
-                self.logDebugText(text: "Upload for data type '\(uploader.sampleDataType.keyName)' completed")
-                self.processNextUploader(forUploader: uploader)
-            }, onError: { [weak self] error in
-                guard let self = self else { return }
-                self.logDebugText(text: "Data Type '\(uploader.sampleDataType.keyName)' upload failed with error: \(error)")
-                guard let sampleUploadError = error as? HealthSampleUploaderError else {
-                    assertionFailure("Unexpected error type")
-                    return
-                }
-                switch sampleUploadError {
-                case .internalError, .fetchDataError, .unexpectedDataType, .uploadServerError:
-                    self.logDebugText(text: "Upload error: \(sampleUploadError)")
-                    self.processNextUploader(forUploader: uploader)
-                case .uploadConnectivityError:
-                    self.logDebugText(text: "Upload connectivity error. Try to re-upload")
-                    // Restart the same upload. At the beginning of the method, if connection is still unavailable,
-                    // the upload sequence will be stopped.
-                    self.startUpload(forUploader: uploader)
-                }
-            }).disposed(by: self.disposeBag)
+
+        let endDate = Date()
+        let oneHour: TimeInterval = 3600
+
+        func processNextChunk() {
+            let nextEndDate = min(startDate.addingTimeInterval(oneHour), endDate)
+            
+            uploader.run(startDate: startDate, endDate: nextEndDate)
+                .subscribe(onSuccess: { [weak self] in
+                    guard let self = self else { return }
+                    self.logDebugText(text: "Upload from \(startDate) to \(nextEndDate) completed")
+                    
+                    if nextEndDate < endDate {
+                        startDate = nextEndDate
+                        processNextChunk()  // Processa il chunk successivo
+                    } else {
+                        self.storage.uploadStartDate = endDate  // Aggiorna dopo aver processato tutto
+                        self.processNextUploader(forUploader: uploader)
+                    }
+                }, onFailure: { [weak self] error in
+                    guard let self = self else { return }
+                    self.logDebugText(text: "Upload failed from \(startDate) to \(nextEndDate) with error: \(error)")
+                    
+                    guard let sampleUploadError = error as? HealthSampleUploaderError else {
+                        assertionFailure("Unexpected error type")
+                        return
+                    }
+                    
+                    switch sampleUploadError {
+                    case .internalError, .fetchDataError, .unexpectedDataType, .uploadServerError:
+                        self.logDebugText(text: "Upload error: \(sampleUploadError)")
+                        self.processNextUploader(forUploader: uploader)
+                    case .uploadConnectivityError:
+                        self.logDebugText(text: "Upload connectivity error. Retrying current chunk")
+                        processNextChunk()  // Riprova l'upload di questo chunk
+                    }
+                }).disposed(by: self.disposeBag)
+        }
+
+        processNextChunk()  // Avvia il primo chunk
     }
+
     
     private func processNextUploader(forUploader uploader: HealthSampleUploader) {
         self.storage.pendingUploadDataType = nil
