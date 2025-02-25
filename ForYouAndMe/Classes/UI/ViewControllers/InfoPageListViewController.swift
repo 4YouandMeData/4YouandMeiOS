@@ -145,7 +145,7 @@ fileprivate extension UIStackView {
     
     func addPage(_ page: Page) {
         let view = UIView()
-        view.backgroundColor = ColorPalette.color(withType: .inactive)
+        view.backgroundColor = ColorPalette.color(withType: .secondaryBackgroungColor)
         view.round(radius: 8.0)
         
         let stackView = UIStackView()

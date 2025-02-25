@@ -14,6 +14,7 @@ typealias ColorMap = [ColorType: UIColor]
 enum ColorType: String, CaseIterable, CodingKey {
     case primary = "primary_color_start"
     case secondary = "secondary_color"
+    case secondaryBackgroungColor = "secondary_background_color"
     case tertiary = "tertiary_color_start"
     case fourth = "fourth_color"
     case primaryText = "primary_text_color"
@@ -47,6 +48,7 @@ enum ColorType: String, CaseIterable, CodingKey {
         case .gradientTertiaryEnd: return UIColor(hexRGB: 0x25B8C9)
         case .fabColorDefault: return UIColor(hexRGB: 0xFFFFFF)
         case .fabOutlineColor: return UIColor(hexRGB: 0xA5A5A5)
+        case .secondaryBackgroungColor: return UIColor(hexRGB: 0xDFDFDF)
         }
     }
 }
