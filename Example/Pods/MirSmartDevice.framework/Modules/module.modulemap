@@ -1,0 +1,6 @@
+framework module MirSmartDevice {
+  umbrella header "MirSmartDevice.h"
+  export *
+
+  module * { export * }
+}

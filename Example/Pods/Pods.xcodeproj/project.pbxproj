@@ -1663,8 +1663,6 @@
 		8706A6EBD005D575F0FCC677A246C4BF /* ORKGraphChartAccessibilityElement.m in Sources */ = {isa = PBXBuildFile; fileRef = 6588E76E9F983FEFAD00BD52B746C402 /* ORKGraphChartAccessibilityElement.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
 		8708A63230C2FE790FD7E00C0F5C165A /* FIRLogger.h in Headers */ = {isa = PBXBuildFile; fileRef = 2CCFF752D2DF38B1E9E95D90C2545EE9 /* FIRLogger.h */; settings = {ATTRIBUTES = (Project, ); }; };
 		87098597D6145DDA525DD0983D8D6D72 /* ORKPSATStepViewController.h in Headers */ = {isa = PBXBuildFile; fileRef = 78416A6E0ACC97172C62187D3BE531B4 /* ORKPSATStepViewController.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		8728F0542D676F7E00E3AC69 /* MirSmartDevice.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8728F0522D676F7700E3AC69 /* MirSmartDevice.framework */; platformFilter = ios; };
-		8728F0552D676F7E00E3AC69 /* MirSmartDevice.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 8728F0522D676F7700E3AC69 /* MirSmartDevice.framework */; platformFilter = ios; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		873B0E7624492E779034F13D21AD1A83 /* ORKTappingContentView.m in Sources */ = {isa = PBXBuildFile; fileRef = 82AF23E3FD715180888E291527C548C7 /* ORKTappingContentView.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
 		873B3134EA69A7AE9927718B23AA63BF /* th.lproj in Resources */ = {isa = PBXBuildFile; fileRef = EC104C8B900330EE3953CD4275CD8B27 /* th.lproj */; };
 		873C1C3EFF7AD6BADBE95BE12A18F5C6 /* SignatureDrawingModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3733132DF99B993E57D696726298843A /* SignatureDrawingModel.swift */; };
@@ -1674,6 +1672,14 @@
 		87864E771236138C4D56D7B5E570484C /* ConsentSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76789F263A41DEACA6BC8EBAB72A3F67 /* ConsentSection.swift */; };
 		87930CA6FE9DAE33623C05AB310945AF /* FIRInstallationsAuthTokenResult.m in Sources */ = {isa = PBXBuildFile; fileRef = D507200455A1273DCC23AB1EA37ADA37 /* FIRInstallationsAuthTokenResult.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
 		87A121956F65E95BE3067D42858640CA /* ORKMultipleValuePicker.h in Headers */ = {isa = PBXBuildFile; fileRef = 2CFAC541C225A1066421E6171D70BCD9 /* ORKMultipleValuePicker.h */; settings = {ATTRIBUTES = (Project, ); }; };
+		87A9907D2D6DFAE50022E695 /* MirSmartDevice.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 87A9907A2D6DFADC0022E695 /* MirSmartDevice.framework */; platformFilter = ios; };
+		87A9907E2D6DFAE50022E695 /* MirSmartDevice.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 87A9907A2D6DFADC0022E695 /* MirSmartDevice.framework */; platformFilter = ios; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		87A990802D6DFAEB0022E695 /* MirSmartDevice.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 87A9907A2D6DFADC0022E695 /* MirSmartDevice.framework */; platformFilter = ios; };
+		87A990812D6DFAEB0022E695 /* MirSmartDevice.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 87A9907A2D6DFADC0022E695 /* MirSmartDevice.framework */; platformFilter = ios; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		87A990832D6DFAF90022E695 /* MirSmartDevice.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 87A9907A2D6DFADC0022E695 /* MirSmartDevice.framework */; platformFilter = ios; };
+		87A990842D6DFAF90022E695 /* MirSmartDevice.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 87A9907A2D6DFADC0022E695 /* MirSmartDevice.framework */; platformFilter = ios; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		87A990862D6DFAFE0022E695 /* MirSmartDevice.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 87A9907A2D6DFADC0022E695 /* MirSmartDevice.framework */; platformFilter = ios; };
+		87A990872D6DFAFE0022E695 /* MirSmartDevice.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 87A9907A2D6DFADC0022E695 /* MirSmartDevice.framework */; platformFilter = ios; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		87DC4EF51109BC1AAD2998088CC59FB6 /* SVRadialGradientLayer.h in Headers */ = {isa = PBXBuildFile; fileRef = 47E9E1A7618270E6014F88053705DAE5 /* SVRadialGradientLayer.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		87E4E4FD65CDED0760373CC3D229BF63 /* ORKToneAudiometryContentView.m in Sources */ = {isa = PBXBuildFile; fileRef = 202A61C47A2659810DE7EAA12EBD11DA /* ORKToneAudiometryContentView.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
 		87EBAFE5EBE844A07097F9743F82BC88 /* Permission.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F36BF96644B7BAA46F2A5E5F7548719 /* Permission.swift */; };
@@ -4109,13 +4115,46 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
-		8728F0562D676F7E00E3AC69 /* Embed Frameworks */ = {
+		87A9907F2D6DFAE50022E695 /* Embed Frameworks */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				8728F0552D676F7E00E3AC69 /* MirSmartDevice.framework in Embed Frameworks */,
+				87A9907E2D6DFAE50022E695 /* MirSmartDevice.framework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		87A990822D6DFAEB0022E695 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				87A990812D6DFAEB0022E695 /* MirSmartDevice.framework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		87A990852D6DFAF90022E695 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				87A990842D6DFAF90022E695 /* MirSmartDevice.framework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		87A990882D6DFAFE0022E695 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				87A990872D6DFAFE0022E695 /* MirSmartDevice.framework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -5860,13 +5899,13 @@
 		86EF4FD53BADB5F74D21BDE31FE118E4 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xml; name = PrivacyInfo.xcprivacy; path = FirebaseCore/Extension/Resources/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		86EF582F8DB64A0BD92D8E1F82D8FE79 /* AssertionRecorder.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = AssertionRecorder.swift; path = Sources/Nimble/Adapters/AssertionRecorder.swift; sourceTree = "<group>"; };
 		8723328EC6DDE41ACD5A80C3C8151400 /* UITabBarController+Rx.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = "UITabBarController+Rx.swift"; path = "RxCocoa/iOS/UITabBarController+Rx.swift"; sourceTree = "<group>"; };
-		8728F0522D676F7700E3AC69 /* MirSmartDevice.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MirSmartDevice.framework; path = Example/Frameworks/MirSmartDevice.framework; sourceTree = "<group>"; };
 		873160343DC55F418BC5F167C91C8A4C /* ORKSurveyAnswerCellForSES.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = ORKSurveyAnswerCellForSES.m; path = ResearchKit/Common/ORKSurveyAnswerCellForSES.m; sourceTree = "<group>"; };
 		87402256195694F5844FC6D16981E69D /* NSLayoutConstraint+PureLayout.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = "NSLayoutConstraint+PureLayout.h"; path = "PureLayout/PureLayout/include/NSLayoutConstraint+PureLayout.h"; sourceTree = "<group>"; };
 		87446E17B9C563E4CE5D5304D3CCECBC /* CodableColor.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CodableColor.swift; sourceTree = "<group>"; };
 		875BE00CA400F088F7AFFE649B9AEA7E /* FIRMessagingTopicsCommon.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = FIRMessagingTopicsCommon.h; path = FirebaseMessaging/Sources/FIRMessagingTopicsCommon.h; sourceTree = "<group>"; };
 		879132E11ECC67D1680D9D4965372E01 /* FBLPromise+Recover.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = "FBLPromise+Recover.h"; path = "Sources/FBLPromises/include/FBLPromise+Recover.h"; sourceTree = "<group>"; };
 		87A23CC81D224CF58AEB7F8FAD2CF113 /* PagedActivitySectionCoordinator.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PagedActivitySectionCoordinator.swift; sourceTree = "<group>"; };
+		87A9907A2D6DFADC0022E695 /* MirSmartDevice.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = MirSmartDevice.framework; sourceTree = "<group>"; };
 		87B21150727184CE4F742FE6619C62B0 /* ORKErrors.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = ORKErrors.m; path = ResearchKit/Common/ORKErrors.m; sourceTree = "<group>"; };
 		87D1E659033FF27FA2618DF8286C77D3 /* AboutYouHeaderView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AboutYouHeaderView.swift; sourceTree = "<group>"; };
 		87EC3901A9593382DFDDB12817C2E4B4 /* WeakPixelInclusion_GL.fsh */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.glsl; name = WeakPixelInclusion_GL.fsh; path = framework/Source/Operations/Shaders/WeakPixelInclusion_GL.fsh; sourceTree = "<group>"; };
@@ -7494,6 +7533,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				D91BA40535544C9FDDA22B1FB2A60779 /* Foundation.framework in Frameworks */,
+				87A990862D6DFAFE0022E695 /* MirSmartDevice.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -7606,7 +7646,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				9616566D74D0E21E63190579C7FF31E9 /* Foundation.framework in Frameworks */,
-				8728F0542D676F7E00E3AC69 /* MirSmartDevice.framework in Frameworks */,
+				87A9907D2D6DFAE50022E695 /* MirSmartDevice.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -7695,6 +7735,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				C531A084A56EB36FBEF490D286EFF2F5 /* Foundation.framework in Frameworks */,
+				87A990832D6DFAF90022E695 /* MirSmartDevice.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -7702,6 +7743,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				87A990802D6DFAEB0022E695 /* MirSmartDevice.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -11728,6 +11770,7 @@
 				E2C34186C0DCC2DC5B7BF59A688A9EAB /* Pods */,
 				8D4D793C0D9767D06D6CFCE9F25327F6 /* Products */,
 				C061A3A4928D8BC80162D12F37DCA44C /* Targets Support Files */,
+				87A9907A2D6DFADC0022E695 /* MirSmartDevice.framework */,
 			);
 			sourceTree = "<group>";
 		};
@@ -12464,7 +12507,6 @@
 				9C08C2E2ED09134D05D5F75DA0C41D7A /* UI */,
 				BA1634C04CF3F163B48523F0D369917B /* Utility */,
 				26F790D11045D9538F87E5E9DF65A3C5 /* UtilityInternal */,
-				8728F0522D676F7700E3AC69 /* MirSmartDevice.framework */,
 			);
 			name = ForYouAndMe;
 			path = ../..;
@@ -14099,6 +14141,7 @@
 				B495CEB393D38F3013570146DF0FB11E /* Sources */,
 				80CFF71CE797450F5B27191FC79B5BE8 /* Frameworks */,
 				45CEA6F6A036A25B00ABF0EADD8F1F98 /* Resources */,
+				87A990822D6DFAEB0022E695 /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
@@ -14242,6 +14285,7 @@
 				B9E6CA27D45AD40E0C65245A0E4B214C /* Sources */,
 				0F287566E3791D34E3FCE0497746BFF8 /* Frameworks */,
 				B75C4E1EB2620836609078F22EE05985 /* Resources */,
+				87A990882D6DFAFE0022E695 /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
@@ -14695,6 +14739,7 @@
 				283C3C1460D7A55F720DA89C33F9F08F /* Sources */,
 				7538154E2E89182E2E9BCC3000C063EA /* Frameworks */,
 				E0F39B4C63B21CEF9C0CAF5F82DEA3AB /* Resources */,
+				87A990852D6DFAF90022E695 /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
@@ -14823,7 +14868,7 @@
 				DD8269598BF5487015BFEA49BFD9CDB5 /* Sources */,
 				44D8B09EBE6A766F5F471D7D025DD881 /* Frameworks */,
 				064E647FFA63A4684AC0E10B8B230C78 /* Resources */,
-				8728F0562D676F7E00E3AC69 /* Embed Frameworks */,
+				87A9907F2D6DFAE50022E695 /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
@@ -19106,6 +19151,10 @@
 				CODE_SIGNING_REQUIRED = NO;
 				CONFIGURATION_BUILD_DIR = "$(BUILD_DIR)/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)/ForYouAndMe";
 				EXPANDED_CODE_SIGN_IDENTITY = "";
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)",
+				);
 				IBSC_MODULE = ForYouAndMe;
 				INFOPLIST_FILE = "Target Support Files/ForYouAndMe/ResourceBundle-ForYouAndMe-ForYouAndMe-Info.plist";
 				PRODUCT_NAME = ForYouAndMe;
@@ -19497,6 +19546,10 @@
 				ENABLE_MODULE_VERIFIER = NO;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				EXPANDED_CODE_SIGN_IDENTITY = "";
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)",
+				);
 				INFOPLIST_FILE = "Target Support Files/Pods-ForYouAndMe_Tests/Pods-ForYouAndMe_Tests-Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -19836,10 +19889,6 @@
 				ENABLE_MODULE_VERIFIER = NO;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				EXPANDED_CODE_SIGN_IDENTITY = "";
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(PROJECT_DIR)",
-				);
 				GCC_PREFIX_HEADER = "Target Support Files/FYAMResearchKit/FYAMResearchKit-prefix.pch";
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = "Target Support Files/FYAMResearchKit/FYAMResearchKit-Info.plist";
@@ -20117,6 +20166,10 @@
 				ENABLE_MODULE_VERIFIER = NO;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				EXPANDED_CODE_SIGN_IDENTITY = "";
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)",
+				);
 				INFOPLIST_FILE = "Target Support Files/Pods-ForYouAndMe_Example/Pods-ForYouAndMe_Example-Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -20321,10 +20374,6 @@
 				ENABLE_MODULE_VERIFIER = NO;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				EXPANDED_CODE_SIGN_IDENTITY = "";
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(PROJECT_DIR)",
-				);
 				GCC_PREFIX_HEADER = "Target Support Files/FYAMResearchKit/FYAMResearchKit-prefix.pch";
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = "Target Support Files/FYAMResearchKit/FYAMResearchKit-Info.plist";
@@ -20449,6 +20498,10 @@
 				ENABLE_MODULE_VERIFIER = NO;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				EXPANDED_CODE_SIGN_IDENTITY = "";
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)",
+				);
 				INFOPLIST_FILE = "Target Support Files/Pods-ForYouAndMe_Tests/Pods-ForYouAndMe_Tests-Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -21256,6 +21309,10 @@
 				CODE_SIGNING_REQUIRED = NO;
 				CONFIGURATION_BUILD_DIR = "$(BUILD_DIR)/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)/ForYouAndMe";
 				EXPANDED_CODE_SIGN_IDENTITY = "";
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)",
+				);
 				IBSC_MODULE = ForYouAndMe;
 				INFOPLIST_FILE = "Target Support Files/ForYouAndMe/ResourceBundle-ForYouAndMe-ForYouAndMe-Info.plist";
 				PRODUCT_NAME = ForYouAndMe;
@@ -21285,6 +21342,10 @@
 				ENABLE_MODULE_VERIFIER = NO;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				EXPANDED_CODE_SIGN_IDENTITY = "";
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)",
+				);
 				INFOPLIST_FILE = "Target Support Files/Pods-ForYouAndMe_Example/Pods-ForYouAndMe_Example-Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -21987,6 +22048,10 @@
 				ENABLE_TESTABILITY = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				EXPANDED_CODE_SIGN_IDENTITY = "";
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)",
+				);
 				GCC_PREFIX_HEADER = "Target Support Files/ForYouAndMe/ForYouAndMe-prefix.pch";
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = "Target Support Files/ForYouAndMe/ForYouAndMe-Info.plist";
@@ -22655,6 +22720,10 @@
 				ENABLE_TESTABILITY = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				EXPANDED_CODE_SIGN_IDENTITY = "";
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)",
+				);
 				GCC_PREFIX_HEADER = "Target Support Files/ForYouAndMe/ForYouAndMe-prefix.pch";
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = "Target Support Files/ForYouAndMe/ForYouAndMe-Info.plist";
