@@ -156,16 +156,17 @@ class HealthManager: HealthService {
             print("HealthManager - Characteristics Data has no clearance")
             return
         }
-        let data: [String: String] = self.readDataTypes.reduce([:]) { result, type in
+        let data: [String: String] = self.readDataTypes.reduce(into: [:]) { result, type in
             if let key = type.characteristicTypeKey {
-                var result = result
                 result[key] = type.characteristicValueDataString(healthStore: self.healthStore) ?? ""
-                return result
-            } else {
-                return result
             }
         }
-        networkDelegate.uploadHealthNetworkData(data)
+        
+        let dataToUpload: [String: Any] = [
+            "generic": data
+        ]
+        
+        networkDelegate.uploadHealthNetworkData(dataToUpload)
             .do(
                 onSuccess: { _ in
                     #if DEBUG

@@ -706,7 +706,13 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             let dataParams: [String: Any] = ["data": params]
             return .requestParameters(parameters: ["phone_event": dataParams], encoding: JSONEncoding.default)
         case .sendHealthData(let healthData):
-            let dataParams: [String: Any] = ["data": healthData]
+            var dataParams: [String: Any] = ["data": healthData]
+            dataParams["source"] = "health_kit"
+            if let subsourceKey = healthData.keys.first, !subsourceKey.isEmpty {
+                dataParams["subsource"] = subsourceKey
+            } else {
+                dataParams["subsource"] = "generic"
+            }
             return .requestParameters(parameters: ["integration_data": dataParams], encoding: JSONEncoding.default)
         case .updateUserPhase:
             let dateString = ISO8601Strategy.encode(Date())
