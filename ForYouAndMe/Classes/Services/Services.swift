@@ -32,6 +32,7 @@ class Services {
     private(set) var healthService: HealthService!
     private(set) var analytics: AnalyticsService!
     private(set) var storageServices: CacheService!
+    private(set) var mirSpirometryService: MirSpirometryService!
     private(set) var deeplinkService: DeeplinkService!
     private(set) var deviceService: DeviceService!
     
@@ -46,6 +47,9 @@ class Services {
         
         let storage = CacheManager()
         self.services.append(storage)
+        
+        let mirSpirometryService = MirSpirometryManager()
+        self.services.append(mirSpirometryService)
         
         let reachabilityService = ReachabilityManager()
         self.services.append(reachabilityService)
@@ -110,6 +114,7 @@ class Services {
         self.healthService = healthService
         self.analytics = analytics
         self.storageServices = storage
+        self.mirSpirometryService = mirSpirometryService
         self.deeplinkService = deeplinkService
         self.deviceService = deviceService
         self.navigator.showSetupScreen()

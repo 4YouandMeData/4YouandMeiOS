@@ -159,7 +159,7 @@ class AboutYouViewController: UIViewController {
                                                              style: .flatStyle,
                                                              gestureCallback: {
             
-            Services.shared.storageServices.mirSpirometryConnect()
+            Services.shared.mirSpirometryService.mirSpirometryConnect()
         })
         
         let mirSpirometryRunTestButton = GenericListItemView(withTitle: "Debug - Mir Spirometry Run Test",
@@ -168,7 +168,7 @@ class AboutYouViewController: UIViewController {
                                                              style: .flatStyle,
                                                              gestureCallback: {
             
-            Services.shared.storageServices.mirSpirometryRunTest()
+            Services.shared.mirSpirometryService.mirSpirometryRunTest()
         })
         
         let mirSpirometryDisconnectButton = GenericListItemView(withTitle: "Debug - Mir Spirometry Disconnect",
@@ -177,7 +177,7 @@ class AboutYouViewController: UIViewController {
                                                                 style: .flatStyle,
                                                                 gestureCallback: {
             
-            Services.shared.storageServices.mirSpirometryDisconnect()
+            Services.shared.mirSpirometryService.mirSpirometryDisconnect()
         })
         
         let mirSpirometryStartDiscoverDevicesButton = GenericListItemView(withTitle: "Debug - Mir Spirometry Start Discover Devices",
@@ -186,7 +186,7 @@ class AboutYouViewController: UIViewController {
                                                                           style: .flatStyle,
                                                                           gestureCallback: {
             
-            Services.shared.storageServices.mirSpirometryStartDiscoverDevices()
+            Services.shared.mirSpirometryService.mirSpirometryStartDiscoverDevices()
         })
         
         let mirSpirometryStopDiscoverDevicesButton = GenericListItemView(withTitle: "Debug - Mir Spirometry Stop Discover Devices",
@@ -195,7 +195,7 @@ class AboutYouViewController: UIViewController {
                                                                          style: .flatStyle,
                                                                          gestureCallback: {
             
-            Services.shared.storageServices.mirSpirometryStopDiscoverDevices()
+            Services.shared.mirSpirometryService.mirSpirometryStopDiscoverDevices()
         })
         
         self.scrollStackView.stackView.addArrangedSubview(mirSpirometryConnectButton)

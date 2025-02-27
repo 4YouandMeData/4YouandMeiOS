@@ -17,15 +17,5 @@ protocol CacheService {
     
     #if DEBUG
     func resetHealthKitCache()
-
-    #if MIRSPIROMETRY
-    func mirSpirometryConnect()
-    func mirSpirometryRunTest()
-    func mirSpirometryDisconnect()
-    func mirSpirometryStartDiscoverDevices()
-    func mirSpirometryStopDiscoverDevices()
-//    func uploadMirSpirometryData()
-    #endif
-    
     #endif
 }
