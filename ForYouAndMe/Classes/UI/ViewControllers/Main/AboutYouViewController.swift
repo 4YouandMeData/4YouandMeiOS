@@ -153,51 +153,61 @@ class AboutYouViewController: UIViewController {
                                                         inset: 21,
                                                         isVertical: false)
 
-        let mirSpirometryConnectButton = GenericListItemView(withTitle: "Debug - Mir Spirometry Connect",
+        let mirSpirometryEnableBluetoothButton = GenericListItemView(withTitle: "Debug - Enable Bluetooth",
+                                                                     image: UIImage(),
+                                                                     colorType: .primary,
+                                                                     style: .flatStyle,
+                                                                     gestureCallback: {
+            
+            Services.shared.mirSpirometryService.enableBluetooth()
+        })
+
+        let mirSpirometryConnectButton = GenericListItemView(withTitle: "Debug - Connect",
                                                              image: UIImage(),
                                                              colorType: .primary,
                                                              style: .flatStyle,
                                                              gestureCallback: {
             
-            Services.shared.mirSpirometryService.mirSpirometryConnect()
+            Services.shared.mirSpirometryService.connect()
         })
         
-        let mirSpirometryRunTestButton = GenericListItemView(withTitle: "Debug - Mir Spirometry Run Test",
+        let mirSpirometryRunTestButton = GenericListItemView(withTitle: "Debug - Run Test (PeakFlowFev1)",
                                                              image: UIImage(),
                                                              colorType: .primary,
                                                              style: .flatStyle,
                                                              gestureCallback: {
             
-            Services.shared.mirSpirometryService.mirSpirometryRunTest()
+            Services.shared.mirSpirometryService.runTestPeakFlowFev1()
         })
         
-        let mirSpirometryDisconnectButton = GenericListItemView(withTitle: "Debug - Mir Spirometry Disconnect",
+        let mirSpirometryDisconnectButton = GenericListItemView(withTitle: "Debug - Disconnect",
                                                                 image: UIImage(),
                                                                 colorType: .primary,
                                                                 style: .flatStyle,
                                                                 gestureCallback: {
             
-            Services.shared.mirSpirometryService.mirSpirometryDisconnect()
+            Services.shared.mirSpirometryService.disconnect()
         })
         
-        let mirSpirometryStartDiscoverDevicesButton = GenericListItemView(withTitle: "Debug - Mir Spirometry Start Discover Devices",
+        let mirSpirometryStartDiscoverDevicesButton = GenericListItemView(withTitle: "Debug - Start Discover Devices",
                                                                           image: UIImage(),
                                                                           colorType: .primary,
                                                                           style: .flatStyle,
                                                                           gestureCallback: {
             
-            Services.shared.mirSpirometryService.mirSpirometryStartDiscoverDevices()
+            Services.shared.mirSpirometryService.startDiscoverDevices()
         })
         
-        let mirSpirometryStopDiscoverDevicesButton = GenericListItemView(withTitle: "Debug - Mir Spirometry Stop Discover Devices",
+        let mirSpirometryStopDiscoverDevicesButton = GenericListItemView(withTitle: "Debug - Stop Discover Devices",
                                                                          image: UIImage(),
                                                                          colorType: .primary,
                                                                          style: .flatStyle,
                                                                          gestureCallback: {
             
-            Services.shared.mirSpirometryService.mirSpirometryStopDiscoverDevices()
+            Services.shared.mirSpirometryService.stopDiscoverDevices()
         })
         
+        self.scrollStackView.stackView.addArrangedSubview(mirSpirometryEnableBluetoothButton)
         self.scrollStackView.stackView.addArrangedSubview(mirSpirometryConnectButton)
         self.scrollStackView.stackView.addArrangedSubview(mirSpirometryRunTestButton)
         self.scrollStackView.stackView.addArrangedSubview(mirSpirometryDisconnectButton)

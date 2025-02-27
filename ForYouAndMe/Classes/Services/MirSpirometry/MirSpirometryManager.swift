@@ -20,23 +20,28 @@ final class MirSpirometryManager: NSObject, MirSpirometryService {
 
     // MARK: Functions
 
-    func mirSpirometryConnect() {
+    func enableBluetooth() {
+        guard let manager = SODeviceManager.shared() else { return }
+        guard manager.bluetoothState() == .unknown else { return }
+        manager.initBluetooth()
+    }
+    
+    func connect() {
         guard let manager = SODeviceManager.shared() else { return }
         
         manager.setLogEnabled(true)
         manager.add(self)
-        manager.initBluetooth()
-
+        
         let demoDeviceID: String = "SM-009-Z125247" // Spirobank Smart SM-009-Z125247
         manager.connect(demoDeviceID)
     }
 
-    func mirSpirometryDisconnect() {
+    func disconnect() {
         guard let manager = SODeviceManager.shared() else { return }
         manager.disconnect()
     }
 
-    func mirSpirometryRunTest() {
+    func runTestPeakFlowFev1() {
         guard let manager = SODeviceManager.shared() else { return }
         guard let device = manager.connectedDevice else { return }
 
@@ -50,13 +55,13 @@ final class MirSpirometryManager: NSObject, MirSpirometryService {
         }
     }
 
-    func mirSpirometryStartDiscoverDevices() {
+    func startDiscoverDevices() {
         guard let manager = SODeviceManager.shared() else { return }
         guard manager.bluetoothState() == .poweredOn else { return }
         manager.startDiscovery()
     }
 
-    func mirSpirometryStopDiscoverDevices() {
+    func stopDiscoverDevices() {
         guard let manager = SODeviceManager.shared() else { return }
         manager.stopDiscovery()
     }

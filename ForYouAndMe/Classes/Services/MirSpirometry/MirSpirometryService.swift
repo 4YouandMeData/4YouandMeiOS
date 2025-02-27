@@ -16,9 +16,10 @@ protocol MirSpirometryService {
 
     // MARK: Functions
 
-    func mirSpirometryConnect()
-    func mirSpirometryRunTest()
-    func mirSpirometryDisconnect()
-    func mirSpirometryStartDiscoverDevices()
-    func mirSpirometryStopDiscoverDevices()
+    func enableBluetooth()
+    func connect()
+    func runTestPeakFlowFev1()
+    func disconnect()
+    func startDiscoverDevices()
+    func stopDiscoverDevices()
 }
