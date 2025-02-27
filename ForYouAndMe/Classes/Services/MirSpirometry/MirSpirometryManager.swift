@@ -274,23 +274,32 @@ extension NSObject {
             .toJSON()
     }
     
-    private func serializeValue(_ value: Any) -> Any {
-        if let number = value as? NSNumber {
-            return number.doubleValue
-        } else if let string = value as? NSString {
-            return string // convert NSObject properties (recursively)
-        } else if let nsObject = value as? NSObject {
-            return nsObject.toDictionary() // convert NSObject properties (recursively)
-        } else if let array = value as? [Any] {
-            return array.map { serializeValue($0) } // convert each array element
-        } else if let dict = value as? [String: Any] {
-            return dict.mapValues { serializeValue($0) } // convert each dictionary entry
+    private func convertValue(_ value: Any) -> Any {
+        switch value {
+        case let obj as NSObject where obj is NSString:
+            return obj  // Directly return basic types
+            
+        case let obj as NSObject where obj is NSNumber:
+            return obj  // Directly return basic types
+            
+        case let obj as NSObject where obj is NSDate:
+            return obj  // Directly return basic types
+            
+        case let obj as NSObject:
+            return obj.toDictionary()  // Convert custom objects to dictionary
+            
+        case let array as [NSObject]:
+            return array.map { convertValue($0) }  // Convert array of objects
+            
+        case let dict as [String: NSObject]:
+            return dict.mapValues { convertValue($0) }  // Convert dictionary values
+            
+        default:
+            return value  // Return as-is for other types
         }
-        
-        return value // return raw value (String, Int, etc.)
     }
-
-    func toDictionary() -> [String: Any] {
+    
+    private func toDictionary() -> [String: Any] {
         var dict: [String: Any] = [:]
         var count: UInt32 = 0
         let properties = class_copyPropertyList(type(of: self), &count)
@@ -304,40 +313,10 @@ extension NSObject {
             let name = String(cString: property_getName(property!))
             
             if let value = self.value(forKey: name) {
-                dict[name] = value
+                dict[name] = convertValue(value)
             }
         }
         
         return dict
     }
-    
-//    private func toDictionary() -> [String: Any] {
-//        var dict: [String: Any] = [:]
-//        var classType: AnyClass? = type(of: self)
-//        
-//        while let currentClass = classType {
-//            var propertyCount: UInt32 = 0
-//
-//            defer {
-//                classType = class_getSuperclass(currentClass) // move up the class hierarchy
-//            }
-//
-//            if let properties = class_copyPropertyList(currentClass, &propertyCount) {
-//                defer {
-//                    free(properties)
-//                }
-//
-//                for index in 0..<Int(propertyCount) {
-//                    let property = properties[index]
-//                    if let propertyName = String(cString: property_getName(property), encoding: .utf8) {
-//                        if let value = self.value(forKey: propertyName) {
-//                            dict[propertyName] = serializeValue(value)
-//                        }
-//                    }
-//                }
-//            }
-//        }
-//        
-//        return dict
-//    }
 }
