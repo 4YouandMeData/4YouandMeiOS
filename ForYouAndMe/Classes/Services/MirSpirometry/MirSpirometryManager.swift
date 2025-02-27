@@ -32,7 +32,7 @@ final class MirSpirometryManager: NSObject, MirSpirometryService {
         manager.setLogEnabled(true)
         manager.add(self)
         
-        let demoDeviceID: String = "SM-009-Z125247" // Spirobank Smart SM-009-Z125247
+        let demoDeviceID: String = "9FA26AD9-8E36-F163-CC7C-458380F07499" // Spirobank Smart 9FA26AD9-8E36-F163-CC7C-458380F07499
         manager.connect(demoDeviceID)
     }
 
