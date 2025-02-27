@@ -27,25 +27,6 @@ final class MirSpirometryManager: NSObject, MirSpirometryService {
     }
     
     func connect() {
-        let testResults = SOResults()
-        testResults.pef_cLs = 1075
-        testResults.fev1_cL = 399
-        testResults.fvc_cL = -1
-        testResults.fev1_fvc_pcnt = -1
-        testResults.qualityCode = 507
-        testResults.fev6_cL = -1
-        testResults.fef2575_cLs = -1
-        testResults.eVol_mL = 88
-        testResults.pefTime_sec = 49
-        testResults.pefTime_ms = 49
-        testResults.deviceType = PeripheralType(rawValue: 2)
-        testResults.resultTestType = SOTestType(rawValue: 1)
-        testResults.deviceAtsStandard = AtsStandard(rawValue: 1)
-        
-        let testJSON = testResults.toJSON()
-        print(testJSON)
-        return
-
         guard let manager = SODeviceManager.shared() else { return }
         
         manager.setLogEnabled(true)
