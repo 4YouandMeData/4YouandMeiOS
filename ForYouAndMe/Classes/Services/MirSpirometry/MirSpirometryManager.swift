@@ -27,6 +27,25 @@ final class MirSpirometryManager: NSObject, MirSpirometryService {
     }
     
     func connect() {
+        let testResults = SOResults()
+        testResults.pef_cLs = 1075
+        testResults.fev1_cL = 399
+        testResults.fvc_cL = -1
+        testResults.fev1_fvc_pcnt = -1
+        testResults.qualityCode = 507
+        testResults.fev6_cL = -1
+        testResults.fef2575_cLs = -1
+        testResults.eVol_mL = 88
+        testResults.pefTime_sec = 49
+        testResults.pefTime_ms = 49
+        testResults.deviceType = PeripheralType(rawValue: 2)
+        testResults.resultTestType = SOTestType(rawValue: 1)
+        testResults.deviceAtsStandard = AtsStandard(rawValue: 1)
+        
+        let testJSON = testResults.toJSON()
+        print(testJSON)
+        return
+
         guard let manager = SODeviceManager.shared() else { return }
         
         manager.setLogEnabled(true)
@@ -256,7 +275,11 @@ extension NSObject {
     }
     
     private func serializeValue(_ value: Any) -> Any {
-        if let nsObject = value as? NSObject {
+        if let number = value as? NSNumber {
+            return number.doubleValue
+        } else if let string = value as? NSString {
+            return string // convert NSObject properties (recursively)
+        } else if let nsObject = value as? NSObject {
             return nsObject.toDictionary() // convert NSObject properties (recursively)
         } else if let array = value as? [Any] {
             return array.map { serializeValue($0) } // convert each array element
@@ -266,34 +289,55 @@ extension NSObject {
         
         return value // return raw value (String, Int, etc.)
     }
-    
-    private func toDictionary() -> [String: Any] {
+
+    func toDictionary() -> [String: Any] {
         var dict: [String: Any] = [:]
-        var classType: AnyClass? = type(of: self)
+        var count: UInt32 = 0
+        let properties = class_copyPropertyList(type(of: self), &count)
+
+        defer {
+            free(properties)
+        }
         
-        while let currentClass = classType {
-            var propertyCount: UInt32 = 0
-
-            defer {
-                classType = class_getSuperclass(currentClass) // move up the class hierarchy
-            }
-
-            if let properties = class_copyPropertyList(currentClass, &propertyCount) {
-                defer {
-                    free(properties)
-                }
-
-                for index in 0..<Int(propertyCount) {
-                    let property = properties[index]
-                    if let propertyName = String(cString: property_getName(property), encoding: .utf8) {
-                        if let value = self.value(forKey: propertyName) {
-                            dict[propertyName] = serializeValue(value)
-                        }
-                    }
-                }
+        for index in 0..<count {
+            let property = properties?.advanced(by: Int(index)).pointee
+            let name = String(cString: property_getName(property!))
+            
+            if let value = self.value(forKey: name) {
+                dict[name] = value
             }
         }
         
         return dict
     }
+    
+//    private func toDictionary() -> [String: Any] {
+//        var dict: [String: Any] = [:]
+//        var classType: AnyClass? = type(of: self)
+//        
+//        while let currentClass = classType {
+//            var propertyCount: UInt32 = 0
+//
+//            defer {
+//                classType = class_getSuperclass(currentClass) // move up the class hierarchy
+//            }
+//
+//            if let properties = class_copyPropertyList(currentClass, &propertyCount) {
+//                defer {
+//                    free(properties)
+//                }
+//
+//                for index in 0..<Int(propertyCount) {
+//                    let property = properties[index]
+//                    if let propertyName = String(cString: property_getName(property), encoding: .utf8) {
+//                        if let value = self.value(forKey: propertyName) {
+//                            dict[propertyName] = serializeValue(value)
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//        
+//        return dict
+//    }
 }
