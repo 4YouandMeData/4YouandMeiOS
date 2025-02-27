@@ -144,18 +144,65 @@ class AboutYouViewController: UIViewController {
                                                                 gestureCallback: {
                 Services.shared.storageServices.resetHealthKitCache()
             })
+            
+            self.scrollStackView.stackView.addArrangedSubview(healthKitCachePurgeButton)
 
-            let mirSpirometryButton = GenericListItemView(withTitle: "Debug - Mir Spirometr Upload",
-                                                          image: UIImage(),
-                                                          colorType: .primary,
-                                                          style: .flatStyle,
-                                                          gestureCallback: {
+            #if MIRSPIROMETRY
+            
+            // MARK: Mir Spirometry
+
+            let mirSpirometryConnectButton = GenericListItemView(withTitle: "Debug - Mir Spirometry Connect",
+                                                                 image: UIImage(),
+                                                                 colorType: .primary,
+                                                                 style: .flatStyle,
+                                                                 gestureCallback: {
                 
-                Services.shared.storageServices.uploadMirSpirometryData()
+                Services.shared.storageServices.mirSpirometryConnect()
+            })
+            
+            let mirSpirometryRunTestButton = GenericListItemView(withTitle: "Debug - Mir Spirometry Run Test",
+                                                                 image: UIImage(),
+                                                                 colorType: .primary,
+                                                                 style: .flatStyle,
+                                                                 gestureCallback: {
+                
+                Services.shared.storageServices.mirSpirometryRunTest()
+            })
+            
+            let mirSpirometryDisconnectButton = GenericListItemView(withTitle: "Debug - Mir Spirometry Disconnect",
+                                                                    image: UIImage(),
+                                                                    colorType: .primary,
+                                                                    style: .flatStyle,
+                                                                    gestureCallback: {
+                
+                Services.shared.storageServices.mirSpirometryDisconnect()
             })
 
-            self.scrollStackView.stackView.addArrangedSubview(healthKitCachePurgeButton)
-            self.scrollStackView.stackView.addArrangedSubview(mirSpirometryButton)
+            let mirSpirometryStartDiscoverDevicesButton = GenericListItemView(withTitle: "Debug - Mir Spirometry Start Discover Devices",
+                                                                    image: UIImage(),
+                                                                    colorType: .primary,
+                                                                    style: .flatStyle,
+                                                                    gestureCallback: {
+                
+                Services.shared.storageServices.mirSpirometryStartDiscoverDevices()
+            })
+
+            let mirSpirometryStopDiscoverDevicesButton = GenericListItemView(withTitle: "Debug - Mir Spirometry Stop Discover Devices",
+                                                                    image: UIImage(),
+                                                                    colorType: .primary,
+                                                                    style: .flatStyle,
+                                                                    gestureCallback: {
+                
+                Services.shared.storageServices.mirSpirometryStopDiscoverDevices()
+            })
+
+            self.scrollStackView.stackView.addArrangedSubview(mirSpirometryConnectButton)
+            self.scrollStackView.stackView.addArrangedSubview(mirSpirometryRunTestButton)
+            self.scrollStackView.stackView.addArrangedSubview(mirSpirometryDisconnectButton)
+            self.scrollStackView.stackView.addArrangedSubview(mirSpirometryStartDiscoverDevicesButton)
+            self.scrollStackView.stackView.addArrangedSubview(mirSpirometryStopDiscoverDevicesButton)
+
+            #endif
         }
         #endif
         

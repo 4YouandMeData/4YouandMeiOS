@@ -310,36 +310,87 @@ extension CacheManager {
         print("HealthSampleUpload cache purged")
     }
 }
+#endif
+
+#if MIRSPIROMETRY
 
 import MirSmartDevice
 
 // MARK: Mir Spirometry
 extension CacheManager {
-    func uploadMirSpirometryData() {
-        
-        // Setup tasks:
-        // 1. Create new Task
-        // 2. Create new Permission for the device
-        
-        // device connection
-        // create session
-        // session complete, extract data
-        // convert data to JSON
-        // upload JSON to the server
 
+    func mirSpirometryConnect() {
+        guard let manager = SODeviceManager.shared() else { return }
         
-        let manager = SODeviceManager.shared()
-        if let manager {
-            manager.setLogEnabled(true)
-            manager.add(deviceManagerDelegate)
-            manager.initBluetooth()
-            manager.connectedDevice.add(deviceDelegate)
+        manager.setLogEnabled(true)
+        manager.add(deviceManagerDelegate)
+        manager.initBluetooth()
+
+        let demoDeviceID: String = "SM-009-Z125247" // Spirobank Smart SM-009-Z125247
+        manager.connect(demoDeviceID)
+    }
+
+    func mirSpirometryDisconnect() {
+        guard let manager = SODeviceManager.shared() else { return }
+        manager.disconnect()
+    }
+
+    func mirSpirometryRunTest() {
+        guard let manager = SODeviceManager.shared() else { return }
+        guard let device = manager.connectedDevice else { return }
+
+        let testType = SOTestType(rawValue: 1)
+        let testTimeout: UInt8 = 15
+        let turbineType = SOTurbineType(rawValue: 1)
+
+        device.add(deviceDelegate)
+        device.checkIfDeviceIsReady { value in
+            guard value == true else { return }
+            device.startTest(with: testType, endOfTestTimeout: testTimeout, turbineType: turbineType)
         }
     }
+
+    func mirSpirometryStartDiscoverDevices() {
+        guard let manager = SODeviceManager.shared() else { return }
+        guard manager.bluetoothState() == .poweredOn else { return }
+        manager.startDiscovery()
+    }
+
+    func mirSpirometryStopDiscoverDevices() {
+        guard let manager = SODeviceManager.shared() else { return }
+        manager.stopDiscovery()
+    }
+
+//    func mirSpirometryData() {
+//        
+//        // Setup tasks:
+//        // 1. Create new Task
+//        // 2. Create new Permission for the device
+//        
+//        // device connection
+//        // create session
+//        // session complete, extract data
+//        // convert data to JSON
+//        // upload JSON to the server
+//
+//        // connessione a device id "Spirobank Smart SM-009-Z125247"
+//        // spiropef
+//        
+//        let manager = SODeviceManager.shared()
+//        if let manager {
+//            let demoDeviceID: String = "SM-009-Z125247" // Spirobank Smart SM-009-Z125247
+//            
+//            manager.setLogEnabled(true)
+//            manager.add(deviceManagerDelegate)
+//            manager.initBluetooth()
+//            manager.connect(demoDeviceID)
+//        }
+//    }
 }
 
 let deviceManagerDelegate = DeviceManagerDelegate()
 let deviceDelegate = DeviceDelegate()
+var devices: [SODeviceInfo] = []
 
 final class DeviceDelegate: NSObject, SODeviceDelegate {
     func soDeviceDidRestartTest(_ soDevice: SODevice!) {
@@ -475,11 +526,24 @@ final class DeviceManagerDelegate: NSObject, SODeviceManagerDelegate {
     }
  
     func deviceManager(_ deviceManager: SODeviceManager!, didConnect device: SODevice!) {
+        device.add(deviceDelegate)
+
+        let testType = SOTestType(rawValue: 1)
+        let testTimeout: UInt8 = 15
+        let turbineType = SOTurbineType(rawValue: 1)
         
+        device.startTest(with: testType, endOfTestTimeout: testTimeout, turbineType: turbineType)
     }
     
     func deviceManager(_ deviceManager: SODeviceManager!, didDiscoverDeviceWith deviceInfo: SODeviceInfo!) {
+        guard devices.first(where: { $0.deviceID == deviceInfo.deviceID }) == nil else { return }
+
+        devices.append(deviceInfo)
         
+        print("didDiscoverDeviceWith ---")
+        print("didDiscoverDeviceWith deviceID \(deviceInfo.deviceID ?? "")")
+        print("didDiscoverDeviceWith name \(deviceInfo.name ?? "")")
+        print("didDiscoverDeviceWith serialNumber \(deviceInfo.serialNumber ?? "")")
     }
     
     func deviceManager(_ deviceManager: SODeviceManager!, didUpdateBluetoothWith state: CBCentralManagerState) {
@@ -494,8 +558,6 @@ final class DeviceManagerDelegate: NSObject, SODeviceManagerDelegate {
         
     }
 }
-
-#endif
 
 extension NSArray {
     
@@ -525,14 +587,14 @@ extension NSObject {
     
     private func serializeValue(_ value: Any) -> Any {
         if let nsObject = value as? NSObject {
-            return nsObject.toDictionary() // Recursively convert NSObject properties
+            return nsObject.toDictionary() // convert NSObject properties (recursively)
         } else if let array = value as? [Any] {
-            return array.map { serializeValue($0) } // Convert each array element
+            return array.map { serializeValue($0) } // convert each array element
         } else if let dict = value as? [String: Any] {
-            return dict.mapValues { serializeValue($0) } // Convert each dictionary entry
+            return dict.mapValues { serializeValue($0) } // convert each dictionary entry
         }
         
-        return value // Return raw value (String, Int, etc.)
+        return value // return raw value (String, Int, etc.)
     }
     
     private func toDictionary() -> [String: Any] {
@@ -543,7 +605,7 @@ extension NSObject {
             var propertyCount: UInt32 = 0
 
             defer {
-                classType = class_getSuperclass(currentClass) // Move up the class hierarchy
+                classType = class_getSuperclass(currentClass) // move up the class hierarchy
             }
 
             if let properties = class_copyPropertyList(currentClass, &propertyCount) {
@@ -565,3 +627,5 @@ extension NSObject {
         return dict
     }
 }
+
+#endif
