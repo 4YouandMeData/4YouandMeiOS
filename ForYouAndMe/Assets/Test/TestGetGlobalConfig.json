@@ -191,7 +191,7 @@
       "PERMISSIONS_ALLOW": "Allow",
       "PERMISSIONS_ALLOWED": "Allowed",
       "PERMISSION_HEALTH_SETTINGS_TITLE": "Health App",
-      "PERMISSION_HEALTH_SETTINGS_MESSAGE": "To manage your Health permissions go to Settings -> Privacy -> Health -> Bump",
+      "PERMISSION_HEALTH_SETTINGS_MESSAGE": "To manage your Health permissions go to Settings -> Privacy -> Health",
       "YOUR_APPS_AND_DEVICES_CONNECT": "Connect",
       "YOUR_APPS_AND_DEVICES_DEAUTHORIZE": "Deauthorize",
       "OAUTH_OURA": "Oura",

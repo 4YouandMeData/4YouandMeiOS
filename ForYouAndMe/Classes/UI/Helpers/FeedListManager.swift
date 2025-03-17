@@ -396,7 +396,7 @@ extension FeedListManager: UITableViewDataSource {
                                 self.navigator.startSurveySection(withTask: feed,
                                                                   surveyGroup: surveyGroup,
                                                                   presenter: delegate.presenter)
-                            }, onError: { [weak self] error in
+                            }, onFailure: { [weak self] error in
                                 guard let self = self else { return }
                                 guard let delegate = self.delegate else { return }
                                 self.navigator.handleError(error: error, presenter: delegate.presenter)

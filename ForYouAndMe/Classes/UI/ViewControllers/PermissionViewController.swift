@@ -123,7 +123,7 @@ public class PermissionViewController: UIViewController {
                 AnalyticsParameter.allow.rawValue :
                 AnalyticsParameter.revoke.rawValue
             self.analytics.track(event: .locationPermissionChanged(permissionStatus))
-        }, onError: { error in
+        }, onFailure: { error in
             self.navigator.handleError(error: error, presenter: self)
         }).disposed(by: self.disposeBag)
     }
@@ -140,7 +140,7 @@ public class PermissionViewController: UIViewController {
                 AnalyticsParameter.allow.rawValue :
                 AnalyticsParameter.revoke.rawValue
             self.analytics.track(event: .notificationPermissionChanged(permissionStatus))
-        }, onError: { [weak self] error in
+        }, onFailure: { [weak self] error in
             guard let self = self else { return }
             self.navigator.handleError(error: error, presenter: self)
         }).disposed(by: self.disposeBag)
@@ -160,14 +160,14 @@ public class PermissionViewController: UIViewController {
 //                            AnalyticsParameter.allow.rawValue :
 //                            AnalyticsParameter.revoke.rawValue
 //                        self.analytics.track(event: .healthPermissionChanged(permissionStatus))
-                    }, onError: { [weak self] error in
+                    }, onFailure: { [weak self] error in
                         guard let self = self else { return }
                         self.navigator.handleError(error: error, presenter: self)
                     }).disposed(by: self.disposeBag)
                 } else {
                     self.navigator.showHealthPermissionSettingsAlert(presenter: self)
                 }
-            }, onError: { [weak self] error in
+            }, onFailure: { [weak self] error in
                 guard let self = self else { return }
                 self.navigator.handleError(error: error, presenter: self)
             }).disposed(by: self.disposeBag)

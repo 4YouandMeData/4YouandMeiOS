@@ -49,7 +49,7 @@ class WalkthroughViewController: UIViewController {
         self.setupScrollView()
         
         let buttonSkip = UIButton()
-        buttonSkip.setTitle(StringsProvider.string(forKey: .surveyButtonSkip).uppercased(), for: .normal)
+        buttonSkip.setTitle(StringsProvider.string(forKey: .walkthroughButtonSkip).uppercased(), for: .normal)
         buttonSkip.setTitleColor(ColorPalette.color(withType: .primary), for: .normal)
         buttonSkip.titleLabel?.font = FontPalette.fontStyleData(forStyle: .menu).font
         buttonSkip.addTarget(self, action: #selector(self.skipButtonPressed), for: .touchUpInside)
@@ -192,7 +192,7 @@ class WalkthroughViewController: UIViewController {
             .subscribe(onSuccess: { [weak self] in
                 guard let self = self else { return }
                 self.dismiss(animated: true)
-            }, onError: { error in
+            }, onFailure: { error in
                 print("Repository - error updateFirebaseToken: \(error.localizedDescription)")
             }).disposed(by: self.disposeBag)
     }

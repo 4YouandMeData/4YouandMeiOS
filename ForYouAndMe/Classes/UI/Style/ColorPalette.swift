@@ -25,6 +25,7 @@ enum ColorType: String, CaseIterable, CodingKey {
     case secondaryMenu = "secondary_menu_color"
     case active = "active_color"
     case inactive = "deactive_color"
+    case fabTextColor = "fab_text_color"
     case gradientPrimaryEnd = "primary_color_end"
     case gradientTertiaryEnd = "tertiary_color_end"
     case fabColorDefault = "fab_color_default"
@@ -37,6 +38,7 @@ enum ColorType: String, CaseIterable, CodingKey {
         case .tertiary: return UIColor(hexRGB: 0x34CBD9)
         case .fourth: return UIColor(hexRGB: 0xF5F5F5)
         case .primaryText: return UIColor(hexRGB: 0x303740)
+        case .fabTextColor: return UIColor(hexRGB: 0xFFFFFF)
         case .secondaryText: return UIColor(hexRGB: 0xFFFFFF)
         case .tertiaryText: return UIColor(hexRGB: 0x25AEC2)
         case .fourthText: return UIColor(hexRGB: 0x828B93)

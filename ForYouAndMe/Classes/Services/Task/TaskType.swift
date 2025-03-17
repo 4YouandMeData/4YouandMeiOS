@@ -22,6 +22,7 @@ enum TaskType: String, CaseIterable {
     case camcogPvt = "camcog_pvt"
     case camcogNbx = "camcog_nbx"
     case camcogEbt = "camcog_ebt"
+    case mirSpyrometer = "mir_spirometer_activity"
 }
 
 extension TaskType {
@@ -50,7 +51,7 @@ extension TaskType {
             return FitnessTask.createTask(withIdentifier: identifier, options: options, orkTaskOptions: orkTaskOptions)
         case .nineHole:
             return NineHoleTask.createTask(withIdentifier: identifier, options: options, orkTaskOptions: orkTaskOptions)
-        case .videoDiary, .camcogPvt, .camcogNbx, .camcogEbt:
+        case .videoDiary, .camcogPvt, .camcogNbx, .camcogEbt, .mirSpyrometer:
             return nil
         }
     }
@@ -64,7 +65,7 @@ extension TaskType {
         case .tremor: return TremorTask.getNetworkResultData(taskResult: taskResult)
         case .fitness: return FitnessTask.getNetworkResultData(taskResult: taskResult)
         case .nineHole: return NineHoleTask.getNetworkResultData(taskResult: taskResult)
-        case .videoDiary, .camcogEbt, .camcogNbx, .camcogPvt: return nil
+        case .videoDiary, .camcogEbt, .camcogNbx, .camcogPvt, .mirSpyrometer: return nil
         }
     }
 }

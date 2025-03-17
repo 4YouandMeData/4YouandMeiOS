@@ -121,7 +121,7 @@ class SurveyGroupSectionCoordinator: PagedActivitySectionCoordinator {
                 .subscribe( onSuccess: { [weak self] in
                     guard let self = self else { return }
                     self.showSuccessPage()
-                }, onError: { [weak self] error in
+                }, onFailure: { [weak self] error in
                     guard let self = self else { return }
                     self.navigator.handleError(error: error, presenter: self.navigationController)
                 }).disposed(by: self.disposeBag)

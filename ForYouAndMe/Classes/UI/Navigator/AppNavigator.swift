@@ -455,7 +455,7 @@ class AppNavigator {
                         self.startSurveySection(withTask: feed,
                                                 surveyGroup: surveyGroup,
                                                 presenter: presenter)
-                    }, onError: { [weak self] error in
+                    }, onFailure: { [weak self] error in
                         guard let self = self else { return }
                         self.handleError(error: error, presenter: presenter)
                     }).disposed(by: self.disposeBag)

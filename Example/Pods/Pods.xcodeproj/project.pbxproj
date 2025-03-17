@@ -202,6 +202,11 @@
 		0CCC2C20C8E459D3BC81F4306BDB51A2 /* ORKAudioRecorder.h in Headers */ = {isa = PBXBuildFile; fileRef = 02294A1055363B0233A0F5B9891949C4 /* ORKAudioRecorder.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		0CF2D2DF44815BD099ACBAAE9F78C8B2 /* ORKReactionTimeViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = E81900400260DB17D1A482B3986EE88D /* ORKReactionTimeViewController.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
 		0D6C7EA1B12048E35C3B01467994A5A1 /* ORKInstructionStepViewController.h in Headers */ = {isa = PBXBuildFile; fileRef = 79AD4B91F1500BBC0C294EF2366575A1 /* ORKInstructionStepViewController.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		0D723E1B2D70862B00F1E24C /* MirSmartDevice.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0D723E1A2D70862B00F1E24C /* MirSmartDevice.framework */; platformFilter = ios; };
+		0D723E1C2D70862B00F1E24C /* MirSmartDevice.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0D723E1A2D70862B00F1E24C /* MirSmartDevice.framework */; platformFilter = ios; };
+		0D723E1D2D70862B00F1E24C /* MirSmartDevice.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0D723E1A2D70862B00F1E24C /* MirSmartDevice.framework */; platformFilter = ios; };
+		0D723E1E2D70862B00F1E24C /* MirSmartDevice.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0D723E1A2D70862B00F1E24C /* MirSmartDevice.framework */; platformFilter = ios; };
+		0D723E1F2D70865A00F1E24C /* MirSmartDevice.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 0D723E1A2D70862B00F1E24C /* MirSmartDevice.framework */; platformFilter = ios; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		0D8C2C7F720B7D08170DCE61902C4305 /* ALView+PureLayout.m in Sources */ = {isa = PBXBuildFile; fileRef = 2EE07A97AF0F3E20008770D7FA16BDDD /* ALView+PureLayout.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
 		0D8D8AAA40421360D8CD6019DAE8ADB5 /* WhiteBalance_GLES.fsh in Resources */ = {isa = PBXBuildFile; fileRef = 9770ECA933BB750ECA4F31CDC36F1E19 /* WhiteBalance_GLES.fsh */; };
 		0DAF259AB6967575F92043C4661C58F2 /* _ObjC_HeartbeatController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4588FF11E9FF1D38AA6A56FDF09F2E4A /* _ObjC_HeartbeatController.swift */; };
@@ -1674,14 +1679,6 @@
 		87864E771236138C4D56D7B5E570484C /* ConsentSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76789F263A41DEACA6BC8EBAB72A3F67 /* ConsentSection.swift */; };
 		87930CA6FE9DAE33623C05AB310945AF /* FIRInstallationsAuthTokenResult.m in Sources */ = {isa = PBXBuildFile; fileRef = D507200455A1273DCC23AB1EA37ADA37 /* FIRInstallationsAuthTokenResult.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
 		87A121956F65E95BE3067D42858640CA /* ORKMultipleValuePicker.h in Headers */ = {isa = PBXBuildFile; fileRef = 2CFAC541C225A1066421E6171D70BCD9 /* ORKMultipleValuePicker.h */; settings = {ATTRIBUTES = (Project, ); }; };
-		87A9907D2D6DFAE50022E695 /* MirSmartDevice.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 87A9907A2D6DFADC0022E695 /* MirSmartDevice.framework */; platformFilter = ios; };
-		87A9907E2D6DFAE50022E695 /* MirSmartDevice.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 87A9907A2D6DFADC0022E695 /* MirSmartDevice.framework */; platformFilter = ios; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		87A990802D6DFAEB0022E695 /* MirSmartDevice.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 87A9907A2D6DFADC0022E695 /* MirSmartDevice.framework */; platformFilter = ios; };
-		87A990812D6DFAEB0022E695 /* MirSmartDevice.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 87A9907A2D6DFADC0022E695 /* MirSmartDevice.framework */; platformFilter = ios; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		87A990832D6DFAF90022E695 /* MirSmartDevice.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 87A9907A2D6DFADC0022E695 /* MirSmartDevice.framework */; platformFilter = ios; };
-		87A990842D6DFAF90022E695 /* MirSmartDevice.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 87A9907A2D6DFADC0022E695 /* MirSmartDevice.framework */; platformFilter = ios; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		87A990862D6DFAFE0022E695 /* MirSmartDevice.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 87A9907A2D6DFADC0022E695 /* MirSmartDevice.framework */; platformFilter = ios; };
-		87A990872D6DFAFE0022E695 /* MirSmartDevice.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 87A9907A2D6DFADC0022E695 /* MirSmartDevice.framework */; platformFilter = ios; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		87DC4EF51109BC1AAD2998088CC59FB6 /* SVRadialGradientLayer.h in Headers */ = {isa = PBXBuildFile; fileRef = 47E9E1A7618270E6014F88053705DAE5 /* SVRadialGradientLayer.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		87E4E4FD65CDED0760373CC3D229BF63 /* ORKToneAudiometryContentView.m in Sources */ = {isa = PBXBuildFile; fileRef = 202A61C47A2659810DE7EAA12EBD11DA /* ORKToneAudiometryContentView.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
 		87EBAFE5EBE844A07097F9743F82BC88 /* Permission.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F36BF96644B7BAA46F2A5E5F7548719 /* Permission.swift */; };
@@ -4130,11 +4127,11 @@
 		};
 		87A9907F2D6DFAE50022E695 /* Embed Frameworks */ = {
 			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
+			buildActionMask = 12;
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				87A9907E2D6DFAE50022E695 /* MirSmartDevice.framework in Embed Frameworks */,
+				0D723E1F2D70865A00F1E24C /* MirSmartDevice.framework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -4145,7 +4142,6 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				87A990812D6DFAEB0022E695 /* MirSmartDevice.framework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -4156,7 +4152,6 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				87A990842D6DFAF90022E695 /* MirSmartDevice.framework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -4167,7 +4162,6 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				87A990872D6DFAFE0022E695 /* MirSmartDevice.framework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -4334,6 +4328,7 @@
 		0D56721AC5B8CD21088512ABF9575755 /* FIRCLSCallStackTree.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = FIRCLSCallStackTree.m; path = Crashlytics/Crashlytics/Helpers/FIRCLSCallStackTree.m; sourceTree = "<group>"; };
 		0D631E9908483F9525A6B3F36F16CC61 /* Quick.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Quick.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		0D6D1179C6E6CC3BBAEFF75B79F07CF4 /* ORKBodyContainerView.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = ORKBodyContainerView.m; path = ResearchKit/Common/ORKBodyContainerView.m; sourceTree = "<group>"; };
+		0D723E1A2D70862B00F1E24C /* MirSmartDevice.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MirSmartDevice.framework; path = /Users/giuslape/Development/Balzo/Clienti/4YouAndMe/MIR_PLUS_SDK_SpirobankSmart_Smartone_IOS_4.2.4/MIR_PLUS_SDK_SpirobankSmart_Smartone_IOS_4.2.4/MIR_PLUS_SDK_SpirobankSmart_Smartone_IOS_4.2.4/MirSmartDevice.framework; sourceTree = "<absolute>"; };
 		0D896B6E772A17E240965516B01B95F3 /* ORKCustomStepView.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = ORKCustomStepView.m; path = ResearchKit/Common/ORKCustomStepView.m; sourceTree = "<group>"; };
 		0D8E3A0541DB3FFADF79263972BEB00E /* RxRelay-dummy.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = "RxRelay-dummy.m"; sourceTree = "<group>"; };
 		0D9298DFBDB72A1E1C806D3DE20F177B /* ORKShoulderRangeOfMotionStepViewController.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = ORKShoulderRangeOfMotionStepViewController.h; path = ResearchKit/ActiveTasks/ORKShoulderRangeOfMotionStepViewController.h; sourceTree = "<group>"; };
@@ -5918,7 +5913,6 @@
 		875BE00CA400F088F7AFFE649B9AEA7E /* FIRMessagingTopicsCommon.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = FIRMessagingTopicsCommon.h; path = FirebaseMessaging/Sources/FIRMessagingTopicsCommon.h; sourceTree = "<group>"; };
 		879132E11ECC67D1680D9D4965372E01 /* FBLPromise+Recover.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = "FBLPromise+Recover.h"; path = "Sources/FBLPromises/include/FBLPromise+Recover.h"; sourceTree = "<group>"; };
 		87A23CC81D224CF58AEB7F8FAD2CF113 /* PagedActivitySectionCoordinator.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PagedActivitySectionCoordinator.swift; sourceTree = "<group>"; };
-		87A9907A2D6DFADC0022E695 /* MirSmartDevice.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = MirSmartDevice.framework; sourceTree = "<group>"; };
 		87B21150727184CE4F742FE6619C62B0 /* ORKErrors.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = ORKErrors.m; path = ResearchKit/Common/ORKErrors.m; sourceTree = "<group>"; };
 		87D1E659033FF27FA2618DF8286C77D3 /* AboutYouHeaderView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AboutYouHeaderView.swift; sourceTree = "<group>"; };
 		87EC3901A9593382DFDDB12817C2E4B4 /* WeakPixelInclusion_GL.fsh */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.glsl; name = WeakPixelInclusion_GL.fsh; path = framework/Source/Operations/Shaders/WeakPixelInclusion_GL.fsh; sourceTree = "<group>"; };
@@ -7550,7 +7544,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				D91BA40535544C9FDDA22B1FB2A60779 /* Foundation.framework in Frameworks */,
-				87A990862D6DFAFE0022E695 /* MirSmartDevice.framework in Frameworks */,
+				0D723E1C2D70862B00F1E24C /* MirSmartDevice.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -7663,7 +7657,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				9616566D74D0E21E63190579C7FF31E9 /* Foundation.framework in Frameworks */,
-				87A9907D2D6DFAE50022E695 /* MirSmartDevice.framework in Frameworks */,
+				0D723E1E2D70862B00F1E24C /* MirSmartDevice.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -7752,7 +7746,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				C531A084A56EB36FBEF490D286EFF2F5 /* Foundation.framework in Frameworks */,
-				87A990832D6DFAF90022E695 /* MirSmartDevice.framework in Frameworks */,
+				0D723E1B2D70862B00F1E24C /* MirSmartDevice.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -7760,7 +7754,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				87A990802D6DFAEB0022E695 /* MirSmartDevice.framework in Frameworks */,
+				0D723E1D2D70862B00F1E24C /* MirSmartDevice.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -11789,7 +11783,7 @@
 				E2C34186C0DCC2DC5B7BF59A688A9EAB /* Pods */,
 				8D4D793C0D9767D06D6CFCE9F25327F6 /* Products */,
 				C061A3A4928D8BC80162D12F37DCA44C /* Targets Support Files */,
-				87A9907A2D6DFADC0022E695 /* MirSmartDevice.framework */,
+				0D723E1A2D70862B00F1E24C /* MirSmartDevice.framework */,
 			);
 			sourceTree = "<group>";
 		};
