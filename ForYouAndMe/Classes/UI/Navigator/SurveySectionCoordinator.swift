@@ -146,7 +146,7 @@ extension SurveySectionCoordinator: SurveyQuestionViewCoordinator {
         }
         
         // Skip logic
-        var matchingTarget = self.getMatchingTarget(result: result)
+        let matchingTarget = self.getMatchingTarget(result: result)
         if let matchingTarget = matchingTarget {
             if matchingTarget.questionId == Constants.Survey.TargetQuit {
                 self.showSuccess()

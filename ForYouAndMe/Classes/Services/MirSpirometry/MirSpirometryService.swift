@@ -8,18 +8,53 @@
 import Foundation
 import MirSmartDevice
 
+/// Protocol that defines the main functionalities and events needed to interact
+/// with a MIR spirometer device, including discovery, connection, test execution, and result handling.
 protocol MirSpirometryService {
     
-    // MARK: Properties
+    // MARK: - Properties
     
+    /// A list of the devices discovered during the scanning process.
     var devices: [SODeviceInfo]? { get }
-
-    // MARK: Functions
-
+    
+    // MARK: - Callbacks / Events
+    
+    /// This closure is triggered whenever a new device is discovered,
+    /// passing the updated list of devices.
+    var onDeviceDiscovered: (([SODeviceInfo]) -> Void)? { get set }
+    
+    /// This closure is triggered when the device connection succeeds.
+    var onDeviceConnected: (() -> Void)? { get set }
+    
+    /// This closure is triggered when the device connection fails or an error occurs.
+    var onDeviceConnectFailed: ((Error?) -> Void)? { get set }
+    
+    /// This closure is triggered when the spirometry test (PeakFlow/FEV1) actually starts.
+    var onTestDidStart: (() -> Void)? { get set }
+    
+    /// This closure is triggered when the spirometry test produces its final results.
+    /// The `String` parameter typically contains the test data in JSON format.
+    var onTestResults: ((String) -> Void)? { get set }
+    
+    // MARK: - Functions
+    
+    /// Initializes or enables Bluetooth if required.
     func enableBluetooth()
-    func connect()
-    func runTestPeakFlowFev1()
-    func disconnect()
+    
+    /// Starts discovering MIR spirometer devices.
     func startDiscoverDevices()
+    
+    /// Stops discovering MIR spirometer devices.
     func stopDiscoverDevices()
+    
+    /// Connects to the selected device.
+    /// If you manage multiple devices, consider adding a parameter (e.g., `deviceID`)
+    /// to specify which one to connect to.
+    func connect()
+    
+    /// Disconnects the currently connected device, if any.
+    func disconnect()
+    
+    /// Starts the PeakFlow/FEV1 spirometry test on the connected device.
+    func runTestPeakFlowFev1()
 }

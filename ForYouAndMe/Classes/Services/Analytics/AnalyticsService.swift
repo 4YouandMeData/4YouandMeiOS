@@ -61,6 +61,7 @@ enum AnalyticsScreens: String {
     case videoDiary = "VideoDiary"
     case aboutYou = "About You"
     case videoDiaryComplete = "VideoDiaryComplete"
+    case spyrometerComplete = "SpyroMeterComplete"
     case consentName = "ConsentName"
     case consentSignature = "ConsentSignature"
     case openPermissions = "Permissions"

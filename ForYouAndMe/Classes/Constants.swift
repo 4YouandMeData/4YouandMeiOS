@@ -140,6 +140,13 @@ struct Constants {
             resultDirectory.appendPathComponent(FilePath.videoResult.rawValue)
             return resultDirectory
         }()
+        
+        static let SpyrometerResultURL: URL = {
+            let documentsDirectoryString = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)[0]
+            var resultDirectory = URL(fileURLWithPath: documentsDirectoryString, isDirectory: true)
+            resultDirectory.appendPathComponent(FilePath.spyrometerResult.rawValue)
+            return resultDirectory
+        }()
     }
     
     struct Note {
@@ -214,6 +221,7 @@ enum FilePath: String {
     case taskResult = "TaskResult"
     case videoResult = "VideoResult"
     case diaryResult = "DiaryResult"
+    case spyrometerResult = "SpyroResult"
 }
 
 enum BatchEventUploaderIdentifier: String {

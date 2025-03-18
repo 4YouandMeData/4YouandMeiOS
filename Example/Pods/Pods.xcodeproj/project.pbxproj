@@ -201,6 +201,8 @@
 		0CADC1F0DF25F95D7959208BF8866405 /* Match.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC3D4C7B2352B1BB4501E204C2BFEE7D /* Match.swift */; settings = {COMPILER_FLAGS = "-DPRODUCT_NAME=Nimble/Nimble"; }; };
 		0CCC2C20C8E459D3BC81F4306BDB51A2 /* ORKAudioRecorder.h in Headers */ = {isa = PBXBuildFile; fileRef = 02294A1055363B0233A0F5B9891949C4 /* ORKAudioRecorder.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		0CF2D2DF44815BD099ACBAAE9F78C8B2 /* ORKReactionTimeViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = E81900400260DB17D1A482B3986EE88D /* ORKReactionTimeViewController.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
+		0D6BBA2E2D88C8F7004DEF42 /* SpyrometerSectionCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D6BBA2D2D88C8EC004DEF42 /* SpyrometerSectionCoordinator.swift */; };
+		0D6BBA312D88C9E1004DEF42 /* SpyrometerScanViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D6BBA302D88C9D7004DEF42 /* SpyrometerScanViewController.swift */; };
 		0D6C7EA1B12048E35C3B01467994A5A1 /* ORKInstructionStepViewController.h in Headers */ = {isa = PBXBuildFile; fileRef = 79AD4B91F1500BBC0C294EF2366575A1 /* ORKInstructionStepViewController.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		0D723E1B2D70862B00F1E24C /* MirSmartDevice.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0D723E1A2D70862B00F1E24C /* MirSmartDevice.framework */; platformFilter = ios; };
 		0D723E1C2D70862B00F1E24C /* MirSmartDevice.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0D723E1A2D70862B00F1E24C /* MirSmartDevice.framework */; platformFilter = ios; };
@@ -1673,8 +1675,8 @@
 		873C1C3EFF7AD6BADBE95BE12A18F5C6 /* SignatureDrawingModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3733132DF99B993E57D696726298843A /* SignatureDrawingModel.swift */; };
 		8751A4FFBF18C88DACE20E0BD5475F14 /* UIButton+AlamofireImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6472FCD0AE9980AB7F573642835E5B20 /* UIButton+AlamofireImage.swift */; };
 		8758756B551985D7BC724649BFD5C63E /* CountryPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C48C9CC5B72293E39EE83B3AD4895667 /* CountryPickerView.swift */; };
-		8758F3332D706DB000A455CA /* MirSmartDevice.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 87A9907A2D6DFADC0022E695 /* MirSmartDevice.framework */; platformFilter = ios; };
-		8758F3342D706DB000A455CA /* MirSmartDevice.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 87A9907A2D6DFADC0022E695 /* MirSmartDevice.framework */; platformFilter = ios; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		8758F3332D706DB000A455CA /* (null) in Frameworks */ = {isa = PBXBuildFile; platformFilter = ios; };
+		8758F3342D706DB000A455CA /* (null) in Embed Frameworks */ = {isa = PBXBuildFile; platformFilter = ios; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		8774F685A498505F99A1E1821F0E1C0A /* FIRCLSCodeMapping.m in Sources */ = {isa = PBXBuildFile; fileRef = DDC24682EBA4F8ABE8FA167FEC200681 /* FIRCLSCodeMapping.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
 		87864E771236138C4D56D7B5E570484C /* ConsentSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76789F263A41DEACA6BC8EBAB72A3F67 /* ConsentSection.swift */; };
 		87930CA6FE9DAE33623C05AB310945AF /* FIRInstallationsAuthTokenResult.m in Sources */ = {isa = PBXBuildFile; fileRef = D507200455A1273DCC23AB1EA37ADA37 /* FIRInstallationsAuthTokenResult.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
@@ -4120,7 +4122,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				8758F3342D706DB000A455CA /* MirSmartDevice.framework in Embed Frameworks */,
+				8758F3342D706DB000A455CA /* (null) in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -4327,6 +4329,8 @@
 		0CE2796E06DF302D61F6C09035E65F84 /* HistogramAccumulation_GL.fsh */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.glsl; name = HistogramAccumulation_GL.fsh; path = framework/Source/Operations/Shaders/HistogramAccumulation_GL.fsh; sourceTree = "<group>"; };
 		0D56721AC5B8CD21088512ABF9575755 /* FIRCLSCallStackTree.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = FIRCLSCallStackTree.m; path = Crashlytics/Crashlytics/Helpers/FIRCLSCallStackTree.m; sourceTree = "<group>"; };
 		0D631E9908483F9525A6B3F36F16CC61 /* Quick.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Quick.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		0D6BBA2D2D88C8EC004DEF42 /* SpyrometerSectionCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpyrometerSectionCoordinator.swift; sourceTree = "<group>"; };
+		0D6BBA302D88C9D7004DEF42 /* SpyrometerScanViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpyrometerScanViewController.swift; sourceTree = "<group>"; };
 		0D6D1179C6E6CC3BBAEFF75B79F07CF4 /* ORKBodyContainerView.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = ORKBodyContainerView.m; path = ResearchKit/Common/ORKBodyContainerView.m; sourceTree = "<group>"; };
 		0D723E1A2D70862B00F1E24C /* MirSmartDevice.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MirSmartDevice.framework; path = /Users/giuslape/Development/Balzo/Clienti/4YouAndMe/MIR_PLUS_SDK_SpirobankSmart_Smartone_IOS_4.2.4/MIR_PLUS_SDK_SpirobankSmart_Smartone_IOS_4.2.4/MIR_PLUS_SDK_SpirobankSmart_Smartone_IOS_4.2.4/MirSmartDevice.framework; sourceTree = "<absolute>"; };
 		0D896B6E772A17E240965516B01B95F3 /* ORKCustomStepView.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = ORKCustomStepView.m; path = ResearchKit/Common/ORKCustomStepView.m; sourceTree = "<group>"; };
@@ -7764,7 +7768,7 @@
 			files = (
 				8D51421FF478040E6383D24254900967 /* CFNetwork.framework in Frameworks */,
 				B32BC6D67438172D5B58955EAB85D802 /* Foundation.framework in Frameworks */,
-				8758F3332D706DB000A455CA /* MirSmartDevice.framework in Frameworks */,
+				8758F3332D706DB000A455CA /* (null) in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -8082,6 +8086,14 @@
 				28BC523AAB0326ADCBB00C72181BFE77 /* UserDefaults */,
 			);
 			path = GoogleUtilities;
+			sourceTree = "<group>";
+		};
+		0D6BBA2F2D88C9CE004DEF42 /* Spyrometer */ = {
+			isa = PBXGroup;
+			children = (
+				0D6BBA302D88C9D7004DEF42 /* SpyrometerScanViewController.swift */,
+			);
+			path = Spyrometer;
 			sourceTree = "<group>";
 		};
 		0D7DFB31C467483B217F9065E0DA160A /* Support Files */ = {
@@ -9071,6 +9083,7 @@
 		44E6670F88E3F35E36BF5DDC134ED4A2 /* Navigator */ = {
 			isa = PBXGroup;
 			children = (
+				0D6BBA2D2D88C8EC004DEF42 /* SpyrometerSectionCoordinator.swift */,
 				59C274BA2942A4439DCA505F83945A5B /* ActivitySectionCoordinator.swift */,
 				7CABB0E4D273B46FA715B44998E0C864 /* AppNavigator.swift */,
 				7153B928558D77EA70D1EC3A801BF95D /* CamcogSectionCoordinator.swift */,
@@ -11493,6 +11506,7 @@
 		C2AC34DCE1B9D5E7C7A4BAE15259715A /* ViewControllers */ = {
 			isa = PBXGroup;
 			children = (
+				0D6BBA2F2D88C9CE004DEF42 /* Spyrometer */,
 				74AE4C199DE6CD45BEA528E590FAD81B /* ActivitySectionViewController.swift */,
 				78692ACDC56B02265649542B9BE6FB29 /* BooleanQuestionsViewController.swift */,
 				1961920625A967A24C3C83C6FC13FF7B /* DevicesIntegrationViewController.swift */,
@@ -18083,6 +18097,7 @@
 				A006B76F7670E41B9CE1D72DDE84AA53 /* StudyInfoSection.swift in Sources */,
 				730EBC710C38BF4692CC3ED2E852DD13 /* StudyInfoViewController.swift in Sources */,
 				F1EA5CE623E4BA41BFAA257C03AAFB83 /* Style.swift in Sources */,
+				0D6BBA312D88C9E1004DEF42 /* SpyrometerScanViewController.swift in Sources */,
 				1BA15537BDD93B9B841CCE0B847399DB /* StyleCategory.swift in Sources */,
 				7354C265BF4DDDA32D9161C4AB61EE26 /* Survey.swift in Sources */,
 				4871FF386ECC493F7E046AC634DFD279 /* Survey+Extensions.swift in Sources */,
@@ -18146,6 +18161,7 @@
 				BFDC1D7EBF1FE361B47E174FBDF31CD3 /* User.swift in Sources */,
 				F531D542AD9ACD376C8CA4CFF3AF1B6A /* User+Extensions.swift in Sources */,
 				A920CC01B8E9F296BFB1F338CAE2DDCD /* UserData.swift in Sources */,
+				0D6BBA2E2D88C8F7004DEF42 /* SpyrometerSectionCoordinator.swift in Sources */,
 				2C01806BE4207D4093BC2446E4738AB8 /* UserDataAggregation.swift in Sources */,
 				52AEEB4C795EB98E114D52DA689D7819 /* UserDataAggregationEmptyByFilterView.swift in Sources */,
 				0AB68600D15592672969E4D74DDC8675 /* UserDataAggregationErrorView.swift in Sources */,

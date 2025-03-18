@@ -8,225 +8,302 @@
 import Foundation
 import MirSmartDevice
 
+/// This class manages the interactions with a MIR spirometer device,
+/// performing discovery, connection, and test operations.
+/// It conforms to the `MirSpirometryService` protocol, defining
+/// the necessary methods and callbacks for each phase.
 final class MirSpirometryManager: NSObject, MirSpirometryService {
-
-    // MARK: Properties
     
+    // MARK: - Internal Storage
+    
+    /// Internal array used to store the discovered devices.
     fileprivate var localDevices: [SODeviceInfo] = []
     
+    // MARK: - MirSpirometryService Protocol Properties
+    
+    /// Returns the list of discovered devices.
     var devices: [SODeviceInfo]? {
-        localDevices
-    }
-
-    // MARK: Functions
-
-    func enableBluetooth() {
-        guard let manager = SODeviceManager.shared() else { return }
-        guard manager.bluetoothState() == .unknown else { return }
-        manager.initBluetooth()
+        return localDevices
     }
     
+    // MARK: - MirSpirometryService Protocol Callbacks
+    
+    /// Triggered whenever the scanning process finds a new device,
+    /// passing the updated device list.
+    var onDeviceDiscovered: (([SODeviceInfo]) -> Void)?
+    
+    /// Triggered when the device connection succeeds.
+    var onDeviceConnected: (() -> Void)?
+    
+    /// Triggered when the device connection fails or encounters an error.
+    var onDeviceConnectFailed: ((Error?) -> Void)?
+    
+    /// Triggered when the spirometry test actually starts on the device.
+    var onTestDidStart: (() -> Void)?
+    
+    /// Triggered when the spirometry test finishes and produces final results.
+    /// The `String` parameter typically contains JSON-formatted data.
+    var onTestResults: ((String) -> Void)?
+    
+    // MARK: - MirSpirometryService Protocol Methods
+    
+    /// Initializes or enables Bluetooth if required.
+    /// In MirSmartDevice, calling `initBluetooth()` on the shared manager
+    /// might be enough to handle initialization.
+    func enableBluetooth() {
+        guard let manager = SODeviceManager.shared() else { return }
+        // If the Bluetooth state is unknown, you can manually initialize it:
+        if manager.bluetoothState() == .unknown {
+            manager.initBluetooth()
+        }
+    }
+    
+    /// Starts discovering MIR spirometer devices.
+    func startDiscoverDevices() {
+        guard let manager = SODeviceManager.shared() else { return }
+        // Enable logs for debugging purposes, if needed.
+        manager.setLogEnabled(true)
+        
+        self.localDevices.removeAll()
+        
+        manager.discoveredPeripherals = nil
+        // Add this manager as a delegate to receive events.
+        manager.add(self)
+        // Begin discovery.
+        manager.startDiscovery()
+    }
+    
+    /// Stops discovering MIR spirometer devices.
+    func stopDiscoverDevices() {
+        guard let manager = SODeviceManager.shared() else { return }
+        manager.stopDiscovery()
+    }
+    
+    /// Connects to a device. This example uses a hard-coded demo Device ID,
+    /// but you can also store a user-selected ID or pass it as a parameter.
     func connect() {
         guard let manager = SODeviceManager.shared() else { return }
         
         manager.setLogEnabled(true)
         manager.add(self)
         
-        let demoDeviceID: String = "9FA26AD9-8E36-F163-CC7C-458380F07499" // Spirobank Smart 9FA26AD9-8E36-F163-CC7C-458380F07499
+        // Replace this with the actual Device ID you want to connect to.
+        let demoDeviceID: String = "9FA26AD9-8E36-F163-CC7C-458380F07499"
+        
         manager.connect(demoDeviceID)
     }
-
+    
+    /// Disconnects the currently connected device, if any.
     func disconnect() {
         guard let manager = SODeviceManager.shared() else { return }
         manager.disconnect()
     }
-
+    
+    /// Runs the PeakFlow/FEV1 spirometry test on the connected device.
     func runTestPeakFlowFev1() {
-        guard let manager = SODeviceManager.shared() else { return }
-        guard let device = manager.connectedDevice else { return }
-
+        guard let manager = SODeviceManager.shared(),
+              let device = manager.connectedDevice else {
+            return
+        }
+        
+        // SOTestType(1) usually indicates FEV1 test, but confirm with MirSmartDevice docs.
         let testType = SOTestType(rawValue: 1)
         let testTimeout: UInt8 = 15
         let turbineType = SOTurbineType(rawValue: 1)
-
-        device.checkIfDeviceIsReady { value in
-            guard value == true else { return }
-            device.startTest(with: testType, endOfTestTimeout: testTimeout, turbineType: turbineType)
+        
+        // Check if the device is ready before starting the test.
+        device.checkIfDeviceIsReady { [weak self] isReady in
+            guard let self = self, isReady == true else { return }
+            device.startTest(with: testType,
+                             endOfTestTimeout: testTimeout,
+                             turbineType: turbineType)
         }
-    }
-
-    func startDiscoverDevices() {
-        guard let manager = SODeviceManager.shared() else { return }
-        guard manager.bluetoothState() == .poweredOn else { return }
-        manager.startDiscovery()
-    }
-
-    func stopDiscoverDevices() {
-        guard let manager = SODeviceManager.shared() else { return }
-        manager.stopDiscovery()
     }
 }
 
-// MARK: SODeviceManagerDelegate
+// MARK: - SODeviceManagerDelegate
 extension MirSpirometryManager: SODeviceManagerDelegate {
-
-    func deviceManager(_ deviceManager: SODeviceManager!, didDisconnectDevice device: SODevice!) {
-
-    }
- 
-    func deviceManager(_ deviceManager: SODeviceManager!, didConnect device: SODevice!) {
-        device.add(self)
-    }
     
-    func deviceManager(_ deviceManager: SODeviceManager!, didDiscoverDeviceWith deviceInfo: SODeviceInfo!) {
+    /// Called when a new device is discovered during the scanning process.
+    func deviceManager(_ deviceManager: SODeviceManager!,
+                       didDiscoverDeviceWith deviceInfo: SODeviceInfo!) {
+        
+        // Avoid duplicates, then add the new device to our list.
         guard localDevices.first(where: { $0.deviceID == deviceInfo.deviceID }) == nil else { return }
         localDevices.append(deviceInfo)
         
-        print("didDiscoverDeviceWith ---")
-        print("didDiscoverDeviceWith deviceID \(deviceInfo.deviceID ?? "")")
-        print("didDiscoverDeviceWith name \(deviceInfo.name ?? "")")
-        print("didDiscoverDeviceWith serialNumber \(deviceInfo.serialNumber ?? "")")
+        // Notify observers of the updated device list.
+        onDeviceDiscovered?(localDevices)
     }
     
-    func deviceManager(_ deviceManager: SODeviceManager!, didUpdateBluetoothWith state: CBCentralManagerState) {
+    /// Called when the device has successfully connected.
+    func deviceManager(_ deviceManager: SODeviceManager!,
+                       didConnect device: SODevice!) {
         
+        // We also need to set this class as the device's delegate to receive test events.
+        device.add(self)
+        
+        // Trigger the callback for a successful connection.
+        onDeviceConnected?()
     }
     
-    func deviceManager(_ deviceManager: SODeviceManager!, didFailToConnectDeviceWith deviceInfo: SODeviceInfo!) {
+    /// Called if the device fails to connect.
+    func deviceManager(_ deviceManager: SODeviceManager!,
+                       didFailToConnectDeviceWith deviceInfo: SODeviceInfo!) {
         
+        // In many scenarios, MirSmartDevice doesn't provide a specific error object here,
+        // so we pass nil.
+        onDeviceConnectFailed?(nil)
     }
     
-    func deviceManager(_ deviceManager: SODeviceManager!, didReceiveWriteRequestError error: (any Error)!, for characteristic: CBCharacteristic!) {
-        
+    /// Called whenever the Bluetooth state changes.
+    /// For instance, you can detect when Bluetooth is powered off/on.
+    func deviceManager(_ deviceManager: SODeviceManager!,
+                       didUpdateBluetoothWith state: CBCentralManagerState) {
+        // You can optionally handle different Bluetooth states if needed.
+    }
+    
+    /// Called when a device is disconnected.
+    func deviceManager(_ deviceManager: SODeviceManager!,
+                       didDisconnectDevice device: SODevice!) {
+        // You might want to handle the disconnection, e.g., reset UI state.
+    }
+    
+    /// Called if there's an error writing data to a characteristic.
+    func deviceManager(_ deviceManager: SODeviceManager!,
+                       didReceiveWriteRequestError error: (any Error)!,
+                       for characteristic: CBCharacteristic!) {
+        // Optionally handle write request errors.
     }
 }
 
-// MARK: SODeviceDelegate
+// MARK: - SODeviceDelegate
 extension MirSpirometryManager: SODeviceDelegate {
+    
+    /// Called when the device restarts the test (e.g., an internal reset).
     func soDeviceDidRestartTest(_ soDevice: SODevice!) {
-        
+        // Optionally handle a test restart event if needed.
     }
     
+    /// Called when the device stops the test.
     func soDeviceDidStopTest(_ soDevice: SODevice!) {
-        
+        // This might occur if the user stops the test prematurely or the device times out.
     }
     
+    /// Called when the device begins the test.
     func soDeviceDidStartTest(_ soDevice: SODevice!) {
-        
+        onTestDidStart?()
     }
     
-    func soDevice(_ soDevice: SODevice!, didUpdate deviceStatus: SODeviceStatus!) {
-        
+    /// Called whenever the device updates its general status.
+    func soDevice(_ soDevice: SODevice!,
+                  didUpdate deviceStatus: SODeviceStatus!) {
+        // Optionally handle status updates (e.g., battery level or warnings).
     }
     
-    func soDevice(_ soDevice: SODevice!, didReceive eofeIndicator: EndOfForcedExpirationIndicator) {
-        
+    /// Called when the device signals the end of forced expiration (EOF).
+    func soDevice(_ soDevice: SODevice!,
+                  didReceive eofeIndicator: EndOfForcedExpirationIndicator) {
+        // You can track the forced expiration if needed.
     }
     
-    func soDevice(_ soDevice: SODevice!, heartBeatDetected bpm: Int32) {
-        
+    /// Called if the device detects a heartbeat (not typically used in spirometry).
+    func soDevice(_ soDevice: SODevice!,
+                  heartBeatDetected bpm: Int32) {
+        // Possibly relevant if the device also measures pulse or oximetry.
     }
     
-    func soDevice(_ soDevice: SODevice!, didUPdateResults results: SOResults!) {
+    /// Called when the device provides updated spirometry results.
+    func soDevice(_ soDevice: SODevice!,
+                  didUPdateResults results: SOResults!) {
+        // Convert the results to JSON string for easier handling.
         let resultsJSON = results.toJSON()
-        print(resultsJSON)
+        onTestResults?(resultsJSON)
     }
     
-    func soDevice(_ soDevice: SODevice, didReceiveEcgInfo info: SOEcgPacketInfo) {
-        
-    }
+    // MARK: - Additional Delegate Methods
     
-    func soDevice(_ soDevice: SODevice, didReceiveEcgValues values: [NSNumber]) {
-        
-    }
+    // Below are optional method stubs from SODeviceDelegate that you can implement
+    // if your workflow requires them. Currently, they are left empty.
     
-    func soDevice(_ soDevice: SODevice, didUpdateEcgResults results: SOResultsEcg) {
-        
-    }
+    func soDevice(_ soDevice: SODevice,
+                  didReceiveEcgInfo info: SOEcgPacketInfo) { }
+    func soDevice(_ soDevice: SODevice,
+                  didReceiveEcgValues values: [NSNumber]) { }
+    func soDevice(_ soDevice: SODevice,
+                  didUpdateEcgResults results: SOResultsEcg) { }
+    func soDevice(_ soDevice: SODevice,
+                  didReceiveEcgProgress progress: Float) { }
+    func soDeviceEcgTestShouldBeStarted(_ soDevice: SODevice) { }
     
-    func soDevice(_ soDevice: SODevice, didReceiveEcgProgress progress: Float) {
-        
-    }
+    func soDevice(_ soDevice: SODevice!,
+                  didUPdateVcResults results: SOResultsVc!) { }
+    func soDevice(_ soDevice: SODevice!,
+                  didUPdateMvvResults results: SOResultsMvv!) { }
+    func soDevice(_ soDevice: SODevice!,
+                  didUpdateOximetryResults oximetryResults: SOResultsOximetry!) { }
+    func soDevice(_ soDevice: SODevice,
+                  didUpdateEcgResultsList resultsList: [SOResultsEcg]) { }
+    func soDevice(_ soDevice: SODevice!,
+                  didUpdateLastCommandStatus isSucceded: Bool) { }
+    func soDevice(_ soDevice: SODevice!,
+                  didUPdateFvcPlusResults results: SOResultsFvcPlus!) { }
+    func soDevice(_ soDevice: SODevice!,
+                  didReceiveRawPacket packetData: Data!,
+                  with packetType: SOParserRawPacketType) { }
     
-    func soDeviceEcgTestShouldBeStarted(_ soDevice: SODevice) {
-        
-    }
+    func soDevice(_ soDevice: SODevice!,
+                  didUpdateOximetryPletismographicValue ppmSignal: Int32) { }
     
-    func soDevice(_ soDevice: SODevice!, didUPdateVcResults results: SOResultsVc!) {
-        
-    }
+    func soDevice(_ soDevice: SODevice!,
+                  didUpdateFlowTimeMonitoringValue value: Int32) { }
     
-    func soDevice(_ soDevice: SODevice!, didUPdateMvvResults results: SOResultsMvv!) {
-        
-    }
+    func soDevice(_ soDevice: SODevice!,
+                  didUpdateHighResolutionCurvePoints curvePoints: NSMutableArray?) { }
     
-    func soDevice(_ soDevice: SODevice!, didUpdateOximetryResults oximetryResults: SOResultsOximetry!) {
-        
-    }
+    func soDevice(_ soDevice: SODevice!,
+                  didAttemptToFixFvcPlusActivation result: FixFvcPlusResult) { }
     
-    func soDevice(_ soDevice: SODevice, didUpdateEcgResultsList resultsList: [SOResultsEcg]) {
-        
-    }
+    func soDevice(_ soDevice: SODevice!,
+                  didUpdateFlowValue value: Float,
+                  isFirstPackage: Bool) { }
     
-    func soDevice(_ soDevice: SODevice!, didUpdateLastCommandStatus isSucceded: Bool) {
-        
-    }
+    func soDevice(_ soDevice: SODevice!,
+                  didReceiveSoftwareUpdateProgress progress: UInt,
+                  with status: UpdateStatus,
+                  error description: String!) { }
     
-    func soDevice(_ soDevice: SODevice!, didUPdateFvcPlusResults results: SOResultsFvcPlus!) {
-        
-    }
+    func soDevice(_ soDevice: SODevice!,
+                  didUpdateVcVolumeTimePoint vcVtPoint: volumeTimePoint!,
+                  isFirstPackage: Bool) { }
     
-    func soDevice(_ soDevice: SODevice!, didReceiveRawPacket packetData: Data!, with packetType: SOParserRawPacketType) {
-        
-    }
+    func soDevice(_ soDevice: SODevice!,
+                  didUpdateMvvVolumeTimePoint mvvVtPoint: volumeTimePoint!,
+                  isFirstPackage: Bool) { }
     
-    func soDevice(_ soDevice: SODevice!, didUpdateOximetryPletismographicValue ppmSignal: Int32) {
-        
-    }
+    func soDevice(_ soDevice: SODevice!,
+                  didUpdateFlowTimeMonitoringValue value: Int32,
+                  timeMilliseconds: Int) { }
     
-    func soDevice(_ soDevice: SODevice!, didUpdateFlowTimeMonitoringValue value: Int32) {
-        
-    }
+    func soDevice(_ soDevice: SODevice!,
+                  didUpdateFvcPlusFlowVolumePoint fvPoint: flowVolmePoint!,
+                  isFirstPackage: Bool) { }
     
-    func soDevice(_ soDevice: SODevice!, didUpdateHighResolutionCurvePoints curvePoints: NSMutableArray?) {
-        
-    }
+    func soDevice(_ soDevice: SODevice!,
+                  didUpdateOximetryRealTimeValuesWithSignal signal: Int32,
+                  spO2Value spO2: Int32,
+                  bpmValue bpm: Int32,
+                  warning: SOOximetryWarnings,
+                  isDataValid isdatavalid: Bool) { }
     
-    func soDevice(_ soDevice: SODevice!, didAttemptToFixFvcPlusActivation result: FixFvcPlusResult) {
-        
-    }
-    
-    func soDevice(_ soDevice: SODevice!, didUpdateFlowValue value: Float, isFirstPackage: Bool) {
-        
-    }
-    
-    func soDevice(_ soDevice: SODevice!, didReceiveSoftwareUpdateProgress progress: UInt, with status: UpdateStatus, error description: String!) {
-        
-    }
-    
-    func soDevice(_ soDevice: SODevice!, didUpdateVcVolumeTimePoint vcVtPoint: volumeTimePoint!, isFirstPackage: Bool) {
-        
-    }
-    
-    func soDevice(_ soDevice: SODevice!, didUpdateMvvVolumeTimePoint mvvVtPoint: volumeTimePoint!, isFirstPackage: Bool) {
-        
-    }
-    
-    func soDevice(_ soDevice: SODevice!, didUpdateFlowTimeMonitoringValue value: Int32, timeMilliseconds: Int) {
-    
-    }
-    
-    func soDevice(_ soDevice: SODevice!, didUpdateFvcPlusFlowVolumePoint fvPoint: flowVolmePoint!, isFirstPackage: Bool) {
-        
-    }
-    
-    func soDevice(_ soDevice: SODevice!, didUpdateOximetryRealTimeValuesWithSignal signal: Int32, spO2Value spO2: Int32, bpmValue bpm: Int32, warning: SOOximetryWarnings, isDataValid isdatavalid: Bool) {
-        
-    }
-    
-    func soDevice(_ soDevice: SODevice!, didUpdateOximetryRealTimeValuesWithSignal signal: Int32, spO2Value spO2: Int32, bpmValue bpm: Int32, isFingerOn fingerOn: Bool, isSearchingForPulse searchingForPulse: Bool, isDataValid dataValid: Bool, isBatteryLow batteryLow: Bool) {
-        
-    }
+    func soDevice(_ soDevice: SODevice!,
+                  didUpdateOximetryRealTimeValuesWithSignal signal: Int32,
+                  spO2Value spO2: Int32,
+                  bpmValue bpm: Int32,
+                  isFingerOn fingerOn: Bool,
+                  isSearchingForPulse searchingForPulse: Bool,
+                  isDataValid dataValid: Bool,
+                  isBatteryLow batteryLow: Bool) { }
 }
 
 extension NSArray {

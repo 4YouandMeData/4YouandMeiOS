@@ -498,6 +498,10 @@ class AppNavigator {
                 return VideoDiarySectionCoordinator(withTask: task,
                                                     activity: activity,
                                                     completionCallback: completionCallback)
+            case .mirSpyrometer:
+                return SpyrometerSectionCoordinator(withTask: task,
+                                                    activity: activity,
+                                                    completionCallback: completionCallback)
             case .camcogEbt, .camcogNbx, .camcogPvt:
                 return CamcogSectionCoordinator(withTask: task,
                                                 activity: activity,

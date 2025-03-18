@@ -176,4 +176,8 @@ class GenericButtonView: UIView {
     public func setButtonEnabled(enabled: Bool) {
         self.button.isEnabled = enabled
     }
+    
+    public func isButtonEnabled() -> Bool {
+        return self.button.isEnabled
+    }
 }
