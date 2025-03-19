@@ -46,7 +46,8 @@ class SpyrometerSectionCoordinator: NSObject, PagedActivitySectionCoordinator {
         self.repository = Services.shared.repository
         self.analytics = Services.shared.analytics
         
-        self.spirometryService = MirSpirometryManager()
+        self.spirometryService = Services.shared.mirSpirometryService
+        self.spirometryService.enableBluetooth()
 
         super.init()
         
@@ -110,7 +111,7 @@ class SpyrometerSectionCoordinator: NSObject, PagedActivitySectionCoordinator {
     /// Creates the scan view controller which manages device discovery and connection.
     /// When a device is successfully connected, the view controller triggers the onScanCompleted callback.
     private func makeScanViewController() -> SpyrometerScanViewController {
-        let scanVC = SpyrometerScanViewController(service: spirometryService)
+        let scanVC = SpyrometerScanViewController()
         scanVC.onScanCompleted = { [weak self] in
             self?.showTestViewController()
         }

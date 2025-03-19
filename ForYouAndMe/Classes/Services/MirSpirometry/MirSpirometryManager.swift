@@ -58,15 +58,19 @@ final class MirSpirometryManager: NSObject, MirSpirometryService {
         }
     }
     
+    func isPoweredOn() -> Bool {
+        guard let manager = SODeviceManager.shared() else { return false }
+        // If the Bluetooth state is unknown, you can manually initialize it:
+        let state = manager.bluetoothState()
+        return state == .poweredOn
+    }
+    
     /// Starts discovering MIR spirometer devices.
     func startDiscoverDevices() {
         guard let manager = SODeviceManager.shared() else { return }
         // Enable logs for debugging purposes, if needed.
         manager.setLogEnabled(true)
-        
-        self.localDevices.removeAll()
-        
-        manager.discoveredPeripherals = nil
+                
         // Add this manager as a delegate to receive events.
         manager.add(self)
         // Begin discovery.

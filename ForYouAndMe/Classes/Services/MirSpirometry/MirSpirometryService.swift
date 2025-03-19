@@ -41,6 +41,9 @@ protocol MirSpirometryService {
     /// Initializes or enables Bluetooth if required.
     func enableBluetooth()
     
+    /// Check if Bluetooth if on.
+    func isPoweredOn() -> Bool
+    
     /// Starts discovering MIR spirometer devices.
     func startDiscoverDevices()
     

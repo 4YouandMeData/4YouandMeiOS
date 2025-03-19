@@ -24,7 +24,7 @@ class SpyrometerScanViewController: UIViewController {
     
     /// Called when the user cancels the scanning operation.
     var onCancelled: (() -> Void)?
-    
+        
     /// Indicates whether a device has been successfully connected.
     private var isDeviceConnected: Bool = false {
         didSet {
@@ -32,17 +32,26 @@ class SpyrometerScanViewController: UIViewController {
             footerView.setButtonEnabled(enabled: isDeviceConnected)
         }
     }
+
+    private lazy var noBluetoothView = BluetoothOffView(withTopOffset: 8.0)
     
     /// Table view to list discovered devices.
-    private let devicesTableView: UITableView = {
+    private lazy var devicesTableView: UITableView = {
         let tableView = UITableView()
         tableView.tableFooterView = UIView() // removes extra empty cells
         tableView.contentInsetAdjustmentBehavior = .never
+        tableView.rowHeight = 80
         return tableView
     }()
-    
+        
     /// An array to store the discovered devices, displayed in the table view.
     private var discoveredDevices: [SODeviceInfo] = []
+    
+    /// The ID of the device that is currently connected, if any.
+    private var connectedDeviceID: String?
+    
+    /// The ID of the device that the user selected to connect to.
+    private var selectedDeviceID: String?
     
     // MARK: - UI Elements
     
@@ -64,8 +73,8 @@ class SpyrometerScanViewController: UIViewController {
     // MARK: - Initialization
     
     /// Initializes the view controller with the given spirometry service.
-    init(service: MirSpirometryService) {
-        self.service = service
+    init() {
+        self.service = Services.shared.mirSpirometryService
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -78,21 +87,40 @@ class SpyrometerScanViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = ColorPalette.color(withType: .secondary)
-        
+
         setupUI()
         setupActions()
         setupServiceCallbacks()
         setupTableView()
-        
-        // Check if Bluetooth is active before starting discovery.
+        addObservers()
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
         checkBluetoothState()
+    }
+    
+    private func addObservers() {
+        NotificationCenter.default.addObserver(self,
+                                               selector: #selector(self.willEnterForeground),
+                                               name: UIApplication.didBecomeActiveNotification,
+                                               object: nil)
+    }
+    
+    @objc private func willEnterForeground() {
+        self.checkBluetoothState()
     }
     
     // MARK: - Bluetooth State Check
     
     /// Checks if Bluetooth is active. If not, shows an error alert.
     private func checkBluetoothState() {
-        service.enableBluetooth()
+        if service.isPoweredOn() == false {
+            self.footerView.setButtonEnabled(enabled: false)
+            self.devicesTableView.backgroundView = self.noBluetoothView
+        } else {
+            self.footerView.setButtonEnabled(enabled: true)
+            self.devicesTableView.backgroundView = nil
+        }
     }
     
     // MARK: - UI Setup using PureLayout
@@ -129,9 +157,6 @@ class SpyrometerScanViewController: UIViewController {
         self.devicesTableView.autoPinEdge(toSuperviewEdge: .leading)
         self.devicesTableView.autoPinEdge(toSuperviewEdge: .trailing)
         self.devicesTableView.autoPinEdge(.bottom, to: .top, of: self.footerView, withOffset: -16)
-        
-        // Finally, set the table header to "Select your device"
-        self.devicesTableView.tableHeaderView = createTableHeaderView()
         
         // Connect button constraints.
         self.footerView.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets.zero, excludingEdge: .top)
@@ -188,6 +213,12 @@ class SpyrometerScanViewController: UIViewController {
             self.footerView.setButtonText(StringsProvider.string(forKey: .spiroScan))
             self.footerView.addTarget(target: self, action: #selector(self.startScanDevices))
             DispatchQueue.main.async {
+                // If there are devices, set the header; otherwise, remove it.
+                if devices.isEmpty {
+                    self.devicesTableView.tableHeaderView = nil
+                } else {
+                    self.devicesTableView.tableHeaderView = self.createTableHeaderView()
+                }
                 self.discoveredDevices = devices
                 self.devicesTableView.reloadData()
             }
@@ -197,10 +228,13 @@ class SpyrometerScanViewController: UIViewController {
         service.onDeviceConnected = { [weak self] in
             DispatchQueue.main.async {
                 AppNavigator.popProgressHUD()
-                self?.isDeviceConnected = true
-                self?.footerView.setButtonEnabled(enabled: true)
-                self?.footerView.setButtonText(StringsProvider.string(forKey: .spiroNext))
-                self?.footerView.addTarget(target: self, action: #selector(self?.continueButtonTapped))
+                guard let self = self else { return }
+                self.connectedDeviceID = self.selectedDeviceID
+                self.isDeviceConnected = true
+                self.footerView.setButtonEnabled(enabled: true)
+                self.footerView.setButtonText(StringsProvider.string(forKey: .spiroNext))
+                self.footerView.addTarget(target: self, action: #selector(self.continueButtonTapped))
+                self.devicesTableView.reloadData()
             }
         }
         
@@ -270,11 +304,30 @@ extension SpyrometerScanViewController: UITableViewDataSource, UITableViewDelega
         
         let cell = tableView.dequeueReusableCell(withIdentifier: "DeviceCell", for: indexPath)
         let deviceInfo = discoveredDevices[indexPath.row]
-        cell.textLabel?.text = deviceInfo.name + " " + deviceInfo.deviceID
-        cell.textLabel?.numberOfLines = 1
+        let firstLine = deviceInfo.name ?? ""
+        let secondLine = deviceInfo.nameCached ?? ""
+        let fullText = "\(firstLine)\n\(secondLine)"
+        let attributedText = NSMutableAttributedString(string: fullText)
+
+        // Create a paragraph style with increased line spacing
+        let paragraphStyle = NSMutableParagraphStyle()
+        paragraphStyle.lineSpacing = 10.0 // Adjust this value to increase spacing
+
+        // Apply the paragraph style to the entire string
+        attributedText.addAttribute(.paragraphStyle, value: paragraphStyle, range: NSRange(location: 0, length: attributedText.length))
+
+        cell.textLabel?.attributedText = attributedText
+        cell.textLabel?.numberOfLines = 2
         cell.textLabel?.font = FontPalette.fontStyleData(forStyle: .paragraph).font
         cell.textLabel?.textColor = ColorPalette.color(withType: .primaryText)
         cell.separatorInset = UIEdgeInsets(top: 0, left: 22, bottom: 0, right: 22)
+        
+        // Show a check icon if this device is connected
+        if deviceInfo.deviceID == connectedDeviceID {
+            cell.accessoryView = UIImageView(image: ImagePalette.image(withName: .deviceConnected))
+        } else {
+            cell.accessoryView = nil
+        }
         return cell
     }
     
@@ -291,6 +344,7 @@ extension SpyrometerScanViewController: UITableViewDataSource, UITableViewDelega
         self.footerView.setButtonEnabled(enabled: false)
         // If your service has a connect(to:) method, pass the deviceID or info
         AppNavigator.pushProgressHUD()
+        self.selectedDeviceID = deviceInfo.deviceID
         service.connect(deviceID: deviceInfo.deviceID)
     }
 }

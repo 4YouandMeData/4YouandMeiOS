@@ -268,7 +268,7 @@ class AppNavigator {
                         guard let self = self else { return }
                         self.currentCoordinator = nil
                         self.goHome()
-                    }, onError: { [weak self] error in
+                    }, onFailure: { [weak self] error in
                         self?.handleError(error: error, presenter: navigationController)
                     })
                     .disposed(by: self.disposeBag)
@@ -821,7 +821,7 @@ class AppNavigator {
             if notificationPermission.isDenied, notificationStatus == false {
                 self?.showPermissionDeniedAlert(presenter: presenter)
             }
-        }, onError: { [weak self] error in
+        }, onFailure: { [weak self] error in
             self?.handleError(error: error, presenter: presenter)
         }).disposed(by: self.disposeBag)
         
@@ -932,7 +932,7 @@ class AppNavigator {
                 }()
                 guard let unwrappedPage = page else { return }
                 self.showInfoDetailPage(presenter: presenter, page: unwrappedPage, isModal: true)
-            }, onError: { [weak self] error in
+            }, onFailure: { [weak self] error in
                 guard let self = self else { return }
                 self.handleError(error: error, presenter: presenter)
             }).disposed(by: self.disposeBag)

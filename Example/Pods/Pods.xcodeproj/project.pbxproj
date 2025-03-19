@@ -203,6 +203,7 @@
 		0CF2D2DF44815BD099ACBAAE9F78C8B2 /* ORKReactionTimeViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = E81900400260DB17D1A482B3986EE88D /* ORKReactionTimeViewController.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
 		0D6BBA2E2D88C8F7004DEF42 /* SpyrometerSectionCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D6BBA2D2D88C8EC004DEF42 /* SpyrometerSectionCoordinator.swift */; };
 		0D6BBA312D88C9E1004DEF42 /* SpyrometerScanViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D6BBA302D88C9D7004DEF42 /* SpyrometerScanViewController.swift */; };
+		0D6BBA332D8ADA24004DEF42 /* BluetoothOffView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D6BBA322D8ADA18004DEF42 /* BluetoothOffView.swift */; };
 		0D6C7EA1B12048E35C3B01467994A5A1 /* ORKInstructionStepViewController.h in Headers */ = {isa = PBXBuildFile; fileRef = 79AD4B91F1500BBC0C294EF2366575A1 /* ORKInstructionStepViewController.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		0D723E1B2D70862B00F1E24C /* MirSmartDevice.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0D723E1A2D70862B00F1E24C /* MirSmartDevice.framework */; platformFilter = ios; };
 		0D723E1C2D70862B00F1E24C /* MirSmartDevice.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0D723E1A2D70862B00F1E24C /* MirSmartDevice.framework */; platformFilter = ios; };
@@ -4331,6 +4332,7 @@
 		0D631E9908483F9525A6B3F36F16CC61 /* Quick.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Quick.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		0D6BBA2D2D88C8EC004DEF42 /* SpyrometerSectionCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpyrometerSectionCoordinator.swift; sourceTree = "<group>"; };
 		0D6BBA302D88C9D7004DEF42 /* SpyrometerScanViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpyrometerScanViewController.swift; sourceTree = "<group>"; };
+		0D6BBA322D8ADA18004DEF42 /* BluetoothOffView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BluetoothOffView.swift; sourceTree = "<group>"; };
 		0D6D1179C6E6CC3BBAEFF75B79F07CF4 /* ORKBodyContainerView.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = ORKBodyContainerView.m; path = ResearchKit/Common/ORKBodyContainerView.m; sourceTree = "<group>"; };
 		0D723E1A2D70862B00F1E24C /* MirSmartDevice.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MirSmartDevice.framework; path = /Users/giuslape/Development/Balzo/Clienti/4YouAndMe/MIR_PLUS_SDK_SpirobankSmart_Smartone_IOS_4.2.4/MIR_PLUS_SDK_SpirobankSmart_Smartone_IOS_4.2.4/MIR_PLUS_SDK_SpirobankSmart_Smartone_IOS_4.2.4/MirSmartDevice.framework; sourceTree = "<absolute>"; };
 		0D896B6E772A17E240965516B01B95F3 /* ORKCustomStepView.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = ORKCustomStepView.m; path = ResearchKit/Common/ORKCustomStepView.m; sourceTree = "<group>"; };
@@ -11628,6 +11630,7 @@
 		CCE4002B99A50AAAEA1FFD8801BEF07D /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				0D6BBA322D8ADA18004DEF42 /* BluetoothOffView.swift */,
 				87D1E659033FF27FA2618DF8286C77D3 /* AboutYouHeaderView.swift */,
 				B6BA2EA92DE4E056B4921E6069273FC5 /* CircleBorderView.swift */,
 				FFC4C7243E9311FB4BC64A1B685D1989 /* CustomSegmentView.swift */,
@@ -17985,6 +17988,7 @@
 				E3F027CE816EB738229EB8C09F1CCB2A /* IntroVideoSectionCoordinator.swift in Sources */,
 				826157EFEE88BA652AF6107B69E94705 /* IntroVideoViewController.swift in Sources */,
 				C36C7A7868D72D92381BC1DF4C0030A4 /* IntroViewController.swift in Sources */,
+				0D6BBA332D8ADA24004DEF42 /* BluetoothOffView.swift in Sources */,
 				67391CA455DA71B79FAB46251FD509EC /* Japx.swift in Sources */,
 				8D5C9B8118570A5E52C430F1027561D8 /* JapxCodable.swift in Sources */,
 				A01308E4660BDE06FDC70FC17932CB04 /* JapxCodableMoya.swift in Sources */,
