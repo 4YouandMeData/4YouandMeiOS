@@ -88,6 +88,7 @@ struct Constants {
         static let VideoDiaryMaxDurationSeconds: TimeInterval = 120.0
         static let VideoDiaryNoteMaxDurationSeconds: TimeInterval = 600.0
         static let AudioDiaryMaxDurationSeconds: TimeInterval = 600.0
+        static let BluetoothScanDurationSeconds: TimeInterval = 1.0
         static let VideoDiaryCaptureSessionPreset: AVCaptureSession.Preset = .hd1280x720
         // Server limit is 20 but AVAssetExportSession.fileLengthLimit can be exceeded by 1 or 2 MB
         static let VideoDiaryMaxFileSize: Int64 = 1024 * 1024 * 18

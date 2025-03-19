@@ -201,6 +201,7 @@
 		0CADC1F0DF25F95D7959208BF8866405 /* Match.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC3D4C7B2352B1BB4501E204C2BFEE7D /* Match.swift */; settings = {COMPILER_FLAGS = "-DPRODUCT_NAME=Nimble/Nimble"; }; };
 		0CCC2C20C8E459D3BC81F4306BDB51A2 /* ORKAudioRecorder.h in Headers */ = {isa = PBXBuildFile; fileRef = 02294A1055363B0233A0F5B9891949C4 /* ORKAudioRecorder.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		0CF2D2DF44815BD099ACBAAE9F78C8B2 /* ORKReactionTimeViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = E81900400260DB17D1A482B3986EE88D /* ORKReactionTimeViewController.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
+		0D0FF5B12D8B2D0700C04036 /* BluetoothNoDevices.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D0FF5B02D8B2D0000C04036 /* BluetoothNoDevices.swift */; };
 		0D6BBA2E2D88C8F7004DEF42 /* SpyrometerSectionCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D6BBA2D2D88C8EC004DEF42 /* SpyrometerSectionCoordinator.swift */; };
 		0D6BBA312D88C9E1004DEF42 /* SpyrometerScanViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D6BBA302D88C9D7004DEF42 /* SpyrometerScanViewController.swift */; };
 		0D6BBA332D8ADA24004DEF42 /* BluetoothOffView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D6BBA322D8ADA18004DEF42 /* BluetoothOffView.swift */; };
@@ -4328,6 +4329,7 @@
 		0CAF23EF6C767FC5DDDF9DD62EFA63F8 /* FIRMessagingPendingTopicsList.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = FIRMessagingPendingTopicsList.h; path = FirebaseMessaging/Sources/FIRMessagingPendingTopicsList.h; sourceTree = "<group>"; };
 		0CCE5FE561F3B280F6C7E95CD0FB8EAE /* ORKTowerOfHanoiStep.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = ORKTowerOfHanoiStep.m; path = ResearchKit/ActiveTasks/ORKTowerOfHanoiStep.m; sourceTree = "<group>"; };
 		0CE2796E06DF302D61F6C09035E65F84 /* HistogramAccumulation_GL.fsh */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.glsl; name = HistogramAccumulation_GL.fsh; path = framework/Source/Operations/Shaders/HistogramAccumulation_GL.fsh; sourceTree = "<group>"; };
+		0D0FF5B02D8B2D0000C04036 /* BluetoothNoDevices.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BluetoothNoDevices.swift; sourceTree = "<group>"; };
 		0D56721AC5B8CD21088512ABF9575755 /* FIRCLSCallStackTree.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = FIRCLSCallStackTree.m; path = Crashlytics/Crashlytics/Helpers/FIRCLSCallStackTree.m; sourceTree = "<group>"; };
 		0D631E9908483F9525A6B3F36F16CC61 /* Quick.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Quick.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		0D6BBA2D2D88C8EC004DEF42 /* SpyrometerSectionCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpyrometerSectionCoordinator.swift; sourceTree = "<group>"; };
@@ -11630,6 +11632,7 @@
 		CCE4002B99A50AAAEA1FFD8801BEF07D /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				0D0FF5B02D8B2D0000C04036 /* BluetoothNoDevices.swift */,
 				0D6BBA322D8ADA18004DEF42 /* BluetoothOffView.swift */,
 				87D1E659033FF27FA2618DF8286C77D3 /* AboutYouHeaderView.swift */,
 				B6BA2EA92DE4E056B4921E6069273FC5 /* CircleBorderView.swift */,
@@ -18117,6 +18120,7 @@
 				4620B71BB3EA6807AED31F8278AC2F7E /* SurveyQuestionPickOne.swift in Sources */,
 				A4C6F2101499F38C8B51F27DF92D47B2 /* SurveyQuestionProtocol.swift in Sources */,
 				AA197F772338CE599661B030A7BE4484 /* SurveyQuestionScale.swift in Sources */,
+				0D0FF5B12D8B2D0700C04036 /* BluetoothNoDevices.swift in Sources */,
 				0991E9A1B982BDAE4338916986DE3B7F /* SurveyQuestionTextinput.swift in Sources */,
 				83352311B137AFBBED89C65F9844EC92 /* SurveyQuestionViewController.swift in Sources */,
 				D3174D92AB47B5199D8B70B63CCC1BDC /* SurveyRangePicker.swift in Sources */,

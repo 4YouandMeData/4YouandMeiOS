@@ -34,6 +34,7 @@ class SpyrometerScanViewController: UIViewController {
     }
 
     private lazy var noBluetoothView = BluetoothOffView(withTopOffset: 8.0)
+    private lazy var noDevicesFound = BluetoothNoDevices(withTopOffset: 8.0)
     
     /// Table view to list discovered devices.
     private lazy var devicesTableView: UITableView = {
@@ -52,6 +53,9 @@ class SpyrometerScanViewController: UIViewController {
     
     /// The ID of the device that the user selected to connect to.
     private var selectedDeviceID: String?
+    
+    /// A timer to stop scanning after a certain duration.
+    private var scanTimer: Timer?
     
     // MARK: - UI Elements
     
@@ -255,8 +259,32 @@ class SpyrometerScanViewController: UIViewController {
         // Start discovering devices only if Bluetooth is active.
         service.startDiscoverDevices()
         AppNavigator.pushProgressHUD()
+        // Start the timer
+        startScanTimer()
         self.footerView.setButtonText(StringsProvider.string(forKey: .spiroStop))
         self.footerView.addTarget(target: self, action: #selector(self.cancelButtonTapped))
+    }
+    
+    /// Schedules a timer that stops scanning after `BluetoothScanDurationSeconds`.
+    private func startScanTimer() {
+        scanTimer?.invalidate()
+        scanTimer = Timer.scheduledTimer(withTimeInterval: Constants.Misc.BluetoothScanDurationSeconds,
+                                         repeats: false,
+                                         block: { [weak self] _ in
+            guard let self = self else { return }
+            
+            // Stop scanning
+            self.service.stopDiscoverDevices()
+            
+            // If no devices were found, show the "no devices" background
+            if self.discoveredDevices.isEmpty {
+                AppNavigator.popProgressHUD()
+                self.footerView.setButtonText(StringsProvider.string(forKey: .spiroScan))
+                self.footerView.setButtonEnabled(enabled: true)
+                self.footerView.addTarget(target: self, action: #selector(self.startScanDevices))
+                self.devicesTableView.backgroundView = self.noDevicesFound
+            }
+        })
     }
     
     /// Called when the cancel button is tapped. Stops device discovery and triggers cancellation.
