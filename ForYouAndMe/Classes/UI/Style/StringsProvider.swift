@@ -175,6 +175,16 @@ enum StringKey: String, CaseIterable, CodingKey {
     case videoDiaryMissingPermissionBodyMic = "VIDEO_DIARY_MISSING_PERMISSION_BODY_MIC"
     case videoDiaryMissingPermissionSettings = "VIDEO_DIARY_MISSING_PERMISSION_SETTINGS"
     case videoDiaryMissingPermissionDiscard = "VIDEO_DIARY_MISSING_PERMISSION_DISCARD"
+    
+   case spiroTitle = "TASK_SPIRO_TITLE"
+   case spiroSubtitle = "TASK_SPIRO_SUBTITLE"
+   case spiroScan = "TASK_SPIRO_BUTTON_SCAN"
+   case spiroStop = "TASK_SPIRO_BUTTON_STOP"
+   case spiroNext = "TASK_SPIRO_BUTTON_NEXT"
+   case spiroNoBluetoothTitle = "TASK_SPIRO_NO_BLUETOOTH_TITLE"
+   case spiroNoBluetoothDesc = "TASK_SPIRO_NO_BLUETOOTH_DESCRIPTION"
+   case spiroNoDeviceTitle = "TASK_SPIRO_NO_DEVICE_TITLE"
+   case spiroNoDeviceDesc = "TASK_SPIRO_NO_DEVICE_DESCRIPTION"
 
     // Study Info
     case studyInfoContactTitle = "STUDY_INFO_CONTACT_INFO"

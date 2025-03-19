@@ -115,15 +115,11 @@ class SpyrometerScanViewController: UIViewController {
                                                                      bottom: 0,
                                                                      right: Constants.Style.DefaultHorizontalMargins))
         
-        stackView.addLabel(withText: "Connect via Bluetooth",
+        stackView.addLabel(withText: StringsProvider.string(forKey: .spiroTitle),
                            fontStyle: .title,
                            color: ColorPalette.color(withType: .primaryText),
                            textAlignment: .left)
-        stackView.addLabel(withText:
-        """
-        Click "SCAN" to search for your MIR Spirometer. 
-        Please, make sure that it is turned on and near to your device.
-        """,
+        stackView.addLabel(withText: StringsProvider.string(forKey: .spiroSubtitle),
                            fontStyle: .paragraph,
                            color: ColorPalette.color(withType: .primaryText),
                            textAlignment: .left)
@@ -139,7 +135,7 @@ class SpyrometerScanViewController: UIViewController {
         
         // Connect button constraints.
         self.footerView.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets.zero, excludingEdge: .top)
-        self.footerView.setButtonText("Scan")
+        self.footerView.setButtonText(StringsProvider.string(forKey: .spiroScan))
     }
     
     private func setupTableView() {
@@ -189,7 +185,7 @@ class SpyrometerScanViewController: UIViewController {
         service.onDeviceDiscovered = { [weak self] devices in
             guard let self = self else { return }
             AppNavigator.popProgressHUD()
-            self.footerView.setButtonText("Scan")
+            self.footerView.setButtonText(StringsProvider.string(forKey: .spiroScan))
             self.footerView.addTarget(target: self, action: #selector(self.startScanDevices))
             DispatchQueue.main.async {
                 self.discoveredDevices = devices
@@ -200,8 +196,10 @@ class SpyrometerScanViewController: UIViewController {
         // Update UI when a device is connected.
         service.onDeviceConnected = { [weak self] in
             DispatchQueue.main.async {
+                AppNavigator.popProgressHUD()
                 self?.isDeviceConnected = true
-                self?.footerView.setButtonText("Next")
+                self?.footerView.setButtonEnabled(enabled: true)
+                self?.footerView.setButtonText(StringsProvider.string(forKey: .spiroNext))
                 self?.footerView.addTarget(target: self, action: #selector(self?.continueButtonTapped))
             }
         }
@@ -219,18 +217,11 @@ class SpyrometerScanViewController: UIViewController {
     
     // MARK: - Button Actions
     
-    /// Called when the connect button is tapped. Initiates the connection process.
-    @objc private func connectButtonTapped() {
-        // In a real scenario, the user would select a device from the discovered list.
-        // Here, we simulate the connection using a demo device.
-        service.connect()
-    }
-    
     @objc private func startScanDevices() {
         // Start discovering devices only if Bluetooth is active.
         service.startDiscoverDevices()
         AppNavigator.pushProgressHUD()
-        self.footerView.setButtonText("Stop")
+        self.footerView.setButtonText(StringsProvider.string(forKey: .spiroStop))
         self.footerView.addTarget(target: self, action: #selector(self.cancelButtonTapped))
     }
     
@@ -238,7 +229,7 @@ class SpyrometerScanViewController: UIViewController {
     @objc private func cancelButtonTapped() {
         AppNavigator.popProgressHUD()
         service.stopDiscoverDevices()
-        self.footerView.setButtonText("Scan")
+        self.footerView.setButtonText(StringsProvider.string(forKey: .spiroScan))
         self.footerView.addTarget(target: self, action: #selector(self.startScanDevices))
     }
     
@@ -279,7 +270,7 @@ extension SpyrometerScanViewController: UITableViewDataSource, UITableViewDelega
         
         let cell = tableView.dequeueReusableCell(withIdentifier: "DeviceCell", for: indexPath)
         let deviceInfo = discoveredDevices[indexPath.row]
-        cell.textLabel?.text = deviceInfo.name ?? "Unnamed Device"
+        cell.textLabel?.text = deviceInfo.name + " " + deviceInfo.deviceID
         cell.textLabel?.numberOfLines = 1
         cell.textLabel?.font = FontPalette.fontStyleData(forStyle: .paragraph).font
         cell.textLabel?.textColor = ColorPalette.color(withType: .primaryText)
@@ -289,14 +280,17 @@ extension SpyrometerScanViewController: UITableViewDataSource, UITableViewDelega
     
     /// Optional: if you want to connect to a device when the user taps a row
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        tableView.deselectRow(at: indexPath, animated: false)
+        
         let deviceInfo = discoveredDevices[indexPath.row]
         print("Selected device: \(deviceInfo.name ?? "Unknown")")
         
         // If you want to connect automatically:
         service.stopDiscoverDevices()
-        self.footerView.setButtonText("Next")
-        self.footerView.addTarget(target: self, action: #selector(self.connectButtonTapped))
+        self.footerView.setButtonText(StringsProvider.string(forKey: .spiroNext))
+        self.footerView.setButtonEnabled(enabled: false)
         // If your service has a connect(to:) method, pass the deviceID or info
-        // Example: service.connect(to: deviceInfo.deviceID)
+        AppNavigator.pushProgressHUD()
+        service.connect(deviceID: deviceInfo.deviceID)
     }
 }

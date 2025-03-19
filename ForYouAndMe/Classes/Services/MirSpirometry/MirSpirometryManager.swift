@@ -81,16 +81,13 @@ final class MirSpirometryManager: NSObject, MirSpirometryService {
     
     /// Connects to a device. This example uses a hard-coded demo Device ID,
     /// but you can also store a user-selected ID or pass it as a parameter.
-    func connect() {
+    func connect(deviceID: String?) {
         guard let manager = SODeviceManager.shared() else { return }
         
         manager.setLogEnabled(true)
         manager.add(self)
         
-        // Replace this with the actual Device ID you want to connect to.
-        let demoDeviceID: String = "9FA26AD9-8E36-F163-CC7C-458380F07499"
-        
-        manager.connect(demoDeviceID)
+        manager.connect(deviceID ?? "9FA26AD9-8E36-F163-CC7C-458380F07499")
     }
     
     /// Disconnects the currently connected device, if any.

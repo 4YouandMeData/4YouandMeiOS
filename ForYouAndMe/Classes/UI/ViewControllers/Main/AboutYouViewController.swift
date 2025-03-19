@@ -168,7 +168,7 @@ class AboutYouViewController: UIViewController {
                                                              style: .flatStyle,
                                                              gestureCallback: {
             
-            Services.shared.mirSpirometryService.connect()
+            Services.shared.mirSpirometryService.connect(deviceID: nil)
         })
         
         let mirSpirometryRunTestButton = GenericListItemView(withTitle: "Debug - Run Test (PeakFlowFev1)",

@@ -48,9 +48,7 @@ protocol MirSpirometryService {
     func stopDiscoverDevices()
     
     /// Connects to the selected device.
-    /// If you manage multiple devices, consider adding a parameter (e.g., `deviceID`)
-    /// to specify which one to connect to.
-    func connect()
+    func connect(deviceID: String?)
     
     /// Disconnects the currently connected device, if any.
     func disconnect()
