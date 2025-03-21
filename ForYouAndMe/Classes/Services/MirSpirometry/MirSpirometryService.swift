@@ -36,6 +36,8 @@ protocol MirSpirometryService {
     /// The `String` parameter typically contains the test data in JSON format.
     var onTestResults: ((String) -> Void)? { get set }
     
+    var onFlowValueUpdated: ((Float, Bool) -> Void)? { get set }
+    
     // MARK: - Functions
     
     /// Initializes or enables Bluetooth if required.

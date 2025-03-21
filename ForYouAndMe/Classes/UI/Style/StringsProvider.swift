@@ -188,6 +188,7 @@ enum StringKey: String, CaseIterable, CodingKey {
     case spiroNoDeviceDesc = "TASK_SPIRO_NO_DEVICE_DESCRIPTION"
     case spiroIntroTestTitle = "TASK_SPIRO_INTRO_TEST_TITLE"
     case spiroIntroTestBody = "TASK_SPIRO_INTRO_TEST_BODY"
+    case spiroSelectDevice = "TASK_SPIRO_SELECT_DEVICE"
 
     // Study Info
     case studyInfoContactTitle = "STUDY_INFO_CONTACT_INFO"

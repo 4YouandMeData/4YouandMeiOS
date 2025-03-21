@@ -45,6 +45,8 @@ final class MirSpirometryManager: NSObject, MirSpirometryService {
     /// The `String` parameter typically contains JSON-formatted data.
     var onTestResults: ((String) -> Void)?
     
+    var onFlowValueUpdated: ((Float, Bool) -> Void)?
+    
     // MARK: - MirSpirometryService Protocol Methods
     
     /// Initializes or enables Bluetooth if required.
@@ -108,7 +110,7 @@ final class MirSpirometryManager: NSObject, MirSpirometryService {
         }
         
         // SOTestType(1) usually indicates FEV1 test, but confirm with MirSmartDevice docs.
-        let testType = SOTestType(rawValue: 1)
+        let testType = SOTestType(rawValue: TestPeakFlowFev1.rawValue)
         let testTimeout: UInt8 = 15
         let turbineType = SOTurbineType(rawValue: 1)
         
@@ -267,7 +269,9 @@ extension MirSpirometryManager: SODeviceDelegate {
     
     func soDevice(_ soDevice: SODevice!,
                   didUpdateFlowValue value: Float,
-                  isFirstPackage: Bool) { }
+                  isFirstPackage: Bool) {
+        onFlowValueUpdated?(value, isFirstPackage)
+    }
     
     func soDevice(_ soDevice: SODevice!,
                   didReceiveSoftwareUpdateProgress progress: UInt,

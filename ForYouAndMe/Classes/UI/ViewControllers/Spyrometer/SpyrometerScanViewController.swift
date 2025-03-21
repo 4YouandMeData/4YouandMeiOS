@@ -62,7 +62,7 @@ class SpyrometerScanViewController: UIViewController {
     /// Label: "Select your device"
     private let selectDeviceLabel: UILabel = {
         let label = UILabel()
-        label.text = "Select your device"
+        label.text = StringsProvider.string(forKey: .spiroSelectDevice)
         label.font = UIFont.systemFont(ofSize: 18, weight: .medium)
         label.numberOfLines = 1
         return label
