@@ -26,8 +26,11 @@ public class SpyrometerIntroTestViewController: UIViewController {
         
         let stackView = UIStackView.create(withAxis: .vertical, spacing: 16)
         self.view.addSubview(stackView)
-        stackView.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets(top: 24, left: 20.0, bottom: 0.0, right: 20.0),
-                                               excludingEdge: .bottom)
+        stackView.autoPinEdgesToSuperviewSafeArea(with: UIEdgeInsets(top: 25.0,
+                                                                     left: Constants.Style.DefaultHorizontalMargins,
+                                                                     bottom: 0,
+                                                                     right: Constants.Style.DefaultHorizontalMargins),
+                                                  excludingEdge: .bottom)
         
         stackView.addBlankSpace(space: 40)
         stackView.addImage(withImage: ImagePalette.image(withName: .spiroIntroTestImage),

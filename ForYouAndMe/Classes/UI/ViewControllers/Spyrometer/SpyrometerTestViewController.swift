@@ -69,13 +69,13 @@ class SpyrometerTestViewController: UIViewController {
 //    }()
 //    
 //    /// Button to trigger connection (demo).
-//    private lazy var footerView: GenericButtonView = {
-//        let buttonView = GenericButtonView(withTextStyleCategory: .secondaryBackground(shadow: true ))
-//        return buttonView
-//    }()
-//    
-//    // MARK: - Initialization
-//    
+    private lazy var footerView: GenericButtonView = {
+        let buttonView = GenericButtonView(withTextStyleCategory: .secondaryBackground(shadow: true ))
+        return buttonView
+    }()
+    
+    // MARK: - Initialization
+    
     /// Initializes the view controller with the given spirometry service.
     init() {
         self.service = Services.shared.mirSpirometryService
@@ -90,123 +90,49 @@ class SpyrometerTestViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-//        view.backgroundColor = ColorPalette.color(withType: .secondary)
-        view.backgroundColor = .yellow
+        view.backgroundColor = ColorPalette.color(withType: .secondary)
 
-//        setupUI()
-//        setupActions()
+        setupUI()
+        setupActions()
 //        setupServiceCallbacks()
 //        setupTableView()
 //        addObservers()
     }
-//    
-//    override func viewWillAppear(_ animated: Bool) {
-//        checkBluetoothState()
-//    }
-//    
-//    private func addObservers() {
-//        NotificationCenter.default.addObserver(self,
-//                                               selector: #selector(self.willEnterForeground),
-//                                               name: UIApplication.didBecomeActiveNotification,
-//                                               object: nil)
-//    }
-//    
-//    @objc private func willEnterForeground() {
-//        self.checkBluetoothState()
-//    }
-//    
-//    // MARK: - Bluetooth State Check
-//    
-//    /// Checks if Bluetooth is active. If not, shows an error alert.
-//    private func checkBluetoothState() {
-//        if service.isPoweredOn() == false {
-//            self.footerView.setButtonEnabled(enabled: false)
-//            self.devicesTableView.backgroundView = self.noBluetoothView
-//        } else {
-//            self.footerView.setButtonEnabled(enabled: true)
-//            self.devicesTableView.backgroundView = nil
-//        }
-//    }
-//    
-//    // MARK: - UI Setup using PureLayout
-//    
-//    /// Configures and adds UI elements to the view using PureLayout.
-//    private func setupUI() {
-//        
-//        let containerView = UIView()
-//        let stackView = UIStackView.create(withAxis: .vertical, spacing: 16.0)
-//        
-//        self.view.addSubview(containerView)
-//        containerView.addSubview(stackView)
-//        
-//        // Footer
-//        self.view.addSubview(self.footerView)
-//        
-//        containerView.autoPinEdgesToSuperviewEdges(with: .zero, excludingEdge: .bottom)
-//        stackView.autoPinEdgesToSuperviewSafeArea(with: UIEdgeInsets(top: 25.0,
-//                                                                     left: Constants.Style.DefaultHorizontalMargins,
-//                                                                     bottom: 0,
-//                                                                     right: Constants.Style.DefaultHorizontalMargins))
-//        
-//        stackView.addLabel(withText: StringsProvider.string(forKey: .spiroTitle),
-//                           fontStyle: .title,
-//                           color: ColorPalette.color(withType: .primaryText),
-//                           textAlignment: .left)
-//        stackView.addLabel(withText: StringsProvider.string(forKey: .spiroSubtitle),
-//                           fontStyle: .paragraph,
-//                           color: ColorPalette.color(withType: .primaryText),
-//                           textAlignment: .left)
-//        // Table view
-//        self.view.addSubview(self.devicesTableView)
-//        self.devicesTableView.autoPinEdge(.top, to: .bottom, of: stackView, withOffset: 32)
-//        self.devicesTableView.autoPinEdge(toSuperviewEdge: .leading)
-//        self.devicesTableView.autoPinEdge(toSuperviewEdge: .trailing)
-//        self.devicesTableView.autoPinEdge(.bottom, to: .top, of: self.footerView, withOffset: -16)
-//        
-//        // Connect button constraints.
-//        self.footerView.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets.zero, excludingEdge: .top)
-//        self.footerView.setButtonText(StringsProvider.string(forKey: .spiroScan))
-//    }
-//    
-//    private func setupTableView() {
-//        devicesTableView.dataSource = self
-//        devicesTableView.delegate = self
-//        // Optionally register a custom cell or just use UITableViewCell
-//        devicesTableView.register(UITableViewCell.self, forCellReuseIdentifier: "DeviceCell")
-//    }
-//    
-//    /// Creates a custom tableHeaderView containing the label "Select your device".
-//    private func createTableHeaderView() -> UIView {
-//        let headerContainer = UIView()
-//        headerContainer.backgroundColor = .clear
-//        
-//        let label = UILabel()
-//        label.text = "Select your device"
-//        label.font = FontPalette.fontStyleData(forStyle: .header2).font
-//        label.textColor = ColorPalette.color(withType: .primaryText)
-//        label.textAlignment = .left
-//        headerContainer.addSubview(label)
-//        
-//        // Use PureLayout inside the header
-//        label.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets(top: 8, left: 12, bottom: 8, right: 12))
-//        
-//        // Let Auto Layout calculate the correct height
-//        headerContainer.layoutIfNeeded()
-//        let height = headerContainer.systemLayoutSizeFitting(UIView.layoutFittingCompressedSize).height
-//        
-//        // Set the frame to the calculated height
-//        headerContainer.frame = CGRect(x: 0, y: 0, width: view.bounds.width, height: height)
-//        
-//        return headerContainer
-//    }
-//    
-//    // MARK: - Actions Setup
-//    
-//    /// Configures target-action for the buttons.
-//    private func setupActions() {
+
+    
+    // MARK: - UI Setup using PureLayout
+    
+    /// Configures and adds UI elements to the view using PureLayout.
+    private func setupUI() {
+        
+        let containerView = UIView()
+        let stackView = UIStackView.create(withAxis: .vertical, spacing: 16.0)
+        
+        self.view.addSubview(containerView)
+        containerView.addSubview(stackView)
+        
+        // Footer
+        self.view.addSubview(self.footerView)
+        
+        containerView.autoPinEdgesToSuperviewEdges(with: .zero, excludingEdge: .bottom)
+        stackView.autoPinEdgesToSuperviewSafeArea(with: UIEdgeInsets(top: 25.0,
+                                                                     left: Constants.Style.DefaultHorizontalMargins,
+                                                                     bottom: 0,
+                                                                     right: Constants.Style.DefaultHorizontalMargins))
+        
+        // Connect button constraints.
+        self.footerView.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets.zero, excludingEdge: .top)
+        self.footerView.setButtonText(StringsProvider.string(forKey: .spiroNext))
+    }
+    
+    // MARK: - Actions Setup
+    
+    /// Configures target-action for the buttons.
+    private func setupActions() {
+        self.footerView.setButtonEnabled(enabled: false)
 //        self.footerView.addTarget(target: self, action: #selector(self.startScanDevices))
-//    }
-//    
+    }
+    
 //    // MARK: - Service Callbacks Setup
 //    
 //    /// Sets up callbacks to handle events from the spirometry service.

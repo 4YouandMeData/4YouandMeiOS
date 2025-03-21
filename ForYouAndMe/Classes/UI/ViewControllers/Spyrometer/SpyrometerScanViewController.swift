@@ -257,6 +257,7 @@ class SpyrometerScanViewController: UIViewController {
     
     @objc private func startScanDevices() {
         // Start discovering devices only if Bluetooth is active.
+        self.devicesTableView.backgroundView = nil
         service.startDiscoverDevices()
         AppNavigator.pushProgressHUD()
         // Start the timer
