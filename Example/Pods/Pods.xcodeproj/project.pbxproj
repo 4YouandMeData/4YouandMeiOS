@@ -202,6 +202,8 @@
 		0CCC2C20C8E459D3BC81F4306BDB51A2 /* ORKAudioRecorder.h in Headers */ = {isa = PBXBuildFile; fileRef = 02294A1055363B0233A0F5B9891949C4 /* ORKAudioRecorder.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		0CF2D2DF44815BD099ACBAAE9F78C8B2 /* ORKReactionTimeViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = E81900400260DB17D1A482B3986EE88D /* ORKReactionTimeViewController.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
 		0D0FF5B12D8B2D0700C04036 /* BluetoothNoDevices.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D0FF5B02D8B2D0000C04036 /* BluetoothNoDevices.swift */; };
+		0D3641CC2D8B334A00FDB3AA /* SpyrometerTestViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D3641CB2D8B334800FDB3AA /* SpyrometerTestViewController.swift */; };
+		0D3641CE2D8B34A700FDB3AA /* SpyrometerIntroTestViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D3641CD2D8B349E00FDB3AA /* SpyrometerIntroTestViewController.swift */; };
 		0D6BBA2E2D88C8F7004DEF42 /* SpyrometerSectionCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D6BBA2D2D88C8EC004DEF42 /* SpyrometerSectionCoordinator.swift */; };
 		0D6BBA312D88C9E1004DEF42 /* SpyrometerScanViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D6BBA302D88C9D7004DEF42 /* SpyrometerScanViewController.swift */; };
 		0D6BBA332D8ADA24004DEF42 /* BluetoothOffView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D6BBA322D8ADA18004DEF42 /* BluetoothOffView.swift */; };
@@ -4330,6 +4332,8 @@
 		0CCE5FE561F3B280F6C7E95CD0FB8EAE /* ORKTowerOfHanoiStep.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = ORKTowerOfHanoiStep.m; path = ResearchKit/ActiveTasks/ORKTowerOfHanoiStep.m; sourceTree = "<group>"; };
 		0CE2796E06DF302D61F6C09035E65F84 /* HistogramAccumulation_GL.fsh */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.glsl; name = HistogramAccumulation_GL.fsh; path = framework/Source/Operations/Shaders/HistogramAccumulation_GL.fsh; sourceTree = "<group>"; };
 		0D0FF5B02D8B2D0000C04036 /* BluetoothNoDevices.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BluetoothNoDevices.swift; sourceTree = "<group>"; };
+		0D3641CB2D8B334800FDB3AA /* SpyrometerTestViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpyrometerTestViewController.swift; sourceTree = "<group>"; };
+		0D3641CD2D8B349E00FDB3AA /* SpyrometerIntroTestViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpyrometerIntroTestViewController.swift; sourceTree = "<group>"; };
 		0D56721AC5B8CD21088512ABF9575755 /* FIRCLSCallStackTree.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = FIRCLSCallStackTree.m; path = Crashlytics/Crashlytics/Helpers/FIRCLSCallStackTree.m; sourceTree = "<group>"; };
 		0D631E9908483F9525A6B3F36F16CC61 /* Quick.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Quick.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		0D6BBA2D2D88C8EC004DEF42 /* SpyrometerSectionCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpyrometerSectionCoordinator.swift; sourceTree = "<group>"; };
@@ -8095,6 +8099,8 @@
 		0D6BBA2F2D88C9CE004DEF42 /* Spyrometer */ = {
 			isa = PBXGroup;
 			children = (
+				0D3641CD2D8B349E00FDB3AA /* SpyrometerIntroTestViewController.swift */,
+				0D3641CB2D8B334800FDB3AA /* SpyrometerTestViewController.swift */,
 				0D6BBA302D88C9D7004DEF42 /* SpyrometerScanViewController.swift */,
 			);
 			path = Spyrometer;
@@ -17898,6 +17904,7 @@
 				25BF03F3E82CFB20BD2D6A857B2F3147 /* CameraPermission.swift in Sources */,
 				52A3B34DDADB1107C0D12021D2DF9466 /* CameraView.swift in Sources */,
 				F813C2812EDC76FF98FE0E8D36437A4D /* ChartData.swift in Sources */,
+				0D3641CC2D8B334A00FDB3AA /* SpyrometerTestViewController.swift in Sources */,
 				09345F58EEADA10B043C8FC8E55FAFCA /* CircleBorderView.swift in Sources */,
 				B5226A29623B8AC99DF1DE5F936AF60B /* CodableColor.swift in Sources */,
 				2A4C6C1159CD00107B5854B13E976288 /* CodableDictionary.swift in Sources */,
@@ -18090,6 +18097,7 @@
 				507710F3D9435A82AA02F88D6486E681 /* SetupLaterViewController.swift in Sources */,
 				5B650834FD3EED088B859DE6AB661AA0 /* SignalProducer+ModelMapper.swift in Sources */,
 				ACA35BEFA2BD5972F8319B8482622216 /* SignalProducerAvailability.swift in Sources */,
+				0D3641CE2D8B34A700FDB3AA /* SpyrometerIntroTestViewController.swift in Sources */,
 				81E398EF9F3D7B80842EA9F0D9763B26 /* Single+Extensions.swift in Sources */,
 				5261A40733256EA2DC74A635E47ADA67 /* Single+ModelMapper.swift in Sources */,
 				57EBB83E2B578ADCD7FB7AE3F250B68B /* SingleTextHeaderView.swift in Sources */,

@@ -82,17 +82,29 @@ class SpyrometerSectionCoordinator: NSObject, PagedActivitySectionCoordinator {
     // MARK: - Flow Management Methods
         
     /// Pushes the test view controller after a successful device connection.
+    private func showIntroTestViewController() {
+        let testVC = SpyrometerIntroTestViewController(withTopOffset: 24)
+        testVC.onGetStarted = { [weak self] in
+            self?.showTestViewController()
+//            self?.showResultsViewController(resultsJSON: resultsJSON)
+        }
+        self.navigationController.pushViewController(testVC,
+                                                     hidesBottomBarWhenPushed: hidesBottomBarWhenPushed,
+                                                     animated: true)
+    }
+    
+    /// Pushes the test view controller after a successful device connection.
     private func showTestViewController() {
-//        let testVC = SpyrometerTestViewController(service: spirometryService)
+        let testVC = SpyrometerTestViewController()
 //        testVC.onTestFinished = { [weak self] resultsJSON in
 //            self?.showResultsViewController(resultsJSON: resultsJSON)
 //        }
 //        testVC.onCancelled = { [weak self] in
 //            self?.completionCallback()
 //        }
-//        self.navigationController.pushViewController(testVC,
-//                                                     hidesBottomBarWhenPushed: hidesBottomBarWhenPushed,
-//                                                     animated: true)
+        self.navigationController.pushViewController(testVC,
+                                                     hidesBottomBarWhenPushed: hidesBottomBarWhenPushed,
+                                                     animated: true)
     }
     
     /// Pushes the results view controller to display the spirometry test results.
@@ -113,7 +125,7 @@ class SpyrometerSectionCoordinator: NSObject, PagedActivitySectionCoordinator {
     private func makeScanViewController() -> SpyrometerScanViewController {
         let scanVC = SpyrometerScanViewController()
         scanVC.onScanCompleted = { [weak self] in
-            self?.showTestViewController()
+            self?.showIntroTestViewController()
         }
         scanVC.onCancelled = { [weak self] in
             self?.completionCallback()
