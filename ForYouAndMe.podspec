@@ -35,11 +35,13 @@ Pod::Spec.new do |s|
   }
   
   s.vendored_frameworks = 'ForYouAndMe/Frameworks/MirSmartDevice.framework'
-  s.xcconfig = { 'FRAMEWORK_SEARCH_PATHS' => '$(PODS_ROOT)/ForYouAndMe/Frameworks/**' }
-  
+
   s.pod_target_xcconfig = {
-    'DEFINES_MODULE' => 'YES',
-    'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'x86_64 arm64'
+      'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'x86_64 arm64'
+  }
+
+  s.xcconfig = {
+      'FRAMEWORK_SEARCH_PATHS' => '$(PODS_ROOT)/ForYouAndMe/Frameworks/**'
   }
    
   s.frameworks = 'UIKit'
