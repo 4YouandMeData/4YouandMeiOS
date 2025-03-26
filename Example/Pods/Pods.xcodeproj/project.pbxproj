@@ -8455,6 +8455,7 @@
 				ECC4B68825CEC50645FACBA57A1FF3A4 /* SystemConfiguration.framework */,
 				6F93DA7805A3671FCFEE2CF565ACD32E /* UIKit.framework */,
 				A99F96DBD0C7AC25D23A8422E2FBCB70 /* XCTest.framework */,
+				0D723E1A2D70862B00F1E24C /* MirSmartDevice.framework */,
 			);
 			name = iOS;
 			sourceTree = "<group>";
@@ -11821,7 +11822,6 @@
 				E2C34186C0DCC2DC5B7BF59A688A9EAB /* Pods */,
 				8D4D793C0D9767D06D6CFCE9F25327F6 /* Products */,
 				C061A3A4928D8BC80162D12F37DCA44C /* Targets Support Files */,
-				0D723E1A2D70862B00F1E24C /* MirSmartDevice.framework */,
 			);
 			sourceTree = "<group>";
 		};

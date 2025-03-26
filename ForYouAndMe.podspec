@@ -61,4 +61,6 @@ Pod::Spec.new do |s|
   
   s.static_framework = true
   
+  s.vendored_frameworks = 'ForYouAndMe/Frameworks/iOS/MirSmartDevice.framework'
+  
 end
