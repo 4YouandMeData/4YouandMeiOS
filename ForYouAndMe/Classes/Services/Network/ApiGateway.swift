@@ -61,6 +61,7 @@ enum DefaultService {
     case sendDiaryNoteAudio(noteId: DiaryNoteItem, attachment: DiaryNoteFile, fromChart: Bool)
     case sendDiaryNoteVideo(noteId: DiaryNoteItem, attachment: DiaryNoteFile)
     case deleteDiaryNote(noteId: String)
+    case sendSpyroResults(results: [String: Any])
     // User
     case getUser
     case sendUserInfoParameters(paramenters: [UserInfoParameterRequest])
@@ -77,7 +78,7 @@ enum DefaultService {
     // Device Data
     case sendDeviceData(deviceData: DeviceData)
     // Health
-    case sendHealthData(healthData: HealthNetworkData)
+    case sendHealthData(healthData: HealthNetworkData, source: String)
     // User Phase
     case createUserPhase(phaseId: String)
     case updateUserPhase(userPhaseId: String)

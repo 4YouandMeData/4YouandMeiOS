@@ -7,6 +7,7 @@
 
 import Foundation
 import RxSwift
+import MirSmartDevice
 
 class SpyrometerSectionCoordinator: NSObject, PagedActivitySectionCoordinator {
     
@@ -86,7 +87,6 @@ class SpyrometerSectionCoordinator: NSObject, PagedActivitySectionCoordinator {
         let testVC = SpyrometerIntroTestViewController(withTopOffset: 24)
         testVC.onGetStarted = { [weak self] in
             self?.showTestViewController()
-//            self?.showResultsViewController(resultsJSON: resultsJSON)
         }
         self.navigationController.pushViewController(testVC,
                                                      hidesBottomBarWhenPushed: hidesBottomBarWhenPushed,
@@ -96,26 +96,68 @@ class SpyrometerSectionCoordinator: NSObject, PagedActivitySectionCoordinator {
     /// Pushes the test view controller after a successful device connection.
     private func showTestViewController() {
         let testVC = SpyrometerTestViewController()
-//        testVC.onTestFinished = { [weak self] resultsJSON in
-//            self?.showResultsViewController(resultsJSON: resultsJSON)
-//        }
-//        testVC.onCancelled = { [weak self] in
-//            self?.completionCallback()
-//        }
+        testVC.onTestCompleted = { [weak self] results in
+            self?.showResultsViewController(results: results)
+        }
         self.navigationController.pushViewController(testVC,
                                                      hidesBottomBarWhenPushed: hidesBottomBarWhenPushed,
                                                      animated: true)
     }
     
     /// Pushes the results view controller to display the spirometry test results.
-    private func showResultsViewController(resultsJSON: String) {
-//        let resultsVC = SpyrometerResultsViewController(resultsJSON: resultsJSON)
-//        resultsVC.onClose = { [weak self] in
-//            self?.completionCallback()
-//        }
-//        self.navigationController.pushViewController(resultsVC,
-//                                                     hidesBottomBarWhenPushed: hidesBottomBarWhenPushed,
-//                                                     animated: true)
+    private func showResultsViewController(results: SOResults) {
+        let resultsVC = SpyrometerResultsViewController(results: results)
+        resultsVC.onRedoPressed = { [weak self] in
+            self?.showIntroTestViewControllerFromRedo()
+        }
+
+        resultsVC.onDonePressed = { [weak self] results in
+            guard let self = self else { return }
+            self.sendResult(taskResult: results, presenter: resultsVC)
+        }
+        
+        self.navigationController.pushViewController(resultsVC,
+                                                     hidesBottomBarWhenPushed: hidesBottomBarWhenPushed,
+                                                     animated: true)
+    }
+    
+    private func showIntroTestViewControllerFromRedo() {
+        if let introVC = navigationController.viewControllers.first(where: { $0 is SpyrometerIntroTestViewController }) {
+            navigationController.popToViewController(introVC, animated: true)
+        } else {
+            // If not found, push a new instance
+            showIntroTestViewController()
+        }
+    }
+    
+    private func sendResult(taskResult: SOResults, presenter: UIViewController) {
+        var taskResultWithUUID = taskResult.toDictionary() ?? [:]
+        let resultUUID = UUID().uuidString
+        taskResultWithUUID["ref_uuid"] = resultUUID
+        repository.sendSpyroResults(results: taskResultWithUUID)
+            .flatMap { [weak self] _ -> Single<Void> in
+                guard let self = self else { return .error(NSError(domain: "InternalError", code: -1)) }
+                return self.repository.sendTaskResult(taskId: self.taskIdentifier,
+                                                      taskResult: TaskNetworkResult(data: taskResultWithUUID, attachedFile: nil))
+            }
+            .addProgress()
+            .subscribe(onSuccess: { [weak self] in
+                guard let self = self else { return }
+                 self.showSuccessPage()
+            }, onFailure: { [weak self] error in
+                guard let self = self else { return }
+                // Gestisci errori (prima o seconda chiamata)
+                self.navigator.handleError(
+                    error: error,
+                    presenter: presenter,
+                    onDismiss: {},
+                    onRetry: { [weak self] in
+                        self?.sendResult(taskResult: taskResult, presenter: presenter)
+                    },
+                    dismissStyle: .destructive
+                )
+            })
+            .disposed(by: disposeBag)
     }
     
     // MARK: - Building Child View Controllers

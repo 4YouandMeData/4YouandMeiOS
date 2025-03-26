@@ -43,9 +43,9 @@ final class MirSpirometryManager: NSObject, MirSpirometryService {
     
     /// Triggered when the spirometry test finishes and produces final results.
     /// The `String` parameter typically contains JSON-formatted data.
-    var onTestResults: ((String) -> Void)?
+    var onTestResults: ((SOResults) -> Void)?
     
-    var onFlowValueUpdated: ((Float, Bool) -> Void)?
+    var onFlowValueUpdated: ((SODevice, Float, Bool) -> Void)?
     
     // MARK: - MirSpirometryService Protocol Methods
     
@@ -191,6 +191,7 @@ extension MirSpirometryManager: SODeviceDelegate {
     /// Called when the device stops the test.
     func soDeviceDidStopTest(_ soDevice: SODevice!) {
         // This might occur if the user stops the test prematurely or the device times out.
+        print("Stop Test")
     }
     
     /// Called when the device begins the test.
@@ -220,8 +221,8 @@ extension MirSpirometryManager: SODeviceDelegate {
     func soDevice(_ soDevice: SODevice!,
                   didUPdateResults results: SOResults!) {
         // Convert the results to JSON string for easier handling.
-        let resultsJSON = results.toJSON()
-        onTestResults?(resultsJSON)
+//        let resultsJSON = results.toJSON()
+        onTestResults?(results)
     }
     
     // MARK: - Additional Delegate Methods
@@ -270,7 +271,7 @@ extension MirSpirometryManager: SODeviceDelegate {
     func soDevice(_ soDevice: SODevice!,
                   didUpdateFlowValue value: Float,
                   isFirstPackage: Bool) {
-        onFlowValueUpdated?(value, isFirstPackage)
+        onFlowValueUpdated?(soDevice, value, isFirstPackage)
     }
     
     func soDevice(_ soDevice: SODevice!,
@@ -320,66 +321,122 @@ extension NSArray {
     }
 }
 
-extension Dictionary {
-    
-    public func toJSON() -> String {
-        guard isEmpty == false else { return "" }
-        guard let jsonData = try? JSONSerialization.data(withJSONObject: self, options: .prettyPrinted) else { return "" }
-        guard let value = String(data: jsonData, encoding: .utf8) else { return "" }
-        return value
-    }
+//extension Dictionary {
+//    
+//    public func toJSON() -> String {
+//        guard isEmpty == false else { return "" }
+//        guard let jsonData = try? JSONSerialization.data(withJSONObject: self, options: .prettyPrinted) else { return "" }
+//        guard let value = String(data: jsonData, encoding: .utf8) else { return "" }
+//        return value
+//    }
+//}
+//
+//extension NSObject {
+//    
+//    public func toJSON() -> String {
+//        toDictionary()
+//            .toJSON()
+//    }
+//    
+//    private func convertValue(_ value: Any) -> Any {
+//        switch value {
+//        case let obj as NSObject where obj is NSString:
+//            return obj  // Directly return basic types
+//            
+//        case let obj as NSObject where obj is NSNumber:
+//            return obj  // Directly return basic types
+//            
+//        case let obj as NSObject where obj is NSDate:
+//            return obj  // Directly return basic types
+//            
+//        case let obj as NSObject:
+//            return obj.toDictionary()  // Convert custom objects to dictionary
+//            
+//        case let array as [NSObject]:
+//            return array.map { convertValue($0) }  // Convert array of objects
+//            
+//        case let dict as [String: NSObject]:
+//            return dict.mapValues { convertValue($0) }  // Convert dictionary values
+//            
+//        default:
+//            return value  // Return as-is for other types
+//        }
+//    }
+//    
+//    private func toDictionary() -> [String: Any] {
+//        var dict: [String: Any] = [:]
+//        var count: UInt32 = 0
+//        let properties = class_copyPropertyList(type(of: self), &count)
+//
+//        defer {
+//            free(properties)
+//        }
+//        
+//        for index in 0..<count {
+//            let property = properties?.advanced(by: Int(index)).pointee
+//            let name = String(cString: property_getName(property!))
+//            
+//            if let value = self.value(forKey: name) {
+//                dict[name] = convertValue(value)
+//            }
+//        }
+//        
+//        return dict
+//    }
+//}
+
+struct SOResultsCodable: Codable {
+    var pefcLs: Int32
+    var fev1cL: Int32
+    var fvccL: Int32
+    var fev1fvcpcnt: Float
+    var qualityCode: Int32
+    var fev6cL: Int32
+    var fef2575cLs: Int32
+    var eVolmL: Int32
+    var pefTimems: Int32
+    var resultTestType: Int
+    var deviceAtsStandard: Int
+    var deviceType: Int
 }
 
-extension NSObject {
-    
-    public func toJSON() -> String {
-        toDictionary()
-            .toJSON()
+extension SOResults {
+    func toCodable() -> SOResultsCodable {
+        return SOResultsCodable(
+            pefcLs: self.pef_cLs,
+            fev1cL: self.fev1_cL,
+            fvccL: self.fvc_cL,
+            fev1fvcpcnt: self.fev1_fvc_pcnt,
+            qualityCode: self.qualityCode,
+            fev6cL: self.fev6_cL,
+            fef2575cLs: self.fef2575_cLs,
+            eVolmL: self.eVol_mL,
+            pefTimems: self.pefTime_ms,
+            resultTestType: Int(self.resultTestType.rawValue),
+            deviceAtsStandard: Int(self.deviceAtsStandard.rawValue),
+            deviceType: Int(self.deviceType.rawValue)
+        )
     }
-    
-    private func convertValue(_ value: Any) -> Any {
-        switch value {
-        case let obj as NSObject where obj is NSString:
-            return obj  // Directly return basic types
-            
-        case let obj as NSObject where obj is NSNumber:
-            return obj  // Directly return basic types
-            
-        case let obj as NSObject where obj is NSDate:
-            return obj  // Directly return basic types
-            
-        case let obj as NSObject:
-            return obj.toDictionary()  // Convert custom objects to dictionary
-            
-        case let array as [NSObject]:
-            return array.map { convertValue($0) }  // Convert array of objects
-            
-        case let dict as [String: NSObject]:
-            return dict.mapValues { convertValue($0) }  // Convert dictionary values
-            
-        default:
-            return value  // Return as-is for other types
-        }
-    }
-    
-    private func toDictionary() -> [String: Any] {
-        var dict: [String: Any] = [:]
-        var count: UInt32 = 0
-        let properties = class_copyPropertyList(type(of: self), &count)
 
-        defer {
-            free(properties)
+    func toJSON() -> String? {
+        let codableObject = self.toCodable()
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = .prettyPrinted
+
+        guard let jsonData = try? encoder.encode(codableObject) else {
+            return nil
         }
-        
-        for index in 0..<count {
-            let property = properties?.advanced(by: Int(index)).pointee
-            let name = String(cString: property_getName(property!))
-            
-            if let value = self.value(forKey: name) {
-                dict[name] = convertValue(value)
-            }
+
+        return String(data: jsonData, encoding: .utf8)
+    }
+    
+    func toDictionary() -> [String: Any]? {
+        let codableObject = self.toCodable()
+        guard let data = try? JSONEncoder().encode(codableObject),
+              let dict = try? JSONSerialization.jsonObject(with: data, options: .allowFragments) as? [String: Any]
+        else {
+            return nil
         }
-        
         return dict
     }
 }

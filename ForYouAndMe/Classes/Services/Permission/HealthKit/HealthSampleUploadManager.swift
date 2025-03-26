@@ -153,7 +153,7 @@ class HealthSampleUploadManager {
         func processNextChunk() {
             let nextEndDate = min(startDate.addingTimeInterval(oneHour), endDate)
             
-            uploader.run(startDate: startDate, endDate: nextEndDate)
+            uploader.run(startDate: startDate, endDate: nextEndDate, source: "health_kit")
                 .subscribe(onSuccess: { [weak self] in
                     guard let self = self else { return }
                     self.logDebugText(text: "Upload from \(startDate) to \(nextEndDate) completed")
@@ -188,7 +188,6 @@ class HealthSampleUploadManager {
         processNextChunk()  // Avvia il primo chunk
     }
 
-    
     private func processNextUploader(forUploader uploader: HealthSampleUploader) {
         self.storage.pendingUploadDataType = nil
         if let nextUploader = self.uploaders.getNextUploader(forDataType: uploader.sampleDataType) {

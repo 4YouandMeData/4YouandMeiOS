@@ -11,7 +11,7 @@ import RxSwift
 typealias HealthNetworkData = [String: Any]
 
 protocol HealthManagerNetworkDelegate: HealthSampleUploaderNetworkDelegate {
-    func uploadHealthNetworkData(_ healthNetworkData: HealthNetworkData) -> Single<()>
+    func uploadHealthNetworkData(_ healthNetworkData: HealthNetworkData, source: String) -> Single<()>
 }
 
 protocol HealthManagerClearanceDelegate: HealthSampleUploadManagerClearanceDelegate {}
@@ -166,7 +166,7 @@ class HealthManager: HealthService {
             "generic": data
         ]
         
-        networkDelegate.uploadHealthNetworkData(dataToUpload)
+        networkDelegate.uploadHealthNetworkData(dataToUpload, source: "health_kit")
             .do(
                 onSuccess: { _ in
                     #if DEBUG

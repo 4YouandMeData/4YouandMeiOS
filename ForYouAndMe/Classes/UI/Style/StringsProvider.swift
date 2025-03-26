@@ -176,6 +176,7 @@ enum StringKey: String, CaseIterable, CodingKey {
     case videoDiaryMissingPermissionSettings = "VIDEO_DIARY_MISSING_PERMISSION_SETTINGS"
     case videoDiaryMissingPermissionDiscard = "VIDEO_DIARY_MISSING_PERMISSION_DISCARD"
     
+    // Spyro Task
     case spiroTitle = "TASK_SPIRO_TITLE"
     case spiroSubtitle = "TASK_SPIRO_SUBTITLE"
     case spiroScan = "TASK_SPIRO_BUTTON_SCAN"
@@ -189,6 +190,23 @@ enum StringKey: String, CaseIterable, CodingKey {
     case spiroIntroTestTitle = "TASK_SPIRO_INTRO_TEST_TITLE"
     case spiroIntroTestBody = "TASK_SPIRO_INTRO_TEST_BODY"
     case spiroSelectDevice = "TASK_SPIRO_SELECT_DEVICE"
+    case spiroTaskCompleteTitle = "TASK_SPIRO_ACTIVITY_COMPLETE_TITLE"
+    case spiroTaskCompleteBody = "TASK_SPIRO_ACTIVITY_COMPLETE_BODY"
+    case spiroTaskButtonRedo = "TASK_SPIRO_ACTIVITY_BUTTON_REDO"
+    case spiroTaskButtonDone = "TASK_SPIRO_ACTIVITY_BUTTON_DONE"
+    case spiroTaskTargets = "TASK_SPIRO_ACTIVITY_TARGETS"
+    case spiroTaskMeasurements = "TASK_SPIRO_ACTIVITY_MEASUREMENTS"
+    case spiroTaskMeasCalloutTitle = "TASK_SPIRO_ACTIVITY_MEASUREMENTS_CALLOUT_TITLE"
+    case spiroTaskMeasCalloutBody = "TASK_SPIRO_ACTIVITY_MEASUREMENTS_CALLOUT_BODY"
+    case spiroTaskResults = "TASK_SPIRO_ACTIVITY_RESULTS"
+    case spiroTaskResultsCalloutTitle = "TASK_SPIRO_ACTIVITY_RESULTS_CALLOUT_TITLE"
+    case spiroTaskResultsCalloutBody = "TASK_SPIRO_ACTIVITY_RESULTS_CALLOUT_BODY"
+    case spiroTaskPef = "TASK_SPIRO_ACTIVITY_PEF"
+    case spiroTaskPefCalloutTitle = "TASK_SPIRO_ACTIVITY_PEF_CALLOUT_TITLE"
+    case spiroTaskPefCalloutBody = "TASK_SPIRO_ACTIVITY_PEF_CALLOUT_BODY"
+    case spiroTaskFev1 = "TASK_SPIRO_ACTIVITY_FEV1"
+    case spiroTaskFev1CalloutTitle = "TASK_SPIRO_ACTIVITY_FEV1_CALLOUT_TITLE"
+    case spiroTaskFev1CalloutBody = "TASK_SPIRO_ACTIVITY_FEV1_CALLOUT_BODY"
 
     // Study Info
     case studyInfoContactTitle = "STUDY_INFO_CONTACT_INFO"

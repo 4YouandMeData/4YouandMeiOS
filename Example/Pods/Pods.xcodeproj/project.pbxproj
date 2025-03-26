@@ -204,6 +204,10 @@
 		0D0FF5B12D8B2D0700C04036 /* BluetoothNoDevices.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D0FF5B02D8B2D0000C04036 /* BluetoothNoDevices.swift */; };
 		0D3641CC2D8B334A00FDB3AA /* SpyrometerTestViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D3641CB2D8B334800FDB3AA /* SpyrometerTestViewController.swift */; };
 		0D3641CE2D8B34A700FDB3AA /* SpyrometerIntroTestViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D3641CD2D8B349E00FDB3AA /* SpyrometerIntroTestViewController.swift */; };
+		0D3641DA2D91BBFA00FDB3AA /* SpyroBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D3641D92D91BBED00FDB3AA /* SpyroBar.swift */; };
+		0D3641DC2D91F52400FDB3AA /* SpyrometerResultsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D3641DB2D91F52300FDB3AA /* SpyrometerResultsViewController.swift */; };
+		0D3641DE2D92BFF900FDB3AA /* SpiroTableView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D3641DD2D92BFF300FDB3AA /* SpiroTableView.swift */; };
+		0D3641E12D9354D500FDB3AA /* SpiroPopoverController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D3641E02D9354B900FDB3AA /* SpiroPopoverController.swift */; };
 		0D6BBA2E2D88C8F7004DEF42 /* SpyrometerSectionCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D6BBA2D2D88C8EC004DEF42 /* SpyrometerSectionCoordinator.swift */; };
 		0D6BBA312D88C9E1004DEF42 /* SpyrometerScanViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D6BBA302D88C9D7004DEF42 /* SpyrometerScanViewController.swift */; };
 		0D6BBA332D8ADA24004DEF42 /* BluetoothOffView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D6BBA322D8ADA18004DEF42 /* BluetoothOffView.swift */; };
@@ -4334,6 +4338,10 @@
 		0D0FF5B02D8B2D0000C04036 /* BluetoothNoDevices.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BluetoothNoDevices.swift; sourceTree = "<group>"; };
 		0D3641CB2D8B334800FDB3AA /* SpyrometerTestViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpyrometerTestViewController.swift; sourceTree = "<group>"; };
 		0D3641CD2D8B349E00FDB3AA /* SpyrometerIntroTestViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpyrometerIntroTestViewController.swift; sourceTree = "<group>"; };
+		0D3641D92D91BBED00FDB3AA /* SpyroBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpyroBar.swift; sourceTree = "<group>"; };
+		0D3641DB2D91F52300FDB3AA /* SpyrometerResultsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpyrometerResultsViewController.swift; sourceTree = "<group>"; };
+		0D3641DD2D92BFF300FDB3AA /* SpiroTableView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpiroTableView.swift; sourceTree = "<group>"; };
+		0D3641E02D9354B900FDB3AA /* SpiroPopoverController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpiroPopoverController.swift; sourceTree = "<group>"; };
 		0D56721AC5B8CD21088512ABF9575755 /* FIRCLSCallStackTree.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = FIRCLSCallStackTree.m; path = Crashlytics/Crashlytics/Helpers/FIRCLSCallStackTree.m; sourceTree = "<group>"; };
 		0D631E9908483F9525A6B3F36F16CC61 /* Quick.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Quick.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		0D6BBA2D2D88C8EC004DEF42 /* SpyrometerSectionCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpyrometerSectionCoordinator.swift; sourceTree = "<group>"; };
@@ -8099,6 +8107,7 @@
 		0D6BBA2F2D88C9CE004DEF42 /* Spyrometer */ = {
 			isa = PBXGroup;
 			children = (
+				0D3641DB2D91F52300FDB3AA /* SpyrometerResultsViewController.swift */,
 				0D3641CD2D8B349E00FDB3AA /* SpyrometerIntroTestViewController.swift */,
 				0D3641CB2D8B334800FDB3AA /* SpyrometerTestViewController.swift */,
 				0D6BBA302D88C9D7004DEF42 /* SpyrometerScanViewController.swift */,
@@ -11638,6 +11647,9 @@
 		CCE4002B99A50AAAEA1FFD8801BEF07D /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				0D3641E02D9354B900FDB3AA /* SpiroPopoverController.swift */,
+				0D3641DD2D92BFF300FDB3AA /* SpiroTableView.swift */,
+				0D3641D92D91BBED00FDB3AA /* SpyroBar.swift */,
 				0D0FF5B02D8B2D0000C04036 /* BluetoothNoDevices.swift */,
 				0D6BBA322D8ADA18004DEF42 /* BluetoothOffView.swift */,
 				87D1E659033FF27FA2618DF8286C77D3 /* AboutYouHeaderView.swift */,
@@ -18041,6 +18053,7 @@
 				7B23E92FA9D7951411DF2BB85885E65E /* OptInPermission.swift in Sources */,
 				F9ECC16A11A3ADEC45A7F35CE2A81885 /* OptInPermissionViewController.swift in Sources */,
 				6CC14C3F0486DC1383AF4F008DD2E8EF /* OptInSection.swift in Sources */,
+				0D3641DA2D91BBFA00FDB3AA /* SpyroBar.swift in Sources */,
 				A5A7AA8D4399B739C75B5663C78BAB8C /* OptInSectionCoordinator.swift in Sources */,
 				0B5F2D74557218E86DBF34D8FE612A3F /* OrientationManager.swift in Sources */,
 				8454B1E38902FB06D17B840C746CAEE1 /* Page.swift in Sources */,
@@ -18104,6 +18117,7 @@
 				648C240B260E7B8762009238157FE266 /* Slider.swift in Sources */,
 				D0D9B286BB0EEB1C0B69C656DCE3B9BE /* SpeechPermission.swift in Sources */,
 				CA5BDCAC6874CC83837EF814F4B16E55 /* StarRatingView.swift in Sources */,
+				0D3641DE2D92BFF900FDB3AA /* SpiroTableView.swift in Sources */,
 				C15E475250E80ED182367C19B97B6EEF /* String+Extensions.swift in Sources */,
 				FBC669BC0B072ED8C0BFCC89BABB6F6B /* String+Localization.swift in Sources */,
 				E188F13DE86420294D675CB2465B2424 /* StringsProvider.swift in Sources */,
@@ -18132,6 +18146,7 @@
 				0991E9A1B982BDAE4338916986DE3B7F /* SurveyQuestionTextinput.swift in Sources */,
 				83352311B137AFBBED89C65F9844EC92 /* SurveyQuestionViewController.swift in Sources */,
 				D3174D92AB47B5199D8B70B63CCC1BDC /* SurveyRangePicker.swift in Sources */,
+				0D3641E12D9354D500FDB3AA /* SpiroPopoverController.swift in Sources */,
 				4293201F6706B4143096CD27538F5194 /* SurveyResult.swift in Sources */,
 				D45BBC4BA735CAF4A42D24F34B42171F /* SurveyScheduleViewController.swift in Sources */,
 				EEC5469F00E82722237CAB04BD659219 /* SurveySectionCoordinator.swift in Sources */,
@@ -18192,6 +18207,7 @@
 				453FE3D029F7431BA489CD9FE3D2D840 /* UserLocation.swift in Sources */,
 				D3447F5B6B8CE385340F082BFDE56579 /* UserNameViewController.swift in Sources */,
 				1C1B827EDB572F11782E151182E48A0C /* UserSettings.swift in Sources */,
+				0D3641DC2D91F52400FDB3AA /* SpyrometerResultsViewController.swift in Sources */,
 				7343CC6579B0582931374FA364D743F1 /* UserSignatureViewController.swift in Sources */,
 				89074016CE1827FE9A210A4B8025695B /* Video+AlertError.swift in Sources */,
 				43F13A7D0EDEB0ED55E433ACD0F098D7 /* VideoDiaryPlayerView.swift in Sources */,

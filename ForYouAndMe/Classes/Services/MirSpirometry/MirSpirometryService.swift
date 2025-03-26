@@ -34,9 +34,9 @@ protocol MirSpirometryService {
     
     /// This closure is triggered when the spirometry test produces its final results.
     /// The `String` parameter typically contains the test data in JSON format.
-    var onTestResults: ((String) -> Void)? { get set }
+    var onTestResults: ((SOResults) -> Void)? { get set }
     
-    var onFlowValueUpdated: ((Float, Bool) -> Void)? { get set }
+    var onFlowValueUpdated: ((SODevice, Float, Bool) -> Void)? { get set }
     
     // MARK: - Functions
     

@@ -396,6 +396,11 @@ extension RepositoryImpl: Repository {
             .handleError()
     }
     
+    func sendSpyroResults(results: [String: Any]) -> Single<()> {
+        return self.api.send(request: ApiRequest(serviceRequest: .sendSpyroResults(results: results)))
+            .handleError()
+    }
+    
     // MARK: - User
     
     var currentUser: User? {
@@ -628,8 +633,8 @@ extension RepositoryImpl: NotificationTokenDelegate {
 // MARK: - HealthManagerNetworkDelegate
 
 extension RepositoryImpl: HealthManagerNetworkDelegate {
-    func uploadHealthNetworkData(_ healthNetworkData: HealthNetworkData) -> Single<()> {
-        return self.api.send(request: ApiRequest(serviceRequest: .sendHealthData(healthData: healthNetworkData)))
+    func uploadHealthNetworkData(_ healthNetworkData: HealthNetworkData, source: String) -> Single<()> {
+        return self.api.send(request: ApiRequest(serviceRequest: .sendHealthData(healthData: healthNetworkData, source: source)))
             .handleError()
             .catch { error in
                 guard let repositoryError = error as? RepositoryError else {

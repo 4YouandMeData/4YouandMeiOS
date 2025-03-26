@@ -89,6 +89,7 @@ protocol Repository: AnyObject {
     func sendDiaryNoteVideo(diaryNoteRef: DiaryNoteItem, file: DiaryNoteFile) -> Single<DiaryNoteItem>
     func updateDiaryNoteText(diaryNote: DiaryNoteItem) -> Single<()>
     func deleteDiaryNote(noteID: String) -> Single<()>
+    func sendSpyroResults(results: [String: Any]) -> Single<()>
     // User
     var currentUser: User? { get }
     func refreshUser() -> Single<User>

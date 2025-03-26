@@ -9,7 +9,7 @@ import Foundation
 import RxSwift
 
 protocol HealthSampleUploaderNetworkDelegate: AnyObject {
-    func uploadHealthNetworkData(_ healthNetworkData: HealthNetworkData) -> Single<()>
+    func uploadHealthNetworkData(_ healthNetworkData: HealthNetworkData, source: String) -> Single<()>
 }
 
 protocol HealthSampleUploaderStorage {
@@ -47,7 +47,7 @@ class HealthSampleUploader {
         self.sampleDataType = sampleDataType
     }
     
-    public func run(startDate: Date, endDate: Date) -> Single<()> {
+    public func run(startDate: Date, endDate: Date, source: String) -> Single<()> {
         guard let networkDelegate = self.networkDelegate else {
             assertionFailure("Missing Network Delegate")
             return Single.error(HealthSampleUploaderError.internalError)
@@ -83,7 +83,8 @@ class HealthSampleUploader {
                 return Single.just(result.anchor)
             }
 
-            return networkDelegate.uploadHealthNetworkData(result.samples.getNetworkData(forDataType: self.sampleDataType))
+            return networkDelegate.uploadHealthNetworkData(result.samples.getNetworkData(forDataType: self.sampleDataType),
+                                                           source: source)
                 .map { result.anchor }
         }
         .do(onSuccess: { anchor in
@@ -94,7 +95,6 @@ class HealthSampleUploader {
         .toVoid()
     }
 
-    
     private func logDebugText(text: String) {
         #if DEBUG
         if Constants.HealthKit.EnableDebugLog {

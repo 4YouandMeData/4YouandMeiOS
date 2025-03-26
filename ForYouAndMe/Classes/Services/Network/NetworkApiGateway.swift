@@ -382,7 +382,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         case .sendDeviceData:
             return "v1/phone_events"
         // Health
-        case .sendHealthData:
+        case .sendHealthData, .sendSpyroResults:
             return "v1/integration_datas"
         // Phase
         case .createUserPhase(let phaseId):
@@ -445,6 +445,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
                 .sendAnswer,
                 .sendDeviceData,
                 .sendHealthData,
+                .sendSpyroResults,
                 .createUserPhase,
                 .sendDiaryNoteText,
                 .sendDiaryNoteAudio,
@@ -544,6 +545,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         case .sendDeviceData: return "{}".utf8Encoded
         // Health
         case .sendHealthData: return "{}".utf8Encoded
+        case .sendSpyroResults: return "{}".utf8Encoded
         // User Phase
         case .createUserPhase: return "{}".utf8Encoded
         case .updateUserPhase: return "{}".utf8Encoded
@@ -705,14 +707,19 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             params["timestamp"] = deviceData.timestamp
             let dataParams: [String: Any] = ["data": params]
             return .requestParameters(parameters: ["phone_event": dataParams], encoding: JSONEncoding.default)
-        case .sendHealthData(let healthData):
+        case .sendHealthData(let healthData, let source):
             var dataParams: [String: Any] = ["data": healthData]
-            dataParams["source"] = "health_kit"
+            dataParams["source"] = source
             if let subsourceKey = healthData.keys.first, !subsourceKey.isEmpty {
                 dataParams["subsource"] = subsourceKey
             } else {
                 dataParams["subsource"] = "generic"
             }
+            return .requestParameters(parameters: ["integration_data": dataParams], encoding: JSONEncoding.default)
+        case .sendSpyroResults(let results):
+            var dataParams: [String: Any] = ["data": results]
+            dataParams["source"] = "mir_spirometer"
+            dataParams["subsource"] = "generic"
             return .requestParameters(parameters: ["integration_data": dataParams], encoding: JSONEncoding.default)
         case .updateUserPhase:
             let dateString = ISO8601Strategy.encode(Date())
@@ -867,6 +874,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
                 .delayTask,
                 .sendDeviceData,
                 .sendHealthData,
+                .sendSpyroResults,
                 .createUserPhase,
                 .updateUserPhase,
                 .getDiaryNotes,
