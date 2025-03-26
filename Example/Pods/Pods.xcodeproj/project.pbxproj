@@ -208,15 +208,12 @@
 		0D3641DC2D91F52400FDB3AA /* SpyrometerResultsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D3641DB2D91F52300FDB3AA /* SpyrometerResultsViewController.swift */; };
 		0D3641DE2D92BFF900FDB3AA /* SpiroTableView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D3641DD2D92BFF300FDB3AA /* SpiroTableView.swift */; };
 		0D3641E12D9354D500FDB3AA /* SpiroPopoverController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D3641E02D9354B900FDB3AA /* SpiroPopoverController.swift */; };
+		0D3641E72D9435B100FDB3AA /* MirSmartDevice.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0D3641E62D9435B100FDB3AA /* MirSmartDevice.framework */; platformFilter = ios; };
+		0D3641E82D9435B100FDB3AA /* MirSmartDevice.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0D3641E62D9435B100FDB3AA /* MirSmartDevice.framework */; platformFilter = ios; };
 		0D6BBA2E2D88C8F7004DEF42 /* SpyrometerSectionCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D6BBA2D2D88C8EC004DEF42 /* SpyrometerSectionCoordinator.swift */; };
 		0D6BBA312D88C9E1004DEF42 /* SpyrometerScanViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D6BBA302D88C9D7004DEF42 /* SpyrometerScanViewController.swift */; };
 		0D6BBA332D8ADA24004DEF42 /* BluetoothOffView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D6BBA322D8ADA18004DEF42 /* BluetoothOffView.swift */; };
 		0D6C7EA1B12048E35C3B01467994A5A1 /* ORKInstructionStepViewController.h in Headers */ = {isa = PBXBuildFile; fileRef = 79AD4B91F1500BBC0C294EF2366575A1 /* ORKInstructionStepViewController.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		0D723E1B2D70862B00F1E24C /* MirSmartDevice.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0D723E1A2D70862B00F1E24C /* MirSmartDevice.framework */; platformFilter = ios; };
-		0D723E1C2D70862B00F1E24C /* MirSmartDevice.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0D723E1A2D70862B00F1E24C /* MirSmartDevice.framework */; platformFilter = ios; };
-		0D723E1D2D70862B00F1E24C /* MirSmartDevice.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0D723E1A2D70862B00F1E24C /* MirSmartDevice.framework */; platformFilter = ios; };
-		0D723E1E2D70862B00F1E24C /* MirSmartDevice.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0D723E1A2D70862B00F1E24C /* MirSmartDevice.framework */; platformFilter = ios; };
-		0D723E1F2D70865A00F1E24C /* MirSmartDevice.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 0D723E1A2D70862B00F1E24C /* MirSmartDevice.framework */; platformFilter = ios; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		0D8C2C7F720B7D08170DCE61902C4305 /* ALView+PureLayout.m in Sources */ = {isa = PBXBuildFile; fileRef = 2EE07A97AF0F3E20008770D7FA16BDDD /* ALView+PureLayout.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
 		0D8D8AAA40421360D8CD6019DAE8ADB5 /* WhiteBalance_GLES.fsh in Resources */ = {isa = PBXBuildFile; fileRef = 9770ECA933BB750ECA4F31CDC36F1E19 /* WhiteBalance_GLES.fsh */; };
 		0DAF259AB6967575F92043C4661C58F2 /* _ObjC_HeartbeatController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4588FF11E9FF1D38AA6A56FDF09F2E4A /* _ObjC_HeartbeatController.swift */; };
@@ -4141,7 +4138,6 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				0D723E1F2D70865A00F1E24C /* MirSmartDevice.framework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -4342,13 +4338,13 @@
 		0D3641DB2D91F52300FDB3AA /* SpyrometerResultsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpyrometerResultsViewController.swift; sourceTree = "<group>"; };
 		0D3641DD2D92BFF300FDB3AA /* SpiroTableView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpiroTableView.swift; sourceTree = "<group>"; };
 		0D3641E02D9354B900FDB3AA /* SpiroPopoverController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpiroPopoverController.swift; sourceTree = "<group>"; };
+		0D3641E62D9435B100FDB3AA /* MirSmartDevice.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MirSmartDevice.framework; path = ../../ForYouAndMe/Frameworks/MirSmartDevice.framework; sourceTree = SOURCE_ROOT; };
 		0D56721AC5B8CD21088512ABF9575755 /* FIRCLSCallStackTree.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = FIRCLSCallStackTree.m; path = Crashlytics/Crashlytics/Helpers/FIRCLSCallStackTree.m; sourceTree = "<group>"; };
 		0D631E9908483F9525A6B3F36F16CC61 /* Quick.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Quick.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		0D6BBA2D2D88C8EC004DEF42 /* SpyrometerSectionCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpyrometerSectionCoordinator.swift; sourceTree = "<group>"; };
 		0D6BBA302D88C9D7004DEF42 /* SpyrometerScanViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpyrometerScanViewController.swift; sourceTree = "<group>"; };
 		0D6BBA322D8ADA18004DEF42 /* BluetoothOffView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BluetoothOffView.swift; sourceTree = "<group>"; };
 		0D6D1179C6E6CC3BBAEFF75B79F07CF4 /* ORKBodyContainerView.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = ORKBodyContainerView.m; path = ResearchKit/Common/ORKBodyContainerView.m; sourceTree = "<group>"; };
-		0D723E1A2D70862B00F1E24C /* MirSmartDevice.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MirSmartDevice.framework; path = /Users/giuslape/Development/Balzo/Clienti/4YouAndMe/MIR_PLUS_SDK_SpirobankSmart_Smartone_IOS_4.2.4/MIR_PLUS_SDK_SpirobankSmart_Smartone_IOS_4.2.4/MIR_PLUS_SDK_SpirobankSmart_Smartone_IOS_4.2.4/MirSmartDevice.framework; sourceTree = "<absolute>"; };
 		0D896B6E772A17E240965516B01B95F3 /* ORKCustomStepView.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = ORKCustomStepView.m; path = ResearchKit/Common/ORKCustomStepView.m; sourceTree = "<group>"; };
 		0D8E3A0541DB3FFADF79263972BEB00E /* RxRelay-dummy.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = "RxRelay-dummy.m"; sourceTree = "<group>"; };
 		0D9298DFBDB72A1E1C806D3DE20F177B /* ORKShoulderRangeOfMotionStepViewController.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = ORKShoulderRangeOfMotionStepViewController.h; path = ResearchKit/ActiveTasks/ORKShoulderRangeOfMotionStepViewController.h; sourceTree = "<group>"; };
@@ -7564,7 +7560,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				D91BA40535544C9FDDA22B1FB2A60779 /* Foundation.framework in Frameworks */,
-				0D723E1C2D70862B00F1E24C /* MirSmartDevice.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -7677,7 +7672,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				9616566D74D0E21E63190579C7FF31E9 /* Foundation.framework in Frameworks */,
-				0D723E1E2D70862B00F1E24C /* MirSmartDevice.framework in Frameworks */,
+				0D3641E72D9435B100FDB3AA /* MirSmartDevice.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -7766,7 +7761,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				C531A084A56EB36FBEF490D286EFF2F5 /* Foundation.framework in Frameworks */,
-				0D723E1B2D70862B00F1E24C /* MirSmartDevice.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -7774,7 +7768,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				0D723E1D2D70862B00F1E24C /* MirSmartDevice.framework in Frameworks */,
+				0D3641E82D9435B100FDB3AA /* MirSmartDevice.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -8455,7 +8449,6 @@
 				ECC4B68825CEC50645FACBA57A1FF3A4 /* SystemConfiguration.framework */,
 				6F93DA7805A3671FCFEE2CF565ACD32E /* UIKit.framework */,
 				A99F96DBD0C7AC25D23A8422E2FBCB70 /* XCTest.framework */,
-				0D723E1A2D70862B00F1E24C /* MirSmartDevice.framework */,
 			);
 			name = iOS;
 			sourceTree = "<group>";
@@ -11342,6 +11335,7 @@
 		AF05E25BC5214EAFD8E7781B8806C564 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				0D3641E62D9435B100FDB3AA /* MirSmartDevice.framework */,
 				2AF3D4207701C25642B3E6516D7BED01 /* iOS */,
 			);
 			name = Frameworks;
