@@ -8,7 +8,7 @@
 
 Pod::Spec.new do |s|
   s.name             = 'ForYouAndMe'
-  s.version          = '0.93.8'
+  s.version          = '0.93.9'
   s.summary          = 'Framework for research studies apps'
   s.description      = <<-DESC
                        ForYouAndMe is a framework aimed to easily develop an app for research study
@@ -35,10 +35,10 @@ Pod::Spec.new do |s|
   }
   
   s.vendored_frameworks = 'ForYouAndMe/Frameworks/MirSmartDevice.framework'
-  s.preserve_paths = 'ForYouAndMe/Frameworks/MirSmartDevice.framework'
   s.xcconfig = { 'FRAMEWORK_SEARCH_PATHS' => '$(PODS_ROOT)/ForYouAndMe/Frameworks/**' }
   
   s.pod_target_xcconfig = {
+    'DEFINES_MODULE' => 'YES',
     'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'x86_64 arm64'
   }
    
