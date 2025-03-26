@@ -8,7 +8,7 @@
 
 Pod::Spec.new do |s|
   s.name             = 'ForYouAndMe'
-  s.version          = '0.93.5'
+  s.version          = '0.93.6'
   s.summary          = 'Framework for research studies apps'
   s.description      = <<-DESC
                        ForYouAndMe is a framework aimed to easily develop an app for research study
@@ -33,6 +33,10 @@ Pod::Spec.new do |s|
   s.resource_bundles = {
       'ForYouAndMe' => ['ForYouAndMe/Assets/**/*.{json,xcassets}']
   }
+  
+  s.vendored_frameworks = 'ForYouAndMe/Frameworks/MirSmartDevice.framework'
+  s.preserve_paths = 'ForYouAndMe/Frameworks/MirSmartDevice.framework'
+  s.xcconfig = { 'FRAMEWORK_SEARCH_PATHS' => '$(PODS_ROOT)/ForYouAndMe/Frameworks/**' }
    
   s.frameworks = 'UIKit'
   
@@ -60,7 +64,5 @@ Pod::Spec.new do |s|
 
   
   s.static_framework = true
-  
-  s.vendored_frameworks = 'ForYouAndMe/Frameworks/iOS/MirSmartDevice.framework'
   
 end
