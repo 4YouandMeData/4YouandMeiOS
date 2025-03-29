@@ -195,6 +195,14 @@ extension RepositoryImpl: Repository {
             .do(onSuccess: { self.saveUser($0) })
     }
     
+    // MARK: - Onboarding Section
+    
+    func submitProfilingOption(questionId: String, optionId: Int) -> Single<()> {
+        return self.api.send(request:
+                                ApiRequest(serviceRequest: .submitProfilingOption(questionId: questionId,
+                                                                                  optionId: optionId)))
+    }
+    
     // MARK: - Screening
     
     func getScreeningSection() -> Single<ScreeningSection> {
@@ -203,6 +211,10 @@ extension RepositoryImpl: Repository {
     }
     
     // MARK: - Informed Consent
+    
+    func getOnboardingQuestionsSection() -> Single<OnboardingQuestionsSection> {
+        return self.api.send(request: ApiRequest(serviceRequest: .getOnboardingQuestionsSection))
+    }
     
     func getInformedConsentSection() -> Single<InformedConsentSection> {
         return self.api.send(request: ApiRequest(serviceRequest: .getInformedConsentSection))

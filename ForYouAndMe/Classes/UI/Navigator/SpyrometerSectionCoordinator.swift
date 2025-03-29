@@ -146,7 +146,7 @@ class SpyrometerSectionCoordinator: NSObject, PagedActivitySectionCoordinator {
                  self.showSuccessPage()
             }, onFailure: { [weak self] error in
                 guard let self = self else { return }
-                // Gestisci errori (prima o seconda chiamata)
+                
                 self.navigator.handleError(
                     error: error,
                     presenter: presenter,

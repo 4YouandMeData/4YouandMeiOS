@@ -98,7 +98,7 @@ class LoadingViewController<T>: UIViewController, LoadingPage {
                 .addProgress()
                 .subscribe(onSuccess: { loadedData in
                     loadingInfo.completionCallback(loadedData)
-                }, onError: { [weak self]  error in
+                }, onFailure: { [weak self]  error in
                     guard let self = self else { return }
                     if false == self.navigator.handleUserNotLoggedError(error: error) {
                         self.errorView.showViewWithError(error)

@@ -212,7 +212,7 @@ public class PhoneVerificationViewController: UIViewController {
                     self.pinCodeView.clearError(clearErrorText: true)
                     self.view.endEditing(true)
                     self.navigator.onLoginCompleted(presenter: self)
-                }, onError: { [weak self] error in
+                }, onFailure: { [weak self] error in
                     guard let self = self else { return }
                     if let error = error as? RepositoryError, case .wrongPhoneValidationCode = error {
                         self.pinCodeView.setError(errorText: error.localizedDescription)
@@ -230,7 +230,7 @@ public class PhoneVerificationViewController: UIViewController {
                     self.navigator.showCodeValidation(countryCode: self.phoneNumberView.countryCode,
                                                       phoneNumber: self.phoneNumberView.text,
                                                       presenter: self)
-                }, onError: { [weak self] error in
+                }, onFailure: { [weak self] error in
                     guard let self = self else { return }
                     if let error = error as? RepositoryError, case .missingPhoneNumber = error {
                         self.phoneNumberView.setError(errorText: error.localizedDescription)

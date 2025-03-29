@@ -55,10 +55,13 @@ protocol Repository: AnyObject {
     func submitPhoneNumber(phoneNumber: String) -> Single<()>
     func verifyPhoneNumber(phoneNumber: String, validationCode: String) -> Single<User>
     func emailLogin(email: String) -> Single<User>
+    // Onboarding Section
+    func submitProfilingOption(questionId: String, optionId: Int) -> Single<()>
     // Screening Section
     func getScreeningSection() -> Single<ScreeningSection>
     // Informed Consent Section
     func getInformedConsentSection() -> Single<InformedConsentSection>
+    func getOnboardingQuestionsSection() -> Single <OnboardingQuestionsSection>
     // Consent Section
     func getConsentSection() -> Single<ConsentSection>
     // Opt In Section

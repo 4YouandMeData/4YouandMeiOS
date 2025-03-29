@@ -151,7 +151,7 @@ public class CodeValidationViewController: UIViewController {
     @objc private func resendCodeButtonPressed() {
         self.repository.submitPhoneNumber(phoneNumber: self.phoneNumberView.fullNumber)
             .addProgress()
-            .subscribe(onError: { [weak self] error in
+            .subscribe(onFailure: { [weak self] error in
                 guard let self = self else { return }
                 self.navigator.handleError(error: error, presenter: self)
             }).disposed(by: self.disposeBag)
@@ -167,7 +167,7 @@ public class CodeValidationViewController: UIViewController {
                 self.codeTextFieldView.clearError(clearErrorText: true)
                 self.view.endEditing(true)
                 self.navigator.onLoginCompleted(presenter: self)
-            }, onError: { [weak self] error in
+            }, onFailure: { [weak self] error in
                 guard let self = self else { return }
                 if let error = error as? RepositoryError, case .wrongPhoneValidationCode = error {
                     self.codeTextFieldView.setError(errorText: error.localizedDescription)

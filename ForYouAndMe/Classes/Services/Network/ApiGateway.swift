@@ -23,10 +23,13 @@ enum DefaultService {
     case submitPhoneNumber(phoneNumber: String)
     case verifyPhoneNumber(phoneNumber: String, validationCode: String)
     case emailLogin(email: String)
+    // Oboarding Section
+    case submitProfilingOption(questionId: String, optionId: Int)
     // Screening Section
     case getScreeningSection
     // Informed Consent Section
     case getInformedConsentSection
+    case getOnboardingQuestionsSection
     // Consent Section
     case getConsentSection
     // Opt In Section

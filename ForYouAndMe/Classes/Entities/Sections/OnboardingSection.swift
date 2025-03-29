@@ -14,11 +14,13 @@ enum OnboardingSectionGroup: String, Codable {
     case consent = "consent_group"
     case integration = "integration"
     case optIn = "opt_in"
+    case onboardingQuestions = "onboarding_questions"
     
     var sections: [OnboardingSection] {
         switch self {
         case .introVideo: return [.introVideo]
         case .screening: return [.screening]
+        case .onboardingQuestions: return [.onboardingQuestions]
         case .consent: return [.informedConsent, .consent, .optIn, .consentUserData]
         case .integration: return [.integration]
         case .optIn: return [.optIn]
@@ -34,6 +36,7 @@ enum OnboardingSection {
     case optIn
     case consentUserData
     case integration
+    case onboardingQuestions
 }
 
 extension OnboardingSection {
@@ -43,7 +46,7 @@ extension OnboardingSection {
         case .introVideo:
             return IntroVideoSectionCoordinator(withNavigationController: navigationController,
                                                 completionCallback: completionCallback)
-        case .screening, .informedConsent, .consent, .optIn, .consentUserData, .integration:
+        case .onboardingQuestions, .screening, .informedConsent, .consent, .optIn, .consentUserData, .integration:
             return nil
         }
     }
@@ -59,6 +62,12 @@ extension OnboardingSection {
                 ScreeningSectionCoordinator(withSectionData: section,
                                             navigationController: navigationController,
                                             completionCallback: completionCallback)
+            }
+        case .onboardingQuestions:
+            return repository.getOnboardingQuestionsSection().map { section in
+                OnboardingQuestionsCoordinator(withSectionData: section,
+                                               navigationController: navigationController,
+                                               completionCallback: completionCallback)
             }
         case .informedConsent:
             return repository.getInformedConsentSection().map { section in

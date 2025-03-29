@@ -210,6 +210,13 @@
 		0D3641E12D9354D500FDB3AA /* SpiroPopoverController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D3641E02D9354B900FDB3AA /* SpiroPopoverController.swift */; };
 		0D3641E72D9435B100FDB3AA /* MirSmartDevice.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0D3641E62D9435B100FDB3AA /* MirSmartDevice.framework */; platformFilter = ios; };
 		0D3641E82D9435B100FDB3AA /* MirSmartDevice.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0D3641E62D9435B100FDB3AA /* MirSmartDevice.framework */; platformFilter = ios; };
+		0D3641EA2D956C2D00FDB3AA /* OnboardingQuestionsSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D3641E92D956C2400FDB3AA /* OnboardingQuestionsSection.swift */; };
+		0D3641EC2D956E3700FDB3AA /* OnboardingQuestionsCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D3641EB2D956E2E00FDB3AA /* OnboardingQuestionsCoordinator.swift */; };
+		0D3641EE2D958A4500FDB3AA /* ProfilingQuestion.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D3641ED2D958A3F00FDB3AA /* ProfilingQuestion.swift */; };
+		0D3641F02D958B5400FDB3AA /* ProfilingOption.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D3641EF2D958B5100FDB3AA /* ProfilingOption.swift */; };
+		0D3641F22D968E2B00FDB3AA /* ProfilingQuestionViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D3641F12D968E2400FDB3AA /* ProfilingQuestionViewController.swift */; };
+		0D3641F42D968F0600FDB3AA /* ProfilingQuestionPickOne.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D3641F32D968F0000FDB3AA /* ProfilingQuestionPickOne.swift */; };
+		0D3641F62D96908900FDB3AA /* ProfilingOptionAnswerCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D3641F52D96908200FDB3AA /* ProfilingOptionAnswerCell.swift */; };
 		0D6BBA2E2D88C8F7004DEF42 /* SpyrometerSectionCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D6BBA2D2D88C8EC004DEF42 /* SpyrometerSectionCoordinator.swift */; };
 		0D6BBA312D88C9E1004DEF42 /* SpyrometerScanViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D6BBA302D88C9D7004DEF42 /* SpyrometerScanViewController.swift */; };
 		0D6BBA332D8ADA24004DEF42 /* BluetoothOffView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D6BBA322D8ADA18004DEF42 /* BluetoothOffView.swift */; };
@@ -4339,6 +4346,13 @@
 		0D3641DD2D92BFF300FDB3AA /* SpiroTableView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpiroTableView.swift; sourceTree = "<group>"; };
 		0D3641E02D9354B900FDB3AA /* SpiroPopoverController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpiroPopoverController.swift; sourceTree = "<group>"; };
 		0D3641E62D9435B100FDB3AA /* MirSmartDevice.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MirSmartDevice.framework; path = ../../ForYouAndMe/Frameworks/MirSmartDevice.framework; sourceTree = SOURCE_ROOT; };
+		0D3641E92D956C2400FDB3AA /* OnboardingQuestionsSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingQuestionsSection.swift; sourceTree = "<group>"; };
+		0D3641EB2D956E2E00FDB3AA /* OnboardingQuestionsCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingQuestionsCoordinator.swift; sourceTree = "<group>"; };
+		0D3641ED2D958A3F00FDB3AA /* ProfilingQuestion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfilingQuestion.swift; sourceTree = "<group>"; };
+		0D3641EF2D958B5100FDB3AA /* ProfilingOption.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfilingOption.swift; sourceTree = "<group>"; };
+		0D3641F12D968E2400FDB3AA /* ProfilingQuestionViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfilingQuestionViewController.swift; sourceTree = "<group>"; };
+		0D3641F32D968F0000FDB3AA /* ProfilingQuestionPickOne.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfilingQuestionPickOne.swift; sourceTree = "<group>"; };
+		0D3641F52D96908200FDB3AA /* ProfilingOptionAnswerCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfilingOptionAnswerCell.swift; sourceTree = "<group>"; };
 		0D56721AC5B8CD21088512ABF9575755 /* FIRCLSCallStackTree.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = FIRCLSCallStackTree.m; path = Crashlytics/Crashlytics/Helpers/FIRCLSCallStackTree.m; sourceTree = "<group>"; };
 		0D631E9908483F9525A6B3F36F16CC61 /* Quick.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Quick.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		0D6BBA2D2D88C8EC004DEF42 /* SpyrometerSectionCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpyrometerSectionCoordinator.swift; sourceTree = "<group>"; };
@@ -8204,6 +8218,7 @@
 		18A81797D90B3970F3AAAF33289C1EEC /* Sections */ = {
 			isa = PBXGroup;
 			children = (
+				0D3641E92D956C2400FDB3AA /* OnboardingQuestionsSection.swift */,
 				76789F263A41DEACA6BC8EBAB72A3F67 /* ConsentSection.swift */,
 				756A661BB5D467C8F6E5B36EA989A434 /* ConsentUserDataSection.swift */,
 				C9C36D804C3FCF182158872E6043DF42 /* InformedConsentSection.swift */,
@@ -8728,6 +8743,8 @@
 		39DE945C7908249203C0E5E0EE361EAA /* Entities */ = {
 			isa = PBXGroup;
 			children = (
+				0D3641EF2D958B5100FDB3AA /* ProfilingOption.swift */,
+				0D3641ED2D958A3F00FDB3AA /* ProfilingQuestion.swift */,
 				982A8FB463A025459AE9FD1C85A19A03 /* Activity.swift */,
 				F1172E2FD7D0A3BAC319FAB1B50465F7 /* Alert.swift */,
 				8F367553A3663B1F90CE7165ADDB3C35 /* Answer.swift */,
@@ -9096,6 +9113,7 @@
 		44E6670F88E3F35E36BF5DDC134ED4A2 /* Navigator */ = {
 			isa = PBXGroup;
 			children = (
+				0D3641EB2D956E2E00FDB3AA /* OnboardingQuestionsCoordinator.swift */,
 				0D6BBA2D2D88C8EC004DEF42 /* SpyrometerSectionCoordinator.swift */,
 				59C274BA2942A4439DCA505F83945A5B /* ActivitySectionCoordinator.swift */,
 				7CABB0E4D273B46FA715B44998E0C864 /* AppNavigator.swift */,
@@ -11520,6 +11538,7 @@
 		C2AC34DCE1B9D5E7C7A4BAE15259715A /* ViewControllers */ = {
 			isa = PBXGroup;
 			children = (
+				0D3641F12D968E2400FDB3AA /* ProfilingQuestionViewController.swift */,
 				0D6BBA2F2D88C9CE004DEF42 /* Spyrometer */,
 				74AE4C199DE6CD45BEA528E590FAD81B /* ActivitySectionViewController.swift */,
 				78692ACDC56B02265649542B9BE6FB29 /* BooleanQuestionsViewController.swift */,
@@ -11642,6 +11661,8 @@
 		CCE4002B99A50AAAEA1FFD8801BEF07D /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				0D3641F52D96908200FDB3AA /* ProfilingOptionAnswerCell.swift */,
+				0D3641F32D968F0000FDB3AA /* ProfilingQuestionPickOne.swift */,
 				0D3641E02D9354B900FDB3AA /* SpiroPopoverController.swift */,
 				0D3641DD2D92BFF300FDB3AA /* SpiroTableView.swift */,
 				0D3641D92D91BBED00FDB3AA /* SpyroBar.swift */,
@@ -17892,6 +17913,7 @@
 				F358037EE65AD98143221FBE4AF520E0 /* AnalyticsService.swift in Sources */,
 				40D9B496B549E3F20E57EFC83D760039 /* Answer.swift in Sources */,
 				67E612D0D5FFB2E7AA17DAC0DC746030 /* ApiContext.swift in Sources */,
+				0D3641EA2D956C2D00FDB3AA /* OnboardingQuestionsSection.swift in Sources */,
 				4023ECF6A0868979975BEAAF3A9B6F12 /* ApiGateway.swift in Sources */,
 				335B93D10C89689663B1268F2714CE93 /* AppNavigator.swift in Sources */,
 				E5079C1E8F5067D8862564BD100BBABD /* Async.swift in Sources */,
@@ -17912,6 +17934,7 @@
 				F813C2812EDC76FF98FE0E8D36437A4D /* ChartData.swift in Sources */,
 				0D3641CC2D8B334A00FDB3AA /* SpyrometerTestViewController.swift in Sources */,
 				09345F58EEADA10B043C8FC8E55FAFCA /* CircleBorderView.swift in Sources */,
+				0D3641F02D958B5400FDB3AA /* ProfilingOption.swift in Sources */,
 				B5226A29623B8AC99DF1DE5F936AF60B /* CodableColor.swift in Sources */,
 				2A4C6C1159CD00107B5854B13E976288 /* CodableDictionary.swift in Sources */,
 				409CC6202F5C61E35AE35818C83FF264 /* CodeValidationViewController.swift in Sources */,
@@ -17949,6 +17972,7 @@
 				58F82CB40C63535B6CC7B053153A113A /* DiarySectionHeader.swift in Sources */,
 				1EF79CED87A2D5569313D3E4F56637EC /* DoubleButtonHorizontalView.swift in Sources */,
 				1604FC5D0D5E2037A19B63E9BC0836BA /* DoubleButtonVerticalView.swift in Sources */,
+				0D3641EC2D956E3700FDB3AA /* OnboardingQuestionsCoordinator.swift in Sources */,
 				B0D8687684883CDB820C808FC37C1779 /* DummyHealthManager.swift in Sources */,
 				299695D4ECF17F22F3D9D42E2487B7BA /* Educational.swift in Sources */,
 				2CB48924E10242F380231FD773D6672E /* ExpiringValue.swift in Sources */,
@@ -18076,6 +18100,7 @@
 				946B2A6FE428D58FB7A4836136148F78 /* PropertyWrappers.swift in Sources */,
 				64A8BBE7BCBA43584FAB1E00FB9DF238 /* Question.swift in Sources */,
 				E8EBA64BB5C5668A4F93A90CF94B5F74 /* QuestionBooleanTableViewCell.swift in Sources */,
+				0D3641F42D968F0600FDB3AA /* ProfilingQuestionPickOne.swift in Sources */,
 				CA08F5A851844A2F18DF47AC4AD34724 /* QuestionViewController.swift in Sources */,
 				91DA0E9DAA4042C21BA21410F8425F9A /* QuickActivity.swift in Sources */,
 				E50C341128EE976BB417AAB295071E70 /* QuickActivityListTableViewCell.swift in Sources */,
@@ -18096,6 +18121,7 @@
 				5AF4A140347CA62ECB52964D20FB57C5 /* ResponseError+Mappable.swift in Sources */,
 				1FC0C208CA9C8C51FB1133A80A227DDB /* ReusableIdentifier.swift in Sources */,
 				546BD4CA1C702ACF350A7FF0458FDAE9 /* Reward.swift in Sources */,
+				0D3641F22D968E2B00FDB3AA /* ProfilingQuestionViewController.swift in Sources */,
 				C9D219472EFEA37FB3F9655D78C10600 /* ScreeningSection.swift in Sources */,
 				67791D00BDD3922D8DA6DD023FD0C05C /* ScreeningSectionCoordinator.swift in Sources */,
 				09CC1ABBD6BF4C6DB1B2F681FA574A4C /* ScrollStackView.swift in Sources */,
@@ -18186,6 +18212,7 @@
 				BFDC1D7EBF1FE361B47E174FBDF31CD3 /* User.swift in Sources */,
 				F531D542AD9ACD376C8CA4CFF3AF1B6A /* User+Extensions.swift in Sources */,
 				A920CC01B8E9F296BFB1F338CAE2DDCD /* UserData.swift in Sources */,
+				0D3641F62D96908900FDB3AA /* ProfilingOptionAnswerCell.swift in Sources */,
 				0D6BBA2E2D88C8F7004DEF42 /* SpyrometerSectionCoordinator.swift in Sources */,
 				2C01806BE4207D4093BC2446E4738AB8 /* UserDataAggregation.swift in Sources */,
 				52AEEB4C795EB98E114D52DA689D7819 /* UserDataAggregationEmptyByFilterView.swift in Sources */,
@@ -18200,6 +18227,7 @@
 				AAF4FBB20F83301D93466FFDB3D28B88 /* UserInfoViewController.swift in Sources */,
 				453FE3D029F7431BA489CD9FE3D2D840 /* UserLocation.swift in Sources */,
 				D3447F5B6B8CE385340F082BFDE56579 /* UserNameViewController.swift in Sources */,
+				0D3641EE2D958A4500FDB3AA /* ProfilingQuestion.swift in Sources */,
 				1C1B827EDB572F11782E151182E48A0C /* UserSettings.swift in Sources */,
 				0D3641DC2D91F52400FDB3AA /* SpyrometerResultsViewController.swift in Sources */,
 				7343CC6579B0582931374FA364D743F1 /* UserSignatureViewController.swift in Sources */,

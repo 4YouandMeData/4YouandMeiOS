@@ -61,6 +61,12 @@ class ConsentUserDataSectionCoordinator {
                                                      animated: true)
     }
     
+    private func showOnboardingQuestions() {
+        self.navigationController.pushViewController(UserSignatureViewController(coordinator: self),
+                                                     hidesBottomBarWhenPushed: self.hidesBottomBarWhenPushed,
+                                                     animated: true)
+    }
+    
     private func submitUserData() {
         guard let firstName = self.userFirstName,
             let lastName = self.userLastName,

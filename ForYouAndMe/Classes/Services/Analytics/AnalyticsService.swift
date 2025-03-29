@@ -133,6 +133,8 @@ extension DefaultService {
         case .submitPhoneNumber: return "Verify Phone Number"
         case .verifyPhoneNumber: return "Login"
         case .emailLogin: return "Email Login"
+        // Onboarding Section
+        case .submitProfilingOption: return "Onboarding Section"
         // Screening Section
         case .getScreeningSection: return "Get Screening"
         // Informed Consent Section
@@ -149,6 +151,7 @@ extension DefaultService {
         case .notifyOnboardingCompleted: return "Notify User Consent Completed"
         case .verifyEmail: return "Confirm Email"
         case .resendConfirmationEmail: return "Resend Confirmation Email"
+        case .getOnboardingQuestionsSection: return "Onboarding Questions"
         // Study Info Section
         case .getStudyInfoSection: return "Get Study Info"
         // Integration Section

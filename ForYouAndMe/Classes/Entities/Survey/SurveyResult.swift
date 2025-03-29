@@ -11,3 +11,8 @@ struct SurveyResult {
     let question: SurveyQuestion
     let answer: Any
 }
+
+struct ProfilingResult {
+    let profilingQuestion: ProfilingQuestion
+    let answer: Any
+}

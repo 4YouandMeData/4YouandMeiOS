@@ -347,7 +347,6 @@ private extension Japx.Decoder {
         
         let relationshipsReferences = object.asDictionary(from: Consts.APIKeys.relationships) ?? Parameters()
         
-        
         let extractRelationship = resolveRelationship(
             from: allObjects,
             parseNotIncludedRelationships: options.parseNotIncludedRelationships

@@ -34,7 +34,7 @@ class NetworkApiGateway: ApiGateway {
     }()
     
     lazy var accessTokenPlugin: PluginType = {
-        let tokenClosure: (TargetType) -> String = { authorizationType in
+        let tokenClosure: (TargetType) -> String = { _ in
             return self.storage.accessToken ?? ""
         }
         let accessTokenPlugin = AccessTokenPlugin(tokenClosure: tokenClosure)
@@ -106,7 +106,7 @@ class NetworkApiGateway: ApiGateway {
     func send<T: Mappable, E: Mappable>(request: ApiRequest, errorType: E.Type) -> Single<[T]> {
         self.sendShared(request: request, errorType: errorType)
             .flatMap { response in
-                Single.just(response).map(to: [T].self).catchError({ (error) in
+                Single.just(response).map(to: [T].self).catch({ (error) in
                     if let error = error as? ApiError {
                         // Network or Server Error
                         return Single.error(error)
@@ -147,7 +147,7 @@ class NetworkApiGateway: ApiGateway {
                 Single.just(response).mapCodableJSONAPI(includeList: T.includeList, keyPath: T.keyPath)
                     .handleMapError(api: self, request: request, response: response)
             }
-            .catchError { error in
+            .catch { error in
                 if case ApiError.cannotParseData = error {
                     return Single.just(nil)
                 } else {
@@ -199,7 +199,7 @@ fileprivate extension PrimitiveSequence where Trait == SingleTrait {
     func handleMapError(api: NetworkApiGateway,
                         request: ApiRequest,
                         response: Response) -> Single<Element> {
-        return self.catchError({ (error) -> Single<Element> in
+        return self.catch({ (error) -> Single<Element> in
             if let error = error as? ApiError {
                 // Network or Server Error
                 return Single.error(error)
@@ -225,7 +225,7 @@ fileprivate extension PrimitiveSequence where Trait == SingleTrait, Element == R
             .do(onError: {
                 print("Network Error: \($0.localizedDescription)")
             })
-            .catchError({ error -> Single<Response> in
+            .catch({ error -> Single<Response> in
                 // Handle network availability
                 if api.reachability.isCurrentlyReachable {
                     return Single.error(ApiError.network(pathUrl: request.serviceRequest.getPath(forStudyId: api.studyId),
@@ -308,12 +308,18 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             return "/v1/studies/\(studyId)/auth/login"
         case .emailLogin:
             return "/v1/studies/\(studyId)/auth/email_login"
+        // Onboarding Section
+        case .submitProfilingOption(let questionId, _):
+            return "/v1/profiling_questions/\(questionId)/user_profiling_questions"
         // Screening Section
         case .getScreeningSection:
             return "/v1/studies/\(studyId)/screening"
         // Informed Consent Section
         case .getInformedConsentSection:
             return "/v1/studies/\(studyId)/informed_consent"
+        // Onboarding Questions
+        case .getOnboardingQuestionsSection:
+            return "/v1/studies/\(studyId)/onboarding_questionnaire"
         // Consent Section
         case .getConsentSection:
             return "/v1/studies/\(studyId)/consent"
@@ -424,6 +430,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
                 .getUserConsentSection,
                 .getIntegrationSection,
                 .getStudyInfoSection,
+                .getOnboardingQuestionsSection,
                 .getFeeds,
                 .getTasks,
                 .getTask,
@@ -438,6 +445,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             return .get
         case .submitPhoneNumber,
                 .verifyPhoneNumber,
+                .submitProfilingOption,
                 .emailLogin,
                 .createUserConsent,
                 .notifyOnboardingCompleted,
@@ -482,6 +490,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             return Constants.Test.OnboardingCompleted
                 ? Bundle.getTestData(from: "TestGetUser")
                 : Bundle.getTestData(from: "TestGetUserNoOnboarding")
+        case .submitProfilingOption: return "{}".utf8Encoded
         // Screening Section
         case .getScreeningSection: return Bundle.getTestData(from: "TestGetScreeningSection")
         // Informed Consent Section
@@ -507,6 +516,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         case .getIntegrationSection: return Bundle.getTestData(from: "TestGetIntegrationSection")
         // StudyInfo
         case .getStudyInfoSection: return Bundle.getTestData(from: "TestGetStudyInfo")
+        case .getOnboardingQuestionsSection: return "{}".utf8Encoded
         // Answers
         case .sendAnswer: return "{}".utf8Encoded
         // Task
@@ -572,6 +582,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
                 .getUserConsentSection,
                 .resendConfirmationEmail,
                 .getIntegrationSection,
+                .getOnboardingQuestionsSection,
                 .getTask,
                 .getSurvey,
                 .getUser,
@@ -591,12 +602,19 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             var params: [String: Any] = [:]
             params["phone_number"] = phoneNumber
             params["verification_code"] = secureCode
-            return .requestParameters(parameters: ["user": params], encoding: JSONEncoding.default)
+            return .requestParameters(parameters: ["user": params],
+                                      encoding: JSONEncoding.default)
         case .emailLogin(let email):
             var params: [String: Any] = [:]
             params["email"] = email
             params["password"] = "fake_password"
-            return .requestParameters(parameters: ["user": params], encoding: JSONEncoding.default)
+            return .requestParameters(parameters: ["user": params],
+                                      encoding: JSONEncoding.default)
+        case .submitProfilingOption(_, let optionId):
+            var params: [String: Any] = [:]
+            params["profiling_option_id"] = optionId
+            return .requestParameters(parameters: ["user_profiling_question": params],
+                                      encoding: JSONEncoding.default)
         case let .createUserConsent(email, firstName, lastName, signatureImage):
             return Task.createForUserContent(withEmail: email,
                                              firstName: firstName,
@@ -845,8 +863,10 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         case .getScreeningSection,
                 .getInformedConsentSection,
                 .getConsentSection,
+                .getOnboardingQuestionsSection,
                 .getOptInSection,
                 .sendOptInPermission,
+                .submitProfilingOption,
                 .getUserConsentSection,
                 .createUserConsent,
                 .updateUserConsent,

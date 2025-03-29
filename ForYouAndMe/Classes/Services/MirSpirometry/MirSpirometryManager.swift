@@ -220,8 +220,6 @@ extension MirSpirometryManager: SODeviceDelegate {
     /// Called when the device provides updated spirometry results.
     func soDevice(_ soDevice: SODevice!,
                   didUPdateResults results: SOResults!) {
-        // Convert the results to JSON string for easier handling.
-//        let resultsJSON = results.toJSON()
         onTestResults?(results)
     }
     
@@ -383,7 +381,7 @@ extension NSArray {
 //        
 //        return dict
 //    }
-//}
+// }
 
 struct SOResultsCodable: Codable {
     var pefcLs: Int32

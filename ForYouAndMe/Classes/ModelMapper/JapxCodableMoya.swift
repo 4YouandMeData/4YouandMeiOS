@@ -27,7 +27,7 @@ extension Response {
         }
 
         do {
-            guard let keyPath = keyPath, !keyPath.isEmpty else  {
+            guard let keyPath = keyPath, !keyPath.isEmpty else {
                 let decodable = try decoder.decode(T.self, from: data, includeList: includeList)
                 return decodable
             }
