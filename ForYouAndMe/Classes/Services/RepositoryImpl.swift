@@ -245,15 +245,26 @@ extension RepositoryImpl: Repository {
     // MARK: - User Consent
     
     func getUserConsentSection() -> Single<ConsentUserDataSection> {
-        return self.api.send(request: ApiRequest(serviceRequest: .getUserConsentSection))
-            .handleError()
+        return self.refreshUser()
+            .flatMap { _ -> Single<ConsentUserDataSection> in
+                return self.api.send(request: ApiRequest(serviceRequest: .getUserConsentSection))
+                    .handleError()
+            }
     }
     
     func submitEmail(email: String) -> Single<()> {
-        return self.api.send(request: ApiRequest(serviceRequest: .createUserConsent(email: email,
-                                                                                    firstName: nil,
-                                                                                    lastName: nil,
-                                                                                    signatureImage: nil)))
+        let data = UserConsentData(
+            email: email,
+            firstName: nil,
+            lastName: nil,
+            guardianFirstName: nil,
+            guardianLastName: nil,
+            relation: nil,
+            signatureImage: nil,
+            additionalImage: nil,
+            isCreate: true)
+        return self.api.send(request: ApiRequest(serviceRequest:
+                .createUserConsent(userConsentData: data)))
             .handleError()
     }
     
@@ -294,11 +305,9 @@ extension RepositoryImpl: Repository {
             .handleError()
     }
     
-    func sendUserData(firstName: String, lastName: String, signatureImage: UIImage) -> Single<()> {
-        return self.api.send(request: ApiRequest(serviceRequest: .createUserConsent(email: nil,
-                                                                                    firstName: firstName,
-                                                                                    lastName: lastName,
-                                                                                    signatureImage: signatureImage)))
+    func sendUserData(userConsentData consentData: UserConsentData) -> Single<()> {
+        return self.api.send(request: ApiRequest(serviceRequest:
+                .createUserConsent(userConsentData: consentData)))
             .handleError()
     }
     

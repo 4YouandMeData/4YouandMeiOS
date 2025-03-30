@@ -110,7 +110,7 @@ extension OptInSectionCoordinator: OptInPermissionCoordinator {
             .reduce(Single.just(())) { (result, systemPermission) in
                 switch systemPermission {
                 case .health: return result.flatMap {
-                    return granted ? self.healthService.requestPermissions().catchErrorJustReturn(()) : Single.just(())
+                    return granted ? self.healthService.requestPermissions().catchAndReturn(()) : Single.just(())
                 }
                 case .location: return result.flatMap {
                     guard self.deviceService.locationServicesAvailable else {
@@ -118,11 +118,11 @@ extension OptInSectionCoordinator: OptInPermissionCoordinator {
                         return Single.just(())
                     }
                     let permission: Permission = Constants.Misc.DefaultLocationPermission
-                    return granted ? permission.request().catchErrorJustReturn(()) : Single.just(())
+                    return granted ? permission.request().catchAndReturn(()) : Single.just(())
                 }
                 case .notification: return result.flatMap {
                     let permission: Permission = .notification
-                    return granted ? permission.request().catchErrorJustReturn(()) : Single.just(())
+                    return granted ? permission.request().catchAndReturn(()) : Single.just(())
                 }
                 }
             }
@@ -144,7 +144,7 @@ extension OptInSectionCoordinator: OptInPermissionCoordinator {
                 } else {
                     self.showSuccess()
                 }
-            }, onError: { [weak self] error in
+            }, onFailure: { [weak self] error in
                 guard let self = self else { return }
                 self.navigator.handleError(error: error, presenter: self.navigationController)
             }).disposed(by: self.disposeBag)

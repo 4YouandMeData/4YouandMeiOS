@@ -11,14 +11,14 @@ import TPKeyboardAvoiding
 import RxSwift
 
 protocol UserNameCoordinator {
-    func onUserNameConfirmPressed(firstName: String, lastName: String)
+    func onUserNameConfirmPressed(firstName: String, lastName: String, relation: String?, currentRole: ConsentRole)
 }
 
 public class UserNameViewController: UIViewController {
     
     private let coordinator: UserNameCoordinator
     private let analytics: AnalyticsService
-    
+    private let consentRole: ConsentRole
     private let disposeBag = DisposeBag()
     
     private lazy var scrollView: UIScrollView = {
@@ -53,9 +53,20 @@ public class UserNameViewController: UIViewController {
         return view
     }()
     
-    init(coordinator: UserNameCoordinator) {
+    private lazy var relationFieldView: GenericTextFieldView = {
+        let view = GenericTextFieldView(keyboardType: .default, styleCategory: .secondary)
+        view.validationCallback = { text -> Bool in
+            return text.count > 0
+        }
+        view.textField.textContentType = .givenName
+        return view
+    }()
+    
+    init(coordinator: UserNameCoordinator,
+         consentRole: ConsentRole) {
         self.coordinator = coordinator
         self.analytics = Services.shared.analytics
+        self.consentRole = consentRole
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -82,22 +93,46 @@ public class UserNameViewController: UIViewController {
                                                                   right: Constants.Style.DefaultHorizontalMargins))
         stackView.autoAlignAxis(toSuperviewAxis: .vertical)
         
-        stackView.addLabel(withText: StringsProvider.string(forKey: .onboardingUserNameTitle),
+        var title: StringKey
+        var body: StringKey
+        switch self.consentRole {
+        case .adult:
+            title = .onboardingUserNameTitle
+            body = .onboardingUserNameBody
+        case .minor:
+            title = .onboardingUserNameMinorTitle
+            body = .onboardingUserNameMinorBody
+        case .guardian:
+            title = .onboardingUserNameGuardianTitle
+            body = .onboardingUserNameGuardianBody
+        }
+        
+        stackView.addLabel(withText: StringsProvider.string(forKey: title),
                            fontStyle: .title,
                            colorType: .secondaryText,
                            textAlignment: .left)
         stackView.addBlankSpace(space: 30.0)
-        stackView.addLabel(withText: StringsProvider.string(forKey: .onboardingUserNameBody),
+        stackView.addLabel(withText: StringsProvider.string(forKey: body),
                            fontStyle: .paragraph,
                            colorType: .secondaryText,
                            textAlignment: .left)
         stackView.addBlankSpace(space: 48.0)
+        
+        if consentRole == .guardian {
+            stackView.addLabel(withText: StringsProvider.string(forKey: .onboardingUserNameRelatedDescription),
+                               fontStyle: .paragraph,
+                               colorType: .secondaryText,
+                               textAlignment: .left)
+            stackView.addBlankSpace(space: 16.0)
+            stackView.addArrangedSubview(self.relationFieldView)
+        }
         stackView.addLabel(withText: StringsProvider.string(forKey: .onboardingUserNameFirstNameDescription),
                            fontStyle: .paragraph,
                            colorType: .secondaryText,
                            textAlignment: .left)
         stackView.addBlankSpace(space: 16.0)
         stackView.addArrangedSubview(self.firstNameFieldView)
+        
         stackView.addLabel(withText: StringsProvider.string(forKey: .onboardingUserNameLastNameDescription),
                            fontStyle: .paragraph,
                            colorType: .secondaryText,
@@ -142,12 +177,22 @@ public class UserNameViewController: UIViewController {
         }
         self.view.endEditing(true)
         self.coordinator.onUserNameConfirmPressed(firstName: self.firstNameFieldView.text,
-                                                  lastName: self.lastNameFieldView.text)
+                                                  lastName: self.lastNameFieldView.text,
+                                                  relation: self.relationFieldView.text,
+                                                  currentRole: self.consentRole)
     }
     
     // MARK: Private Methods
     
     private func updateUI() {
-        self.confirmButton.isEnabled = self.firstNameFieldView.isValid.value && self.lastNameFieldView.isValid.value
+        switch consentRole {
+        case .minor, .adult:
+            self.confirmButton.isEnabled = self.firstNameFieldView.isValid.value && self.lastNameFieldView.isValid.value
+        case .guardian:
+            self.confirmButton.isEnabled = self.firstNameFieldView.isValid.value &&
+            self.lastNameFieldView.isValid.value &&
+            self.relationFieldView.isValid.value
+            
+        }
     }
 }

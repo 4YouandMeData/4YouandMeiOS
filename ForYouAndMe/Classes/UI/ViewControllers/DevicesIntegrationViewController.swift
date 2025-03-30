@@ -90,7 +90,7 @@ public class DevicesIntegrationViewController: UIViewController {
         
         self.repository.refreshUser()
             .toVoid()
-            .catchErrorJustReturn(())
+            .catchAndReturn(())
             .addProgress()
             .subscribe(onSuccess: { [weak self] in
                 guard let self = self else { return }

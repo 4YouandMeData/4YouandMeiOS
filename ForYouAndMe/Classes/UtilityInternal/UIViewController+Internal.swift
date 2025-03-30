@@ -42,7 +42,7 @@ extension UIViewController {
                 repository.getTask(taskId: taskId)
                     .subscribe(onSuccess: { feed in
                         navigator.startFeedFlow(withFeed: feed, presenter: self)
-                    }, onError: { error in
+                    }, onFailure: { error in
                         print("\(Self.self) - Could not get task for deeplink. Error: \(error)")
                     }).disposed(by: disposeBag)
             case .openUrl(let url):

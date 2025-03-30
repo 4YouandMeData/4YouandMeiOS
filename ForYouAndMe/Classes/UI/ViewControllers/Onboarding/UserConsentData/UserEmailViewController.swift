@@ -25,6 +25,7 @@ public class UserEmailViewController: UIViewController {
     private let repository: Repository
     private let analytics: AnalyticsService
     private let coordinator: UserEmailCoordinator
+    private let consentRole: ConsentRole
     
     private let disposeBag = DisposeBag()
     
@@ -67,12 +68,13 @@ public class UserEmailViewController: UIViewController {
     
     private var headerImageView: UIImageView?
     
-    init(coordinator: UserEmailCoordinator) {
+    init(coordinator: UserEmailCoordinator,
+         consentRole: ConsentRole) {
         self.navigator = Services.shared.navigator
         self.repository = Services.shared.repository
         self.analytics = Services.shared.analytics
         self.coordinator = coordinator
-        
+        self.consentRole = consentRole
         super.init(nibName: nil, bundle: nil)
     }
     

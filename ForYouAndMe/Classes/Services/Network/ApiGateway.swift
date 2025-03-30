@@ -37,8 +37,8 @@ enum DefaultService {
     case sendOptInPermission(permissionId: String, granted: Bool, context: ApiContext?)
     // User Consent Section
     case getUserConsentSection
-    case createUserConsent(email: String?, firstName: String?, lastName: String?, signatureImage: UIImage?)
-    case updateUserConsent(email: String?, firstName: String?, lastName: String?, signatureImage: UIImage?)
+    case createUserConsent(userConsentData: UserConsentData)
+    case updateUserConsent(userConsentData: UserConsentData)
     case notifyOnboardingCompleted
     case verifyEmail(validationCode: String)
     case resendConfirmationEmail

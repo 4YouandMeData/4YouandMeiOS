@@ -615,24 +615,21 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             params["profiling_option_id"] = optionId
             return .requestParameters(parameters: ["user_profiling_question": params],
                                       encoding: JSONEncoding.default)
-        case let .createUserConsent(email, firstName, lastName, signatureImage):
-            return Task.createForUserContent(withEmail: email,
-                                             firstName: firstName,
-                                             lastName: lastName,
-                                             signatureImage: signatureImage,
-                                             isCreate: true)
-        case let .updateUserConsent(email, firstName, lastName, signatureImage):
-            return Task.createForUserContent(withEmail: email,
-                                             firstName: firstName,
-                                             lastName: lastName,
-                                             signatureImage: signatureImage,
-                                             isCreate: false)
+        case let .createUserConsent(consentData):
+            return Task.createForUserContent(consentData: consentData)
+        case let .updateUserConsent(consentData):
+            return Task.createForUserContent(consentData: consentData)
         case .notifyOnboardingCompleted:
-            return Task.createForUserContent(withEmail: nil,
-                                             firstName: nil,
-                                             lastName: nil,
-                                             signatureImage: nil,
-                                             isCreate: true)
+            let data = UserConsentData(email: nil,
+                                       firstName: nil,
+                                       lastName: nil,
+                                       guardianFirstName: nil,
+                                       guardianLastName: nil,
+                                       relation: nil,
+                                       signatureImage: nil,
+                                       additionalImage: nil,
+                                       isCreate: true)
+            return Task.createForUserContent(consentData: data)
         case .verifyEmail(let email):
             var params: [String: Any] = [:]
             params["email_confirmation_token"] = email
@@ -938,40 +935,53 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
 }
 
 fileprivate extension Task {
-    static func createForUserContent(withEmail email: String?,
-                                     firstName: String?,
-                                     lastName: String?,
-                                     signatureImage: UIImage?,
-                                     isCreate: Bool) -> Task {
+    static func createForUserContent(consentData: UserConsentData) -> Task {
         var params: [String: Any] = [:]
-        if isCreate {
+        if consentData.isCreate {
             params["agree"] = true
         }
-        if let email = email {
+        if let email = consentData.email {
             params["new_email"] = email
         }
-        if let firstName = firstName {
+        if let firstName = consentData.firstName {
             params["first_name"] = firstName
         }
-        if let lastName = lastName {
+        if let lastName = consentData.lastName {
             params["last_name"] = lastName
         }
-        let imageDataString: String? = {
-            guard let signatureImage = signatureImage else { return nil }
-            guard let imageData = signatureImage.pngData() else {
-                assertionFailure("Cannot convert image data to PNG")
-                return nil
-            }
-            var imageDataString = imageData.base64EncodedString()
-            // Adding Mime type
-            imageDataString = "data:image/png;base64,\(imageDataString)"
-            return imageDataString
-        }()
-        if let imageDataString = imageDataString {
-            params["signature_base64"] = imageDataString
+        
+        if let signatureBase64 = convertImageToBase64(consentData.signatureImage) {
+            params["signature_base64"] = signatureBase64
         }
         params["on_boarding_completed_at"] = Date().string(withFormat: "yyyy-MM-dd")
+        
+//        if let guardianFirstName = consentData.guardianFirstName,
+//           let guardianLastName = consentData.guardianLastName,
+//           let guardianSignatureImage = consentData.additionalImage,
+//           let guardianRelation = consentData.relation {
+//                
+//                let guardianSignatureBase64 = convertImageToBase64(guardianSignatureImage)
+//
+//                let guardianDict: [String: Any] = [
+//                    "first_name": guardianFirstName,
+//                    "last_name": guardianLastName,
+//                    "user_consent_type": guardianRelation,
+//                    "signature_base64": guardianSignatureBase64 ?? ""
+//                ]
+//                
+//                params["other_user_consents_attributes"] = [guardianDict]
+//            }
         return .requestParameters(parameters: ["user_consent": params], encoding: JSONEncoding.default)
+    }
+    
+    private static func convertImageToBase64(_ image: UIImage?) -> String? {
+        guard let image = image else { return nil }
+        guard let imageData = image.pngData() else {
+            assertionFailure("Cannot convert image data to PNG")
+            return nil
+        }
+        let base64String = imageData.base64EncodedString()
+        return "data:image/png;base64,\(base64String)"
     }
 }
 

@@ -9,7 +9,7 @@ import Foundation
 import UberSignature
 
 protocol UserSignatureCoordinator {
-    func onUserSignatureCreated(signatureImage: UIImage)
+    func onUserSignatureCreated(signatureImage: UIImage, currentRole: ConsentRole)
     func onUserSignatureBackButtonPressed()
 }
 
@@ -17,6 +17,7 @@ class UserSignatureViewController: UIViewController {
     
     private let coordinator: UserSignatureCoordinator
     private let analytics: AnalyticsService
+    private let consentRole: ConsentRole
     
     private lazy var signatureViewController: SignatureDrawingViewController = {
         let controller = SignatureDrawingViewController()
@@ -103,9 +104,11 @@ class UserSignatureViewController: UIViewController {
         return view
     }()
     
-    init(coordinator: UserSignatureCoordinator) {
+    init(coordinator: UserSignatureCoordinator,
+         consentRole: ConsentRole) {
         self.coordinator = coordinator
         self.analytics = Services.shared.analytics
+        self.consentRole = consentRole
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -123,13 +126,28 @@ class UserSignatureViewController: UIViewController {
         self.view.addSubview(scrollStackView)
         scrollStackView.autoPinEdgesToSuperviewSafeArea(with: .zero, excludingEdge: .bottom)
         
+        var title: StringKey
+        var body: StringKey
+        
+        switch consentRole {
+        case .adult:
+            title =  .onboardingUserSignatureTitle
+            body = .onboardingUserSignatureBody
+        case .minor:
+            title = .onboardingUserMinorSignatureTitle
+            body = .onboardingUserMinorSignatureBody
+        case .guardian:
+            title = .onboardingUserGuardianSignatureTitle
+            body = .onboardingUserGuardianSignatureBody
+        }
+        
         scrollStackView.stackView.addBlankSpace(space: 30.0)
-        scrollStackView.stackView.addLabel(withText: StringsProvider.string(forKey: .onboardingUserSignatureTitle),
+        scrollStackView.stackView.addLabel(withText: StringsProvider.string(forKey: title),
                                            fontStyle: .title,
                                            colorType: .primaryText,
                                            textAlignment: .left)
         scrollStackView.stackView.addBlankSpace(space: 30.0)
-        scrollStackView.stackView.addLabel(withText: StringsProvider.string(forKey: .onboardingUserSignatureBody),
+        scrollStackView.stackView.addLabel(withText: StringsProvider.string(forKey: body),
                                            fontStyle: .paragraph,
                                            colorType: .primaryText,
                                            textAlignment: .left)
@@ -163,7 +181,10 @@ class UserSignatureViewController: UIViewController {
         self.analytics.track(event: .recordScreen(screenName: AnalyticsScreens.consentSignature.rawValue,
                                                   screenClass: String(describing: type(of: self))))
         self.navigationController?.navigationBar.apply(style: NavigationBarStyleCategory.secondary(hidden: false).style)
-        self.addCustomBackButton()
+        self.addCustomBackButton(
+            withImage: ImagePalette.templateImage(withName: .backButtonNavigation)) { [weak self] in
+            self?.customBackButtonPressed()
+        }
     }
     
     // MARK: Actions
@@ -173,7 +194,8 @@ class UserSignatureViewController: UIViewController {
             assertionFailure("Missing signature image")
             return
         }
-        self.coordinator.onUserSignatureCreated(signatureImage: signatureImage)
+        self.coordinator.onUserSignatureCreated(signatureImage: signatureImage,
+                                                currentRole: consentRole)
     }
     
     @objc private func clearButtonPressed() {

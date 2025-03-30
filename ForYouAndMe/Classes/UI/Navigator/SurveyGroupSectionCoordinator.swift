@@ -98,19 +98,16 @@ class SurveyGroupSectionCoordinator: PagedActivitySectionCoordinator {
         
         let nextCurrentSurveyIndex: Int
             
-            if let blockId = target?.blockId,
-               !blockId.isEmpty {
-                // Cerco l’indice del SurveyTask che ha id == blockId
-                if let index = self.sectionData.validSurveys.firstIndex(where: { $0.id == blockId }) {
-                    nextCurrentSurveyIndex = index
-                } else {
-                    // Se non lo trovo, fallback sul successivo
-                    nextCurrentSurveyIndex = currentSurveyIndex + 1
-                }
+        if let blockId = target?.blockId,
+           !blockId.isEmpty {
+            if let index = self.sectionData.validSurveys.firstIndex(where: { $0.id == blockId }) {
+                nextCurrentSurveyIndex = index
             } else {
-                // Se blockId è assente o vuoto, vado al successivo
                 nextCurrentSurveyIndex = currentSurveyIndex + 1
             }
+        } else {
+            nextCurrentSurveyIndex = currentSurveyIndex + 1
+        }
         if nextCurrentSurveyIndex == self.sectionData.validSurveys.count {
             var aggregatedAnswers: [SurveyResult] = []
             self.answersForSurveys.forEach { answersForSurvey in

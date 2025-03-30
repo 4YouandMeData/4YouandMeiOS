@@ -7,6 +7,25 @@
 
 import Foundation
 
+struct UserFlag: Codable {
+    let id: String
+    let type: String
+    let name: String
+}
+
+extension UserFlag: JSONAPIMappable {
+    
+    static var includeList: String? = """
+user_flag
+"""
+    
+    enum CodingKeys: String, CodingKey {
+        case id
+        case type
+        case name
+    }
+}
+
 struct User: Codable {
     let id: String
     let type: String
@@ -24,6 +43,8 @@ struct User: Codable {
     var customData: [UserInfoParameter]?
     let userPhases: [UserPhase]?
     let studyWalkthroughDone: Bool
+    var userFlags: [UserFlag]
+    
 }
 
 extension User: JSONAPIMappable {
@@ -32,7 +53,8 @@ user_study_phases,\
 user_study_phases.start_at,\
 user_study_phases.end_at,\
 user_study_phases.study_phase,\
-user_study_phases.study_phase.name
+user_study_phases.study_phase.name,\
+user_flags
 """
     
     enum CodingKeys: String, CodingKey {
@@ -49,5 +71,6 @@ user_study_phases.study_phase.name
         case customData = "custom_data"
         case userPhases = "user_study_phases"
         case studyWalkthroughDone = "study_walkthrough_done"
+        case userFlags = "user_flags"
     }
 }

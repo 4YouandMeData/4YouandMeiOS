@@ -21,7 +21,7 @@ public class UserEmailVerificationViewController: UIViewController {
     private let repository: Repository
     private let analytics: AnalyticsService
     private let coordinator: UserEmailVerificationCoordinator
-    
+    private let consentRole: ConsentRole
     private let disposeBag = DisposeBag()
     
     private lazy var scrollView: UIScrollView = {
@@ -68,11 +68,14 @@ public class UserEmailVerificationViewController: UIViewController {
         return view
     }()
     
-    init(email: String, coordinator: UserEmailVerificationCoordinator) {
+    init(email: String,
+         coordinator: UserEmailVerificationCoordinator,
+         consentRole: ConsentRole) {
         self.navigator = Services.shared.navigator
         self.repository = Services.shared.repository
         self.analytics = Services.shared.analytics
         self.coordinator = coordinator
+        self.consentRole = consentRole
         super.init(nibName: nil, bundle: nil)
         self.emailFieldView.text = email
     }
