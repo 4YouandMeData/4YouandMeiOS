@@ -99,6 +99,9 @@ class SpyrometerSectionCoordinator: NSObject, PagedActivitySectionCoordinator {
         testVC.onTestCompleted = { [weak self] results in
             self?.showResultsViewController(results: results)
         }
+        testVC.onDeviceDisconnected = { [weak self] in
+            self?.showDeviceDisconnectedViewController()
+        }
         self.navigationController.pushViewController(testVC,
                                                      hidesBottomBarWhenPushed: hidesBottomBarWhenPushed,
                                                      animated: true)
@@ -114,6 +117,20 @@ class SpyrometerSectionCoordinator: NSObject, PagedActivitySectionCoordinator {
         resultsVC.onDonePressed = { [weak self] results in
             guard let self = self else { return }
             self.sendResult(taskResult: results, presenter: resultsVC)
+        }
+        
+        self.navigationController.pushViewController(resultsVC,
+                                                     hidesBottomBarWhenPushed: hidesBottomBarWhenPushed,
+                                                     animated: true)
+    }
+    
+    /// Pushes the results view controller to display the spirometry test results.
+    private func showDeviceDisconnectedViewController() {
+        let resultsVC = SpiroDeviceDisconnectedViewController()
+        resultsVC.onNextPressed = { [weak self] in
+            if let introVC = self?.navigationController.viewControllers.first(where: { $0 is SpyrometerScanViewController }) {
+                self?.navigationController.popToViewController(introVC,animated: true)
+            }
         }
         
         self.navigationController.pushViewController(resultsVC,

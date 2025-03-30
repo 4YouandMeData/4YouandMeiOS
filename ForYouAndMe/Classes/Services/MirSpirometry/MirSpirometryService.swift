@@ -26,6 +26,9 @@ protocol MirSpirometryService {
     /// This closure is triggered when the device connection succeeds.
     var onDeviceConnected: (() -> Void)? { get set }
     
+    /// Triggered when the device is disconnected.
+    var onDeviceDisconnected: (() -> Void)? { get set }
+    
     /// This closure is triggered when the device connection fails or an error occurs.
     var onDeviceConnectFailed: ((Error?) -> Void)? { get set }
     
@@ -36,7 +39,11 @@ protocol MirSpirometryService {
     /// The `String` parameter typically contains the test data in JSON format.
     var onTestResults: ((SOResults) -> Void)? { get set }
     
+    /// Triggered when test value is changed
     var onFlowValueUpdated: ((SODevice, Float, Bool) -> Void)? { get set }
+    
+    /// Callback on every change of bluetooth state
+    var onBluetoothStateChanged: ((CBCentralManagerState) -> Void)? { get set }
     
     // MARK: - Functions
     

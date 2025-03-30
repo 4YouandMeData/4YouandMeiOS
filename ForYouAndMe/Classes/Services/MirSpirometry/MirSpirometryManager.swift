@@ -35,6 +35,9 @@ final class MirSpirometryManager: NSObject, MirSpirometryService {
     /// Triggered when the device connection succeeds.
     var onDeviceConnected: (() -> Void)?
     
+    /// Triggered when the device is disconnected.
+    var onDeviceDisconnected: (() -> Void)?
+    
     /// Triggered when the device connection fails or encounters an error.
     var onDeviceConnectFailed: ((Error?) -> Void)?
     
@@ -46,6 +49,8 @@ final class MirSpirometryManager: NSObject, MirSpirometryService {
     var onTestResults: ((SOResults) -> Void)?
     
     var onFlowValueUpdated: ((SODevice, Float, Bool) -> Void)?
+    
+    var onBluetoothStateChanged: ((CBCentralManagerState) -> Void)?
     
     // MARK: - MirSpirometryService Protocol Methods
     
@@ -81,6 +86,7 @@ final class MirSpirometryManager: NSObject, MirSpirometryService {
     
     /// Stops discovering MIR spirometer devices.
     func stopDiscoverDevices() {
+        self.localDevices.removeAll()
         guard let manager = SODeviceManager.shared() else { return }
         manager.stopDiscovery()
     }
@@ -98,6 +104,7 @@ final class MirSpirometryManager: NSObject, MirSpirometryService {
     
     /// Disconnects the currently connected device, if any.
     func disconnect() {
+        self.localDevices.removeAll()
         guard let manager = SODeviceManager.shared() else { return }
         manager.disconnect()
     }
@@ -163,13 +170,14 @@ extension MirSpirometryManager: SODeviceManagerDelegate {
     /// For instance, you can detect when Bluetooth is powered off/on.
     func deviceManager(_ deviceManager: SODeviceManager!,
                        didUpdateBluetoothWith state: CBCentralManagerState) {
-        // You can optionally handle different Bluetooth states if needed.
+        onBluetoothStateChanged?(state)
     }
     
     /// Called when a device is disconnected.
     func deviceManager(_ deviceManager: SODeviceManager!,
                        didDisconnectDevice device: SODevice!) {
-        // You might want to handle the disconnection, e.g., reset UI state.
+        // Informa chiunque ascolti che il device si è disconnesso.
+        onDeviceDisconnected?()
     }
     
     /// Called if there's an error writing data to a characteristic.

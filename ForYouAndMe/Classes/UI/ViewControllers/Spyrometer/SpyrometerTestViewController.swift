@@ -26,6 +26,8 @@ class SpyrometerTestViewController: UIViewController {
     // MARK: - Callbacks
     /// Called when the scanning is completed and the user taps "Continue".
     var onTestCompleted: ((SOResults) -> Void)?
+    
+    var onDeviceDisconnected: (() -> Void)?
 
 //    /// Called when the user cancels the scanning operation.
 //    var onCancelled: (() -> Void)?
@@ -65,6 +67,7 @@ class SpyrometerTestViewController: UIViewController {
         setupUI()
         setupActions()
         setupManagerCallbacks()
+        self.checkBluetoothState()
     }
 
     // MARK: - UI Setup using PureLayout
@@ -75,7 +78,6 @@ class SpyrometerTestViewController: UIViewController {
         let containerView = UIView()
         view.addSubview(containerView)
 
-        // 3) Create the footer (button) at the bottom edge
         view.addSubview(self.footerView)
         
         // Footer pinned to bottom, left, right
@@ -83,7 +85,6 @@ class SpyrometerTestViewController: UIViewController {
         // Set the initial button text
         self.footerView.setButtonText(StringsProvider.string(forKey: .spiroNext))
         
-        // 4) Pin containerView to fill the area above the footer
         containerView.autoPinEdgesToSuperviewEdges(with: .zero, excludingEdge: .bottom)
         containerView.autoPinEdge(.bottom, to: .top, of: footerView)
                 
@@ -108,6 +109,25 @@ class SpyrometerTestViewController: UIViewController {
         actualBarView.autoAlignAxis(.vertical, toSameAxisOf: containerView, withOffset: 48)
     }
     
+    @objc private func willEnterForeground() {
+        self.checkBluetoothState()
+    }
+    
+    /// Checks if Bluetooth is active. If not, shows an error alert.
+    private func checkBluetoothState() {
+        if service.isPoweredOn() == false {
+            self.handleDeviceDisconnected()
+        }
+    }
+    
+    private func handleDeviceDisconnected() {
+        if isPEFTestRunning {
+            stopPEFTest()
+        }
+        self.onDeviceDisconnected?()
+        self.footerView.setButtonEnabled(enabled: false)
+    }
+    
     // MARK: - Actions Setup
     
     /// Configures target-action for the buttons.
@@ -129,7 +149,23 @@ class SpyrometerTestViewController: UIViewController {
 
     /// Sets up the main callbacks from the MirSpirometryService (MirSpirometryManager).
     private func setupManagerCallbacks() {
-                
+
+        service.onDeviceDisconnected = { [weak self] in
+           DispatchQueue.main.async {
+               guard let self = self else { return }
+               self.handleDeviceDisconnected()
+           }
+        }
+        
+        service.onBluetoothStateChanged = { [weak self] newState in
+            DispatchQueue.main.async {
+                guard let self = self else { return }
+                if newState != .poweredOn {
+                    // Bluetooth spento / non disponibile => disconnessione
+                    self.handleDeviceDisconnected()
+                }
+            }
+        }
         // Called when the test actually starts
         service.onTestDidStart = { [weak self] in
             guard let self = self else { return }

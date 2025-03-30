@@ -120,7 +120,13 @@ class SpyrometerScanViewController: UIViewController {
     private func checkBluetoothState() {
         if service.isPoweredOn() == false {
             self.footerView.setButtonEnabled(enabled: false)
+            self.discoveredDevices.removeAll()
+            self.devicesTableView.reloadData()
+            self.devicesTableView.tableHeaderView = nil
             self.devicesTableView.backgroundView = self.noBluetoothView
+            self.footerView.setButtonText(StringsProvider.string(forKey: .spiroScan))
+            self.footerView.addTarget(target: self, action: #selector(self.startScanDevices))
+            service.disconnect()
         } else {
             self.footerView.setButtonEnabled(enabled: true)
             self.devicesTableView.backgroundView = nil
@@ -180,7 +186,7 @@ class SpyrometerScanViewController: UIViewController {
         headerContainer.backgroundColor = .clear
         
         let label = UILabel()
-        label.text = "Select your device"
+        label.text = StringsProvider.string(forKey: .spiroSelectDevice)
         label.font = FontPalette.fontStyleData(forStyle: .header2).font
         label.textColor = ColorPalette.color(withType: .primaryText)
         label.textAlignment = .left
