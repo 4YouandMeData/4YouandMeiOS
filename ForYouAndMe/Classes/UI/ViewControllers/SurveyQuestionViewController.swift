@@ -31,6 +31,25 @@ class SurveyQuestionViewController: UIViewController,
         return scrollView
     }()
     
+    private lazy var progressView: UIProgressView = {
+        let progressView = UIProgressView(progressViewStyle: .default)
+        progressView.progressTintColor = ColorPalette.color(withType: .primary)
+        progressView.trackTintColor = ColorPalette.color(withType: .fourthText).applyAlpha(0.3)
+        progressView.translatesAutoresizingMaskIntoConstraints = false
+        return progressView
+    }()
+    
+    private lazy var progressValueLabel: UILabel = {
+        let label = UILabel()
+        label.textAlignment = .center
+        label.numberOfLines = 1
+        label.font = FontPalette.fontStyleData(forStyle: .infoNote).font
+        label.textColor = ColorPalette.color(withType: .primary)
+        label.text = "0% completed"
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+    
     private lazy var confirmButtonView: GenericButtonView = {
         let view = GenericButtonView(withImageStyleCategory: .secondaryBackground)
         view.addTarget(target: self, action: #selector(self.confirmButtonPressed))
@@ -58,11 +77,21 @@ class SurveyQuestionViewController: UIViewController,
     public override func viewDidLoad() {
         super.viewDidLoad()
         
-        self.view.backgroundColor = ColorPalette.color(withType: .secondary)
+        self.view.addSubview(self.progressView)
+        self.progressView.autoPinEdgesToSuperviewSafeArea(with: UIEdgeInsets(top: 0.0,
+                                                                             left: Constants.Style.DefaultHorizontalMargins,
+                                                                             bottom: 0.0,
+                                                                             right: Constants.Style.DefaultHorizontalMargins),
+                                                          excludingEdge: .bottom)
         
-        self.title = StringsProvider.string(forKey: .surveyStepsCount,
-                                            withParameters: ["\(self.pageData.questionNumber)",
-                                                             "\(self.pageData.totalQuestions)"])
+        self.view.addSubview(self.progressValueLabel)
+        self.progressValueLabel.autoPinEdge(.top,
+                                            to: .bottom,
+                                            of: self.progressView,
+                                            withOffset: 8.0)
+        self.progressValueLabel.autoAlignAxis(.vertical,
+                                              toSameAxisOf: self.progressView)
+        self.view.backgroundColor = ColorPalette.color(withType: .secondary)
         
         // ScrollView
         self.view.addSubview(self.scrollView)
@@ -77,7 +106,7 @@ class SurveyQuestionViewController: UIViewController,
                                                                   right: Constants.Style.DefaultHorizontalMargins))
         stackView.autoAlignAxis(toSuperviewAxis: .vertical)
         
-        stackView.addBlankSpace(space: 50.0)
+        stackView.addBlankSpace(space: 60.0)
         // Image
         if let image = self.pageData.question.image {
             stackView.addHeaderImage(image: image, height: 54.0)
@@ -103,6 +132,12 @@ class SurveyQuestionViewController: UIViewController,
         
         let tap = UITapGestureRecognizer(target: self, action: #selector(self.tapView))
         self.view.addGestureRecognizer(tap)
+        
+        let progressValue = Float(self.pageData.questionNumber) / Float(self.pageData.totalQuestions)
+        self.progressView.setProgress(progressValue, animated: true)
+        
+        let percent = Int(progressValue * 100)
+        progressValueLabel.text = "\(percent)% completed"
         
         self.updateConfirmButton()
     }

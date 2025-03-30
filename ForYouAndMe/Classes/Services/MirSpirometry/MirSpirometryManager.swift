@@ -122,8 +122,8 @@ final class MirSpirometryManager: NSObject, MirSpirometryService {
         let turbineType = SOTurbineType(rawValue: 1)
         
         // Check if the device is ready before starting the test.
-        device.checkIfDeviceIsReady { [weak self] isReady in
-            guard let self = self, isReady == true else { return }
+        device.checkIfDeviceIsReady { isReady in
+            guard isReady == true else { return }
             device.startTest(with: testType,
                              endOfTestTimeout: testTimeout,
                              turbineType: turbineType)

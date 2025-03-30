@@ -146,6 +146,10 @@ extension SurveyGroup {
     var validSurveys: [SurveyTask] {
         return self.surveys.filter { $0.isValid }
     }
+    
+    var allValidQuestions: [SurveyQuestion] {
+        return self.validSurveys.flatMap { $0.validQuestions }
+    }
 }
 
 extension Array where Element == SurveyTarget {

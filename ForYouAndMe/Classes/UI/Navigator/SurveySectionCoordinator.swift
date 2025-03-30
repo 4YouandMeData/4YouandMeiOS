@@ -12,6 +12,8 @@ class SurveySectionCoordinator {
     // MARK: - Coordinator
     var hidesBottomBarWhenPushed: Bool = false
     
+    var onQuestionAnswered: ((Int) -> Void)?
+    
     // MARK: - PagedSectionCoordinator
     var addAbortOnboardingButton: Bool = false
     
@@ -21,14 +23,20 @@ class SurveySectionCoordinator {
     
     private let sectionData: SurveyTask
     private let completionCallback: SurveySectionCallback
+    private let totalQuestions: Int
+    private let questionsSoFar: Int
     
     private var results: [SurveyResult] = []
     
     init(withSectionData sectionData: SurveyTask,
          navigationController: UINavigationController,
+         questionsSoFar: Int,
+         totalQuestions: Int,
          completionCallback: @escaping SurveySectionCallback) {
         self.sectionData = sectionData
         self.navigationController = navigationController
+        self.totalQuestions = totalQuestions
+        self.questionsSoFar = questionsSoFar
         self.completionCallback = completionCallback
     }
     
@@ -63,9 +71,11 @@ class SurveySectionCoordinator {
             assertionFailure("Missing question in question array")
             return UIViewController()
         }
+        
+        let index = self.questionsSoFar + questionIndex
         let pageData = SurveyQuestionPageData(question: question,
-                                              questionNumber: questionIndex + 1,
-                                              totalQuestions: self.sectionData.validQuestions.count)
+                                              questionNumber: index,
+                                              totalQuestions: self.totalQuestions)
         return SurveyQuestionViewController(withPageData: pageData, coordinator: self)
     }
     
@@ -107,6 +117,7 @@ class SurveySectionCoordinator {
         if nextQuestionIndex == self.sectionData.validQuestions.count {
             self.showSuccess()
         } else {
+            self.onQuestionAnswered?(questionIndex)
             let nextQuestion = self.sectionData.validQuestions[nextQuestionIndex]
             self.showQuestion(nextQuestion)
         }
@@ -138,7 +149,7 @@ extension SurveySectionCoordinator: SurveyQuestionViewCoordinator {
             self.showNextSurveyQuestion(questionId: result.question.id)
             return
         }
-        
+                
         if let resultIndex = self.results.firstIndex(where: { $0.question == result.question }) {
             self.results[resultIndex] = result
         } else {
