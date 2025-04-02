@@ -331,6 +331,8 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         // User Consent Section
         case .getUserConsentSection:
             return "/v1/studies/\(studyId)/signature"
+        case .createOtherUserConsent(let consentId, _):
+            return "/v1/user_consents/\(consentId)/other_user_consents"
         case .createUserConsent, .updateUserConsent:
             return "/v1/studies/\(studyId)/user_consent"
         case .notifyOnboardingCompleted:
@@ -448,6 +450,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
                 .submitProfilingOption,
                 .emailLogin,
                 .createUserConsent,
+                .createOtherUserConsent,
                 .notifyOnboardingCompleted,
                 .sendOptInPermission,
                 .sendAnswer,
@@ -508,6 +511,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         // User Consent Section
         case .getUserConsentSection: return Bundle.getTestData(from: "TestGetUserConsentSection")
         case .createUserConsent: return "{}".utf8Encoded
+        case .createOtherUserConsent: return "{}".utf8Encoded
         case .updateUserConsent: return "{}".utf8Encoded
         case .notifyOnboardingCompleted: return "{}".utf8Encoded
         case .verifyEmail: return "{}".utf8Encoded
@@ -617,6 +621,8 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
                                       encoding: JSONEncoding.default)
         case let .createUserConsent(consentData):
             return Task.createForUserContent(consentData: consentData)
+        case let .createOtherUserConsent(_, userConsentData):
+            return Task.createForUserContentForMinor(consentData: userConsentData)
         case let .updateUserConsent(consentData):
             return Task.createForUserContent(consentData: consentData)
         case .notifyOnboardingCompleted:
@@ -866,6 +872,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
                 .submitProfilingOption,
                 .getUserConsentSection,
                 .createUserConsent,
+                .createOtherUserConsent,
                 .updateUserConsent,
                 .notifyOnboardingCompleted,
                 .getStudyInfoSection,
@@ -954,24 +961,32 @@ fileprivate extension Task {
             params["signature_base64"] = signatureBase64
         }
         params["on_boarding_completed_at"] = Date().string(withFormat: "yyyy-MM-dd")
-        
-//        if let guardianFirstName = consentData.guardianFirstName,
-//           let guardianLastName = consentData.guardianLastName,
-//           let guardianSignatureImage = consentData.additionalImage,
-//           let guardianRelation = consentData.relation {
-//                
-//                let guardianSignatureBase64 = convertImageToBase64(guardianSignatureImage)
-//
-//                let guardianDict: [String: Any] = [
-//                    "first_name": guardianFirstName,
-//                    "last_name": guardianLastName,
-//                    "user_consent_type": guardianRelation,
-//                    "signature_base64": guardianSignatureBase64 ?? ""
-//                ]
-//                
-//                params["other_user_consents_attributes"] = [guardianDict]
-//            }
+
         return .requestParameters(parameters: ["user_consent": params], encoding: JSONEncoding.default)
+    }
+    
+    static func createForUserContentForMinor(consentData: UserConsentData) -> Task {
+    
+        let task: Task = {
+                guard let guardianFirstName = consentData.guardianFirstName,
+                      let guardianLastName = consentData.guardianLastName,
+                      let guardianSignatureImage = consentData.additionalImage,
+                      let guardianRelation = consentData.relation else {
+                    return .requestParameters(parameters: [:], encoding: JSONEncoding.default)
+                }
+                
+                let guardianSignatureBase64 = convertImageToBase64(guardianSignatureImage)
+                var guardianDict: [String: Any] = [:]
+                guardianDict["first_name"] = guardianFirstName
+                guardianDict["last_name"] = guardianLastName
+                guardianDict["user_consent_type"] = guardianRelation
+                guardianDict["signature_base64"] = guardianSignatureBase64 ?? ""
+                
+                return .requestParameters(parameters: ["other_user_consent": guardianDict],
+                                          encoding: JSONEncoding.default)
+            }()
+            
+            return task
     }
     
     private static func convertImageToBase64(_ image: UIImage?) -> String? {

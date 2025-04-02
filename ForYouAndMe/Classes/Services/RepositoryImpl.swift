@@ -262,7 +262,7 @@ extension RepositoryImpl: Repository {
             relation: nil,
             signatureImage: nil,
             additionalImage: nil,
-            isCreate: true)
+            isCreate: false)
         return self.api.send(request: ApiRequest(serviceRequest:
                 .createUserConsent(userConsentData: data)))
             .handleError()
@@ -305,9 +305,15 @@ extension RepositoryImpl: Repository {
             .handleError()
     }
     
-    func sendUserData(userConsentData consentData: UserConsentData) -> Single<()> {
+    func sendUserData(userConsentData consentData: UserConsentData) -> Single<UserConsent> {
         return self.api.send(request: ApiRequest(serviceRequest:
                 .createUserConsent(userConsentData: consentData)))
+            .handleError()
+    }
+    
+    func sendUserDataForMinor(consentId: String, userConsentData: UserConsentData) -> Single<()> {
+        return self.api.send(request: ApiRequest(serviceRequest:
+                .createOtherUserConsent(consentId: consentId, userConsentData: userConsentData)))
             .handleError()
     }
     

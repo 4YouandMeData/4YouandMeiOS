@@ -218,6 +218,7 @@
 		0D3641F42D968F0600FDB3AA /* ProfilingQuestionPickOne.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D3641F32D968F0000FDB3AA /* ProfilingQuestionPickOne.swift */; };
 		0D3641F62D96908900FDB3AA /* ProfilingOptionAnswerCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D3641F52D96908200FDB3AA /* ProfilingOptionAnswerCell.swift */; };
 		0D3641F82D999BAE00FDB3AA /* SpiroDeviceDisconnectedViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D3641F72D999BA000FDB3AA /* SpiroDeviceDisconnectedViewController.swift */; };
+		0D3642022D9B087500FDB3AA /* UserConsent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D3642012D9B087200FDB3AA /* UserConsent.swift */; };
 		0D6BBA2E2D88C8F7004DEF42 /* SpyrometerSectionCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D6BBA2D2D88C8EC004DEF42 /* SpyrometerSectionCoordinator.swift */; };
 		0D6BBA312D88C9E1004DEF42 /* SpyrometerScanViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D6BBA302D88C9D7004DEF42 /* SpyrometerScanViewController.swift */; };
 		0D6BBA332D8ADA24004DEF42 /* BluetoothOffView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D6BBA322D8ADA18004DEF42 /* BluetoothOffView.swift */; };
@@ -4355,6 +4356,7 @@
 		0D3641F32D968F0000FDB3AA /* ProfilingQuestionPickOne.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfilingQuestionPickOne.swift; sourceTree = "<group>"; };
 		0D3641F52D96908200FDB3AA /* ProfilingOptionAnswerCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfilingOptionAnswerCell.swift; sourceTree = "<group>"; };
 		0D3641F72D999BA000FDB3AA /* SpiroDeviceDisconnectedViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpiroDeviceDisconnectedViewController.swift; sourceTree = "<group>"; };
+		0D3642012D9B087200FDB3AA /* UserConsent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserConsent.swift; sourceTree = "<group>"; };
 		0D56721AC5B8CD21088512ABF9575755 /* FIRCLSCallStackTree.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = FIRCLSCallStackTree.m; path = Crashlytics/Crashlytics/Helpers/FIRCLSCallStackTree.m; sourceTree = "<group>"; };
 		0D631E9908483F9525A6B3F36F16CC61 /* Quick.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Quick.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		0D6BBA2D2D88C8EC004DEF42 /* SpyrometerSectionCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpyrometerSectionCoordinator.swift; sourceTree = "<group>"; };
@@ -8745,6 +8747,7 @@
 		39DE945C7908249203C0E5E0EE361EAA /* Entities */ = {
 			isa = PBXGroup;
 			children = (
+				0D3642012D9B087200FDB3AA /* UserConsent.swift */,
 				0D3641EF2D958B5100FDB3AA /* ProfilingOption.swift */,
 				0D3641ED2D958A3F00FDB3AA /* ProfilingQuestion.swift */,
 				982A8FB463A025459AE9FD1C85A19A03 /* Activity.swift */,
@@ -18235,6 +18238,7 @@
 				1C1B827EDB572F11782E151182E48A0C /* UserSettings.swift in Sources */,
 				0D3641DC2D91F52400FDB3AA /* SpyrometerResultsViewController.swift in Sources */,
 				7343CC6579B0582931374FA364D743F1 /* UserSignatureViewController.swift in Sources */,
+				0D3642022D9B087500FDB3AA /* UserConsent.swift in Sources */,
 				89074016CE1827FE9A210A4B8025695B /* Video+AlertError.swift in Sources */,
 				43F13A7D0EDEB0ED55E433ACD0F098D7 /* VideoDiaryPlayerView.swift in Sources */,
 				39C6E3901EB214B60048FF2E74517445 /* VideoDiaryRecorderViewController.swift in Sources */,

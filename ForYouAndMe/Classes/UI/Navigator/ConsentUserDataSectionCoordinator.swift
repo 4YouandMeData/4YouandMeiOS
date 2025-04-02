@@ -123,6 +123,7 @@ class ConsentUserDataSectionCoordinator {
             let lastName = self.userLastName,
             let signatureImage = self.userSignatureImage,
             let relation = self.userRelation,
+            let email = self.userEmail,
             let guardianFirstName = self.guardianFirstName,
             let guardianLastName = self.guardianLastName,
             let additionalSignature = self.additionalUserSignatureImage else {
@@ -131,7 +132,7 @@ class ConsentUserDataSectionCoordinator {
         }
         
         let data = UserConsentData(
-            email: nil,
+            email: email,
             firstName: firstName,
             lastName: lastName,
             guardianFirstName: guardianFirstName,
@@ -141,7 +142,19 @@ class ConsentUserDataSectionCoordinator {
             additionalImage: additionalSignature,
             isCreate: true)
         
-        self.submitUserData(consentData: data)
+        self.repository.sendUserData(userConsentData: data)
+            .flatMap { consent in
+                return self.repository.sendUserDataForMinor(consentId: consent.id, userConsentData: data)
+            }
+            .addProgress()
+            .subscribe(onSuccess: { [weak self] in
+                guard let self = self else { return }
+                self.showSuccess()
+            }, onFailure: { [weak self] error in
+                guard let self = self else { return }
+                self.navigator.handleError(error: error, presenter: self.navigationController)
+            })
+            .disposed(by: self.disposeBag)
     }
     
     private func submitUserDataForAdult() {
@@ -163,22 +176,17 @@ class ConsentUserDataSectionCoordinator {
             additionalImage: nil,
             isCreate: true)
         
-        self.submitUserData(consentData: data)
-    }
-    
-    private func submitUserData(consentData: UserConsentData) {
-        
-        self.repository.sendUserData(userConsentData: consentData)
+        self.repository.sendUserData(userConsentData: data)
             .addProgress()
-            .subscribe(onSuccess: { [weak self] in
+            .subscribe(onSuccess: { [weak self] _ in
                 guard let self = self else { return }
                 self.showSuccess()
             }, onFailure: { [weak self] error in
                     guard let self = self else { return }
                     self.navigator.handleError(error: error, presenter: self.navigationController)
             }).disposed(by: self.disposeBag)
-        
     }
+    
     
     private func showSuccess() {
         if let successPage = self.sectionData.successPage {
@@ -238,9 +246,11 @@ extension ConsentUserDataSectionCoordinator: UserSignatureCoordinator {
         case .adult:
             self.userSignatureImage = signatureImage
             self.submitUserDataForAdult()
+            return
         case .guardian:
             self.additionalUserSignatureImage = signatureImage
             self.submitUserDataForMinor()
+            return
         case .minor:
             self.userSignatureImage = signatureImage
         }

@@ -38,6 +38,7 @@ enum DefaultService {
     // User Consent Section
     case getUserConsentSection
     case createUserConsent(userConsentData: UserConsentData)
+    case createOtherUserConsent(consentId: String, userConsentData: UserConsentData)
     case updateUserConsent(userConsentData: UserConsentData)
     case notifyOnboardingCompleted
     case verifyEmail(validationCode: String)

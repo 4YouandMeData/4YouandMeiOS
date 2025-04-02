@@ -72,7 +72,8 @@ protocol Repository: AnyObject {
     func submitEmail(email: String) -> Single<()>
     func verifyEmail(validationCode: String) -> Single<()>
     func resendConfirmationEmail() -> Single<()>
-    func sendUserData(userConsentData: UserConsentData) -> Single<()>
+    func sendUserData(userConsentData: UserConsentData) -> Single<UserConsent>
+    func sendUserDataForMinor(consentId: String, userConsentData: UserConsentData) -> Single<()>
     func sendWalkthroughDone() -> Single<()>
     func notifyOnboardingCompleted() -> Single<()>
     // Integration Section

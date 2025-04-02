@@ -147,6 +147,7 @@ extension DefaultService {
         // User Consent Section
         case .getUserConsentSection: return "Get Signature"
         case .createUserConsent: return "Create User Consent"
+        case .createOtherUserConsent: return "Create Other User Content"
         case .updateUserConsent: return "Update User Consent"
         case .notifyOnboardingCompleted: return "Notify User Consent Completed"
         case .verifyEmail: return "Confirm Email"
