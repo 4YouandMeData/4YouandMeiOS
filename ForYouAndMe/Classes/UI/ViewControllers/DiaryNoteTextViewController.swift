@@ -17,6 +17,7 @@ class DiaryNoteTextViewController: UIViewController {
     private let navigator: AppNavigator
     private let repository: Repository
     private let analytics: AnalyticsService
+    private let reflectionCoordinator: ReflectionSectionCoordinator?
         
     public fileprivate(set) var standardColor: UIColor = ColorPalette.color(withType: .primaryText)
     public fileprivate(set) var errorColor: UIColor = ColorPalette.color(withType: .primaryText)
@@ -125,7 +126,8 @@ class DiaryNoteTextViewController: UIViewController {
     
     init(withDataPoint dataPoint: DiaryNoteItem?,
          isEditMode: Bool,
-         isFromChart: Bool) {
+         isFromChart: Bool,
+         reflectionCoordinator: ReflectionSectionCoordinator?) {
         self.navigator = Services.shared.navigator
         self.repository = Services.shared.repository
         self.storage = Services.shared.storageServices
@@ -133,6 +135,7 @@ class DiaryNoteTextViewController: UIViewController {
         self.diaryNote = dataPoint
         self.isEditMode = isEditMode
         self.isFromChart = isFromChart
+        self.reflectionCoordinator = reflectionCoordinator
         
         super.init(nibName: nil, bundle: nil)
     }
@@ -240,7 +243,10 @@ class DiaryNoteTextViewController: UIViewController {
                     .addProgress()
                     .subscribe(onSuccess: { [weak self] in
                         guard let self = self else { return }
-                        self.closeButtonPressed()
+                        guard let coordinator = self.reflectionCoordinator else {
+                            return self.closeButtonPressed()
+                        }
+                        coordinator.onReflectionCreated(presenter: self, reflectionType: .text)
                     }, onFailure: { [weak self] error in
                         guard let self = self else { return }
                         self.navigator.handleError(error: error, presenter: self)
@@ -256,7 +262,10 @@ class DiaryNoteTextViewController: UIViewController {
                     .addProgress()
                     .subscribe(onSuccess: { [weak self] in
                         guard let self = self else { return }
-                        self.closeButtonPressed()
+                        guard let coordinator = self.reflectionCoordinator else {
+                            return self.closeButtonPressed()
+                        }
+                        coordinator.onReflectionCreated(presenter: self, reflectionType: .text)
                     }, onFailure: { [weak self] error in
                         guard let self = self else { return }
                         self.navigator.handleError(error: error, presenter: self)

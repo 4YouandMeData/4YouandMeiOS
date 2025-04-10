@@ -28,6 +28,7 @@ class DiaryNoteAudioViewController: UIViewController {
     private let audioAssetManager = AudioAssetManager()
     private var audioFileURL: URL?
     private let pageState: BehaviorRelay<PageState> = BehaviorRelay<PageState>(value: .listen)
+    private let reflectionCoordinator: ReflectionSectionCoordinator?
     
     private var pollingDisposable: Disposable?
     private let pollingInterval: TimeInterval = 5.0 // Polling interval in seconds
@@ -183,13 +184,15 @@ class DiaryNoteAudioViewController: UIViewController {
     private var isEditMode: Bool
     
     init(withDiaryNote diaryNote: DiaryNoteItem?,
-         isEditMode: Bool) {
+         isEditMode: Bool,
+         reflectionCoordinator: ReflectionSectionCoordinator?) {
         self.navigator = Services.shared.navigator
         self.repository = Services.shared.repository
         self.storage = Services.shared.storageServices
         self.analytics = Services.shared.analytics
         self.isEditMode = isEditMode
         self.diaryNoteItem = diaryNote
+        self.reflectionCoordinator = reflectionCoordinator
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -279,11 +282,15 @@ class DiaryNoteAudioViewController: UIViewController {
             .subscribe(onSuccess: { [weak self] diaryNote in
                 guard let self = self else { return }
                 self.diaryNoteItem = diaryNote
-                try? FileManager.default.removeItem(atPath: Constants.Note.NoteResultURL.path)
-                DispatchQueue.main.async {
-                    self.pageState.accept(.transcribe)
-                    self.startPolling() // Start polling after successful creation
+                guard let coordinator = self.reflectionCoordinator else {
+                    try? FileManager.default.removeItem(atPath: Constants.Note.NoteResultURL.path)
+                    DispatchQueue.main.async {
+                        self.pageState.accept(.transcribe)
+                        self.startPolling() // Start polling after successful creation
+                    }
+                    return
                 }
+                coordinator.onReflectionCreated(presenter: self, reflectionType: .audio)
             }, onFailure: { [weak self] error in
                 guard let self = self else { return }
                 self.navigator.handleError(error: error,

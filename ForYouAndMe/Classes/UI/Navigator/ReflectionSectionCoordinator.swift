@@ -7,6 +7,10 @@
 
 import RxSwift
 
+protocol ReflectionViewCoordinator {
+    func onReflectionCreated(presenter: UIViewController, reflectionType: DiaryNoteItemType)
+}
+
 class ReflectionSectionCoordinator: NSObject, PagedActivitySectionCoordinator {
     
     // MARK: - Coordinator
@@ -92,30 +96,26 @@ class ReflectionSectionCoordinator: NSObject, PagedActivitySectionCoordinator {
     /// Pushes the results view controller to display the spirometry test results.
     private func sendResult(taskResult: [String: String], presenter: UIViewController) {
         
-//        repository.sendTaskResult(taskId: self.taskIdentifier, taskResult: taskResult)
-//            .flatMap { [weak self] _ -> Single<Void> in
-//                guard let self = self else { return .error(NSError(domain: "InternalError", code: -1)) }
-//                return self.repository.sendTaskResult(taskId: self.taskIdentifier,
-//                                                      taskResult: TaskNetworkResult(data: taskResultWithUUID, attachedFile: nil))
-//            }
-//            .addProgress()
-//            .subscribe(onSuccess: { [weak self] in
-//                guard let self = self else { return }
-//                 self.showSuccessPage()
-//            }, onFailure: { [weak self] error in
-//                guard let self = self else { return }
-//                
-//                self.navigator.handleError(
-//                    error: error,
-//                    presenter: presenter,
-//                    onDismiss: {},
-//                    onRetry: { [weak self] in
-//                        self?.sendResult(taskResult: taskResult, presenter: presenter)
-//                    },
-//                    dismissStyle: .destructive
-//                )
-//            })
-//            .disposed(by: disposeBag)
+        self.repository.sendTaskResult(taskId: self.taskIdentifier,
+                                       taskResult: TaskNetworkResult(data: taskResult, attachedFile: nil))
+            .addProgress()
+            .subscribe(onSuccess: { [weak self] in
+                guard let self = self else { return }
+                 self.showSuccessPage()
+            }, onFailure: { [weak self] error in
+                guard let self = self else { return }
+                
+                self.navigator.handleError(
+                    error: error,
+                    presenter: presenter,
+                    onDismiss: {},
+                    onRetry: { [weak self] in
+                        self?.sendResult(taskResult: taskResult, presenter: presenter)
+                    },
+                    dismissStyle: .destructive
+                )
+            })
+            .disposed(by: disposeBag)
     }
     
     // MARK: - Building Child View Controllers
@@ -126,6 +126,53 @@ class ReflectionSectionCoordinator: NSObject, PagedActivitySectionCoordinator {
         let reflectionVC = ReflectionViewController(headerImage: self.headerImage)
         reflectionVC.onLearnMorePressed = { [weak self] title, body in
             self?.showLearnModeViewController(title: title, body: body)
+        }
+        
+        reflectionVC.onWritePressed = { [weak self] in
+            guard let self = self else { return }
+            let diaryNoteable = DiaryNoteable(id: self.taskIdentifier, type: "Task")
+            let dataPoint = DiaryNoteItem(diaryNoteId: self.taskIdentifier,
+                                          body: nil,
+                                          interval: nil,
+                                          diaryNoteable: diaryNoteable)
+            let diaryNoteTextViewController = DiaryNoteTextViewController(withDataPoint: dataPoint,
+                                                                          isEditMode: false,
+                                                                          isFromChart: true,
+                                                                          reflectionCoordinator: self)
+            
+            self.activityPresenter?.view.backgroundColor = ColorPalette.color(withType: .secondary)
+            self.navigationController.pushViewController(diaryNoteTextViewController,
+                                                         hidesBottomBarWhenPushed: false,
+                                                         animated: true)
+        }
+        
+        reflectionVC.onAudioPressed = { [weak self] in
+            guard let self = self else { return }
+            let diaryNoteable = DiaryNoteable(id: self.taskIdentifier, type: "Task")
+            let dataPoint = DiaryNoteItem(diaryNoteId: self.taskIdentifier,
+                                          body: nil,
+                                          interval: nil,
+                                          diaryNoteable: diaryNoteable)
+            let diaryNoteAudioViewController = DiaryNoteAudioViewController(withDiaryNote: dataPoint,
+                                                                            isEditMode: false,
+                                                                            reflectionCoordinator: self)
+            
+            self.activityPresenter?.view.backgroundColor = ColorPalette.color(withType: .secondary)
+            self.navigationController.pushViewController(diaryNoteAudioViewController,
+                                                         hidesBottomBarWhenPushed: false,
+                                                         animated: true)
+        }
+        
+        reflectionVC.onVideoPressed = { [weak self] in
+            guard let self = self else { return }
+            let diaryNoteVideoViewController = DiaryNoteVideoViewController(diaryNoteItem: nil,
+                                                                            isEdit: false,
+                                                                            reflectionCoordinator: self)
+            
+            self.activityPresenter?.view.backgroundColor = ColorPalette.color(withType: .secondary)
+            self.navigationController.pushViewController(diaryNoteVideoViewController,
+                                                         hidesBottomBarWhenPushed: false,
+                                                         animated: true)
         }
 
         return reflectionVC
@@ -145,5 +192,21 @@ class ReflectionSectionCoordinator: NSObject, PagedActivitySectionCoordinator {
     /// Convenience property for presenting alerts or handling errors.
     var activityPresenter: UIViewController? {
         return self.activitySectionViewController
+    }
+}
+
+extension ReflectionSectionCoordinator: ReflectionViewCoordinator {
+    func onReflectionCreated(presenter: UIViewController, reflectionType: DiaryNoteItemType) {
+        switch reflectionType {
+        case .audio:
+            self.sendResult(taskResult: [:], presenter: presenter)
+            return
+        case .video:
+            self.sendResult(taskResult: [:], presenter: presenter)
+            return
+        case .text:
+            self.sendResult(taskResult: [:], presenter: presenter)
+            return
+        }
     }
 }

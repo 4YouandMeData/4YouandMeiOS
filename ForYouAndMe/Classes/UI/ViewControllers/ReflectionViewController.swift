@@ -135,5 +135,3 @@ class ReflectionViewController: UIViewController {
                                  StringsProvider.string(forKey: .reflectionTaskBody))
     }
 }
-
-

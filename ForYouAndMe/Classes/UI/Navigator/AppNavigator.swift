@@ -577,7 +577,8 @@ class AppNavigator {
                                   isFromChart: Bool) {
         let diaryNoteTextViewController = DiaryNoteTextViewController(withDataPoint: diaryNote,
                                                                       isEditMode: isEditMode,
-                                                                      isFromChart: isFromChart)
+                                                                      isFromChart: isFromChart,
+                                                                      reflectionCoordinator: nil)
         diaryNoteTextViewController.modalPresentationStyle = .fullScreen
         if !isFromChart {
             presenter.dismiss(animated: true) {
@@ -604,7 +605,8 @@ class AppNavigator {
                                    isEditMode: Bool,
                                    isFromChart: Bool) {
         let diaryNoteAudioViewController = DiaryNoteAudioViewController(withDiaryNote: diaryNote,
-                                                                        isEditMode: isEditMode)
+                                                                        isEditMode: isEditMode,
+                                                                        reflectionCoordinator: nil)
         diaryNoteAudioViewController.modalPresentationStyle = .fullScreen
         if !isFromChart {
             presenter.dismiss(animated: true) {
@@ -630,7 +632,8 @@ class AppNavigator {
                                    presenter: UIViewController,
                                    isFromChart: Bool) {
         let diaryNoteVideoViewController = DiaryNoteVideoViewController(diaryNoteItem: diaryNote,
-                                                                        isEdit: isEdit)
+                                                                        isEdit: isEdit,
+                                                                        reflectionCoordinator: nil)
         diaryNoteVideoViewController.modalPresentationStyle = .fullScreen
         if !isFromChart {
             presenter.dismiss(animated: true) {

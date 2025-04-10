@@ -37,6 +37,7 @@ class DiaryNoteVideoViewController: UIViewController {
     private var pollingDisposable: Disposable?
     private let pollingInterval: TimeInterval = 5.0 // Polling interval in seconds
     private var isPollingActive: Bool = false
+    private var reflectionCoordinator: ReflectionSectionCoordinator?
     
     private var currentState: VideoDiaryState = .record(isRecording: false) {
         didSet {
@@ -237,13 +238,15 @@ class DiaryNoteVideoViewController: UIViewController {
     }()
     
     init(diaryNoteItem: DiaryNoteItem?,
-         isEdit: Bool) {
+         isEdit: Bool,
+         reflectionCoordinator: ReflectionSectionCoordinator?) {
         self.navigator = Services.shared.navigator
         self.repository = Services.shared.repository
         self.storage = Services.shared.storageServices
         self.analytics = Services.shared.analytics
         self.isEditMode = isEdit
         self.diaryNoteItem = diaryNoteItem
+        self.reflectionCoordinator = reflectionCoordinator
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -775,11 +778,15 @@ class DiaryNoteVideoViewController: UIViewController {
             .subscribe(onSuccess: { [weak self] diaryNote in
                 guard let self = self else { return }
                 self.diaryNoteItem = diaryNote
-                self.onRecordCompleted()
-                DispatchQueue.main.async {
-                    self.startPolling() // Start polling after successful creation
-                    self.setupUIVideoWatch()
+                guard let coordinator = self.reflectionCoordinator else {
+                    self.onRecordCompleted()
+                    DispatchQueue.main.async {
+                        self.startPolling() // Start polling after successful creation
+                        self.setupUIVideoWatch()
+                    }
+                    return
                 }
+                coordinator.onReflectionCreated(presenter: self, reflectionType: .audio)
             }, onFailure: { [weak self] error in
                 guard let self = self else { return }
                 self.navigator.handleError(error: error,
