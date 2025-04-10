@@ -502,6 +502,10 @@ class AppNavigator {
                 return SpyrometerSectionCoordinator(withTask: task,
                                                     activity: activity,
                                                     completionCallback: completionCallback)
+            case .reflectionActivity:
+                return ReflectionSectionCoordinator(withTask: task,
+                                                    activity: activity,
+                                                    completionCallback: completionCallback)
             case .camcogEbt, .camcogNbx, .camcogPvt:
                 return CamcogSectionCoordinator(withTask: task,
                                                 activity: activity,

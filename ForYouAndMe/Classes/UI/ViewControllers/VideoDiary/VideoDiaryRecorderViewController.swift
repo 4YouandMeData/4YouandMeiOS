@@ -339,7 +339,7 @@ public class VideoDiaryRecorderViewController: UIViewController {
                 guard let self = self else { return }
                 try? FileManager.default.removeItem(atPath: Constants.Task.VideoResultURL.path)
                 self.currentState = .submitted(submitDate: Date(), isPlaying: false)
-            }, onError: { [weak self] error in
+            }, onFailure: { [weak self] error in
                 guard let self = self else { return }
                 self.navigator.handleError(error: error,
                                            presenter: self)

@@ -129,7 +129,7 @@ class SpyrometerSectionCoordinator: NSObject, PagedActivitySectionCoordinator {
         let resultsVC = SpiroDeviceDisconnectedViewController()
         resultsVC.onNextPressed = { [weak self] in
             if let introVC = self?.navigationController.viewControllers.first(where: { $0 is SpyrometerScanViewController }) {
-                self?.navigationController.popToViewController(introVC,animated: true)
+                self?.navigationController.popToViewController(introVC, animated: true)
             }
         }
         

@@ -53,6 +53,17 @@ extension UIStackView {
         self.addArrangedSubview(imageView, horizontalInset: horizontalInset)
     }
     
+    func addImageAsync(withURL url: URL?,
+                       sizeDimension: CGFloat,
+                       horizontalInset: CGFloat = 0) {
+        let imageView = UIImageView()
+        imageView.loadAsyncImage(withURL: url,
+                                 placeHolderImage: Constants.Resources.AsyncImagePlaceholder,
+                                 targetSize: CGSize(width: sizeDimension, height: sizeDimension))
+        imageView.contentMode = .scaleAspectFit
+        self.addArrangedSubview(imageView, horizontalInset: horizontalInset)
+    }
+    
     func addImage(withImage image: UIImage?,
                   color: UIColor,
                   sizeDimension: CGFloat,

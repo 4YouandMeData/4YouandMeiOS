@@ -97,6 +97,7 @@ public class InfoPageViewController: UIViewController, PageProvider {
         scrollStackView.stackView.addBlankSpace(space: 50.0)
         // Image
         scrollStackView.stackView.addHeaderImage(image: self.pageData.page.image, height: self.pageData.customImageHeight ?? 54.0)
+        
         scrollStackView.stackView.addBlankSpace(space: 40.0)
         // Title
         scrollStackView.stackView.addLabel(withText: self.pageData.page.title,
@@ -223,8 +224,8 @@ public class InfoPageViewController: UIViewController, PageProvider {
     }
 }
 
-fileprivate extension UIStackView {
-    func addExternalLinkButton(_ target: Any?, action: Selector, text: String) {
+extension UIStackView {
+    func addExternalLinkButton(_ target: Any?, action: Selector, text: String, exludingEdge: ALEdge = .trailing) {
         let button = UIButton()
         button.setTitle(text, for: .normal)
         button.setTitleColor(ColorPalette.color(withType: .gradientPrimaryEnd), for: .normal)
@@ -232,8 +233,8 @@ fileprivate extension UIStackView {
         button.addTarget(target, action: action, for: .touchUpInside)
         let buttonContainerView = UIView()
         buttonContainerView.addSubview(button)
-        button.autoPinEdgesToSuperviewEdges(with: .zero, excludingEdge: .trailing)
-        button.autoPinEdge(toSuperviewEdge: .trailing, withInset: 0.0, relation: .greaterThanOrEqual)
+        button.autoPinEdgesToSuperviewEdges(with: .zero, excludingEdge: exludingEdge)
+        button.autoPinEdge(toSuperviewEdge: exludingEdge, withInset: 0.0, relation: .greaterThanOrEqual)
         button.autoSetDimension(.height, toSize: 44.0)
         self.addArrangedSubview(buttonContainerView)
     }

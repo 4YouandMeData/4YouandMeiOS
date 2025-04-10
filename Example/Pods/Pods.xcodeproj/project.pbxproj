@@ -219,12 +219,16 @@
 		0D3641F62D96908900FDB3AA /* ProfilingOptionAnswerCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D3641F52D96908200FDB3AA /* ProfilingOptionAnswerCell.swift */; };
 		0D3641F82D999BAE00FDB3AA /* SpiroDeviceDisconnectedViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D3641F72D999BA000FDB3AA /* SpiroDeviceDisconnectedViewController.swift */; };
 		0D3642022D9B087500FDB3AA /* UserConsent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D3642012D9B087200FDB3AA /* UserConsent.swift */; };
+		0D3642222DA41DCE00FDB3AA /* ReflectionSectionCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D3642212DA41DC000FDB3AA /* ReflectionSectionCoordinator.swift */; };
+		0D3642242DA51D0D00FDB3AA /* ReflectionViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D3642232DA51D0900FDB3AA /* ReflectionViewController.swift */; };
 		0D6BBA2E2D88C8F7004DEF42 /* SpyrometerSectionCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D6BBA2D2D88C8EC004DEF42 /* SpyrometerSectionCoordinator.swift */; };
 		0D6BBA312D88C9E1004DEF42 /* SpyrometerScanViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D6BBA302D88C9D7004DEF42 /* SpyrometerScanViewController.swift */; };
 		0D6BBA332D8ADA24004DEF42 /* BluetoothOffView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D6BBA322D8ADA18004DEF42 /* BluetoothOffView.swift */; };
 		0D6C7EA1B12048E35C3B01467994A5A1 /* ORKInstructionStepViewController.h in Headers */ = {isa = PBXBuildFile; fileRef = 79AD4B91F1500BBC0C294EF2366575A1 /* ORKInstructionStepViewController.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		0D8C2C7F720B7D08170DCE61902C4305 /* ALView+PureLayout.m in Sources */ = {isa = PBXBuildFile; fileRef = 2EE07A97AF0F3E20008770D7FA16BDDD /* ALView+PureLayout.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
 		0D8D8AAA40421360D8CD6019DAE8ADB5 /* WhiteBalance_GLES.fsh in Resources */ = {isa = PBXBuildFile; fileRef = 9770ECA933BB750ECA4F31CDC36F1E19 /* WhiteBalance_GLES.fsh */; };
+		0D94E47E2DA7AA9D00C47142 /* FormSheetPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D94E47D2DA7AA8A00C47142 /* FormSheetPage.swift */; };
+		0D94E4802DA7E54000C47142 /* TripleButtonHorizontalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D94E47F2DA7E54000C47142 /* TripleButtonHorizontalView.swift */; };
 		0DAF259AB6967575F92043C4661C58F2 /* _ObjC_HeartbeatController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4588FF11E9FF1D38AA6A56FDF09F2E4A /* _ObjC_HeartbeatController.swift */; };
 		0DB452DA3ABF28E520A1FFF083A9CA0C /* CountryCodeProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9963DFEE5E8E1E02904993CE288E2C5 /* CountryCodeProvider.swift */; };
 		0DC813E62FCEF6C6C3009180D7790BFE /* Result+Alamofire.swift in Sources */ = {isa = PBXBuildFile; fileRef = C47D4F6B40174FC0BB3097E6D29EBA1B /* Result+Alamofire.swift */; };
@@ -2364,7 +2368,6 @@
 		BD36D098D652262032F1E78F8203A27A /* ignoreWhen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 419ED23D56B83E51D3C50E790E4BC2C9 /* ignoreWhen.swift */; };
 		BD40F1408056AC808BE07FAF801C59B1 /* ORKLineGraphChartView.h in Headers */ = {isa = PBXBuildFile; fileRef = 62BCB7AE4034A3904BF73A5E5FD23099 /* ORKLineGraphChartView.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		BD74ABFFFAF9837483DA8A626F7621F7 /* ColorDodgeBlend.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F0C305BB469DDEBFEF34C773BBE094E /* ColorDodgeBlend.swift */; };
-		BD95364D3C9EDB789FDBE6D49F3B215E /* TripleButtonHorizontalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 939663E7EB8EC91B10CE9544CEEE399E /* TripleButtonHorizontalView.swift */; };
 		BDA395336D24A392FACEF894D4960D4F /* Image.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C8AA3950D1E8EFF271384CC56B38945 /* Image.swift */; };
 		BDBC7D592FC726EC4000FDBA4BE13ED9 /* LocalBinaryPattern_GLES.fsh in Resources */ = {isa = PBXBuildFile; fileRef = E78686BCD7ACDDB8BBD592965C42F8CB /* LocalBinaryPattern_GLES.fsh */; };
 		BDCE2FFE85E09FD2E1CEA47E88E29752 /* QuickActivityView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93347EB09B98AC7282263B50C9B30158 /* QuickActivityView.swift */; };
@@ -4357,6 +4360,8 @@
 		0D3641F52D96908200FDB3AA /* ProfilingOptionAnswerCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfilingOptionAnswerCell.swift; sourceTree = "<group>"; };
 		0D3641F72D999BA000FDB3AA /* SpiroDeviceDisconnectedViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpiroDeviceDisconnectedViewController.swift; sourceTree = "<group>"; };
 		0D3642012D9B087200FDB3AA /* UserConsent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserConsent.swift; sourceTree = "<group>"; };
+		0D3642212DA41DC000FDB3AA /* ReflectionSectionCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReflectionSectionCoordinator.swift; sourceTree = "<group>"; };
+		0D3642232DA51D0900FDB3AA /* ReflectionViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReflectionViewController.swift; sourceTree = "<group>"; };
 		0D56721AC5B8CD21088512ABF9575755 /* FIRCLSCallStackTree.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = FIRCLSCallStackTree.m; path = Crashlytics/Crashlytics/Helpers/FIRCLSCallStackTree.m; sourceTree = "<group>"; };
 		0D631E9908483F9525A6B3F36F16CC61 /* Quick.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Quick.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		0D6BBA2D2D88C8EC004DEF42 /* SpyrometerSectionCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpyrometerSectionCoordinator.swift; sourceTree = "<group>"; };
@@ -4366,6 +4371,8 @@
 		0D896B6E772A17E240965516B01B95F3 /* ORKCustomStepView.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = ORKCustomStepView.m; path = ResearchKit/Common/ORKCustomStepView.m; sourceTree = "<group>"; };
 		0D8E3A0541DB3FFADF79263972BEB00E /* RxRelay-dummy.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = "RxRelay-dummy.m"; sourceTree = "<group>"; };
 		0D9298DFBDB72A1E1C806D3DE20F177B /* ORKShoulderRangeOfMotionStepViewController.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = ORKShoulderRangeOfMotionStepViewController.h; path = ResearchKit/ActiveTasks/ORKShoulderRangeOfMotionStepViewController.h; sourceTree = "<group>"; };
+		0D94E47D2DA7AA8A00C47142 /* FormSheetPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FormSheetPage.swift; sourceTree = "<group>"; };
+		0D94E47F2DA7E54000C47142 /* TripleButtonHorizontalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripleButtonHorizontalView.swift; sourceTree = "<group>"; };
 		0D95F6009B8D7651B69CBB32CD50E5B5 /* GDTCCTUploadOperation.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = GDTCCTUploadOperation.m; path = GoogleDataTransport/GDTCCTLibrary/GDTCCTUploadOperation.m; sourceTree = "<group>"; };
 		0DB2765FFEC03194DB0908AAA0166DF0 /* Dilation1_GL.fsh */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.glsl; name = Dilation1_GL.fsh; path = framework/Source/Operations/Shaders/Dilation1_GL.fsh; sourceTree = "<group>"; };
 		0DB8AFC53314CA7E11D00D8487083226 /* ORKTowerOfHanoiStepViewController.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = ORKTowerOfHanoiStepViewController.m; path = ResearchKit/ActiveTasks/ORKTowerOfHanoiStepViewController.m; sourceTree = "<group>"; };
@@ -6101,7 +6108,6 @@
 		936F9E568AED5FE711E3B4E141D969C3 /* FIRCLSAnalyticsManager.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = FIRCLSAnalyticsManager.m; path = Crashlytics/Crashlytics/Controllers/FIRCLSAnalyticsManager.m; sourceTree = "<group>"; };
 		9383E12A8933EB937FCBD524B80090E5 /* BalzoGPUImage2.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = BalzoGPUImage2.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		939581B8198B693A91CD41A710629447 /* PermissionViewController.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PermissionViewController.swift; sourceTree = "<group>"; };
-		939663E7EB8EC91B10CE9544CEEE399E /* TripleButtonHorizontalView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TripleButtonHorizontalView.swift; sourceTree = "<group>"; };
 		93BBBD0012657B20C6BAED6DE71C8350 /* FIRCLSLaunchMarkerModel.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = FIRCLSLaunchMarkerModel.h; path = Crashlytics/Crashlytics/Models/FIRCLSLaunchMarkerModel.h; sourceTree = "<group>"; };
 		93E4168A0B324332596E9AAF63D354D2 /* Skip.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = Skip.swift; path = RxSwift/Observables/Skip.swift; sourceTree = "<group>"; };
 		93E49719A9F74F0D25FF684E97055867 /* FirebaseCoreExtension-dummy.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = "FirebaseCoreExtension-dummy.m"; sourceTree = "<group>"; };
@@ -9118,6 +9124,7 @@
 		44E6670F88E3F35E36BF5DDC134ED4A2 /* Navigator */ = {
 			isa = PBXGroup;
 			children = (
+				0D3642212DA41DC000FDB3AA /* ReflectionSectionCoordinator.swift */,
 				0D3641EB2D956E2E00FDB3AA /* OnboardingQuestionsCoordinator.swift */,
 				0D6BBA2D2D88C8EC004DEF42 /* SpyrometerSectionCoordinator.swift */,
 				59C274BA2942A4439DCA505F83945A5B /* ActivitySectionCoordinator.swift */,
@@ -11543,6 +11550,8 @@
 		C2AC34DCE1B9D5E7C7A4BAE15259715A /* ViewControllers */ = {
 			isa = PBXGroup;
 			children = (
+				0D94E47D2DA7AA8A00C47142 /* FormSheetPage.swift */,
+				0D3642232DA51D0900FDB3AA /* ReflectionViewController.swift */,
 				0D3641F72D999BA000FDB3AA /* SpiroDeviceDisconnectedViewController.swift */,
 				0D3641F12D968E2400FDB3AA /* ProfilingQuestionViewController.swift */,
 				0D6BBA2F2D88C9CE004DEF42 /* Spyrometer */,
@@ -11667,6 +11676,7 @@
 		CCE4002B99A50AAAEA1FFD8801BEF07D /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				0D94E47F2DA7E54000C47142 /* TripleButtonHorizontalView.swift */,
 				0D3641F52D96908200FDB3AA /* ProfilingOptionAnswerCell.swift */,
 				0D3641F32D968F0000FDB3AA /* ProfilingQuestionPickOne.swift */,
 				0D3641E02D9354B900FDB3AA /* SpiroPopoverController.swift */,
@@ -11711,7 +11721,6 @@
 				B4F2F7D674DCE4B1354E392F2CB1910F /* StarRatingView.swift */,
 				E5A1C901F177278C82C3FD1F4AAF2220 /* StudyInfoHeaderView.swift */,
 				73C342C6B452153319EA98B0AE8F1E17 /* TaskEmptyView.swift */,
-				939663E7EB8EC91B10CE9544CEEE399E /* TripleButtonHorizontalView.swift */,
 				6E4B061775492072974FF48F75D1D418 /* UserDataAggregationEmptyByFilterView.swift */,
 				55872D718AE2D86638329D2D012F0CBC /* UserDataAggregationErrorView.swift */,
 				7E3124F6EAB7E3BA120E3A7B3DC8F272 /* UserInfoHeaderView.swift */,
@@ -17956,6 +17965,7 @@
 				0DB452DA3ABF28E520A1FFF083A9CA0C /* CountryCodeProvider.swift in Sources */,
 				8EE66E013605CF29727AFE7D4B136C9C /* CustomSegmentView.swift in Sources */,
 				6C55FB89EC096EF3563E4ADE43F0FBF4 /* DataPickerHandler.swift in Sources */,
+				0D94E4802DA7E54000C47142 /* TripleButtonHorizontalView.swift in Sources */,
 				20C01F8D62A0DA8CEFE4D41CD5536B47 /* Date+Extensions.swift in Sources */,
 				80539907CC2312CF624CC1C9C9E1EDFB /* DatePickerHandler.swift in Sources */,
 				54B88DD45C87FA6D3180D04CA2A76C00 /* DeeplinkManager.swift in Sources */,
@@ -18045,6 +18055,7 @@
 				828FB644595DF96A3E440DE8DF9CE8E6 /* KeyboardNotificationProvider.swift in Sources */,
 				BB92F8AC6A9ED9D206CCF51EF9728A7E /* LoadingTableViewCell.swift in Sources */,
 				1D030ECB6F810ADC4C003DAA32F58333 /* LoadingTranscribeAudio.swift in Sources */,
+				0D3642222DA41DCE00FDB3AA /* ReflectionSectionCoordinator.swift in Sources */,
 				EE1363E773E0B69A99986E45E6464764 /* LoadingViewController.swift in Sources */,
 				DF74483F5541E988477D297F12BD4701 /* LocationPermission.swift in Sources */,
 				88E75F2E92E14E4751C456897A56222B /* Mappable.swift in Sources */,
@@ -18067,6 +18078,7 @@
 				A344279A31A013A5826EE2590FF2D37D /* NotificationPermission.swift in Sources */,
 				085858D60C23BB0B4E668B346DD26B70 /* NotificationService.swift in Sources */,
 				82E68826BEDF59EBB52CE145E07C58D4 /* NSAttributedString+Extensions.swift in Sources */,
+				0D94E47E2DA7AA9D00C47142 /* FormSheetPage.swift in Sources */,
 				FAF84AA3E531A984CA1034EB0EC0AAF5 /* NSAttributedString+Palette.swift in Sources */,
 				DC63058F4A128B5489B6A660E5ECB3F4 /* NSDictionary+Safety.swift in Sources */,
 				B245B97FB10F9AE95913D112D459BF79 /* Observable+ModelMapper.swift in Sources */,
@@ -18187,9 +18199,9 @@
 				E477BF6BA070EF79765BA898733129DE /* TPKeyboardAvoiding+Extensions.swift in Sources */,
 				6D614885783274B3D837B1EFB92C8E73 /* TrailMakingTask.swift in Sources */,
 				FEB5EC11543FF51C4ED7D95F5A49E801 /* Transform.swift in Sources */,
+				0D3642242DA51D0D00FDB3AA /* ReflectionViewController.swift in Sources */,
 				4832C83361F269CDCD9FC866CA9CFD0F /* Transform+Dictionary.swift in Sources */,
 				6900C4C8727630BD036DDA587F57EFB5 /* TremorTask.swift in Sources */,
-				BD95364D3C9EDB789FDBE6D49F3B215E /* TripleButtonHorizontalView.swift in Sources */,
 				EACF491EC82AB1AB9159027ACD3334C6 /* TypeAliases.swift in Sources */,
 				4CA99FA8A95416CA1B7DDC7B91D8EC12 /* UIBarButtonItem+ActionHandler.swift in Sources */,
 				151B9D8DA46E52E480788D4727F977B8 /* UIButton+Extensions.swift in Sources */,
