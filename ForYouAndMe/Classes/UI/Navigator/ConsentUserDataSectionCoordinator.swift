@@ -140,7 +140,7 @@ class ConsentUserDataSectionCoordinator {
             relation: relation,
             signatureImage: signatureImage,
             additionalImage: additionalSignature,
-            isCreate: true)
+            isCreate: false)
         
         self.repository.sendUserData(userConsentData: data)
             .flatMap { consent in
@@ -174,7 +174,7 @@ class ConsentUserDataSectionCoordinator {
             relation: nil,
             signatureImage: signatureImage,
             additionalImage: nil,
-            isCreate: true)
+            isCreate: false)
         
         self.repository.sendUserData(userConsentData: data)
             .addProgress()
@@ -186,7 +186,6 @@ class ConsentUserDataSectionCoordinator {
                     self.navigator.handleError(error: error, presenter: self.navigationController)
             }).disposed(by: self.disposeBag)
     }
-    
     
     private func showSuccess() {
         if let successPage = self.sectionData.successPage {

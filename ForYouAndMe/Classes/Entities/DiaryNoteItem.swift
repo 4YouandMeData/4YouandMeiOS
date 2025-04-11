@@ -26,9 +26,22 @@ enum DiaryNoteItemType: String, Codable {
     case video
 }
 
+enum DiaryNoteableType: String, Codable {
+    case chart
+    case task
+}
+
 struct DiaryNoteable: Codable {
     let id: String
     let type: String
+}
+
+extension DiaryNoteable: JSONAPIMappable {
+    
+    enum CodingKeys: String, CodingKey {
+        case id
+        case type
+    }
 }
 
 struct DiaryNoteItem: Codable {
@@ -91,7 +104,9 @@ struct DiaryNoteItem: Codable {
 
 extension DiaryNoteItem: JSONAPIMappable {
     
-    static var includeList: String? = "diary_noteable"
+    static var includeList: String? = """
+diary_noteable
+"""
     
     enum CodingKeys: String, CodingKey {
         case id
@@ -113,7 +128,7 @@ extension DiaryNoteItem: JSONAPIMappable {
         // Decode optional fields
         self.title = try container.decodeIfPresent(String.self, forKey: .title)
         self.body = try container.decodeIfPresent(String.self, forKey: .body)
-        self.diaryNoteable = try? container.decodeIfPresent(DiaryNoteable.self, forKey: .diaryNoteable)
+        self.diaryNoteable = try container.decodeIfPresent(DiaryNoteable.self, forKey: .diaryNoteable)
         
         // Check for attachment
         if let attachmentContainer = try? container.decodeIfPresent([String: String].self, forKey: .urlString),

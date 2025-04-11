@@ -65,6 +65,8 @@ enum ImageName: String, CaseIterable {
     case deviceConnected = "device_connected"
     case bluetoothNoDevices = "bluetooth_no_devices"
     case spiroIntroTestImage = "spiro_intro_image"
+    case reflectionBrainIcon = "brain_logo"
+    case reflectionEyeIcon = "eye_logo"
 }
 
 enum TemplateImageName: String, CaseIterable {

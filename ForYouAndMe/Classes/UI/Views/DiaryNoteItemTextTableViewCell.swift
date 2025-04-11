@@ -9,6 +9,40 @@ import UIKit
 
 class DiaryNoteItemTextTableViewCell: UITableViewCell {
     
+    /// This view contains the tag icon and label displayed above the note content.
+    private lazy var noteTagContainer: UIStackView = {
+        let container = UIStackView()
+        container.axis = .horizontal
+        container.alignment = .center
+        container.spacing = 8.0
+        container.distribution = .fill
+        container.addArrangedSubview(tagIconImageView)
+        container.addArrangedSubview(tagLabel)
+        container.backgroundColor = .yellow
+        container.layer.cornerRadius = 6
+        container.layoutMargins = UIEdgeInsets(top: 4, left: 8, bottom: 4, right: 8)
+        container.isLayoutMarginsRelativeArrangement = true
+        
+        return container
+    }()
+    
+    private lazy var tagIconImageView: UIImageView = {
+        let imageView = UIImageView()
+        imageView.contentMode = .scaleAspectFit
+        imageView.image = ImagePalette.image(withName: .reflectionBrainIcon)
+        imageView.autoSetDimensions(to: CGSize(width: 10, height: 10))
+        return imageView
+    }()
+    
+    private lazy var tagLabel: UILabel = {
+        let label = UILabel()
+        label.text = "I HAVE NOTICED".uppercased()
+        label.font = UIFont.systemFont(ofSize: 8, weight: .medium)
+        label.textColor = ColorPalette.color(withType: .primaryText)
+        label.numberOfLines = 1
+        return label
+    }()
+    
     private lazy var noteImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.contentMode = .scaleAspectFit
@@ -63,6 +97,7 @@ class DiaryNoteItemTextTableViewCell: UITableViewCell {
         textView.axis = .vertical
         textView.spacing = 4.0
         textView.alignment = .leading
+        textView.addArrangedSubview(self.noteTagContainer)
         textView.addArrangedSubview(self.noteTitleLabel)
         textView.addArrangedSubview(self.noteDescriptionLabel)
         
@@ -95,6 +130,23 @@ class DiaryNoteItemTextTableViewCell: UITableViewCell {
         self.updateNoteTitle(data.title ?? "")
         self.updateNoteDescription(data.body ?? "")
         noteImageView.image = ImagePalette.image(withName: .textNoteListImage)
+        
+        if let diaryType = DiaryNoteableType(rawValue: data.diaryNoteable?.type.lowercased() ?? "") {
+            switch diaryType {
+            case .chart:
+                self.tagLabel.text = "I Have Noticed"
+                self.noteTagContainer.backgroundColor = UIColor.systemBlue.withAlphaComponent(0.1)
+                self.tagLabel.textColor = UIColor.systemBlue
+                self.tagIconImageView.tintColor = UIColor.systemBlue
+            case .task:
+                self.tagLabel.text = "Reflection"
+                self.noteTagContainer.backgroundColor = UIColor.systemGreen.withAlphaComponent(0.1)
+                self.tagLabel.textColor = UIColor.systemGreen
+                self.tagIconImageView.tintColor = UIColor.systemGreen
+            }
+        } else {
+            self.noteTagContainer.isHidden = true
+        }
     }
     
     // MARK: - Actions
