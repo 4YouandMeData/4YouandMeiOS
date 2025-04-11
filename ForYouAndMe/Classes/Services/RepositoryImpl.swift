@@ -393,7 +393,7 @@ extension RepositoryImpl: Repository {
             .handleError()
     }
     
-    func sendDiaryNoteText(diaryNote: DiaryNoteItem, fromChart: Bool) -> Single<()> {
+    func sendDiaryNoteText(diaryNote: DiaryNoteItem, fromChart: Bool) -> Single<DiaryNoteItem> {
         return self.api.send(request: ApiRequest(serviceRequest: .sendDiaryNoteText(diaryItem: diaryNote, fromChart: fromChart)))
             .handleError()
     }

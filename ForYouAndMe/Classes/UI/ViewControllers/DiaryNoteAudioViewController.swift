@@ -290,7 +290,7 @@ class DiaryNoteAudioViewController: UIViewController {
                     }
                     return
                 }
-                coordinator.onReflectionCreated(presenter: self, reflectionType: .audio)
+                coordinator.onReflectionCreated(presenter: self, reflectionType: .audio, diaryNote: diaryNote)
             }, onFailure: { [weak self] error in
                 guard let self = self else { return }
                 self.navigator.handleError(error: error,

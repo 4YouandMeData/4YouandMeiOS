@@ -8,7 +8,7 @@
 import RxSwift
 
 protocol ReflectionViewCoordinator {
-    func onReflectionCreated(presenter: UIViewController, reflectionType: DiaryNoteItemType)
+    func onReflectionCreated(presenter: UIViewController, reflectionType: DiaryNoteItemType, diaryNote: DiaryNoteItem)
 }
 
 class ReflectionSectionCoordinator: NSObject, PagedActivitySectionCoordinator {
@@ -196,16 +196,29 @@ class ReflectionSectionCoordinator: NSObject, PagedActivitySectionCoordinator {
 }
 
 extension ReflectionSectionCoordinator: ReflectionViewCoordinator {
-    func onReflectionCreated(presenter: UIViewController, reflectionType: DiaryNoteItemType) {
+    func onReflectionCreated(presenter: UIViewController, reflectionType: DiaryNoteItemType, diaryNote: DiaryNoteItem) {
+        let diaryNoteDict: [String: String] = [
+            "id": diaryNote.id
+        ]
+        guard let jsonData = try? JSONSerialization.data(withJSONObject: diaryNoteDict, options: []),
+              let diaryNoteJSONString = String(data: jsonData, encoding: .utf8) else {
+            // In caso di errore, puoi decidere come gestirlo (ad esempio, inviare un dizionario vuoto)
+            self.sendResult(taskResult: [:], presenter: presenter)
+            return
+        }
+        
+        let taskResultData: [String: String] = [
+            "diary_note": diaryNoteJSONString
+        ]
         switch reflectionType {
         case .audio:
-            self.sendResult(taskResult: [:], presenter: presenter)
+            self.sendResult(taskResult: taskResultData, presenter: presenter)
             return
         case .video:
-            self.sendResult(taskResult: [:], presenter: presenter)
+            self.sendResult(taskResult: taskResultData, presenter: presenter)
             return
         case .text:
-            self.sendResult(taskResult: [:], presenter: presenter)
+            self.sendResult(taskResult: taskResultData, presenter: presenter)
             return
         }
     }

@@ -786,7 +786,7 @@ class DiaryNoteVideoViewController: UIViewController {
                     }
                     return
                 }
-                coordinator.onReflectionCreated(presenter: self, reflectionType: .audio)
+                coordinator.onReflectionCreated(presenter: self, reflectionType: .video, diaryNote: diaryNote)
             }, onFailure: { [weak self] error in
                 guard let self = self else { return }
                 self.navigator.handleError(error: error,

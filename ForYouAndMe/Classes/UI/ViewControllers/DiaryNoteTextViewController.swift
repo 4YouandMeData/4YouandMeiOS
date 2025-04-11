@@ -241,12 +241,12 @@ class DiaryNoteTextViewController: UIViewController {
             if let diaryNote, self.diaryNote?.diaryNoteable != nil {
                 self.repository.sendDiaryNoteText(diaryNote: diaryNote, fromChart: true)
                     .addProgress()
-                    .subscribe(onSuccess: { [weak self] in
+                    .subscribe(onSuccess: { [weak self] diaryNote in
                         guard let self = self else { return }
                         guard let coordinator = self.reflectionCoordinator else {
                             return self.closeButtonPressed()
                         }
-                        coordinator.onReflectionCreated(presenter: self, reflectionType: .text)
+                        coordinator.onReflectionCreated(presenter: self, reflectionType: .text, diaryNote: diaryNote)
                     }, onFailure: { [weak self] error in
                         guard let self = self else { return }
                         self.navigator.handleError(error: error, presenter: self)
@@ -260,12 +260,12 @@ class DiaryNoteTextViewController: UIViewController {
 
                 self.repository.sendDiaryNoteText(diaryNote: newDiaryNote, fromChart: false)
                     .addProgress()
-                    .subscribe(onSuccess: { [weak self] in
+                    .subscribe(onSuccess: { [weak self] diaryNote in
                         guard let self = self else { return }
                         guard let coordinator = self.reflectionCoordinator else {
                             return self.closeButtonPressed()
                         }
-                        coordinator.onReflectionCreated(presenter: self, reflectionType: .text)
+                        coordinator.onReflectionCreated(presenter: self, reflectionType: .text, diaryNote: diaryNote)
                     }, onFailure: { [weak self] error in
                         guard let self = self else { return }
                         self.navigator.handleError(error: error, presenter: self)
