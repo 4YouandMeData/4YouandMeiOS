@@ -16,7 +16,7 @@ struct OnboardingQuestionsSection {
     @ExcludeInvalid
     var questions: [ProfilingQuestion]
     
-    let welcomePage: Page
+    let welcomePage: Page?
     let successPage: Page?
     let failurePage: Page?
 }
@@ -53,7 +53,6 @@ extension OnboardingQuestionsSection: Hashable, Equatable {
         hasher.combine(self.id)
     }
 }
-
 
 extension OnboardingQuestionsSection {
     

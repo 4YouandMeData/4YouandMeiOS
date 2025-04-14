@@ -106,8 +106,17 @@ extension OnboardingQuestionsCoordinator: PagedSectionCoordinator {
     var pages: [Page] { self.sectionData.pages }
     
     func getStartingPage() -> UIViewController {
-        let infoPageData = InfoPageData.createWelcomePageData(withPage: self.sectionData.welcomePage)
-        return InfoPageViewController(withPageData: infoPageData, coordinator: self)
+        if let welcomePage = self.sectionData.welcomePage {
+            let infoPageData = InfoPageData.createWelcomePageData(withPage: welcomePage)
+            return InfoPageViewController(withPageData: infoPageData, coordinator: self)
+        } else {
+            guard let question = self.sectionData.questions.first else {
+                fatalError("Valid Questions are not presents")
+            }
+            self.currentQuestion = question
+            let pageData = ProfilingQuestionViewController(withPageData: question, coordinator: self)
+            return pageData
+        }
     }
     
     func performCustomPrimaryButtonNavigation(page: Page) -> Bool {
