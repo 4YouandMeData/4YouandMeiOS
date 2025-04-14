@@ -131,18 +131,20 @@ class DiaryNoteItemTextTableViewCell: UITableViewCell {
         self.updateNoteDescription(data.body ?? "")
         noteImageView.image = ImagePalette.image(withName: .textNoteListImage)
         
-        if let diaryType = DiaryNoteableType(rawValue: data.diaryNoteable?.type.lowercased() ?? "") {
+        if let diaryType = DiaryNoteableType(rawValue: data.diaryNoteable?.type.lowercased() ?? "none") {
             switch diaryType {
-            case .chart:
+            case .none, .chart:
                 self.tagLabel.text = "I Have Noticed"
-                self.noteTagContainer.backgroundColor = UIColor.systemBlue.withAlphaComponent(0.1)
-                self.tagLabel.textColor = UIColor.systemBlue
-                self.tagIconImageView.tintColor = UIColor.systemBlue
+                self.noteTagContainer.backgroundColor = ColorPalette.color(withType: .noticedColor)
+                self.tagLabel.textColor = ColorPalette.color(withType: .noticedTextColor)
+                self.tagIconImageView.tintColor = ColorPalette.color(withType: .noticedTextColor)
+                self.tagIconImageView.image = ImagePalette.image(withName: .reflectionEyeIcon)
             case .task:
                 self.tagLabel.text = "Reflection"
-                self.noteTagContainer.backgroundColor = UIColor.systemGreen.withAlphaComponent(0.1)
-                self.tagLabel.textColor = UIColor.systemGreen
-                self.tagIconImageView.tintColor = UIColor.systemGreen
+                self.noteTagContainer.backgroundColor = ColorPalette.color(withType: .reflectionColor)
+                self.tagLabel.textColor = ColorPalette.color(withType: .reflectionTextColor)
+                self.tagIconImageView.tintColor = ColorPalette.color(withType: .reflectionTextColor)
+                self.tagIconImageView.image = ImagePalette.image(withName: .reflectionBrainIcon)
             }
         } else {
             self.noteTagContainer.isHidden = true

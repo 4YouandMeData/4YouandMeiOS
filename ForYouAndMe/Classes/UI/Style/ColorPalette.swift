@@ -30,6 +30,10 @@ enum ColorType: String, CaseIterable, CodingKey {
     case gradientTertiaryEnd = "tertiary_color_end"
     case fabColorDefault = "fab_color_default"
     case fabOutlineColor = "fab_outline_color"
+    case reflectionColor = "reflection_color"
+    case reflectionTextColor = "reflection_text_color"
+    case noticedColor = "noticed_color"
+    case noticedTextColor = "noticed_text_color"
     
     var defaultColor: UIColor {
         switch self {
@@ -51,6 +55,10 @@ enum ColorType: String, CaseIterable, CodingKey {
         case .fabColorDefault: return UIColor(hexRGB: 0xFFFFFF)
         case .fabOutlineColor: return UIColor(hexRGB: 0xA5A5A5)
         case .secondaryBackgroungColor: return UIColor(hexRGB: 0xDFDFDF)
+        case .reflectionColor: return UIColor(hexRGB: 0xFFE993)
+        case .reflectionTextColor: return UIColor(hexRGB: 0x905006)
+        case .noticedColor: return UIColor(hexRGB: 0xD4E8FF)
+        case .noticedTextColor: return UIColor(hexRGB: 0x007AFF)
         }
     }
 }

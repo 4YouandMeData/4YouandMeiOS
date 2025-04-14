@@ -165,7 +165,12 @@ class ReflectionSectionCoordinator: NSObject, PagedActivitySectionCoordinator {
         
         reflectionVC.onVideoPressed = { [weak self] in
             guard let self = self else { return }
-            let diaryNoteVideoViewController = DiaryNoteVideoViewController(diaryNoteItem: nil,
+            let diaryNoteable = DiaryNoteable(id: self.taskIdentifier, type: "Task")
+            let dataPoint = DiaryNoteItem(diaryNoteId: self.taskIdentifier,
+                                          body: nil,
+                                          interval: nil,
+                                          diaryNoteable: diaryNoteable)
+            let diaryNoteVideoViewController = DiaryNoteVideoViewController(diaryNoteItem: dataPoint,
                                                                             isEdit: false,
                                                                             reflectionCoordinator: self)
             

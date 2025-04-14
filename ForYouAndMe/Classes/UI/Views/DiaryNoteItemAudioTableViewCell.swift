@@ -9,6 +9,40 @@ import UIKit
 
 class DiaryNoteItemAudioTableViewCell: UITableViewCell {
     
+    /// This view contains the tag icon and label displayed above the note content.
+    private lazy var noteTagContainer: UIStackView = {
+        let container = UIStackView()
+        container.axis = .horizontal
+        container.alignment = .center
+        container.spacing = 8.0
+        container.distribution = .fill
+        container.addArrangedSubview(tagIconImageView)
+        container.addArrangedSubview(tagLabel)
+        container.backgroundColor = .yellow
+        container.layer.cornerRadius = 6
+        container.layoutMargins = UIEdgeInsets(top: 4, left: 8, bottom: 4, right: 8)
+        container.isLayoutMarginsRelativeArrangement = true
+        
+        return container
+    }()
+    
+    private lazy var tagIconImageView: UIImageView = {
+        let imageView = UIImageView()
+        imageView.contentMode = .scaleAspectFit
+        imageView.image = ImagePalette.image(withName: .reflectionBrainIcon)
+        imageView.autoSetDimensions(to: CGSize(width: 10, height: 10))
+        return imageView
+    }()
+    
+    private lazy var tagLabel: UILabel = {
+        let label = UILabel()
+        label.text = "I HAVE NOTICED".uppercased()
+        label.font = UIFont.systemFont(ofSize: 8, weight: .medium)
+        label.textColor = ColorPalette.color(withType: .primaryText)
+        label.numberOfLines = 1
+        return label
+    }()
+    
     private lazy var noteImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.contentMode = .scaleAspectFit
@@ -61,8 +95,10 @@ class DiaryNoteItemAudioTableViewCell: UITableViewCell {
         let playerView = UIStackView()
         playerView.axis = .vertical
         playerView.distribution = .fill
+        playerView.alignment = .leading
+        playerView.addArrangedSubview(self.noteTagContainer)
         playerView.addArrangedSubview(self.noteTitleLabel)
-        playerView.spacing = 16.0
+        playerView.spacing = 8.0
         
         let audioView = UIStackView()
         audioView.axis = .horizontal
@@ -101,6 +137,24 @@ class DiaryNoteItemAudioTableViewCell: UITableViewCell {
         self.updateNoteTitle(data.title ?? "Audio Recorded")
         noteImageView.image = ImagePalette.image(withName: .audioNoteListImage)
         
+        if let diaryType = DiaryNoteableType(rawValue: data.diaryNoteable?.type.lowercased() ?? "none") {
+            switch diaryType {
+            case .none, .chart:
+                self.tagLabel.text = "I Have Noticed"
+                self.noteTagContainer.backgroundColor = ColorPalette.color(withType: .noticedColor)
+                self.tagLabel.textColor = ColorPalette.color(withType: .noticedTextColor)
+                self.tagIconImageView.tintColor = ColorPalette.color(withType: .noticedTextColor)
+                self.tagIconImageView.image = ImagePalette.image(withName: .reflectionEyeIcon)
+            case .task:
+                self.tagLabel.text = "Reflection"
+                self.noteTagContainer.backgroundColor = ColorPalette.color(withType: .reflectionColor)
+                self.tagLabel.textColor = ColorPalette.color(withType: .reflectionTextColor)
+                self.tagIconImageView.tintColor = ColorPalette.color(withType: .reflectionTextColor)
+                self.tagIconImageView.image = ImagePalette.image(withName: .reflectionBrainIcon)
+            }
+        } else {
+            self.noteTagContainer.isHidden = true
+        }
     }
     
     public func setTimeLabelFromDuration(_ duration: TimeInterval) {

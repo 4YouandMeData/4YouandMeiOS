@@ -29,6 +29,7 @@ enum DiaryNoteItemType: String, Codable {
 enum DiaryNoteableType: String, Codable {
     case chart
     case task
+    case none
 }
 
 struct DiaryNoteable: Codable {

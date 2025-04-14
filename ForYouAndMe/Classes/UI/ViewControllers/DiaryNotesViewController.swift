@@ -421,9 +421,9 @@ extension DiaryNotesViewController: UITableViewDelegate {
         let diaryNote = diaryNoteItems[indexPath.row]
             switch diaryNote.diaryNoteType {
             case .text:
-                return 80 // Altezza variabile per le note di testo
+                return 80 // Variable Height for text note
             case .audio, .video:
-                return 100 // Altezza fissa per le note audio
+                return 100 // Fixed Height for audio and video note
             case .none:
                 return UITableView.automaticDimension
             }
