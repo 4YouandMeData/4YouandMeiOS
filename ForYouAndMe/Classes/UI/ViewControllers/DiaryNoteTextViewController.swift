@@ -310,7 +310,7 @@ class DiaryNoteTextViewController: UIViewController {
     
     private func loadNote() {
         
-        guard let dataPoint = self.diaryNote, ((self.diaryNote?.diaryNoteable) == nil) else {
+        guard let dataPoint = self.diaryNote else {
             self.pageState.accept(.edit)
             return
         }
