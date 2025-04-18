@@ -54,6 +54,8 @@ extension SurveyResult {
             if let minimum = self.question.minimum, value < minimum { return false }
             if let maximum = self.question.maximum, value > maximum { return false }
             return true
+        case .clickable:
+            return false
         }
     }
     
@@ -68,6 +70,7 @@ extension SurveyResult {
         case .dateInput: return nil
         case .scale: return self.answer as? Int
         case .range: return self.answer as? Int
+        case .clickable: return nil
         }
     }
     
@@ -86,6 +89,7 @@ extension SurveyResult {
         case .dateInput: return nil
         case .scale: return nil
         case .range: return nil
+        case .clickable: return nil
         }
     }
 }
@@ -127,6 +131,8 @@ extension SurveyQuestion {
                   minimum < maximum else {
                 return false
             }
+        case .clickable:
+            guard self.clickableImage != nil else { return false }
         }
         return true
     }

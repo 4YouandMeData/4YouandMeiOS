@@ -229,6 +229,7 @@
 		0D8D8AAA40421360D8CD6019DAE8ADB5 /* WhiteBalance_GLES.fsh in Resources */ = {isa = PBXBuildFile; fileRef = 9770ECA933BB750ECA4F31CDC36F1E19 /* WhiteBalance_GLES.fsh */; };
 		0D94E47E2DA7AA9D00C47142 /* FormSheetPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D94E47D2DA7AA8A00C47142 /* FormSheetPage.swift */; };
 		0D94E4802DA7E54000C47142 /* TripleButtonHorizontalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D94E47F2DA7E54000C47142 /* TripleButtonHorizontalView.swift */; };
+		0DA07A2E2DB2C404000F0418 /* SurveyClickableImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DA07A2D2DB2C3FF000F0418 /* SurveyClickableImage.swift */; };
 		0DAF259AB6967575F92043C4661C58F2 /* _ObjC_HeartbeatController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4588FF11E9FF1D38AA6A56FDF09F2E4A /* _ObjC_HeartbeatController.swift */; };
 		0DB452DA3ABF28E520A1FFF083A9CA0C /* CountryCodeProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9963DFEE5E8E1E02904993CE288E2C5 /* CountryCodeProvider.swift */; };
 		0DC813E62FCEF6C6C3009180D7790BFE /* Result+Alamofire.swift in Sources */ = {isa = PBXBuildFile; fileRef = C47D4F6B40174FC0BB3097E6D29EBA1B /* Result+Alamofire.swift */; };
@@ -4374,6 +4375,7 @@
 		0D94E47D2DA7AA8A00C47142 /* FormSheetPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FormSheetPage.swift; sourceTree = "<group>"; };
 		0D94E47F2DA7E54000C47142 /* TripleButtonHorizontalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripleButtonHorizontalView.swift; sourceTree = "<group>"; };
 		0D95F6009B8D7651B69CBB32CD50E5B5 /* GDTCCTUploadOperation.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = GDTCCTUploadOperation.m; path = GoogleDataTransport/GDTCCTLibrary/GDTCCTUploadOperation.m; sourceTree = "<group>"; };
+		0DA07A2D2DB2C3FF000F0418 /* SurveyClickableImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SurveyClickableImage.swift; sourceTree = "<group>"; };
 		0DB2765FFEC03194DB0908AAA0166DF0 /* Dilation1_GL.fsh */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.glsl; name = Dilation1_GL.fsh; path = framework/Source/Operations/Shaders/Dilation1_GL.fsh; sourceTree = "<group>"; };
 		0DB8AFC53314CA7E11D00D8487083226 /* ORKTowerOfHanoiStepViewController.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = ORKTowerOfHanoiStepViewController.m; path = ResearchKit/ActiveTasks/ORKTowerOfHanoiStepViewController.m; sourceTree = "<group>"; };
 		0DE1D72D2D7D400342DE5BDF9C1D680F /* Driver+Subscription.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = "Driver+Subscription.swift"; path = "RxCocoa/Traits/Driver/Driver+Subscription.swift"; sourceTree = "<group>"; };
@@ -8381,6 +8383,7 @@
 		230C3F32D3857501331AD6826367F124 /* Survey */ = {
 			isa = PBXGroup;
 			children = (
+				0DA07A2D2DB2C3FF000F0418 /* SurveyClickableImage.swift */,
 				C2BE33109315E53C83EE4979CAABDE8D /* Slider.swift */,
 				F336B7E0DA46280C3F9F4AB3B548DCD7 /* SurveyQuestionDate.swift */,
 				027B80A242B979F0551838A7FF4BB444 /* SurveyQuestionNumerical.swift */,
@@ -17928,6 +17931,7 @@
 				F358037EE65AD98143221FBE4AF520E0 /* AnalyticsService.swift in Sources */,
 				40D9B496B549E3F20E57EFC83D760039 /* Answer.swift in Sources */,
 				67E612D0D5FFB2E7AA17DAC0DC746030 /* ApiContext.swift in Sources */,
+				0DA07A2E2DB2C404000F0418 /* SurveyClickableImage.swift in Sources */,
 				0D3641EA2D956C2D00FDB3AA /* OnboardingQuestionsSection.swift in Sources */,
 				4023ECF6A0868979975BEAAF3A9B6F12 /* ApiGateway.swift in Sources */,
 				335B93D10C89689663B1268F2714CE93 /* AppNavigator.swift in Sources */,

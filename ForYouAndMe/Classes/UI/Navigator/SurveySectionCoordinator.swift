@@ -212,6 +212,8 @@ extension SurveySectionCoordinator: SurveyQuestionViewCoordinator {
             if let optionsIdentifiers = result.optionsIdentifiers {
                 matchingTarget = result.question.targets?.getTargetMatchingCriteria(forOptionsIdentifiers: optionsIdentifiers)
             }
+        case .clickable:
+            break
         case .pickMany:
             if let optionsIdentifiers = result.optionsIdentifiers {
                 matchingTarget = result.question.targets?.getTargetMatchingCriteria(forOptionsIdentifiers: optionsIdentifiers)

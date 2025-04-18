@@ -16,6 +16,7 @@ enum SurveyQuestionType: String {
     case dateInput = "SurveyQuestionDate"
     case scale = "SurveyQuestionScale"
     case range = "SurveyQuestionRange"
+    case clickable = "SurveyQuestionClickableImage"
 }
 
 struct SurveyQuestion {
@@ -28,6 +29,9 @@ struct SurveyQuestion {
     let body: String
     @ImageDecodable
     var image: UIImage?
+    
+    @ImageDecodable
+    var clickableImage: UIImage?
     
     // Details
     var minimum: Int?
@@ -66,6 +70,7 @@ extension SurveyQuestion: JSONAPIMappable {
         case questionType = "question_type"
         case body = "text"
         case image
+        case clickableImage = "clickable_image"
         case minimum = "min"
         case maximum = "max"
         case interval = "interval"

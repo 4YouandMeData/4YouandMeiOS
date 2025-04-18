@@ -24,6 +24,8 @@ struct SurveyQuestionPickerFactory {
             return SurveyQuestionScale(surveyQuestion: question, delegate: delegate)
         case .range:
             return SurveyRangePicker(surveyQuestion: question, delegate: delegate)
+        case .clickable:
+            return SurveyClickableImage(surveyQuestion: question, delegate: delegate)
         }
     }
 }
