@@ -704,6 +704,16 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
                 } else if let data = try? JSONEncoder().encode(parameter.answer as? SurveyPickResponse), // Pick One Answers
                           let dictionary = try? JSONSerialization.jsonObject(with: data, options: .allowFragments) as? [String: Any] {
                     userParameter["answer"] = dictionary
+                } else if let clickableResponses = parameter.answer as? [SurveyClickableResponse] {
+                    let clickableResponsesEncoded: [[String: Any]] = clickableResponses.reduce([]) { (result, clickableResponse) in
+                        var result = result
+                        if let data = try? JSONEncoder().encode(clickableResponse),
+                           let dictionary = try? JSONSerialization.jsonObject(with: data, options: .allowFragments) as? [String: Any] {
+                            result.append(dictionary)
+                        }
+                        return result
+                    }
+                    userParameter["answer"] = clickableResponsesEncoded
                 } else {
                     userParameter["answer"] = parameter.answer // Other survey Answers
                 }

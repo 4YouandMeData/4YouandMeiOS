@@ -55,7 +55,8 @@ extension SurveyResult {
             if let maximum = self.question.maximum, value > maximum { return false }
             return true
         case .clickable:
-            return false
+            guard let answers = self.answer as? [SurveyClickableResponse] else { return false }
+            return !answers.isEmpty
         }
     }
     
