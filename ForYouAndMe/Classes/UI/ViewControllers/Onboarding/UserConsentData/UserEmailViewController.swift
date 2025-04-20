@@ -133,7 +133,7 @@ public class UserEmailViewController: UIViewController {
         self.analytics.track(event: .recordScreen(screenName: AnalyticsScreens.emailInsert.rawValue,
                                                   screenClass: String(describing: type(of: self))))
         self.navigationController?.navigationBar.apply(style: NavigationBarStyleCategory.secondary(hidden: false).style)
-        self.addCustomBackButton()
+        self.navigationItem.hidesBackButton = true
     }
     
     // MARK: Actions

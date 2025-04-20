@@ -149,7 +149,7 @@ public class UserEmailVerificationViewController: UIViewController {
         self.analytics.track(event: .recordScreen(screenName: AnalyticsScreens.emailVerification.rawValue,
                                                   screenClass: String(describing: type(of: self))))
         self.navigationController?.navigationBar.apply(style: NavigationBarStyleCategory.active(hidden: false).style)
-        self.addCustomBackButton()
+        self.navigationItem.hidesBackButton = true
     }
     
     // MARK: Actions
@@ -157,7 +157,7 @@ public class UserEmailVerificationViewController: UIViewController {
     @objc private func resendCodeButtonPressed() {
         self.repository.resendConfirmationEmail()
             .addProgress()
-            .subscribe(onError: { [weak self] error in
+            .subscribe(onFailure: { [weak self] error in
                 guard let self = self else { return }
                 self.navigator.handleError(error: error, presenter: self)
             }).disposed(by: self.disposeBag)

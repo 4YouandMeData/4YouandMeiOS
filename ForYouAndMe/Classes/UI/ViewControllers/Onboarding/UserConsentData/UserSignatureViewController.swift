@@ -181,10 +181,7 @@ class UserSignatureViewController: UIViewController {
         self.analytics.track(event: .recordScreen(screenName: AnalyticsScreens.consentSignature.rawValue,
                                                   screenClass: String(describing: type(of: self))))
         self.navigationController?.navigationBar.apply(style: NavigationBarStyleCategory.secondary(hidden: false).style)
-        self.addCustomBackButton(
-            withImage: ImagePalette.templateImage(withName: .backButtonNavigation)) { [weak self] in
-            self?.customBackButtonPressed()
-        }
+        self.navigationItem.hidesBackButton = true
     }
     
     // MARK: Actions
