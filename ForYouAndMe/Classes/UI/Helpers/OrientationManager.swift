@@ -34,3 +34,19 @@ struct OrientationManager {
         self.lockOrientation(self.defaultOrientationLock, andRotateTo: self.defaultOrientation)
     }
 }
+
+extension OrientationManager {
+    /// Reset orientation to default, then invoke completion when rotation animation ends.
+    static func resetToDefaultWithCompletion(_ completion: @escaping () -> Void) {
+        // Lock back to default
+        currentOrientationLock = defaultOrientationLock
+        let delay = 0.35
+        UIDevice.current.setValue(defaultOrientation.rawValue, forKey: "orientation")
+        UINavigationController.attemptRotationToDeviceOrientation()
+
+        // 3. Schedule the completion after a small delay
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+            completion()
+        }
+    }
+}

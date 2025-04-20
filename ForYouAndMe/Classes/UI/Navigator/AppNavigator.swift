@@ -10,6 +10,7 @@ import UIKit
 import SVProgressHUD
 import RxSwift
 import SafariServices
+import WebKit
 
 enum InternalDeeplinkKey: String {
     case feed
@@ -204,7 +205,7 @@ class AppNavigator {
         }
         self.analytics.track(event: .recordScreen(screenName: AnalyticsScreens.privacyPolicy.rawValue,
                                                   screenClass: String(describing: type(of: presenter))))
-        self.openWebView(withTitle: "", url: url, presenter: presenter)
+        self.openWebView(withTitle: "", url: url, presenter: presenter, configuration: nil)
     }
     
     public func showTermsOfService(presenter: UIViewController) {
@@ -214,7 +215,7 @@ class AppNavigator {
         }
         self.analytics.track(event: .recordScreen(screenName: AnalyticsScreens.termsOfService.rawValue,
                                                   screenClass: String(describing: type(of: presenter))))
-        self.openWebView(withTitle: "", url: url, presenter: presenter)
+        self.openWebView(withTitle: "", url: url, presenter: presenter, configuration: nil)
     }
     
     public func onLoginCompleted(presenter: UIViewController) {
@@ -563,12 +564,16 @@ class AppNavigator {
         presenter.present(viewController, animated: true, completion: nil)
     }
     
-    public func presentDiaryNotes(diaryNote: DiaryNoteItem?, presenter: UIViewController, isFromChart: Bool) {
-        let diaryNoteViewController = DiaryNotesViewController(withDataPoint: diaryNote, isFromChart: isFromChart)
-        let navigationViewController = UINavigationController(rootViewController: diaryNoteViewController)
-        navigationViewController.modalPresentationStyle = .formSheet
-        navigationViewController.preventPopWithSwipe()
-        presenter.present(navigationViewController, animated: true)
+    public func presentDiaryNotes(diaryNote: DiaryNoteItem?,
+                                  presenter: UIViewController,
+                                  isFromChart: Bool,
+                                  animated: Bool = true) {
+        let diaryVC = DiaryNotesViewController(withDataPoint: diaryNote,
+                                               isFromChart: isFromChart)
+        let navVC = UINavigationController(rootViewController: diaryVC)
+        navVC.modalPresentationStyle = .formSheet
+        navVC.preventPopWithSwipe()
+        presenter.present(navVC, animated: animated)
     }
     
     public func openDiaryNoteText(diaryNote: DiaryNoteItem?,
@@ -773,8 +778,12 @@ class AppNavigator {
         }
     }
     
-    public func openWebView(withTitle title: String, url: URL, presenter: UIViewController) {
-        let webViewViewController = WebViewViewController(withTitle: title, allowNavigation: true, url: url)
+    public func openWebView(withTitle title: String, url: URL, presenter: UIViewController, configuration: WKWebViewConfiguration?) {
+        let webViewViewController = WebViewViewController(withTitle: title,
+                                                          allowNavigation: true,
+                                                          url: url,
+                                                          htmlString: nil,
+                                                          webViewConfiguration: configuration ?? WKWebViewConfiguration())
         let navigationViewController = UINavigationController(rootViewController: webViewViewController)
         navigationViewController.preventPopWithSwipe()
         presenter.present(navigationViewController, animated: true)

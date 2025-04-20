@@ -9,6 +9,11 @@ import UIKit
 import RxSwift
 import WebKit
 
+enum ScriptMessage: String {
+    case chartPointTapped = "chartPointTapped"
+    case chartFullScreenTapped = "chartFullScreenTapped"
+}
+
 class UserDataViewController: UIViewController, WKNavigationDelegate, WKScriptMessageHandler {
     
     // MARK: - AttributedTextStyles
@@ -177,48 +182,96 @@ class UserDataViewController: UIViewController, WKNavigationDelegate, WKScriptMe
 
    }
     
-    // Implementazione del WKScriptMessageHandler
+    // WKScriptMessageHandler implementation
     func userContentController(_ userContentController: WKUserContentController,
                                didReceive message: WKScriptMessage) {
-        if message.name == "chartPointTapped",
-           let body = message.body as? [String: Any] {
-            handleChartPointTap(eventData: body)
+        guard let msg = ScriptMessage(rawValue: message.name),
+              let body = message.body as? [String: Any] else {
+            return
         }
-        if message.name == "chartFullScreenTapped",
-           let body = message.body as? [String: Any] {
-            guard let chartId = body["chartId"] as? NSNumber else { return }
-            var chartUrl = Constants.Network.CharPageUrlStr + chartId.stringValue
-            if let queryString = body["queryString"] as? String {
-                chartUrl += queryString
-            }
-            self.navigator.openWebView(withTitle: "", url: URL(string: chartUrl)!, presenter: self)
-            OrientationManager.lockOrientation(.landscape)
+
+        switch msg {
+        case .chartPointTapped:
+            dismissRotateAndPresent(eventData: body)
+
+        case .chartFullScreenTapped:
+            handleFullScreenTap(body: body)
         }
     }
     
-    // Metodo per gestire l'evento di tap sul punto del grafico
-    private func handleChartPointTap(eventData: [String: Any]) {
-        guard let dataPoint = eventData["datetime_ref"] as? String else {
-            return
-        }
-        guard let interval = eventData["interval"] as? String else {
-            return
-        }
-        guard let diaryNoteableType = eventData["diary_noteable_type"] as? String else {
-            return
-        }
-        guard let diaryNoteableId = eventData["diary_noteable_id"] as? String else {
-            return
+    // Dismiss the current view, rotate back to portrait, then present diary note
+    private func dismissRotateAndPresent(eventData: [String: Any]) {
+
+        let afterDismiss = {
+            // this will wait the rotation animation before calling the closure
+            OrientationManager.resetToDefaultWithCompletion {
+                self.handleChartPointTap(eventData: eventData, animated: true)
+            }
         }
         
-        let diaryNoteable = DiaryNoteable(id: diaryNoteableId,
-                                          type: diaryNoteableType)
-        
-        let diaryNote = DiaryNoteItem(diaryNoteId: dataPoint,
-                                      body: "",
-                                      interval: interval,
-                                      diaryNoteable: diaryNoteable)
-        
-        self.navigator.presentDiaryNotes(diaryNote: diaryNote, presenter: self, isFromChart: true)
+        if let nav = navigationController {
+            nav.dismiss(animated: true, completion: afterDismiss)
+        } else {
+            dismiss(animated: true, completion: afterDismiss)
+        }
+    }
+    
+    private func handleFullScreenTap(body: [String: Any]) {
+        guard let chartId = body["chartId"] as? NSNumber else { return }
+        let query = body["queryString"] as? String ?? ""
+        let urlString = Constants.Network.CharPageUrlStr + chartId.stringValue + query
+
+        guard let url = URL(string: urlString) else {
+            assertionFailure("URL invalido: \(urlString)")
+            return
+        }
+
+        navigator.openWebView(
+            withTitle: "",
+            url: url,
+            presenter: self,
+            configuration: webView.configuration
+        )
+        OrientationManager.lockOrientation(.landscape)
+    }
+    
+    // MARK: - Chart Point Tap Handler
+
+    /// Processes a tap on a chart point by extracting the necessary data
+    /// and presenting the corresponding diary note screen.
+    /// - Parameter eventData: A dictionary containing the tap event payload.
+    private func handleChartPointTap(eventData: [String: Any], animated: Bool) {
+        // Extract all required fields in a single guard to fail early if any are missing or of wrong type
+        guard
+            let dataPoint      = eventData["datetime_ref"]        as? String,
+            let interval       = eventData["interval"]            as? String,
+            let noteableType   = eventData["diary_noteable_type"] as? String,
+            let noteableId     = eventData["diary_noteable_id"]   as? String
+        else {
+            // If any value is unavailable, abort handling
+            return
+        }
+
+        // Build the DiaryNoteable model
+        let diaryNoteable = DiaryNoteable(
+            id: noteableId,
+            type: noteableType
+        )
+
+        // Construct the DiaryNoteItem representing the tapped point
+        let diaryNote = DiaryNoteItem(
+            diaryNoteId: dataPoint,
+            body: "",             // Body is empty for chart-initiated notes
+            interval: interval,
+            diaryNoteable: diaryNoteable
+        )
+
+        // Present the diary note screen, flagging that it originated from a chart tap
+        navigator.presentDiaryNotes(
+            diaryNote: diaryNote,
+            presenter: self,
+            isFromChart: true,
+            animated: animated
+        )
     }
 }

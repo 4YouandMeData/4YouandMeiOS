@@ -212,7 +212,7 @@ public class InfoPageViewController: UIViewController, PageProvider {
         
         self.analytics.track(event: .recordScreen(screenName: AnalyticsScreens.learnMore.rawValue,
                                                   screenClass: String(describing: type(of: self))))
-        self.navigator.openWebView(withTitle: "", url: url, presenter: self)
+        self.navigator.openWebView(withTitle: "", url: url, presenter: self, configuration: nil)
     }
     
     @objc private func modalLinkButtonPressed() {
