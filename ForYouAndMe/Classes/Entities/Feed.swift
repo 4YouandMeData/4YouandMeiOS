@@ -110,7 +110,8 @@ struct SchedulableDecodable: Decodable {
         let container = try decoder.singleValueContainer()
         
         if let activity = try? container.decode(Activity.self),
-            Schedulable.activity(activity: activity).schedulableType == activity.type {
+           Schedulable.activity(activity: activity).schedulableType == activity.type,
+           activity.taskType != nil {
             self.wrappedValue = .activity(activity: activity)
         } else if let quickActivity = try? container.decode(QuickActivity.self),
             Schedulable.quickActivity(quickActivity: quickActivity).schedulableType == quickActivity.type {
