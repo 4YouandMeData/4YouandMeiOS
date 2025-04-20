@@ -67,15 +67,8 @@ class ReflectionSectionCoordinator: NSObject, PagedActivitySectionCoordinator {
     
     // MARK: - Public Methods
     
-    public func onSpyroCompleted() {
-        self.deleteTaskResult()
-        self.analytics.track(event: .recordScreen(screenName: AnalyticsScreens.spyrometerComplete.rawValue,
-                                                  screenClass: String(describing: type(of: self))))
-        self.showSuccessPage()
-    }
-    
     public func onCancelTask() {
-        self.completionCallback()
+        self.navigationController.popViewController(animated: true)
     }
     
     // MARK: - Private Methods

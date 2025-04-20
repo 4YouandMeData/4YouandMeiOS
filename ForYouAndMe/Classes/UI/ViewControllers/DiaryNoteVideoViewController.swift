@@ -617,7 +617,14 @@ class DiaryNoteVideoViewController: UIViewController {
                           handler: { [weak self] _ in self?.navigator.openSettings() }),
             UIAlertAction(title: StringsProvider.string(forKey: .videoDiaryMissingPermissionDiscard),
                           style: .destructive,
-                          handler: { [weak self] _ in self?.dismiss(animated: true)/*self?.coordinator.onCancelTask()*/ })
+                          handler: { [weak self] _ in
+                              guard let self = self else { return }
+                              guard let coordinator = self.reflectionCoordinator else {
+                                  self.dismiss(animated: true)
+                                  return
+                              }
+                              coordinator.onCancelTask()
+                          })
         ]
         self.showAlert(withTitle: title, message: message, actions: actions, tintColor: ColorPalette.color(withType: .primary))
     }
@@ -975,14 +982,25 @@ extension DiaryNoteVideoViewController: VideoDiaryPlayerViewDelegate {
                               handler: nil),
                 UIAlertAction(title: StringsProvider.string(forKey: .videoDiaryDiscardConfirm),
                               style: .destructive,
-                              handler: { [weak self] _ in self?.dismiss(animated: true)/*self?.coordinator.onCancelTask()*/ })
+                              handler: { [weak self] _ in
+                                  guard let self = self else { return }
+                                  guard let coordinator = self.reflectionCoordinator else {
+                                      self.dismiss(animated: true)
+                                      return
+                                  }
+                                  coordinator.onCancelTask()
+                              })
             ]
             self.showAlert(withTitle: StringsProvider.string(forKey: .videoDiaryDiscardTitle),
                            message: StringsProvider.string(forKey: .videoDiaryDiscardBody),
                            actions: actions,
                            tintColor: ColorPalette.color(withType: .primary))
         } else {
-            self.dismiss(animated: true)
+            guard let coordinator = self.reflectionCoordinator else {
+                self.dismiss(animated: true)
+                return
+            }
+            coordinator.onCancelTask()
         }
     }
 }
