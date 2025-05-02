@@ -196,9 +196,15 @@ class DiaryNoteTextViewController: UIViewController {
                                                                               right: 10))
         
         self.pageState.subscribe(onNext: { [weak self] newPageState in
-            self?.updateNextButton(pageState: newPageState)
-            self?.updateTextFields(pageState: newPageState)
-            self?.view.endEditing(true)
+            guard let self = self else { return }
+            self.updateNextButton(pageState: newPageState)
+            self.updateTextFields(pageState: newPageState)
+            self.view.endEditing(true)
+            // Disable confirm button initially in edit if no text
+            if newPageState == .edit {
+                let hasText = !(self.textView.text.isEmpty)
+                self.footerView.setButtonEnabled(enabled: hasText)
+            }
         }).disposed(by: self.disposeBag)
         
         self.loadNote()
@@ -345,6 +351,12 @@ extension DiaryNoteTextViewController: UITextViewDelegate {
         } else {
             textView.layer.borderColor = UIColor.red.cgColor
             self.limitLabel.textColor = .red
+        }
+        
+        // Enable/disable confirm button when editing
+        if pageState.value == .edit {
+            let enabled = !textView.text.isEmpty
+            footerView.setButtonEnabled(enabled: enabled)
         }
     }
 }
