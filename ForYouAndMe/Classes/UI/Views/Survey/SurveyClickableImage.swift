@@ -56,6 +56,10 @@ class SurveyClickableImage: UIView {
         // 5. Tap gesture
         let tap = UITapGestureRecognizer(target: self, action: #selector(self.imageTapped(_:)))
         imageView.addGestureRecognizer(tap)
+        
+        let doubleTap = UITapGestureRecognizer(target: self, action: #selector(self.resetClicks))
+        doubleTap.numberOfTapsRequired = 2
+        imageView.addGestureRecognizer(doubleTap)
     }
     
     required init?(coder aDecoder: NSCoder) {
@@ -77,7 +81,7 @@ class SurveyClickableImage: UIView {
         if let maxClicks = surveyQuestion.maxClick, answers.count >= maxClicks {
             // Provide haptic feedback to signal "no more clicks allowed"
             let feedback = UINotificationFeedbackGenerator()
-            feedback.notificationOccurred(.warning)
+            feedback.notificationOccurred(.error)
             return
         }
         
@@ -91,6 +95,15 @@ class SurveyClickableImage: UIView {
             
         answers.append(response)
         drawDot(at: point, in: imageView)
+        delegate?.answerDidChange(self.surveyQuestion, answer: self.answers)
+    }
+    
+    /// Resets all recorded clicks and removes their dots from the view.
+    @objc private func resetClicks() {
+        answers.removeAll()
+        
+        // Remove all dot subviews from the imageView
+        imageView.subviews.forEach { $0.removeFromSuperview() }
         delegate?.answerDidChange(self.surveyQuestion, answer: self.answers)
     }
     
