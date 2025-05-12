@@ -65,12 +65,21 @@ class SurveyClickableImage: UIView {
     // MARK: - Tap Handling
     
     @objc private func imageTapped(_ recognizer: UITapGestureRecognizer) {
+        
         let point = recognizer.location(in: imageView)
         
         let width = imageView.bounds.width
         let height = imageView.bounds.height
         
         guard width > 0, height > 0 else { return }
+        
+        // Check if we've reached the max number of clicks
+        if let maxClicks = surveyQuestion.maxClick, answers.count >= maxClicks {
+            // Provide haptic feedback to signal "no more clicks allowed"
+            let feedback = UINotificationFeedbackGenerator()
+            feedback.notificationOccurred(.warning)
+            return
+        }
         
         let percentX = point.x / width
         let percentY = point.y / height

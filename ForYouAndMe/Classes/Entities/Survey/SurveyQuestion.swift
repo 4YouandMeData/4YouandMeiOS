@@ -36,6 +36,7 @@ struct SurveyQuestion {
     // Details
     var minimum: Int?
     var maximum: Int?
+    var maxClick: Int?
     @StringToInt
     var interval: Int?
     @NilIfEmptyString
@@ -73,6 +74,7 @@ extension SurveyQuestion: JSONAPIMappable {
         case clickableImage = "clickable_image"
         case minimum = "min"
         case maximum = "max"
+        case maxClick = "max_click_points"
         case interval = "interval"
         case minimumDisplay = "min_display"
         case maximumDisplay = "max_display"
