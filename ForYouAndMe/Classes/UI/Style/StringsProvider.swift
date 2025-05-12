@@ -14,6 +14,7 @@ typealias FullStringMap = [String: String]
 enum StringKey: String, CaseIterable, CodingKey {
     // Setup
     case setupErrorTitle = "SETUP_ERROR_TITLE"
+    case tabBarList = "TAB_BAR_LIST"
     // Welcome
     case welcomeStartButton = "WELCOME_START_BUTTON"
     // Intro
@@ -347,5 +348,23 @@ class StringsProvider {
             formattedString = formattedString.replacingOccurrences(of: "{\(index)}", with: element)
         }
         return formattedString
+    }
+}
+
+extension StringsProvider {
+    /// Returns the array of MainTab configured in TAB_BAR_LIST,
+    /// ensuring that 'feed' is always present.
+    static func configuredMainTabs() -> [MainTab] {
+        // Try to read the raw configuration string; default to empty if missing
+        let raw = requiredStringMap[.tabBarList] ?? ""
+        // Split by “;”, map to MainTab (filtering out invalid entries)
+        var tabs = raw
+            .split(separator: ";")
+            .compactMap { MainTab(configKey: String($0)) }
+        // Ensure 'feed' is always first
+        if !tabs.contains(.feed) {
+            tabs.insert(.feed, at: 0)
+        }
+        return tabs
     }
 }

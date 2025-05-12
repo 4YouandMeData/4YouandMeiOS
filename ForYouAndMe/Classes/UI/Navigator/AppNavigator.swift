@@ -25,9 +25,11 @@ enum InternalDeeplinkKey: String {
     case consent = "new_consent_version_available"
 }
 
+enum MainTab: Int, CaseIterable { case feed = 0, task = 1, diary = 2, userData = 3, studyInfo = 4 }
+
+
 class AppNavigator {
     
-    enum MainTab: Int, CaseIterable { case feed = 0, task = 1, diary = 2, userData = 3, studyInfo = 4 }
     enum StudyInfoPage { case faq, reward, contacts }
     
     static let defaultStartingTab: MainTab = .feed
@@ -363,57 +365,56 @@ class AppNavigator {
         // Add shadow
         tabBarController.tabBar.addShadowLinear(goingDown: false)
         
+        // Get tabs from configuration (or fallback to allCases)
+        let tabs = StringsProvider.configuredMainTabs()
+        
         var viewControllers: [UIViewController] = []
         
         let titleFont = FontPalette.fontStyleData(forStyle: .menu).font
         
-        MainTab.allCases.forEach { mainTab in
+        tabs.forEach { mainTab in
+            let navController: UINavigationController
+
             switch mainTab {
             case .feed:
                 let feedViewController = FeedViewController()
-                let feedNavigationController = UINavigationController(rootViewController: feedViewController)
-                feedNavigationController.preventPopWithSwipe()
-                feedNavigationController.tabBarItem.image = ImagePalette.templateImage(withName: .tabFeed)
-                feedNavigationController.tabBarItem.title = StringsProvider.string(forKey: .tabFeed)
-                feedNavigationController.tabBarItem.setTitleTextAttributes([.font: titleFont], for: .normal)
-                viewControllers.append(feedNavigationController)
+                navController = UINavigationController(rootViewController: feedViewController)
+                navController.tabBarItem.image = ImagePalette.templateImage(withName: .tabFeed)
+                navController.tabBarItem.title = StringsProvider.string(forKey: .tabFeed)
             case .task:
                 let taskViewController = TaskViewController()
-                let taskNavigationController = UINavigationController(rootViewController: taskViewController)
-                taskNavigationController.preventPopWithSwipe()
-                taskNavigationController.tabBarItem.image = ImagePalette.templateImage(withName: .tabTask)
-                taskNavigationController.tabBarItem.title = StringsProvider.string(forKey: .tabTask)
-                taskNavigationController.tabBarItem.setTitleTextAttributes([.font: titleFont], for: .normal)
-                viewControllers.append(taskNavigationController)
+                navController = UINavigationController(rootViewController: taskViewController)
+                navController.tabBarItem.image = ImagePalette.templateImage(withName: .tabTask)
+                navController.tabBarItem.title = StringsProvider.string(forKey: .tabTask)
             case .diary:
                 let diaryNoteViewController = DiaryNotesViewController(withDataPoint: nil, isFromChart: false)
-                let diaryNoteNavigationController = UINavigationController(rootViewController: diaryNoteViewController)
-                diaryNoteNavigationController.preventPopWithSwipe()
-                diaryNoteNavigationController.tabBarItem.image = ImagePalette.templateImage(withName: .tabDiary)
-                diaryNoteNavigationController.tabBarItem.title = StringsProvider.string(forKey: .tabDiary)
-                diaryNoteNavigationController.tabBarItem.setTitleTextAttributes([.font: titleFont], for: .normal)
-                viewControllers.append(diaryNoteNavigationController)
+                navController = UINavigationController(rootViewController: diaryNoteViewController)
+                navController.tabBarItem.image = ImagePalette.templateImage(withName: .tabDiary)
+                navController.tabBarItem.title = StringsProvider.string(forKey: .tabDiary)
             case .userData:
                 let userDataViewController = UserDataViewController()
-                let userDataNavigationController = UINavigationController(rootViewController: userDataViewController)
-                userDataNavigationController.preventPopWithSwipe()
-                userDataNavigationController.tabBarItem.image = ImagePalette.templateImage(withName: .tabUserData)
-                userDataNavigationController.tabBarItem.title = StringsProvider.string(forKey: .tabUserData)
-                userDataNavigationController.tabBarItem.setTitleTextAttributes([.font: titleFont], for: .normal)
-                viewControllers.append(userDataNavigationController)
+                navController = UINavigationController(rootViewController: userDataViewController)
+                navController.tabBarItem.image = ImagePalette.templateImage(withName: .tabUserData)
+                navController.tabBarItem.title = StringsProvider.string(forKey: .tabUserData)
             case .studyInfo:
                 let studyInfoViewController = StudyInfoViewController()
-                let studyInfoNavigationController = UINavigationController(rootViewController: studyInfoViewController)
-                studyInfoNavigationController.preventPopWithSwipe()
-                studyInfoNavigationController.tabBarItem.image = ImagePalette.templateImage(withName: .tabStudyInfo)
-                studyInfoNavigationController.tabBarItem.title = StringsProvider.string(forKey: .tabStudyInfo)
-                studyInfoNavigationController.tabBarItem.setTitleTextAttributes([.font: titleFont], for: .normal)
-                viewControllers.append(studyInfoNavigationController)
+                navController = UINavigationController(rootViewController: studyInfoViewController)
+                navController.tabBarItem.image = ImagePalette.templateImage(withName: .tabStudyInfo)
+                navController.tabBarItem.title = StringsProvider.string(forKey: .tabStudyInfo)
             }
+            
+            // Disable interactive swipe-back
+            navController.preventPopWithSwipe()
+            // Apply custom font to tab title
+            navController.tabBarItem.setTitleTextAttributes([.font: titleFont], for: .normal)
+            
+            viewControllers.append(navController)
         }
         
         tabBarController.viewControllers = viewControllers
-        tabBarController.selectedIndex = Self.defaultStartingTab.rawValue
+        if let defaultIndex = tabs.firstIndex(of: Self.defaultStartingTab) {
+            tabBarController.selectedIndex = defaultIndex
+        }
         self.window.rootViewController = tabBarController
     }
     
@@ -927,11 +928,24 @@ class AppNavigator {
     }
     
     private func goToMainTab(tab: MainTab, presenter: UIViewController) {
+        // Try to get the UITabBarController from the presenter
         guard let tabBarController = presenter.tabBarController else {
-            print("AppNavigator - Missing tab bar controller")
+            assertionFailure("AppNavigator - Missing UITabBarController on presenter")
             return
         }
-        tabBarController.selectedIndex = tab.rawValue
+        // Ensure the viewControllers array is available
+        guard let controllers = tabBarController.viewControllers else {
+            assertionFailure("AppNavigator - UITabBarController.viewControllers is nil")
+            return
+        }
+        let index = tab.rawValue
+        // Ensure the index is within the valid range
+        guard index >= 0 && index < controllers.count else {
+            assertionFailure("AppNavigator - Invalid tab index \(index); valid range is 0...\(controllers.count - 1)")
+            return
+        }
+        // All good – switch to the desired tab
+        tabBarController.selectedIndex = index
     }
     
     private func openStudyInfoPage(studyInfoPage: StudyInfoPage, presenter: UIViewController) {
@@ -1075,6 +1089,25 @@ fileprivate extension UITabBar {
             
             self.standardAppearance = appearance
             self.scrollEdgeAppearance = appearance
+        }
+    }
+}
+
+extension MainTab {
+    init?(configKey: String) {
+        switch configKey.lowercased() {
+        case "feed":
+            self = .feed
+        case "task":
+            self = .task
+        case "log", "diary":
+            self = .diary
+        case "compass", "userdata":
+            self = .userData
+        case "settings", "studyinfo":
+            self = .studyInfo
+        default:
+            return nil
         }
     }
 }

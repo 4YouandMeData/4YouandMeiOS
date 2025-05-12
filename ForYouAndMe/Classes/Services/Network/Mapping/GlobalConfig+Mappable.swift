@@ -116,4 +116,23 @@ fileprivate extension RequiredStringMap {
         let phaseStrings = phasesListString.split(separator: ";")
         return phaseStrings.compactMap { String($0) }
     }
+    
+    func extractMainTabs() throws -> [MainTab] {
+            guard let raw = self[.tabBarList] else {
+                throw MapperError.customError(
+                    field: "strings",
+                    message: "Missing TAB_BAR_LIST in strings"
+                )
+            }
+            // Suddividi, mappa e rimuovi eventuali voci non riconosciute
+            var tabs = raw
+                .split(separator: ";")
+                .compactMap { MainTab(configKey: String($0)) }
+
+            // Assicuriamoci che 'feed' sia sempre presente e in testa
+            if !tabs.contains(.feed) {
+                tabs.insert(.feed, at: 0)
+            }
+            return tabs
+        }
 }
