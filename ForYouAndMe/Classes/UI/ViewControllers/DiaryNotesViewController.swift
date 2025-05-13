@@ -99,8 +99,14 @@ class DiaryNotesViewController: UIViewController {
     }()
     
     private lazy var messages: [MessageInfo] = {
-        let messages = self.storage.infoMessages?.messages(withLocation: .tabDiary)
-        return messages ?? []
+        
+        if self.dataPointID == nil {
+            let messages = self.storage.infoMessages?.messages(withLocation: .tabDiary)
+            return messages ?? []
+        } else {
+            let messages = self.storage.infoMessages?.messages(withLocation: .pageChartDiary)
+            return messages ?? []
+        }
     }()
     
     private var storage: CacheService
