@@ -24,6 +24,7 @@ enum DiaryNoteItemType: String, Codable {
     case text
     case audio
     case video
+    case eaten = "food_diary"
 }
 
 enum DiaryNoteableType: String, Codable {

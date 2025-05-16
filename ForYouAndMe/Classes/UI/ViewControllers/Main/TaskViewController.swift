@@ -105,6 +105,17 @@ class TaskViewController: UIViewController {
         self.comingSoonButton.autoPinEdge(.trailing, to: .trailing, of: headerView, withOffset: -12.0)
 
         let actionButton = JJFloatingActionButton()
+        
+        let actionEaten = actionButton.addItem()
+        actionEaten.titleLabel.text = StringsProvider.string(forKey: .diaryNoteFabNoticed)
+        actionEaten.titleLabel.textColor = ColorPalette.color(withType: .fabTextColor)
+        actionEaten.imageView.image = ImagePalette.image(withName: .noteGeneric)
+        actionEaten.buttonColor = ColorPalette.color(withType: .secondary)
+        actionEaten.action = { [weak self] _ in
+            guard let self = self else { return }
+            self.navigator.openNoticedViewController(presenter: self)
+        }
+        
         let actionItemRiflection = actionButton.addItem()
         actionItemRiflection.titleLabel.text = StringsProvider.string(forKey: .diaryNoteFabReflection)
         actionItemRiflection.titleLabel.textColor = ColorPalette.color(withType: .fabTextColor)

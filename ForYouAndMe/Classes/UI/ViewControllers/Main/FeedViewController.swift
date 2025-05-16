@@ -92,11 +92,12 @@ class FeedViewController: UIViewController {
         self.tableView.autoPinEdge(.top, to: .bottom, of: self.headerView)
         
         let actionButton = JJFloatingActionButton()
-        let actionItemRiflection = actionButton.addItem()
-        actionItemRiflection.titleLabel.text = StringsProvider.string(forKey: .diaryNoteFabReflection)
-        actionItemRiflection.titleLabel.textColor = ColorPalette.color(withType: .fabTextColor)
-        actionItemRiflection.imageView.image = ImagePalette.image(withName: .riflectionIcon)
-        actionItemRiflection.buttonColor = ColorPalette.color(withType: .inactive)
+        
+        let actionItemReflection = actionButton.addItem()
+        actionItemReflection.titleLabel.text = StringsProvider.string(forKey: .diaryNoteFabReflection)
+        actionItemReflection.titleLabel.textColor = ColorPalette.color(withType: .fabTextColor)
+        actionItemReflection.imageView.image = ImagePalette.image(withName: .riflectionIcon)
+        actionItemReflection.buttonColor = ColorPalette.color(withType: .inactive)
         
         let actionNoticed = actionButton.addItem()
         actionNoticed.titleLabel.text = StringsProvider.string(forKey: .diaryNoteFabNoticed)
@@ -106,6 +107,16 @@ class FeedViewController: UIViewController {
         actionNoticed.action = { [weak self] _ in
             guard let self = self else { return }
             self.navigator.openNoticedViewController(presenter: self)
+        }
+        
+        let actionEaten = actionButton.addItem()
+        actionEaten.titleLabel.text = StringsProvider.string(forKey: .diaryNoteFabNoticed)
+        actionEaten.titleLabel.textColor = ColorPalette.color(withType: .fabTextColor)
+        actionEaten.imageView.image = ImagePalette.image(withName: .eatenIcon)
+        actionEaten.buttonColor = ColorPalette.color(withType: .primary)
+        actionEaten.action = { [weak self] _ in
+            guard let self = self else { return }
+            self.navigator.openEatenViewController(presenter: self)
         }
         
         view.addSubview(actionButton)

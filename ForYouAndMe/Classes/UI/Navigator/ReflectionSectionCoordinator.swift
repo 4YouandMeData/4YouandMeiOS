@@ -218,6 +218,8 @@ extension ReflectionSectionCoordinator: ReflectionViewCoordinator {
         case .text:
             self.sendResult(taskResult: taskResultData, presenter: presenter)
             return
+        case .eaten:
+            return
         }
     }
 }

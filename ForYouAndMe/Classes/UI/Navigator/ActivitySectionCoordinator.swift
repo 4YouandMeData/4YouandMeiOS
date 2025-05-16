@@ -26,7 +26,7 @@ extension ActivitySectionCoordinator {
             .subscribe(onSuccess: { [weak self] in
                 guard let self = self else { return }
                 self.completionCallback()
-                }, onError: { [weak self] error in
+            }, onFailure: { [weak self] error in
                     guard let self = self else { return }
                     if let presenter = self.activityPresenter {
                         self.navigator.handleError(error: error, presenter: presenter)

@@ -388,7 +388,8 @@ extension DiaryNotesViewController: UITableViewDataSource {
                 }
                 
                 return cell
-                
+            case .eaten:
+                return UITableViewCell()
             }
         } else {
             assertionFailure("Unhandled Diary Note Item type: \(diaryNote.self)")
@@ -428,7 +429,7 @@ extension DiaryNotesViewController: UITableViewDelegate {
             switch diaryNote.diaryNoteType {
             case .text:
                 return 80 // Variable Height for text note
-            case .audio, .video:
+            case .audio, .video, .eaten:
                 return 100 // Fixed Height for audio and video note
             case .none:
                 return UITableView.automaticDimension

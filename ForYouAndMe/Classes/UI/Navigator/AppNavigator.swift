@@ -666,6 +666,35 @@ class AppNavigator {
         presenter.present(noticedViewController, animated: true)
     }
     
+    public func openEatenViewController(presenter: UIViewController) {
+        // Prevent overlapping flows
+        assert(self.currentActivityCoordinator == nil, "Another activity is already in progress")
+
+        // Completion callback: dismiss modal and clear current coordinator
+        let completion: NotificationCallback = { [weak self, weak presenter] in
+            presenter?.dismiss(animated: true, completion: nil)
+            self?.currentActivityCoordinator = nil
+        }
+
+        // Instantiate the FoodEntryCoordinator
+        let coordinator = FoodEntryCoordinator(
+            repository: self.repository,
+            navigator: self,
+            taskIdentifier: "foodEntry",
+            completion: completion
+        )
+
+        // Get the first view controller of the flow
+        let startVC = coordinator.getStartingPage()
+        startVC.modalPresentationStyle = .fullScreen
+
+        // Present modally
+        presenter.present(startVC, animated: true, completion: nil)
+
+        // Hold a strong reference so we can dismiss later
+        self.currentActivityCoordinator = coordinator
+    }
+    
     // MARK: About You
     
     public func showAboutYouPage(presenter: UIViewController) {

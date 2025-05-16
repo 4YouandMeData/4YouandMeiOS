@@ -202,6 +202,11 @@
 		0CCC2C20C8E459D3BC81F4306BDB51A2 /* ORKAudioRecorder.h in Headers */ = {isa = PBXBuildFile; fileRef = 02294A1055363B0233A0F5B9891949C4 /* ORKAudioRecorder.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		0CF2D2DF44815BD099ACBAAE9F78C8B2 /* ORKReactionTimeViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = E81900400260DB17D1A482B3986EE88D /* ORKReactionTimeViewController.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
 		0D0FF5B12D8B2D0700C04036 /* BluetoothNoDevices.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D0FF5B02D8B2D0000C04036 /* BluetoothNoDevices.swift */; };
+		0D15F70A2DD5CDDE00C42FF3 /* EatenTimeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D15F7092DD5CDD800C42FF3 /* EatenTimeViewController.swift */; };
+		0D15F7142DD64F0500C42FF3 /* EatenDateTimeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D15F7132DD64F0400C42FF3 /* EatenDateTimeViewController.swift */; };
+		0D15F7162DD6F79400C42FF3 /* ConsumptionAmountViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D15F7152DD6F79300C42FF3 /* ConsumptionAmountViewController.swift */; };
+		0D15F71E2DD7393D00C42FF3 /* NutrientQuestionViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D15F71D2DD7393B00C42FF3 /* NutrientQuestionViewController.swift */; };
+		0D15F7202DD74F1300C42FF3 /* Page+Eaten.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D15F71F2DD74F1300C42FF3 /* Page+Eaten.swift */; };
 		0D3641CC2D8B334A00FDB3AA /* SpyrometerTestViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D3641CB2D8B334800FDB3AA /* SpyrometerTestViewController.swift */; };
 		0D3641CE2D8B34A700FDB3AA /* SpyrometerIntroTestViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D3641CD2D8B349E00FDB3AA /* SpyrometerIntroTestViewController.swift */; };
 		0D3641DA2D91BBFA00FDB3AA /* SpyroBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D3641D92D91BBED00FDB3AA /* SpyroBar.swift */; };
@@ -225,6 +230,9 @@
 		0D6BBA312D88C9E1004DEF42 /* SpyrometerScanViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D6BBA302D88C9D7004DEF42 /* SpyrometerScanViewController.swift */; };
 		0D6BBA332D8ADA24004DEF42 /* BluetoothOffView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D6BBA322D8ADA18004DEF42 /* BluetoothOffView.swift */; };
 		0D6C7EA1B12048E35C3B01467994A5A1 /* ORKInstructionStepViewController.h in Headers */ = {isa = PBXBuildFile; fileRef = 79AD4B91F1500BBC0C294EF2366575A1 /* ORKInstructionStepViewController.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		0D75E4302DD49D0B0012A30F /* FoodEntryCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D75E42F2DD49D030012A30F /* FoodEntryCoordinator.swift */; };
+		0D75E4342DD4A9D90012A30F /* EatenTypeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D75E4332DD4A9D30012A30F /* EatenTypeViewController.swift */; };
+		0D75E43C2DD5AE240012A30F /* OptionButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D75E43B2DD5AE210012A30F /* OptionButton.swift */; };
 		0D8C2C7F720B7D08170DCE61902C4305 /* ALView+PureLayout.m in Sources */ = {isa = PBXBuildFile; fileRef = 2EE07A97AF0F3E20008770D7FA16BDDD /* ALView+PureLayout.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
 		0D8D8AAA40421360D8CD6019DAE8ADB5 /* WhiteBalance_GLES.fsh in Resources */ = {isa = PBXBuildFile; fileRef = 9770ECA933BB750ECA4F31CDC36F1E19 /* WhiteBalance_GLES.fsh */; };
 		0D94E47E2DA7AA9D00C47142 /* FormSheetPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D94E47D2DA7AA8A00C47142 /* FormSheetPage.swift */; };
@@ -4345,6 +4353,11 @@
 		0CCE5FE561F3B280F6C7E95CD0FB8EAE /* ORKTowerOfHanoiStep.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = ORKTowerOfHanoiStep.m; path = ResearchKit/ActiveTasks/ORKTowerOfHanoiStep.m; sourceTree = "<group>"; };
 		0CE2796E06DF302D61F6C09035E65F84 /* HistogramAccumulation_GL.fsh */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.glsl; name = HistogramAccumulation_GL.fsh; path = framework/Source/Operations/Shaders/HistogramAccumulation_GL.fsh; sourceTree = "<group>"; };
 		0D0FF5B02D8B2D0000C04036 /* BluetoothNoDevices.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BluetoothNoDevices.swift; sourceTree = "<group>"; };
+		0D15F7092DD5CDD800C42FF3 /* EatenTimeViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EatenTimeViewController.swift; sourceTree = "<group>"; };
+		0D15F7132DD64F0400C42FF3 /* EatenDateTimeViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EatenDateTimeViewController.swift; sourceTree = "<group>"; };
+		0D15F7152DD6F79300C42FF3 /* ConsumptionAmountViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConsumptionAmountViewController.swift; sourceTree = "<group>"; };
+		0D15F71D2DD7393B00C42FF3 /* NutrientQuestionViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NutrientQuestionViewController.swift; sourceTree = "<group>"; };
+		0D15F71F2DD74F1300C42FF3 /* Page+Eaten.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Page+Eaten.swift"; sourceTree = "<group>"; };
 		0D3641CB2D8B334800FDB3AA /* SpyrometerTestViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpyrometerTestViewController.swift; sourceTree = "<group>"; };
 		0D3641CD2D8B349E00FDB3AA /* SpyrometerIntroTestViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpyrometerIntroTestViewController.swift; sourceTree = "<group>"; };
 		0D3641D92D91BBED00FDB3AA /* SpyroBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpyroBar.swift; sourceTree = "<group>"; };
@@ -4369,6 +4382,9 @@
 		0D6BBA302D88C9D7004DEF42 /* SpyrometerScanViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpyrometerScanViewController.swift; sourceTree = "<group>"; };
 		0D6BBA322D8ADA18004DEF42 /* BluetoothOffView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BluetoothOffView.swift; sourceTree = "<group>"; };
 		0D6D1179C6E6CC3BBAEFF75B79F07CF4 /* ORKBodyContainerView.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = ORKBodyContainerView.m; path = ResearchKit/Common/ORKBodyContainerView.m; sourceTree = "<group>"; };
+		0D75E42F2DD49D030012A30F /* FoodEntryCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodEntryCoordinator.swift; sourceTree = "<group>"; };
+		0D75E4332DD4A9D30012A30F /* EatenTypeViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EatenTypeViewController.swift; sourceTree = "<group>"; };
+		0D75E43B2DD5AE210012A30F /* OptionButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OptionButton.swift; sourceTree = "<group>"; };
 		0D896B6E772A17E240965516B01B95F3 /* ORKCustomStepView.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = ORKCustomStepView.m; path = ResearchKit/Common/ORKCustomStepView.m; sourceTree = "<group>"; };
 		0D8E3A0541DB3FFADF79263972BEB00E /* RxRelay-dummy.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = "RxRelay-dummy.m"; sourceTree = "<group>"; };
 		0D9298DFBDB72A1E1C806D3DE20F177B /* ORKShoulderRangeOfMotionStepViewController.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = ORKShoulderRangeOfMotionStepViewController.h; path = ResearchKit/ActiveTasks/ORKShoulderRangeOfMotionStepViewController.h; sourceTree = "<group>"; };
@@ -8756,6 +8772,7 @@
 		39DE945C7908249203C0E5E0EE361EAA /* Entities */ = {
 			isa = PBXGroup;
 			children = (
+				0D15F71F2DD74F1300C42FF3 /* Page+Eaten.swift */,
 				0D3642012D9B087200FDB3AA /* UserConsent.swift */,
 				0D3641EF2D958B5100FDB3AA /* ProfilingOption.swift */,
 				0D3641ED2D958A3F00FDB3AA /* ProfilingQuestion.swift */,
@@ -9127,6 +9144,7 @@
 		44E6670F88E3F35E36BF5DDC134ED4A2 /* Navigator */ = {
 			isa = PBXGroup;
 			children = (
+				0D75E42F2DD49D030012A30F /* FoodEntryCoordinator.swift */,
 				0D3642212DA41DC000FDB3AA /* ReflectionSectionCoordinator.swift */,
 				0D3641EB2D956E2E00FDB3AA /* OnboardingQuestionsCoordinator.swift */,
 				0D6BBA2D2D88C8EC004DEF42 /* SpyrometerSectionCoordinator.swift */,
@@ -11553,6 +11571,11 @@
 		C2AC34DCE1B9D5E7C7A4BAE15259715A /* ViewControllers */ = {
 			isa = PBXGroup;
 			children = (
+				0D15F71D2DD7393B00C42FF3 /* NutrientQuestionViewController.swift */,
+				0D15F7152DD6F79300C42FF3 /* ConsumptionAmountViewController.swift */,
+				0D15F7132DD64F0400C42FF3 /* EatenDateTimeViewController.swift */,
+				0D15F7092DD5CDD800C42FF3 /* EatenTimeViewController.swift */,
+				0D75E4332DD4A9D30012A30F /* EatenTypeViewController.swift */,
 				0D94E47D2DA7AA8A00C47142 /* FormSheetPage.swift */,
 				0D3642232DA51D0900FDB3AA /* ReflectionViewController.swift */,
 				0D3641F72D999BA000FDB3AA /* SpiroDeviceDisconnectedViewController.swift */,
@@ -11679,6 +11702,7 @@
 		CCE4002B99A50AAAEA1FFD8801BEF07D /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				0D75E43B2DD5AE210012A30F /* OptionButton.swift */,
 				0D94E47F2DA7E54000C47142 /* TripleButtonHorizontalView.swift */,
 				0D3641F52D96908200FDB3AA /* ProfilingOptionAnswerCell.swift */,
 				0D3641F32D968F0000FDB3AA /* ProfilingQuestionPickOne.swift */,
@@ -17938,6 +17962,7 @@
 				E5079C1E8F5067D8862564BD100BBABD /* Async.swift in Sources */,
 				AFE6BF83164B6F2D678B52660BA2D5A9 /* AttributedTextStyle.swift in Sources */,
 				291F9B77AC84AA6D8254B0B0F47EF218 /* AudioAssetManager.swift in Sources */,
+				0D15F7162DD6F79400C42FF3 /* ConsumptionAmountViewController.swift in Sources */,
 				C5A1EBC00E3D76D30105B7DA96F29289 /* AudioPlayerManager.swift in Sources */,
 				72E55246E8E3B64B0F1F8812BF4952BA /* BatchEventUploader.swift in Sources */,
 				7388353A443800B3833A059BFCEEE407 /* BluetoothPermission.swift in Sources */,
@@ -17964,6 +17989,7 @@
 				BD31F469DA5FA6CFF990D227168D2197 /* ConsentUserDataSectionCoordinator.swift in Sources */,
 				6565E54DF697DF57A585D91AD8001F63 /* Constants.swift in Sources */,
 				B21CD95F2A090B2E69E9B2A7A0989012 /* ContactsPermission.swift in Sources */,
+				0D15F71E2DD7393D00C42FF3 /* NutrientQuestionViewController.swift in Sources */,
 				A86EDF303DA4DF263FC4394618994269 /* Convertible.swift in Sources */,
 				8695F3EC9A07FD23B002C99378A4D25E /* Coordinator.swift in Sources */,
 				0DB452DA3ABF28E520A1FFF083A9CA0C /* CountryCodeProvider.swift in Sources */,
@@ -17979,6 +18005,7 @@
 				BBAD9FF9FB358115578D84D0D85F0771 /* DeviceItemView.swift in Sources */,
 				69EEC2C4FFC76B9C52347F318278B837 /* DeviceManager.swift in Sources */,
 				8EFDB3B3F3084F6BCE00A5ADC38A14F1 /* DeviceService.swift in Sources */,
+				0D15F7142DD64F0500C42FF3 /* EatenDateTimeViewController.swift in Sources */,
 				C5CB31EF661BFA5A5C090AE5B67082D5 /* DevicesIntegrationViewController.swift in Sources */,
 				F016A9DEC66DDE1C319CD01F47C3F9A9 /* DiaryNoteAudioViewController.swift in Sources */,
 				08B26981D10879F266761B6E65071704 /* DiaryNoteEmptyView.swift in Sources */,
@@ -18084,6 +18111,7 @@
 				82E68826BEDF59EBB52CE145E07C58D4 /* NSAttributedString+Extensions.swift in Sources */,
 				0D94E47E2DA7AA9D00C47142 /* FormSheetPage.swift in Sources */,
 				FAF84AA3E531A984CA1034EB0EC0AAF5 /* NSAttributedString+Palette.swift in Sources */,
+				0D15F70A2DD5CDDE00C42FF3 /* EatenTimeViewController.swift in Sources */,
 				DC63058F4A128B5489B6A660E5ECB3F4 /* NSDictionary+Safety.swift in Sources */,
 				B245B97FB10F9AE95913D112D459BF79 /* Observable+ModelMapper.swift in Sources */,
 				4BCEA70571453B8C85354ECA3D5BC2D4 /* ObservableAvailability.swift in Sources */,
@@ -18107,6 +18135,8 @@
 				B92E7E2A1C6658C0AAC70D580222DEA7 /* PermissionLocationHandler.swift in Sources */,
 				B45CA38A1CB63EE0EF2AA9A255531AE8 /* PermissionOpener.swift in Sources */,
 				C8C63F70B6D4D084EF79478F77FB36AC /* PermissionProtocol.swift in Sources */,
+				0D75E4342DD4A9D90012A30F /* EatenTypeViewController.swift in Sources */,
+				0D75E43C2DD5AE240012A30F /* OptionButton.swift in Sources */,
 				07BBABA28DCDAED3D3D7260A3AF039B6 /* PermissionViewController.swift in Sources */,
 				61F3B9E89D26FE1A6F363A3083C2C623 /* Phase.swift in Sources */,
 				1BE5A07D0073A2FB7BA0FA01B39A41CF /* PhoneNumberView.swift in Sources */,
@@ -18142,6 +18172,7 @@
 				B1B00552E385AF9CFB299BA1FBB10B71 /* ResponseError.swift in Sources */,
 				5AF4A140347CA62ECB52964D20FB57C5 /* ResponseError+Mappable.swift in Sources */,
 				1FC0C208CA9C8C51FB1133A80A227DDB /* ReusableIdentifier.swift in Sources */,
+				0D75E4302DD49D0B0012A30F /* FoodEntryCoordinator.swift in Sources */,
 				546BD4CA1C702ACF350A7FF0458FDAE9 /* Reward.swift in Sources */,
 				0D3641F22D968E2B00FDB3AA /* ProfilingQuestionViewController.swift in Sources */,
 				C9D219472EFEA37FB3F9655D78C10600 /* ScreeningSection.swift in Sources */,
@@ -18232,6 +18263,7 @@
 				A3301645F6C9B14216D9AEE29238631F /* UIViewController+Internal.swift in Sources */,
 				A59885364C381AAFCF26133EF106CFC5 /* URL+Convertible.swift in Sources */,
 				523CD987A4B7AE7C6FEAA1CC26DFD91A /* URL+Extensions.swift in Sources */,
+				0D15F7202DD74F1300C42FF3 /* Page+Eaten.swift in Sources */,
 				BFDC1D7EBF1FE361B47E174FBDF31CD3 /* User.swift in Sources */,
 				F531D542AD9ACD376C8CA4CFF3AF1B6A /* User+Extensions.swift in Sources */,
 				A920CC01B8E9F296BFB1F338CAE2DDCD /* UserData.swift in Sources */,

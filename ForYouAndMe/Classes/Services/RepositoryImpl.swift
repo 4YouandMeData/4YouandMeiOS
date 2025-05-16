@@ -413,6 +413,20 @@ extension RepositoryImpl: Repository {
             .handleError()
     }
     
+    func sendDiaryNoteEaten(date: Date,
+                            mealType: String,
+                            quantity: String,
+                            significantNutrition: Bool,
+                            fromChart: Bool) -> Single<DiaryNoteItem> {
+        return self.api.send(request: ApiRequest(serviceRequest:
+                .sendDiaryNoteEaten(date: date,
+                                    mealType: mealType,
+                                    quantity: quantity,
+                                    significantNutrition: significantNutrition,
+                                    fromChart: fromChart)))
+            .handleError()
+    }
+
     func updateDiaryNoteText(diaryNote: DiaryNoteItem) -> Single<()> {
         return self.api.send(request: ApiRequest(serviceRequest: .updateDiaryNoteText(diaryItem: diaryNote)))
             .handleError()
