@@ -29,6 +29,8 @@ class ConsumptionAmountViewController: UIViewController {
 
     /// The type we ate (snack/meal)
     var selectedType: EatenTypeViewController.EntryType!
+    private let storage: CacheService
+    private let navigator: AppNavigator
     weak var delegate: ConsumptionAmountViewControllerDelegate?
 
     // MARK: – Subviews
@@ -70,8 +72,27 @@ class ConsumptionAmountViewController: UIViewController {
             footerView.setButtonEnabled(enabled: selectedQuantity != nil)
         }
     }
+    
+    private lazy var messages: [MessageInfo] = {
+        let messages = self.storage.infoMessages?.messages(withLocation: .pageIHaveEeaten)
+        return messages ?? []
+    }()
 
     // MARK: – Lifecycle
+    
+    init() {
+        self.navigator = Services.shared.navigator
+        self.storage = Services.shared.storageServices
+        super.init(nibName: nil, bundle: nil)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    deinit {
+        print("DiaryNoteViewController - deinit")
+    }
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -79,13 +100,6 @@ class ConsumptionAmountViewController: UIViewController {
         setupNavigationBar()
         setupLayout()
         setupActions()
-    }
-
-    override func viewWillDisappear(_ animated: Bool) {
-        super.viewWillDisappear(animated)
-        if isMovingFromParent {
-            delegate?.consumptionAmountViewControllerDidCancel(self)
-        }
     }
 
     // MARK: – Setup
@@ -98,6 +112,19 @@ class ConsumptionAmountViewController: UIViewController {
     }
 
     private func setupLayout() {
+        
+        // Create a bar button item with your info image
+        let comingSoonItem = UIBarButtonItem(
+            image: ImagePalette.templateImage(withName: .infoMessage),
+            style: .plain,
+            target: self,
+            action: #selector(infoButtonPressed)
+        )
+        comingSoonItem.tintColor = ColorPalette.color(withType: .primary)
+        self.navigationItem.rightBarButtonItem = (self.messages.count < 1)
+            ? nil
+            : comingSoonItem
+        
         view.addSubview(scrollStack)
         scrollStack.autoPinEdgesToSuperviewSafeArea(with: .zero, excludingEdge: .bottom)
 
@@ -185,5 +212,9 @@ class ConsumptionAmountViewController: UIViewController {
         guard let qty = selectedQuantity else { return }
         delegate?.consumptionAmountViewController(self,
             didSelect: qty.rawValue)
+    }
+    
+    @objc private func infoButtonPressed() {
+        self.navigator.openMessagePage(withLocation: .pageIHaveEeaten, presenter: self)
     }
 }

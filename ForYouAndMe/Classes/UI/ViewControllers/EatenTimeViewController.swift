@@ -15,6 +15,8 @@ protocol EatenTimeViewControllerDelegate: AnyObject {
 class EatenTimeViewController: UIViewController {
     
     var selectedType: EatenTypeViewController.EntryType
+    private let storage: CacheService
+    private let navigator: AppNavigator
     
     enum TimeRelative: String {
         case withinHour = "In the last hour"
@@ -36,11 +38,16 @@ class EatenTimeViewController: UIViewController {
     }()
     
     private var selectedRelative: TimeRelative? {
-            didSet {
-                let enabled = (selectedRelative != nil)
-                footerView.setButtonEnabled(enabled: enabled)
-            }
+        didSet {
+            let enabled = (selectedRelative != nil)
+            footerView.setButtonEnabled(enabled: enabled)
         }
+    }
+    
+    private lazy var messages: [MessageInfo] = {
+        let messages = self.storage.infoMessages?.messages(withLocation: .pageIHaveEeaten)
+        return messages ?? []
+    }()
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
@@ -48,6 +55,8 @@ class EatenTimeViewController: UIViewController {
     
     init(selectedType: EatenTypeViewController.EntryType) {
         self.selectedType = selectedType
+        self.navigator = Services.shared.navigator
+        self.storage = Services.shared.storageServices
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -64,6 +73,18 @@ class EatenTimeViewController: UIViewController {
     }
     
     private func setupLayout() {
+        
+        // Create a bar button item with your info image
+        let comingSoonItem = UIBarButtonItem(
+            image: ImagePalette.templateImage(withName: .infoMessage),
+            style: .plain,
+            target: self,
+            action: #selector(infoButtonPressed)
+        )
+        comingSoonItem.tintColor = ColorPalette.color(withType: .primary)
+        self.navigationItem.rightBarButtonItem = (self.messages.count < 1)
+            ? nil
+            : comingSoonItem
         
         let scrollStackView = ScrollStackView(axis: .vertical, horizontalInset: Constants.Style.DefaultHorizontalMargins)
         self.view.addSubview(scrollStackView)
@@ -144,5 +165,9 @@ class EatenTimeViewController: UIViewController {
         // Notify delegate when Next is tapped
         guard let rel = selectedRelative else { return }
         delegate?.eatenTimeViewController(self, didSelect: rel)
+    }
+    
+    @objc private func infoButtonPressed() {
+        self.navigator.openMessagePage(withLocation: .pageIHaveEeaten, presenter: self)
     }
 }

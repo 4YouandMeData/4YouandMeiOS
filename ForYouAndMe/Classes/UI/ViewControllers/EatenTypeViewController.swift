@@ -24,6 +24,8 @@ class EatenTypeViewController: UIViewController {
 
     private lazy var snackButton = makeOptionButton(type: .snack)
     private lazy var mealButton  = makeOptionButton(type: .meal)
+    private let storage: CacheService
+    private let navigator: AppNavigator
     
     private lazy var closeButton: UIBarButtonItem = {
         let item = UIBarButtonItem(
@@ -37,6 +39,20 @@ class EatenTypeViewController: UIViewController {
             return item
     }()
     
+    init() {
+        self.navigator = Services.shared.navigator
+        self.storage = Services.shared.storageServices
+        super.init(nibName: nil, bundle: nil)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    deinit {
+        print("DiaryNoteViewController - deinit")
+    }
+    
     private lazy var footerView: GenericButtonView = {
         
         let buttonView = GenericButtonView(withTextStyleCategory: .secondaryBackground(shadow: false))
@@ -45,6 +61,11 @@ class EatenTypeViewController: UIViewController {
         buttonView.addTarget(target: self, action: #selector(self.nextTapped))
         
         return buttonView
+    }()
+    
+    private lazy var messages: [MessageInfo] = {
+        let messages = self.storage.infoMessages?.messages(withLocation: .pageIHaveEeaten)
+        return messages ?? []
     }()
     
     private var selectedType: EntryType? {
@@ -63,6 +84,18 @@ class EatenTypeViewController: UIViewController {
     private func setupLayout() {
 
         self.navigationItem.leftBarButtonItem = self.closeButton
+        
+        // Create a bar button item with your info image
+        let comingSoonItem = UIBarButtonItem(
+            image: ImagePalette.templateImage(withName: .infoMessage),
+            style: .plain,
+            target: self,
+            action: #selector(infoButtonPressed)
+        )
+        comingSoonItem.tintColor = ColorPalette.color(withType: .primary)
+        self.navigationItem.rightBarButtonItem = (self.messages.count < 1)
+            ? nil
+            : comingSoonItem
         
         let scrollStackView = ScrollStackView(axis: .vertical, horizontalInset: Constants.Style.DefaultHorizontalMargins)
         self.view.addSubview(scrollStackView)
@@ -133,7 +166,7 @@ class EatenTypeViewController: UIViewController {
         self.delegate?.eatenDismiss(self)
     }
 
-    @objc func handleInfo() {
-        // Present info modal if needed
+    @objc private func infoButtonPressed() {
+        self.navigator.openMessagePage(withLocation: .pageIHaveEeaten, presenter: self)
     }
 }

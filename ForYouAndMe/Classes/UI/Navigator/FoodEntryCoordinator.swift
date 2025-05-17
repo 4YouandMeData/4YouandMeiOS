@@ -85,56 +85,6 @@ final class FoodEntryCoordinator: PagedActivitySectionCoordinator {
         return activitySectionViewController!
     }
     
-    // MARK: - PageCoordinator callbacks (delegated by PagedSectionCoordinator)
-    // Default implementations handle navigation. Override these if you need to capture data:
-    
-    func performCustomPrimaryButtonNavigation(page: Page) -> Bool {
-        switch page.id {
-        case Page.foodType.id:
-            selectedFoodType = page.buttonFirstlabel
-            return false // continue default navigation
-        case Page.timeRelative.id where page.buttonFirstlabel == "In the last hour":
-            snackDate = Date()
-            return false
-        case Page.dateTime.id:
-            // snackDate should be set from page data (e.g. InfoPageData)
-            return false
-        case Page.quantity.id:
-            if page.buttonFirstlabel == "more than usual" {
-                quantitySelection = page.buttonFirstlabel
-            }
-            return false
-        case Page.nutrient.id where page.buttonFirstlabel == "Yes":
-            nutrientAnswer = true
-            return false
-        case Page.confirm.id:
-            saveAllAndFinish()
-            return true // handled, no further navigation
-        default:
-            return false
-        }
-    }
-    
-    func performCustomSecondaryButtonNavigation(page: Page) -> Bool {
-        switch page.id {
-        case Page.foodType.id:
-            selectedFoodType = page.buttonSecondlabel
-            return false
-        case Page.timeRelative.id where page.buttonSecondlabel == "Earlier than the last hour":
-            return false
-        case Page.quantity.id:
-            if page.buttonSecondlabel == "the same amount as usual" {
-                quantitySelection = page.buttonSecondlabel
-            }
-            return false
-        case Page.nutrient.id where page.buttonSecondlabel == "No":
-            nutrientAnswer = false
-            return false
-        default:
-            return false
-        }
-    }
-    
     // MARK: - Save & finish
     private func saveAllAndFinish() {
         // Example saving logic
