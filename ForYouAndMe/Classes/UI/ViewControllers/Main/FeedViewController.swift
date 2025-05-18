@@ -110,7 +110,7 @@ class FeedViewController: UIViewController {
         }
         
         let actionEaten = actionButton.addItem()
-        actionEaten.titleLabel.text = StringsProvider.string(forKey: .diaryNoteFabNoticed)
+        actionEaten.titleLabel.text = StringsProvider.string(forKey: .diaryNoteFabEaten)
         actionEaten.titleLabel.textColor = ColorPalette.color(withType: .fabTextColor)
         actionEaten.imageView.image = ImagePalette.image(withName: .eatenIcon)
         actionEaten.buttonColor = ColorPalette.color(withType: .primary)

@@ -41,24 +41,24 @@ class ConsumptionAmountViewController: UIViewController {
     )
 
     private lazy var moreButton: OptionButton = makeOption(
-        text: "more than usual",
+        text: StringsProvider.string(forKey: .diaryNoteEatenStepFourthFirstButton),
         iconName: .plusIcon,
         value: .moreThanUsual
     )
     private lazy var sameButton: OptionButton = makeOption(
-        text: "the same amount as usual",
+        text: StringsProvider.string(forKey: .diaryNoteEatenStepFourthSecondButton),
         iconName: .equalsIcon,
         value: .asUsual
     )
     private lazy var lessButton: OptionButton = makeOption(
-        text: "less than usual",
+        text: StringsProvider.string(forKey: .diaryNoteEatenStepFourthThirdButton),
         iconName: .minusIcon,
         value: .lessThanUsual
     )
 
     private lazy var footerView: GenericButtonView = {
         let buttonView = GenericButtonView(withTextStyleCategory: .secondaryBackground(shadow: false))
-        buttonView.setButtonText(StringsProvider.string(forKey: .spiroNext))
+        buttonView.setButtonText(StringsProvider.string(forKey: .diaryNoteEatenNextButton))
         buttonView.setButtonEnabled(enabled: false)
         buttonView.addTarget(target: self, action: #selector(self.nextTapped))
         return buttonView
@@ -132,7 +132,7 @@ class ConsumptionAmountViewController: UIViewController {
         let paragraph = NSMutableParagraphStyle()
         paragraph.alignment = .center
         let boldTitle = NSAttributedString(
-            string: "I've eaten",
+            string: StringsProvider.string(forKey: .diaryNoteEatenStepFourthTitle),
             attributes: [
                 .font: UIFont.boldSystemFont(ofSize: FontPalette.fontStyleData(forStyle: .header2).font.pointSize),
                 .foregroundColor: ColorPalette.color(withType: .primaryText),
@@ -143,9 +143,9 @@ class ConsumptionAmountViewController: UIViewController {
         scrollStack.stackView.addBlankSpace(space: 36)
 
         // Subtitle
-        let base = "Was your "
-        let boldPart = selectedType.rawValue.lowercased()
-        let end = " …"
+        let base = StringsProvider.string(forKey: .diaryNoteEatenStepFourthMessage)
+        let boldPart = " " + selectedType.rawValue.lowercased()
+        let end = "..."
         let att = NSMutableAttributedString(string: base, attributes: [
             .font: FontPalette.fontStyleData(forStyle: .paragraph).font,
             .foregroundColor: ColorPalette.color(withType: .primaryText),

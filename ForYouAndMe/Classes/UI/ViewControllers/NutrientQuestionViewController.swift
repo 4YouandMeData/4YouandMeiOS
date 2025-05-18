@@ -32,12 +32,12 @@ class NutrientQuestionViewController: UIViewController {
         horizontalInset: Constants.Style.DefaultHorizontalMargins
     )
     
-    private lazy var yesButton: OptionButton = makeOption(text: "Yes")
-    private lazy var noButton: OptionButton = makeOption(text: "No")
+    private lazy var yesButton: OptionButton = makeOption(text: StringsProvider.string(forKey: .diaryNoteEatenStepFifthFirstButton))
+    private lazy var noButton: OptionButton = makeOption(text: StringsProvider.string(forKey: .diaryNoteEatenStepFifthSecondButton))
     
     private lazy var footerView: GenericButtonView = {
         let buttonView = GenericButtonView(withTextStyleCategory: .secondaryBackground(shadow: false))
-        buttonView.setButtonText(StringsProvider.string(forKey: .spiroNext))
+        buttonView.setButtonText(StringsProvider.string(forKey: .diaryNoteEatenConfirmButton))
         buttonView.setButtonEnabled(enabled: false)
         buttonView.addTarget(target: self, action: #selector(self.confirmTapped))
         
@@ -108,13 +108,11 @@ class NutrientQuestionViewController: UIViewController {
         scrollStack.autoPinEdgesToSuperviewSafeArea(with: .zero, excludingEdge: .bottom)
         
         // Title: attributed string
-        let base = "Did your "
-        let bold = selectedType.rawValue.lowercased()
-        let tail = " contain either a significant proportion of protein, fiber and/or fat in it?"
+        let base = StringsProvider.string(forKey: .diaryNoteEatenStepFifthMessage)
         
         let paragraph = NSMutableParagraphStyle()
         paragraph.alignment = .center
-        
+
         let normalAttrs: [NSAttributedString.Key: Any] = [
             .font: UIFont.preferredFont(forTextStyle: .body),
             .foregroundColor: ColorPalette.color(withType: .primaryText),
@@ -125,11 +123,21 @@ class NutrientQuestionViewController: UIViewController {
             .foregroundColor: ColorPalette.color(withType: .primaryText),
             .paragraphStyle: paragraph
         ]
-        let att = NSMutableAttributedString(string: base, attributes: normalAttrs)
-        att.append(NSAttributedString(string: bold, attributes: boldAttrs))
-        att.append(NSAttributedString(string: tail, attributes: normalAttrs))
         
-        let baseTitle = "I've eaten"
+        let att = NSMutableAttributedString(string: base, attributes: normalAttrs)
+        
+        func applyBold(to substring: String) {
+            let fullText = att.string as NSString
+            let range = fullText.range(of: substring, options: .caseInsensitive)
+            guard range.location != NSNotFound else { return }
+            att.addAttributes(boldAttrs, range: range)
+        }
+        
+        let typeKey = selectedType.rawValue    // e.g. "Snack" or "Meal"
+        applyBold(to: typeKey)
+        ["protein", "fiber", "fat"].forEach { applyBold(to: $0) }
+        
+        let baseTitle = StringsProvider.string(forKey: .diaryNoteEatenStepFifthTitle)
         let boldAttrsTitle: [NSAttributedString.Key: Any] = [
             .font: UIFont.boldSystemFont(ofSize: FontPalette.fontStyleData(forStyle: .header2).font.pointSize),
             .foregroundColor: ColorPalette.color(withType: .primaryText),

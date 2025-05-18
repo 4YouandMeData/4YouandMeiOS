@@ -19,8 +19,8 @@ class EatenTimeViewController: UIViewController {
     private let navigator: AppNavigator
     
     enum TimeRelative: String {
-        case withinHour = "In the last hour"
-        case earlier    = "Earlier than the last hour"
+        case withinHour
+        case earlier
     }
     
     private lazy var withinHourButton: OptionButton = makeOptionButton(type: .withinHour)
@@ -30,7 +30,7 @@ class EatenTimeViewController: UIViewController {
     
     private lazy var footerView: GenericButtonView = {
         let buttonView = GenericButtonView(withTextStyleCategory: .secondaryBackground(shadow: false))
-        buttonView.setButtonText(StringsProvider.string(forKey: .spiroNext))
+        buttonView.setButtonText(StringsProvider.string(forKey: .diaryNoteEatenNextButton))
         buttonView.setButtonEnabled(enabled: false)
         buttonView.addTarget(target: self, action: #selector(self.nextTapped))
         
@@ -146,8 +146,12 @@ class EatenTimeViewController: UIViewController {
     
     private func makeOptionButton(type: TimeRelative) -> OptionButton {
         let btn = OptionButton()
+        let title = type == .earlier
+        ? StringsProvider.string(forKey: .diaryNoteEatenStepTwoFirstButton)
+        : StringsProvider.string(forKey: .diaryNoteEatenStepTwoSecondButton)
+        
         btn.layoutStyle = .textLeft(padding: 16)
-        btn.setTitle(type.rawValue, for: .normal)
+        btn.setTitle(title, for: .normal)
         btn.addTarget(self, action: #selector(optionTapped(_:)), for: .touchUpInside)
         return btn
     }

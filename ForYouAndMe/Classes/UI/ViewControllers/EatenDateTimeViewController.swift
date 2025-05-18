@@ -43,7 +43,7 @@ class EatenDateTimeViewController: UIViewController {
     
     private let sectionHeader: UILabel = {
         let lbl = UILabel()
-        lbl.text = "Time"
+        lbl.text = StringsProvider.string(forKey: .diaryNoteEatenStepThreeTime)
         lbl.font = FontPalette.fontStyleData(forStyle: .paragraph).font
         lbl.textColor = ColorPalette.color(withType: .primary)
         return lbl
@@ -84,7 +84,7 @@ class EatenDateTimeViewController: UIViewController {
     
     private lazy var footerView: GenericButtonView = {
         let buttonView = GenericButtonView(withTextStyleCategory: .secondaryBackground(shadow: false))
-        buttonView.setButtonText(StringsProvider.string(forKey: .spiroNext))
+        buttonView.setButtonText(StringsProvider.string(forKey: .diaryNoteEatenNextButton))
         buttonView.setButtonEnabled(enabled: false)
         buttonView.addTarget(target: self, action: #selector(self.nextTapped))
         
@@ -165,7 +165,7 @@ class EatenDateTimeViewController: UIViewController {
         let paragraphStyle = NSMutableParagraphStyle()
             paragraphStyle.alignment = .center
         
-        let baseTitle = "I've eaten"
+        let baseTitle = StringsProvider.string(forKey: .diaryNoteEatenStepThreeTitle)
         let boldAttrsTitle: [NSAttributedString.Key: Any] = [
             .font: UIFont.boldSystemFont(ofSize: FontPalette.fontStyleData(forStyle: .header2).font.pointSize),
             .foregroundColor: ColorPalette.color(withType: .primaryText),
@@ -174,8 +174,8 @@ class EatenDateTimeViewController: UIViewController {
         let boldString = NSAttributedString(string: baseTitle, attributes: boldAttrsTitle)
         
         // Subtitle: normal + bold
-        let base = "Specify the date and time of your "
-        let boldPart = selectedType.rawValue.lowercased()
+        let base = StringsProvider.string(forKey: .diaryNoteEatenStepThreeMessage)
+        let boldPart = " " + selectedType.rawValue.lowercased()
         
         let paragraph = NSMutableParagraphStyle()
         paragraph.alignment = .center

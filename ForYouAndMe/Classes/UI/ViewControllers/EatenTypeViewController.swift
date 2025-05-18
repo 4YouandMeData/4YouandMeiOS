@@ -56,7 +56,7 @@ class EatenTypeViewController: UIViewController {
     private lazy var footerView: GenericButtonView = {
         
         let buttonView = GenericButtonView(withTextStyleCategory: .secondaryBackground(shadow: false))
-        buttonView.setButtonText(StringsProvider.string(forKey: .spiroNext))
+        buttonView.setButtonText(StringsProvider.string(forKey: .diaryNoteEatenNextButton))
         buttonView.setButtonEnabled(enabled: false)
         buttonView.addTarget(target: self, action: #selector(self.nextTapped))
         
@@ -106,7 +106,7 @@ class EatenTypeViewController: UIViewController {
         let paragraphStyle = NSMutableParagraphStyle()
             paragraphStyle.alignment = .center
 
-        let baseTitle = "I've eaten"
+        let baseTitle = StringsProvider.string(forKey: .diaryNoteEatenStepOneTitle)
         let boldAttrs: [NSAttributedString.Key: Any] = [
             .font: UIFont.boldSystemFont(ofSize: FontPalette.fontStyleData(forStyle: .header2).font.pointSize),
             .foregroundColor: ColorPalette.color(withType: .primaryText),
@@ -117,7 +117,7 @@ class EatenTypeViewController: UIViewController {
         
         scrollStackView.stackView.addBlankSpace(space: 36)
         
-        scrollStackView.stackView.addLabel(withText: "Do you have a snack or normal meal?",
+        scrollStackView.stackView.addLabel(withText: StringsProvider.string(forKey: .diaryNoteEatenStepOneMessage),
                                fontStyle: .paragraph,
                                color: ColorPalette.color(withType: .primaryText))
         
@@ -144,8 +144,12 @@ class EatenTypeViewController: UIViewController {
         let btn = OptionButton()
         btn.layoutStyle = .vertical(spacing: 16)
         let imageName = type == .snack ? TemplateImageName.snackImage : TemplateImageName.mealImage
+        let title = type == .snack
+        ? StringsProvider.string(forKey: .diaryNoteEatenStepOneFirstButton)
+        : StringsProvider.string(forKey: .diaryNoteEatenStepOneSecondButton)
+        
         btn.setImage(ImagePalette.templateImage(withName: imageName), for: .normal)
-        btn.setTitle(type.rawValue, for: .normal)
+        btn.setTitle(title, for: .normal)
         btn.addTarget(self, action: #selector(optionTapped(_:)), for: .touchUpInside)
         return btn
     }

@@ -164,6 +164,32 @@ enum StringKey: String, CaseIterable, CodingKey {
     case diaryNoteTranscribeTextTitle = "DIARYNOTE_TRANSCRIBE_TEXT_TITLE"
     case diaryNoteTranscribeTextDescription = "DIARYNOTE_TRANSCRIBE_TEXT_DESCRIPTION"
     case diaryNoteTranscribeTextError = "DIARYNOTE_TRANSCRIBE_TEXT_ERROR"
+    
+    // I Have Eaten
+    
+    case diaryNoteFabEaten = "FAB_I_HAVE_EATEN"
+    case diaryNoteEatenStepOneTitle = "EATEN_STEP_ONE_TITLE"
+    case diaryNoteEatenStepOneMessage = "EATEN_STEP_ONE_MESSAGE"
+    case diaryNoteEatenStepOneFirstButton = "EATEN_STEP_ONE_FIRST_BUTTON"
+    case diaryNoteEatenStepOneSecondButton = "EATEN_STEP_ONE_SECOND_BUTTON"
+    case diaryNoteEatenStepTwoTitle = "EATEN_STEP_TWO_TITLE"
+    case diaryNoteEatenStepTwoMessage = "EATEN_STEP_TWO_MESSAGE"
+    case diaryNoteEatenStepTwoFirstButton = "EATEN_STEP_TWO_FIRST_BUTTON"
+    case diaryNoteEatenStepTwoSecondButton = "EATEN_STEP_TWO_SECOND_BUTTON"
+    case diaryNoteEatenStepThreeTitle = "EATEN_STEP_THREE_TITLE"
+    case diaryNoteEatenStepThreeMessage = "EATEN_STEP_THREE_MESSAGE"
+    case diaryNoteEatenStepThreeTime = "EATEN_STEP_THREE_TIME"
+    case diaryNoteEatenStepFourthTitle = "EATEN_STEP_FOURTH_TITLE"
+    case diaryNoteEatenStepFourthMessage = "EATEN_STEP_FOURTH_MESSAGE"
+    case diaryNoteEatenStepFourthFirstButton = "EATEN_STEP_FOURTH_FIRST_BUTTON"
+    case diaryNoteEatenStepFourthSecondButton = "EATEN_STEP_FOURTH_SECOND_BUTTON"
+    case diaryNoteEatenStepFourthThirdButton = "EATEN_STEP_FOURTH_THIRD_BUTTON"
+    case diaryNoteEatenStepFifthTitle = "EATEN_STEP_FIFTH_TITLE"
+    case diaryNoteEatenStepFifthMessage = "EATEN_STEP_FIFTH_MESSAGE"
+    case diaryNoteEatenStepFifthFirstButton = "EATEN_STEP_FIFTH_FIRST_BUTTON"
+    case diaryNoteEatenStepFifthSecondButton = "EATEN_STEP_FIFTH_SECOND_BUTTON"
+    case diaryNoteEatenNextButton = "EATEN_NEXT_BUTTON"
+    case diaryNoteEatenConfirmButton = "EATEN_CONFIRM_BUTTON"
 
     // Video Diary
     case videoDiaryRecorderInfoFilter = "VIDEO_DIARY_RECORDER_INFO_FILTER"

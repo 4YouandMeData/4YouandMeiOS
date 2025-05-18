@@ -106,16 +106,6 @@ class TaskViewController: UIViewController {
 
         let actionButton = JJFloatingActionButton()
         
-        let actionEaten = actionButton.addItem()
-        actionEaten.titleLabel.text = StringsProvider.string(forKey: .diaryNoteFabNoticed)
-        actionEaten.titleLabel.textColor = ColorPalette.color(withType: .fabTextColor)
-        actionEaten.imageView.image = ImagePalette.image(withName: .noteGeneric)
-        actionEaten.buttonColor = ColorPalette.color(withType: .secondary)
-        actionEaten.action = { [weak self] _ in
-            guard let self = self else { return }
-            self.navigator.openNoticedViewController(presenter: self)
-        }
-        
         let actionItemRiflection = actionButton.addItem()
         actionItemRiflection.titleLabel.text = StringsProvider.string(forKey: .diaryNoteFabReflection)
         actionItemRiflection.titleLabel.textColor = ColorPalette.color(withType: .fabTextColor)
@@ -130,6 +120,16 @@ class TaskViewController: UIViewController {
         actionNoticed.action = { [weak self] _ in
             guard let self = self else { return }
             self.navigator.openNoticedViewController(presenter: self)
+        }
+        
+        let actionEaten = actionButton.addItem()
+        actionEaten.titleLabel.text = StringsProvider.string(forKey: .diaryNoteFabEaten)
+        actionEaten.titleLabel.textColor = ColorPalette.color(withType: .fabTextColor)
+        actionEaten.imageView.image = ImagePalette.image(withName: .eatenIcon)
+        actionEaten.buttonColor = ColorPalette.color(withType: .primary)
+        actionEaten.action = { [weak self] _ in
+            guard let self = self else { return }
+            self.navigator.openEatenViewController(presenter: self)
         }
         
         view.addSubview(actionButton)
