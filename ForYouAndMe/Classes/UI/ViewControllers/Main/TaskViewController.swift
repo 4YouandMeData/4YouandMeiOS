@@ -125,7 +125,7 @@ class TaskViewController: UIViewController {
         let actionEaten = actionButton.addItem()
         actionEaten.titleLabel.text = StringsProvider.string(forKey: .diaryNoteFabEaten)
         actionEaten.titleLabel.textColor = ColorPalette.color(withType: .fabTextColor)
-        actionEaten.imageView.image = ImagePalette.image(withName: .eatenIcon)
+        actionEaten.imageView.image = ImagePalette.templateImage(withName: .eatenIcon)
         actionEaten.buttonColor = ColorPalette.color(withType: .primary)
         actionEaten.action = { [weak self] _ in
             guard let self = self else { return }

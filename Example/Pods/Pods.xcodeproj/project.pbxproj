@@ -207,6 +207,10 @@
 		0D15F7162DD6F79400C42FF3 /* ConsumptionAmountViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D15F7152DD6F79300C42FF3 /* ConsumptionAmountViewController.swift */; };
 		0D15F71E2DD7393D00C42FF3 /* NutrientQuestionViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D15F71D2DD7393B00C42FF3 /* NutrientQuestionViewController.swift */; };
 		0D15F7202DD74F1300C42FF3 /* Page+Eaten.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D15F71F2DD74F1300C42FF3 /* Page+Eaten.swift */; };
+		0D15F7A52DDB871400C42FF3 /* InsulinEntryCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D15F7A42DDB870300C42FF3 /* InsulinEntryCoordinator.swift */; };
+		0D15F7A72DDB934C00C42FF3 /* DoseTypeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D15F7A62DDB934600C42FF3 /* DoseTypeViewController.swift */; };
+		0D15F7A92DDB9A3700C42FF3 /* Page+Doses.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D15F7A82DDB9A3300C42FF3 /* Page+Doses.swift */; };
+		0D15F7AB2DDB9FB600C42FF3 /* DoseDateTimeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D15F7AA2DDB9FAE00C42FF3 /* DoseDateTimeViewController.swift */; };
 		0D3641CC2D8B334A00FDB3AA /* SpyrometerTestViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D3641CB2D8B334800FDB3AA /* SpyrometerTestViewController.swift */; };
 		0D3641CE2D8B34A700FDB3AA /* SpyrometerIntroTestViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D3641CD2D8B349E00FDB3AA /* SpyrometerIntroTestViewController.swift */; };
 		0D3641DA2D91BBFA00FDB3AA /* SpyroBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D3641D92D91BBED00FDB3AA /* SpyroBar.swift */; };
@@ -4358,6 +4362,10 @@
 		0D15F7152DD6F79300C42FF3 /* ConsumptionAmountViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConsumptionAmountViewController.swift; sourceTree = "<group>"; };
 		0D15F71D2DD7393B00C42FF3 /* NutrientQuestionViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NutrientQuestionViewController.swift; sourceTree = "<group>"; };
 		0D15F71F2DD74F1300C42FF3 /* Page+Eaten.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Page+Eaten.swift"; sourceTree = "<group>"; };
+		0D15F7A42DDB870300C42FF3 /* InsulinEntryCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InsulinEntryCoordinator.swift; sourceTree = "<group>"; };
+		0D15F7A62DDB934600C42FF3 /* DoseTypeViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoseTypeViewController.swift; sourceTree = "<group>"; };
+		0D15F7A82DDB9A3300C42FF3 /* Page+Doses.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Page+Doses.swift"; sourceTree = "<group>"; };
+		0D15F7AA2DDB9FAE00C42FF3 /* DoseDateTimeViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoseDateTimeViewController.swift; sourceTree = "<group>"; };
 		0D3641CB2D8B334800FDB3AA /* SpyrometerTestViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpyrometerTestViewController.swift; sourceTree = "<group>"; };
 		0D3641CD2D8B349E00FDB3AA /* SpyrometerIntroTestViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpyrometerIntroTestViewController.swift; sourceTree = "<group>"; };
 		0D3641D92D91BBED00FDB3AA /* SpyroBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpyroBar.swift; sourceTree = "<group>"; };
@@ -8772,6 +8780,7 @@
 		39DE945C7908249203C0E5E0EE361EAA /* Entities */ = {
 			isa = PBXGroup;
 			children = (
+				0D15F7A82DDB9A3300C42FF3 /* Page+Doses.swift */,
 				0D15F71F2DD74F1300C42FF3 /* Page+Eaten.swift */,
 				0D3642012D9B087200FDB3AA /* UserConsent.swift */,
 				0D3641EF2D958B5100FDB3AA /* ProfilingOption.swift */,
@@ -9144,6 +9153,7 @@
 		44E6670F88E3F35E36BF5DDC134ED4A2 /* Navigator */ = {
 			isa = PBXGroup;
 			children = (
+				0D15F7A42DDB870300C42FF3 /* InsulinEntryCoordinator.swift */,
 				0D75E42F2DD49D030012A30F /* FoodEntryCoordinator.swift */,
 				0D3642212DA41DC000FDB3AA /* ReflectionSectionCoordinator.swift */,
 				0D3641EB2D956E2E00FDB3AA /* OnboardingQuestionsCoordinator.swift */,
@@ -11571,6 +11581,8 @@
 		C2AC34DCE1B9D5E7C7A4BAE15259715A /* ViewControllers */ = {
 			isa = PBXGroup;
 			children = (
+				0D15F7AA2DDB9FAE00C42FF3 /* DoseDateTimeViewController.swift */,
+				0D15F7A62DDB934600C42FF3 /* DoseTypeViewController.swift */,
 				0D15F71D2DD7393B00C42FF3 /* NutrientQuestionViewController.swift */,
 				0D15F7152DD6F79300C42FF3 /* ConsumptionAmountViewController.swift */,
 				0D15F7132DD64F0400C42FF3 /* EatenDateTimeViewController.swift */,
@@ -18002,6 +18014,7 @@
 				96DC54D20664BB510782C611F00B94AE /* DeeplinkService.swift in Sources */,
 				8F09840D61460FC5BD64E08A2D6A7740 /* DefaultConvertible.swift in Sources */,
 				C4DB7BFA81A310BEC8CB1187FDAB8204 /* Defaults+Convertible.swift in Sources */,
+				0D15F7A52DDB871400C42FF3 /* InsulinEntryCoordinator.swift in Sources */,
 				BBAD9FF9FB358115578D84D0D85F0771 /* DeviceItemView.swift in Sources */,
 				69EEC2C4FFC76B9C52347F318278B837 /* DeviceManager.swift in Sources */,
 				8EFDB3B3F3084F6BCE00A5ADC38A14F1 /* DeviceService.swift in Sources */,
@@ -18043,6 +18056,7 @@
 				4C5A5EBAA6981AAFC3D22405EF0BA526 /* GenericButtonView.swift in Sources */,
 				776F73159847DFCCB39DE3CE8447344B /* GenericCheckboxView.swift in Sources */,
 				87FE1536A5C1A8C3246E4ABED15A603E /* GenericErrorView.swift in Sources */,
+				0D15F7A72DDB934C00C42FF3 /* DoseTypeViewController.swift in Sources */,
 				7F83B6417F5A7F52D0CFD2AD98109BC1 /* GenericListItemView.swift in Sources */,
 				BCC1F088206C0C4BE9DC36FB2ECB8F57 /* GenericTextCheckboxView.swift in Sources */,
 				735C55108BDB72CB234CE148815F262A /* GenericTextFieldView.swift in Sources */,
@@ -18112,6 +18126,7 @@
 				0D94E47E2DA7AA9D00C47142 /* FormSheetPage.swift in Sources */,
 				FAF84AA3E531A984CA1034EB0EC0AAF5 /* NSAttributedString+Palette.swift in Sources */,
 				0D15F70A2DD5CDDE00C42FF3 /* EatenTimeViewController.swift in Sources */,
+				0D15F7A92DDB9A3700C42FF3 /* Page+Doses.swift in Sources */,
 				DC63058F4A128B5489B6A660E5ECB3F4 /* NSDictionary+Safety.swift in Sources */,
 				B245B97FB10F9AE95913D112D459BF79 /* Observable+ModelMapper.swift in Sources */,
 				4BCEA70571453B8C85354ECA3D5BC2D4 /* ObservableAvailability.swift in Sources */,
@@ -18280,6 +18295,7 @@
 				A122BE96BB560A0344B80BF0C5FB261F /* UserInfoHeaderView.swift in Sources */,
 				FE97283E9FFDFFFCAF677F32B6ED5401 /* UserInfoParameter.swift in Sources */,
 				AAF4FBB20F83301D93466FFDB3D28B88 /* UserInfoViewController.swift in Sources */,
+				0D15F7AB2DDB9FB600C42FF3 /* DoseDateTimeViewController.swift in Sources */,
 				453FE3D029F7431BA489CD9FE3D2D840 /* UserLocation.swift in Sources */,
 				D3447F5B6B8CE385340F082BFDE56579 /* UserNameViewController.swift in Sources */,
 				0D3641EE2D958A4500FDB3AA /* ProfilingQuestion.swift in Sources */,

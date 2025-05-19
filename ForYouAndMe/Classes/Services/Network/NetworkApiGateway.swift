@@ -405,7 +405,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             return "v1/diary_notes/\(diaryNoteId)"
         case .sendDiaryNoteText:
             return "v1/diary_notes"
-        case .sendDiaryNoteEaten:
+        case .sendDiaryNoteEaten, .sendDiaryNoteDoses:
             return "v1/diary_notes"
         case .deleteDiaryNote(let diaryNoteId):
             return "v1/diary_notes/\(diaryNoteId)"
@@ -463,7 +463,8 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
                 .sendDiaryNoteText,
                 .sendDiaryNoteAudio,
                 .sendDiaryNoteVideo,
-                .sendDiaryNoteEaten:
+                .sendDiaryNoteEaten,
+                .sendDiaryNoteDoses:
             return .post
         case .verifyEmail,
                 .resendConfirmationEmail,
@@ -571,6 +572,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         case .sendDiaryNoteAudio: return "{}".utf8Encoded
         case .sendDiaryNoteVideo: return "{}".utf8Encoded
         case .sendDiaryNoteEaten: return "{}".utf8Encoded
+        case .sendDiaryNoteDoses: return "{}".utf8Encoded
         case .getDiaryNoteText: return "{}".utf8Encoded
         case .getDiaryNoteAudio: return "{}".utf8Encoded
         case .deleteDiaryNote: return "{}".utf8Encoded
@@ -799,7 +801,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             }
             
             return .requestJSONEncodable(diaryNote)
-        case .sendDiaryNoteEaten(let date, let mealType, let quantity, let significantNutrition, let fromChart):
+        case .sendDiaryNoteEaten(let date, let mealType, let quantity, let significantNutrition, _):
             var data: [String: Any] = [:]
             data["quantity"] = quantity
             data["with_significant_protein_fiber_or_fat"] = significantNutrition
@@ -812,6 +814,17 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             
             return .requestParameters(parameters: ["diary_note": dataParams], encoding: JSONEncoding.default)
             
+        case .sendDiaryNoteDoses(let doseType, let date, let amount, _):
+            var data: [String: Any] = [:]
+            data["dose_type"] = doseType
+            data["quantity"] = amount
+            
+            var dataParams: [String: Any] = [:]
+            dataParams["data"] = data
+            dataParams["datetime_ref"] = date.string(withFormat: dateTimeFormat)
+            dataParams["diary_type"] = DiaryNoteItemType.doses.rawValue
+            
+            return .requestParameters(parameters: ["diary_note": dataParams], encoding: JSONEncoding.default)
         case .sendDiaryNoteAudio(let diaryNote, _, _):
             // Add parameters
             var multipartBodyReq = self.multipartBody
@@ -935,6 +948,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
                 .sendDiaryNoteAudio,
                 .sendDiaryNoteVideo,
                 .sendDiaryNoteEaten,
+                .sendDiaryNoteDoses,
                 .deleteDiaryNote,
                 .getInfoMessages,
                 .updateDiaryNoteText:

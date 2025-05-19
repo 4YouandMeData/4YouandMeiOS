@@ -93,11 +93,16 @@ class FeedViewController: UIViewController {
         
         let actionButton = JJFloatingActionButton()
         
-        let actionItemReflection = actionButton.addItem()
-        actionItemReflection.titleLabel.text = StringsProvider.string(forKey: .diaryNoteFabReflection)
-        actionItemReflection.titleLabel.textColor = ColorPalette.color(withType: .fabTextColor)
-        actionItemReflection.imageView.image = ImagePalette.image(withName: .riflectionIcon)
-        actionItemReflection.buttonColor = ColorPalette.color(withType: .inactive)
+        let actionInsulin = actionButton.addItem()
+        actionInsulin.titleLabel.text = StringsProvider.string(forKey: .diaryNoteFabDoses)
+        actionInsulin.titleLabel.textColor = ColorPalette.color(withType: .fabTextColor)
+        actionInsulin.imageView.image = ImagePalette.templateImage(withName: .siringeIcon)
+        actionInsulin.imageView.tintColor = ColorPalette.color(withType: .primary)
+        actionInsulin.buttonColor = ColorPalette.color(withType: .secondary)
+        actionInsulin.action = { [weak self] _ in
+            guard let self = self else { return }
+            self.navigator.openMyDosesViewController(presenter: self)
+        }
         
         let actionNoticed = actionButton.addItem()
         actionNoticed.titleLabel.text = StringsProvider.string(forKey: .diaryNoteFabNoticed)
@@ -112,8 +117,9 @@ class FeedViewController: UIViewController {
         let actionEaten = actionButton.addItem()
         actionEaten.titleLabel.text = StringsProvider.string(forKey: .diaryNoteFabEaten)
         actionEaten.titleLabel.textColor = ColorPalette.color(withType: .fabTextColor)
-        actionEaten.imageView.image = ImagePalette.image(withName: .eatenIcon)
-        actionEaten.buttonColor = ColorPalette.color(withType: .primary)
+        actionEaten.imageView.image = ImagePalette.templateImage(withName: .eatenIcon)
+        actionEaten.imageView.tintColor = ColorPalette.color(withType: .primary)
+        actionEaten.buttonColor = ColorPalette.color(withType: .secondary)
         actionEaten.action = { [weak self] _ in
             guard let self = self else { return }
             self.navigator.openEatenViewController(presenter: self)

@@ -695,6 +695,35 @@ class AppNavigator {
         self.currentActivityCoordinator = coordinator
     }
     
+    public func openMyDosesViewController(presenter: UIViewController) {
+        // Prevent overlapping flows
+        assert(self.currentActivityCoordinator == nil, "Another activity is already in progress")
+
+        // Completion callback: dismiss modal and clear current coordinator
+        let completion: NotificationCallback = { [weak self, weak presenter] in
+            presenter?.dismiss(animated: true, completion: nil)
+            self?.currentActivityCoordinator = nil
+        }
+
+        // Instantiate the Insulin Coordinator
+        let coordinator = InsulinEntryCoordinator(
+            repository: self.repository,
+            navigator: self,
+            taskIdentifier: "insulinEntry",
+            completion: completion
+        )
+
+        // Get the first view controller of the flow
+        let startVC = coordinator.getStartingPage()
+        startVC.modalPresentationStyle = .fullScreen
+
+        // Present modally
+        presenter.present(startVC, animated: true, completion: nil)
+
+        // Hold a strong reference so we can dismiss later
+        self.currentActivityCoordinator = coordinator
+    }
+    
     // MARK: About You
     
     public func showAboutYouPage(presenter: UIViewController) {

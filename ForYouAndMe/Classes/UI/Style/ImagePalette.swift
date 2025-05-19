@@ -57,7 +57,6 @@ enum ImageName: String, CaseIterable {
     case audioPlayButton = "audio_play"
     case noteGeneric = "note_generic_image"
     case riflectionIcon = "riflection_image"
-    case eatenIcon = "eaten_image"
     case audioNote = "audio_note"
     case textNote = "text_note"
     case editAudioNote = "edit_audio_note"
@@ -102,6 +101,8 @@ enum TemplateImageName: String, CaseIterable {
     case plusIcon = "plus_icon"
     case equalsIcon = "equals_icon"
     case minusIcon = "minus_icon"
+    case eatenIcon = "eaten_image"
+    case siringeIcon = "siringe_icon"
 }
 
 public class ImagePalette {

@@ -190,7 +190,21 @@ enum StringKey: String, CaseIterable, CodingKey {
     case diaryNoteEatenStepFifthSecondButton = "EATEN_STEP_FIFTH_SECOND_BUTTON"
     case diaryNoteEatenNextButton = "EATEN_NEXT_BUTTON"
     case diaryNoteEatenConfirmButton = "EATEN_CONFIRM_BUTTON"
-
+    
+    // My Doses
+    case diaryNoteFabDoses = "FAB_MY_DOSES"
+    case doseNextButton = "DOSE_NEXT_BUTTON"
+    case doseStepOneTitle = "DOSE_STEP_ONE_TITLE"
+    case doseStepOneMessage = "DOSE_STEP_ONE_MESSAGE"
+    case doseStepOneFirstButton = "DOSE_STEP_ONE_FIRST_BUTTON"
+    case doseStepOneSecondButton = "DOSE_STEP_ONE_SECOND_BUTTON"
+    case doseStepTwoTimeLabel = "DOSE_STEP_TWO_TIME_LABEL"
+    case doseStepTwoTitle = "DOSE_STEP_TWO_TITLE"
+    case doseStepTwoMessage = "DOSE_STEP_TWO_MESSAGE"
+    case doseStepTwoUnitsLabel = "DOSE_STEP_TWO_UNITS_LABEL"
+    case doseStepTwoDosesLabel = "DOSE_STEP_TWO_DOSES_LABEL"
+    case doseStepTwoConfirmButton = "DOSE_STEP_TWO_CONFIRM_BUTTON"
+    
     // Video Diary
     case videoDiaryRecorderInfoFilter = "VIDEO_DIARY_RECORDER_INFO_FILTER"
     case videoDiaryRecorderTitle = "VIDEO_DIARY_RECORDER_TITLE"
