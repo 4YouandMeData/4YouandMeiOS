@@ -90,7 +90,7 @@ class EatenTimeViewController: UIViewController {
         self.view.addSubview(scrollStackView)
         scrollStackView.autoPinEdgesToSuperviewSafeArea(with: .zero, excludingEdge: .bottom)
         
-        let baseText = "You had you"
+        let baseText = StringsProvider.string(forKey: .diaryNoteEatenStepTwoTitle)
         let typeText = " " + selectedType.rawValue.lowercased() + "..."
         
         let paragraphStyle = NSMutableParagraphStyle()
