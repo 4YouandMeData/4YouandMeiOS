@@ -50,16 +50,35 @@ class SurveyClickableImage: UIView {
         let aspectRatio = image.size.height / image.size.width
         imageView.autoMatch(.height, to: .width, of: imageView, withMultiplier: aspectRatio)
         
-        // 4. Bottom pinning to ensure SurveyClickableImage has intrinsic height
-        imageView.autoPinEdge(toSuperviewEdge: .bottom)
-        
-        // 5. Tap gesture
+        // Reset button setup
+        let resetButton = UIButton()
+        var config = UIButton.Configuration.filled()
+        config.title = StringsProvider.string(forKey: .resetDots)
+        let resetIcon = ImagePalette.templateImage(withName: .resetDots)
+        config.image = resetIcon
+        config.imagePlacement = .leading
+        config.imagePadding = 8
+        config.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { incoming in
+            var outgoing = incoming
+            outgoing.font = UIFont.systemFont(ofSize: 16, weight: .medium)
+            return outgoing
+        }
+        config.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16)
+        config.cornerStyle = .capsule
+        config.baseBackgroundColor = ColorPalette.color(withType: .primary)
+        config.baseForegroundColor = ColorPalette.color(withType: .secondaryText)
+        resetButton.configuration = config
+        resetButton.addTarget(self, action: #selector(resetClicks), for: .touchUpInside)
+        self.addSubview(resetButton)
+        resetButton.autoAlignAxis(toSuperviewAxis: .vertical)
+        resetButton.autoPinEdge(.top, to: .bottom, of: imageView, withOffset: 16)
+
+        // Bottom pin for intrinsic height
+        resetButton.autoPinEdge(toSuperviewEdge: .bottom, withInset: 16)
+
+        // Single Tap gesture
         let tap = UITapGestureRecognizer(target: self, action: #selector(self.imageTapped(_:)))
         imageView.addGestureRecognizer(tap)
-        
-        let doubleTap = UITapGestureRecognizer(target: self, action: #selector(self.resetClicks))
-        doubleTap.numberOfTapsRequired = 2
-        imageView.addGestureRecognizer(doubleTap)
     }
     
     required init?(coder aDecoder: NSCoder) {

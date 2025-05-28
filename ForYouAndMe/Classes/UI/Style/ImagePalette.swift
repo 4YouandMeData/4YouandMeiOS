@@ -103,6 +103,7 @@ enum TemplateImageName: String, CaseIterable {
     case minusIcon = "minus_icon"
     case eatenIcon = "eaten_image"
     case siringeIcon = "siringe_icon"
+    case resetDots = "reset_icon"
 }
 
 public class ImagePalette {

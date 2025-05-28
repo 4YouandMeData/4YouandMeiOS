@@ -142,6 +142,7 @@ enum StringKey: String, CaseIterable, CodingKey {
     case surveyButtonDefault = "SURVEY_BUTTON_DEFAULT"
     case surveyButtonSkip = "SURVEY_BUTTON_SKIP"
     case surveyStepsCount = "SURVEY_STEPS_COUNT"
+    case resetDots = "RESET_DOTS"
     // Walkthrough
     case walkthroughButtonSkip = "WALKTHROUGH_BUTTON_SKIP"
     // Diary Note
