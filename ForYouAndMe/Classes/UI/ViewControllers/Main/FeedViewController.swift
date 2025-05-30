@@ -50,6 +50,12 @@ class FeedViewController: UIViewController {
         return tableView
     }()
     
+    private lazy var actionButton: JJFloatingActionButton = {
+        let button = JJFloatingActionButton()
+        button.closeAutomatically = true
+        return button
+    }()
+    
     private lazy var emptyView = FeedEmptyView(withTopOffset: FeedTableViewHeader.height)
     
     private let navigator: AppNavigator
@@ -91,13 +97,13 @@ class FeedViewController: UIViewController {
         self.tableView.autoPinEdgesToSuperviewEdges(with: .zero, excludingEdge: .top)
         self.tableView.autoPinEdge(.top, to: .bottom, of: self.headerView)
         
-        let actionButton = JJFloatingActionButton()
+        actionButton = JJFloatingActionButton()
         
         let actionInsulin = actionButton.addItem()
         actionInsulin.titleLabel.text = StringsProvider.string(forKey: .diaryNoteFabDoses)
         actionInsulin.titleLabel.textColor = ColorPalette.color(withType: .fabTextColor)
         actionInsulin.imageView.image = ImagePalette.templateImage(withName: .siringeIcon)
-        actionInsulin.imageView.tintColor = ColorPalette.color(withType: .primary)
+        actionInsulin.imageView.tintColor = ColorPalette.color(withType: .primaryText)
         actionInsulin.buttonColor = ColorPalette.color(withType: .secondary)
         actionInsulin.action = { [weak self] _ in
             guard let self = self else { return }
@@ -108,6 +114,7 @@ class FeedViewController: UIViewController {
         actionNoticed.titleLabel.text = StringsProvider.string(forKey: .diaryNoteFabNoticed)
         actionNoticed.titleLabel.textColor = ColorPalette.color(withType: .fabTextColor)
         actionNoticed.imageView.image = ImagePalette.image(withName: .noteGeneric)
+        actionNoticed.imageView.tintColor = ColorPalette.color(withType: .primaryText)
         actionNoticed.buttonColor = ColorPalette.color(withType: .secondary)
         actionNoticed.action = { [weak self] _ in
             guard let self = self else { return }
@@ -118,7 +125,7 @@ class FeedViewController: UIViewController {
         actionEaten.titleLabel.text = StringsProvider.string(forKey: .diaryNoteFabEaten)
         actionEaten.titleLabel.textColor = ColorPalette.color(withType: .fabTextColor)
         actionEaten.imageView.image = ImagePalette.templateImage(withName: .eatenIcon)
-        actionEaten.imageView.tintColor = ColorPalette.color(withType: .primary)
+        actionEaten.imageView.tintColor = ColorPalette.color(withType: .primaryText)
         actionEaten.buttonColor = ColorPalette.color(withType: .secondary)
         actionEaten.action = { [weak self] _ in
             guard let self = self else { return }
@@ -157,6 +164,11 @@ class FeedViewController: UIViewController {
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         self.listManager.viewDidLayoutSubviews()
+    }
+    
+    override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        self.actionButton.close(animated: false)
     }
     
     // MARK: - Private Methods

@@ -109,6 +109,14 @@ class DiaryNotesViewController: UIViewController {
         }
     }()
     
+    
+    private lazy var actionButton: JJFloatingActionButton = {
+        let button = JJFloatingActionButton()
+        button.closeAutomatically = true
+        return button
+    }()
+    
+    
     private var storage: CacheService
     private var dataPointID: String?
     private var diaryNote: DiaryNoteItem?
@@ -168,21 +176,39 @@ class DiaryNotesViewController: UIViewController {
             comingSoonButton.autoPinEdge(.bottom, to: .bottom, of: headerView, withOffset: -20.0)
             comingSoonButton.autoPinEdge(.trailing, to: .trailing, of: headerView, withOffset: -12.0)
             
-            let actionButton = JJFloatingActionButton()
-            let actionItemRiflection = actionButton.addItem()
-            actionItemRiflection.titleLabel.text = StringsProvider.string(forKey: .diaryNoteFabReflection)
-            actionItemRiflection.titleLabel.textColor = ColorPalette.color(withType: .fabTextColor)
-            actionItemRiflection.imageView.image = ImagePalette.image(withName: .riflectionIcon)
-            actionItemRiflection.buttonColor = ColorPalette.color(withType: .inactive)
+            actionButton = JJFloatingActionButton()
+            
+            let actionInsulin = actionButton.addItem()
+            actionInsulin.titleLabel.text = StringsProvider.string(forKey: .diaryNoteFabDoses)
+            actionInsulin.titleLabel.textColor = ColorPalette.color(withType: .fabTextColor)
+            actionInsulin.imageView.image = ImagePalette.templateImage(withName: .siringeIcon)
+            actionInsulin.imageView.tintColor = ColorPalette.color(withType: .primaryText)
+            actionInsulin.buttonColor = ColorPalette.color(withType: .secondary)
+            actionInsulin.action = { [weak self] _ in
+                guard let self = self else { return }
+                self.navigator.openMyDosesViewController(presenter: self)
+            }
             
             let actionNoticed = actionButton.addItem()
             actionNoticed.titleLabel.text = StringsProvider.string(forKey: .diaryNoteFabNoticed)
             actionNoticed.titleLabel.textColor = ColorPalette.color(withType: .fabTextColor)
             actionNoticed.imageView.image = ImagePalette.image(withName: .noteGeneric)
+            actionNoticed.imageView.tintColor = ColorPalette.color(withType: .primaryText)
             actionNoticed.buttonColor = ColorPalette.color(withType: .secondary)
             actionNoticed.action = { [weak self] _ in
                 guard let self = self else { return }
                 self.navigator.openNoticedViewController(presenter: self)
+            }
+            
+            let actionEaten = actionButton.addItem()
+            actionEaten.titleLabel.text = StringsProvider.string(forKey: .diaryNoteFabEaten)
+            actionEaten.titleLabel.textColor = ColorPalette.color(withType: .fabTextColor)
+            actionEaten.imageView.image = ImagePalette.templateImage(withName: .eatenIcon)
+            actionEaten.imageView.tintColor = ColorPalette.color(withType: .primaryText)
+            actionEaten.buttonColor = ColorPalette.color(withType: .secondary)
+            actionEaten.action = { [weak self] _ in
+                guard let self = self else { return }
+                self.navigator.openEatenViewController(presenter: self)
             }
             
             view.addSubview(actionButton)
@@ -226,6 +252,11 @@ class DiaryNotesViewController: UIViewController {
         }
         self.tableView.reloadData()
         self.updateUI()
+    }
+    
+    override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        self.actionButton.close(animated: false)
     }
     
     override func viewWillAppear(_ animated: Bool) {
