@@ -99,7 +99,7 @@ final class InsulinEntryCoordinator: PagedActivitySectionCoordinator {
         .addProgress()
         .subscribe(onSuccess: { [weak self] _ in
             self?.completionCallback()
-        }, onFailure: { error in
+        }, onFailure: { _ in
             // handle error if needed
         })
         .disposed(by: disposeBag)
@@ -112,12 +112,13 @@ extension InsulinEntryCoordinator: DoseTypeViewControllerDelegate {
         selectedDoseTypeText = type.displayText
         selectedDoseType = type.rawValue
         
-        guard let selectedDoseType = self.selectedDoseType else {
+        guard let _ = self.selectedDoseType,
+              let selectedDoseTypeText = self.selectedDoseTypeText else {
             fatalError("Selected dose type is nil")
         }
         
         // Navigate to date/time selector
-        let dtVC = DoseDateTimeViewController(displayTitle: selectedDoseType)
+        let dtVC = DoseDateTimeViewController(displayTitle: selectedDoseTypeText)
         dtVC.delegate = self
         navigationController.pushViewController(
             dtVC,

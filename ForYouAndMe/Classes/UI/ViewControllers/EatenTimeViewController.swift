@@ -90,7 +90,7 @@ class EatenTimeViewController: UIViewController {
         self.view.addSubview(scrollStackView)
         scrollStackView.autoPinEdgesToSuperviewSafeArea(with: .zero, excludingEdge: .bottom)
         
-        let baseText = StringsProvider.string(forKey: .diaryNoteEatenStepTwoTitle)
+        let baseText = StringsProvider.string(forKey: .diaryNoteEatenStepTwoMessage)
         let typeText = " " + selectedType.rawValue.lowercased() + "..."
         
         let paragraphStyle = NSMutableParagraphStyle()
@@ -111,7 +111,7 @@ class EatenTimeViewController: UIViewController {
         attributed.append(.init(string: typeText, attributes: attrsBold))
         
         // Transform input text to bold using attributed string
-        let baseTitle = "I've eaten"
+        let baseTitle = StringsProvider.string(forKey: .diaryNoteEatenStepTwoTitle)
         let boldAttrs: [NSAttributedString.Key: Any] = [
             .font: UIFont.boldSystemFont(ofSize: FontPalette.fontStyleData(forStyle: .header2).font.pointSize),
             .foregroundColor: ColorPalette.color(withType: .primaryText),
