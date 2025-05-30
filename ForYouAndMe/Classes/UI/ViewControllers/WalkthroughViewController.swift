@@ -122,7 +122,17 @@ class WalkthroughViewController: UIViewController {
             imageView.autoAlignAxis(toSuperviewAxis: .vertical)
             imageView.autoPinEdge(toSuperviewSafeArea: .leading)
             imageView.autoPinEdge(toSuperviewSafeArea: .trailing)
-            imageView.autoSetDimension(.height, toSize: 400, relation: .lessThanOrEqual)
+//            imageView.autoSetDimension(.height, toSize: 400, relation: .lessThanOrEqual)
+            let maxHeight = imageView.autoSetDimension(.height,
+                                                       toSize: 400,
+                                                       relation: .lessThanOrEqual)
+            maxHeight.priority = .defaultHigh
+
+            let proportional = imageView.autoMatch(.height,
+                                                   to: .height,
+                                                   of: view,
+                                                   withMultiplier: 0.4)
+            proportional.priority = .defaultLow
             
             // Title
             let titleLabel = UILabel()
@@ -169,7 +179,6 @@ class WalkthroughViewController: UIViewController {
             self.pageControl.numberOfPages = index + 1
             index += 1
             nextPage = currentPage.buttonFirstPage?.getPage(fromPages: self.pages)
-            print("Prova prova")
         }
     }
     
