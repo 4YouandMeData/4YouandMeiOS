@@ -316,22 +316,29 @@ class DiaryNoteTextViewController: UIViewController {
     
     private func loadNote() {
         
-        guard let dataPoint = self.diaryNote else {
-            self.pageState.accept(.edit)
+        guard self.reflectionCoordinator != nil else {
+            
+            guard let dataPoint = self.diaryNote, self.isEditMode == true else {
+                self.pageState.accept(.edit)
+                return
+            }
+            
+            self.repository.getDiaryNoteText(noteID: dataPoint.id)
+                .addProgress()
+                .subscribe(onSuccess: { [weak self] diaryNoteText in
+                    guard let self = self else { return }
+                    self.diaryNote = diaryNoteText
+                    self.textView.text = diaryNoteText.body
+                    self.updateTextFields(pageState: self.pageState.value)
+                }, onFailure: { [weak self] error in
+                    guard let self = self else { return }
+                    self.navigator.handleError(error: error, presenter: self)
+                }).disposed(by: self.disposeBag)
+            
             return
         }
         
-        self.repository.getDiaryNoteText(noteID: dataPoint.id)
-            .addProgress()
-            .subscribe(onSuccess: { [weak self] diaryNoteText in
-                guard let self = self else { return }
-                self.diaryNote = diaryNoteText
-                self.textView.text = diaryNoteText.body
-                self.updateTextFields(pageState: self.pageState.value)
-            }, onFailure: { [weak self] error in
-                guard let self = self else { return }
-                self.navigator.handleError(error: error, presenter: self)
-            }).disposed(by: self.disposeBag)
+        self.pageState.accept(.edit)
     }
 }
 

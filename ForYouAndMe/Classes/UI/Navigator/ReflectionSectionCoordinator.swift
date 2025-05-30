@@ -130,7 +130,7 @@ class ReflectionSectionCoordinator: NSObject, PagedActivitySectionCoordinator {
                                           diaryNoteable: diaryNoteable)
             let diaryNoteTextViewController = DiaryNoteTextViewController(withDataPoint: dataPoint,
                                                                           isEditMode: false,
-                                                                          isFromChart: true,
+                                                                          isFromChart: false,
                                                                           reflectionCoordinator: self)
             
             self.activityPresenter?.view.backgroundColor = ColorPalette.color(withType: .secondary)
