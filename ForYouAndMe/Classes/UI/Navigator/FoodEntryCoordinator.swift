@@ -121,25 +121,28 @@ extension FoodEntryCoordinator: EatenTypeViewControllerDelegate {
 
 extension FoodEntryCoordinator: EatenTimeViewControllerDelegate {
     func eatenTimeViewController(_ vc: EatenTimeViewController, didSelect relative: EatenTimeViewController.TimeRelative) {
-        // Save the time choice
         if relative == .withinHour {
             snackDate = Date()
+            
+            let amountVC = ConsumptionAmountViewController()
+            amountVC.selectedType = EatenTypeViewController.EntryType(rawValue: selectedFoodType!)!
+            amountVC.delegate = self
+            navigationController.pushViewController(
+                amountVC,
+                hidesBottomBarWhenPushed: hidesBottomBarWhenPushed,
+                animated: true
+            )
+        } else {
+            
+            let dateTimeVC = EatenDateTimeViewController()
+            dateTimeVC.selectedType = EatenTypeViewController.EntryType(rawValue: selectedFoodType!)!
+            dateTimeVC.delegate = self
+            navigationController.pushViewController(
+                dateTimeVC,
+                hidesBottomBarWhenPushed: hidesBottomBarWhenPushed,
+                animated: true
+            )
         }
-        
-        guard let select = selectedFoodType else {
-            return
-        }
-        
-        // Navigate to date/time picker screen
-        let dateTimeVC = EatenDateTimeViewController()
-        dateTimeVC.selectedType = EatenTypeViewController.EntryType(rawValue: select)!
-        dateTimeVC.delegate = self
-        
-        navigationController.pushViewController(
-            dateTimeVC,
-            hidesBottomBarWhenPushed: hidesBottomBarWhenPushed,
-            animated: true
-        )
     }
 }
 

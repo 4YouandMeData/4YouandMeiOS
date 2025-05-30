@@ -127,11 +127,11 @@ class EatenTimeViewController: UIViewController {
         
         scrollStackView.stackView.addBlankSpace(space: 44)
         
-        scrollStackView.stackView.addArrangedSubview(self.earlierButton)
+        scrollStackView.stackView.addArrangedSubview(self.withinHourButton)
         
         scrollStackView.stackView.addBlankSpace(space: 16)
         
-        scrollStackView.stackView.addArrangedSubview(self.withinHourButton)
+        scrollStackView.stackView.addArrangedSubview(self.earlierButton)
         
         self.earlierButton.autoSetDimension(.height, toSize: 54)
         self.withinHourButton.autoMatch(.height, to: .height, of: earlierButton)
@@ -146,7 +146,7 @@ class EatenTimeViewController: UIViewController {
     
     private func makeOptionButton(type: TimeRelative) -> OptionButton {
         let btn = OptionButton()
-        let title = type == .earlier
+        let title = type == .withinHour
         ? StringsProvider.string(forKey: .diaryNoteEatenStepTwoFirstButton)
         : StringsProvider.string(forKey: .diaryNoteEatenStepTwoSecondButton)
         
