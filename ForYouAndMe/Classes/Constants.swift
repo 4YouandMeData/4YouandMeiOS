@@ -123,6 +123,9 @@ struct Constants {
         static let RescueTimeAppSchema: URL = URL(string: "rescuetime://")!
         static let TwitterStoreUrl: URL = URL(string: "itms-apps://apps.apple.com/us/app/twitter/id333903271")!
         static let TwitterAppSchema: URL = URL(string: "twitter://")!
+        static let DexComStoreUrl: URL = URL(string: "itms-apps://apps.apple.com/us/app/dexcom-one/id6450965754")!
+        static let DexComAppSchema: URL = URL(string: "dexcom://")!
+
     }
     
     struct Task {

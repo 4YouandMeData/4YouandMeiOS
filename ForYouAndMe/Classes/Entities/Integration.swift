@@ -14,6 +14,7 @@ public enum Integration: String {
     case instagram
     case rescueTime = "rescuetime"
     case twitter
+    case dexcom
     
     var storeUrl: URL {
         switch self {
@@ -23,6 +24,7 @@ public enum Integration: String {
         case .instagram: return Constants.Url.InstagramStoreUrl
         case .rescueTime: return Constants.Url.RescueTimeStoreUrl
         case .twitter: return Constants.Url.TwitterStoreUrl
+        case .dexcom: return Constants.Url.DexComStoreUrl
         }
     }
     
@@ -34,6 +36,7 @@ public enum Integration: String {
         case .instagram: return Constants.Url.InstagramAppSchema
         case .rescueTime: return Constants.Url.RescueTimeAppSchema
         case .twitter: return Constants.Url.TwitterAppSchema
+        case .dexcom: return Constants.Url.DexComAppSchema
         }
     }
     
