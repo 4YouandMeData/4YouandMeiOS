@@ -23,23 +23,23 @@ class SpiroTableView: UIView {
     // Header row (4 columns: param? / Targets? / Measurements? / Results?)
     private let headerStack = UIStackView()
     private let headerCol1 = UIButton(type: .system)
-//    private let headerCol2 = UILabel()
+    private let headerCol2 = UILabel()
     private let headerCol3 = UILabel()
-//    private let headerCol4 = UILabel()
+    private let headerCol4 = UILabel()
     
     // Row 1 (PEF)
     private let row1Stack = UIStackView()
     private let row1Col1 = UIButton(type: .system)
-//    private let row1Col2 = UILabel()
+    private let row1Col2 = UILabel()
     private let row1Col3 = UILabel()
-//    private let row1Col4 = UILabel()
+    private let row1Col4 = UILabel()
     
     // Row 2 (FEV1)
     private let row2Stack = UIStackView()
     private let row2Col1 = UIButton(type: .system)
-//    private let row2Col2 = UILabel()
+    private let row2Col2 = UILabel()
     private let row2Col3 = UILabel()
-//    private let row2Col4 = UILabel()
+    private let row2Col4 = UILabel()
     
     // We assume the view controller that contains this view
     // will be set as a "weak" reference or we can store a closure
@@ -95,15 +95,15 @@ class SpiroTableView: UIView {
         
         // 4 columns
         headerStack.addArrangedSubview(headerCol1)
-//        headerStack.addArrangedSubview(headerCol2)
+        headerStack.addArrangedSubview(headerCol2)
         headerStack.addArrangedSubview(headerCol3)
-//        headerStack.addArrangedSubview(headerCol4)
+        headerStack.addArrangedSubview(headerCol4)
         
-//        headerCol2.text = StringsProvider.string(forKey: .spiroTaskTargets)
-//        headerCol2.font = FontPalette.fontStyleData(forStyle: .infoNote).font
-//        headerCol2.textColor = ColorPalette.color(withType: .primaryText)
-//        headerCol2.textAlignment = .center
-//        headerCol2.sizeToFit()
+        headerCol2.text = StringsProvider.string(forKey: .spiroTaskTargets)
+        headerCol2.font = FontPalette.fontStyleData(forStyle: .infoNote).font
+        headerCol2.textColor = ColorPalette.color(withType: .primaryText)
+        headerCol2.textAlignment = .center
+        headerCol2.sizeToFit()
         
         headerCol3.text = StringsProvider.string(forKey: .spiroTaskMeasurements)
         headerCol3.font = FontPalette.fontStyleData(forStyle: .infoNote).font
@@ -111,11 +111,11 @@ class SpiroTableView: UIView {
         headerCol3.textAlignment = .center
         headerCol3.sizeToFit()
         
-//        headerCol4.text = StringsProvider.string(forKey: .spiroTaskResults)
-//        headerCol4.font = FontPalette.fontStyleData(forStyle: .infoNote).font
-//        headerCol4.textColor = ColorPalette.color(withType: .primaryText)
-//        headerCol4.textAlignment = .center
-//        headerCol4.sizeToFit()
+        headerCol4.text = StringsProvider.string(forKey: .spiroTaskResults)
+        headerCol4.font = FontPalette.fontStyleData(forStyle: .infoNote).font
+        headerCol4.textColor = ColorPalette.color(withType: .primaryText)
+        headerCol4.textAlignment = .center
+        headerCol4.sizeToFit()
         
         // Optional styling
         [headerCol1, headerCol3].forEach {
@@ -135,30 +135,30 @@ class SpiroTableView: UIView {
         row1Stack.backgroundColor = .lightGray
         
         row1Stack.addArrangedSubview(row1Col1)
-//        row1Stack.addArrangedSubview(row1Col2)
+        row1Stack.addArrangedSubview(row1Col2)
         row1Stack.addArrangedSubview(row1Col3)
-//        row1Stack.addArrangedSubview(row1Col4)
+        row1Stack.addArrangedSubview(row1Col4)
         
         // row1Col1 as a button
         row1Col1.setTitle("PEF ?", for: .normal)
         row1Col1.addTarget(self, action: #selector(pefButtonTapped(_:)), for: .touchUpInside)
         row1Col1.backgroundColor = .white
         
-//        row1Col2.text = "700 L/m"
+        row1Col2.text = "700 L/m"
         row1Col3.text = "719 L/m"
-//        row1Col4.text = "OK"
+        row1Col4.text = "OK"
         
-//        row1Col2.textAlignment = .center
-//        row1Col2.backgroundColor = .white
+        row1Col2.textAlignment = .center
+        row1Col2.backgroundColor = .white
         row1Col3.textAlignment = .center
         row1Col3.backgroundColor = .white
-//        row1Col4.textAlignment = .center
-//        row1Col4.textColor = .systemGreen
-//        row1Col4.backgroundColor = .white
+        row1Col4.textAlignment = .center
+        row1Col4.textColor = .systemGreen
+        row1Col4.backgroundColor = .white
         
-//        row1Col2.font = FontPalette.fontStyleData(forStyle: .infoNote).font
+        row1Col2.font = FontPalette.fontStyleData(forStyle: .infoNote).font
         row1Col3.font = FontPalette.fontStyleData(forStyle: .infoNote).font
-//        row1Col4.font = FontPalette.fontStyleData(forStyle: .infoNote).font
+        row1Col4.font = FontPalette.fontStyleData(forStyle: .infoNote).font
     }
     
     private func setupRow2() {
@@ -169,30 +169,30 @@ class SpiroTableView: UIView {
         row2Stack.backgroundColor = .lightGray
         
         row2Stack.addArrangedSubview(row2Col1)
-//        row2Stack.addArrangedSubview(row2Col2)
+        row2Stack.addArrangedSubview(row2Col2)
         row2Stack.addArrangedSubview(row2Col3)
-//        row2Stack.addArrangedSubview(row2Col4)
+        row2Stack.addArrangedSubview(row2Col4)
         
         // row2Col1 as a button
         row2Col1.setTitle("FEV1 ?", for: .normal)
         row2Col1.addTarget(self, action: #selector(fev1ButtonTapped(_:)), for: .touchUpInside)
         row2Col1.backgroundColor = .white
         
-//        row2Col2.text = "3.5 L"
-//        row2Col2.backgroundColor = .white
+        row2Col2.text = "3.5 L"
+        row2Col2.backgroundColor = .white
         row2Col3.text = "4.64 L"
         row2Col3.backgroundColor = .white
-//        row2Col4.text = "Warning"
-//        row2Col4.backgroundColor = .white
+        row2Col4.text = "Warning"
+        row2Col4.backgroundColor = .white
         
-//        row2Col2.textAlignment = .center
+        row2Col2.textAlignment = .center
         row2Col3.textAlignment = .center
-//        row2Col4.textAlignment = .center
-//        row2Col4.textColor = .systemOrange
+        row2Col4.textAlignment = .center
+        row2Col4.textColor = .systemOrange
         
-//        row2Col2.font = FontPalette.fontStyleData(forStyle: .infoNote).font
+        row2Col2.font = FontPalette.fontStyleData(forStyle: .infoNote).font
         row2Col3.font = FontPalette.fontStyleData(forStyle: .infoNote).font
-//        row2Col4.font = FontPalette.fontStyleData(forStyle: .infoNote).font
+        row2Col4.font = FontPalette.fontStyleData(forStyle: .infoNote).font
     }
     
     // MARK: - Button Actions
@@ -235,9 +235,20 @@ class SpiroTableView: UIView {
     ///   - measurement: The measured value (e.g., "719 L/m").
     ///   - result: The result status (e.g., "OK").
     public func updatePEFRow(target: String, measurement: String, result: String) {
-//        row1Col2.text = target
+        row1Col2.text = target
         row1Col3.text = measurement
-//        row1Col4.text = result
+        row1Col4.text = result
+        
+        switch result.lowercased() {
+        case "ok":
+            row1Col4.textColor = .systemGreen
+        case "warning":
+            row1Col4.textColor = .systemOrange
+        case "critical":
+            row1Col4.textColor = .systemRed
+        default:
+            row1Col4.textColor = ColorPalette.color(withType: .primaryText)
+        }
     }
     
     /// Updates the values displayed in the FEV1 row.
@@ -246,8 +257,19 @@ class SpiroTableView: UIView {
     ///   - measurement: The measured value (e.g., "4.64 L").
     ///   - result: The result status (e.g., "Warning").
     public func updateFEV1Row(target: String, measurement: String, result: String) {
-//        row2Col2.text = target
+        row2Col2.text = target
         row2Col3.text = measurement
-//        row2Col4.text = result
+        row2Col4.text = result
+        
+        switch result.lowercased() {
+        case "ok":
+            row2Col4.textColor = .systemGreen
+        case "warning":
+            row2Col4.textColor = .systemOrange
+        case "critical":
+            row2Col4.textColor = .systemRed
+        default:
+            row2Col4.textColor = ColorPalette.color(withType: .primaryText)
+        }
     }
 }

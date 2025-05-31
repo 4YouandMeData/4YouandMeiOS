@@ -51,6 +51,22 @@ struct Feed {
     var notifiable: Notifiable?
     
     let rescheduledTimes: Int?
+    
+    @FailableDecodable
+    var pefThresholdWarning: Float?
+    
+    @FailableDecodable
+    var pefThresholdStandard: Float?
+    @FailableDecodable
+    var fev1ThresholdWarning: Float?
+    @FailableDecodable
+    var fev1ThresholdStandard: Float?
+    @FailableDecodable
+    var previousMir: Float?
+    @FailableDecodable
+    var mirThreshold: Float?
+    @FailableDecodable
+    var skippable: Bool?
 }
 
 enum FeedParsingError: Error {
@@ -75,6 +91,13 @@ schedulable.success_page
         case schedulable
         case notifiable
         case rescheduledTimes = "rescheduled_times"
+        case pefThresholdWarning = "pef_spirometry_threshold_warning"
+        case pefThresholdStandard = "pef_spirometry_threshold_standard"
+        case fev1ThresholdWarning = "fev1_spirometry_threshold_warning"
+        case fev1ThresholdStandard = "fev1_spirometry_threshold_standard"
+        case previousMir = "previous_mir_spirometer_data"
+        case mirThreshold = "mir_spirometer_threshold"
+        case skippable
         case meta
     }
     
@@ -90,7 +113,13 @@ schedulable.success_page
         guard self.schedulable != nil || notifiable != nil else {
             throw FeedParsingError.missingBothSchedulableAndNotifiable
         }
-        
+        self.pefThresholdWarning = try? container.decodeIfPresent(Float.self, forKey: .pefThresholdWarning)
+        self.pefThresholdStandard = try? container.decodeIfPresent(Float.self, forKey: .pefThresholdStandard)
+        self.fev1ThresholdWarning = try? container.decodeIfPresent(Float.self, forKey: .fev1ThresholdWarning)
+        self.fev1ThresholdStandard = try? container.decodeIfPresent(Float.self, forKey: .fev1ThresholdStandard)
+        self.previousMir = try? container.decodeIfPresent(Float.self, forKey: .previousMir)
+        self.mirThreshold = try? container.decodeIfPresent(Float.self, forKey: .mirThreshold)
+        self.skippable = try? container.decodeIfPresent(Bool.self, forKey: .skippable)
         // Workaround to a backend issue (see code at the bottom of the current file)
         let meta: FeedMeta? = try? container.decodeIfPresent(FeedMeta.self, forKey: .meta)
         self.notifiable = notifiable?.convertWithFeedMeta(meta)

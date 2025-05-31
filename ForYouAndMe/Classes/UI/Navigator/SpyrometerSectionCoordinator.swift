@@ -24,6 +24,8 @@ class SpyrometerSectionCoordinator: NSObject, PagedActivitySectionCoordinator {
     let repository: Repository
     let disposeBag = DisposeBag()
     
+    private let feed: Feed
+    
     // MARK: - PagedActivitySectionCoordinator
     weak var activitySectionViewController: ActivitySectionViewController?
     let pagedSectionData: PagedSectionData
@@ -38,6 +40,8 @@ class SpyrometerSectionCoordinator: NSObject, PagedActivitySectionCoordinator {
     init(withTask task: Feed,
          activity: Activity,
          completionCallback: @escaping NotificationCallback) {
+        
+        self.feed = task
         self.taskIdentifier = task.id
         self.pagedSectionData = activity.pagedSectionData
         self.currentlyRescheduledTimes = task.rescheduledTimes ?? 0
@@ -109,7 +113,20 @@ class SpyrometerSectionCoordinator: NSObject, PagedActivitySectionCoordinator {
     
     /// Pushes the results view controller to display the spirometry test results.
     private func showResultsViewController(results: SOResults) {
-        let resultsVC = SpyrometerResultsViewController(results: results)
+        
+        let pefStd   = feed.pefThresholdStandard
+        let pefWarn  = feed.pefThresholdWarning
+        let fev1Std  = feed.fev1ThresholdStandard
+        let fev1Warn = feed.fev1ThresholdWarning
+        
+        let resultsVC = SpyrometerResultsViewController(
+            results: results,
+            pefStandard: pefStd,
+            pefWarning: pefWarn,
+            fev1Standard: fev1Std,
+            fev1Warning: fev1Warn
+        )
+
         resultsVC.onRedoPressed = { [weak self] in
             self?.showIntroTestViewControllerFromRedo()
         }

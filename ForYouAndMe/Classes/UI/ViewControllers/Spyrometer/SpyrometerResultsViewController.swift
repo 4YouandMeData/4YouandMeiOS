@@ -27,9 +27,31 @@ public class SpyrometerResultsViewController: UIViewController {
     
     private let results: SOResults
     
-    init(results: SOResults) {
+    /// Threshold for PEF (in L)
+    private let pefStandard: Float?
+    private let pefWarning: Float?
+    
+    /// Threshold for FEV1 (in L)
+    private let fev1Standard: Float?
+    private let fev1Warning: Float?
+    
+    /// Converter: from cL to L (valore decimale)
+    private func clampToLiters(_ centiLiters: Int32) -> Float {
+        // Example: if 719 cL → 7.19 L
+        return Float(centiLiters) / 100.0
+    }
+    
+    init(results: SOResults,
+         pefStandard: Float?,
+         pefWarning: Float?,
+         fev1Standard: Float?,
+         fev1Warning: Float?) {
         
         self.results = results
+        self.pefStandard = pefStandard
+        self.pefWarning = pefWarning
+        self.fev1Standard = fev1Standard
+        self.fev1Warning = fev1Warning
         
         super.init(nibName: nil, bundle: nil)
 
@@ -60,8 +82,50 @@ public class SpyrometerResultsViewController: UIViewController {
         stackView.addArrangedSubview(spiroTable)
         spiroTable.autoSetDimension(.height, toSize: 150, relation: .greaterThanOrEqual)
         spiroTable.parentViewController = self
-        spiroTable.updatePEFRow(target: "", measurement: String(format: "%d L/m", self.results.pef_cLs), result: "OK")
-        spiroTable.updateFEV1Row(target: "", measurement: String(format: "%d L/m", self.results.fev1_cL), result: "OK")
+        
+        let pefLiters = clampToLiters(self.results.pef_cLs)
+        let fev1Liters = clampToLiters(self.results.fev1_cL)
+        
+        let pefTargetString: String
+        if let std = pefStandard {
+            // For example “7.00 L/m”
+            pefTargetString = String(format: "%.2f L/m", std)
+        } else {
+            pefTargetString = ""
+        }
+        
+        let fev1TargetString: String
+        if let std = fev1Standard {
+            // Ad esempio “4.50 L”
+            fev1TargetString = String(format: "%.2f L", std)
+        } else {
+            fev1TargetString = ""
+        }
+        
+        let pefMeasuredString = String(format: "%.2f L/m", pefLiters)
+        let fev1MeasuredString = String(format: "%.2f L", fev1Liters)
+        
+        let pefStatus  = statusMessage(
+            measured:  pefLiters,
+            standard:  pefStandard,
+            warning:   pefWarning
+        )
+        let fev1Status = statusMessage(
+            measured:  fev1Liters,
+            standard:  fev1Standard,
+            warning:   fev1Warning
+        )
+        
+        spiroTable.updatePEFRow(
+            target:      pefTargetString,
+            measurement: pefMeasuredString,
+            result:      pefStatus
+        )
+        spiroTable.updateFEV1Row(
+            target:      fev1TargetString,
+            measurement: fev1MeasuredString,
+            result:      fev1Status
+        )
         
         self.view.addSubview(self.footerView)
         
@@ -81,6 +145,22 @@ public class SpyrometerResultsViewController: UIViewController {
         
         self.footerView.addTargetToFirstButton(target: self, action: #selector(self.redoButtonPressed))
         self.footerView.addTargetToSecondButton(target: self, action: #selector(self.doneButtonPressed))
+    }
+    
+    func statusMessage(
+        measured: Float,
+        standard: Float?,
+        warning: Float?) -> String {
+        guard let std = standard, let warn = warning else {
+            return "OK"
+        }
+        if measured >= std {
+            return "OK"
+        } else if measured >= warn {
+            return "Warning"
+        } else {
+            return "Critical"
+        }
     }
     
     @objc private func redoButtonPressed() {
