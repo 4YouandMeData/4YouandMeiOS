@@ -9,7 +9,7 @@ import UIKit
 import RxSwift
 import JJFloatingActionButton
 
-class TaskViewController: UIViewController {
+class TaskViewController: BaseViewController {
     
     private lazy var listManager: FeedListManager = {
         return FeedListManager(repository: self.repository,
@@ -39,7 +39,7 @@ class TaskViewController: UIViewController {
     }()
     
     private lazy var messages: [MessageInfo] = {
-        let messages = self.storage.infoMessages?.messages(withLocation: .tabTask)
+        let messages = self.cacheService.infoMessages?.messages(withLocation: .tabTask)
         return messages ?? []
     }()
     
@@ -59,23 +59,8 @@ class TaskViewController: UIViewController {
         return tableView
     }()
     
-    private lazy var actionButton: JJFloatingActionButton = {
-        let button = JJFloatingActionButton()
-        button.closeAutomatically = true
-        return button
-    }()
-    
-    private let navigator: AppNavigator
-    private let repository: Repository
-    private let analytics: AnalyticsService
-    private let storage: CacheService
-    
-    init() {
-        self.navigator = Services.shared.navigator
-        self.repository = Services.shared.repository
-        self.analytics = Services.shared.analytics
-        self.storage = Services.shared.storageServices
-        super.init(nibName: nil, bundle: nil)
+    override init() {
+        super.init()
     }
     
     required init?(coder: NSCoder) {
@@ -109,52 +94,6 @@ class TaskViewController: UIViewController {
         headerView.addSubview(self.comingSoonButton)
         self.comingSoonButton.autoPinEdge(.bottom, to: .bottom, of: headerView, withOffset: -20.0)
         self.comingSoonButton.autoPinEdge(.trailing, to: .trailing, of: headerView, withOffset: -12.0)
-
-        actionButton = JJFloatingActionButton()
-        
-        let actionInsulin = actionButton.addItem()
-        actionInsulin.titleLabel.text = StringsProvider.string(forKey: .diaryNoteFabDoses)
-        actionInsulin.titleLabel.textColor = ColorPalette.color(withType: .fabTextColor)
-        actionInsulin.imageView.image = ImagePalette.templateImage(withName: .siringeIcon)
-        actionInsulin.imageView.tintColor = ColorPalette.color(withType: .primaryText)
-        actionInsulin.buttonColor = ColorPalette.color(withType: .secondary)
-        actionInsulin.action = { [weak self] _ in
-            guard let self = self else { return }
-            self.navigator.openMyDosesViewController(presenter: self)
-        }
-        
-        let actionNoticed = actionButton.addItem()
-        actionNoticed.titleLabel.text = StringsProvider.string(forKey: .diaryNoteFabNoticed)
-        actionNoticed.titleLabel.textColor = ColorPalette.color(withType: .fabTextColor)
-        actionNoticed.imageView.image = ImagePalette.image(withName: .noteGeneric)
-        actionNoticed.imageView.tintColor = ColorPalette.color(withType: .primaryText)
-        actionNoticed.buttonColor = ColorPalette.color(withType: .secondary)
-        actionNoticed.action = { [weak self] _ in
-            guard let self = self else { return }
-            self.navigator.openNoticedViewController(presenter: self)
-        }
-        
-        let actionEaten = actionButton.addItem()
-        actionEaten.titleLabel.text = StringsProvider.string(forKey: .diaryNoteFabEaten)
-        actionEaten.titleLabel.textColor = ColorPalette.color(withType: .fabTextColor)
-        actionEaten.imageView.image = ImagePalette.templateImage(withName: .eatenIcon)
-        actionEaten.imageView.tintColor = ColorPalette.color(withType: .primaryText)
-        actionEaten.buttonColor = ColorPalette.color(withType: .secondary)
-        actionEaten.action = { [weak self] _ in
-            guard let self = self else { return }
-            self.navigator.openEatenViewController(presenter: self)
-        }
-        
-        view.addSubview(actionButton)
-        actionButton.display(inViewController: self)
-        actionButton.buttonColor = ColorPalette.color(withType: .fabColorDefault)
-        actionButton.buttonImageColor = .black
-        actionButton.layoutIfNeeded()
-        let borderView = CircleBorderView(frame: actionButton.circleView.frame,
-                                          color: ColorPalette.color(withType: .fabOutlineColor),
-                                          borderWidth: 1.0)
-        
-        actionButton.addSubview(borderView)
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -171,11 +110,6 @@ class TaskViewController: UIViewController {
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         self.listManager.viewDidLayoutSubviews()
-    }
-    
-    override func viewDidDisappear(_ animated: Bool) {
-        super.viewDidDisappear(animated)
-        self.actionButton.close(animated: false)
     }
     
     @objc private func comingSoonButtonPressed() {

@@ -27,7 +27,6 @@ enum InternalDeeplinkKey: String {
 
 enum MainTab: Int, CaseIterable { case feed = 0, task = 1, diary = 2, userData = 3, studyInfo = 4 }
 
-
 class AppNavigator {
     
     enum StudyInfoPage { case faq, reward, contacts }

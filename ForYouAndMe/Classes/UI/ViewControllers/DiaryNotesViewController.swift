@@ -14,16 +14,11 @@ struct DiaryNoteSection {
     var items: [DiaryNoteItem]
 }
 
-class DiaryNotesViewController: UIViewController {
+class DiaryNotesViewController: BaseViewController {
     
-    private let navigator: AppNavigator
-    private let repository: Repository
-    private let analytics: AnalyticsService
     private let audioAssetManager: AudioAssetManager
     
     private lazy var diaryNoteEmptyView = DiaryNoteEmptyView(withTopOffset: 8.0)
-
-    private let disposeBag = DisposeBag()
         
     private lazy var closeButton: UIButton = {
         let button = UIButton()
@@ -101,23 +96,14 @@ class DiaryNotesViewController: UIViewController {
     private lazy var messages: [MessageInfo] = {
         
         if self.dataPointID == nil {
-            let messages = self.storage.infoMessages?.messages(withLocation: .tabDiary)
+            let messages = self.cacheService.infoMessages?.messages(withLocation: .tabDiary)
             return messages ?? []
         } else {
-            let messages = self.storage.infoMessages?.messages(withLocation: .pageChartDiary)
+            let messages = self.cacheService.infoMessages?.messages(withLocation: .pageChartDiary)
             return messages ?? []
         }
     }()
     
-    
-    private lazy var actionButton: JJFloatingActionButton = {
-        let button = JJFloatingActionButton()
-        button.closeAutomatically = true
-        return button
-    }()
-    
-    
-    private var storage: CacheService
     private var dataPointID: String?
     private var diaryNote: DiaryNoteItem?
     private var diaryNoteItems: [DiaryNoteItem]
@@ -125,17 +111,12 @@ class DiaryNotesViewController: UIViewController {
     private let isFromChart: Bool
     
     init(withDataPoint dataPoint: DiaryNoteItem?, isFromChart: Bool) {
-        self.navigator = Services.shared.navigator
-        self.repository = Services.shared.repository
-        self.storage = Services.shared.storageServices
-        self.analytics = Services.shared.analytics
         self.diaryNote = dataPoint
         self.dataPointID = dataPoint?.diaryNoteId.string(withFormat: dateTimeFormat)
         self.isFromChart = isFromChart
         self.diaryNoteItems = []
         self.audioAssetManager = AudioAssetManager()
-        // Crea un array di oggetti DiaryNoteItem dai dati di test
-        super.init(nibName: nil, bundle: nil)
+        super.init()
         
         self.tableView.registerHeaderFooterViewWithClass(DiarySectionHeader.self)
     }
@@ -175,54 +156,10 @@ class DiaryNotesViewController: UIViewController {
             headerView.addSubview(comingSoonButton)
             comingSoonButton.autoPinEdge(.bottom, to: .bottom, of: headerView, withOffset: -20.0)
             comingSoonButton.autoPinEdge(.trailing, to: .trailing, of: headerView, withOffset: -12.0)
-            
-            actionButton = JJFloatingActionButton()
-            
-            let actionInsulin = actionButton.addItem()
-            actionInsulin.titleLabel.text = StringsProvider.string(forKey: .diaryNoteFabDoses)
-            actionInsulin.titleLabel.textColor = ColorPalette.color(withType: .fabTextColor)
-            actionInsulin.imageView.image = ImagePalette.templateImage(withName: .siringeIcon)
-            actionInsulin.imageView.tintColor = ColorPalette.color(withType: .primaryText)
-            actionInsulin.buttonColor = ColorPalette.color(withType: .secondary)
-            actionInsulin.action = { [weak self] _ in
-                guard let self = self else { return }
-                self.navigator.openMyDosesViewController(presenter: self)
-            }
-            
-            let actionNoticed = actionButton.addItem()
-            actionNoticed.titleLabel.text = StringsProvider.string(forKey: .diaryNoteFabNoticed)
-            actionNoticed.titleLabel.textColor = ColorPalette.color(withType: .fabTextColor)
-            actionNoticed.imageView.image = ImagePalette.image(withName: .noteGeneric)
-            actionNoticed.imageView.tintColor = ColorPalette.color(withType: .primaryText)
-            actionNoticed.buttonColor = ColorPalette.color(withType: .secondary)
-            actionNoticed.action = { [weak self] _ in
-                guard let self = self else { return }
-                self.navigator.openNoticedViewController(presenter: self)
-            }
-            
-            let actionEaten = actionButton.addItem()
-            actionEaten.titleLabel.text = StringsProvider.string(forKey: .diaryNoteFabEaten)
-            actionEaten.titleLabel.textColor = ColorPalette.color(withType: .fabTextColor)
-            actionEaten.imageView.image = ImagePalette.templateImage(withName: .eatenIcon)
-            actionEaten.imageView.tintColor = ColorPalette.color(withType: .primaryText)
-            actionEaten.buttonColor = ColorPalette.color(withType: .secondary)
-            actionEaten.action = { [weak self] _ in
-                guard let self = self else { return }
-                self.navigator.openEatenViewController(presenter: self)
-            }
-            
-            view.addSubview(actionButton)
-            actionButton.display(inViewController: self)
-            actionButton.buttonColor = ColorPalette.color(withType: .fabColorDefault)
-            actionButton.buttonImageColor = .black
-            actionButton.layoutIfNeeded()
-            let borderView = CircleBorderView(frame: actionButton.circleView.frame,
-                                              color: ColorPalette.color(withType: .fabOutlineColor),
-                                              borderWidth: 1.0)
-            
-            actionButton.addSubview(borderView)
 
         } else {
+            
+            setFabHidden(true)
             
             let containerView = UIView()
             self.view.addSubview(containerView)
@@ -252,11 +189,6 @@ class DiaryNotesViewController: UIViewController {
         }
         self.tableView.reloadData()
         self.updateUI()
-    }
-    
-    override func viewDidDisappear(_ animated: Bool) {
-        super.viewDidDisappear(animated)
-        self.actionButton.close(animated: false)
     }
     
     override func viewWillAppear(_ animated: Bool) {
