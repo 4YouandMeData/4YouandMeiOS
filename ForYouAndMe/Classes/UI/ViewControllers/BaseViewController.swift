@@ -32,6 +32,7 @@ class BaseViewController: UIViewController {
         let button = JJFloatingActionButton()
         // Automatically close the menu when an item is tapped:
         button.closeAutomatically = true
+        button.handleSingleActionDirectly = false
         return button
     }()
     
