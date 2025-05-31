@@ -118,6 +118,8 @@ enum StringKey: String, CaseIterable, CodingKey {
     case tabFeedHeaderSubtitle = "TAB_FEED_HEADER_SUBTITLE"
     case tabFeedHeaderPoints = "TAB_FEED_HEADER_POINTS"
     case profileTitle = "PROFILE_TITLE"
+    case fabElements = "FAB_ELEMENTS"
+    
     // User Data Filter
     case userDataFilterTitle = "USER_DATA_FILTER_TITLE"
     case userDataFilterClearButton = "USER_DATA_FILTER_CLEAR_BUTTON"

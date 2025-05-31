@@ -28,7 +28,6 @@ class BaseViewController: UIViewController {
     
     // MARK: – Floating Action Button
     
-    /// Single JJFloatingActionButton instance, configurato una volta
     lazy var floatingButton: JJFloatingActionButton = {
         let button = JJFloatingActionButton()
         // Automatically close the menu when an item is tapped:
@@ -61,7 +60,7 @@ class BaseViewController: UIViewController {
         super.viewDidLoad()
         
         self.view.backgroundColor = ColorPalette.color(withType: .secondary)
-        setupFloatingButton()
+        setupFloatingButtonIfNeeded()
     }
     
     override func viewDidLayoutSubviews() {
@@ -78,15 +77,31 @@ class BaseViewController: UIViewController {
     
     // MARK: – Private Methods
     
-    /// Crea, aggiunge alla view e fa layout del FAB, quindi popola gli item “di default”
-    private func setupFloatingButton() {
+    private func setupFloatingButtonIfNeeded() {
+        let rawConfig = StringsProvider.string(forKey: .fabElements)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        guard !rawConfig.isEmpty else {
+            // No configuration => do not display the FAB
+            return
+        }
+        
+        // 3) Split on ";" and filter null value
+        let elements = rawConfig
+            .split(separator: ";")
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() }
+            .filter { !$0.isEmpty }
+        
+        guard !elements.isEmpty else {
+            return
+        }
         
         view.addSubview(floatingButton)
         
         floatingButton.autoPinEdge(toSuperviewSafeArea: .bottom, withInset: 16)
         floatingButton.autoPinEdge(toSuperviewSafeArea: .trailing, withInset: 16)
-        
-        addDefaultFabItems()
+
+        addFabItems(from: elements)
         
         floatingButton.buttonColor      = ColorPalette.color(withType: .fabColorDefault)
         floatingButton.buttonImageColor = .black
@@ -100,12 +115,27 @@ class BaseViewController: UIViewController {
         floatingButton.addSubview(borderView)
     }
     
+    private func addFabItems(from elements: [String]) {
+        for element in elements {
+            switch element {
+            case "insulin":
+                addInsulinFabItem()
+            case "noticed":
+                addNoticedFabItem()
+            case "eaten":
+                addEatenFabItem()
+            default:
+                // Keyword sconosciuta: ignoro o loggo
+                print("BaseViewController: unknown FAB element '\(element)' – skipping")
+            }
+        }
+    }
+    
     func setFabHidden(_ hidden: Bool) {
         floatingButton.isHidden = hidden
     }
     
-    private func addDefaultFabItems() {
-        // ‣ First item: “Doses”
+    private func addInsulinFabItem() {
         let actionInsulin = floatingButton.addItem()
         actionInsulin.titleLabel.text      = StringsProvider.string(forKey: .diaryNoteFabDoses)
         actionInsulin.titleLabel.textColor = ColorPalette.color(withType: .fabTextColor)
@@ -113,14 +143,12 @@ class BaseViewController: UIViewController {
         actionInsulin.imageView.tintColor  = ColorPalette.color(withType: .primaryText)
         actionInsulin.buttonColor          = ColorPalette.color(withType: .secondary)
         actionInsulin.action = { [weak self] _ in
-            // Navigate to MyDoses from whichever subclass stia mostrando il FAB
             guard let self = self else { return }
             self.navigator.openMyDosesViewController(presenter: self)
-            // (closeAutomatically = true già fa la chiusura, ma volendo si potrebbe forzare)
-            // self.floatingButton.close(animated: true, completion: nil)
         }
-        
-        // ‣ Second item: “Noticed”
+    }
+    
+    private func addNoticedFabItem() {
         let actionNoticed = floatingButton.addItem()
         actionNoticed.titleLabel.text      = StringsProvider.string(forKey: .diaryNoteFabNoticed)
         actionNoticed.titleLabel.textColor = ColorPalette.color(withType: .fabTextColor)
@@ -131,8 +159,9 @@ class BaseViewController: UIViewController {
             guard let self = self else { return }
             self.navigator.openNoticedViewController(presenter: self)
         }
-        
-        // ‣ Third item: “Eaten”
+    }
+    
+    private func addEatenFabItem() {
         let actionEaten = floatingButton.addItem()
         actionEaten.titleLabel.text      = StringsProvider.string(forKey: .diaryNoteFabEaten)
         actionEaten.titleLabel.textColor = ColorPalette.color(withType: .fabTextColor)
