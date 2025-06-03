@@ -27,13 +27,9 @@ public class SpyrometerResultsViewController: UIViewController {
     
     private let results: SOResults
     
-    /// Threshold for PEF (in L)
-    private let pefStandard: Float?
-    private let pefWarning: Float?
+    private let feed: Feed
     
-    /// Threshold for FEV1 (in L)
-    private let fev1Standard: Float?
-    private let fev1Warning: Float?
+    private var shouldShowMirWarning: Bool = false
     
     /// Converter: from cL to L (valore decimale)
     private func clampToLiters(_ centiLiters: Int32) -> Float {
@@ -41,17 +37,10 @@ public class SpyrometerResultsViewController: UIViewController {
         return Float(centiLiters) / 100.0
     }
     
-    init(results: SOResults,
-         pefStandard: Float?,
-         pefWarning: Float?,
-         fev1Standard: Float?,
-         fev1Warning: Float?) {
+    init(feed: Feed, results: SOResults) {
         
+        self.feed = feed
         self.results = results
-        self.pefStandard = pefStandard
-        self.pefWarning = pefWarning
-        self.fev1Standard = fev1Standard
-        self.fev1Warning = fev1Warning
         
         super.init(nibName: nil, bundle: nil)
 
@@ -83,49 +72,9 @@ public class SpyrometerResultsViewController: UIViewController {
         spiroTable.autoSetDimension(.height, toSize: 150, relation: .greaterThanOrEqual)
         spiroTable.parentViewController = self
         
-        let pefLiters = clampToLiters(self.results.pef_cLs)
-        let fev1Liters = clampToLiters(self.results.fev1_cL)
-        
-        let pefTargetString: String
-        if let std = pefStandard {
-            // For example “7.00 L/m”
-            pefTargetString = String(format: "%.2f L/m", std)
-        } else {
-            pefTargetString = ""
-        }
-        
-        let fev1TargetString: String
-        if let std = fev1Standard {
-            // Ad esempio “4.50 L”
-            fev1TargetString = String(format: "%.2f L", std)
-        } else {
-            fev1TargetString = ""
-        }
-        
-        let pefMeasuredString = String(format: "%.2f L/m", pefLiters)
-        let fev1MeasuredString = String(format: "%.2f L", fev1Liters)
-        
-        let pefStatus  = statusMessage(
-            measured:  pefLiters,
-            standard:  pefStandard,
-            warning:   pefWarning
-        )
-        let fev1Status = statusMessage(
-            measured:  fev1Liters,
-            standard:  fev1Standard,
-            warning:   fev1Warning
-        )
-        
-        spiroTable.updatePEFRow(
-            target:      pefTargetString,
-            measurement: pefMeasuredString,
-            result:      pefStatus
-        )
-        spiroTable.updateFEV1Row(
-            target:      fev1TargetString,
-            measurement: fev1MeasuredString,
-            result:      fev1Status
-        )
+        evaluateMirDropFlag()
+
+        populateTable()
         
         self.view.addSubview(self.footerView)
         
@@ -147,6 +96,15 @@ public class SpyrometerResultsViewController: UIViewController {
         self.footerView.addTargetToSecondButton(target: self, action: #selector(self.doneButtonPressed))
     }
     
+    public override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        
+        if shouldShowMirWarning {
+            showWarningScreen()
+            shouldShowMirWarning = false
+        }
+    }
+    
     func statusMessage(
         measured: Float,
         standard: Float?,
@@ -161,6 +119,79 @@ public class SpyrometerResultsViewController: UIViewController {
         } else {
             return "Critical"
         }
+    }
+    
+    private func evaluateMirDropFlag() {
+        
+        let fev1Liters = Float(results.fev1_cL) / 100.0
+        let previous    = feed.previousMir
+        let threshold   = feed.mirThreshold
+        
+        guard let prev = previous, let thr = threshold else {
+            shouldShowMirWarning = true
+            return
+        }
+        
+        let dropAmount     = prev - fev1Liters
+        let dropPercentage = dropAmount / prev
+        
+        shouldShowMirWarning = (dropPercentage > thr)
+    }
+    
+    private func populateTable() {
+
+        let pefLiters  = Float(results.pef_cLs) / 100.0
+        let fev1Liters = Float(results.fev1_cL) / 100.0
+        
+        let pefStd      = feed.pefThresholdStandard
+        let pefWarn     = feed.pefThresholdWarning
+        let fev1Std     = feed.fev1ThresholdStandard
+        let fev1Warn    = feed.fev1ThresholdWarning
+        
+        let pefTargetString: String = {
+            if let std = pefStd {
+                // Esempio: “7.00 L/m”
+                return String(format: "%.2f L/m", std)
+            } else {
+                return ""
+            }
+        }()
+        let fev1TargetString: String = {
+            if let std = fev1Std {
+                // Esempio: “4.50 L”
+                return String(format: "%.2f L", std)
+            } else {
+                return ""
+            }
+        }()
+        
+        let pefMeasuredString  = String(format: "%.2f L/m", pefLiters)
+        let fev1MeasuredString = String(format: "%.2f L", fev1Liters)
+        
+        let pefStatus  = statusMessage(measured: pefLiters, standard: pefStd, warning: pefWarn)
+        let fev1Status = statusMessage(measured: fev1Liters, standard: fev1Std, warning: fev1Warn)
+        
+        spiroTable.updatePEFRow(
+            target: pefTargetString,
+            measurement: pefMeasuredString,
+            result: pefStatus
+        )
+        spiroTable.updateFEV1Row(
+            target: fev1TargetString,
+            measurement: fev1MeasuredString,
+            result: fev1Status
+        )
+    }
+    
+    private func showWarningScreen() {
+    
+        let warningVC = SpirometryWarningViewController()
+        warningVC.modalPresentationStyle = .pageSheet
+        if let sheet = warningVC.sheetPresentationController {
+            sheet.detents = [.large()]
+            sheet.preferredCornerRadius = 16
+        }
+        self.present(warningVC, animated: true, completion: nil)
     }
     
     @objc private func redoButtonPressed() {

@@ -104,6 +104,7 @@ enum TemplateImageName: String, CaseIterable {
     case eatenIcon = "eaten_image"
     case siringeIcon = "siringe_icon"
     case resetDots = "reset_icon"
+    case medicalAlert = "medical_alert"
 }
 
 public class ImagePalette {

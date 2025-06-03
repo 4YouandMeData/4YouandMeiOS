@@ -246,6 +246,7 @@
 		0DB452DA3ABF28E520A1FFF083A9CA0C /* CountryCodeProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9963DFEE5E8E1E02904993CE288E2C5 /* CountryCodeProvider.swift */; };
 		0DC813E62FCEF6C6C3009180D7790BFE /* Result+Alamofire.swift in Sources */ = {isa = PBXBuildFile; fileRef = C47D4F6B40174FC0BB3097E6D29EBA1B /* Result+Alamofire.swift */; };
 		0DE1B6012DEAE9AB0055939D /* BaseViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DE1B6002DEAE9A60055939D /* BaseViewController.swift */; };
+		0DE1B6032DEED5EC0055939D /* SpirometryWarningViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DE1B6022DEED5E40055939D /* SpirometryWarningViewController.swift */; };
 		0DF676D21260D833B926206A70BBFDEA /* UICollectionView+Rx.swift in Sources */ = {isa = PBXBuildFile; fileRef = E52981DDDD7994453313E1DA5F47EBEE /* UICollectionView+Rx.swift */; };
 		0DFD3190169A2D9B9C18F0A4DCAFA540 /* AddBlend_GLES.fsh in Resources */ = {isa = PBXBuildFile; fileRef = 210FD7941AF1176487BB65FE8D7AC149 /* AddBlend_GLES.fsh */; };
 		0E0DBC7CDF4BC5F99FD41C27E5AECB58 /* NetworkApiGateway.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9450C6CFD254AEEFC22F9F0168316FE7 /* NetworkApiGateway.swift */; };
@@ -4404,6 +4405,7 @@
 		0DB2765FFEC03194DB0908AAA0166DF0 /* Dilation1_GL.fsh */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.glsl; name = Dilation1_GL.fsh; path = framework/Source/Operations/Shaders/Dilation1_GL.fsh; sourceTree = "<group>"; };
 		0DB8AFC53314CA7E11D00D8487083226 /* ORKTowerOfHanoiStepViewController.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = ORKTowerOfHanoiStepViewController.m; path = ResearchKit/ActiveTasks/ORKTowerOfHanoiStepViewController.m; sourceTree = "<group>"; };
 		0DE1B6002DEAE9A60055939D /* BaseViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BaseViewController.swift; sourceTree = "<group>"; };
+		0DE1B6022DEED5E40055939D /* SpirometryWarningViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpirometryWarningViewController.swift; sourceTree = "<group>"; };
 		0DE1D72D2D7D400342DE5BDF9C1D680F /* Driver+Subscription.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = "Driver+Subscription.swift"; path = "RxCocoa/Traits/Driver/Driver+Subscription.swift"; sourceTree = "<group>"; };
 		0DF1B5B5FF308B44783BD744F05C4301 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xml; name = PrivacyInfo.xcprivacy; path = Sources/FBLPromises/Resources/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		0E043E815B37F70E42DE81F81F56CD51 /* DiaryNoteItemAudioTableViewCell.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DiaryNoteItemAudioTableViewCell.swift; sourceTree = "<group>"; };
@@ -11583,6 +11585,7 @@
 		C2AC34DCE1B9D5E7C7A4BAE15259715A /* ViewControllers */ = {
 			isa = PBXGroup;
 			children = (
+				0DE1B6022DEED5E40055939D /* SpirometryWarningViewController.swift */,
 				0DE1B6002DEAE9A60055939D /* BaseViewController.swift */,
 				0D15F7AA2DDB9FAE00C42FF3 /* DoseDateTimeViewController.swift */,
 				0D15F7A62DDB934600C42FF3 /* DoseTypeViewController.swift */,
@@ -18064,6 +18067,7 @@
 				7F83B6417F5A7F52D0CFD2AD98109BC1 /* GenericListItemView.swift in Sources */,
 				BCC1F088206C0C4BE9DC36FB2ECB8F57 /* GenericTextCheckboxView.swift in Sources */,
 				735C55108BDB72CB234CE148815F262A /* GenericTextFieldView.swift in Sources */,
+				0DE1B6032DEED5EC0055939D /* SpirometryWarningViewController.swift in Sources */,
 				F87C388C42CFFD4B221BB45F963EB26E /* GlobalConfig.swift in Sources */,
 				49FD32DD1DDACA9954ADF5FE12436F33 /* GlobalConfig+Mappable.swift in Sources */,
 				219E7BBA350E043D77ADBB78B353B1A5 /* Gradient+Extension.swift in Sources */,

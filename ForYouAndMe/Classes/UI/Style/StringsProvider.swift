@@ -263,6 +263,9 @@ enum StringKey: String, CaseIterable, CodingKey {
     case spiroTaskFev1CalloutBody = "TASK_SPIRO_ACTIVITY_FEV1_CALLOUT_BODY"
     case spiroTaskDeviceDisconnectedTitle = "TASK_SPIRO_DEVICE_DISCONNECTED_TITLE"
     case spiroTaskDeviceDisconnectedBody = "TASK_SPIRO_DEVICE_DISCONNECTED_BODY"
+    case spiroTitleMedicalAlertTitle = "TASK_SPIRO_ALERT_DIALOG_TITLE"
+    case spiroTitleMedicalAlertMessage = "TASK_SPIRO_ALERT_DIALOG_MESSAGE"
+    case spiroTitleMedicalAlertButtonText = "TASK_SPIRO_ALERT_DIALOG_BUTTON"
     
     // Reflection Task
     case reflectionTextTask = "REFLECTION_CREATE_TEXT"

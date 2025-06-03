@@ -114,18 +114,9 @@ class SpyrometerSectionCoordinator: NSObject, PagedActivitySectionCoordinator {
     /// Pushes the results view controller to display the spirometry test results.
     private func showResultsViewController(results: SOResults) {
         
-        let pefStd   = feed.pefThresholdStandard
-        let pefWarn  = feed.pefThresholdWarning
-        let fev1Std  = feed.fev1ThresholdStandard
-        let fev1Warn = feed.fev1ThresholdWarning
-        
         let resultsVC = SpyrometerResultsViewController(
-            results: results,
-            pefStandard: pefStd,
-            pefWarning: pefWarn,
-            fev1Standard: fev1Std,
-            fev1Warning: fev1Warn
-        )
+            feed: self.feed,
+            results: results)
 
         resultsVC.onRedoPressed = { [weak self] in
             self?.showIntroTestViewControllerFromRedo()
