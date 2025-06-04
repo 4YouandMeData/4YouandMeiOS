@@ -86,10 +86,10 @@ class OptInPermissionViewController: UIViewController {
         
         scrollStackView.stackView.addBlankSpace(space: 27.0)
         // Body
-        scrollStackView.stackView.addLabel(withText: self.optInPermission.body,
-                                           fontStyle: .paragraph,
-                                           colorType: .primaryText,
-                                           textAlignment: .left)
+        scrollStackView.stackView.addHTMLTextView(withText: self.optInPermission.body,
+                                                  fontStyle: .paragraph,
+                                                  colorType: .primaryText,
+                                                  textAlignment: .center)
         
         scrollStackView.stackView.addBlankSpace(space: 30.0)
         // Permissions
