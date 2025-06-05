@@ -26,18 +26,31 @@ class DoseTypeViewController: UIViewController {
         case insulinInjection = "insulin_injection"
         
         /// The actual text shown on screen
-        var displayText: String {
-            switch self {
-            case .pumpBolus:
-                return StringsProvider.string(forKey: .doseStepOneFirstButton)
-            case .insulinInjection:
-                return StringsProvider.string(forKey: .doseStepOneSecondButton)
+        func displayText(usingVariant variant: InsulinFlowVariant) -> String {
+            
+            switch variant {
+            case .standalone:
+                switch self {
+                case .pumpBolus:
+                    return StringsProvider.string(forKey: .doseStepOneFirstButton)
+                case .insulinInjection:
+                    return StringsProvider.string(forKey: .doseStepOneSecondButton)
+                }
+                
+            case .embeddedInNoticed:
+                switch self {
+                case .pumpBolus:
+                    return StringsProvider.string(forKey: .noticedStepTwoFirstButton)
+                case .insulinInjection:
+                    return StringsProvider.string(forKey: .noticedStepTwoFirstButton)
+                }
             }
         }
     }
     
-    // MARK: - Public API
+    private let variant: InsulinFlowVariant
     
+    // MARK: - Public API
     weak var delegate: DoseTypeViewControllerDelegate?
     
     // MARK: - Subviews
@@ -63,8 +76,11 @@ class DoseTypeViewController: UIViewController {
     }()
     
     private lazy var footerView: GenericButtonView = {
+        let buttonText = (variant == .standalone)
+        ? StringsProvider.string(forKey: .doseNextButton)
+        : StringsProvider.string(forKey: .noticedStepNextButton)
         let buttonView = GenericButtonView(withTextStyleCategory: .secondaryBackground(shadow: false))
-        buttonView.setButtonText(StringsProvider.string(forKey: .doseNextButton))
+        buttonView.setButtonText(buttonText)
         buttonView.setButtonEnabled(enabled: false)
         buttonView.addTarget(target: self, action: #selector(nextTapped))
         return buttonView
@@ -81,12 +97,13 @@ class DoseTypeViewController: UIViewController {
     
     // MARK: - Init
     
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
+    init(variant: InsulinFlowVariant) {
+        self.variant = variant
+        super.init(nibName: nil, bundle: nil)
     }
     
-    init() {
-        super.init(nibName: nil, bundle: nil)
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
     }
     
     // MARK: - Lifecycle
@@ -99,6 +116,14 @@ class DoseTypeViewController: UIViewController {
         setupActions()
     }
     
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        if variant == .embeddedInNoticed {
+            navigationController?.navigationBar.apply(style: NavigationBarStyleCategory.secondary(hidden: false).style)
+            addCustomBackButton()
+        }
+    }
+    
     // MARK: - Setup
     
     private func setupNavigationBar() {
@@ -109,15 +134,21 @@ class DoseTypeViewController: UIViewController {
     
     private func setupLayout() {
         
-        self.navigationItem.leftBarButtonItem = self.closeButton
+        if variant == .standalone {
+            self.navigationItem.leftBarButtonItem = self.closeButton
+        }
 
         // Add scroll + stack
         view.addSubview(scrollStack)
         scrollStack.autoPinEdgesToSuperviewSafeArea(with: .zero, excludingEdge: .bottom)
         
         // Header: "Add a dose"
+        let title = (variant == .standalone)
+        ? StringsProvider.string(forKey: .doseStepOneTitle)
+        : StringsProvider.string(forKey: .noticedStepTwoTitle)
+        
         let header = NSAttributedString(
-            string: StringsProvider.string(forKey: .doseStepOneTitle),
+            string: title,
             attributes: [
                 .font: UIFont.boldSystemFont(ofSize: FontPalette.fontStyleData(forStyle: .header2).font.pointSize),
                 .foregroundColor: ColorPalette.color(withType: .primaryText),
@@ -132,8 +163,12 @@ class DoseTypeViewController: UIViewController {
         scrollStack.stackView.addBlankSpace(space: 36)
         
         // Subtitle: "What type did you use?"
+        let message = (variant == .standalone)
+        ? StringsProvider.string(forKey: .doseStepOneMessage)
+        : StringsProvider.string(forKey: .noticedStepTwoMessage)
+        
         scrollStack.stackView.addLabel(
-            withText: StringsProvider.string(forKey: .doseStepOneMessage),
+            withText: message,
             fontStyle: .paragraph,
             color: ColorPalette.color(withType: .primaryText)
         )
@@ -156,7 +191,7 @@ class DoseTypeViewController: UIViewController {
         // Create an OptionButton with left-aligned text
         let btn = OptionButton()
         btn.layoutStyle = .textLeft(padding: 16)
-        btn.setTitle(type.displayText, for: .normal)
+        btn.setTitle(type.displayText(usingVariant: self.variant), for: .normal)
         return btn
     }
     

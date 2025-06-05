@@ -8,8 +8,20 @@
 import UIKit
 import RxSwift
 
+enum InsulinFlowVariant {
+    case standalone
+    case embeddedInNoticed
+}
+
 /// Coordinator for the “Add a dose” flow
 final class InsulinEntryCoordinator: PagedActivitySectionCoordinator {
+    
+    // MARK: – “External” nav controller
+    private weak var externalNavigationController: UINavigationController?
+
+    private var useExternalNav: Bool {
+        return externalNavigationController != nil
+    }
     
     // MARK: – Coordinator requirements
     var hidesBottomBarWhenPushed: Bool = false
@@ -26,6 +38,9 @@ final class InsulinEntryCoordinator: PagedActivitySectionCoordinator {
     var pages: [Page] { pagedSectionData.pages }
     var addAbortOnboardingButton: Bool = false
     var navigationController: UINavigationController {
+        if let ext = externalNavigationController {
+            return ext
+        }
         guard let nav = activitySectionViewController?.internalNavigationController else {
             fatalError("ActivitySectionViewController not initialized")
         }
@@ -38,6 +53,7 @@ final class InsulinEntryCoordinator: PagedActivitySectionCoordinator {
     let coreViewController: UIViewController? = nil
     var currentlyRescheduledTimes: Int = 0
     let maxRescheduleTimes: Int = 0
+    private let variant: InsulinFlowVariant
     
     // MARK: – Collected data
     private var selectedDoseTypeText: String?
@@ -48,13 +64,17 @@ final class InsulinEntryCoordinator: PagedActivitySectionCoordinator {
     // MARK: – Initialization
     init(repository: Repository,
          navigator: AppNavigator,
+         variant: InsulinFlowVariant,
          taskIdentifier: String,
+         externalNavigationController: UINavigationController? = nil,
          completion: @escaping NotificationCallback) {
         
         self.repository = repository
         self.navigator = navigator
         self.taskIdentifier = taskIdentifier
         self.completionCallback = completion
+        self.externalNavigationController = externalNavigationController
+        self.variant = variant
         
         // Define the sequence of pages
         let sequence: [Page] = [
@@ -71,8 +91,15 @@ final class InsulinEntryCoordinator: PagedActivitySectionCoordinator {
     
     // MARK: – Flow start
     func getStartingPage() -> UIViewController {
-        let vc = DoseTypeViewController()
+        let vc = DoseTypeViewController(variant: self.variant)
         vc.delegate = self
+        
+        if let extNav = externalNavigationController {
+            extNav.pushViewController(vc,
+                                      hidesBottomBarWhenPushed: hidesBottomBarWhenPushed,
+                                      animated: true)
+            return vc
+        }
         
         self.activitySectionViewController =
           ActivitySectionViewController(coordinator: self,
@@ -109,16 +136,16 @@ final class InsulinEntryCoordinator: PagedActivitySectionCoordinator {
 // MARK: – DoseTypeViewControllerDelegate
 extension InsulinEntryCoordinator: DoseTypeViewControllerDelegate {
     func doseTypeViewController(_ vc: DoseTypeViewController, didSelect type: DoseTypeViewController.DoseType) {
-        selectedDoseTypeText = type.displayText
+        selectedDoseTypeText = type.displayText(usingVariant: self.variant)
         selectedDoseType = type.rawValue
         
-        guard let _ = self.selectedDoseType,
+        guard self.selectedDoseType != nil,
               let selectedDoseTypeText = self.selectedDoseTypeText else {
             fatalError("Selected dose type is nil")
         }
         
         // Navigate to date/time selector
-        let dtVC = DoseDateTimeViewController(displayTitle: selectedDoseTypeText)
+        let dtVC = DoseDateTimeViewController(displayTitle: selectedDoseTypeText, variant: self.variant)
         dtVC.delegate = self
         navigationController.pushViewController(
             dtVC,
@@ -128,6 +155,9 @@ extension InsulinEntryCoordinator: DoseTypeViewControllerDelegate {
     }
     
     func doseTypeViewControllerDidCancel(_ vc: DoseTypeViewController) {
+        if let presenter = activitySectionViewController {
+            presenter.dismiss(animated: true, completion: nil)
+        }
         completionCallback()
     }
 }
@@ -142,6 +172,9 @@ extension InsulinEntryCoordinator: DoseDateTimeViewControllerDelegate {
     }
 
     func doseDateTimeViewControllerDidCancel(_ vc: DoseDateTimeViewController) {
+        if let presenter = activitySectionViewController {
+            presenter.dismiss(animated: true, completion: nil)
+        }
         completionCallback()
     }
 }

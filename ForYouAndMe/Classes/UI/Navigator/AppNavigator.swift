@@ -473,7 +473,7 @@ class AppNavigator {
                 assertionFailure("AppNavigator - Missing notifiable url for given notifiable")
                 return
             }
-            self.handleNotifiableTile(notifiableUrl: notifiableUrl, presenter: presenter)
+            self.handleNotifiableTile(notifiableUrl: notifiableUrl, presenter: presenter, weHaveNoticed: false)
         } else {
             assertionFailure("Unhandle Type")
         }
@@ -546,13 +546,39 @@ class AppNavigator {
         self.currentActivityCoordinator = coordinator
     }
     
-    public func handleNotifiableTile(notifiableUrl: String, presenter: UIViewController) {
-        if let internalDeeplinkKey = InternalDeeplinkKey(rawValue: notifiableUrl) {
-            self.handleInternalDeeplink(withKey: internalDeeplinkKey, presenter: presenter)
-        } else if let oAuthIntegration = IntegrationProvider.oAuthIntegration(withName: notifiableUrl) {
-            self.openIntegrationApp(forIntegration: oAuthIntegration)
-        } else if let url = URL(string: notifiableUrl) {
-            self.openUrlOnBrowser(url, presenter: presenter)
+    public func startWeHaveNoticedSection(presenter: UIViewController) {
+        
+        let completionCallback: NotificationCallback = { [weak presenter] in
+            presenter?.dismiss(animated: true, completion: nil)
+            self.currentCoordinator = nil
+        }
+        
+        // Instantiate the coordinator, passing the original presenter.
+        let weHaveNoticedCoordinator = WeHaveNoticedCoordinator(
+            repository: Services.shared.repository,
+            navigator: self,
+            taskIdentifier: "WeHaveNoticedFlow",
+            presenter: presenter,
+            completion: completionCallback
+        )
+        
+        self.currentCoordinator = weHaveNoticedCoordinator
+        let startVC = weHaveNoticedCoordinator.getStartingPage()
+        startVC.modalPresentationStyle = .fullScreen
+        presenter.present(startVC, animated: true, completion: nil)
+    }
+    
+    public func handleNotifiableTile(notifiableUrl: String?, presenter: UIViewController, weHaveNoticed: Bool) {
+        if let notifiableUrl = notifiableUrl {
+            if let internalDeeplinkKey = InternalDeeplinkKey(rawValue: notifiableUrl) {
+                self.handleInternalDeeplink(withKey: internalDeeplinkKey, presenter: presenter)
+            } else if let oAuthIntegration = IntegrationProvider.oAuthIntegration(withName: notifiableUrl) {
+                self.openIntegrationApp(forIntegration: oAuthIntegration)
+            } else if let url = URL(string: notifiableUrl) {
+                self.openUrlOnBrowser(url, presenter: presenter)
+            }
+        } else if weHaveNoticed {
+            self.startWeHaveNoticedSection(presenter: presenter)
         }
     }
     
@@ -708,6 +734,7 @@ class AppNavigator {
         let coordinator = InsulinEntryCoordinator(
             repository: self.repository,
             navigator: self,
+            variant: .standalone,
             taskIdentifier: "insulinEntry",
             completion: completion
         )

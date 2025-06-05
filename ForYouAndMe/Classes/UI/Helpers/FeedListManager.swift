@@ -431,25 +431,25 @@ extension FeedListManager: UITableViewDataSource {
                     cell.display(data: educational, buttonPressedCallback: { [weak self] in
                         guard let self = self else { return }
                         guard let delegate = self.delegate else { return }
-                        guard let notifiableUrl = educational.urlString else { return }
-                        self.navigator.handleNotifiableTile(notifiableUrl: notifiableUrl,
-                                                            presenter: delegate.presenter)
+                        self.navigator.handleNotifiableTile(notifiableUrl: educational.urlString,
+                                                            presenter: delegate.presenter,
+                                                            weHaveNoticed: false)
                     })
                 case .alert(let alert):
-                    cell.display(data: alert, buttonPressedCallback: { [weak self] in
+                    cell.display(data: alert, wehaveNoticed: true, buttonPressedCallback: { [weak self] in
                         guard let self = self else { return }
                         guard let delegate = self.delegate else { return }
-                        guard let notifiableUrl = alert.urlString else { return }
-                        self.navigator.handleNotifiableTile(notifiableUrl: notifiableUrl,
-                                                            presenter: delegate.presenter)
+                        self.navigator.handleNotifiableTile(notifiableUrl: alert.urlString,
+                                                            presenter: delegate.presenter,
+                                                            weHaveNoticed: true)
                     })
                 case .reward(let reward):
                     cell.display(data: reward, buttonPressedCallback: { [weak self] in
                         guard let self = self else { return }
                         guard let delegate = self.delegate else { return }
-                        guard let notifiableUrl = reward.urlString else { return }
-                        self.navigator.handleNotifiableTile(notifiableUrl: notifiableUrl,
-                                                            presenter: delegate.presenter)
+                        self.navigator.handleNotifiableTile(notifiableUrl: reward.urlString,
+                                                            presenter: delegate.presenter,
+                                                            weHaveNoticed: false)
                     })
                 }
             } else {

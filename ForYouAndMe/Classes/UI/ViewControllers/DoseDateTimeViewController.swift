@@ -34,6 +34,7 @@ class DoseDateTimeViewController: UIViewController, UITextFieldDelegate {
     weak var delegate: DoseDateTimeViewControllerDelegate?
     private let storage: CacheService
     private let navigator: AppNavigator
+    private let variant: InsulinFlowVariant
     
     // MARK: - Subviews
 
@@ -50,7 +51,6 @@ class DoseDateTimeViewController: UIViewController, UITextFieldDelegate {
 
     private let sectionHeaderTime: UILabel = {
         let lbl = UILabel()
-        lbl.text = StringsProvider.string(forKey: .doseStepTwoTimeLabel)
         lbl.font = FontPalette.fontStyleData(forStyle: .paragraph).font
         lbl.textColor = ColorPalette.color(withType: .primary)
         return lbl
@@ -88,7 +88,6 @@ class DoseDateTimeViewController: UIViewController, UITextFieldDelegate {
 
     private let sectionHeaderDose: UILabel = {
         let lbl = UILabel()
-        lbl.text = StringsProvider.string(forKey: .doseStepTwoDosesLabel)
         lbl.font = FontPalette.fontStyleData(forStyle: .paragraph).font
         lbl.textColor = ColorPalette.color(withType: .primary)
         return lbl
@@ -104,13 +103,11 @@ class DoseDateTimeViewController: UIViewController, UITextFieldDelegate {
         tf.keyboardType = .decimalPad
         tf.font = .preferredFont(forTextStyle: .body)
         tf.textColor = ColorPalette.color(withType: .primaryText)
-        tf.placeholder = StringsProvider.string(forKey: .doseStepTwoUnitsLabel)
         tf.returnKeyType = .done
         return tf
     }()
     private let doseUnitsLabel: UILabel = {
         let lbl = UILabel()
-        lbl.text = StringsProvider.string(forKey: .doseStepTwoUnitsLabel)
         lbl.font = FontPalette.fontStyleData(forStyle: .paragraph).font
         lbl.textColor = ColorPalette.color(withType: .primary)
         return lbl
@@ -122,8 +119,11 @@ class DoseDateTimeViewController: UIViewController, UITextFieldDelegate {
     }()
 
     private lazy var footerView: GenericButtonView = {
+        let key = (variant == .standalone)
+        ? StringsProvider.string(forKey: .doseStepTwoConfirmButton)
+        : StringsProvider.string(forKey: .noticedStepConfirmButton)
         let gv = GenericButtonView(withTextStyleCategory: .secondaryBackground(shadow: false))
-        gv.setButtonText(StringsProvider.string(forKey: .doseStepTwoConfirmButton))
+        gv.setButtonText(key)
         gv.setButtonEnabled(enabled: false)
         gv.addTarget(target: self, action: #selector(confirmTapped))
         return gv
@@ -144,10 +144,11 @@ class DoseDateTimeViewController: UIViewController, UITextFieldDelegate {
 
     // MARK: - Init
 
-    init(displayTitle: String) {
+    init(displayTitle: String, variant: InsulinFlowVariant) {
         self.displayTitle = displayTitle
         self.navigator = Services.shared.navigator
         self.storage = Services.shared.storageServices
+        self.variant = variant
         super.init(nibName: nil, bundle: nil)
     }
     required init?(coder: NSCoder) { fatalError("init(coder:) not implemented") }
@@ -204,9 +205,12 @@ class DoseDateTimeViewController: UIViewController, UITextFieldDelegate {
         scrollStackView.autoPinEdgesToSuperviewSafeArea(with: .zero, excludingEdge: .bottom)
 
         // Title
+        let titleKey = (variant == .standalone)
+        ? StringsProvider.string(forKey: .doseStepTwoTitle)
+        : StringsProvider.string(forKey: .noticedStepThreeTitle)
         let paragraph = NSMutableParagraphStyle(); paragraph.alignment = .center
         let title = NSAttributedString(
-            string: StringsProvider.string(forKey: .doseStepTwoTitle),
+            string: titleKey,
             attributes: [
                 .font: UIFont.boldSystemFont(ofSize: FontPalette.fontStyleData(forStyle: .header2).font.pointSize),
                 .foregroundColor: ColorPalette.color(withType: .primaryText),
@@ -217,7 +221,10 @@ class DoseDateTimeViewController: UIViewController, UITextFieldDelegate {
         scrollStackView.stackView.addBlankSpace(space: 36)
 
         // Subtitle
-        let baseMsg = StringsProvider.string(forKey: .doseStepTwoMessage)
+        let messagekey = (variant == .standalone)
+        ? StringsProvider.string(forKey: .doseStepTwoMessage)
+        : StringsProvider.string(forKey: .noticedStepThreeMessage)
+        let baseMsg = messagekey
         let normalAttrs: [NSAttributedString.Key: Any] = [
             .font: UIFont.preferredFont(forTextStyle: .body),
             .foregroundColor: ColorPalette.color(withType: .primaryText),
@@ -235,6 +242,11 @@ class DoseDateTimeViewController: UIViewController, UITextFieldDelegate {
         scrollStackView.stackView.addBlankSpace(space: 70)
 
         // Date Section
+        
+        sectionHeaderTime.text = (variant == .standalone)
+        ? StringsProvider.string(forKey: .doseStepTwoTimeLabel)
+        : StringsProvider.string(forKey: .noticedStepThreeTime)
+
         scrollStackView.stackView.addArrangedSubview(sectionHeaderTime)
         scrollStackView.stackView.addBlankSpace(space: 8)
         scrollStackView.stackView.addArrangedSubview(dateRow)
@@ -253,10 +265,20 @@ class DoseDateTimeViewController: UIViewController, UITextFieldDelegate {
         scrollStackView.stackView.addBlankSpace(space: 36)
 
         // Dose Section
+        
+        sectionHeaderDose.text = (variant == .standalone)
+        ? StringsProvider.string(forKey: .doseStepTwoUnitsLabel)
+        : StringsProvider.string(forKey: .noticedStepThreeUnit)
+        
         scrollStackView.stackView.addArrangedSubview(sectionHeaderDose)
         scrollStackView.stackView.addBlankSpace(space: 8)
         scrollStackView.stackView.addArrangedSubview(doseRow)
         doseRow.autoSetDimension(.height, toSize: 44)
+        
+        doseTextField.placeholder = (variant == .standalone)
+        ? StringsProvider.string(forKey: .doseStepTwoUnitsLabel)
+        : StringsProvider.string(forKey: .noticedStepThreeUnit)
+        
         doseRow.addSubview(doseTextField); doseRow.addSubview(doseUnitsLabel); doseRow.addSubview(underlineDose)
         doseTextField.autoAlignAxis(toSuperviewAxis: .horizontal)
         doseTextField.autoPinEdge(.leading, to: .leading, of: doseRow)

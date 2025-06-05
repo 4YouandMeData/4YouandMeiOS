@@ -248,6 +248,7 @@ fileprivate extension Notifiable {
             return .educational(educational: item)
         case .alert(var item):
             item.title = item.title?.convertWithFeedMeta(feedMeta)
+            item.body = item.body?.convertWithFeedMeta(feedMeta)
             return .alert(alert: item)
         case .reward(var item):
             item.title = item.title?.convertWithFeedMeta(feedMeta)

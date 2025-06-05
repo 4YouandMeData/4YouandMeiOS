@@ -247,6 +247,8 @@
 		0DC813E62FCEF6C6C3009180D7790BFE /* Result+Alamofire.swift in Sources */ = {isa = PBXBuildFile; fileRef = C47D4F6B40174FC0BB3097E6D29EBA1B /* Result+Alamofire.swift */; };
 		0DE1B6012DEAE9AB0055939D /* BaseViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DE1B6002DEAE9A60055939D /* BaseViewController.swift */; };
 		0DE1B6032DEED5EC0055939D /* SpirometryWarningViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DE1B6022DEED5E40055939D /* SpirometryWarningViewController.swift */; };
+		0DE1B7F12DF1CCD50055939D /* WeHaveNoticedCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DE1B7F02DF1CCCE0055939D /* WeHaveNoticedCoordinator.swift */; };
+		0DE1B8112DF229020055939D /* NoticedIntroViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DE1B8102DF228FB0055939D /* NoticedIntroViewController.swift */; };
 		0DF676D21260D833B926206A70BBFDEA /* UICollectionView+Rx.swift in Sources */ = {isa = PBXBuildFile; fileRef = E52981DDDD7994453313E1DA5F47EBEE /* UICollectionView+Rx.swift */; };
 		0DFD3190169A2D9B9C18F0A4DCAFA540 /* AddBlend_GLES.fsh in Resources */ = {isa = PBXBuildFile; fileRef = 210FD7941AF1176487BB65FE8D7AC149 /* AddBlend_GLES.fsh */; };
 		0E0DBC7CDF4BC5F99FD41C27E5AECB58 /* NetworkApiGateway.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9450C6CFD254AEEFC22F9F0168316FE7 /* NetworkApiGateway.swift */; };
@@ -4406,6 +4408,8 @@
 		0DB8AFC53314CA7E11D00D8487083226 /* ORKTowerOfHanoiStepViewController.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = ORKTowerOfHanoiStepViewController.m; path = ResearchKit/ActiveTasks/ORKTowerOfHanoiStepViewController.m; sourceTree = "<group>"; };
 		0DE1B6002DEAE9A60055939D /* BaseViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BaseViewController.swift; sourceTree = "<group>"; };
 		0DE1B6022DEED5E40055939D /* SpirometryWarningViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpirometryWarningViewController.swift; sourceTree = "<group>"; };
+		0DE1B7F02DF1CCCE0055939D /* WeHaveNoticedCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeHaveNoticedCoordinator.swift; sourceTree = "<group>"; };
+		0DE1B8102DF228FB0055939D /* NoticedIntroViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoticedIntroViewController.swift; sourceTree = "<group>"; };
 		0DE1D72D2D7D400342DE5BDF9C1D680F /* Driver+Subscription.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = "Driver+Subscription.swift"; path = "RxCocoa/Traits/Driver/Driver+Subscription.swift"; sourceTree = "<group>"; };
 		0DF1B5B5FF308B44783BD744F05C4301 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xml; name = PrivacyInfo.xcprivacy; path = Sources/FBLPromises/Resources/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		0E043E815B37F70E42DE81F81F56CD51 /* DiaryNoteItemAudioTableViewCell.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DiaryNoteItemAudioTableViewCell.swift; sourceTree = "<group>"; };
@@ -9157,6 +9161,7 @@
 		44E6670F88E3F35E36BF5DDC134ED4A2 /* Navigator */ = {
 			isa = PBXGroup;
 			children = (
+				0DE1B7F02DF1CCCE0055939D /* WeHaveNoticedCoordinator.swift */,
 				0D15F7A42DDB870300C42FF3 /* InsulinEntryCoordinator.swift */,
 				0D75E42F2DD49D030012A30F /* FoodEntryCoordinator.swift */,
 				0D3642212DA41DC000FDB3AA /* ReflectionSectionCoordinator.swift */,
@@ -11585,6 +11590,7 @@
 		C2AC34DCE1B9D5E7C7A4BAE15259715A /* ViewControllers */ = {
 			isa = PBXGroup;
 			children = (
+				0DE1B8102DF228FB0055939D /* NoticedIntroViewController.swift */,
 				0DE1B6022DEED5E40055939D /* SpirometryWarningViewController.swift */,
 				0DE1B6002DEAE9A60055939D /* BaseViewController.swift */,
 				0D15F7AA2DDB9FAE00C42FF3 /* DoseDateTimeViewController.swift */,
@@ -18170,6 +18176,7 @@
 				35B1D769101FA60E62273E1411F4F772 /* PopupViewController.swift in Sources */,
 				FD89AE1FAEA3F61EE8313BEC0977728E /* PossibleAnswer.swift in Sources */,
 				2EEF723BBD1C8DE2CC0D5F0A88E669A8 /* PossibleAnswerTableViewCell.swift in Sources */,
+				0DE1B7F12DF1CCD50055939D /* WeHaveNoticedCoordinator.swift in Sources */,
 				149EB6C6E3D909B4F49D227D82482D2C /* PrioritizedRequest.swift in Sources */,
 				5E29D5D37D96674E5921B1550D00557D /* ProjectInfo.swift in Sources */,
 				946B2A6FE428D58FB7A4836136148F78 /* PropertyWrappers.swift in Sources */,
@@ -18180,6 +18187,7 @@
 				91DA0E9DAA4042C21BA21410F8425F9A /* QuickActivity.swift in Sources */,
 				E50C341128EE976BB417AAB295071E70 /* QuickActivityListTableViewCell.swift in Sources */,
 				230A106B18930EAF6D0832659A1491FB /* QuickActivityOption.swift in Sources */,
+				0DE1B8112DF229020055939D /* NoticedIntroViewController.swift in Sources */,
 				FBDD60A4B70FEA159D9DBDA83B35F162 /* QuickActivityOptionView.swift in Sources */,
 				BDCE2FFE85E09FD2E1CEA47E88E29752 /* QuickActivityView.swift in Sources */,
 				AF6A8C02CF1C6B8F82911C2AB79512B7 /* ReachabilityManager.swift in Sources */,

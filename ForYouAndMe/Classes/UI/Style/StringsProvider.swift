@@ -283,7 +283,7 @@ enum StringKey: String, CaseIterable, CodingKey {
     case noticedStepOneMessage = "NOTICED_STEP_ONE_MESSAGE"
     case noticedStepOneFirstButton = "NOTICED_STEP_ONE_FIRST_BUTTON"
     case noticedStepOneSecondButton = "NOTICED_STEP_ONE_SECOND_BUTTON"
-    case noticedStepStepTwoTitle = "NOTICED_STEP_TWO_TITLE"
+    case noticedStepTwoTitle = "NOTICED_STEP_TWO_TITLE"
     case noticedStepTwoMessage = "NOTICED_STEP_TWO_MESSAGE"
     case noticedStepTwoFirstButton = "NOTICED_STEP_TWO_FIRST_BUTTON"
     case noticedStepTwoSecondButton = "NOTICED_STEP_TWO_SECOND_BUTTON"

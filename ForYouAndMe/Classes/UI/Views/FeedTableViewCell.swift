@@ -113,6 +113,9 @@ class FeedTableViewCell: UITableViewCell {
         stackView.addArrangedSubview(horizontalStackView)
         self.horizontalStackView.addArrangedSubview(self.buttonView)
         self.horizontalStackView.addArrangedSubview(self.skipButtonView)
+        
+        self.buttonView.isHidden = true
+        self.skipButtonView.isHidden = true
     }
     
     required init?(coder aDecoder: NSCoder) {
@@ -228,7 +231,7 @@ class FeedTableViewCell: UITableViewCell {
         }
     }
     
-    public func display(data: Alert, buttonPressedCallback: @escaping NotificationCallback) {
+    public func display(data: Alert, wehaveNoticed: Bool, buttonPressedCallback: @escaping NotificationCallback) {
         self.buttonPressedCallback = buttonPressedCallback
         
         self.updateGradientView(startColor: data.startColor, endColor: data.endColor, singleColor: data.cardColor)
@@ -236,13 +239,13 @@ class FeedTableViewCell: UITableViewCell {
         self.setFeedTitle(text: data.title)
         self.setFeedDescription(text: data.body)
         
-        if nil != data.urlString {
+        if nil != data.urlString || wehaveNoticed {
             let buttonText = data.buttonText ?? StringsProvider.string(forKey: .alertButtonDefault)
             self.buttonView.isHidden = false
             self.buttonView.setButtonText(buttonText)
         } else {
             assert(data.buttonText == nil, "Existing button text for notifiable without urlString")
-            self.buttonView.isHidden = true
+            self.buttonView.removeFromSuperview()
         }
     }
     
@@ -260,7 +263,7 @@ class FeedTableViewCell: UITableViewCell {
             self.buttonView.setButtonText(buttonText)
         } else {
             assert(data.buttonText == nil, "Existing button text for notifiable without urlString")
-            self.buttonView.isHidden = true
+            self.buttonView.removeFromSuperview()
         }
     }
     
