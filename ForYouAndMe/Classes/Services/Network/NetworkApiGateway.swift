@@ -357,7 +357,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             return "v1/tasks"
         case .getTask(let taskId):
             return "v1/tasks/\(taskId)"
-        case .sendTaskResultData(let taskId, _):
+        case .sendTaskResultData(let taskId, _), .sendSkipTask(let taskId):
             return "v1/tasks/\(taskId)"
         case .sendTaskResultFile(let taskId, _):
             return "v1/tasks/\(taskId)/attach"
@@ -471,6 +471,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
                 .updateUserConsent,
                 .sendTaskResultData,
                 .sendTaskResultFile,
+                .sendSkipTask,
                 .sendUserInfoParameters,
                 .sendUserTimeZone,
                 .sendUserSettings,
@@ -532,6 +533,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         case .getTask: return Bundle.getTestData(from: "TaskGetTaskVideoDiary")
         case .sendTaskResultData: return "{}".utf8Encoded
         case .sendTaskResultFile: return "{}".utf8Encoded
+        case .sendSkipTask: return "{}".utf8Encoded
         case .delayTask: return "{}".utf8Encoded
         case .getInfoMessages: return "{}".utf8Encoded
         // User
@@ -663,6 +665,10 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             return .requestParameters(parameters: ["task": params], encoding: JSONEncoding.default)
         case .sendTaskResultFile:
             return .uploadMultipart(self.multipartBody)
+        case .sendSkipTask:
+            var params: [String: Bool] = [:]
+            params["skipped_by_user"] = true
+            return .requestParameters(parameters: ["result": params], encoding: JSONEncoding.default)
         case .sendUserInfoParameters(let userParameters):
             let customDataParams: [[String: Any]] = userParameters.reduce([]) { (result, parameter) in
                 let newParameter = UserInfoParameter.create(fromParameter: parameter.parameter, withValue: parameter.value)
@@ -925,6 +931,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
                 .getTask,
                 .sendTaskResultData,
                 .sendTaskResultFile,
+                .sendSkipTask,
                 .getUser,
                 .sendUserTimeZone,
                 .sendUserInfoParameters,

@@ -38,12 +38,37 @@ class FeedTableViewCell: UITableViewCell {
     }()
     
     private lazy var buttonView: GenericButtonView = {
-        let button = GenericButtonView(withTextStyleCategory: .feed, fillWidth: false, topInset: 30.0, bottomInset: 0.0)
+        let button = GenericButtonView(withTextStyleCategory: .feed,
+                                       fillWidth: true,
+                                       horizontalInset: 8.0,
+                                       topInset: 30.0,
+                                       bottomInset: 0.0)
         button.addTarget(target: self, action: #selector(self.buttonPressed))
+        
         return button
     }()
     
+    private lazy var skipButtonView: GenericButtonView = {
+        let button = GenericButtonView(withTextStyleCategory: .feed,
+                                       fillWidth: true,
+                                       horizontalInset: 8.0,
+                                       topInset: 30.0,
+                                       bottomInset: 0.0)
+        button.addTarget(target: self, action: #selector(self.skipButtonPressed))
+        return button
+    }()
+    
+    private lazy var horizontalStackView: UIStackView = {
+        let stack = UIStackView()
+        stack.axis = .horizontal
+        stack.spacing = 8.0
+        stack.alignment = .center
+        stack.addArrangedSubview(self.buttonView)
+        return stack
+    }()
+    
     private var buttonPressedCallback: NotificationCallback?
+    private var skipButtonPressedCallback: NotificationCallback?
     
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
@@ -82,7 +107,12 @@ class FeedTableViewCell: UITableViewCell {
         stackView.addArrangedSubview(self.feedTitleLabel)
         stackView.addBlankSpace(space: 12.0)
         stackView.addArrangedSubview(self.feedDescriptionLabel)
-        stackView.addArrangedSubview(self.buttonView)
+        
+        self.horizontalStackView.axis = .horizontal
+        self.horizontalStackView.distribution = .fillEqually
+        stackView.addArrangedSubview(horizontalStackView)
+        self.horizontalStackView.addArrangedSubview(self.buttonView)
+        self.horizontalStackView.addArrangedSubview(self.skipButtonView)
     }
     
     required init?(coder aDecoder: NSCoder) {
@@ -91,9 +121,12 @@ class FeedTableViewCell: UITableViewCell {
     
     // MARK: - Public Methods
     
-    public func display(data: Activity, buttonPressedCallback: @escaping NotificationCallback) {
+    public func display(data: Activity,
+                        skippable: Bool = false,
+                        buttonPressedCallback: @escaping NotificationCallback,
+                        skipButtonPressedCallback: @escaping NotificationCallback) {
         self.buttonPressedCallback = buttonPressedCallback
-        
+        self.skipButtonPressedCallback = skipButtonPressedCallback
         self.updateGradientView(startColor: data.startColor, endColor: data.endColor, singleColor: data.cardColor)
         self.setFeedImage(imageUrl: data.image)
         self.setFeedTitle(text: data.title)
@@ -103,14 +136,44 @@ class FeedTableViewCell: UITableViewCell {
             let buttonText = data.buttonText ?? StringsProvider.string(forKey: .activityButtonDefault)
             self.buttonView.isHidden = false
             self.buttonView.setButtonText(buttonText)
+            
+            self.horizontalStackView.distribution = .fill
+
+            if skippable {
+                
+                if self.horizontalStackView.arrangedSubviews.contains(self.skipButtonView) == false {
+                    self.horizontalStackView.addArrangedSubview(self.skipButtonView)
+                }
+                let skipText = StringsProvider.string(forKey: .skipActivityButtonDefault)
+                self.skipButtonView.isHidden = false
+                self.skipButtonView.setButtonText(skipText)
+                
+                self.horizontalStackView.distribution = .fillEqually
+                
+            } else {
+                
+                if self.horizontalStackView.arrangedSubviews.contains(self.skipButtonView) {
+                    self.horizontalStackView.removeArrangedSubview(self.skipButtonView)
+                    self.skipButtonView.removeFromSuperview()
+                }
+                
+                self.horizontalStackView.distribution = .fill
+            }
+            
+            self.horizontalStackView.isHidden = false
+            
         } else {
             assert(data.buttonText == nil, "Existing button text for activity without activity type")
             self.buttonView.isHidden = true
         }
     }
     
-    public func display(data: Survey, buttonPressedCallback: @escaping NotificationCallback) {
+    public func display(data: Survey,
+                        skippable: Bool,
+                        buttonPressedCallback: @escaping NotificationCallback,
+                        skipButtonPressedCallback: @escaping NotificationCallback) {
         self.buttonPressedCallback = buttonPressedCallback
+        self.skipButtonPressedCallback = skipButtonPressedCallback
         
         self.updateGradientView(startColor: data.startColor, endColor: data.endColor, singleColor: data.cardColor)
         self.setFeedImage(imageUrl: data.image)
@@ -120,6 +183,31 @@ class FeedTableViewCell: UITableViewCell {
         let buttonText = data.buttonText ?? StringsProvider.string(forKey: .surveyButtonDefault)
         self.buttonView.isHidden = false
         self.buttonView.setButtonText(buttonText)
+        
+        self.horizontalStackView.distribution = .fill
+        
+        if skippable {
+            
+            if self.horizontalStackView.arrangedSubviews.contains(self.skipButtonView) == false {
+                self.horizontalStackView.addArrangedSubview(self.skipButtonView)
+            }
+            let skipText = StringsProvider.string(forKey: .skipActivityButtonDefault)
+            self.skipButtonView.isHidden = false
+            self.skipButtonView.setButtonText(skipText)
+            
+            self.horizontalStackView.distribution = .fillEqually
+            
+        } else {
+            
+            if self.horizontalStackView.arrangedSubviews.contains(self.skipButtonView) {
+                self.horizontalStackView.removeArrangedSubview(self.skipButtonView)
+                self.skipButtonView.removeFromSuperview()
+            }
+            
+            self.horizontalStackView.distribution = .fill
+        }
+        
+        self.horizontalStackView.isHidden = false
     }
     
     public func display(data: Educational, buttonPressedCallback: @escaping NotificationCallback) {
@@ -180,6 +268,10 @@ class FeedTableViewCell: UITableViewCell {
     
     @objc private func buttonPressed() {
         self.buttonPressedCallback?()
+    }
+    
+    @objc private func skipButtonPressed() {
+        self.skipButtonPressedCallback?()
     }
     
     // MARK: - Private Methods

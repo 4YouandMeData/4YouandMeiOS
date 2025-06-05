@@ -131,6 +131,8 @@ enum StringKey: String, CaseIterable, CodingKey {
     case placeholderOtherField = "OTHER_ANSWER_PLACEHOLDER"
     // Activity
     case activityButtonDefault = "ACTIVITY_BUTTON_DEFAULT"
+    case skipActivityButtonDefault = "SKIP_ACTIVITY_BUTTON_DEFAULT"
+    
     // Quick Activity
     case quickActivityButtonDefault = "QUICK_ACTIVITY_BUTTON_DEFAULT"
     case quickActivityButtonNext = "QUICK_ACTIVITY_BUTTON_NEXT"
@@ -147,6 +149,7 @@ enum StringKey: String, CaseIterable, CodingKey {
     case resetDots = "RESET_DOTS"
     // Walkthrough
     case walkthroughButtonSkip = "WALKTHROUGH_BUTTON_SKIP"
+    
     // Diary Note
     case diaryNoteTitle = "DIARY_NOTE_TITLE_DEFAULT"
     case diaryNoteRecordVideo = "DIARYNOTE_CREATE_VIDEO"
@@ -169,7 +172,6 @@ enum StringKey: String, CaseIterable, CodingKey {
     case diaryNoteTranscribeTextError = "DIARYNOTE_TRANSCRIBE_TEXT_ERROR"
     
     // I Have Eaten
-    
     case diaryNoteFabEaten = "FAB_I_HAVE_EATEN"
     case diaryNoteEatenStepOneTitle = "EATEN_STEP_ONE_TITLE"
     case diaryNoteEatenStepOneMessage = "EATEN_STEP_ONE_MESSAGE"
@@ -275,6 +277,62 @@ enum StringKey: String, CaseIterable, CodingKey {
     case reflectionTaskBody = "REFLECTION_TASK_BODY"
     case reflectionTaskLearnMore = "REFLECTION_TASK_LEARN_MORE"
     case reflectionLearnMoreClose = "REFLECTION_LEARN_MORE_CLOSE"
+    
+    // We have Noticed
+    case noticedStepOneTitle = "NOTICED_STEP_ONE_TITLE"
+    case noticedStepOneMessage = "NOTICED_STEP_ONE_MESSAGE"
+    case noticedStepOneFirstButton = "NOTICED_STEP_ONE_FIRST_BUTTON"
+    case noticedStepOneSecondButton = "NOTICED_STEP_ONE_SECOND_BUTTON"
+    case noticedStepStepTwoTitle = "NOTICED_STEP_TWO_TITLE"
+    case noticedStepTwoMessage = "NOTICED_STEP_TWO_MESSAGE"
+    case noticedStepTwoFirstButton = "NOTICED_STEP_TWO_FIRST_BUTTON"
+    case noticedStepTwoSecondButton = "NOTICED_STEP_TWO_SECOND_BUTTON"
+    case noticedStepThreeTitle = "NOTICED_STEP_THREE_TITLE"
+    case noticedStepThreeMessage = "NOTICED_STEP_THREE_MESSAGE"
+    case noticedStepThreeTime = "NOTICED_STEP_THREE_TIME_LABEL"
+    case noticedStepThreeDoses = "NOTICED_STEP_THREE_DOSES_LABEL"
+    case noticedStepThreeUnit = "NOTICED_STEP_THREE_UNITS_LABEL"
+    case noticedStepFourTitle = "NOTICED_STEP_FOUR_TITLE"
+    case noticedStepFourMessage = "NOTICED_STEP_FOUR_MESSAGE"
+    case noticedStepFourFirstButton = "NOTICED_STEP_FOUR_FIRST_BUTTON"
+    case noticedStepFourSecondButton = "NOTICED_STEP_FOUR_SECOND_BUTTON"
+    case noticedStepFiveTitle = "NOTICED_STEP_FIVE_TITLE"
+    case noticedStepFiveMessage = "NOTICED_STEP_FIVE_MESSAGE"
+    case noticedStepFiveFirstButton = "NOTICED_STEP_FIVE_FIRST_BUTTON"
+    case noticedStepFiveSecondButton = "NOTICED_STEP_FIVE_SECOND_BUTTON"
+    case noticedStepSixTitle = "NOTICED_STEP_SIX_TITLE"
+    case noticedStepSixMessage = "NOTICED_STEP_SIX_MESSAGE"
+    case noticedStepSixFirstButton = "NOTICED_STEP_SIX_FIRST_BUTTON"
+    case noticedStepSixSecondButton = "NOTICED_STEP_SIX_SECOND_BUTTON"
+    case noticedStepSevenTitle = "NOTICED_STEP_SEVEN_TITLE"
+    case noticedStepSevenMessage = "NOTICED_STEP_SEVEN_MESSAGE"
+    case noticedStepSevenTime = "NOTICED_STEP_SEVEN_TIME"
+    case noticedStepEightTitle = "NOTICED_STEP_EIGHT_TITLE"
+    case noticedStepEightMessage = "NOTICED_STEP_EIGHT_MESSAGE"
+    case noticedStepEightFirstButton = "NOTICED_STEP_EIGHT_FIRST_BUTTON"
+    case noticedStepEightSecondButton = "NOTICED_STEP_EIGHT_SECOND_BUTTON"
+    case noticedStepEightThirdButton = "NOTICED_STEP_EIGHT_THIRD_BUTTON"
+    case noticedStepNineTitle = "NOTICED_STEP_NINE_TITLE"
+    case noticedStepNineMessage = "NOTICED_STEP_NINE_MESSAGE"
+    case noticedStepNineFirstButton = "NOTICED_STEP_NINE_FIRST_BUTTON"
+    case noticedStepNineSecondButton = "NOTICED_STEP_NINE_SECOND_BUTTON"
+    case noticedStepTenTitle = "NOTICED_STEP_TEN_TITLE"
+    case noticedStepTenMessage = "NOTICED_STEP_TEN_MESSAGE"
+    case noticedStepTenFirstButton = "NOTICED_STEP_TEN_FIRST_BUTTON"
+    case noticedStepTenSecondButton = "NOTICED_STEP_TEN_SECOND_BUTTON"
+    case noticedStepTenThirdButton = "NOTICED_STEP_TEN_THIRD_BUTTON"
+    case noticedStepTenFourthButton = "NOTICED_STEP_TEN_FOURTH_BUTTON"
+    case noticedStepElevenTitle = "NOTICED_STEP_ELEVEN_TITLE"
+    case noticedStepElevenMessage = "NOTICED_STEP_ELEVEN_MESSAGE"
+    case noticedStepElevenFirstButton = "NOTICED_STEP_ELEVEN_FIRST_BUTTON"
+    case noticedStepElevenSecondButton = "NOTICED_STEP_ELEVEN_SECOND_BUTTON"
+    case noticedStepElevenThirdButton = "NOTICED_STEP_ELEVEN_THIRD_BUTTON"
+    case noticedStepElevenFourthButton = "NOTICED_STEP_ELEVEN_FOURTH_BUTTON"
+    case noticedStepElevenFifthButton = "NOTICED_STEP_ELEVEN_FIFTH_BUTTON"
+    case noticedStepSuccessTitle = "NOTICED_STEP_SUCCESS_TITLE"
+    case noticedStepSuccessMessage = "NOTICED_STEP_SUCCESS_MESSAGE"
+    case noticedStepNextButton = "NOTICED_NEXT_BUTTON"
+    case noticedStepConfirmButton = "NOTICED_CONFIRM_BUTTON"
 
     // Study Info
     case studyInfoContactTitle = "STUDY_INFO_CONTACT_INFO"

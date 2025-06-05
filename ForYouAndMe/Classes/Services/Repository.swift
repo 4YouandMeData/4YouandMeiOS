@@ -83,6 +83,7 @@ protocol Repository: AnyObject {
     func getTasks(fetchMode: FetchMode) -> Single<[Feed]>
     func getTask(taskId: String) -> Single<Feed>
     func sendQuickActivityResult(quickActivityTaskId: String, quickActivityOption: QuickActivityOption) -> Single<()>
+    func sendSkipTask(taskId: String) -> Single<()>
     func sendTaskResult(taskId: String, taskResult: TaskNetworkResult) -> Single<()>
     func delayTask(taskId: String) -> Single<()>
     func getDiaryNotes(diaryNote: DiaryNoteItem?, fromChart: Bool) -> Single<[DiaryNoteItem]>

@@ -373,6 +373,10 @@ extension RepositoryImpl: Repository {
         return sendRequest
     }
     
+    func sendSkipTask(taskId: String) -> Single<()> {
+        self.api.send(request: ApiRequest(serviceRequest: .sendSkipTask(taskId: taskId))).handleError()
+    }
+    
     func delayTask(taskId: String) -> Single<()> {
         return self.api.send(request: ApiRequest(serviceRequest: .delayTask(taskId: taskId)))
             .handleError()

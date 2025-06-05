@@ -166,6 +166,7 @@ extension DefaultService {
         case .getTask: return "Get Task"
         case .sendTaskResultData: return "Send Task Result Data"
         case .sendTaskResultFile: return "Send Task Result Attachment"
+        case .sendSkipTask: return "Skip Task"
         case .delayTask: return "Reschedule Task"
         case .sendSpyroResults: return "Spyro Task"
         // User

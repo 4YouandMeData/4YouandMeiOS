@@ -56,6 +56,7 @@ enum DefaultService {
     case getTask(taskId: String)
     case sendTaskResultData(taskId: String, resultData: TaskNetworkResultData)
     case sendTaskResultFile(taskId: String, resultFile: TaskNetworkResultFile)
+    case sendSkipTask(taskId: String)
     case delayTask(taskId: String)
     case getDiaryNotes(diaryNote: DiaryNoteItem?, fromChart: Bool)
     case getDiaryNoteText(noteId: String)

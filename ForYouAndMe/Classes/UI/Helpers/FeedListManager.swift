@@ -216,7 +216,7 @@ class FeedListManager: NSObject {
                 self.handleRefreshEnd()
                 self.errorView.hideView()
                 onCompletion?()
-            }, onError: { [weak self] error in
+            }, onFailure: { [weak self] error in
                 guard let self = self else { return }
                 self.content = nil
                 self.handleRefreshEnd()
@@ -250,7 +250,7 @@ class FeedListManager: NSObject {
                 self.content = self.content.merge(withContent: content)
                 self.tableView.reloadData()
                 self.errorView.hideView()
-            }, onError: { error in
+            }, onFailure: { error in
                 delegate.showError(error: error)
             })
     }
@@ -296,7 +296,7 @@ class FeedListManager: NSObject {
                 guard let self = self else { return }
                 self.analytics.track(event: .quickActivity(taskId, option: option.id))
                 self.reloadItems()
-            }, onError: { [weak self] error in
+            }, onFailure: { [weak self] error in
                 guard let self = self else { return }
                 self.navigator.handleError(error: error, presenter: delegate.presenter)
             }).disposed(by: self.disposeBag)
@@ -378,16 +378,29 @@ extension FeedListManager: UITableViewDataSource {
                 case .quickActivity:
                     assertionFailure("Unexpected quick activity as schedulable type")
                 case .activity(let activity):
-                    cell.display(data: activity, buttonPressedCallback: { [weak self] in
+                    cell.display(data: activity,
+                                 skippable: feed.skippable ?? false,
+                                 buttonPressedCallback: { [weak self] in
                         guard let self = self else { return }
                         guard let delegate = self.delegate else { return }
                         self.navigator.startTaskSection(withTask: feed,
                                                         activity: activity,
                                                         taskOptions: nil,
                                                         presenter: delegate.presenter)
+                    }, skipButtonPressedCallback: { [weak self] in
+                        guard let self = self else { return }
+                        self.repository.sendSkipTask(taskId: feed.id)
+                            .addProgress()
+                            .subscribe(onSuccess: { [weak self] in
+                                guard let self = self else { return }
+                                self.reloadItems()
+                            })
+                            .disposed(by: self.disposeBag)
                     })
                 case .survey(let survey):
-                    cell.display(data: survey, buttonPressedCallback: { () in
+                    cell.display(data: survey,
+                                 skippable: feed.skippable ?? false,
+                                 buttonPressedCallback: { () in
                         self.repository.getSurvey(surveyId: survey.id)
                             .addProgress()
                             .subscribe(onSuccess: { [weak self] surveyGroup in
@@ -401,6 +414,15 @@ extension FeedListManager: UITableViewDataSource {
                                 guard let delegate = self.delegate else { return }
                                 self.navigator.handleError(error: error, presenter: delegate.presenter)
                             }).disposed(by: self.disposeBag)
+                    }, skipButtonPressedCallback: { [weak self] in
+                        guard let self = self else { return }
+                        self.repository.sendSkipTask(taskId: feed.id)
+                            .addProgress()
+                            .subscribe(onSuccess: { [weak self] in
+                                guard let self = self else { return }
+                                self.reloadItems()
+                            })
+                            .disposed(by: self.disposeBag)
                     })
                 }
             } else if let notifiable = feed.notifiable {
