@@ -26,7 +26,7 @@ class DoseTypeViewController: UIViewController {
         case insulinInjection = "insulin_injection"
         
         /// The actual text shown on screen
-        func displayText(usingVariant variant: InsulinFlowVariant) -> String {
+        func displayText(usingVariant variant: FlowVariant) -> String {
             
             switch variant {
             case .standalone:
@@ -48,7 +48,7 @@ class DoseTypeViewController: UIViewController {
         }
     }
     
-    private let variant: InsulinFlowVariant
+    private let variant: FlowVariant
     
     // MARK: - Public API
     weak var delegate: DoseTypeViewControllerDelegate?
@@ -97,7 +97,7 @@ class DoseTypeViewController: UIViewController {
     
     // MARK: - Init
     
-    init(variant: InsulinFlowVariant) {
+    init(variant: FlowVariant) {
         self.variant = variant
         super.init(nibName: nil, bundle: nil)
     }

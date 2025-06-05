@@ -34,7 +34,7 @@ class DoseDateTimeViewController: UIViewController, UITextFieldDelegate {
     weak var delegate: DoseDateTimeViewControllerDelegate?
     private let storage: CacheService
     private let navigator: AppNavigator
-    private let variant: InsulinFlowVariant
+    private let variant: FlowVariant
     
     // MARK: - Subviews
 
@@ -144,7 +144,7 @@ class DoseDateTimeViewController: UIViewController, UITextFieldDelegate {
 
     // MARK: - Init
 
-    init(displayTitle: String, variant: InsulinFlowVariant) {
+    init(displayTitle: String, variant: FlowVariant) {
         self.displayTitle = displayTitle
         self.navigator = Services.shared.navigator
         self.storage = Services.shared.storageServices

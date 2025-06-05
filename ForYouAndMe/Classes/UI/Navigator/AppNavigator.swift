@@ -706,6 +706,7 @@ class AppNavigator {
             repository: self.repository,
             navigator: self,
             taskIdentifier: "foodEntry",
+            variant: .standalone,
             completion: completion
         )
 

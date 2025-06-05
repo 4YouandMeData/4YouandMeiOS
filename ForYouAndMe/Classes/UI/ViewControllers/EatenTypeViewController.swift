@@ -16,8 +16,24 @@ protocol EatenTypeViewControllerDelegate: AnyObject {
 class EatenTypeViewController: UIViewController {
     
     enum EntryType: String {
-        case snack = "Snack"
-        case meal  = "Meal"
+        case snack = "snack"
+        case meal  = "meal"
+        
+        func displayTextUsingVariant(variant: FlowVariant) -> String {
+            switch variant {
+            case .embeddedInNoticed:
+                switch self {
+                case .snack: return StringsProvider.string(forKey: .noticedStepFiveFirstButton)
+                case .meal:  return StringsProvider.string(forKey: .noticedStepFiveSecondButton)
+                }
+            case .standalone:
+                switch self {
+                case .snack: return StringsProvider.string(forKey: .diaryNoteEatenStepOneFirstButton)
+                case .meal:  return StringsProvider.string(forKey: .diaryNoteEatenStepOneSecondButton)
+                }
+            }
+            
+        }
     }
 
     weak var delegate: EatenTypeViewControllerDelegate?
@@ -26,6 +42,7 @@ class EatenTypeViewController: UIViewController {
     private lazy var mealButton  = makeOptionButton(type: .meal)
     private let storage: CacheService
     private let navigator: AppNavigator
+    private let variant: FlowVariant
     
     private lazy var closeButton: UIBarButtonItem = {
         let item = UIBarButtonItem(
@@ -39,9 +56,10 @@ class EatenTypeViewController: UIViewController {
             return item
     }()
     
-    init() {
+    init(variant: FlowVariant) {
         self.navigator = Services.shared.navigator
         self.storage = Services.shared.storageServices
+        self.variant = variant
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -54,9 +72,11 @@ class EatenTypeViewController: UIViewController {
     }
     
     private lazy var footerView: GenericButtonView = {
-        
         let buttonView = GenericButtonView(withTextStyleCategory: .secondaryBackground(shadow: false))
-        buttonView.setButtonText(StringsProvider.string(forKey: .diaryNoteEatenNextButton))
+        let text = variant == .standalone
+        ? StringsProvider.string(forKey: .diaryNoteEatenNextButton)
+        : StringsProvider.string(forKey: .noticedStepNextButton)
+        buttonView.setButtonText(text)
         buttonView.setButtonEnabled(enabled: false)
         buttonView.addTarget(target: self, action: #selector(self.nextTapped))
         
@@ -105,8 +125,12 @@ class EatenTypeViewController: UIViewController {
         
         let paragraphStyle = NSMutableParagraphStyle()
             paragraphStyle.alignment = .center
-
-        let baseTitle = StringsProvider.string(forKey: .diaryNoteEatenStepOneTitle)
+        
+        let text = variant == .standalone
+        ? StringsProvider.string(forKey: .diaryNoteEatenStepOneTitle)
+        : StringsProvider.string(forKey: .noticedStepFiveTitle)
+        
+        let baseTitle = text
         let boldAttrs: [NSAttributedString.Key: Any] = [
             .font: UIFont.boldSystemFont(ofSize: FontPalette.fontStyleData(forStyle: .header2).font.pointSize),
             .foregroundColor: ColorPalette.color(withType: .primaryText),
@@ -117,7 +141,11 @@ class EatenTypeViewController: UIViewController {
         
         scrollStackView.stackView.addBlankSpace(space: 36)
         
-        scrollStackView.stackView.addLabel(withText: StringsProvider.string(forKey: .diaryNoteEatenStepOneMessage),
+        let message = variant == .standalone
+        ? StringsProvider.string(forKey: .diaryNoteEatenStepOneMessage)
+        : StringsProvider.string(forKey: .noticedStepFiveMessage)
+        
+        scrollStackView.stackView.addLabel(withText: message,
                                fontStyle: .paragraph,
                                color: ColorPalette.color(withType: .primaryText))
         
@@ -144,9 +172,7 @@ class EatenTypeViewController: UIViewController {
         let btn = OptionButton()
         btn.layoutStyle = .vertical(spacing: 16)
         let imageName = type == .snack ? TemplateImageName.snackImage : TemplateImageName.mealImage
-        let title = type == .snack
-        ? StringsProvider.string(forKey: .diaryNoteEatenStepOneFirstButton)
-        : StringsProvider.string(forKey: .diaryNoteEatenStepOneSecondButton)
+        let title = type.displayTextUsingVariant(variant: self.variant)
         
         btn.setImage(ImagePalette.templateImage(withName: imageName), for: .normal)
         btn.setTitle(title, for: .normal)

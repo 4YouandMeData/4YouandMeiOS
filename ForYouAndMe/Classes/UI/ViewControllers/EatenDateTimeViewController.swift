@@ -26,6 +26,7 @@ class EatenDateTimeViewController: UIViewController {
     var selectedType: EatenTypeViewController.EntryType!
     private let storage: CacheService
     private let navigator: AppNavigator
+    private let variant: FlowVariant
     weak var delegate: EatenDateTimeViewControllerDelegate?
 
     // MARK: – Subviews
@@ -43,7 +44,6 @@ class EatenDateTimeViewController: UIViewController {
     
     private let sectionHeader: UILabel = {
         let lbl = UILabel()
-        lbl.text = StringsProvider.string(forKey: .diaryNoteEatenStepThreeTime)
         lbl.font = FontPalette.fontStyleData(forStyle: .paragraph).font
         lbl.textColor = ColorPalette.color(withType: .primary)
         return lbl
@@ -84,7 +84,10 @@ class EatenDateTimeViewController: UIViewController {
     
     private lazy var footerView: GenericButtonView = {
         let buttonView = GenericButtonView(withTextStyleCategory: .secondaryBackground(shadow: false))
-        buttonView.setButtonText(StringsProvider.string(forKey: .diaryNoteEatenNextButton))
+        let buttonKey = (variant == .standalone)
+        ? StringsProvider.string(forKey: .diaryNoteEatenNextButton)
+        : StringsProvider.string(forKey: .noticedStepNextButton)
+        buttonView.setButtonText(buttonKey)
         buttonView.setButtonEnabled(enabled: false)
         buttonView.addTarget(target: self, action: #selector(self.nextTapped))
         
@@ -113,9 +116,10 @@ class EatenDateTimeViewController: UIViewController {
 
     // MARK: – Lifecycle
     
-    init() {
+    init(variant: FlowVariant) {
         self.navigator = Services.shared.navigator
         self.storage = Services.shared.storageServices
+        self.variant = variant
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -165,16 +169,22 @@ class EatenDateTimeViewController: UIViewController {
         let paragraphStyle = NSMutableParagraphStyle()
             paragraphStyle.alignment = .center
         
-        let baseTitle = StringsProvider.string(forKey: .diaryNoteEatenStepThreeTitle)
+        let titleKey = (variant == .standalone)
+        ? StringsProvider.string(forKey: .diaryNoteEatenStepThreeTitle)
+        : StringsProvider.string(forKey: .noticedStepSevenTitle)
         let boldAttrsTitle: [NSAttributedString.Key: Any] = [
             .font: UIFont.boldSystemFont(ofSize: FontPalette.fontStyleData(forStyle: .header2).font.pointSize),
             .foregroundColor: ColorPalette.color(withType: .primaryText),
             .paragraphStyle: paragraphStyle
         ]
-        let boldString = NSAttributedString(string: baseTitle, attributes: boldAttrsTitle)
+        let boldString = NSAttributedString(string: titleKey, attributes: boldAttrsTitle)
         
         // Subtitle: normal + bold
-        let base = StringsProvider.string(forKey: .diaryNoteEatenStepThreeMessage)
+        let baseKey = (variant == .standalone)
+        ? StringsProvider.string(forKey: .diaryNoteEatenStepThreeMessage)
+        : StringsProvider.string(forKey: .noticedStepSevenMessage)
+        
+        let base = baseKey
         let boldPart = " " + selectedType.rawValue.lowercased()
         
         let paragraph = NSMutableParagraphStyle()
@@ -204,6 +214,10 @@ class EatenDateTimeViewController: UIViewController {
         scrollStackView.stackView.addBlankSpace(space: 70)
         
         // Section header
+        sectionHeader.text = (variant == .standalone)
+        ? StringsProvider.string(forKey: .diaryNoteEatenStepThreeTime)
+        : StringsProvider.string(forKey: .noticedStepSevenTime)
+        
         scrollStackView.stackView.addArrangedSubview(sectionHeader)
         scrollStackView.stackView.addBlankSpace(space: 8)
         

@@ -23,6 +23,7 @@ class NutrientQuestionViewController: UIViewController {
     var selectedType: EatenTypeViewController.EntryType!
     private let storage: CacheService
     private let navigator: AppNavigator
+    private let variant: FlowVariant
     weak var delegate: NutrientQuestionViewControllerDelegate?
     
     // MARK: - Subviews
@@ -32,12 +33,19 @@ class NutrientQuestionViewController: UIViewController {
         horizontalInset: Constants.Style.DefaultHorizontalMargins
     )
     
-    private lazy var yesButton: OptionButton = makeOption(text: StringsProvider.string(forKey: .diaryNoteEatenStepFifthFirstButton))
-    private lazy var noButton: OptionButton = makeOption(text: StringsProvider.string(forKey: .diaryNoteEatenStepFifthSecondButton))
+    private lazy var yesButton: OptionButton = makeOption(text: (variant == .standalone)
+                                                          ? StringsProvider.string(forKey: .diaryNoteEatenStepFifthFirstButton)
+                                                          : StringsProvider.string(forKey: .noticedStepNineFirstButton))
+    private lazy var noButton: OptionButton = makeOption(text: (variant == .standalone)
+                                                         ? StringsProvider.string(forKey: .diaryNoteEatenStepFifthSecondButton)
+                                                         : StringsProvider.string(forKey: .noticedStepNineSecondButton))
     
     private lazy var footerView: GenericButtonView = {
         let buttonView = GenericButtonView(withTextStyleCategory: .secondaryBackground(shadow: false))
-        buttonView.setButtonText(StringsProvider.string(forKey: .diaryNoteEatenConfirmButton))
+        let buttonKey = (variant == .standalone)
+        ? StringsProvider.string(forKey: .diaryNoteEatenConfirmButton)
+        : StringsProvider.string(forKey: .noticedStepConfirmButton)
+        buttonView.setButtonText(buttonKey)
         buttonView.setButtonEnabled(enabled: false)
         buttonView.addTarget(target: self, action: #selector(self.confirmTapped))
         
@@ -59,9 +67,10 @@ class NutrientQuestionViewController: UIViewController {
 
     // MARK: – Lifecycle
     
-    init() {
+    init(variant: FlowVariant) {
         self.navigator = Services.shared.navigator
         self.storage = Services.shared.storageServices
+        self.variant = variant
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -108,7 +117,9 @@ class NutrientQuestionViewController: UIViewController {
         scrollStack.autoPinEdgesToSuperviewSafeArea(with: .zero, excludingEdge: .bottom)
         
         // Title: attributed string
-        let base = StringsProvider.string(forKey: .diaryNoteEatenStepFifthMessage)
+        let messageKey = (variant == .standalone)
+        ? StringsProvider.string(forKey: .diaryNoteEatenStepFifthMessage)
+        : StringsProvider.string(forKey: .noticedStepNineMessage)
         
         let paragraph = NSMutableParagraphStyle()
         paragraph.alignment = .center
@@ -124,7 +135,7 @@ class NutrientQuestionViewController: UIViewController {
             .paragraphStyle: paragraph
         ]
         
-        let att = NSMutableAttributedString(string: base, attributes: normalAttrs)
+        let att = NSMutableAttributedString(string: messageKey, attributes: normalAttrs)
         
         func applyBold(to substring: String) {
             let fullText = att.string as NSString
@@ -137,7 +148,9 @@ class NutrientQuestionViewController: UIViewController {
         applyBold(to: typeKey)
         ["protein", "fiber", "fat"].forEach { applyBold(to: $0) }
         
-        let baseTitle = StringsProvider.string(forKey: .diaryNoteEatenStepFifthTitle)
+        let baseTitle = (variant == .standalone)
+        ? StringsProvider.string(forKey: .diaryNoteEatenStepFifthTitle)
+        : StringsProvider.string(forKey: .noticedStepNineTitle)
         let boldAttrsTitle: [NSAttributedString.Key: Any] = [
             .font: UIFont.boldSystemFont(ofSize: FontPalette.fontStyleData(forStyle: .header2).font.pointSize),
             .foregroundColor: ColorPalette.color(withType: .primaryText),

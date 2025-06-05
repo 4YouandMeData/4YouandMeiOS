@@ -17,20 +17,44 @@ class EatenTimeViewController: UIViewController {
     var selectedType: EatenTypeViewController.EntryType
     private let storage: CacheService
     private let navigator: AppNavigator
+    private let variant: FlowVariant
     
     enum TimeRelative: String {
         case withinHour
         case earlier
+        
+        func displayTextWithVariant(variant: FlowVariant) -> String {
+            switch variant {
+            case .embeddedInNoticed:
+                switch self {
+                case .earlier:
+                    return StringsProvider.string(forKey: .noticedStepSixSecondButton)
+                case .withinHour:
+                    return StringsProvider.string(forKey: .noticedStepSixFirstButton)
+                }
+                
+            case .standalone:
+                switch self {
+                case .earlier:
+                    return StringsProvider.string(forKey: .diaryNoteEatenStepTwoSecondButton)
+                case .withinHour:
+                    return StringsProvider.string(forKey: .diaryNoteEatenStepTwoFirstButton)
+                }
+            }
+        }
     }
     
     private lazy var withinHourButton: OptionButton = makeOptionButton(type: .withinHour)
-    private lazy var earlierButton: OptionButton     = makeOptionButton(type: .earlier)
+    private lazy var earlierButton: OptionButton = makeOptionButton(type: .earlier)
     
     weak var delegate: EatenTimeViewControllerDelegate?
     
     private lazy var footerView: GenericButtonView = {
         let buttonView = GenericButtonView(withTextStyleCategory: .secondaryBackground(shadow: false))
-        buttonView.setButtonText(StringsProvider.string(forKey: .diaryNoteEatenNextButton))
+        let buttonKey = (variant == .standalone)
+        ? StringsProvider.string(forKey: .diaryNoteEatenNextButton)
+        : StringsProvider.string(forKey: .noticedStepNextButton)
+        buttonView.setButtonText(buttonKey)
         buttonView.setButtonEnabled(enabled: false)
         buttonView.addTarget(target: self, action: #selector(self.nextTapped))
         
@@ -53,10 +77,12 @@ class EatenTimeViewController: UIViewController {
         fatalError("init(coder:) has not been implemented")
     }
     
-    init(selectedType: EatenTypeViewController.EntryType) {
+    init(selectedType: EatenTypeViewController.EntryType,
+         variant: FlowVariant) {
         self.selectedType = selectedType
         self.navigator = Services.shared.navigator
         self.storage = Services.shared.storageServices
+        self.variant = variant
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -90,7 +116,10 @@ class EatenTimeViewController: UIViewController {
         self.view.addSubview(scrollStackView)
         scrollStackView.autoPinEdgesToSuperviewSafeArea(with: .zero, excludingEdge: .bottom)
         
-        let baseText = StringsProvider.string(forKey: .diaryNoteEatenStepTwoMessage)
+        let messageKey = (variant == .standalone)
+        ? StringsProvider.string(forKey: .diaryNoteEatenStepTwoMessage)
+        : StringsProvider.string(forKey: .noticedStepSixMessage)
+        
         let typeText = " " + selectedType.rawValue.lowercased() + "..."
         
         let paragraphStyle = NSMutableParagraphStyle()
@@ -101,7 +130,7 @@ class EatenTimeViewController: UIViewController {
             .foregroundColor: ColorPalette.color(withType: .primaryText),
             .paragraphStyle: paragraphStyle
         ]
-        let attributed = NSMutableAttributedString(string: baseText, attributes: attrsNormal)
+        let attributed = NSMutableAttributedString(string: messageKey, attributes: attrsNormal)
         
         let attrsBold: [NSAttributedString.Key: Any] = [
             .font: UIFont.boldSystemFont(ofSize: 17),
@@ -111,13 +140,16 @@ class EatenTimeViewController: UIViewController {
         attributed.append(.init(string: typeText, attributes: attrsBold))
         
         // Transform input text to bold using attributed string
-        let baseTitle = StringsProvider.string(forKey: .diaryNoteEatenStepTwoTitle)
+        let titleKey = (variant == .standalone)
+        ? StringsProvider.string(forKey: .diaryNoteEatenStepTwoTitle)
+        : StringsProvider.string(forKey: .noticedStepSixTitle)
+        
         let boldAttrs: [NSAttributedString.Key: Any] = [
             .font: UIFont.boldSystemFont(ofSize: FontPalette.fontStyleData(forStyle: .header2).font.pointSize),
             .foregroundColor: ColorPalette.color(withType: .primaryText),
             .paragraphStyle: paragraphStyle
         ]
-        let boldString = NSAttributedString(string: baseTitle, attributes: boldAttrs)
+        let boldString = NSAttributedString(string: titleKey, attributes: boldAttrs)
         scrollStackView.stackView.addLabel(attributedString: boldString, numberOfLines: 1)
         
         scrollStackView.stackView.addBlankSpace(space: 36)
@@ -146,10 +178,7 @@ class EatenTimeViewController: UIViewController {
     
     private func makeOptionButton(type: TimeRelative) -> OptionButton {
         let btn = OptionButton()
-        let title = type == .withinHour
-        ? StringsProvider.string(forKey: .diaryNoteEatenStepTwoFirstButton)
-        : StringsProvider.string(forKey: .diaryNoteEatenStepTwoSecondButton)
-        
+        let title = type.displayTextWithVariant(variant: self.variant)
         btn.layoutStyle = .textLeft(padding: 16)
         btn.setTitle(title, for: .normal)
         btn.addTarget(self, action: #selector(optionTapped(_:)), for: .touchUpInside)

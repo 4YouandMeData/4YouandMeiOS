@@ -8,11 +8,6 @@
 import UIKit
 import RxSwift
 
-enum InsulinFlowVariant {
-    case standalone
-    case embeddedInNoticed
-}
-
 /// Coordinator for the “Add a dose” flow
 final class InsulinEntryCoordinator: PagedActivitySectionCoordinator {
     
@@ -53,7 +48,7 @@ final class InsulinEntryCoordinator: PagedActivitySectionCoordinator {
     let coreViewController: UIViewController? = nil
     var currentlyRescheduledTimes: Int = 0
     let maxRescheduleTimes: Int = 0
-    private let variant: InsulinFlowVariant
+    private let variant: FlowVariant
     
     // MARK: – Collected data
     private var selectedDoseTypeText: String?
@@ -64,7 +59,7 @@ final class InsulinEntryCoordinator: PagedActivitySectionCoordinator {
     // MARK: – Initialization
     init(repository: Repository,
          navigator: AppNavigator,
-         variant: InsulinFlowVariant,
+         variant: FlowVariant,
          taskIdentifier: String,
          externalNavigationController: UINavigationController? = nil,
          completion: @escaping NotificationCallback) {

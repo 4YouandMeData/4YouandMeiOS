@@ -5,6 +5,11 @@
 //  Created by Giuseppe Lapenta on 05/06/25.
 //
 
+enum FlowVariant {
+    case standalone
+    case embeddedInNoticed
+}
+
 /// Coordinator for the “We Have Noticed” flow, embedding the existing
 /// InsulinEntryCoordinator as the first step.
 final class WeHaveNoticedCoordinator: Coordinator {
@@ -33,6 +38,7 @@ final class WeHaveNoticedCoordinator: Coordinator {
 
     /// Child coordinator for insulin‐entry flow.
     private var insulinCoordinator: InsulinEntryCoordinator?
+    private var foodCoordinator: FoodEntryCoordinator?
 
     /// The internally created UINavigationController that hosts all steps.
     private var navController: UINavigationController?
@@ -106,22 +112,30 @@ final class WeHaveNoticedCoordinator: Coordinator {
         insulinCoordinator = nil
 
         // Proceed to the next step after insulin data entry.
-        showNextStepAfterInsulin()
+        showFoodEntry()
     }
 
-    /// Pushes the next step's view controller in the flow.
-    private func showNextStepAfterInsulin() {
-//        // Example: next step asks “Did you eat?”.
-//        let eatVC = DidYouEatViewController()
-//        eatVC.delegate = self
-//
-//        guard let nav = self.navController else {
-//            assertionFailure("WeHaveNoticedCoordinator requires a UINavigationController internally")
-//            finishFlow()  // fallback: end the flow
-//            return
-//        }
-//        // Push the “DidYouEat” screen onto the same navigation stack.
-//        nav.pushViewController(eatVC, animated: true)
+    private func showFoodEntry() {
+        guard let nav = navController else {
+            assertionFailure("Missing internal UINavigationController for food")
+            finishFlow()
+            return
+        }
+
+        // 1) Crea il FoodEntryCoordinator usando la stessa nav
+        let food = FoodEntryCoordinator(
+            repository: repository,
+            navigator: navigator,
+            taskIdentifier: "\(taskIdentifier)_FoodEntry",
+            variant: .embeddedInNoticed,
+            externalNavigationController: nav,
+            completion: { [weak self] in
+                self?.finishFlow()
+            }
+        )
+
+        self.foodCoordinator = food
+        _ = food.getStartingPage()
     }
 
     /// Called to finish the flow or proceed to a final confirmation.
@@ -139,7 +153,7 @@ extension WeHaveNoticedCoordinator: NoticedIntroViewControllerDelegate {
         showInsulinEntry()
     }
     func noticedIntroViewControllerDidSelectNo(_ vc: NoticedIntroViewController) {
-        
+        showFoodEntry()
     }
     func noticedIntroViewControllerDidCancel(_ vc: NoticedIntroViewController) {
         finishFlow()

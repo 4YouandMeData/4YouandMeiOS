@@ -32,6 +32,7 @@ class ConsumptionAmountViewController: UIViewController {
     private let storage: CacheService
     private let navigator: AppNavigator
     weak var delegate: ConsumptionAmountViewControllerDelegate?
+    private let variant: FlowVariant
 
     // MARK: – Subviews
 
@@ -41,24 +42,33 @@ class ConsumptionAmountViewController: UIViewController {
     )
 
     private lazy var moreButton: OptionButton = makeOption(
-        text: StringsProvider.string(forKey: .diaryNoteEatenStepFourthFirstButton),
+        text: (variant == .standalone)
+        ? StringsProvider.string(forKey: .diaryNoteEatenStepFourthFirstButton)
+        : StringsProvider.string(forKey: .noticedStepEightFirstButton),
         iconName: .plusIcon,
         value: .moreThanUsual
     )
     private lazy var sameButton: OptionButton = makeOption(
-        text: StringsProvider.string(forKey: .diaryNoteEatenStepFourthSecondButton),
+        text: (variant == .standalone)
+        ? StringsProvider.string(forKey: .diaryNoteEatenStepFourthSecondButton)
+        : StringsProvider.string(forKey: .noticedStepEightSecondButton),
         iconName: .equalsIcon,
         value: .asUsual
     )
     private lazy var lessButton: OptionButton = makeOption(
-        text: StringsProvider.string(forKey: .diaryNoteEatenStepFourthThirdButton),
+        text: (variant == .standalone)
+        ? StringsProvider.string(forKey: .diaryNoteEatenStepFourthThirdButton)
+        : StringsProvider.string(forKey: .noticedStepEightThirdButton),
         iconName: .minusIcon,
         value: .lessThanUsual
     )
 
     private lazy var footerView: GenericButtonView = {
         let buttonView = GenericButtonView(withTextStyleCategory: .secondaryBackground(shadow: false))
-        buttonView.setButtonText(StringsProvider.string(forKey: .diaryNoteEatenNextButton))
+        let buttonKey = (variant == .standalone)
+        ? StringsProvider.string(forKey: .diaryNoteEatenNextButton)
+        : StringsProvider.string(forKey: .noticedStepNextButton)
+        buttonView.setButtonText(buttonKey)
         buttonView.setButtonEnabled(enabled: false)
         buttonView.addTarget(target: self, action: #selector(self.nextTapped))
         return buttonView
@@ -80,9 +90,10 @@ class ConsumptionAmountViewController: UIViewController {
 
     // MARK: – Lifecycle
     
-    init() {
+    init(variant: FlowVariant) {
         self.navigator = Services.shared.navigator
         self.storage = Services.shared.storageServices
+        self.variant = variant
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -129,10 +140,14 @@ class ConsumptionAmountViewController: UIViewController {
         scrollStack.autoPinEdgesToSuperviewSafeArea(with: .zero, excludingEdge: .bottom)
 
         // Title
+        let buttonKey = (variant == .standalone)
+        ? StringsProvider.string(forKey: .diaryNoteEatenStepFourthTitle)
+        : StringsProvider.string(forKey: .noticedStepEightTitle)
+        
         let paragraph = NSMutableParagraphStyle()
         paragraph.alignment = .center
         let boldTitle = NSAttributedString(
-            string: StringsProvider.string(forKey: .diaryNoteEatenStepFourthTitle),
+            string: buttonKey,
             attributes: [
                 .font: UIFont.boldSystemFont(ofSize: FontPalette.fontStyleData(forStyle: .header2).font.pointSize),
                 .foregroundColor: ColorPalette.color(withType: .primaryText),
@@ -143,10 +158,12 @@ class ConsumptionAmountViewController: UIViewController {
         scrollStack.stackView.addBlankSpace(space: 36)
 
         // Subtitle
-        let base = StringsProvider.string(forKey: .diaryNoteEatenStepFourthMessage)
+        let messageKey = (variant == .standalone)
+        ? StringsProvider.string(forKey: .diaryNoteEatenStepFourthMessage)
+        : StringsProvider.string(forKey: .noticedStepEightMessage)
         let boldPart = " " + selectedType.rawValue.lowercased()
         let end = "..."
-        let att = NSMutableAttributedString(string: base, attributes: [
+        let att = NSMutableAttributedString(string: messageKey, attributes: [
             .font: FontPalette.fontStyleData(forStyle: .paragraph).font,
             .foregroundColor: ColorPalette.color(withType: .primaryText),
             .paragraphStyle: paragraph
