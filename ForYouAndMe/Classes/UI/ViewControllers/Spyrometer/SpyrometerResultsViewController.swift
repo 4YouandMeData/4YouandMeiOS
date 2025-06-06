@@ -128,7 +128,7 @@ public class SpyrometerResultsViewController: UIViewController {
         let threshold   = feed.mirThreshold
         
         guard let prev = previous, let thr = threshold else {
-            shouldShowMirWarning = true
+            shouldShowMirWarning = false
             return
         }
         

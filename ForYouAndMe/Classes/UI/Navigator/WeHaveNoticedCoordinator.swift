@@ -4,6 +4,7 @@
 //
 //  Created by Giuseppe Lapenta on 05/06/25.
 //
+import RxSwift
 
 enum FlowVariant {
     case standalone
@@ -12,47 +13,43 @@ enum FlowVariant {
 
 /// Coordinator for the “We Have Noticed” flow, embedding the existing
 /// InsulinEntryCoordinator as the first step.
-final class WeHaveNoticedCoordinator: Coordinator {
+final class WeHaveNoticedCoordinator: PagedActivitySectionCoordinator {
 
-    // MARK: – Coordinator Conformance
-
-    /// If true, hides the bottom bar when this coordinator's pages are pushed.
     var hidesBottomBarWhenPushed: Bool = false
+        
+    // MARK: – ActivitySectionCoordinator requirements
+    let repository: Repository
+    let navigator: AppNavigator
+    let taskIdentifier: String
+    let disposeBag = DisposeBag()
+    var activityPresenter: UIViewController? { activitySectionViewController }
+    var completionCallback: NotificationCallback
 
-    // MARK: – Properties
-
-    /// Repository layer for API or data persistence.
-    private let repository: Repository
-
-    /// Shared AppNavigator instance.
-    private let navigator: AppNavigator
-
-    /// Unique identifier for this flow.
-    private let taskIdentifier: String
-
-    /// The view controller that initially presents this flow (used to dismiss modally).
-    private weak var presentingViewController: UIViewController?
-
-    /// Callback invoked when the entire flow finishes.
-    private var completionCallback: NotificationCallback
-
-    /// Child coordinator for insulin‐entry flow.
-    private var insulinCoordinator: InsulinEntryCoordinator?
-    private var foodCoordinator: FoodEntryCoordinator?
-
-    /// The internally created UINavigationController that hosts all steps.
-    private var navController: UINavigationController?
+    var pages: [Page] { pagedSectionData.pages }
+    var addAbortOnboardingButton: Bool = false
+    
+    var activitySectionViewController: ActivitySectionViewController?
+    let pagedSectionData: PagedSectionData
+    let coreViewController: UIViewController? = nil
+    var currentlyRescheduledTimes: Int = 0
+    let maxRescheduleTimes: Int = 0
+    
+    private var currentActivityCoordinator: ActivitySectionCoordinator?
+        
+    var navigationController: UINavigationController {
+        guard let nav = activitySectionViewController?.internalNavigationController else {
+            fatalError("ActivitySectionViewController not initialized")
+        }
+        return nav
+    }
+    
+//    private var answeredDose: (type: String, date: Date, amount: Double)?
+//    private var answeredFood: (didEat: Bool, mealType: String?, date: Date?, quantity: String?, hasNutrients: Bool?)?
+    private var answeredActivity: PhysicalActivityViewController.ActivityLevel?
+    private var answeredStress: StressLevelViewController.StressLevel?
 
     // MARK: – Initialization
 
-    /// Initializes the WeHaveNoticedCoordinator.
-    ///
-    /// - Parameters:
-    ///   - repository: The repository layer for data/network operations.
-    ///   - navigator: The AppNavigator for navigation actions.
-    ///   - taskIdentifier: A unique identifier string for this flow.
-    ///   - presenter: The UIViewController that will present the flow modally.
-    ///   - completion: Callback called when the entire flow finishes.
     init(repository: Repository,
          navigator: AppNavigator,
          taskIdentifier: String,
@@ -62,8 +59,13 @@ final class WeHaveNoticedCoordinator: Coordinator {
         self.repository = repository
         self.navigator = navigator
         self.taskIdentifier = taskIdentifier
-        self.presentingViewController = presenter
         self.completionCallback = completion
+        
+        self.pagedSectionData = PagedSectionData(
+            welcomePage: Page(id: "wehaventiced_intro", type: "", title: "", body: "", image: nil),
+                    successPage: nil,
+                    pages: []
+                )
     }
 
     // MARK: – Coordinator
@@ -72,110 +74,156 @@ final class WeHaveNoticedCoordinator: Coordinator {
     /// this method creates one internally, embeds the insulin‐entry flow, and returns it.
     func getStartingPage() -> UIViewController {
         
-        let introVC = NoticedIntroViewController(dynamicMessage: "")
+        let introVC = NoticedIntroViewController()
         introVC.delegate = self
-
-        let nav = UINavigationController(rootViewController: introVC)
-        nav.modalPresentationStyle = .fullScreen
-        nav.preventPopWithSwipe()
-        self.navController = nav
-
-        return nav
-    }
-    
-    private func showInsulinEntry() {
-        guard let nav = navController else {
-            assertionFailure("Missing internal UINavigationController")
-            finishFlow()
-            return
-        }
-
-        let insulin = InsulinEntryCoordinator(
-            repository: repository,
-            navigator: navigator,
-            variant: .embeddedInNoticed,
-            taskIdentifier: "\(taskIdentifier)_InsulinEntry",
-            externalNavigationController: nav,
-            completion: { [weak self] in
-                self?.insulinFlowDidFinish()
-            }
-        )
-        self.insulinCoordinator = insulin
-        _ = insulin.getStartingPage()
-    }
-
-    // MARK: – Private Methods
-
-    /// Called when the InsulinEntryCoordinator finishes its flow.
-    private func insulinFlowDidFinish() {
-        // Release the child coordinator.
-        insulinCoordinator = nil
-
-        // Proceed to the next step after insulin data entry.
-        showFoodEntry()
-    }
-
-    private func showFoodEntry() {
-        guard let nav = navController else {
-            assertionFailure("Missing internal UINavigationController for food")
-            finishFlow()
-            return
-        }
-
-        // 1) Crea il FoodEntryCoordinator usando la stessa nav
-        let food = FoodEntryCoordinator(
-            repository: repository,
-            navigator: navigator,
-            taskIdentifier: "\(taskIdentifier)_FoodEntry",
-            variant: .embeddedInNoticed,
-            externalNavigationController: nav,
-            completion: { [weak self] in
-                self?.finishFlow()
-            }
-        )
-
-        self.foodCoordinator = food
-        _ = food.getStartingPage()
-    }
-
-    /// Called to finish the flow or proceed to a final confirmation.
-    private func finishFlow() {
-        // Dismiss the modal presentation (the UINavigationController).
-        presentingViewController?.dismiss(animated: true, completion: nil)
-
-        // Invoke the completion callback to notify whoever started this flow.
-        completionCallback()
+        
+        let activityVC = ActivitySectionViewController(coordinator: self,
+                                                        startingViewController: introVC)
+        self.activitySectionViewController = activityVC
+        return activityVC
     }
 }
 
 extension WeHaveNoticedCoordinator: NoticedIntroViewControllerDelegate {
+    
     func noticedIntroViewControllerDidSelectYes(_ vc: NoticedIntroViewController) {
-        showInsulinEntry()
+        
+        let insulinCompletion: NotificationCallback = { [weak self] in
+            guard let self = self else { return }
+            self.showFoodIntro()
+        }
+        
+        let insulinCoordinator = InsulinEntryCoordinator(
+            repository: repository,
+            navigator: navigator,
+            variant: .embeddedInNoticed,
+            taskIdentifier: "insulinEntry",
+            completion: insulinCompletion
+        )
+        
+        self.currentActivityCoordinator = insulinCoordinator
+
+        let startVC = insulinCoordinator.getStartingPage()
+        vc.navigationController?.pushViewController(startVC, animated: true)
     }
+    
     func noticedIntroViewControllerDidSelectNo(_ vc: NoticedIntroViewController) {
-        showFoodEntry()
+        showFoodIntro()
     }
+    
+    /// Called when user taps “Close” / cancella dal NoticedIntro
     func noticedIntroViewControllerDidCancel(_ vc: NoticedIntroViewController) {
-        finishFlow()
+        completionCallback()
+    }
+    
+    /// Private helper: sposta al FoodIntro
+    private func showFoodIntro() {
+        let foodIntroVC = EatenIntroViewController()
+        foodIntroVC.delegate = self
+        
+        navigationController.pushViewController(
+            foodIntroVC,
+            hidesBottomBarWhenPushed: hidesBottomBarWhenPushed,
+            animated: true
+        )
     }
 }
 
-// MARK: – DidYouEatViewControllerDelegate
+// MARK: – EatenIntroViewControllerDelegate
 
-//extension WeHaveNoticedCoordinator: DidYouEatViewControllerDelegate {
-//    func didYouEatViewController(_ vc: DidYouEatViewController, didSelect ate: Bool) {
-//        // Handle the user's response (ate or not).
-//        // Example: you could save `ate` or perform additional logic here.
-//
-//        // End the flow, since no further steps follow in this example.
-//        finishFlow()
-//
-//        // If you need additional steps after “Did you eat?”, replace finishFlow()
-//        // with the code to push the next view controller.
-//    }
-//
-//    func didYouEatViewControllerDidCancel(_ vc: DidYouEatViewController) {
-//        // If user cancels, end the flow immediately.
-//        finishFlow()
-//    }
-//}
+extension WeHaveNoticedCoordinator: EatenIntroViewControllerDelegate {
+    
+    func eatenIntroViewControllerDidSelectYes(_ vc: EatenIntroViewController) {
+        let foodCompletion: NotificationCallback = { [weak self] in
+            guard let self = self else { return }
+            self.showPhysicalActivity()
+        }
+        
+        let foodCoordinator = FoodEntryCoordinator(
+            repository: repository,
+            navigator: navigator,
+            taskIdentifier: "foodEntry",
+            variant: .embeddedInNoticed,
+            completion: foodCompletion
+        )
+        
+        self.currentActivityCoordinator = foodCoordinator
+        
+        navigationController.pushViewController(
+            foodCoordinator.getStartingPage(),
+            hidesBottomBarWhenPushed: hidesBottomBarWhenPushed,
+            animated: true
+        )
+    }
+
+    func eatenIntroViewControllerDidSelectNo(_ vc: EatenIntroViewController) {
+        showPhysicalActivity()
+    }
+    
+    func eatenIntroViewControllerDidCancel(_ vc: EatenIntroViewController) {
+        vc.navigationController?.popViewController(animated: true)
+    }
+    
+    private func showPhysicalActivity() {
+        let activityVC = PhysicalActivityViewController(variant: .embeddedInNoticed)
+        activityVC.delegate = self
+        
+        navigationController.pushViewController(
+            activityVC,
+            hidesBottomBarWhenPushed: hidesBottomBarWhenPushed,
+            animated: true
+        )
+    }
+}
+
+// MARK: – PhysicalActivityViewControllerDelegate
+
+extension WeHaveNoticedCoordinator: PhysicalActivityViewControllerDelegate {
+    
+    func physicalActivityViewController(_ vc: PhysicalActivityViewController,
+                                        didSelect level: PhysicalActivityViewController.ActivityLevel) {
+        self.answeredActivity = level
+        
+        let stressVC = StressLevelViewController(variant: .embeddedInNoticed)
+        stressVC.delegate = self
+        
+        navigationController.pushViewController(
+            stressVC,
+            hidesBottomBarWhenPushed: hidesBottomBarWhenPushed,
+            animated: true
+        )
+    }
+    
+    func physicalActivityViewControllerDidCancel(_ vc: PhysicalActivityViewController) {
+        completionCallback()
+    }
+}
+
+// MARK: – StressLevelViewControllerDelegate
+
+extension WeHaveNoticedCoordinator: StressLevelViewControllerDelegate {
+    
+    func stressLevelViewController(_ vc: StressLevelViewController,
+                                   didSelect level: StressLevelViewController.StressLevel) {
+        self.answeredStress = level
+        
+        showSuccessPage()
+    }
+    
+    /// Called quando l’utente annulla su StressLevel
+    func stressLevelViewControllerDidCancel(_ vc: StressLevelViewController) {
+        completionCallback()
+    }
+    
+    private func showSuccessPage() {
+        let successVC = SuccessViewController()
+        
+        successVC.onConfirm = { [weak self] in
+            guard let self = self else { return }
+            self.completionCallback()
+        }
+        
+        successVC.modalPresentationStyle = .fullScreen
+        activitySectionViewController?.present(successVC, animated: true, completion: nil)
+    }
+}

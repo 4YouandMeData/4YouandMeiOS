@@ -250,6 +250,9 @@
 		0DE1B7F12DF1CCD50055939D /* WeHaveNoticedCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DE1B7F02DF1CCCE0055939D /* WeHaveNoticedCoordinator.swift */; };
 		0DE1B8112DF229020055939D /* NoticedIntroViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DE1B8102DF228FB0055939D /* NoticedIntroViewController.swift */; };
 		0DE1B8132DF244060055939D /* EatenIntroViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DE1B8122DF244050055939D /* EatenIntroViewController.swift */; };
+		0DE1B8152DF2CC460055939D /* PhysicalActivityViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DE1B8142DF2CC440055939D /* PhysicalActivityViewController.swift */; };
+		0DE1B8172DF2EB510055939D /* StressLevelViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DE1B8162DF2EB4F0055939D /* StressLevelViewController.swift */; };
+		0DE1B8192DF2F5130055939D /* SuccessViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DE1B8182DF2F50D0055939D /* SuccessViewController.swift */; };
 		0DF676D21260D833B926206A70BBFDEA /* UICollectionView+Rx.swift in Sources */ = {isa = PBXBuildFile; fileRef = E52981DDDD7994453313E1DA5F47EBEE /* UICollectionView+Rx.swift */; };
 		0DFD3190169A2D9B9C18F0A4DCAFA540 /* AddBlend_GLES.fsh in Resources */ = {isa = PBXBuildFile; fileRef = 210FD7941AF1176487BB65FE8D7AC149 /* AddBlend_GLES.fsh */; };
 		0E0DBC7CDF4BC5F99FD41C27E5AECB58 /* NetworkApiGateway.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9450C6CFD254AEEFC22F9F0168316FE7 /* NetworkApiGateway.swift */; };
@@ -4412,6 +4415,9 @@
 		0DE1B7F02DF1CCCE0055939D /* WeHaveNoticedCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeHaveNoticedCoordinator.swift; sourceTree = "<group>"; };
 		0DE1B8102DF228FB0055939D /* NoticedIntroViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoticedIntroViewController.swift; sourceTree = "<group>"; };
 		0DE1B8122DF244050055939D /* EatenIntroViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EatenIntroViewController.swift; sourceTree = "<group>"; };
+		0DE1B8142DF2CC440055939D /* PhysicalActivityViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhysicalActivityViewController.swift; sourceTree = "<group>"; };
+		0DE1B8162DF2EB4F0055939D /* StressLevelViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StressLevelViewController.swift; sourceTree = "<group>"; };
+		0DE1B8182DF2F50D0055939D /* SuccessViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuccessViewController.swift; sourceTree = "<group>"; };
 		0DE1D72D2D7D400342DE5BDF9C1D680F /* Driver+Subscription.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = "Driver+Subscription.swift"; path = "RxCocoa/Traits/Driver/Driver+Subscription.swift"; sourceTree = "<group>"; };
 		0DF1B5B5FF308B44783BD744F05C4301 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xml; name = PrivacyInfo.xcprivacy; path = Sources/FBLPromises/Resources/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		0E043E815B37F70E42DE81F81F56CD51 /* DiaryNoteItemAudioTableViewCell.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DiaryNoteItemAudioTableViewCell.swift; sourceTree = "<group>"; };
@@ -11592,6 +11598,9 @@
 		C2AC34DCE1B9D5E7C7A4BAE15259715A /* ViewControllers */ = {
 			isa = PBXGroup;
 			children = (
+				0DE1B8182DF2F50D0055939D /* SuccessViewController.swift */,
+				0DE1B8162DF2EB4F0055939D /* StressLevelViewController.swift */,
+				0DE1B8142DF2CC440055939D /* PhysicalActivityViewController.swift */,
 				0DE1B8122DF244050055939D /* EatenIntroViewController.swift */,
 				0DE1B8102DF228FB0055939D /* NoticedIntroViewController.swift */,
 				0DE1B6022DEED5E40055939D /* SpirometryWarningViewController.swift */,
@@ -18047,6 +18056,7 @@
 				231987A59EDF507FECEA7340F1FF899D /* DiaryNoteTextViewController.swift in Sources */,
 				EC2146C43394F8D8375E26974CFFBC8D /* DiaryNoteVideoViewController.swift in Sources */,
 				58F82CB40C63535B6CC7B053153A113A /* DiarySectionHeader.swift in Sources */,
+				0DE1B8172DF2EB510055939D /* StressLevelViewController.swift in Sources */,
 				1EF79CED87A2D5569313D3E4F56637EC /* DoubleButtonHorizontalView.swift in Sources */,
 				1604FC5D0D5E2037A19B63E9BC0836BA /* DoubleButtonVerticalView.swift in Sources */,
 				0D3641EC2D956E3700FDB3AA /* OnboardingQuestionsCoordinator.swift in Sources */,
@@ -18062,6 +18072,7 @@
 				52F5AE1A47EC839A693837038DD7E8C3 /* FeedTableViewHeader.swift in Sources */,
 				612EA24D9B4E2ACD8394EEE8B29150EA /* FeedViewController.swift in Sources */,
 				A3661BFB7C3EB82884914A19069DC348 /* FileDataExtension.swift in Sources */,
+				0DE1B8152DF2CC460055939D /* PhysicalActivityViewController.swift in Sources */,
 				59B9EACA0A7A6E314952BE06ACE31E42 /* FirebaseAnalyticsPlatform.swift in Sources */,
 				235855C5E7A49AA1401C38D35AA4CC84 /* FitnessTask.swift in Sources */,
 				E074AD49A13179F7BFEF311A0A65AAE2 /* Float+Convertible.swift in Sources */,
@@ -18098,6 +18109,7 @@
 				57E95A4309591CCC830388FC2AA9E051 /* InformedConsentSectionCoordinator.swift in Sources */,
 				90FA0DEA8690DAC71A9B708E48FCD6EF /* Int+Custom.swift in Sources */,
 				C0DFF8DB9C8E7D4446C4D5B9639C8F78 /* Integration.swift in Sources */,
+				0DE1B8192DF2F5130055939D /* SuccessViewController.swift in Sources */,
 				DFEF6A8169523E1D8F6F1710F083102E /* IntegrationData.swift in Sources */,
 				550F535B6001B8B5DC958F69E7918634 /* IntegrationPageViewController.swift in Sources */,
 				F05041E3EC75180842C700238EE73DAD /* IntegrationProvider.swift in Sources */,

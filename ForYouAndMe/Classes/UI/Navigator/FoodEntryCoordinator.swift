@@ -33,13 +33,22 @@ final class FoodEntryCoordinator: PagedActivitySectionCoordinator {
     
     /// Navigation controller driving the paged UI
     var navigationController: UINavigationController {
-        if let ext = externalNavigationController {
-            return ext
+        switch variant {
+        case .embeddedInNoticed:
+            guard let eatenVC = rootEatenTypeVC else {
+                fatalError("rootEatenTypeVC is not initialized in embeddedInNoticed")
+            }
+            guard let nav = eatenVC.navigationController else {
+                fatalError("not navcontroller")
+            }
+            return nav
+            
+        case .standalone:
+            guard let nav = activitySectionViewController?.internalNavigationController else {
+                fatalError("ActivitySectionViewController not initialized")
+            }
+            return nav
         }
-        guard let nav = activitySectionViewController?.internalNavigationController else {
-            fatalError("ActivitySectionViewController not initialized")
-        }
-        return nav
     }
     
     // MARK: - PagedActivitySectionCoordinator requirements
@@ -55,6 +64,7 @@ final class FoodEntryCoordinator: PagedActivitySectionCoordinator {
     private var quantitySelection: String?
     private var nutrientAnswer: Bool?
     private let variant: FlowVariant
+    private var rootEatenTypeVC: EatenTypeViewController?
     
     // MARK: - Initialization
     init(repository: Repository,
@@ -88,43 +98,22 @@ final class FoodEntryCoordinator: PagedActivitySectionCoordinator {
     
     // MARK: - Flow start
     func getStartingPage() -> UIViewController {
-        // Use custom view controller for first step
-        
-        if variant == .embeddedInNoticed {
-            // Create the intro screen
-            let introVC = EatenIntroViewController()
-            introVC.delegate = self
+        switch variant {
+        case .embeddedInNoticed:
+            let eatenTypeVC = EatenTypeViewController(variant: variant)
+            eatenTypeVC.delegate = self
+            self.rootEatenTypeVC = eatenTypeVC
+            return eatenTypeVC
             
-            if let extNav = externalNavigationController {
-                // If we have an external UINavigationController, just push the intro onto it
-                extNav.pushViewController(introVC,
-                                          hidesBottomBarWhenPushed: hidesBottomBarWhenPushed,
-                                          animated: true)
-                return introVC
-            }
+        case .standalone:
+            let eatenTypeVC = EatenTypeViewController(variant: variant)
+            eatenTypeVC.delegate = self
             
-            // Otherwise, create our own ActivitySectionViewController carrying the introVC
-            let activityVC = ActivitySectionViewController(
-                coordinator: self,
-                startingViewController: introVC
-            )
+            let activityVC = ActivitySectionViewController(coordinator: self,
+                                                            startingViewController: eatenTypeVC)
             self.activitySectionViewController = activityVC
             return activityVC
         }
-        let vc = EatenTypeViewController(variant: self.variant)
-        vc.delegate = self
-        
-        if let extNav = externalNavigationController {
-            extNav.pushViewController(
-                vc,
-                hidesBottomBarWhenPushed: hidesBottomBarWhenPushed,
-                animated: true
-            )
-            return vc
-        }
-        
-        self.activitySectionViewController = ActivitySectionViewController(coordinator: self, startingViewController: vc)
-        return activitySectionViewController!
     }
     
     // MARK: - Save & finish
@@ -134,30 +123,6 @@ final class FoodEntryCoordinator: PagedActivitySectionCoordinator {
         print("Snack date: \(snackDate ?? Date())")
         print("Quantity: \(quantitySelection ?? "-")")
         print("Contains nutrients: \(nutrientAnswer == true ? "Yes" : "No")")
-        completionCallback()
-    }
-}
-
-extension FoodEntryCoordinator: EatenIntroViewControllerDelegate {
-    
-    func eatenIntroViewControllerDidSelectYes(_ vc: EatenIntroViewController) {
-        let eatenTypeVC = EatenTypeViewController(variant: variant)
-        eatenTypeVC.delegate = self
-        
-        navigationController.pushViewController(
-            eatenTypeVC,
-            hidesBottomBarWhenPushed: hidesBottomBarWhenPushed,
-            animated: true
-        )
-    }
-    
-    func eatenIntroViewControllerDidSelectNo(_ vc: EatenIntroViewController) {
-        // L’utente ha risposto “No”: skip diretto, chiudo il flow
-        completionCallback()
-    }
-    
-    func eatenIntroViewControllerDidCancel(_ vc: EatenIntroViewController) {
-        // L’utente ha tappato “X”: chiudo il flow
         completionCallback()
     }
 }

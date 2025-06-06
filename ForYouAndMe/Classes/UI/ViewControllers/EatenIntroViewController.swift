@@ -26,17 +26,6 @@ class EatenIntroViewController: UIViewController {
     private lazy var yesButton: OptionButton = makeOptionButton(text: StringsProvider.string(forKey: .noticedStepFourFirstButton))
     private lazy var noButton: OptionButton  = makeOptionButton(text: StringsProvider.string(forKey: .noticedStepFourSecondButton))
     
-    private lazy var closeButton: UIBarButtonItem = {
-        let item = UIBarButtonItem(
-            image: ImagePalette.templateImage(withName: .closeButton),
-            style: .plain,
-            target: self,
-            action: #selector(closeTapped)
-        )
-        item.tintColor = ColorPalette.color(withType: .primaryText)
-        return item
-    }()
-    
     private lazy var footerView: GenericButtonView = {
         let gv = GenericButtonView(withTextStyleCategory: .secondaryBackground(shadow: false))
         gv.setButtonText(StringsProvider.string(forKey: .noticedStepNextButton))
@@ -80,8 +69,7 @@ class EatenIntroViewController: UIViewController {
         navigationController?.navigationBar.apply(
             style: NavigationBarStyleCategory.secondary(hidden: false).style
         )
-        closeButton.target = self
-        navigationItem.leftBarButtonItem = closeButton
+        addCustomBackButton()
     }
     
     private func setupLayout() {

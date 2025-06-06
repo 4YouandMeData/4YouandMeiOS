@@ -11,13 +11,6 @@ import RxSwift
 /// Coordinator for the “Add a dose” flow
 final class InsulinEntryCoordinator: PagedActivitySectionCoordinator {
     
-    // MARK: – “External” nav controller
-    private weak var externalNavigationController: UINavigationController?
-
-    private var useExternalNav: Bool {
-        return externalNavigationController != nil
-    }
-    
     // MARK: – Coordinator requirements
     var hidesBottomBarWhenPushed: Bool = false
     
@@ -33,9 +26,6 @@ final class InsulinEntryCoordinator: PagedActivitySectionCoordinator {
     var pages: [Page] { pagedSectionData.pages }
     var addAbortOnboardingButton: Bool = false
     var navigationController: UINavigationController {
-        if let ext = externalNavigationController {
-            return ext
-        }
         guard let nav = activitySectionViewController?.internalNavigationController else {
             fatalError("ActivitySectionViewController not initialized")
         }
@@ -68,7 +58,6 @@ final class InsulinEntryCoordinator: PagedActivitySectionCoordinator {
         self.navigator = navigator
         self.taskIdentifier = taskIdentifier
         self.completionCallback = completion
-        self.externalNavigationController = externalNavigationController
         self.variant = variant
         
         // Define the sequence of pages
@@ -86,20 +75,22 @@ final class InsulinEntryCoordinator: PagedActivitySectionCoordinator {
     
     // MARK: – Flow start
     func getStartingPage() -> UIViewController {
-        let vc = DoseTypeViewController(variant: self.variant)
-        vc.delegate = self
         
-        if let extNav = externalNavigationController {
-            extNav.pushViewController(vc,
-                                      hidesBottomBarWhenPushed: hidesBottomBarWhenPushed,
-                                      animated: true)
-            return vc
+        switch variant {
+        case .standalone:
+            let vc = DoseTypeViewController(variant: self.variant)
+            vc.delegate = self
+            
+            self.activitySectionViewController =
+              ActivitySectionViewController(coordinator: self,
+                                            startingViewController: vc)
+            return activitySectionViewController!
+        case .embeddedInNoticed:
+            let doseTypeVC = DoseTypeViewController(variant: variant)
+            doseTypeVC.delegate = self
+            return doseTypeVC
         }
         
-        self.activitySectionViewController =
-          ActivitySectionViewController(coordinator: self,
-                                        startingViewController: vc)
-        return activitySectionViewController!
     }
     
     // MARK: – Save & finish
@@ -139,14 +130,21 @@ extension InsulinEntryCoordinator: DoseTypeViewControllerDelegate {
             fatalError("Selected dose type is nil")
         }
         
-        // Navigate to date/time selector
-        let dtVC = DoseDateTimeViewController(displayTitle: selectedDoseTypeText, variant: self.variant)
-        dtVC.delegate = self
-        navigationController.pushViewController(
-            dtVC,
-            hidesBottomBarWhenPushed: hidesBottomBarWhenPushed,
-            animated: true
-        )
+        let dtVC = DoseDateTimeViewController(displayTitle: selectedDoseTypeText, variant: variant)
+               dtVC.delegate = self
+        if variant == .embeddedInNoticed {
+            vc.navigationController?.pushViewController(
+                dtVC,
+                animated: true
+            )
+        } else {
+            // Se sono nel diary standalone, uso il navigationController interno di ActivitySectionViewController
+            navigationController.pushViewController(
+                dtVC,
+                hidesBottomBarWhenPushed: hidesBottomBarWhenPushed,
+                animated: true
+            )
+        }
     }
     
     func doseTypeViewControllerDidCancel(_ vc: DoseTypeViewController) {

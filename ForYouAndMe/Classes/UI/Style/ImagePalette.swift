@@ -105,6 +105,15 @@ enum TemplateImageName: String, CaseIterable {
     case siringeIcon = "siringe_icon"
     case resetDots = "reset_icon"
     case medicalAlert = "medical_alert"
+    case activityIconMild = "activity_icon_mild"
+    case activityIconNo = "activity_icon_no"
+    case activityIconModerate = "activity_icon_moderate"
+    case activityIconVigorous = "activity_icon_vigorous"
+    case stressIconLittle = "stress_icon_a_little"
+    case stressIconNone = "stress_icon_none"
+    case stressIconSome = "stress_icon_some"
+    case stressIconStressed = "stress_icon_stressed"
+    case stressIconVeryStressed = "stress_icon_very_stressed"
 }
 
 public class ImagePalette {

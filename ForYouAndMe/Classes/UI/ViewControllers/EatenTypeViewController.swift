@@ -16,8 +16,8 @@ protocol EatenTypeViewControllerDelegate: AnyObject {
 class EatenTypeViewController: UIViewController {
     
     enum EntryType: String {
-        case snack = "snack"
-        case meal  = "meal"
+        case snack
+        case meal
         
         func displayTextUsingVariant(variant: FlowVariant) -> String {
             switch variant {
@@ -100,10 +100,21 @@ class EatenTypeViewController: UIViewController {
         self.view.backgroundColor = ColorPalette.color(withType: .secondary)
         setupLayout()
     }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        navigationController?.navigationBar.apply(
+            style: NavigationBarStyleCategory.secondary(hidden: false).style
+        )
+        switch variant {
+        case .embeddedInNoticed:
+            addCustomBackButton()
+        case .standalone:
+            self.navigationItem.leftBarButtonItem = self.closeButton
+        }
+    }
 
     private func setupLayout() {
-
-        self.navigationItem.leftBarButtonItem = self.closeButton
         
         // Create a bar button item with your info image
         let comingSoonItem = UIBarButtonItem(

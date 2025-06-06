@@ -17,7 +17,6 @@ protocol NoticedIntroViewControllerDelegate: AnyObject {
 class NoticedIntroViewController: UIViewController {
     
     weak var delegate: NoticedIntroViewControllerDelegate?
-    private let dynamicMessage: String
     
     private let scrollStack = ScrollStackView(
         axis: .vertical,
@@ -79,8 +78,7 @@ class NoticedIntroViewController: UIViewController {
         }
     }
     
-    init(dynamicMessage: String) {
-        self.dynamicMessage = dynamicMessage
+    init() {
         super.init(nibName: nil, bundle: nil)
     }
     required init?(coder: NSCoder) {
