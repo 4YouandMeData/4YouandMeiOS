@@ -351,7 +351,7 @@ extension DiaryNotesViewController: UITableViewDataSource {
                 }
                 
                 return cell
-            case .eaten, .doses:
+            case .eaten, .doses, .weNoticed:
                 return UITableViewCell()
             }
         } else {
@@ -392,7 +392,7 @@ extension DiaryNotesViewController: UITableViewDelegate {
             switch diaryNote.diaryNoteType {
             case .text:
                 return 80 // Variable Height for text note
-            case .audio, .video, .eaten, .doses:
+            case .audio, .video, .eaten, .doses, .weNoticed:
                 return 100 // Fixed Height for audio and video note
             case .none:
                 return UITableView.automaticDimension

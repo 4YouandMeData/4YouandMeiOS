@@ -24,10 +24,10 @@ class StressLevelViewController: UIViewController {
     // MARK: – Public API
     
     /// The possible stress levels the user can choose
-    enum StressLevel: String {
-        case none         = "none"
-        case aLittle      = "a_little"
-        case somewhat     = "somewhat"
+    enum StressLevel: String, Codable {
+        case none         = "not_stressed_at_all"
+        case aLittle      = "a_little_stressed"
+        case somewhat     = "somewhat_stressed"
         case stressed     = "stressed"
         case veryStressed = "very_stressed"
         

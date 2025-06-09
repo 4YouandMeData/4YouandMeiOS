@@ -11,6 +11,19 @@ enum FlowVariant {
     case embeddedInNoticed
 }
 
+struct FoodEntryData: Codable {
+    let mealType: String
+    let date: Date
+    let quantity: String
+    let hasNutrients: Bool
+}
+
+struct DoseEntryData: Codable {
+    let doseType: String
+    let date: Date
+    let amount: Double
+}
+
 /// Coordinator for the “We Have Noticed” flow, embedding the existing
 /// InsulinEntryCoordinator as the first step.
 final class WeHaveNoticedCoordinator: PagedActivitySectionCoordinator {
@@ -43,10 +56,11 @@ final class WeHaveNoticedCoordinator: PagedActivitySectionCoordinator {
         return nav
     }
     
-//    private var answeredDose: (type: String, date: Date, amount: Double)?
-//    private var answeredFood: (didEat: Bool, mealType: String?, date: Date?, quantity: String?, hasNutrients: Bool?)?
+    private var answeredDose: DoseEntryData?
+    private var answeredFood: FoodEntryData?
     private var answeredActivity: PhysicalActivityViewController.ActivityLevel?
     private var answeredStress: StressLevelViewController.StressLevel?
+    private var feed: Feed?
 
     // MARK: – Initialization
 
@@ -54,12 +68,14 @@ final class WeHaveNoticedCoordinator: PagedActivitySectionCoordinator {
          navigator: AppNavigator,
          taskIdentifier: String,
          presenter: UIViewController,
+         feed: Feed,
          completion: @escaping NotificationCallback) {
 
         self.repository = repository
         self.navigator = navigator
         self.taskIdentifier = taskIdentifier
         self.completionCallback = completion
+        self.feed = feed
         
         self.pagedSectionData = PagedSectionData(
             welcomePage: Page(id: "wehaventiced_intro", type: "", title: "", body: "", image: nil),
@@ -93,11 +109,16 @@ extension WeHaveNoticedCoordinator: NoticedIntroViewControllerDelegate {
             self.showFoodIntro()
         }
         
+        let onDataCompletion: InsulinDataCallback = { [weak self] type, date, amount in
+            self?.answeredDose = DoseEntryData(doseType: type, date: date, amount: amount)
+        }
+        
         let insulinCoordinator = InsulinEntryCoordinator(
             repository: repository,
             navigator: navigator,
             variant: .embeddedInNoticed,
             taskIdentifier: "insulinEntry",
+            onData: onDataCompletion,
             completion: insulinCompletion
         )
         
@@ -139,11 +160,19 @@ extension WeHaveNoticedCoordinator: EatenIntroViewControllerDelegate {
             self.showPhysicalActivity()
         }
         
+        let onDataCallback: FoodDataCallback = { [weak self] mealType, snackDate, quantity, hasNutrient in
+            self?.answeredFood = FoodEntryData(mealType: mealType,
+                                               date: snackDate,
+                                               quantity: quantity,
+                                               hasNutrients: hasNutrient)
+        }
+        
         let foodCoordinator = FoodEntryCoordinator(
             repository: repository,
             navigator: navigator,
             taskIdentifier: "foodEntry",
             variant: .embeddedInNoticed,
+            onDataCallback: onDataCallback,
             completion: foodCompletion
         )
         
@@ -206,8 +235,27 @@ extension WeHaveNoticedCoordinator: StressLevelViewControllerDelegate {
     func stressLevelViewController(_ vc: StressLevelViewController,
                                    didSelect level: StressLevelViewController.StressLevel) {
         self.answeredStress = level
-        
-        showSuccessPage()
+        if let tv = feed?.extractWeHaveNoticedTemplateValues() {
+            let diaryNoteData = DiaryNoteWeHaveNoticedItem(diaryType: .weNoticed,
+                                                           dosesData: self.answeredDose,
+                                                           foodData: self.answeredFood,
+                                                           diaryDate: Date(),
+                                                           answeredActivity: self.answeredActivity,
+                                                           answeredStress: self.answeredStress,
+                                                           oldValue: tv.oldValue,
+                                                           oldValueRetrievedAt: tv.oldValueRetrievedAt,
+                                                           currentValue: tv.currentValue,
+                                                           currentValueRetrievedAt: tv.currentValueRetrievedAt)
+            
+            self.repository.sendCombinedDiaryNote(diaryNote: diaryNoteData)
+                .addProgress()
+                .subscribe(onSuccess: { [weak self] _ in
+                    self?.showSuccessPage()
+                }, onFailure: { _ in
+                    // handle error if needed
+                })
+                .disposed(by: disposeBag)
+        }
     }
     
     /// Called quando l’utente annulla su StressLevel

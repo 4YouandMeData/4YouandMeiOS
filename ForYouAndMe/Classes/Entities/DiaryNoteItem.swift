@@ -26,6 +26,7 @@ enum DiaryNoteItemType: String, Codable {
     case video
     case eaten = "food_diary"
     case doses = "insulin_diary"
+    case weNoticed = "we_have_noticed"
 }
 
 enum DiaryNoteableType: String, Codable {
@@ -45,6 +46,26 @@ extension DiaryNoteable: JSONAPIMappable {
         case id
         case type
     }
+}
+
+struct DiaryNoteWeHaveNoticedItem: Codable {
+    
+    let diaryType: DiaryNoteItemType
+    let dosesData: DoseEntryData?
+    let foodData: FoodEntryData?
+    let diaryDate: Date
+    let answeredActivity: PhysicalActivityViewController.ActivityLevel?
+    let answeredStress: StressLevelViewController.StressLevel?
+    
+    let oldValue: Double
+    
+    @DateValue<ISO8601Strategy>
+    var oldValueRetrievedAt: Date
+    
+    let currentValue: Double
+    
+    @DateValue<ISO8601Strategy>
+    var currentValueRetrievedAt: Date
 }
 
 struct DiaryNoteItem: Codable {

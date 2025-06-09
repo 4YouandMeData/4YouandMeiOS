@@ -67,6 +67,9 @@ struct Feed {
     var mirThreshold: Float?
     @FailableDecodable
     var skippable: Bool?
+
+    @FailableDecodable
+    var meta: FeedMeta?
 }
 
 enum FeedParsingError: Error {
@@ -121,8 +124,8 @@ schedulable.success_page
         self.mirThreshold = try? container.decodeIfPresent(Float.self, forKey: .mirThreshold)
         self.skippable = try? container.decodeIfPresent(Bool.self, forKey: .skippable)
         // Workaround to a backend issue (see code at the bottom of the current file)
-        let meta: FeedMeta? = try? container.decodeIfPresent(FeedMeta.self, forKey: .meta)
-        self.notifiable = notifiable?.convertWithFeedMeta(meta)
+        self.meta = try? container.decodeIfPresent(FeedMeta.self, forKey: .meta)
+        self.notifiable = notifiable?.convertWithFeedMeta(self.meta)
     }
 }
 
@@ -254,5 +257,54 @@ fileprivate extension Notifiable {
             item.title = item.title?.convertWithFeedMeta(feedMeta)
             return .reward(reward: item)
         }
+    }
+}
+
+struct TemplateValues {
+    let oldValue: Double
+    let oldValueRetrievedAt: Date
+    let currentValue: Double
+    let currentValueRetrievedAt: Date
+}
+
+extension Feed {
+    func extractWeHaveNoticedTemplateValues() -> TemplateValues? {
+        guard let templates = self.meta?.resolvedTemplates else { return nil }
+        
+        let dict = templates.reduce(into: [String: String]()) { acc, tpl in
+            if let v = tpl.variable, let r = tpl.resolved {
+                acc[v] = r
+            }
+        }
+        
+        guard
+            let oldValue = dict["old_value"],
+            let oldRetrievedAtString = dict["old_value_retrieved_at"],
+            let currentValue = dict["current_value"],
+            let currentRetrievedAtString = dict["current_value_retrieved_at"]
+        else {
+            return nil
+        }
+        
+        guard
+            let oldValDouble = Double(oldValue),
+            let curValDouble = Double(currentValue)
+        else { return nil }
+        
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MM/dd/yy hh:mm:ss a"
+        guard
+            let oldRetrievedAt = formatter.date(from: oldRetrievedAtString),
+            let currentRetrievedAt = formatter.date(from: currentRetrievedAtString)
+        else {
+            return nil
+        }
+        
+        return TemplateValues(
+            oldValue: oldValDouble,
+            oldValueRetrievedAt: oldRetrievedAt,
+            currentValue: curValDouble,
+            currentValueRetrievedAt: currentRetrievedAt
+        )
     }
 }

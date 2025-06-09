@@ -431,7 +431,8 @@ extension FeedListManager: UITableViewDataSource {
                     cell.display(data: educational, buttonPressedCallback: { [weak self] in
                         guard let self = self else { return }
                         guard let delegate = self.delegate else { return }
-                        self.navigator.handleNotifiableTile(notifiableUrl: educational.urlString,
+                        self.navigator.handleNotifiableTile(data: feed,
+                                                            notifiableUrl: educational.urlString,
                                                             presenter: delegate.presenter,
                                                             weHaveNoticed: false)
                     })
@@ -439,7 +440,8 @@ extension FeedListManager: UITableViewDataSource {
                     cell.display(data: alert, wehaveNoticed: true, buttonPressedCallback: { [weak self] in
                         guard let self = self else { return }
                         guard let delegate = self.delegate else { return }
-                        self.navigator.handleNotifiableTile(notifiableUrl: alert.urlString,
+                        self.navigator.handleNotifiableTile(data: feed,
+                                                            notifiableUrl: alert.urlString,
                                                             presenter: delegate.presenter,
                                                             weHaveNoticed: true)
                     })
@@ -447,7 +449,8 @@ extension FeedListManager: UITableViewDataSource {
                     cell.display(data: reward, buttonPressedCallback: { [weak self] in
                         guard let self = self else { return }
                         guard let delegate = self.delegate else { return }
-                        self.navigator.handleNotifiableTile(notifiableUrl: reward.urlString,
+                        self.navigator.handleNotifiableTile(data: feed,
+                                                            notifiableUrl: reward.urlString,
                                                             presenter: delegate.presenter,
                                                             weHaveNoticed: false)
                     })

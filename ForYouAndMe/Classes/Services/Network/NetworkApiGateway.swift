@@ -405,7 +405,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             return "v1/diary_notes/\(diaryNoteId)"
         case .sendDiaryNoteText:
             return "v1/diary_notes"
-        case .sendDiaryNoteEaten, .sendDiaryNoteDoses:
+        case .sendDiaryNoteEaten, .sendDiaryNoteDoses, .sendCombinedDiaryNote:
             return "v1/diary_notes"
         case .deleteDiaryNote(let diaryNoteId):
             return "v1/diary_notes/\(diaryNoteId)"
@@ -464,7 +464,8 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
                 .sendDiaryNoteAudio,
                 .sendDiaryNoteVideo,
                 .sendDiaryNoteEaten,
-                .sendDiaryNoteDoses:
+                .sendDiaryNoteDoses,
+                .sendCombinedDiaryNote:
             return .post
         case .verifyEmail,
                 .resendConfirmationEmail,
@@ -575,6 +576,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         case .sendDiaryNoteVideo: return "{}".utf8Encoded
         case .sendDiaryNoteEaten: return "{}".utf8Encoded
         case .sendDiaryNoteDoses: return "{}".utf8Encoded
+        case .sendCombinedDiaryNote: return "{}".utf8Encoded
         case .getDiaryNoteText: return "{}".utf8Encoded
         case .getDiaryNoteAudio: return "{}".utf8Encoded
         case .deleteDiaryNote: return "{}".utf8Encoded
@@ -831,6 +833,33 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             dataParams["diary_type"] = DiaryNoteItemType.doses.rawValue
             
             return .requestParameters(parameters: ["diary_note": dataParams], encoding: JSONEncoding.default)
+        case .sendCombinedDiaryNote(let diaryNote):
+            
+            var data: [String: Any] = [
+                    "old_value": diaryNote.oldValue,
+                    "old_value_retrieved_at": diaryNote.oldValueRetrievedAt.string(withFormat: dateTimeFormat),
+                    "current_value": diaryNote.currentValue,
+                    "current_value_retrieved_at": diaryNote.currentValueRetrievedAt.string(withFormat: dateTimeFormat),
+                    "physical_activity": diaryNote.answeredActivity?.rawValue ?? "",
+                    "stress_level": diaryNote.answeredStress?.rawValue ?? ""
+                ]
+
+                if let dose = diaryNote.dosesData {
+                    data["dose_type"] = dose.doseType
+                    data["quantity"] = dose.amount
+                }
+
+                if let food = diaryNote.foodData {
+                    data["meal_type"] = food.mealType
+                    data["food_quantity"] = food.quantity
+                    data["with_significant_protein_fiber_or_fat"] = food.hasNutrients
+                }
+            
+            var dataParams: [String: Any] = [:]
+            dataParams["data"] = data
+            dataParams["datetime_ref"] = diaryNote.diaryDate.string(withFormat: dateTimeFormat)
+            dataParams["diary_type"] = DiaryNoteItemType.weNoticed.rawValue
+            return .requestParameters(parameters: ["diary_note": dataParams], encoding: JSONEncoding.default)
         case .sendDiaryNoteAudio(let diaryNote, _, _):
             // Add parameters
             var multipartBodyReq = self.multipartBody
@@ -956,6 +985,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
                 .sendDiaryNoteVideo,
                 .sendDiaryNoteEaten,
                 .sendDiaryNoteDoses,
+                .sendCombinedDiaryNote,
                 .deleteDiaryNote,
                 .getInfoMessages,
                 .updateDiaryNoteText:

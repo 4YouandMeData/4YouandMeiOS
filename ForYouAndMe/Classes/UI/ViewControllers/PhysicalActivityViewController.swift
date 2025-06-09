@@ -24,7 +24,7 @@ class PhysicalActivityViewController: UIViewController {
     // MARK: – Public API
     
     /// The possible activity levels the user can choose
-    enum ActivityLevel: String {
+    enum ActivityLevel: String, Codable {
         case no        = "no"
         case mild      = "mild"
         case moderate  = "moderate"

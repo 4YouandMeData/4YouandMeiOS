@@ -23,6 +23,7 @@ final class FoodEntryCoordinator: PagedActivitySectionCoordinator {
     let disposeBag = DisposeBag()
     var activityPresenter: UIViewController? { activitySectionViewController }
     var completionCallback: NotificationCallback
+    var onDataCallback: FoodDataCallback?
     
     // MARK: - PagedSectionCoordinator requirements
     /// Sequence of pages for the flow (no separate welcome/success)
@@ -72,12 +73,14 @@ final class FoodEntryCoordinator: PagedActivitySectionCoordinator {
          taskIdentifier: String,
          variant: FlowVariant,
          externalNavigationController: UINavigationController? = nil,
+         onDataCallback: @escaping FoodDataCallback,
          completion: @escaping NotificationCallback) {
         self.repository = repository
         self.navigator = navigator
         self.taskIdentifier = taskIdentifier
         self.variant = variant
         self.externalNavigationController = externalNavigationController
+        self.onDataCallback = onDataCallback
         self.completionCallback = completion
         
         // Build pages sequence: includes all steps, no dedicated welcome/success
@@ -118,12 +121,30 @@ final class FoodEntryCoordinator: PagedActivitySectionCoordinator {
     
     // MARK: - Save & finish
     private func saveAllAndFinish() {
-        // Example saving logic
-        print("Selected food type: \(selectedFoodType ?? "-")")
-        print("Snack date: \(snackDate ?? Date())")
-        print("Quantity: \(quantitySelection ?? "-")")
-        print("Contains nutrients: \(nutrientAnswer == true ? "Yes" : "No")")
-        completionCallback()
+        guard let snackDate = self.snackDate,
+              let selectedFoodType = self.selectedFoodType,
+              let quantitySelection = self.quantitySelection,
+              let nutrientAnswer = self.nutrientAnswer else {
+            return
+        }
+        
+        if variant == .embeddedInNoticed {
+            self.onDataCallback?(selectedFoodType, snackDate, quantitySelection, nutrientAnswer)
+            self.completionCallback()
+        } else {
+            self.repository.sendDiaryNoteEaten(date: snackDate,
+                                               mealType: selectedFoodType.lowercased(),
+                                               quantity: quantitySelection,
+                                               significantNutrition: nutrientAnswer,
+                                               fromChart: true)
+                .addProgress()
+                .subscribe(onSuccess: { [weak self] _ in
+                    guard let self = self else { return }
+                    completionCallback()
+                }, onFailure: { _ in
+                    
+                }).disposed(by: self.disposeBag)
+        }
     }
 }
 
@@ -231,25 +252,7 @@ extension FoodEntryCoordinator: NutrientQuestionViewControllerDelegate {
                                         didAnswer hasNutrients: Bool) {
         nutrientAnswer = hasNutrients
         
-        guard let snackDate = self.snackDate,
-              let selectedFoodType = self.selectedFoodType,
-              let quantitySelection = self.quantitySelection,
-              let nutrientAnswer = self.nutrientAnswer else {
-            return
-        }
-        
-        self.repository.sendDiaryNoteEaten(date: snackDate,
-                                           mealType: selectedFoodType.lowercased(),
-                                           quantity: quantitySelection,
-                                           significantNutrition: nutrientAnswer,
-                                           fromChart: true)
-            .addProgress()
-            .subscribe(onSuccess: { [weak self] _ in
-                guard let self = self else { return }
-                completionCallback()
-            }, onFailure: { _ in
-                
-            }).disposed(by: self.disposeBag)
+        self.saveAllAndFinish()
     }
     
     func nutrientQuestionViewControllerDidCancel(_ vc: NutrientQuestionViewController) {

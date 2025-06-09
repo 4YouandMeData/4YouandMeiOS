@@ -12,3 +12,11 @@ typealias NotificationCallback = () -> Void
 typealias ViewControllerCallback = (UIViewController) -> Void
 typealias NavigationControllerCallback = (UINavigationController) -> Void
 typealias ViewCallback = (UIView) -> Void
+typealias InsulinDataCallback = (_ doseType: String,
+                                 _ date: Date,
+                                 _ amount: Double) -> Void
+
+typealias FoodDataCallback = (_ mealType: String,
+                              _ date: Date,
+                              _ quantity: String,
+                              _ hasNutrients: Bool) -> Void

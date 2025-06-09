@@ -20,6 +20,7 @@ final class InsulinEntryCoordinator: PagedActivitySectionCoordinator {
     let taskIdentifier: String
     let disposeBag = DisposeBag()
     var activityPresenter: UIViewController? { activitySectionViewController }
+    var onData: InsulinDataCallback?
     var completionCallback: NotificationCallback
     
     // MARK: – PagedSectionCoordinator requirements
@@ -52,12 +53,14 @@ final class InsulinEntryCoordinator: PagedActivitySectionCoordinator {
          variant: FlowVariant,
          taskIdentifier: String,
          externalNavigationController: UINavigationController? = nil,
+         onData: @escaping InsulinDataCallback,
          completion: @escaping NotificationCallback) {
         
         self.repository = repository
         self.navigator = navigator
         self.taskIdentifier = taskIdentifier
         self.completionCallback = completion
+        self.onData = onData
         self.variant = variant
         
         // Define the sequence of pages
@@ -103,19 +106,24 @@ final class InsulinEntryCoordinator: PagedActivitySectionCoordinator {
             return
         }
         
-        repository.sendDiaryNoteDoses(
-            doseType: type,
-            date: date,
-            amount: amount,
-            fromChart: false
-        )
-        .addProgress()
-        .subscribe(onSuccess: { [weak self] _ in
-            self?.completionCallback()
-        }, onFailure: { _ in
-            // handle error if needed
-        })
-        .disposed(by: disposeBag)
+        if variant == .embeddedInNoticed {
+            onData?(type, date, amount)
+            self.completionCallback()
+        } else {
+            repository.sendDiaryNoteDoses(
+                doseType: type,
+                date: date,
+                amount: amount,
+                fromChart: false
+            )
+            .addProgress()
+            .subscribe(onSuccess: { [weak self] _ in
+                self?.completionCallback()
+            }, onFailure: { _ in
+                // handle error if needed
+            })
+            .disposed(by: disposeBag)
+        }
     }
 }
 

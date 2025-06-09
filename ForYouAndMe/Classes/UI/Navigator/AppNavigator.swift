@@ -473,7 +473,10 @@ class AppNavigator {
                 assertionFailure("AppNavigator - Missing notifiable url for given notifiable")
                 return
             }
-            self.handleNotifiableTile(notifiableUrl: notifiableUrl, presenter: presenter, weHaveNoticed: false)
+            self.handleNotifiableTile(data: feed,
+                                      notifiableUrl: notifiableUrl,
+                                      presenter: presenter,
+                                      weHaveNoticed: false)
         } else {
             assertionFailure("Unhandle Type")
         }
@@ -546,7 +549,7 @@ class AppNavigator {
         self.currentActivityCoordinator = coordinator
     }
     
-    public func startWeHaveNoticedSection(presenter: UIViewController) {
+    public func startWeHaveNoticedSection(data: Feed, presenter: UIViewController) {
         
         let completionCallback: NotificationCallback = { [weak presenter] in
             presenter?.dismiss(animated: true, completion: nil)
@@ -559,6 +562,7 @@ class AppNavigator {
             navigator: self,
             taskIdentifier: "WeHaveNoticedFlow",
             presenter: presenter,
+            feed: data,
             completion: completionCallback
         )
         
@@ -568,7 +572,7 @@ class AppNavigator {
         presenter.present(startVC, animated: true, completion: nil)
     }
     
-    public func handleNotifiableTile(notifiableUrl: String?, presenter: UIViewController, weHaveNoticed: Bool) {
+    public func handleNotifiableTile(data: Feed, notifiableUrl: String?, presenter: UIViewController, weHaveNoticed: Bool) {
         if let notifiableUrl = notifiableUrl {
             if let internalDeeplinkKey = InternalDeeplinkKey(rawValue: notifiableUrl) {
                 self.handleInternalDeeplink(withKey: internalDeeplinkKey, presenter: presenter)
@@ -578,7 +582,7 @@ class AppNavigator {
                 self.openUrlOnBrowser(url, presenter: presenter)
             }
         } else if weHaveNoticed {
-            self.startWeHaveNoticedSection(presenter: presenter)
+            self.startWeHaveNoticedSection(data: data, presenter: presenter)
         }
     }
     
@@ -707,6 +711,7 @@ class AppNavigator {
             navigator: self,
             taskIdentifier: "foodEntry",
             variant: .standalone,
+            onDataCallback: {_, _, _, _ in},
             completion: completion
         )
 
@@ -737,6 +742,7 @@ class AppNavigator {
             navigator: self,
             variant: .standalone,
             taskIdentifier: "insulinEntry",
+            onData: {_,_,_ in },
             completion: completion
         )
 

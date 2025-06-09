@@ -67,6 +67,7 @@ enum DefaultService {
     case sendDiaryNoteVideo(noteId: DiaryNoteItem, attachment: DiaryNoteFile)
     case sendDiaryNoteEaten(date: Date, mealType: String, quantity: String, significantNutrition: Bool, fromChart: Bool)
     case sendDiaryNoteDoses(doseType: String, date: Date, amount: Double, fromChart: Bool)
+    case sendCombinedDiaryNote(diaryNote: DiaryNoteWeHaveNoticedItem)
     case deleteDiaryNote(noteId: String)
     case sendSpyroResults(results: [String: Any])
     // User

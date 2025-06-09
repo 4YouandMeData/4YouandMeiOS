@@ -21,7 +21,7 @@ protocol DoseTypeViewControllerDelegate: AnyObject {
 class DoseTypeViewController: UIViewController {
     
     /// Available dose types
-    enum DoseType: String {
+    enum DoseType: String, Codable {
         case pumpBolus        = "bolus_dose"
         case insulinInjection = "insulin_injection"
         
