@@ -17,6 +17,9 @@ protocol NoticedIntroViewControllerDelegate: AnyObject {
 class NoticedIntroViewController: UIViewController {
     
     weak var delegate: NoticedIntroViewControllerDelegate?
+    let navigator: AppNavigator
+    
+    var messages: [MessageInfo] = []
     
     private let scrollStack = ScrollStackView(
         axis: .vertical,
@@ -78,7 +81,8 @@ class NoticedIntroViewController: UIViewController {
         }
     }
     
-    init() {
+    init(navigator: AppNavigator) {
+        self.navigator = navigator
         super.init(nibName: nil, bundle: nil)
     }
     required init?(coder: NSCoder) {
@@ -100,7 +104,7 @@ class NoticedIntroViewController: UIViewController {
         closeButton.target = self
         infoButton.target = self
         navigationItem.leftBarButtonItem = closeButton
-        navigationItem.rightBarButtonItem = infoButton
+        navigationItem.rightBarButtonItem = self.messages.count > 0 ? infoButton : nil
     }
     
     private func setupLayout() {
@@ -187,6 +191,6 @@ class NoticedIntroViewController: UIViewController {
     }
     
     @objc private func infoButtonPressed() {
-        
+        self.navigator.openMessagePage(withLocation: .pageWeHaveNoticed, presenter: self)
     }
 }

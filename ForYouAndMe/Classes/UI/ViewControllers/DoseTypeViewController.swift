@@ -49,9 +49,28 @@ class DoseTypeViewController: UIViewController {
     }
     
     private let variant: FlowVariant
-    
+    private lazy var messages: [MessageInfo] = {
+        if let storage = Services.shared.storageServices {
+            let location: MessageInfoParameter = (variant == .embeddedInNoticed) ? .pageWeHaveNoticed : .pageMyDoses
+            let messages = storage.infoMessages?.messages(withLocation: location)
+            return messages ?? []
+        }
+        return []
+    }()
+
     // MARK: - Public API
     weak var delegate: DoseTypeViewControllerDelegate?
+    
+    private lazy var infoButton: UIBarButtonItem = {
+        let item = UIBarButtonItem(
+            image: ImagePalette.templateImage(withName: .infoMessage),
+            style: .plain,
+            target: self,
+            action: #selector(infoButtonPressed)
+        )
+        item.tintColor = ColorPalette.color(withType: .primary)
+        return item
+    }()
     
     // MARK: - Subviews
     
@@ -119,8 +138,8 @@ class DoseTypeViewController: UIViewController {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         if variant == .embeddedInNoticed {
-            navigationController?.navigationBar.apply(style: NavigationBarStyleCategory.secondary(hidden: false).style)
             addCustomBackButton()
+            navigationItem.rightBarButtonItem = self.messages.count > 0 ? self.infoButton : nil
         }
     }
     
@@ -128,8 +147,7 @@ class DoseTypeViewController: UIViewController {
     
     private func setupNavigationBar() {
         navigationController?.navigationBar.apply(
-            style: NavigationBarStyleCategory.secondary(hidden: false).style
-        )
+            style: NavigationBarStyleCategory.secondary(hidden: false).style)
     }
     
     private func setupLayout() {
@@ -224,5 +242,11 @@ class DoseTypeViewController: UIViewController {
     // MARK: Actions
     @objc private func closeButtonPressed() {
         self.delegate?.doseTypeViewControllerDidCancel(self)
+    }
+    
+    @objc private func infoButtonPressed() {
+        let navigator = Services.shared.navigator
+        let location: MessageInfoParameter = (variant == .embeddedInNoticed) ? .pageWeHaveNoticed : .pageMyDoses
+        navigator?.openMessagePage(withLocation: location, presenter: self)
     }
 }

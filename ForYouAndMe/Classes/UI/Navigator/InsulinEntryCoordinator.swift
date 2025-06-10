@@ -17,6 +17,7 @@ final class InsulinEntryCoordinator: PagedActivitySectionCoordinator {
     // MARK: – ActivitySectionCoordinator requirements
     let repository: Repository
     let navigator: AppNavigator
+    var messages: [MessageInfo] = []
     let taskIdentifier: String
     let disposeBag = DisposeBag()
     var activityPresenter: UIViewController? { activitySectionViewController }
@@ -89,7 +90,7 @@ final class InsulinEntryCoordinator: PagedActivitySectionCoordinator {
                                             startingViewController: vc)
             return activitySectionViewController!
         case .embeddedInNoticed:
-            let doseTypeVC = DoseTypeViewController(variant: variant)
+            let doseTypeVC = DoseTypeViewController(variant: self.variant)
             doseTypeVC.delegate = self
             return doseTypeVC
         }
@@ -139,7 +140,7 @@ extension InsulinEntryCoordinator: DoseTypeViewControllerDelegate {
         }
         
         let dtVC = DoseDateTimeViewController(displayTitle: selectedDoseTypeText, variant: variant)
-               dtVC.delegate = self
+        dtVC.delegate = self
         if variant == .embeddedInNoticed {
             vc.navigationController?.pushViewController(
                 dtVC,

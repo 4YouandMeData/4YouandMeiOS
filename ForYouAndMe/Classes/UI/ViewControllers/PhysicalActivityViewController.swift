@@ -78,6 +78,11 @@ class PhysicalActivityViewController: UIViewController {
     private lazy var moderateButton: OptionButton = makeOptionButton(for: .moderate)
     private lazy var vigorousButton: OptionButton = makeOptionButton(for: .vigorous)
     
+    private lazy var messages: [MessageInfo] = {
+        let messages = Services.shared.storageServices.infoMessages?.messages(withLocation: .pageWeHaveNoticed)
+        return messages ?? []
+    }()
+    
     private lazy var closeButton: UIBarButtonItem = {
         let item = UIBarButtonItem(
             image: ImagePalette.templateImage(withName: .closeButton),
@@ -88,6 +93,13 @@ class PhysicalActivityViewController: UIViewController {
         item.tintColor = ColorPalette.color(withType: .primaryText)
         return item
     }()
+    
+    private lazy var comingSoonItem = UIBarButtonItem(
+        image: ImagePalette.templateImage(withName: .infoMessage),
+        style: .plain,
+        target: self,
+        action: #selector(infoButtonPressed)
+    )
     
     private lazy var footerView: GenericButtonView = {
         // Decide which “Next” button text to use based on variant
@@ -141,6 +153,10 @@ class PhysicalActivityViewController: UIViewController {
         switch variant {
         case .embeddedInNoticed:
             addCustomBackButton()
+            comingSoonItem.tintColor = ColorPalette.color(withType: .primary)
+            self.navigationItem.rightBarButtonItem = (self.messages.count < 1)
+                ? nil
+                : comingSoonItem
         case .standalone:
             self.navigationItem.leftBarButtonItem = self.closeButton
         }
@@ -251,5 +267,9 @@ class PhysicalActivityViewController: UIViewController {
     
     @objc private func closeTapped() {
         delegate?.physicalActivityViewControllerDidCancel(self)
+    }
+    
+    @objc private func infoButtonPressed() {
+        Services.shared.navigator.openMessagePage(withLocation: .pageWeHaveNoticed, presenter: self)
     }
 }

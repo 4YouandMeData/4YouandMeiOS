@@ -84,6 +84,18 @@ class StressLevelViewController: UIViewController {
     private lazy var stressedButton: OptionButton    = makeOptionButton(for: .stressed)
     private lazy var veryStressedButton: OptionButton = makeOptionButton(for: .veryStressed)
     
+    private lazy var messages: [MessageInfo] = {
+        let messages = Services.shared.storageServices.infoMessages?.messages(withLocation: .pageWeHaveNoticed)
+        return messages ?? []
+    }()
+    
+    private lazy var comingSoonItem = UIBarButtonItem(
+        image: ImagePalette.templateImage(withName: .infoMessage),
+        style: .plain,
+        target: self,
+        action: #selector(infoButtonPressed)
+    )
+    
     private lazy var closeButton: UIBarButtonItem = {
         let item = UIBarButtonItem(
             image: ImagePalette.templateImage(withName: .closeButton),
@@ -148,6 +160,10 @@ class StressLevelViewController: UIViewController {
         switch variant {
         case .embeddedInNoticed:
             addCustomBackButton()
+            comingSoonItem.tintColor = ColorPalette.color(withType: .primary)
+            self.navigationItem.rightBarButtonItem = (self.messages.count < 1)
+                ? nil
+                : comingSoonItem
         case .standalone:
             self.navigationItem.leftBarButtonItem = self.closeButton
         }
@@ -263,5 +279,9 @@ class StressLevelViewController: UIViewController {
     
     @objc private func closeTapped() {
         delegate?.stressLevelViewControllerDidCancel(self)
+    }
+    
+    @objc private func infoButtonPressed() {
+        Services.shared.navigator.openMessagePage(withLocation: .pageWeHaveNoticed, presenter: self)
     }
 }

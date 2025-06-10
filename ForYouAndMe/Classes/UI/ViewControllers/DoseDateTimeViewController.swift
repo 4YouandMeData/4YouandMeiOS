@@ -35,7 +35,7 @@ class DoseDateTimeViewController: UIViewController, UITextFieldDelegate {
     private let storage: CacheService
     private let navigator: AppNavigator
     private let variant: FlowVariant
-    
+
     // MARK: - Subviews
 
     private let scrollStackView = ScrollStackView(
@@ -138,7 +138,8 @@ class DoseDateTimeViewController: UIViewController, UITextFieldDelegate {
     }
     
     private lazy var messages: [MessageInfo] = {
-        let messages = self.storage.infoMessages?.messages(withLocation: .pageMyDoses)
+        let location: MessageInfoParameter = (variant == .embeddedInNoticed) ? .pageWeHaveNoticed : .pageMyDoses
+        let messages = self.storage.infoMessages?.messages(withLocation: location)
         return messages ?? []
     }()
 
@@ -337,7 +338,8 @@ class DoseDateTimeViewController: UIViewController, UITextFieldDelegate {
     }
 
     @objc private func infoPressed() {
-        navigator.openMessagePage(withLocation: .pageMyDoses,
+        let location: MessageInfoParameter = (variant == .embeddedInNoticed) ? .pageWeHaveNoticed : .pageMyDoses
+        navigator.openMessagePage(withLocation: location,
                                   presenter: self)
     }
 

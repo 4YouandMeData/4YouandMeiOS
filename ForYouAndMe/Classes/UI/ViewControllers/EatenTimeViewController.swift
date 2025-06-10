@@ -69,7 +69,8 @@ class EatenTimeViewController: UIViewController {
     }
     
     private lazy var messages: [MessageInfo] = {
-        let messages = self.storage.infoMessages?.messages(withLocation: .pageIHaveEeaten)
+        let location: MessageInfoParameter = (variant == .embeddedInNoticed) ? .pageWeHaveNoticed : .pageIHaveEeaten
+        let messages = self.storage.infoMessages?.messages(withLocation: location)
         return messages ?? []
     }()
     
@@ -201,6 +202,7 @@ class EatenTimeViewController: UIViewController {
     }
     
     @objc private func infoButtonPressed() {
-        self.navigator.openMessagePage(withLocation: .pageIHaveEeaten, presenter: self)
+        let location: MessageInfoParameter = (variant == .embeddedInNoticed) ? .pageWeHaveNoticed : .pageIHaveEeaten
+        self.navigator.openMessagePage(withLocation: location, presenter: self)
     }
 }

@@ -33,6 +33,7 @@ final class WeHaveNoticedCoordinator: PagedActivitySectionCoordinator {
     // MARK: – ActivitySectionCoordinator requirements
     let repository: Repository
     let navigator: AppNavigator
+    let cacheService: CacheService
     let taskIdentifier: String
     let disposeBag = DisposeBag()
     var activityPresenter: UIViewController? { activitySectionViewController }
@@ -61,6 +62,10 @@ final class WeHaveNoticedCoordinator: PagedActivitySectionCoordinator {
     private var answeredActivity: PhysicalActivityViewController.ActivityLevel?
     private var answeredStress: StressLevelViewController.StressLevel?
     private var feed: Feed?
+    private lazy var messages: [MessageInfo] = {
+        let messages = self.cacheService.infoMessages?.messages(withLocation: .pageWeHaveNoticed)
+        return messages ?? []
+    }()
 
     // MARK: – Initialization
 
@@ -73,6 +78,7 @@ final class WeHaveNoticedCoordinator: PagedActivitySectionCoordinator {
 
         self.repository = repository
         self.navigator = navigator
+        self.cacheService = Services.shared.storageServices
         self.taskIdentifier = taskIdentifier
         self.completionCallback = completion
         self.feed = feed
@@ -90,8 +96,9 @@ final class WeHaveNoticedCoordinator: PagedActivitySectionCoordinator {
     /// this method creates one internally, embeds the insulin‐entry flow, and returns it.
     func getStartingPage() -> UIViewController {
         
-        let introVC = NoticedIntroViewController()
+        let introVC = NoticedIntroViewController(navigator: self.navigator)
         introVC.delegate = self
+        introVC.messages = self.messages
         
         let activityVC = ActivitySectionViewController(coordinator: self,
                                                         startingViewController: introVC)
@@ -121,6 +128,8 @@ extension WeHaveNoticedCoordinator: NoticedIntroViewControllerDelegate {
             onData: onDataCompletion,
             completion: insulinCompletion
         )
+        
+        insulinCoordinator.messages = self.messages
         
         self.currentActivityCoordinator = insulinCoordinator
 

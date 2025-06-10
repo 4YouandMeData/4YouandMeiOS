@@ -26,6 +26,23 @@ class EatenIntroViewController: UIViewController {
     private lazy var yesButton: OptionButton = makeOptionButton(text: StringsProvider.string(forKey: .noticedStepFourFirstButton))
     private lazy var noButton: OptionButton  = makeOptionButton(text: StringsProvider.string(forKey: .noticedStepFourSecondButton))
     
+    private lazy var messages: [MessageInfo] = {
+        let storage = Services.shared.storageServices
+        let messages = storage?.infoMessages?.messages(withLocation: .pageWeHaveNoticed)
+        return messages ?? []
+    }()
+    
+    private lazy var infoButton: UIBarButtonItem = {
+        let item = UIBarButtonItem(
+            image: ImagePalette.templateImage(withName: .infoMessage),
+            style: .plain,
+            target: self,
+            action: #selector(infoButtonPressed)
+        )
+        item.tintColor = ColorPalette.color(withType: .primary)
+        return item
+    }()
+    
     private lazy var footerView: GenericButtonView = {
         let gv = GenericButtonView(withTextStyleCategory: .secondaryBackground(shadow: false))
         gv.setButtonText(StringsProvider.string(forKey: .noticedStepNextButton))
@@ -70,6 +87,7 @@ class EatenIntroViewController: UIViewController {
             style: NavigationBarStyleCategory.secondary(hidden: false).style
         )
         addCustomBackButton()
+        navigationItem.rightBarButtonItem = self.messages.count > 0 ? infoButton : nil
     }
     
     private func setupLayout() {
@@ -144,5 +162,10 @@ class EatenIntroViewController: UIViewController {
     
     @objc private func closeTapped() {
         delegate?.eatenIntroViewControllerDidCancel(self)
+    }
+    
+    @objc private func infoButtonPressed() {
+        let navigator = Services.shared.navigator
+        navigator?.openMessagePage(withLocation: .pageWeHaveNoticed, presenter: self)
     }
 }
