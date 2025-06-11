@@ -121,7 +121,7 @@ class EatenTimeViewController: UIViewController {
         ? StringsProvider.string(forKey: .diaryNoteEatenStepTwoMessage)
         : StringsProvider.string(forKey: .noticedStepSixMessage)
         
-        let typeText = " " + selectedType.rawValue.lowercased() + "..."
+        let typeText = " " + selectedType.displayTextUsingVariant(variant: self.variant).lowercased() + "..."
         
         let paragraphStyle = NSMutableParagraphStyle()
             paragraphStyle.alignment = .center

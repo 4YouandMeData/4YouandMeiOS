@@ -22,16 +22,28 @@ class OptInPermissionViewController: UIViewController {
     private let coordinator: OptInPermissionCoordinator
     private let disposeBag = DisposeBag()
     
-    private lazy var grantTextCheckbox: GenericTextCheckboxView = {
-        let textCheckBox = GenericTextCheckboxView(isDefaultChecked: false, styleCategory: .primary(fontStyle: .header3, textFirst: false))
-        textCheckBox.setLabelText(self.optInPermission.grantText)
-        return textCheckBox
+    private lazy var grantRadio: GenericTextRadioView = {
+        let view = GenericTextRadioView(
+            isDefaultSelected: false,
+            radioStyle: .primary,
+            fontStyle: .header3,
+            colorType: .primaryText,
+            textFirst: false,
+            text: optInPermission.grantText
+        )
+        return view
     }()
     
-    private lazy var denyTextCheckbox: GenericTextCheckboxView = {
-        let textCheckBox = GenericTextCheckboxView(isDefaultChecked: false, styleCategory: .primary(fontStyle: .header3, textFirst: false))
-        textCheckBox.setLabelText(self.optInPermission.denyText)
-        return textCheckBox
+    private lazy var denyRadio: GenericTextRadioView = {
+        let view = GenericTextRadioView(
+            isDefaultSelected: false,
+            radioStyle: .primary,
+            fontStyle: .header3,
+            colorType: .primaryText,
+            textFirst: false,
+            text: optInPermission.denyText
+        )
+        return view
     }()
     
     private lazy var confirmButtonView: GenericButtonView = {
@@ -43,13 +55,9 @@ class OptInPermissionViewController: UIViewController {
     
     private var permission: SystemPermission? { self.optInPermission.systemPermissions.first }
     private var granted: Bool? {
-        if self.grantTextCheckbox.isCheckedSubject.value {
-            return true
-        } else if self.denyTextCheckbox.isCheckedSubject.value {
-            return false
-        } else {
-            return nil
-        }
+        if grantRadio.isSelectedSubject.value { return true }
+        if denyRadio.isSelectedSubject.value { return false }
+        return nil
     }
     
     init(withOptInPermission optInPermission: OptInPermission, coordinator: OptInPermissionCoordinator) {
@@ -91,11 +99,10 @@ class OptInPermissionViewController: UIViewController {
                                                   colorType: .primaryText,
                                                   textAlignment: .center)
         
-        scrollStackView.stackView.addBlankSpace(space: 30.0)
         // Permissions
-        scrollStackView.stackView.addArrangedSubview(self.grantTextCheckbox)
+        scrollStackView.stackView.addArrangedSubview(self.grantRadio)
         scrollStackView.stackView.addBlankSpace(space: 8.0)
-        scrollStackView.stackView.addArrangedSubview(self.denyTextCheckbox)
+        scrollStackView.stackView.addArrangedSubview(self.denyRadio)
         
         scrollStackView.stackView.addBlankSpace(space: 27.0)
         
@@ -105,27 +112,8 @@ class OptInPermissionViewController: UIViewController {
         self.confirmButtonView.autoPinEdgesToSuperviewSafeArea(with: UIEdgeInsets.zero, excludingEdge: .top)
         scrollStackView.scrollView.autoPinEdge(.bottom, to: .top, of: self.confirmButtonView)
         
-        self.grantTextCheckbox.isCheckedSubject
-        .subscribe(onNext: { [weak self] result in
-            guard let self = self else { return }
-            if result {
-                self.denyTextCheckbox.isCheckedSubject.accept(false)
-            }
-            self.updateUI()
-        })
-        .disposed(by: self.disposeBag)
-        
-        self.denyTextCheckbox.isCheckedSubject
-        .subscribe(onNext: { [weak self] result in
-            guard let self = self else { return }
-            if result {
-                self.grantTextCheckbox.isCheckedSubject.accept(false)
-            }
-            self.updateUI()
-        })
-        .disposed(by: self.disposeBag)
-        
         self.updateUI()
+        self.setupBindings()
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -134,6 +122,25 @@ class OptInPermissionViewController: UIViewController {
                                                   screenClass: String(describing: type(of: self))))
         self.navigationController?.navigationBar.apply(style: NavigationBarStyleCategory.secondary(hidden: true).style)
         self.navigationItem.hidesBackButton = true
+    }
+    
+    private func setupBindings() {
+        // Mutual‐exclusion of radios
+        grantRadio.isSelectedSubject
+            .subscribe(onNext: { [weak self] selected in
+                if selected { self?.denyRadio.isSelectedSubject.accept(false) }
+                self?.updateUI()
+            })
+            .disposed(by: disposeBag)
+        
+        denyRadio.isSelectedSubject
+            .subscribe(onNext: { [weak self] selected in
+                if selected { self?.grantRadio.isSelectedSubject.accept(false) }
+                self?.updateUI()
+            })
+            .disposed(by: disposeBag)
+        
+        updateUI()
     }
     
     // MARK: Actions

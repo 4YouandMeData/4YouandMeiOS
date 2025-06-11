@@ -253,6 +253,8 @@
 		0DE1B8152DF2CC460055939D /* PhysicalActivityViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DE1B8142DF2CC440055939D /* PhysicalActivityViewController.swift */; };
 		0DE1B8172DF2EB510055939D /* StressLevelViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DE1B8162DF2EB4F0055939D /* StressLevelViewController.swift */; };
 		0DE1B8192DF2F5130055939D /* SuccessViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DE1B8182DF2F50D0055939D /* SuccessViewController.swift */; };
+		0DE1B8A12DF8B6020055939D /* GenericRadioButtonView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DE1B8A02DF8B5FA0055939D /* GenericRadioButtonView.swift */; };
+		0DE1B8A32DF8B64F0055939D /* GenericTextRadioView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DE1B8A22DF8B6430055939D /* GenericTextRadioView.swift */; };
 		0DF676D21260D833B926206A70BBFDEA /* UICollectionView+Rx.swift in Sources */ = {isa = PBXBuildFile; fileRef = E52981DDDD7994453313E1DA5F47EBEE /* UICollectionView+Rx.swift */; };
 		0DFD3190169A2D9B9C18F0A4DCAFA540 /* AddBlend_GLES.fsh in Resources */ = {isa = PBXBuildFile; fileRef = 210FD7941AF1176487BB65FE8D7AC149 /* AddBlend_GLES.fsh */; };
 		0E0DBC7CDF4BC5F99FD41C27E5AECB58 /* NetworkApiGateway.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9450C6CFD254AEEFC22F9F0168316FE7 /* NetworkApiGateway.swift */; };
@@ -4418,6 +4420,8 @@
 		0DE1B8142DF2CC440055939D /* PhysicalActivityViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhysicalActivityViewController.swift; sourceTree = "<group>"; };
 		0DE1B8162DF2EB4F0055939D /* StressLevelViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StressLevelViewController.swift; sourceTree = "<group>"; };
 		0DE1B8182DF2F50D0055939D /* SuccessViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuccessViewController.swift; sourceTree = "<group>"; };
+		0DE1B8A02DF8B5FA0055939D /* GenericRadioButtonView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GenericRadioButtonView.swift; sourceTree = "<group>"; };
+		0DE1B8A22DF8B6430055939D /* GenericTextRadioView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GenericTextRadioView.swift; sourceTree = "<group>"; };
 		0DE1D72D2D7D400342DE5BDF9C1D680F /* Driver+Subscription.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = "Driver+Subscription.swift"; path = "RxCocoa/Traits/Driver/Driver+Subscription.swift"; sourceTree = "<group>"; };
 		0DF1B5B5FF308B44783BD744F05C4301 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xml; name = PrivacyInfo.xcprivacy; path = Sources/FBLPromises/Resources/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		0E043E815B37F70E42DE81F81F56CD51 /* DiaryNoteItemAudioTableViewCell.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DiaryNoteItemAudioTableViewCell.swift; sourceTree = "<group>"; };
@@ -11738,6 +11742,8 @@
 		CCE4002B99A50AAAEA1FFD8801BEF07D /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				0DE1B8A22DF8B6430055939D /* GenericTextRadioView.swift */,
+				0DE1B8A02DF8B5FA0055939D /* GenericRadioButtonView.swift */,
 				0D75E43B2DD5AE210012A30F /* OptionButton.swift */,
 				0D94E47F2DA7E54000C47142 /* TripleButtonHorizontalView.swift */,
 				0D3641F52D96908200FDB3AA /* ProfilingOptionAnswerCell.swift */,
@@ -18019,6 +18025,7 @@
 				B5226A29623B8AC99DF1DE5F936AF60B /* CodableColor.swift in Sources */,
 				2A4C6C1159CD00107B5854B13E976288 /* CodableDictionary.swift in Sources */,
 				409CC6202F5C61E35AE35818C83FF264 /* CodeValidationViewController.swift in Sources */,
+				0DE1B8A12DF8B6020055939D /* GenericRadioButtonView.swift in Sources */,
 				004B4CA6FC588FB6BCC6312A7BCCC8F8 /* ColorPalette.swift in Sources */,
 				87864E771236138C4D56D7B5E570484C /* ConsentSection.swift in Sources */,
 				BCBBAEF97018F8B7AB26D1B3B439925E /* ConsentSectionCoordinator.swift in Sources */,
@@ -18027,6 +18034,7 @@
 				6565E54DF697DF57A585D91AD8001F63 /* Constants.swift in Sources */,
 				B21CD95F2A090B2E69E9B2A7A0989012 /* ContactsPermission.swift in Sources */,
 				0D15F71E2DD7393D00C42FF3 /* NutrientQuestionViewController.swift in Sources */,
+				0DE1B8A32DF8B64F0055939D /* GenericTextRadioView.swift in Sources */,
 				A86EDF303DA4DF263FC4394618994269 /* Convertible.swift in Sources */,
 				8695F3EC9A07FD23B002C99378A4D25E /* Coordinator.swift in Sources */,
 				0DE1B6012DEAE9AB0055939D /* BaseViewController.swift in Sources */,
