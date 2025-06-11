@@ -94,7 +94,7 @@ class DiaryNoteTextViewController: UIViewController {
     
     private lazy var placeholderLabel: UILabel = {
         let label = UILabel()
-        label.text = "Insert your note here"
+        label.text = StringsProvider.string(forKey: .diaryNotePlaceholder)
         label.font = FontPalette.fontStyleData(forStyle: .paragraph).font
         label.textColor = ColorPalette.color(withType: .inactive)
         label.sizeToFit()

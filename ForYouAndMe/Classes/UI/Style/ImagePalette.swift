@@ -114,6 +114,7 @@ enum TemplateImageName: String, CaseIterable {
     case stressIconSome = "stress_icon_some"
     case stressIconStressed = "stress_icon_stressed"
     case stressIconVeryStressed = "stress_icon_very_stressed"
+    case questionIcon = "question_icon"
 }
 
 public class ImagePalette {

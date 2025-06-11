@@ -51,7 +51,7 @@ class SurveySectionCoordinator {
             let infoPageData = InfoPageData(page: welcomePage,
                                     addAbortOnboardingButton: false,
                                     addCloseButton: false,
-                                    allowBackwardNavigation: false,
+                                    allowBackwardNavigation: true,
                                     bodyTextAlignment: .left,
                                     bottomViewStyle: .singleButton,
                                     customImageHeight: nil,

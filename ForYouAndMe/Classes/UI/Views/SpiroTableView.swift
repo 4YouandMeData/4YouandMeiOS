@@ -95,6 +95,7 @@ class SpiroTableView: UIView {
             title: StringsProvider.string(forKey: .spiroTaskTargets),
             fontStyle: .infoNote,
             colorType: .primaryText,
+            infoImage: .questionIcon,
             action: #selector(targetsButtonTapped(_:)),
             target: self
         )
@@ -111,6 +112,7 @@ class SpiroTableView: UIView {
             title: StringsProvider.string(forKey: .spiroTaskResults),
             fontStyle: .infoNote,
             colorType: .primaryText,
+            infoImage: .questionIcon,
             action: #selector(resultsButtonTapped(_:)),
             target: self
         )
@@ -243,7 +245,7 @@ class SpiroTableView: UIView {
         title: String,
         fontStyle: FontStyle = .infoNote,
         colorType: ColorType = .primaryText,
-        infoImage: TemplateImageName = .infoMessage,
+        infoImage: TemplateImageName = .questionIcon,
         tag: Int = 0,
         action: Selector,
         target: Any
