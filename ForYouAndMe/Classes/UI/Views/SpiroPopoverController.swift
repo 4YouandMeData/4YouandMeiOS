@@ -70,6 +70,7 @@ class SpiroPopoverController: UIViewController {
         closeButton.setTitle("X", for: .normal)
         closeButton.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .bold)
         closeButton.addTarget(self, action: #selector(closeTapped), for: .touchUpInside)
+        closeButton.tintColor = ColorPalette.color(withType: .primary)
         
         // Configure bodyLabel
         bodyLabel.text = bodyText

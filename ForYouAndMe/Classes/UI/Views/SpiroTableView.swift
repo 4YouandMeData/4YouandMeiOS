@@ -23,20 +23,16 @@ class SpiroTableView: UIView {
     // Header row (4 columns: param? / Targets? / Measurements? / Results?)
     private let headerStack = UIStackView()
     private let headerCol1 = UIButton(type: .system)
-    private let headerCol2 = UILabel()
     private let headerCol3 = UILabel()
-    private let headerCol4 = UILabel()
-    
+        
     // Row 1 (PEF)
     private let row1Stack = UIStackView()
-    private let row1Col1 = UIButton(type: .system)
     private let row1Col2 = UILabel()
     private let row1Col3 = UILabel()
     private let row1Col4 = UILabel()
     
     // Row 2 (FEV1)
     private let row2Stack = UIStackView()
-    private let row2Col1 = UIButton(type: .system)
     private let row2Col2 = UILabel()
     private let row2Col3 = UILabel()
     private let row2Col4 = UILabel()
@@ -94,31 +90,31 @@ class SpiroTableView: UIView {
         
         // 4 columns
         headerStack.addArrangedSubview(headerCol1)
-        headerStack.addArrangedSubview(headerCol2)
+        
+        let targetCell = makeInfoCell(
+            title: StringsProvider.string(forKey: .spiroTaskTargets),
+            fontStyle: .infoNote,
+            colorType: .primaryText,
+            action: #selector(targetsButtonTapped(_:)),
+            target: self
+        )
+        headerStack.addArrangedSubview(targetCell)
+        
         headerStack.addArrangedSubview(headerCol3)
-        headerStack.addArrangedSubview(headerCol4)
-        
-        headerCol2.text = StringsProvider.string(forKey: .spiroTaskTargets)
-        headerCol2.font = FontPalette.fontStyleData(forStyle: .infoNote).font
-        headerCol2.textColor = ColorPalette.color(withType: .primaryText)
-        headerCol2.textAlignment = .center
-        headerCol2.layer.borderWidth = 1.0
-        headerCol2.layer.borderColor = UIColor.init(hexString: "#E4E4E4")?.cgColor
-        headerCol2.sizeToFit()
-        
         headerCol3.text = StringsProvider.string(forKey: .spiroTaskMeasurements)
         headerCol3.font = FontPalette.fontStyleData(forStyle: .infoNote).font
         headerCol3.textColor = ColorPalette.color(withType: .primaryText)
         headerCol3.textAlignment = .center
         headerCol3.sizeToFit()
         
-        headerCol4.text = StringsProvider.string(forKey: .spiroTaskResults)
-        headerCol4.font = FontPalette.fontStyleData(forStyle: .infoNote).font
-        headerCol4.textColor = ColorPalette.color(withType: .primaryText)
-        headerCol4.textAlignment = .center
-        headerCol4.layer.borderWidth = 1.0
-        headerCol4.layer.borderColor = UIColor.init(hexString: "#E4E4E4")?.cgColor
-        headerCol4.sizeToFit()
+        let measCell = makeInfoCell(
+            title: StringsProvider.string(forKey: .spiroTaskResults),
+            fontStyle: .infoNote,
+            colorType: .primaryText,
+            action: #selector(resultsButtonTapped(_:)),
+            target: self
+        )
+        headerStack.addArrangedSubview(measCell)
     }
     
     private func setupRow1() {
@@ -126,17 +122,17 @@ class SpiroTableView: UIView {
         row1Stack.alignment = .fill
         row1Stack.distribution = .fillEqually
         
-        row1Stack.addArrangedSubview(row1Col1)
+        let pefCell = makeInfoCell(
+            title: "PEF",
+            action: #selector(pefButtonTapped(_:)),
+            target: self
+        )
+        row1Stack.addArrangedSubview(pefCell)
         row1Stack.addArrangedSubview(row1Col2)
         row1Stack.addArrangedSubview(row1Col3)
         row1Stack.addArrangedSubview(row1Col4)
         
         // row1Col1 as a button
-        row1Col1.setTitle("PEF ?", for: .normal)
-        row1Col1.addTarget(self, action: #selector(pefButtonTapped(_:)), for: .touchUpInside)
-        row1Col1.backgroundColor = UIColor.init(hexString: "#F5F5F5")
-        row1Col1.layer.borderColor =  UIColor.init(hexString: "#E4E4E4")?.cgColor
-        row1Col1.layer.borderWidth = 1
         
         row1Col2.text = "700 L/m"
         row1Col3.text = "719 L/m"
@@ -167,18 +163,17 @@ class SpiroTableView: UIView {
         row2Stack.distribution = .fillEqually
         row2Stack.backgroundColor = .lightGray
         
-        row2Stack.addArrangedSubview(row2Col1)
+        let fevCell = makeInfoCell(
+            title: "FEV1",
+            action: #selector(fev1ButtonTapped(_:)),
+            target: self
+        )
+        row2Stack.addArrangedSubview(fevCell)
         row2Stack.addArrangedSubview(row2Col2)
         row2Stack.addArrangedSubview(row2Col3)
         row2Stack.addArrangedSubview(row2Col4)
         
         // row2Col1 as a button
-        row2Col1.setTitle("FEV1 ?", for: .normal)
-        row2Col1.addTarget(self, action: #selector(fev1ButtonTapped(_:)), for: .touchUpInside)
-        row2Col1.backgroundColor = UIColor.init(hexString: "#F5F5F5")
-        row2Col1.layer.borderColor =  UIColor.init(hexString: "#E4E4E4")?.cgColor
-        row2Col1.layer.borderWidth = 1
-        
         row2Col2.text = "3.5 L"
         row2Col2.backgroundColor = .white
         row2Col2.layer.borderColor =  UIColor.init(hexString: "#E4E4E4")?.cgColor
@@ -214,6 +209,16 @@ class SpiroTableView: UIView {
                     withMessage: StringsProvider.string(forKey: .spiroTaskFev1CalloutBody))
     }
     
+    @objc private func targetsButtonTapped(_ sender: UIButton) {
+        showCallout(from: sender, withTitle: StringsProvider.string(forKey: .spiroTaskMeasCalloutTitle),
+                    withMessage: StringsProvider.string(forKey: .spiroTaskMeasCalloutBody))
+    }
+    
+    @objc private func resultsButtonTapped(_ sender: UIButton) {
+        showCallout(from: sender, withTitle: StringsProvider.string(forKey: .spiroTaskResultsCalloutTitle),
+                    withMessage: StringsProvider.string(forKey: .spiroTaskResultsCalloutBody))
+    }
+    
     // MARK: - Callout / Popover
     
     private func showCallout(from source: UIView, withTitle title: String, withMessage message: String) {
@@ -232,6 +237,55 @@ class SpiroTableView: UIView {
         }
         
         vc.present(popVC, animated: true, completion: nil)
+    }
+    
+    func makeInfoCell(
+        title: String,
+        fontStyle: FontStyle = .infoNote,
+        colorType: ColorType = .primaryText,
+        infoImage: TemplateImageName = .infoMessage,
+        tag: Int = 0,
+        action: Selector,
+        target: Any
+    ) -> UIView {
+        // Container view
+        let cell = UIView()
+        cell.backgroundColor = .white
+        cell.backgroundColor = UIColor.init(hexString: "#F5F5F5")
+        cell.layer.borderColor = UIColor(hexString: "#E4E4E4")?.cgColor
+        cell.layer.borderWidth = 1.0
+
+        // Label
+        let label = UILabel()
+        let styleData = FontPalette.fontStyleData(forStyle: fontStyle)
+        let paragraph = NSMutableParagraphStyle()
+        paragraph.alignment = .left
+        paragraph.lineSpacing = styleData.lineSpacing
+        let attrs: [NSAttributedString.Key: Any] = [
+            .font: styleData.font,
+            .foregroundColor: ColorPalette.color(withType: colorType),
+            .paragraphStyle: paragraph
+        ]
+        let text = styleData.uppercase ? title.uppercased() : title
+        label.attributedText = NSAttributedString(string: text, attributes: attrs)
+        label.numberOfLines = 1
+        cell.addSubview(label)
+
+        // Info‐button
+        let btn = UIButton(type: .system)
+        btn.setImage(ImagePalette.templateImage(withName: infoImage), for: .normal)
+        btn.tintColor = ColorPalette.color(withType: .primary)
+        btn.tag = tag
+        btn.addTarget(target, action: action, for: .touchUpInside)
+        cell.addSubview(btn)
+
+        let margin: CGFloat = Constants.Style.DefaultHorizontalMargins/2
+        label.autoPinEdge(toSuperviewEdge: .leading, withInset: margin)
+        label.autoAlignAxis(toSuperviewAxis: .horizontal)
+        btn.autoPinEdge(toSuperviewEdge: .trailing, withInset: margin/2)
+        btn.autoAlignAxis(toSuperviewAxis: .horizontal)
+
+        return cell
     }
     
     // MARK: - Public API to update values
