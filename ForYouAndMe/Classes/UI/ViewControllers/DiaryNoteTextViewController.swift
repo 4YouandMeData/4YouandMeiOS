@@ -120,7 +120,7 @@ class DiaryNoteTextViewController: UIViewController {
     
     private var storage: CacheService
     private var diaryNote: DiaryNoteItem?
-    private let maxCharacters: Int = 500
+    private let maxCharacters: Int = 2500
     private let isEditMode: Bool
     private let isFromChart: Bool
     
