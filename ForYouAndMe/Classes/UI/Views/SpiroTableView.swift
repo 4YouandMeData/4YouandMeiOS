@@ -62,15 +62,13 @@ class SpiroTableView: UIView {
     
     private func setupView() {
         backgroundColor = .white
-        layer.borderColor = UIColor.lightGray.cgColor
+        layer.borderColor = UIColor.init(hexString: "#E4E4E4")?.cgColor
         layer.borderWidth = 1.0
         
         // Container stack (vertical)
         containerStack.axis = .vertical
         containerStack.alignment = .fill
         containerStack.distribution = .fillEqually
-        containerStack.spacing = 1.0
-        containerStack.backgroundColor = .lightGray
         
         addSubview(containerStack)
         containerStack.autoPinEdgesToSuperviewEdges()
@@ -90,8 +88,9 @@ class SpiroTableView: UIView {
         headerStack.axis = .horizontal
         headerStack.alignment = .fill
         headerStack.distribution = .fillEqually
-        headerStack.spacing = 1.0
-        headerStack.backgroundColor = .lightGray
+        headerStack.backgroundColor = UIColor.init(hexString: "#F5F5F5")
+        headerStack.layer.borderWidth = 1.0
+        headerStack.layer.borderColor = UIColor.init(hexString: "#E4E4E4")?.cgColor
         
         // 4 columns
         headerStack.addArrangedSubview(headerCol1)
@@ -103,6 +102,8 @@ class SpiroTableView: UIView {
         headerCol2.font = FontPalette.fontStyleData(forStyle: .infoNote).font
         headerCol2.textColor = ColorPalette.color(withType: .primaryText)
         headerCol2.textAlignment = .center
+        headerCol2.layer.borderWidth = 1.0
+        headerCol2.layer.borderColor = UIColor.init(hexString: "#E4E4E4")?.cgColor
         headerCol2.sizeToFit()
         
         headerCol3.text = StringsProvider.string(forKey: .spiroTaskMeasurements)
@@ -115,24 +116,15 @@ class SpiroTableView: UIView {
         headerCol4.font = FontPalette.fontStyleData(forStyle: .infoNote).font
         headerCol4.textColor = ColorPalette.color(withType: .primaryText)
         headerCol4.textAlignment = .center
+        headerCol4.layer.borderWidth = 1.0
+        headerCol4.layer.borderColor = UIColor.init(hexString: "#E4E4E4")?.cgColor
         headerCol4.sizeToFit()
-        
-        // Optional styling
-        [headerCol1, headerCol3].forEach {
-            if let lbl = $0 as? UILabel {
-                lbl.backgroundColor = .systemGray5
-            } else if let btn = $0 as? UIButton {
-                btn.backgroundColor = .systemGray5
-            }
-        }
     }
     
     private func setupRow1() {
         row1Stack.axis = .horizontal
         row1Stack.alignment = .fill
         row1Stack.distribution = .fillEqually
-        row1Stack.spacing = 1.0
-        row1Stack.backgroundColor = .lightGray
         
         row1Stack.addArrangedSubview(row1Col1)
         row1Stack.addArrangedSubview(row1Col2)
@@ -142,7 +134,9 @@ class SpiroTableView: UIView {
         // row1Col1 as a button
         row1Col1.setTitle("PEF ?", for: .normal)
         row1Col1.addTarget(self, action: #selector(pefButtonTapped(_:)), for: .touchUpInside)
-        row1Col1.backgroundColor = .white
+        row1Col1.backgroundColor = UIColor.init(hexString: "#F5F5F5")
+        row1Col1.layer.borderColor =  UIColor.init(hexString: "#E4E4E4")?.cgColor
+        row1Col1.layer.borderWidth = 1
         
         row1Col2.text = "700 L/m"
         row1Col3.text = "719 L/m"
@@ -150,11 +144,17 @@ class SpiroTableView: UIView {
         
         row1Col2.textAlignment = .center
         row1Col2.backgroundColor = .white
+        row1Col2.layer.borderColor =  UIColor.init(hexString: "#E4E4E4")?.cgColor
+        row1Col2.layer.borderWidth = 1
         row1Col3.textAlignment = .center
         row1Col3.backgroundColor = .white
+        row1Col3.layer.borderColor =  UIColor.init(hexString: "#E4E4E4")?.cgColor
+        row1Col3.layer.borderWidth = 1
         row1Col4.textAlignment = .center
         row1Col4.textColor = .systemGreen
         row1Col4.backgroundColor = .white
+        row1Col4.layer.borderColor =  UIColor.init(hexString: "#E4E4E4")?.cgColor
+        row1Col4.layer.borderWidth = 1
         
         row1Col2.font = FontPalette.fontStyleData(forStyle: .infoNote).font
         row1Col3.font = FontPalette.fontStyleData(forStyle: .infoNote).font
@@ -165,7 +165,6 @@ class SpiroTableView: UIView {
         row2Stack.axis = .horizontal
         row2Stack.alignment = .fill
         row2Stack.distribution = .fillEqually
-        row2Stack.spacing = 1.0
         row2Stack.backgroundColor = .lightGray
         
         row2Stack.addArrangedSubview(row2Col1)
@@ -176,14 +175,22 @@ class SpiroTableView: UIView {
         // row2Col1 as a button
         row2Col1.setTitle("FEV1 ?", for: .normal)
         row2Col1.addTarget(self, action: #selector(fev1ButtonTapped(_:)), for: .touchUpInside)
-        row2Col1.backgroundColor = .white
+        row2Col1.backgroundColor = UIColor.init(hexString: "#F5F5F5")
+        row2Col1.layer.borderColor =  UIColor.init(hexString: "#E4E4E4")?.cgColor
+        row2Col1.layer.borderWidth = 1
         
         row2Col2.text = "3.5 L"
         row2Col2.backgroundColor = .white
+        row2Col2.layer.borderColor =  UIColor.init(hexString: "#E4E4E4")?.cgColor
+        row2Col2.layer.borderWidth = 1
         row2Col3.text = "4.64 L"
         row2Col3.backgroundColor = .white
+        row2Col3.layer.borderColor =  UIColor.init(hexString: "#E4E4E4")?.cgColor
+        row2Col3.layer.borderWidth = 1
         row2Col4.text = "Warning"
         row2Col4.backgroundColor = .white
+        row2Col4.layer.borderColor =  UIColor.init(hexString: "#E4E4E4")?.cgColor
+        row2Col4.layer.borderWidth = 1
         
         row2Col2.textAlignment = .center
         row2Col3.textAlignment = .center
