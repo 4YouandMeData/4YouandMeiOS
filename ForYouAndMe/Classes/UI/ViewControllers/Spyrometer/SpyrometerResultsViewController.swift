@@ -123,8 +123,8 @@ public class SpyrometerResultsViewController: UIViewController {
     
     private func evaluateMirDropFlag() {
         
-        let fev1Liters = Float(results.fev1_cL) / 100.0
-        let previous    = feed.previousMir
+        let fev1Liters = Double(results.fev1_cL)
+        let previous    = feed.previousFev1
         let threshold   = feed.mirThreshold
         
         guard let prev = previous, let thr = threshold else {

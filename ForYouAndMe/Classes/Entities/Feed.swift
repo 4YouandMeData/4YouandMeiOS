@@ -35,6 +35,13 @@ enum Notifiable {
     }
 }
 
+struct PreviousMirData: Decodable {
+    let fev1cL: Double?
+    enum CodingKeys: String, CodingKey {
+        case fev1cL
+    }
+}
+
 struct Feed {
     let id: String
     let type: String
@@ -61,12 +68,13 @@ struct Feed {
     var fev1ThresholdWarning: Float?
     @FailableDecodable
     var fev1ThresholdStandard: Float?
+ 
     @FailableDecodable
-    var previousMir: Float?
-    @FailableDecodable
-    var mirThreshold: Float?
+    var mirThreshold: Double?
     @FailableDecodable
     var skippable: Bool?
+    
+    var previousMirData: PreviousMirData?
 
     @FailableDecodable
     var meta: FeedMeta?
@@ -120,12 +128,18 @@ schedulable.success_page
         self.pefThresholdStandard = try? container.decodeIfPresent(Float.self, forKey: .pefThresholdStandard)
         self.fev1ThresholdWarning = try? container.decodeIfPresent(Float.self, forKey: .fev1ThresholdWarning)
         self.fev1ThresholdStandard = try? container.decodeIfPresent(Float.self, forKey: .fev1ThresholdStandard)
-        self.previousMir = try? container.decodeIfPresent(Float.self, forKey: .previousMir)
-        self.mirThreshold = try? container.decodeIfPresent(Float.self, forKey: .mirThreshold)
+        self.previousMirData = try? container.decodeIfPresent(PreviousMirData.self, forKey: .previousMir)
+        self.mirThreshold = try? container.decodeIfPresent(Double.self, forKey: .mirThreshold)
         self.skippable = try? container.decodeIfPresent(Bool.self, forKey: .skippable)
         // Workaround to a backend issue (see code at the bottom of the current file)
         self.meta = try? container.decodeIfPresent(FeedMeta.self, forKey: .meta)
         self.notifiable = notifiable?.convertWithFeedMeta(self.meta)
+    }
+}
+
+extension Feed {
+    var previousFev1: Double? {
+        previousMirData?.fev1cL
     }
 }
 
