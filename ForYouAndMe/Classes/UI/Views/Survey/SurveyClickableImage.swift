@@ -127,15 +127,31 @@ class SurveyClickableImage: UIView {
     }
     
     private func drawDot(at point: CGPoint, in imageView: UIImageView) {
-        let dotDiameter: CGFloat = 10
-        let dot = UIView()
-        dot.backgroundColor = .red
-        dot.layer.cornerRadius = dotDiameter / 2
-        imageView.addSubview(dot)
+        let innerDiameter: CGFloat = 10
+        let outerDiameter: CGFloat = 20
         
-        dot.autoSetDimensions(to: CGSize(width: dotDiameter, height: dotDiameter))
-        dot.autoPinEdge(.leading, to: .leading, of: imageView, withOffset: point.x - dotDiameter / 2)
-        dot.autoPinEdge(.top, to: .top, of: imageView, withOffset: point.y - dotDiameter / 2)
+        let outer = UIView()
+        outer.backgroundColor = UIColor.red.withAlphaComponent(0.3)
+        outer.layer.cornerRadius = outerDiameter / 2
+        outer.isUserInteractionEnabled = false
+        imageView.addSubview(outer)
+        outer.autoSetDimensions(to: CGSize(width: outerDiameter, height: outerDiameter))
+        outer.autoPinEdge(.leading,
+                          to: .leading,
+                          of: imageView,
+                          withOffset: point.x - outerDiameter / 2)
+        outer.autoPinEdge(.top,
+                          to: .top,
+                          of: imageView,
+                          withOffset: point.y - outerDiameter / 2)
+
+        let inner = UIView()
+        inner.backgroundColor = .red
+        inner.layer.cornerRadius = innerDiameter / 2
+        inner.isUserInteractionEnabled = false
+        outer.addSubview(inner)
+        inner.autoSetDimensions(to: CGSize(width: innerDiameter, height: innerDiameter))
+        inner.autoCenterInSuperview()
     }
 }
 
