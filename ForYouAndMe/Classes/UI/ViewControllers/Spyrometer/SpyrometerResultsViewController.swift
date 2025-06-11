@@ -141,7 +141,7 @@ public class SpyrometerResultsViewController: UIViewController {
     private func populateTable() {
 
         let pefLiters  = Float(results.pef_cLs) / 100.0
-        let fev1Liters = Float(results.fev1_cL) / 100.0
+        let fev1Liters = Float(results.fev1_cL)
         
         let pefStd      = feed.pefThresholdStandard
         let pefWarn     = feed.pefThresholdWarning
