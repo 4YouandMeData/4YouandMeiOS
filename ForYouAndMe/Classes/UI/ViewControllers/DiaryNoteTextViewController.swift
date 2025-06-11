@@ -21,7 +21,7 @@ class DiaryNoteTextViewController: UIViewController {
         
     public fileprivate(set) var standardColor: UIColor = ColorPalette.color(withType: .primaryText)
     public fileprivate(set) var errorColor: UIColor = ColorPalette.color(withType: .primaryText)
-    public fileprivate(set) var inactiveColor: UIColor = ColorPalette.color(withType: .inactive)
+    public fileprivate(set) var inactiveColor: UIColor = UIColor.init(hexString: "#A2A2A2")!
     
     private let disposeBag = DisposeBag()
     
