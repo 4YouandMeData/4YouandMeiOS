@@ -117,6 +117,8 @@ class DoubleButtonHorizontalView: UIView {
         self.secondButton.autoPinEdgesToSuperviewEdges()
         stackView.addArrangedSubview(secondButtonContainerView)
         
+        self.setupButtonFontAutoResize()
+        
         self.apply(style: styleCategory.style)
     }
     
@@ -141,7 +143,7 @@ class DoubleButtonHorizontalView: UIView {
         }
         let attributedText = NSAttributedString.create(withText: text, attributedTextStyle: attributedTextStyle)
         self.firstButton.setAttributedTitle(attributedText, for: .normal)
-        self.firstButton.titleEdgeInsets = UIEdgeInsets(top: 0, left: 8, bottom: 0, right: 0)
+        self.firstButton.titleEdgeInsets = UIEdgeInsets(top: 0, left: 8, bottom: 0, right: 8)
     }
     
     public func setSecondButtonText(_ text: String) {
@@ -151,7 +153,7 @@ class DoubleButtonHorizontalView: UIView {
         }
         let attributedText = NSAttributedString.create(withText: text, attributedTextStyle: attributedTextStyle)
         self.secondButton.setAttributedTitle(attributedText, for: .normal)
-        self.secondButton.titleEdgeInsets = UIEdgeInsets(top: 0, left: 8, bottom: 0, right: 0)
+        self.secondButton.titleEdgeInsets = UIEdgeInsets(top: 0, left: 8, bottom: 0, right: 8)
     }
     
     public func setFirstButtonImage(_ image: UIImage?) {
@@ -163,4 +165,16 @@ class DoubleButtonHorizontalView: UIView {
         self.secondButton.setImage(image, for: .normal)
         self.secondButton.imageEdgeInsets = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 8)
     }
+    
+    private func setupButtonFontAutoResize() {
+         self.firstButton.titleLabel?.adjustsFontSizeToFitWidth = true
+         self.firstButton.titleLabel?.minimumScaleFactor = 0.7
+         self.firstButton.titleLabel?.numberOfLines = 1
+         self.firstButton.titleLabel?.lineBreakMode = .byTruncatingTail
+         
+         self.secondButton.titleLabel?.adjustsFontSizeToFitWidth = true
+         self.secondButton.titleLabel?.minimumScaleFactor = 0.7
+         self.secondButton.titleLabel?.numberOfLines = 1
+         self.secondButton.titleLabel?.lineBreakMode = .byTruncatingTail
+     }
 }
