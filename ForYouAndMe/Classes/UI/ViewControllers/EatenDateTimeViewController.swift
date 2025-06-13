@@ -186,7 +186,7 @@ class EatenDateTimeViewController: UIViewController {
         : StringsProvider.string(forKey: .noticedStepSevenMessage)
         
         let base = baseKey
-        let boldPart = " " + selectedType.rawValue.lowercased()
+        let boldPart = " " + selectedType.displayTextUsingVariant(variant: self.variant).lowercased()
         
         let paragraph = NSMutableParagraphStyle()
         paragraph.alignment = .center

@@ -162,7 +162,7 @@ class ConsumptionAmountViewController: UIViewController {
         let messageKey = (variant == .standalone)
         ? StringsProvider.string(forKey: .diaryNoteEatenStepFourthMessage)
         : StringsProvider.string(forKey: .noticedStepEightMessage)
-        let boldPart = " " + selectedType.rawValue.lowercased()
+        let boldPart = " " + selectedType.displayTextUsingVariant(variant: self.variant).lowercased()
         let end = "..."
         let att = NSMutableAttributedString(string: messageKey, attributes: [
             .font: FontPalette.fontStyleData(forStyle: .paragraph).font,

@@ -147,7 +147,7 @@ class NutrientQuestionViewController: UIViewController {
         
         let typeKey = selectedType.rawValue    // e.g. "Snack" or "Meal"
         applyBold(to: typeKey)
-        ["protein", "fiber", "fat"].forEach { applyBold(to: $0) }
+        ["protein", "fiber", "fat", "proteine", "fibre", "grassi"].forEach { applyBold(to: $0) }
         
         let baseTitle = (variant == .standalone)
         ? StringsProvider.string(forKey: .diaryNoteEatenStepFifthTitle)
