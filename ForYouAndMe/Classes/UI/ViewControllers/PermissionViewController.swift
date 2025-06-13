@@ -91,7 +91,8 @@ public class PermissionViewController: UIViewController {
                                           isAuthorized: notificationPermission.isAuthorized,
                                           iconName: .pushNotificationIcon,
                                           gestureCallback: { [weak self] in
-                                            self?.handlePushNotificationPermission(permission: notificationPermission)
+            guard let self = self else { return }
+            self.handlePushNotificationPermission(permission: notificationPermission)
         })
         pushItem.autoSetDimension(.height, toSize: 72, relation: .greaterThanOrEqual)
         
@@ -134,7 +135,7 @@ public class PermissionViewController: UIViewController {
             if permission.isDenied, permission.isNotDetermined == false {
                 self.navigator.showPermissionDeniedAlert(presenter: self)
             } else {
-                self.refreshStatus()
+                self.navigator.openSettings()
             }
             let permissionStatus = permission.isAuthorized ?
                 AnalyticsParameter.allow.rawValue :

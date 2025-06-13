@@ -55,7 +55,7 @@ class PermissionItemView: UIView {
             let titleKey: StringKey = isAuthorized ? .allowedMessage : .allowMessage
             attributedString = NSAttributedString.create(withText: StringsProvider.string(forKey: titleKey),
                                                          fontStyle: .paragraph,
-                                                         colorType: isAuthorized ? .gradientPrimaryEnd : .secondaryText,
+                                                         colorType: .secondaryText,
                                                          textAlignment: .left,
                                                          underlined: true)
             let allowLabel = UILabel()
@@ -65,10 +65,8 @@ class PermissionItemView: UIView {
             stackView.addArrangedSubview(allowLabel, horizontalInset: 8)
         }
         
-        if isAuthorized != true {
-            let tap = UITapGestureRecognizer(target: self, action: #selector(viewDidPressed))
-            self.addGestureRecognizer(tap)
-        }
+        let tap = UITapGestureRecognizer(target: self, action: #selector(viewDidPressed))
+        self.addGestureRecognizer(tap)
     }
     
     required init?(coder aDecoder: NSCoder) {
@@ -79,8 +77,8 @@ class PermissionItemView: UIView {
         UIView.animate(withDuration: 0.1, delay: 0.0,
                        options: [.curveLinear],
                        animations: {
-                        self.backgroundColor = .white
-                        self.backgroundColor = ColorPalette.color(withType: .primary)
+            self.backgroundColor = ColorPalette.color(withType: .secondary)
+            self.backgroundColor = ColorPalette.color(withType: .primary)
         }, completion: nil)
         self.gestureCallback?()
     }
