@@ -560,7 +560,7 @@ class AppNavigator {
         let weHaveNoticedCoordinator = WeHaveNoticedCoordinator(
             repository: Services.shared.repository,
             navigator: self,
-            taskIdentifier: "WeHaveNoticedFlow",
+            taskIdentifier: data.id,
             presenter: presenter,
             feed: data,
             completion: completionCallback

@@ -261,6 +261,12 @@ class EatenDateTimeViewController: UIViewController {
 
     @objc private func rowTapped() {
         datePicker.isHidden.toggle()
+        
+        // If picker is now visible, auto-fill the form using its current date
+        if !datePicker.isHidden {
+            // Trigger the same logic as when the user cambia il valore
+            pickerChanged(datePicker)
+        }
     }
 
     @objc private func pickerChanged(_ dp: UIDatePicker) {

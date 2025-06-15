@@ -444,7 +444,7 @@ extension RepositoryImpl: Repository {
         .handleError()
     }
     
-    func sendCombinedDiaryNote(diaryNote: DiaryNoteWeHaveNoticedItem) -> Single<()> {
+    func sendCombinedDiaryNote(diaryNote: DiaryNoteWeHaveNoticedItem) -> Single<DiaryNoteItem> {
         return self.api.send(request: ApiRequest(serviceRequest:
                 .sendCombinedDiaryNote(diaryNote: diaryNote)))
         .handleError()

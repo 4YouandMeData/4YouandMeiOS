@@ -258,6 +258,12 @@ extension WeHaveNoticedCoordinator: StressLevelViewControllerDelegate {
             
             self.repository.sendCombinedDiaryNote(diaryNote: diaryNoteData)
                 .addProgress()
+                .flatMap { diaryNoteItem -> Single<()> in
+                    let resultData: TaskNetworkResult = TaskNetworkResult(data: [
+                        "diary_note_id": diaryNoteItem.id
+                    ], attachedFile: nil)
+                    return self.repository.sendTaskResult(taskId: self.taskIdentifier, taskResult: resultData)
+                }
                 .subscribe(onSuccess: { [weak self] _ in
                     self?.showSuccessPage()
                 }, onFailure: { _ in

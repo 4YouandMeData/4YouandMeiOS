@@ -100,7 +100,7 @@ protocol Repository: AnyObject {
                             date: Date,
                             amount: Double,
                             fromChart: Bool) -> Single<DiaryNoteItem>
-    func sendCombinedDiaryNote(diaryNote: DiaryNoteWeHaveNoticedItem) -> Single<()>
+    func sendCombinedDiaryNote(diaryNote: DiaryNoteWeHaveNoticedItem) -> Single<DiaryNoteItem>
     func updateDiaryNoteText(diaryNote: DiaryNoteItem) -> Single<()>
     func deleteDiaryNote(noteID: String) -> Single<()>
     func sendSpyroResults(results: [String: Any]) -> Single<()>
