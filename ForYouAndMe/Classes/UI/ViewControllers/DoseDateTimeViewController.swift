@@ -309,6 +309,12 @@ class DoseDateTimeViewController: UIViewController, UITextFieldDelegate {
     @objc private func togglePicker() {
         doseTextField.resignFirstResponder()
         datePicker.isHidden.toggle()
+        
+        // If picker is now visible, auto-fill the form using its current date
+        if !datePicker.isHidden {
+            // Trigger the same logic as when the user cambia il valore
+            pickerChanged(datePicker)
+        }
     }
 
     @objc private func pickerChanged(_ dp: UIDatePicker) {

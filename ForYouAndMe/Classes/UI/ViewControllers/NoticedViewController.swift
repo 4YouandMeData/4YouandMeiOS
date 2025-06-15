@@ -54,7 +54,7 @@ class NoticedViewController: UIViewController {
     }()
     
     private lazy var messages: [MessageInfo] = {
-        let messages = self.storage.infoMessages?.messages(withLocation: .tabDiary)
+        let messages = self.storage.infoMessages?.messages(withLocation: .pageIHaveNoticed)
         return messages ?? []
     }()
     
@@ -163,6 +163,6 @@ class NoticedViewController: UIViewController {
     }
     
     @objc private func infoButtonPressed() {
-        self.navigator.openMessagePage(withLocation: .pageChartDiary, presenter: self)
+        self.navigator.openMessagePage(withLocation: .pageIHaveNoticed, presenter: self)
     }
 }
