@@ -230,6 +230,9 @@
 		0D3642022D9B087500FDB3AA /* UserConsent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D3642012D9B087200FDB3AA /* UserConsent.swift */; };
 		0D3642222DA41DCE00FDB3AA /* ReflectionSectionCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D3642212DA41DC000FDB3AA /* ReflectionSectionCoordinator.swift */; };
 		0D3642242DA51D0D00FDB3AA /* ReflectionViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D3642232DA51D0900FDB3AA /* ReflectionViewController.swift */; };
+		0D4D22692DFF253A0060DA71 /* DiaryNoteItemEatenTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D4D22682DFF25380060DA71 /* DiaryNoteItemEatenTableViewCell.swift */; };
+		0D4D226B2DFF26360060DA71 /* DiaryNoteItemDosesTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D4D226A2DFF26340060DA71 /* DiaryNoteItemDosesTableViewCell.swift */; };
+		0D4D226D2DFF4A570060DA71 /* DiaryNoteItemWeNoticedTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D4D226C2DFF4A550060DA71 /* DiaryNoteItemWeNoticedTableViewCell.swift */; };
 		0D6BBA2E2D88C8F7004DEF42 /* SpyrometerSectionCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D6BBA2D2D88C8EC004DEF42 /* SpyrometerSectionCoordinator.swift */; };
 		0D6BBA312D88C9E1004DEF42 /* SpyrometerScanViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D6BBA302D88C9D7004DEF42 /* SpyrometerScanViewController.swift */; };
 		0D6BBA332D8ADA24004DEF42 /* BluetoothOffView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D6BBA322D8ADA18004DEF42 /* BluetoothOffView.swift */; };
@@ -4394,6 +4397,9 @@
 		0D3642012D9B087200FDB3AA /* UserConsent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserConsent.swift; sourceTree = "<group>"; };
 		0D3642212DA41DC000FDB3AA /* ReflectionSectionCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReflectionSectionCoordinator.swift; sourceTree = "<group>"; };
 		0D3642232DA51D0900FDB3AA /* ReflectionViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReflectionViewController.swift; sourceTree = "<group>"; };
+		0D4D22682DFF25380060DA71 /* DiaryNoteItemEatenTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiaryNoteItemEatenTableViewCell.swift; sourceTree = "<group>"; };
+		0D4D226A2DFF26340060DA71 /* DiaryNoteItemDosesTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiaryNoteItemDosesTableViewCell.swift; sourceTree = "<group>"; };
+		0D4D226C2DFF4A550060DA71 /* DiaryNoteItemWeNoticedTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiaryNoteItemWeNoticedTableViewCell.swift; sourceTree = "<group>"; };
 		0D56721AC5B8CD21088512ABF9575755 /* FIRCLSCallStackTree.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = FIRCLSCallStackTree.m; path = Crashlytics/Crashlytics/Helpers/FIRCLSCallStackTree.m; sourceTree = "<group>"; };
 		0D631E9908483F9525A6B3F36F16CC61 /* Quick.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Quick.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		0D6BBA2D2D88C8EC004DEF42 /* SpyrometerSectionCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpyrometerSectionCoordinator.swift; sourceTree = "<group>"; };
@@ -11742,6 +11748,9 @@
 		CCE4002B99A50AAAEA1FFD8801BEF07D /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				0D4D226C2DFF4A550060DA71 /* DiaryNoteItemWeNoticedTableViewCell.swift */,
+				0D4D226A2DFF26340060DA71 /* DiaryNoteItemDosesTableViewCell.swift */,
+				0D4D22682DFF25380060DA71 /* DiaryNoteItemEatenTableViewCell.swift */,
 				0DE1B8A22DF8B6430055939D /* GenericTextRadioView.swift */,
 				0DE1B8A02DF8B5FA0055939D /* GenericRadioButtonView.swift */,
 				0D75E43B2DD5AE210012A30F /* OptionButton.swift */,
@@ -18056,6 +18065,7 @@
 				C5CB31EF661BFA5A5C090AE5B67082D5 /* DevicesIntegrationViewController.swift in Sources */,
 				F016A9DEC66DDE1C319CD01F47C3F9A9 /* DiaryNoteAudioViewController.swift in Sources */,
 				08B26981D10879F266761B6E65071704 /* DiaryNoteEmptyView.swift in Sources */,
+				0D4D226D2DFF4A570060DA71 /* DiaryNoteItemWeNoticedTableViewCell.swift in Sources */,
 				E8914E77C288E5A5592C7B21091A992B /* DiaryNoteItem.swift in Sources */,
 				2D470CAA7A4833DBCD0FC55033066B12 /* DiaryNoteItemAudioTableViewCell.swift in Sources */,
 				4A8DB1E8488CA6C93DAB43E21F413399 /* DiaryNoteItemTextTableViewCell.swift in Sources */,
@@ -18118,6 +18128,7 @@
 				90FA0DEA8690DAC71A9B708E48FCD6EF /* Int+Custom.swift in Sources */,
 				C0DFF8DB9C8E7D4446C4D5B9639C8F78 /* Integration.swift in Sources */,
 				0DE1B8192DF2F5130055939D /* SuccessViewController.swift in Sources */,
+				0D4D22692DFF253A0060DA71 /* DiaryNoteItemEatenTableViewCell.swift in Sources */,
 				DFEF6A8169523E1D8F6F1710F083102E /* IntegrationData.swift in Sources */,
 				550F535B6001B8B5DC958F69E7918634 /* IntegrationPageViewController.swift in Sources */,
 				F05041E3EC75180842C700238EE73DAD /* IntegrationProvider.swift in Sources */,
@@ -18211,6 +18222,7 @@
 				91DA0E9DAA4042C21BA21410F8425F9A /* QuickActivity.swift in Sources */,
 				E50C341128EE976BB417AAB295071E70 /* QuickActivityListTableViewCell.swift in Sources */,
 				230A106B18930EAF6D0832659A1491FB /* QuickActivityOption.swift in Sources */,
+				0D4D226B2DFF26360060DA71 /* DiaryNoteItemDosesTableViewCell.swift in Sources */,
 				0DE1B8112DF229020055939D /* NoticedIntroViewController.swift in Sources */,
 				FBDD60A4B70FEA159D9DBDA83B35F162 /* QuickActivityOptionView.swift in Sources */,
 				BDCE2FFE85E09FD2E1CEA47E88E29752 /* QuickActivityView.swift in Sources */,

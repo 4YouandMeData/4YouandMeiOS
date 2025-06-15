@@ -42,6 +42,12 @@ struct Constants {
         static let EditButtonHeight: CGFloat = 26.0
         static let DefaultBottomMargin: CGFloat = 20.0
         static let SurveyPickerDefaultHeight: CGFloat = 300.0
+        static let EatenColorBackground = "#94FFB7"
+        static let EatenColorText = "#227B3F"
+        static let DosesColorBackground = "#ACB0FD"
+        static let DosesColorText = "#2E3288"
+        static let WeNoticedColorBackground = "#FF9694"
+        static let WeNoticedColorText = "#8E2E2C"
     }
     struct Resources {
         static let DefaultBundleName: String = "ForYouAndMe"

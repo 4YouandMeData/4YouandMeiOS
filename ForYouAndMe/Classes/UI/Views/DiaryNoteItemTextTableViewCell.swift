@@ -14,7 +14,7 @@ class DiaryNoteItemTextTableViewCell: UITableViewCell {
         let container = UIStackView()
         container.axis = .horizontal
         container.alignment = .center
-        container.spacing = 8.0
+        container.spacing = 4.0
         container.distribution = .fill
         container.addArrangedSubview(tagIconImageView)
         container.addArrangedSubview(tagLabel)

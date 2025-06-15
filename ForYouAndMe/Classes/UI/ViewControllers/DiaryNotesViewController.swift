@@ -85,6 +85,9 @@ class DiaryNotesViewController: BaseViewController {
         tableView.registerCellsWithClass(DiaryNoteItemTextTableViewCell.self)
         tableView.registerCellsWithClass(DiaryNoteItemAudioTableViewCell.self)
         tableView.registerCellsWithClass(DiaryNoteItemVideoTableViewCell.self)
+        tableView.registerCellsWithClass(DiaryNoteItemEatenTableViewCell.self)
+        tableView.registerCellsWithClass(DiaryNoteItemDosesTableViewCell.self)
+        tableView.registerCellsWithClass(DiaryNoteItemWeNoticedTableViewCell.self)
         tableView.contentInsetAdjustmentBehavior = .never
         tableView.backgroundView = self.diaryNoteEmptyView
         tableView.dataSource = self
@@ -351,8 +354,52 @@ extension DiaryNotesViewController: UITableViewDataSource {
                 }
                 
                 return cell
-            case .eaten, .doses, .weNoticed:
-                return UITableViewCell()
+            case .eaten:
+                guard let cell = tableView.dequeueReusableCellOfType(type: DiaryNoteItemEatenTableViewCell.self,
+                                                                     forIndexPath: indexPath) else {
+                    assertionFailure("DiaryNoteItemEatenTableViewCell not registered")
+                    return UITableViewCell()
+                }
+                cell.display(data: diaryNote, onTap: { [weak self] in
+                    guard let self = self else { return }
+//                    self.navigator.open(diaryNote: diaryNote,
+//                                                      isEdit: true,
+//                                                      presenter: self,
+//                                                      isFromChart: false)
+                })
+                
+                return cell
+
+            case .doses:
+                guard let cell = tableView.dequeueReusableCellOfType(type: DiaryNoteItemDosesTableViewCell.self,
+                                                                     forIndexPath: indexPath) else {
+                    assertionFailure("DiaryNoteItemDosesTableViewCell not registered")
+                    return UITableViewCell()
+                }
+                cell.display(data: diaryNote, onTap: { [weak self] in
+                    guard let self = self else { return }
+//                    self.navigator.open(diaryNote: diaryNote,
+//                                                      isEdit: true,
+//                                                      presenter: self,
+//                                                      isFromChart: false)
+                })
+                
+                return cell
+            case .weNoticed:
+                guard let cell = tableView.dequeueReusableCellOfType(type: DiaryNoteItemWeNoticedTableViewCell.self,
+                                                                     forIndexPath: indexPath) else {
+                    assertionFailure("DiaryNoteItemWeNoticedTableViewCell not registered")
+                    return UITableViewCell()
+                }
+                cell.display(data: diaryNote, onTap: { [weak self] in
+                    guard let self = self else { return }
+//                    self.navigator.open(diaryNote: diaryNote,
+//                                                      isEdit: true,
+//                                                      presenter: self,
+//                                                      isFromChart: false)
+                })
+                
+                return cell
             }
         } else {
             assertionFailure("Unhandled Diary Note Item type: \(diaryNote.self)")

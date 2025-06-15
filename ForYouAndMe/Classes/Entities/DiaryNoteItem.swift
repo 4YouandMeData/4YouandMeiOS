@@ -21,7 +21,7 @@ struct DiaryNoteFile {
 }
 
 enum DiaryNoteItemType: String, Codable {
-    case text
+    case text = "note_diary"
     case audio
     case video
     case eaten = "food_diary"
@@ -141,6 +141,7 @@ diary_noteable
         case urlString = "attachment"
         case diaryNoteable = "diary_noteable"
         case transcribeStatus = "transcribe_status"
+        case diaryNoteType = "diary_type"
     }
     
     init(from decoder: Decoder) throws {
@@ -153,8 +154,8 @@ diary_noteable
         self.title = try container.decodeIfPresent(String.self, forKey: .title)
         self.body = try container.decodeIfPresent(String.self, forKey: .body)
         self.diaryNoteable = try container.decodeIfPresent(DiaryNoteable.self, forKey: .diaryNoteable)
+        self.diaryNoteType = try? container.decodeIfPresent(DiaryNoteItemType.self, forKey: .diaryNoteType)
         
-        // Check for attachment
         if let attachmentContainer = try? container.decodeIfPresent([String: String].self, forKey: .urlString),
            let attachmentURL = attachmentContainer["url"] {
             self.urlString = attachmentURL
@@ -165,9 +166,6 @@ diary_noteable
                     self.diaryNoteType = .audio
                 }
             }
-        } else {
-            self.urlString = nil
-            self.diaryNoteType = .text
         }
         
         self.transcribeStatus = try? container.decodeIfPresent(TranscribeStatus.self, forKey: .transcribeStatus)
