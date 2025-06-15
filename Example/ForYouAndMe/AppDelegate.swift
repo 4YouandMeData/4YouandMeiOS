@@ -27,6 +27,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         if let font = UIFont(name: "Helvetica", size: 16.0) {
             fontStyleMap[.paragraph] = FontStyleData(font: font, lineSpacing: 5.0, uppercase: false)
         }
+        if let font = UIFont(name: "Helvetica-Bold", size: 16.0) {
+            fontStyleMap[.paragraphBold] = FontStyleData(font: font, lineSpacing: 5.0, uppercase: false)
+        }
         if let font = UIFont(name: "Helvetica", size: 13.0) {
             fontStyleMap[.header3] = FontStyleData(font: font, lineSpacing: 3.0, uppercase: false)
         }

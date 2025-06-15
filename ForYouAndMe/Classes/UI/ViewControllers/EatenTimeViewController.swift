@@ -14,7 +14,7 @@ protocol EatenTimeViewControllerDelegate: AnyObject {
 
 class EatenTimeViewController: UIViewController {
     
-    var selectedType: EatenTypeViewController.EntryType
+    var selectedType: FoodEntryType
     private let storage: CacheService
     private let navigator: AppNavigator
     private let variant: FlowVariant
@@ -78,7 +78,7 @@ class EatenTimeViewController: UIViewController {
         fatalError("init(coder:) has not been implemented")
     }
     
-    init(selectedType: EatenTypeViewController.EntryType,
+    init(selectedType: FoodEntryType,
          variant: FlowVariant) {
         self.selectedType = selectedType
         self.navigator = Services.shared.navigator

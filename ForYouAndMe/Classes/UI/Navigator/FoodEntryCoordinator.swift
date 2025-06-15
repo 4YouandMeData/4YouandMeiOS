@@ -8,6 +8,27 @@
 import UIKit
 import RxSwift
 
+enum FoodEntryType: String {
+    case snack
+    case meal
+    
+    func displayTextUsingVariant(variant: FlowVariant) -> String {
+        switch variant {
+        case .embeddedInNoticed:
+            switch self {
+            case .snack: return StringsProvider.string(forKey: .noticedStepFiveFirstButton)
+            case .meal:  return StringsProvider.string(forKey: .noticedStepFiveSecondButton)
+            }
+        case .standalone:
+            switch self {
+            case .snack: return StringsProvider.string(forKey: .diaryNoteEatenStepOneFirstButton)
+            case .meal:  return StringsProvider.string(forKey: .diaryNoteEatenStepOneSecondButton)
+            }
+        }
+        
+    }
+}
+
 final class FoodEntryCoordinator: PagedActivitySectionCoordinator {
     
     // MARK: - “External” navigation controller (se passata)
@@ -149,7 +170,7 @@ final class FoodEntryCoordinator: PagedActivitySectionCoordinator {
 }
 
 extension FoodEntryCoordinator: EatenTypeViewControllerDelegate {
-    func eatenTypeViewController(_ vc: EatenTypeViewController, didSelect type: EatenTypeViewController.EntryType) {
+    func eatenTypeViewController(_ vc: EatenTypeViewController, didSelect type: FoodEntryType) {
         selectedFoodType = type.rawValue
         
         guard let select = selectedFoodType else {
@@ -157,7 +178,7 @@ extension FoodEntryCoordinator: EatenTypeViewControllerDelegate {
         }
         
         // Navigate to time selection screen
-        let timeVC = EatenTimeViewController(selectedType: EatenTypeViewController.EntryType(rawValue: select)!,
+        let timeVC = EatenTimeViewController(selectedType: FoodEntryType(rawValue: select)!,
                                              variant: self.variant)
         timeVC.delegate = self
         navigationController.pushViewController(
@@ -178,7 +199,7 @@ extension FoodEntryCoordinator: EatenTimeViewControllerDelegate {
             snackDate = Date()
             
             let amountVC = ConsumptionAmountViewController(variant: self.variant)
-            amountVC.selectedType = EatenTypeViewController.EntryType(rawValue: selectedFoodType!)!
+            amountVC.selectedType = FoodEntryType(rawValue: selectedFoodType!)!
             amountVC.delegate = self
             navigationController.pushViewController(
                 amountVC,
@@ -188,7 +209,7 @@ extension FoodEntryCoordinator: EatenTimeViewControllerDelegate {
         } else {
             
             let dateTimeVC = EatenDateTimeViewController(variant: self.variant)
-            dateTimeVC.selectedType = EatenTypeViewController.EntryType(rawValue: selectedFoodType!)!
+            dateTimeVC.selectedType = FoodEntryType(rawValue: selectedFoodType!)!
             dateTimeVC.delegate = self
             navigationController.pushViewController(
                 dateTimeVC,
@@ -202,7 +223,7 @@ extension FoodEntryCoordinator: EatenTimeViewControllerDelegate {
 // MARK: – EatenDateTimeViewControllerDelegate
 extension FoodEntryCoordinator: EatenDateTimeViewControllerDelegate {
     func eatenDateTimeViewController(_ vc: EatenDateTimeViewController,
-                                     didSelect type: EatenTypeViewController.EntryType,
+                                     didSelect type: FoodEntryType,
                                      at date: Date) {
         // Save the chosen date/time
         snackDate = date
@@ -232,7 +253,7 @@ extension FoodEntryCoordinator: ConsumptionAmountViewControllerDelegate {
         
         // Next: nutrient question screen
         let nutrientVC = NutrientQuestionViewController(variant: self.variant)
-        nutrientVC.selectedType = EatenTypeViewController.EntryType(rawValue: selectedFoodType!)!
+        nutrientVC.selectedType = FoodEntryType(rawValue: selectedFoodType!)!
         nutrientVC.delegate = self
         navigationController.pushViewController(
             nutrientVC,

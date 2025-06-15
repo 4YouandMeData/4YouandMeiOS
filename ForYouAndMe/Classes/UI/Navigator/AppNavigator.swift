@@ -742,7 +742,7 @@ class AppNavigator {
             navigator: self,
             variant: .standalone,
             taskIdentifier: "insulinEntry",
-            onData: {_,_,_ in },
+            onData: {_, _, _ in },
             completion: completion
         )
 
@@ -755,6 +755,22 @@ class AppNavigator {
 
         // Hold a strong reference so we can dismiss later
         self.currentActivityCoordinator = coordinator
+    }
+    
+    public func openEatenFormViewController(presenter: UIViewController, foodItem: DiaryNoteItem) {
+
+        let vc = EatenEntryFormViewController()
+        // Get the first view controller of the flow
+        vc.modalPresentationStyle = .fullScreen
+        vc.configure(with: foodItem)
+        
+        guard let navigationController = presenter.navigationController else {
+            assertionFailure("Missing UINavigationController")
+            return
+        }
+        navigationController.pushViewController(vc,
+                                                hidesBottomBarWhenPushed: true,
+                                                animated: true)
     }
     
     // MARK: About You

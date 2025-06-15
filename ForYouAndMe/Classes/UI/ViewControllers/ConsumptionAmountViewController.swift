@@ -21,6 +21,24 @@ enum ConsumptionQuantity: String {
     case moreThanUsual   = "more_than_usual"
     case asUsual         = "as_usual"
     case lessThanUsual   = "less_than_usual"
+    
+    func displayTextUsingVariant(variant: FlowVariant) -> String {
+        switch variant {
+        case .embeddedInNoticed:
+            switch self {
+            case .moreThanUsual: return StringsProvider.string(forKey: .noticedStepEightFirstButton)
+            case .asUsual:  return StringsProvider.string(forKey: .noticedStepEightSecondButton)
+            case .lessThanUsual: return StringsProvider.string(forKey: .noticedStepEightThirdButton)
+            }
+        case .standalone:
+            switch self {
+            case .moreThanUsual: return StringsProvider.string(forKey: .diaryNoteEatenStepFourthFirstButton)
+            case .asUsual:  return StringsProvider.string(forKey: .diaryNoteEatenStepFourthSecondButton)
+            case .lessThanUsual: return StringsProvider.string(forKey: .diaryNoteEatenStepFourthThirdButton)
+            }
+        }
+        
+    }
 }
 
 class ConsumptionAmountViewController: UIViewController {
@@ -28,7 +46,7 @@ class ConsumptionAmountViewController: UIViewController {
     // MARK: – Public API
 
     /// The type we ate (snack/meal)
-    var selectedType: EatenTypeViewController.EntryType!
+    var selectedType: FoodEntryType!
     private let storage: CacheService
     private let navigator: AppNavigator
     weak var delegate: ConsumptionAmountViewControllerDelegate?

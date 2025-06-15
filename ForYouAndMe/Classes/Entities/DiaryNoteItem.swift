@@ -9,6 +9,63 @@ import Foundation
 
 typealias DiaryNoteData = [String: Any]
 
+public enum DiaryNotePayload: Decodable {
+    case food(mealType: String, quantity: String, significantNutrition: Bool)
+    case doses(quantity: Int, doseType: String)
+    case noticed(physicalActivity: String,
+                oldValue: Double,
+                currentValue: Double,
+                oldValueRetrievedAt: Date,
+                currentValueRetrievedAt: Date,
+                stressLevel: String)
+}
+
+public struct AnyCodable: Codable {
+    public let value: Any
+
+    public init(_ value: Any) {
+        self.value = value
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        if let intVal = try? container.decode(Int.self) {
+            value = intVal
+        } else if let doubleVal = try? container.decode(Double.self) {
+            value = doubleVal
+        } else if let boolVal = try? container.decode(Bool.self) {
+            value = boolVal
+        } else if let stringVal = try? container.decode(String.self) {
+            value = stringVal
+        } else if let dateVal = try? container.decode(Date.self) {
+            value = dateVal
+        } else {
+            throw DecodingError.dataCorruptedError(in: container,
+                debugDescription: "Unsupported type")
+        }
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        switch value {
+        case let intVal as Int:
+            try container.encode(intVal)
+        case let doubleVal as Double:
+            try container.encode(doubleVal)
+        case let boolVal as Bool:
+            try container.encode(boolVal)
+        case let stringVal as String:
+            try container.encode(stringVal)
+        case let dateVal as Date:
+            try container.encode(dateVal)
+        default:
+            throw EncodingError.invalidValue(value,
+                EncodingError.Context(codingPath: encoder.codingPath,
+                                      debugDescription: "Unsupported type"))
+        }
+    }
+}
+
 enum TranscribeStatus: String, Codable {
     case pending
     case success
@@ -96,6 +153,8 @@ struct DiaryNoteItem: Codable {
     @FailableCodable
     var diaryNoteable: DiaryNoteable?
     
+    var payload: DiaryNotePayload?
+    
     init (id: String,
           type: String,
           diaryNoteId: Date,
@@ -142,6 +201,7 @@ diary_noteable
         case diaryNoteable = "diary_noteable"
         case transcribeStatus = "transcribe_status"
         case diaryNoteType = "diary_type"
+        case rawData = "data"
     }
     
     init(from decoder: Decoder) throws {
@@ -169,6 +229,37 @@ diary_noteable
         }
         
         self.transcribeStatus = try? container.decodeIfPresent(TranscribeStatus.self, forKey: .transcribeStatus)
+        var payload: DiaryNotePayload?
+        if let raw = try? container.decodeIfPresent([String:AnyCodable].self, forKey: .rawData),
+           let type = self.diaryNoteType {
+            switch type {
+            case .eaten:
+                let meal = raw["meal_type"]?.value as? String ?? ""
+                let qty = raw["quantity"]?.value as? String ?? ""
+                let fat = raw["with_significant_protein_fiber_or_fat"]?.value as? Bool ?? false
+                payload = .food(mealType: meal, quantity: qty, significantNutrition: fat)
+            case .doses:
+                let qty = raw["quantity"]?.value as? Int ?? 0
+                let dt = raw["dose_type"]?.value as? String ?? ""
+                payload = .doses(quantity: qty, doseType: dt)
+            case .weNoticed:
+                let pa = raw["physical_activity"]?.value as? String ?? ""
+                let ov = raw["old_value"]?.value as? Double ?? 0
+                let cv = raw["current_value"]?.value as? Double ?? 0
+                let ovd = raw["old_value_retrieved_at"]?.value as? Date ?? Date()
+                let cvd = raw["current_value_retrieved_at"]?.value as? Date ?? Date()
+                let sl = raw["stress_level"]?.value as? String ?? ""
+                payload = .noticed(physicalActivity: pa,
+                                   oldValue: ov,
+                                   currentValue: cv,
+                                   oldValueRetrievedAt: ovd,
+                                   currentValueRetrievedAt: cvd,
+                                   stressLevel: sl)
+            default:
+                break
+            }
+        }
+        self.payload = payload
     }
     
     func encode(to encoder: Encoder) throws {

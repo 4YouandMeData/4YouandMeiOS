@@ -11,7 +11,7 @@ import PureLayout
 protocol EatenDateTimeViewControllerDelegate: AnyObject {
     /// Called when user taps “Next” with both type and date selected
     func eatenDateTimeViewController(_ vc: EatenDateTimeViewController,
-                                     didSelect type: EatenTypeViewController.EntryType,
+                                     didSelect type: FoodEntryType,
                                      at date: Date)
     
     /// Called when user dismisses this screen (e.g. via back)
@@ -23,7 +23,7 @@ class EatenDateTimeViewController: UIViewController {
     // MARK: – Public API
     
     /// Type passed from the previous screen
-    var selectedType: EatenTypeViewController.EntryType!
+    var selectedType: FoodEntryType!
     private let storage: CacheService
     private let navigator: AppNavigator
     private let variant: FlowVariant

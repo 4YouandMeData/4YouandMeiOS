@@ -9,32 +9,11 @@ import UIKit
 import PureLayout
 
 protocol EatenTypeViewControllerDelegate: AnyObject {
-    func eatenTypeViewController(_ vc: EatenTypeViewController, didSelect type: EatenTypeViewController.EntryType)
+    func eatenTypeViewController(_ vc: EatenTypeViewController, didSelect type: FoodEntryType)
     func eatenDismiss(_ vc: EatenTypeViewController)
 }
 
 class EatenTypeViewController: UIViewController {
-    
-    enum EntryType: String {
-        case snack
-        case meal
-        
-        func displayTextUsingVariant(variant: FlowVariant) -> String {
-            switch variant {
-            case .embeddedInNoticed:
-                switch self {
-                case .snack: return StringsProvider.string(forKey: .noticedStepFiveFirstButton)
-                case .meal:  return StringsProvider.string(forKey: .noticedStepFiveSecondButton)
-                }
-            case .standalone:
-                switch self {
-                case .snack: return StringsProvider.string(forKey: .diaryNoteEatenStepOneFirstButton)
-                case .meal:  return StringsProvider.string(forKey: .diaryNoteEatenStepOneSecondButton)
-                }
-            }
-            
-        }
-    }
 
     weak var delegate: EatenTypeViewControllerDelegate?
 
@@ -89,7 +68,7 @@ class EatenTypeViewController: UIViewController {
         return messages ?? []
     }()
     
-    private var selectedType: EntryType? {
+    private var selectedType: FoodEntryType? {
         didSet {
             let enabled = selectedType != nil
             self.footerView.setButtonEnabled(enabled: enabled)
@@ -180,7 +159,7 @@ class EatenTypeViewController: UIViewController {
         scrollStackView.scrollView.autoPinEdge(.bottom, to: .top, of: footerView)
     }
 
-    private func makeOptionButton(type: EntryType) -> OptionButton {
+    private func makeOptionButton(type: FoodEntryType) -> OptionButton {
         let btn = OptionButton()
         btn.layoutStyle = .vertical(spacing: 16)
         let imageName = type == .snack ? TemplateImageName.snackImage : TemplateImageName.mealImage

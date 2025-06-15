@@ -362,10 +362,7 @@ extension DiaryNotesViewController: UITableViewDataSource {
                 }
                 cell.display(data: diaryNote, onTap: { [weak self] in
                     guard let self = self else { return }
-//                    self.navigator.open(diaryNote: diaryNote,
-//                                                      isEdit: true,
-//                                                      presenter: self,
-//                                                      isFromChart: false)
+                    self.navigator.openEatenFormViewController(presenter: self, foodItem: diaryNote)
                 })
                 
                 return cell

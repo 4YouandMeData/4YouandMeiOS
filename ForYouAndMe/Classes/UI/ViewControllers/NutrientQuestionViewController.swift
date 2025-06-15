@@ -20,7 +20,7 @@ class NutrientQuestionViewController: UIViewController {
     // MARK: - Public API
     
     /// The food type (snack/meal) to display in title
-    var selectedType: EatenTypeViewController.EntryType!
+    var selectedType: FoodEntryType!
     private let storage: CacheService
     private let navigator: AppNavigator
     private let variant: FlowVariant

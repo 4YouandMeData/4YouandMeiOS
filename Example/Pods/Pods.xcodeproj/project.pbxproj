@@ -233,6 +233,7 @@
 		0D4D22692DFF253A0060DA71 /* DiaryNoteItemEatenTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D4D22682DFF25380060DA71 /* DiaryNoteItemEatenTableViewCell.swift */; };
 		0D4D226B2DFF26360060DA71 /* DiaryNoteItemDosesTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D4D226A2DFF26340060DA71 /* DiaryNoteItemDosesTableViewCell.swift */; };
 		0D4D226D2DFF4A570060DA71 /* DiaryNoteItemWeNoticedTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D4D226C2DFF4A550060DA71 /* DiaryNoteItemWeNoticedTableViewCell.swift */; };
+		0D4D226F2DFF507F0060DA71 /* EatenEntryFormViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D4D226E2DFF507E0060DA71 /* EatenEntryFormViewController.swift */; };
 		0D6BBA2E2D88C8F7004DEF42 /* SpyrometerSectionCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D6BBA2D2D88C8EC004DEF42 /* SpyrometerSectionCoordinator.swift */; };
 		0D6BBA312D88C9E1004DEF42 /* SpyrometerScanViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D6BBA302D88C9D7004DEF42 /* SpyrometerScanViewController.swift */; };
 		0D6BBA332D8ADA24004DEF42 /* BluetoothOffView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D6BBA322D8ADA18004DEF42 /* BluetoothOffView.swift */; };
@@ -4400,6 +4401,7 @@
 		0D4D22682DFF25380060DA71 /* DiaryNoteItemEatenTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiaryNoteItemEatenTableViewCell.swift; sourceTree = "<group>"; };
 		0D4D226A2DFF26340060DA71 /* DiaryNoteItemDosesTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiaryNoteItemDosesTableViewCell.swift; sourceTree = "<group>"; };
 		0D4D226C2DFF4A550060DA71 /* DiaryNoteItemWeNoticedTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiaryNoteItemWeNoticedTableViewCell.swift; sourceTree = "<group>"; };
+		0D4D226E2DFF507E0060DA71 /* EatenEntryFormViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EatenEntryFormViewController.swift; sourceTree = "<group>"; };
 		0D56721AC5B8CD21088512ABF9575755 /* FIRCLSCallStackTree.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = FIRCLSCallStackTree.m; path = Crashlytics/Crashlytics/Helpers/FIRCLSCallStackTree.m; sourceTree = "<group>"; };
 		0D631E9908483F9525A6B3F36F16CC61 /* Quick.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Quick.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		0D6BBA2D2D88C8EC004DEF42 /* SpyrometerSectionCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpyrometerSectionCoordinator.swift; sourceTree = "<group>"; };
@@ -11608,6 +11610,7 @@
 		C2AC34DCE1B9D5E7C7A4BAE15259715A /* ViewControllers */ = {
 			isa = PBXGroup;
 			children = (
+				0D4D226E2DFF507E0060DA71 /* EatenEntryFormViewController.swift */,
 				0DE1B8182DF2F50D0055939D /* SuccessViewController.swift */,
 				0DE1B8162DF2EB4F0055939D /* StressLevelViewController.swift */,
 				0DE1B8142DF2CC440055939D /* PhysicalActivityViewController.swift */,
@@ -18165,6 +18168,7 @@
 				6DFACC212BB331E60CAAAFB132B55112 /* NavigationBarStyles.swift in Sources */,
 				0E0DBC7CDF4BC5F99FD41C27E5AECB58 /* NetworkApiGateway.swift in Sources */,
 				5430AF529E917E2DE6CBE3A7FDB79B93 /* NetworkUtility.swift in Sources */,
+				0D4D226F2DFF507F0060DA71 /* EatenEntryFormViewController.swift in Sources */,
 				0926D9899E56C358DFCB553F5BC0BFC7 /* NineHoleTask.swift in Sources */,
 				925136839F1957848305679BFE741897 /* NoteVideoPlayerView.swift in Sources */,
 				F8DD75AA017DAD2C78FE3C89872E22EC /* NoticedViewController.swift in Sources */,
