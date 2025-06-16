@@ -12,41 +12,13 @@ import PureLayout
 protocol DoseTypeViewControllerDelegate: AnyObject {
     /// Called when user selects a dose type
     func doseTypeViewController(_ vc: DoseTypeViewController,
-                                didSelect type: DoseTypeViewController.DoseType)
+                                didSelect type: DoseType)
     /// Called when user taps back/cancel
     func doseTypeViewControllerDidCancel(_ vc: DoseTypeViewController)
 }
 
 /// View controller to let user choose between pump bolus or insulin injection
 class DoseTypeViewController: UIViewController {
-    
-    /// Available dose types
-    enum DoseType: String, Codable {
-        case pumpBolus        = "bolus_dose"
-        case insulinInjection = "insulin_injection"
-        
-        /// The actual text shown on screen
-        func displayText(usingVariant variant: FlowVariant) -> String {
-            
-            switch variant {
-            case .standalone:
-                switch self {
-                case .pumpBolus:
-                    return StringsProvider.string(forKey: .doseStepOneFirstButton)
-                case .insulinInjection:
-                    return StringsProvider.string(forKey: .doseStepOneSecondButton)
-                }
-                
-            case .embeddedInNoticed:
-                switch self {
-                case .pumpBolus:
-                    return StringsProvider.string(forKey: .noticedStepTwoFirstButton)
-                case .insulinInjection:
-                    return StringsProvider.string(forKey: .noticedStepTwoFirstButton)
-                }
-            }
-        }
-    }
     
     private let variant: FlowVariant
     private lazy var messages: [MessageInfo] = {

@@ -773,6 +773,22 @@ class AppNavigator {
                                                 animated: true)
     }
     
+    public func openDosesFormViewController(presenter: UIViewController, dosesItem: DiaryNoteItem) {
+
+        let vc = DosesEntryFormViewController()
+        // Get the first view controller of the flow
+        vc.modalPresentationStyle = .fullScreen
+        vc.configure(with: dosesItem)
+        
+        guard let navigationController = presenter.navigationController else {
+            assertionFailure("Missing UINavigationController")
+            return
+        }
+        navigationController.pushViewController(vc,
+                                                hidesBottomBarWhenPushed: true,
+                                                animated: true)
+    }
+    
     // MARK: About You
     
     public func showAboutYouPage(presenter: UIViewController) {

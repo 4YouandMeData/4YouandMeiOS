@@ -230,7 +230,7 @@ diary_noteable
         
         self.transcribeStatus = try? container.decodeIfPresent(TranscribeStatus.self, forKey: .transcribeStatus)
         var payload: DiaryNotePayload?
-        if let raw = try? container.decodeIfPresent([String:AnyCodable].self, forKey: .rawData),
+        if let raw = try? container.decodeIfPresent([String: AnyCodable].self, forKey: .rawData),
            let type = self.diaryNoteType {
             switch type {
             case .eaten:

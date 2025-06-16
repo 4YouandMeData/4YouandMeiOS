@@ -8,6 +8,34 @@
 import UIKit
 import RxSwift
 
+/// Available dose types
+enum DoseType: String, Codable {
+    case pumpBolus        = "bolus_dose"
+    case insulinInjection = "insulin_injection"
+    
+    /// The actual text shown on screen
+    func displayText(usingVariant variant: FlowVariant) -> String {
+        
+        switch variant {
+        case .standalone:
+            switch self {
+            case .pumpBolus:
+                return StringsProvider.string(forKey: .doseStepOneFirstButton)
+            case .insulinInjection:
+                return StringsProvider.string(forKey: .doseStepOneSecondButton)
+            }
+            
+        case .embeddedInNoticed:
+            switch self {
+            case .pumpBolus:
+                return StringsProvider.string(forKey: .noticedStepTwoFirstButton)
+            case .insulinInjection:
+                return StringsProvider.string(forKey: .noticedStepTwoFirstButton)
+            }
+        }
+    }
+}
+
 /// Coordinator for the “Add a dose” flow
 final class InsulinEntryCoordinator: PagedActivitySectionCoordinator {
     
@@ -130,7 +158,7 @@ final class InsulinEntryCoordinator: PagedActivitySectionCoordinator {
 
 // MARK: – DoseTypeViewControllerDelegate
 extension InsulinEntryCoordinator: DoseTypeViewControllerDelegate {
-    func doseTypeViewController(_ vc: DoseTypeViewController, didSelect type: DoseTypeViewController.DoseType) {
+    func doseTypeViewController(_ vc: DoseTypeViewController, didSelect type: DoseType) {
         selectedDoseTypeText = type.displayText(usingVariant: self.variant)
         selectedDoseType = type.rawValue
         
