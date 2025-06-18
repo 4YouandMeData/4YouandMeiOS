@@ -24,6 +24,83 @@ struct DoseEntryData: Codable {
     let amount: Double
 }
 
+/// The possible activity levels the user can choose
+enum ActivityLevel: String, Codable {
+    case no        = "no"
+    case mild      = "mild"
+    case moderate  = "moderate"
+    case vigorous  = "vigouros"
+    
+    /// Returns the localized display text for each activity level
+    var displayText: String {
+        switch self {
+        case .no:
+            return StringsProvider.string(forKey: .noticedStepTenFirstButton)
+        case .mild:
+            return StringsProvider.string(forKey: .noticedStepTenSecondButton)
+        case .moderate:
+            return StringsProvider.string(forKey: .noticedStepTenThirdButton)
+        case .vigorous:
+            return StringsProvider.string(forKey: .noticedStepTenFourthButton)
+        }
+    }
+    
+    /// Returns the name of the icon image (template) for each level
+    var iconImageName: TemplateImageName {
+        switch self {
+        case .no:
+            return .activityIconNo
+        case .mild:
+            return .activityIconMild
+        case .moderate:
+            return .activityIconModerate
+        case .vigorous:
+            return .activityIconVigorous
+        }
+    }
+}
+
+/// The possible stress levels the user can choose
+enum StressLevel: String, Codable {
+    case none         = "not_stressed_at_all"
+    case aLittle      = "a_little_stressed"
+    case somewhat     = "somewhat_stressed"
+    case stressed     = "stressed"
+    case veryStressed = "very_stressed"
+    
+    /// Returns the localized display text for each stress level
+    var displayText: String {
+        switch self {
+        case .none:
+            return StringsProvider.string(forKey: .noticedStepElevenFirstButton)
+        case .aLittle:
+            return StringsProvider.string(forKey: .noticedStepElevenSecondButton)
+        case .somewhat:
+            return StringsProvider.string(forKey: .noticedStepElevenThirdButton)
+        case .stressed:
+            return StringsProvider.string(forKey: .noticedStepElevenFourthButton)
+        case .veryStressed:
+            return StringsProvider.string(forKey: .noticedStepElevenFifthButton)
+        }
+    }
+    
+    /// Returns the name of the icon image (template) for each level
+    var iconImageName: TemplateImageName {
+        switch self {
+        case .none:
+            return .stressIconNone
+        case .aLittle:
+            return .stressIconLittle
+        case .somewhat:
+            return .stressIconSome
+        case .stressed:
+            return .stressIconStressed
+        case .veryStressed:
+            return .stressIconVeryStressed
+        }
+    }
+}
+
 /// Coordinator for the “We Have Noticed” flow, embedding the existing
 /// InsulinEntryCoordinator as the first step.
 final class WeHaveNoticedCoordinator: PagedActivitySectionCoordinator {
@@ -59,8 +136,8 @@ final class WeHaveNoticedCoordinator: PagedActivitySectionCoordinator {
     
     private var answeredDose: DoseEntryData?
     private var answeredFood: FoodEntryData?
-    private var answeredActivity: PhysicalActivityViewController.ActivityLevel?
-    private var answeredStress: StressLevelViewController.StressLevel?
+    private var answeredActivity: ActivityLevel?
+    private var answeredStress: StressLevel?
     private var feed: Feed?
     private lazy var messages: [MessageInfo] = {
         let messages = self.cacheService.infoMessages?.messages(withLocation: .pageWeHaveNoticed)
@@ -219,7 +296,7 @@ extension WeHaveNoticedCoordinator: EatenIntroViewControllerDelegate {
 extension WeHaveNoticedCoordinator: PhysicalActivityViewControllerDelegate {
     
     func physicalActivityViewController(_ vc: PhysicalActivityViewController,
-                                        didSelect level: PhysicalActivityViewController.ActivityLevel) {
+                                        didSelect level: ActivityLevel) {
         self.answeredActivity = level
         
         let stressVC = StressLevelViewController(variant: .embeddedInNoticed)
@@ -242,7 +319,7 @@ extension WeHaveNoticedCoordinator: PhysicalActivityViewControllerDelegate {
 extension WeHaveNoticedCoordinator: StressLevelViewControllerDelegate {
     
     func stressLevelViewController(_ vc: StressLevelViewController,
-                                   didSelect level: StressLevelViewController.StressLevel) {
+                                   didSelect level: StressLevel) {
         self.answeredStress = level
         if let tv = feed?.extractWeHaveNoticedTemplateValues() {
             let diaryNoteData = DiaryNoteWeHaveNoticedItem(diaryType: .weNoticed,

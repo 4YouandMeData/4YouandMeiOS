@@ -51,28 +51,32 @@ class EatenEntryFormViewController: UIViewController {
 
     private lazy var datePromptLabel: UILabel = {
         let lbl = UILabel()
-        let baseKey = StringsProvider.string(forKey: .diaryNoteEatenStepThreeMessage)
-        
-        let base = baseKey
-        let boldPart = " " + (selectedMealType?.displayTextUsingVariant(variant: .standalone).lowercased() ?? "")
+        let messageKey = StringsProvider.string(forKey: .diaryNoteEatenStepThreeMessage)
+            .replacingPlaceholders(with: [selectedMealType?.displayTextUsingVariant(variant: .standalone).lowercased() ?? ""])
     
         let paragraph = NSMutableParagraphStyle()
         paragraph.alignment = .left
         
-        let normalAttrs: [NSAttributedString.Key: Any] = [
-            .font: UIFont.preferredFont(forTextStyle: .body),
+        let attrsNormal: [NSAttributedString.Key: Any] = [
+            .font: UIFont.systemFont(ofSize: 17),
             .foregroundColor: ColorPalette.color(withType: .primaryText),
             .paragraphStyle: paragraph
         ]
-        let boldAttrs: [NSAttributedString.Key: Any] = [
-            .font: UIFont.boldSystemFont(ofSize: UIFont.preferredFont(forTextStyle: .body).pointSize),
+
+        let attributed = NSMutableAttributedString(string: messageKey, attributes: attrsNormal)
+
+        let attrsBold: [NSAttributedString.Key: Any] = [
+            .font: UIFont.boldSystemFont(ofSize: 17),
             .foregroundColor: ColorPalette.color(withType: .primaryText),
             .paragraphStyle: paragraph
         ]
-        
-        let att = NSMutableAttributedString(string: base, attributes: normalAttrs)
-        att.append(NSAttributedString(string: boldPart, attributes: boldAttrs))
-        lbl.attributedText = att
+
+        // Find the range of the string to be bolded
+        if let boldRange = messageKey.range(of: messageKey) {
+            let nsRange = NSRange(boldRange, in: messageKey)
+            attributed.addAttributes(attrsBold, range: nsRange)
+        }
+        lbl.attributedText = attributed
         lbl.font = FontPalette.fontStyleData(forStyle: .paragraphBold).font
         lbl.numberOfLines = 0
         return lbl
@@ -93,24 +97,29 @@ class EatenEntryFormViewController: UIViewController {
         let paragraph = NSMutableParagraphStyle()
         paragraph.alignment = .left
         let messageKey = StringsProvider.string(forKey: .diaryNoteEatenStepFourthMessage)
-        let boldPart = " " + (selectedMealType?.displayTextUsingVariant(variant: .standalone).lowercased() ?? "")
-        let end = "..."
-        let att = NSMutableAttributedString(string: messageKey, attributes: [
-            .font: FontPalette.fontStyleData(forStyle: .paragraph).font,
+            .replacingPlaceholders(with: [selectedMealType?.displayTextUsingVariant(variant: .standalone).lowercased() ?? ""])
+        
+        let attrsNormal: [NSAttributedString.Key: Any] = [
+            .font: UIFont.systemFont(ofSize: 17),
             .foregroundColor: ColorPalette.color(withType: .primaryText),
             .paragraphStyle: paragraph
-        ])
-        att.append(NSAttributedString(string: boldPart, attributes: [
-            .font: UIFont.boldSystemFont(ofSize: FontPalette.fontStyleData(forStyle: .paragraph).font.pointSize),
+        ]
+
+        let attributed = NSMutableAttributedString(string: messageKey, attributes: attrsNormal)
+
+        let attrsBold: [NSAttributedString.Key: Any] = [
+            .font: UIFont.boldSystemFont(ofSize: 17),
             .foregroundColor: ColorPalette.color(withType: .primaryText),
             .paragraphStyle: paragraph
-        ]))
-        att.append(NSAttributedString(string: end, attributes: [
-            .font: FontPalette.fontStyleData(forStyle: .paragraph).font,
-            .foregroundColor: ColorPalette.color(withType: .primaryText),
-            .paragraphStyle: paragraph
-        ]))
-        lbl.attributedText = att
+        ]
+
+        // Find the range of the string to be bolded
+        if let boldRange = messageKey.range(of: messageKey) {
+            let nsRange = NSRange(boldRange, in: messageKey)
+            attributed.addAttributes(attrsBold, range: nsRange)
+        }
+        
+        lbl.attributedText = attributed
         lbl.font = FontPalette.fontStyleData(forStyle: .paragraphBold).font
         lbl.numberOfLines = 0
         return lbl
@@ -118,9 +127,34 @@ class EatenEntryFormViewController: UIViewController {
     private let quantityValueLabel: UILabel = createValueLabel()
     private let quantityRow: UIControl = createRowControl()
 
-    private let proteinLabel: UILabel = {
+    private lazy var proteinLabel: UILabel = {
         let lbl = UILabel()
-        lbl.text = StringsProvider.string(forKey: .diaryNoteEatenStepFifthMessage)
+        let paragraph = NSMutableParagraphStyle()
+        paragraph.alignment = .left
+        let messageKey = StringsProvider.string(forKey: .diaryNoteEatenStepFifthMessage)
+            .replacingPlaceholders(with: [selectedMealType?.displayTextUsingVariant(variant: .standalone).lowercased() ?? ""])
+        
+        let attrsNormal: [NSAttributedString.Key: Any] = [
+            .font: UIFont.systemFont(ofSize: 17),
+            .foregroundColor: ColorPalette.color(withType: .primaryText),
+            .paragraphStyle: paragraph
+        ]
+
+        let attributed = NSMutableAttributedString(string: messageKey, attributes: attrsNormal)
+
+        let attrsBold: [NSAttributedString.Key: Any] = [
+            .font: UIFont.boldSystemFont(ofSize: 17),
+            .foregroundColor: ColorPalette.color(withType: .primaryText),
+            .paragraphStyle: paragraph
+        ]
+
+        // Find the range of the string to be bolded
+        if let boldRange = messageKey.range(of: messageKey) {
+            let nsRange = NSRange(boldRange, in: messageKey)
+            attributed.addAttributes(attrsBold, range: nsRange)
+        }
+        
+        lbl.attributedText = attributed
         lbl.font = FontPalette.fontStyleData(forStyle: .paragraphBold).font
         lbl.numberOfLines = 0
         return lbl

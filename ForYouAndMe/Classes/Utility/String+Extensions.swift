@@ -24,4 +24,12 @@ extension String {
             return []
         }
     }
+    
+    func replacingPlaceholders(with args: [String]) -> String {
+        var result = self
+        for (idx, arg) in args.enumerated() {
+            result = result.replacingOccurrences(of: "{\(idx)}", with: arg)
+        }
+        return result
+    }
 }

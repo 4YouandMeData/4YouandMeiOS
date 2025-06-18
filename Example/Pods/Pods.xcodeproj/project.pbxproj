@@ -235,6 +235,7 @@
 		0D4D226D2DFF4A570060DA71 /* DiaryNoteItemWeNoticedTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D4D226C2DFF4A550060DA71 /* DiaryNoteItemWeNoticedTableViewCell.swift */; };
 		0D4D226F2DFF507F0060DA71 /* EatenEntryFormViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D4D226E2DFF507E0060DA71 /* EatenEntryFormViewController.swift */; };
 		0D4D22712E001ACD0060DA71 /* DosesEntryFormViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D4D22702E001ACC0060DA71 /* DosesEntryFormViewController.swift */; };
+		0D4D22732E001F350060DA71 /* WeHaveNoticedEntryFormViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D4D22722E001F330060DA71 /* WeHaveNoticedEntryFormViewController.swift */; };
 		0D6BBA2E2D88C8F7004DEF42 /* SpyrometerSectionCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D6BBA2D2D88C8EC004DEF42 /* SpyrometerSectionCoordinator.swift */; };
 		0D6BBA312D88C9E1004DEF42 /* SpyrometerScanViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D6BBA302D88C9D7004DEF42 /* SpyrometerScanViewController.swift */; };
 		0D6BBA332D8ADA24004DEF42 /* BluetoothOffView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D6BBA322D8ADA18004DEF42 /* BluetoothOffView.swift */; };
@@ -4404,6 +4405,7 @@
 		0D4D226C2DFF4A550060DA71 /* DiaryNoteItemWeNoticedTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiaryNoteItemWeNoticedTableViewCell.swift; sourceTree = "<group>"; };
 		0D4D226E2DFF507E0060DA71 /* EatenEntryFormViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EatenEntryFormViewController.swift; sourceTree = "<group>"; };
 		0D4D22702E001ACC0060DA71 /* DosesEntryFormViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DosesEntryFormViewController.swift; sourceTree = "<group>"; };
+		0D4D22722E001F330060DA71 /* WeHaveNoticedEntryFormViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeHaveNoticedEntryFormViewController.swift; sourceTree = "<group>"; };
 		0D56721AC5B8CD21088512ABF9575755 /* FIRCLSCallStackTree.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = FIRCLSCallStackTree.m; path = Crashlytics/Crashlytics/Helpers/FIRCLSCallStackTree.m; sourceTree = "<group>"; };
 		0D631E9908483F9525A6B3F36F16CC61 /* Quick.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Quick.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		0D6BBA2D2D88C8EC004DEF42 /* SpyrometerSectionCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpyrometerSectionCoordinator.swift; sourceTree = "<group>"; };
@@ -11612,6 +11614,7 @@
 		C2AC34DCE1B9D5E7C7A4BAE15259715A /* ViewControllers */ = {
 			isa = PBXGroup;
 			children = (
+				0D4D22722E001F330060DA71 /* WeHaveNoticedEntryFormViewController.swift */,
 				0D4D22702E001ACC0060DA71 /* DosesEntryFormViewController.swift */,
 				0D4D226E2DFF507E0060DA71 /* EatenEntryFormViewController.swift */,
 				0DE1B8182DF2F50D0055939D /* SuccessViewController.swift */,
@@ -18062,6 +18065,7 @@
 				80539907CC2312CF624CC1C9C9E1EDFB /* DatePickerHandler.swift in Sources */,
 				54B88DD45C87FA6D3180D04CA2A76C00 /* DeeplinkManager.swift in Sources */,
 				96DC54D20664BB510782C611F00B94AE /* DeeplinkService.swift in Sources */,
+				0D4D22732E001F350060DA71 /* WeHaveNoticedEntryFormViewController.swift in Sources */,
 				8F09840D61460FC5BD64E08A2D6A7740 /* DefaultConvertible.swift in Sources */,
 				C4DB7BFA81A310BEC8CB1187FDAB8204 /* Defaults+Convertible.swift in Sources */,
 				0D15F7A52DDB871400C42FF3 /* InsulinEntryCoordinator.swift in Sources */,

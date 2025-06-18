@@ -334,6 +334,7 @@ enum StringKey: String, CaseIterable, CodingKey {
     case noticedStepSuccessMessage = "NOTICED_STEP_SUCCESS_MESSAGE"
     case noticedStepNextButton = "NOTICED_NEXT_BUTTON"
     case noticedStepConfirmButton = "NOTICED_CONFIRM_BUTTON"
+    case weHaveNoticedMessage = "WE_HAVE_NOTICED_MESSAGE"
 
     // Study Info
     case studyInfoContactTitle = "STUDY_INFO_CONTACT_INFO"

@@ -117,28 +117,35 @@ class EatenTimeViewController: UIViewController {
         self.view.addSubview(scrollStackView)
         scrollStackView.autoPinEdgesToSuperviewSafeArea(with: .zero, excludingEdge: .bottom)
         
+        let replacementString = selectedType.displayTextUsingVariant(variant: self.variant).lowercased()
+
         let messageKey = (variant == .standalone)
-        ? StringsProvider.string(forKey: .diaryNoteEatenStepTwoMessage)
-        : StringsProvider.string(forKey: .noticedStepSixMessage)
-        
-        let typeText = " " + selectedType.displayTextUsingVariant(variant: self.variant).lowercased() + "..."
-        
+            ? StringsProvider.string(forKey: .diaryNoteEatenStepTwoMessage)
+                .replacingPlaceholders(with: [replacementString])
+            : StringsProvider.string(forKey: .noticedStepSixMessage)
+
         let paragraphStyle = NSMutableParagraphStyle()
-            paragraphStyle.alignment = .center
+        paragraphStyle.alignment = .center
 
         let attrsNormal: [NSAttributedString.Key: Any] = [
             .font: UIFont.systemFont(ofSize: 17),
             .foregroundColor: ColorPalette.color(withType: .primaryText),
             .paragraphStyle: paragraphStyle
         ]
+
         let attributed = NSMutableAttributedString(string: messageKey, attributes: attrsNormal)
-        
+
         let attrsBold: [NSAttributedString.Key: Any] = [
             .font: UIFont.boldSystemFont(ofSize: 17),
             .foregroundColor: ColorPalette.color(withType: .primaryText),
             .paragraphStyle: paragraphStyle
         ]
-        attributed.append(.init(string: typeText, attributes: attrsBold))
+
+        // Find the range of the string to be bolded
+        if let boldRange = messageKey.range(of: replacementString) {
+            let nsRange = NSRange(boldRange, in: messageKey)
+            attributed.addAttributes(attrsBold, range: nsRange)
+        }
         
         // Transform input text to bold using attributed string
         let titleKey = (variant == .standalone)

@@ -9,15 +9,26 @@ import Foundation
 
 typealias DiaryNoteData = [String: Any]
 
-public enum DiaryNotePayload: Decodable {
+public enum DiaryNotePayload {
     case food(mealType: String, quantity: String, significantNutrition: Bool)
     case doses(quantity: Int, doseType: String)
-    case noticed(physicalActivity: String,
-                oldValue: Double,
-                currentValue: Double,
-                oldValueRetrievedAt: Date,
-                currentValueRetrievedAt: Date,
-                stressLevel: String)
+    case noticed(
+        physicalActivity: String,
+        oldValue: Double,
+        currentValue: Double,
+        oldValueRetrievedAt: Date,
+        currentValueRetrievedAt: Date,
+        stressLevel: String,
+        // Optional injection and eating details
+        injected: Bool?,
+        injectionType: String?,
+        injectionQuantity: Int?,
+        ateInPriorHour: Bool?,
+        ateType: String?,
+        ateDate: Date?,
+        ateQuantity: String?,
+        ateFat: Bool?
+    )
 }
 
 public struct AnyCodable: Codable {
@@ -111,8 +122,8 @@ struct DiaryNoteWeHaveNoticedItem: Codable {
     let dosesData: DoseEntryData?
     let foodData: FoodEntryData?
     let diaryDate: Date
-    let answeredActivity: PhysicalActivityViewController.ActivityLevel?
-    let answeredStress: StressLevelViewController.StressLevel?
+    let answeredActivity: ActivityLevel?
+    let answeredStress: StressLevel?
     
     let oldValue: Double
     
@@ -230,31 +241,74 @@ diary_noteable
         
         self.transcribeStatus = try? container.decodeIfPresent(TranscribeStatus.self, forKey: .transcribeStatus)
         var payload: DiaryNotePayload?
+        // Decode payload
         if let raw = try? container.decodeIfPresent([String: AnyCodable].self, forKey: .rawData),
-           let type = self.diaryNoteType {
-            switch type {
+           let noteType = diaryNoteType {
+            let isoFmt = ISO8601DateFormatter()
+            switch noteType {
             case .eaten:
                 let meal = raw["meal_type"]?.value as? String ?? ""
-                let qty = raw["quantity"]?.value as? String ?? ""
-                let fat = raw["with_significant_protein_fiber_or_fat"]?.value as? Bool ?? false
+                let qty  = raw["quantity"]?.value as? String ?? raw["food_quantity"]?.value as? String ?? ""
+                let fat  = raw["with_significant_protein_fiber_or_fat"]?.value as? Bool ?? false
                 payload = .food(mealType: meal, quantity: qty, significantNutrition: fat)
+                
             case .doses:
-                let qty = raw["quantity"]?.value as? Int ?? 0
-                let dt = raw["dose_type"]?.value as? String ?? ""
+                let qty = (raw["quantity"]?.value as? Int)
+                ?? (raw["quantity"]?.value as? Double).flatMap { Int($0) }
+                ?? 0
+                let dt  = raw["dose_type"]?.value as? String ?? ""
                 payload = .doses(quantity: qty, doseType: dt)
+                
             case .weNoticed:
+                // Required fields
                 let pa = raw["physical_activity"]?.value as? String ?? ""
-                let ov = raw["old_value"]?.value as? Double ?? 0
-                let cv = raw["current_value"]?.value as? Double ?? 0
-                let ovd = raw["old_value_retrieved_at"]?.value as? Date ?? Date()
-                let cvd = raw["current_value_retrieved_at"]?.value as? Date ?? Date()
+                let ov: Double = (raw["old_value"]?.value as? Double)
+                ?? (raw["old_value"]?.value as? Int).map(Double.init)
+                ?? 0
+                let cv: Double = (raw["current_value"]?.value as? Double)
+                ?? (raw["current_value"]?.value as? Int).map(Double.init)
+                ?? 0
+                // Parse timestamps
+                let ovd: Date = {
+                    if let sx = raw["old_value_retrieved_at"]?.value as? String,
+                       let dx = isoFmt.date(from: sx) { return dx }
+                    return Date()
+                }()
+                let cvd: Date = {
+                    if let sx = raw["current_value_retrieved_at"]?.value as? String,
+                       let dx = isoFmt.date(from: sx) { return dx }
+                    return Date()
+                }()
                 let sl = raw["stress_level"]?.value as? String ?? ""
-                payload = .noticed(physicalActivity: pa,
-                                   oldValue: ov,
-                                   currentValue: cv,
-                                   oldValueRetrievedAt: ovd,
-                                   currentValueRetrievedAt: cvd,
-                                   stressLevel: sl)
+                // Optional injection
+                let injType = raw["dose_type"]?.value as? String
+                let injQty  = (raw["quantity"]?.value as? Int)
+                ?? (raw["quantity"]?.value as? Double).flatMap { Int($0) }
+                let injFlag: Bool? = raw["dose_type"] != nil ? true : nil
+                // Optional eating
+                let ateFlag: Bool? = raw["meal_type"] != nil ? true : nil
+                let ateType: String? = raw["meal_type"]?.value as? String
+                let ateDt: Date? = (raw["current_value_retrieved_at"]?.value as? String).flatMap { isoFmt.date(from: $0) }
+                let ateQty: String? = raw["food_quantity"]?.value as? String
+                let ateFat: Bool? = raw["with_significant_protein_fiber_or_fat"]?.value as? Bool ?? false
+                
+                payload = .noticed(
+                    physicalActivity: pa,
+                    oldValue: ov,
+                    currentValue: cv,
+                    oldValueRetrievedAt: ovd,
+                    currentValueRetrievedAt: cvd,
+                    stressLevel: sl,
+                    injected: injFlag,
+                    injectionType: injType,
+                    injectionQuantity: injQty,
+                    ateInPriorHour: ateFlag,
+                    ateType: ateType,
+                    ateDate: ateDt,
+                    ateQuantity: ateQty,
+                    ateFat: ateFat
+                )
+                
             default:
                 break
             }

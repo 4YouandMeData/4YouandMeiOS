@@ -209,7 +209,9 @@ class DoseDateTimeViewController: UIViewController, UITextFieldDelegate {
         let titleKey = (variant == .standalone)
         ? StringsProvider.string(forKey: .doseStepTwoTitle)
         : StringsProvider.string(forKey: .noticedStepThreeTitle)
-        let paragraph = NSMutableParagraphStyle(); paragraph.alignment = .center
+        let paragraph = NSMutableParagraphStyle()
+        paragraph.alignment = .center
+        
         let title = NSAttributedString(
             string: titleKey,
             attributes: [
@@ -220,25 +222,36 @@ class DoseDateTimeViewController: UIViewController, UITextFieldDelegate {
         )
         scrollStackView.stackView.addLabel(attributedString: title, numberOfLines: 1)
         scrollStackView.stackView.addBlankSpace(space: 36)
+        
+        let replacementString = displayTitle
 
         // Subtitle
-        let messagekey = (variant == .standalone)
+        let messageKey = (variant == .standalone)
         ? StringsProvider.string(forKey: .doseStepTwoMessage)
+            .replacingPlaceholders(with: [replacementString])
         : StringsProvider.string(forKey: .noticedStepThreeMessage)
-        let baseMsg = messagekey
-        let normalAttrs: [NSAttributedString.Key: Any] = [
-            .font: UIFont.preferredFont(forTextStyle: .body),
+        
+        let attrsNormal: [NSAttributedString.Key: Any] = [
+            .font: UIFont.systemFont(ofSize: 17),
             .foregroundColor: ColorPalette.color(withType: .primaryText),
             .paragraphStyle: paragraph
         ]
-        let boldAttrs: [NSAttributedString.Key: Any] = [
-            .font: UIFont.boldSystemFont(ofSize: UIFont.preferredFont(forTextStyle: .body).pointSize),
+
+        let attributed = NSMutableAttributedString(string: messageKey, attributes: attrsNormal)
+
+        let attrsBold: [NSAttributedString.Key: Any] = [
+            .font: UIFont.boldSystemFont(ofSize: 17),
             .foregroundColor: ColorPalette.color(withType: .primaryText),
             .paragraphStyle: paragraph
         ]
-        let subtitle = NSMutableAttributedString(string: baseMsg, attributes: normalAttrs)
-        subtitle.append(NSAttributedString(string: " " + displayTitle, attributes: boldAttrs))
-        subtitleLabel.attributedText = subtitle
+
+        // Find the range of the string to be bolded
+        if let boldRange = messageKey.range(of: replacementString) {
+            let nsRange = NSRange(boldRange, in: messageKey)
+            attributed.addAttributes(attrsBold, range: nsRange)
+        }
+        
+        subtitleLabel.attributedText = attributed
         scrollStackView.stackView.addArrangedSubview(subtitleLabel)
         scrollStackView.stackView.addBlankSpace(space: 70)
 

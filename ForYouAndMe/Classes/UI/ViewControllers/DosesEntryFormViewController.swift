@@ -50,7 +50,7 @@ class DosesEntryFormViewController: UIViewController {
 
     private let dateLabel: UILabel = {
         let lbl = UILabel()
-        lbl.text = StringsProvider.string(forKey: .doseStepTwoMessage) + " dose"
+        lbl.text = StringsProvider.string(forKey: .doseStepTwoMessage)
         lbl.font = FontPalette.fontStyleData(forStyle: .paragraphBold).font
         lbl.numberOfLines = 0
         return lbl
@@ -60,7 +60,7 @@ class DosesEntryFormViewController: UIViewController {
 
     private let quantityLabel: UILabel = {
         let lbl = UILabel()
-        lbl.text = "Specify the measured dose quantity"/*StringsProvider.string(forKey: .diaryNoteDosesStepThreeMessage)*/
+        lbl.text = StringsProvider.string(forKey: .doseStepTwoMessage)
         lbl.font = FontPalette.fontStyleData(forStyle: .paragraphBold).font
         lbl.numberOfLines = 0
         return lbl
@@ -129,6 +129,12 @@ class DosesEntryFormViewController: UIViewController {
         scrollStack.stackView.addBlankSpace(space: 24)
 
         // Date
+        dateLabel.text = StringsProvider.string(forKey: .doseStepTwoMessage)
+            .replacingPlaceholders(with: [doseType?.displayText(usingVariant: .standalone) ?? "-"])
+        
+        quantityLabel.text = StringsProvider.string(forKey: .doseStepTwoMessage)
+            .replacingPlaceholders(with: [doseType?.displayText(usingVariant: .standalone) ?? "-"])
+        
         scrollStack.stackView.addArrangedSubview(dateLabel)
         scrollStack.stackView.addBlankSpace(space: 8)
         scrollStack.stackView.addArrangedSubview(dateRow)
@@ -146,7 +152,11 @@ class DosesEntryFormViewController: UIViewController {
         scrollStack.stackView.addBlankSpace(space: 8)
         scrollStack.stackView.addArrangedSubview(quantityRow)
         quantityRow.addSubview(quantityValueLabel)
-        quantityValueLabel.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets(top:0, left:8, bottom:0, right:0), excludingEdge: .right)
+        quantityValueLabel.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets(top: 0,
+                                                                           left: 8,
+                                                                           bottom: 0,
+                                                                           right: 0),
+                                                        excludingEdge: .right)
     }
 
     // MARK: - Helpers

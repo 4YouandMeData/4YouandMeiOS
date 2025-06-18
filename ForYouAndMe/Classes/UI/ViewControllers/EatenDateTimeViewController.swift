@@ -166,9 +166,37 @@ class EatenDateTimeViewController: UIViewController {
         scrollStackView.autoPinEdgesToSuperviewSafeArea(with: .zero, excludingEdge: .bottom)
         
         // Transform input text to bold using attributed string
+        let replacementString = selectedType.displayTextUsingVariant(variant: self.variant).lowercased()
         
+        let messageKey = (variant == .standalone)
+        ? StringsProvider.string(forKey: .diaryNoteEatenStepThreeMessage)
+            .replacingPlaceholders(with: [replacementString])
+        : StringsProvider.string(forKey: .noticedStepSevenMessage)
+
         let paragraphStyle = NSMutableParagraphStyle()
-            paragraphStyle.alignment = .center
+        paragraphStyle.alignment = .center
+
+        let attrsNormal: [NSAttributedString.Key: Any] = [
+            .font: UIFont.systemFont(ofSize: 17),
+            .foregroundColor: ColorPalette.color(withType: .primaryText),
+            .paragraphStyle: paragraphStyle
+        ]
+
+        let attributed = NSMutableAttributedString(string: messageKey, attributes: attrsNormal)
+
+        let attrsBold: [NSAttributedString.Key: Any] = [
+            .font: UIFont.boldSystemFont(ofSize: 17),
+            .foregroundColor: ColorPalette.color(withType: .primaryText),
+            .paragraphStyle: paragraphStyle
+        ]
+
+        // Find the range of the string to be bolded
+        if let boldRange = messageKey.range(of: replacementString) {
+            let nsRange = NSRange(boldRange, in: messageKey)
+            attributed.addAttributes(attrsBold, range: nsRange)
+        }
+        
+        subtitleLabel.attributedText = attributed
         
         let titleKey = (variant == .standalone)
         ? StringsProvider.string(forKey: .diaryNoteEatenStepThreeTitle)
@@ -179,32 +207,6 @@ class EatenDateTimeViewController: UIViewController {
             .paragraphStyle: paragraphStyle
         ]
         let boldString = NSAttributedString(string: titleKey, attributes: boldAttrsTitle)
-        
-        // Subtitle: normal + bold
-        let baseKey = (variant == .standalone)
-        ? StringsProvider.string(forKey: .diaryNoteEatenStepThreeMessage)
-        : StringsProvider.string(forKey: .noticedStepSevenMessage)
-        
-        let base = baseKey
-        let boldPart = " " + selectedType.displayTextUsingVariant(variant: self.variant).lowercased()
-        
-        let paragraph = NSMutableParagraphStyle()
-        paragraph.alignment = .center
-        
-        let normalAttrs: [NSAttributedString.Key: Any] = [
-            .font: UIFont.preferredFont(forTextStyle: .body),
-            .foregroundColor: ColorPalette.color(withType: .primaryText),
-            .paragraphStyle: paragraph
-        ]
-        let boldAttrs: [NSAttributedString.Key: Any] = [
-            .font: UIFont.boldSystemFont(ofSize: UIFont.preferredFont(forTextStyle: .body).pointSize),
-            .foregroundColor: ColorPalette.color(withType: .primaryText),
-            .paragraphStyle: paragraph
-        ]
-        
-        let att = NSMutableAttributedString(string: base, attributes: normalAttrs)
-        att.append(NSAttributedString(string: boldPart, attributes: boldAttrs))
-        subtitleLabel.attributedText = att
         
         scrollStackView.stackView.addLabel(attributedString: boldString, numberOfLines: 1)
 

@@ -12,7 +12,7 @@ import PureLayout
 protocol PhysicalActivityViewControllerDelegate: AnyObject {
     /// Called when the user selects an activity level and taps “Next”
     func physicalActivityViewController(_ vc: PhysicalActivityViewController,
-                                        didSelect level: PhysicalActivityViewController.ActivityLevel)
+                                        didSelect level: ActivityLevel)
     /// Called when the user taps the close (“X”) button
     func physicalActivityViewControllerDidCancel(_ vc: PhysicalActivityViewController)
 }
@@ -22,42 +22,6 @@ protocol PhysicalActivityViewControllerDelegate: AnyObject {
 class PhysicalActivityViewController: UIViewController {
     
     // MARK: – Public API
-    
-    /// The possible activity levels the user can choose
-    enum ActivityLevel: String, Codable {
-        case no        = "no"
-        case mild      = "mild"
-        case moderate  = "moderate"
-        case vigorous  = "vigouros"
-        
-        /// Returns the localized display text for each activity level
-        var displayText: String {
-            switch self {
-            case .no:
-                return StringsProvider.string(forKey: .noticedStepTenFirstButton)
-            case .mild:
-                return StringsProvider.string(forKey: .noticedStepTenSecondButton)
-            case .moderate:
-                return StringsProvider.string(forKey: .noticedStepTenThirdButton)
-            case .vigorous:
-                return StringsProvider.string(forKey: .noticedStepTenFourthButton)
-            }
-        }
-        
-        /// Returns the name of the icon image (template) for each level
-        var iconImageName: TemplateImageName {
-            switch self {
-            case .no:
-                return .activityIconNo
-            case .mild:
-                return .activityIconMild
-            case .moderate:
-                return .activityIconModerate
-            case .vigorous:
-                return .activityIconVigorous
-            }
-        }
-    }
     
     weak var delegate: PhysicalActivityViewControllerDelegate?
     

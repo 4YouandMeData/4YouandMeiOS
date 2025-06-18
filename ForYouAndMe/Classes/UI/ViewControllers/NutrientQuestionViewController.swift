@@ -117,32 +117,42 @@ class NutrientQuestionViewController: UIViewController {
         view.addSubview(scrollStack)
         scrollStack.autoPinEdgesToSuperviewSafeArea(with: .zero, excludingEdge: .bottom)
         
+        let replacementString = selectedType.displayTextUsingVariant(variant: self.variant).lowercased()
+        
         // Title: attributed string
         let messageKey = (variant == .standalone)
         ? StringsProvider.string(forKey: .diaryNoteEatenStepFifthMessage)
+            .replacingPlaceholders(with: [replacementString])
         : StringsProvider.string(forKey: .noticedStepNineMessage)
         
         let paragraph = NSMutableParagraphStyle()
         paragraph.alignment = .center
 
-        let normalAttrs: [NSAttributedString.Key: Any] = [
-            .font: UIFont.preferredFont(forTextStyle: .body),
+        let attrsNormal: [NSAttributedString.Key: Any] = [
+            .font: UIFont.systemFont(ofSize: 17),
             .foregroundColor: ColorPalette.color(withType: .primaryText),
             .paragraphStyle: paragraph
         ]
-        let boldAttrs: [NSAttributedString.Key: Any] = [
-            .font: UIFont.boldSystemFont(ofSize: UIFont.preferredFont(forTextStyle: .body).pointSize),
+
+        let attributed = NSMutableAttributedString(string: messageKey, attributes: attrsNormal)
+
+        let attrsBold: [NSAttributedString.Key: Any] = [
+            .font: UIFont.boldSystemFont(ofSize: 17),
             .foregroundColor: ColorPalette.color(withType: .primaryText),
             .paragraphStyle: paragraph
         ]
-        
-        let att = NSMutableAttributedString(string: messageKey, attributes: normalAttrs)
+
+        // Find the range of the string to be bolded
+        if let boldRange = messageKey.range(of: replacementString) {
+            let nsRange = NSRange(boldRange, in: messageKey)
+            attributed.addAttributes(attrsBold, range: nsRange)
+        }
         
         func applyBold(to substring: String) {
-            let fullText = att.string as NSString
+            let fullText = attributed.string as NSString
             let range = fullText.range(of: substring, options: .caseInsensitive)
             guard range.location != NSNotFound else { return }
-            att.addAttributes(boldAttrs, range: range)
+            attributed.addAttributes(attrsBold, range: range)
         }
         
         let typeKey = selectedType.rawValue    // e.g. "Snack" or "Meal"
@@ -162,7 +172,7 @@ class NutrientQuestionViewController: UIViewController {
         
         scrollStack.stackView.addBlankSpace(space: 36)
         
-        scrollStack.stackView.addLabel(attributedString: att)
+        scrollStack.stackView.addLabel(attributedString: attributed)
         scrollStack.stackView.addBlankSpace(space: 24)
         
         // Buttons

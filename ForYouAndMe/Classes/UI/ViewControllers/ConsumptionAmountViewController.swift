@@ -176,28 +176,35 @@ class ConsumptionAmountViewController: UIViewController {
         scrollStack.stackView.addLabel(attributedString: boldTitle, numberOfLines: 1)
         scrollStack.stackView.addBlankSpace(space: 36)
 
+        let replacementString = selectedType.displayTextUsingVariant(variant: self.variant).lowercased()
+
         // Subtitle
         let messageKey = (variant == .standalone)
         ? StringsProvider.string(forKey: .diaryNoteEatenStepFourthMessage)
+            .replacingPlaceholders(with: [replacementString])
         : StringsProvider.string(forKey: .noticedStepEightMessage)
-        let boldPart = " " + selectedType.displayTextUsingVariant(variant: self.variant).lowercased()
-        let end = "..."
-        let att = NSMutableAttributedString(string: messageKey, attributes: [
-            .font: FontPalette.fontStyleData(forStyle: .paragraph).font,
+        
+        let attrsNormal: [NSAttributedString.Key: Any] = [
+            .font: UIFont.systemFont(ofSize: 17),
             .foregroundColor: ColorPalette.color(withType: .primaryText),
             .paragraphStyle: paragraph
-        ])
-        att.append(NSAttributedString(string: boldPart, attributes: [
-            .font: UIFont.boldSystemFont(ofSize: FontPalette.fontStyleData(forStyle: .paragraph).font.pointSize),
+        ]
+
+        let attributed = NSMutableAttributedString(string: messageKey, attributes: attrsNormal)
+
+        let attrsBold: [NSAttributedString.Key: Any] = [
+            .font: UIFont.boldSystemFont(ofSize: 17),
             .foregroundColor: ColorPalette.color(withType: .primaryText),
             .paragraphStyle: paragraph
-        ]))
-        att.append(NSAttributedString(string: end, attributes: [
-            .font: FontPalette.fontStyleData(forStyle: .paragraph).font,
-            .foregroundColor: ColorPalette.color(withType: .primaryText),
-            .paragraphStyle: paragraph
-        ]))
-        scrollStack.stackView.addLabel(attributedString: att)
+        ]
+
+        // Find the range of the string to be bolded
+        if let boldRange = messageKey.range(of: replacementString) {
+            let nsRange = NSRange(boldRange, in: messageKey)
+            attributed.addAttributes(attrsBold, range: nsRange)
+        }
+        
+        scrollStack.stackView.addLabel(attributedString: attributed)
         scrollStack.stackView.addBlankSpace(space: 70)
 
         // Options list

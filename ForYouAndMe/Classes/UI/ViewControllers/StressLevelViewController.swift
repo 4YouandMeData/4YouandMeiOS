@@ -12,7 +12,7 @@ import PureLayout
 protocol StressLevelViewControllerDelegate: AnyObject {
     /// Called when the user selects a stress level and taps “Confirm”
     func stressLevelViewController(_ vc: StressLevelViewController,
-                                   didSelect level: StressLevelViewController.StressLevel)
+                                   didSelect level: StressLevel)
     /// Called when the user taps the close (“X”) button
     func stressLevelViewControllerDidCancel(_ vc: StressLevelViewController)
 }
@@ -22,47 +22,6 @@ protocol StressLevelViewControllerDelegate: AnyObject {
 class StressLevelViewController: UIViewController {
     
     // MARK: – Public API
-    
-    /// The possible stress levels the user can choose
-    enum StressLevel: String, Codable {
-        case none         = "not_stressed_at_all"
-        case aLittle      = "a_little_stressed"
-        case somewhat     = "somewhat_stressed"
-        case stressed     = "stressed"
-        case veryStressed = "very_stressed"
-        
-        /// Returns the localized display text for each stress level
-        var displayText: String {
-            switch self {
-            case .none:
-                return StringsProvider.string(forKey: .noticedStepElevenFirstButton)
-            case .aLittle:
-                return StringsProvider.string(forKey: .noticedStepElevenSecondButton)
-            case .somewhat:
-                return StringsProvider.string(forKey: .noticedStepElevenThirdButton)
-            case .stressed:
-                return StringsProvider.string(forKey: .noticedStepElevenFourthButton)
-            case .veryStressed:
-                return StringsProvider.string(forKey: .noticedStepElevenFifthButton)
-            }
-        }
-        
-        /// Returns the name of the icon image (template) for each level
-        var iconImageName: TemplateImageName {
-            switch self {
-            case .none:
-                return .stressIconNone
-            case .aLittle:
-                return .stressIconLittle
-            case .somewhat:
-                return .stressIconSome
-            case .stressed:
-                return .stressIconStressed
-            case .veryStressed:
-                return .stressIconVeryStressed
-            }
-        }
-    }
     
     weak var delegate: StressLevelViewControllerDelegate?
     
@@ -256,7 +215,7 @@ class StressLevelViewController: UIViewController {
         // Select the tapped one and update state
         if sender == noneButton {
             noneButton.isSelected = true
-            selectedLevel = StressLevelViewController.StressLevel.none
+            selectedLevel = StressLevel.none
         } else if sender == aLittleButton {
             aLittleButton.isSelected = true
             selectedLevel = .aLittle
