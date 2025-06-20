@@ -205,17 +205,18 @@ class WeHaveNoticedEntryFormViewController: UIViewController {
         scrollStackView.stackView.addArrangedSubview(descriptionLabel)
         scrollStackView.stackView.addBlankSpace(space: 16)
 
+        scrollStackView.stackView.addBlankSpace(space: 24)
+        scrollStackView.stackView.addArrangedSubview(injectedLabel)
+        scrollStackView.stackView.addBlankSpace(space: 8)
+        scrollStackView.stackView.addArrangedSubview(injectedRow)
+        scrollStackView.stackView.addBlankSpace(space: 16)
+        
         // Injection block
         if injected {
             
             self.injectionQuantityLabel.text = StringsProvider.string(forKey: .noticedStepThreeMessage)
                 .replacingPlaceholders(with: [self.injectionType?.displayText(usingVariant: .embeddedInNoticed) ?? "-"])
             
-            scrollStackView.stackView.addBlankSpace(space: 24)
-            scrollStackView.stackView.addArrangedSubview(injectedLabel)
-            scrollStackView.stackView.addBlankSpace(space: 8)
-            scrollStackView.stackView.addArrangedSubview(injectedRow)
-            scrollStackView.stackView.addBlankSpace(space: 16)
             scrollStackView.stackView.addArrangedSubview(injectionTypeLabel)
             scrollStackView.stackView.addBlankSpace(space: 8)
             scrollStackView.stackView.addArrangedSubview(injectionTypeRow)
@@ -224,10 +225,14 @@ class WeHaveNoticedEntryFormViewController: UIViewController {
             scrollStackView.stackView.addBlankSpace(space: 8)
             scrollStackView.stackView.addArrangedSubview(injectionQuantityRow)
         }
+        
+        scrollStackView.stackView.addArrangedSubview(ateLabel)
+        scrollStackView.stackView.addBlankSpace(space: 8)
+        scrollStackView.stackView.addArrangedSubview(ateRow)
+        scrollStackView.stackView.addBlankSpace(space: 16)
 
         // Eating block
         if ateInPriorHour {
-            
             let type = self.ateType?.displayTextUsingVariant(variant: .embeddedInNoticed)
             
             ateDateLabel.text = StringsProvider.string(forKey: .noticedStepSevenMessage)
@@ -240,10 +245,6 @@ class WeHaveNoticedEntryFormViewController: UIViewController {
             ateFatLabel.text = StringsProvider.string(forKey: .noticedStepNineMessage)
                 .replacingPlaceholders(with: [type ?? "-"])
             
-            scrollStackView.stackView.addArrangedSubview(ateLabel)
-            scrollStackView.stackView.addBlankSpace(space: 8)
-            scrollStackView.stackView.addArrangedSubview(ateRow)
-            scrollStackView.stackView.addBlankSpace(space: 16)
             scrollStackView.stackView.addArrangedSubview(ateTypeLabel)
             scrollStackView.stackView.addBlankSpace(space: 8)
             scrollStackView.stackView.addArrangedSubview(ateTypeRow)
