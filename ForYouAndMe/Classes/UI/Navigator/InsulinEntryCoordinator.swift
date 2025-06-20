@@ -131,16 +131,24 @@ final class InsulinEntryCoordinator: PagedActivitySectionCoordinator {
     private func saveAllAndFinish() {
         // Perform the API call with collected data
         guard let type = selectedDoseType,
-              let date = doseDate,
               let amount = doseAmount else {
             completionCallback()
             return
         }
         
         if variant == .embeddedInNoticed {
-            onData?(type, date, amount)
+            onData?(type, nil, amount)
             self.completionCallback()
         } else {
+            
+            // Perform the API call with collected data
+            guard let type = selectedDoseType,
+                  let date = doseDate,
+                  let amount = doseAmount else {
+                completionCallback()
+                return
+            }
+            
             repository.sendDiaryNoteDoses(
                 doseType: type,
                 date: date,
@@ -197,7 +205,7 @@ extension InsulinEntryCoordinator: DoseTypeViewControllerDelegate {
 
 // MARK: – DoseDateTimeViewControllerDelegate
 extension InsulinEntryCoordinator: DoseDateTimeViewControllerDelegate {
-    func doseDateTimeViewController(_ vc: DoseDateTimeViewController, didSelect date: Date, amount: Double) {
+    func doseDateTimeViewController(_ vc: DoseDateTimeViewController, didSelect date: Date?, amount: Double) {
         // collect both values and fire save
         doseDate   = date
         doseAmount = amount

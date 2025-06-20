@@ -18,7 +18,7 @@ import PureLayout
 protocol DoseDateTimeViewControllerDelegate: AnyObject {
     /// Called when user taps "Confirm" with both date and amount
     func doseDateTimeViewController(_ vc: DoseDateTimeViewController,
-                                    didSelect date: Date,
+                                    didSelect date: Date?,
                                     amount: Double)
     /// Called when user dismisses this screen (e.g. via back)
     func doseDateTimeViewControllerDidCancel(_ vc: DoseDateTimeViewController)
@@ -135,7 +135,12 @@ class DoseDateTimeViewController: UIViewController, UITextFieldDelegate {
     private var chosenDate: Date? { didSet { updateFooter() }}
     private var chosenDose: Double? { didSet { updateFooter() }}
     private func updateFooter() {
-        footerView.setButtonEnabled(enabled: chosenDate != nil && chosenDose != nil)
+        switch self.variant {
+        case .standalone:
+            footerView.setButtonEnabled(enabled: chosenDate != nil && chosenDose != nil)
+        case .embeddedInNoticed:
+            footerView.setButtonEnabled(enabled: chosenDose != nil)
+        }
     }
     
     private lazy var messages: [MessageInfo] = {
@@ -268,26 +273,32 @@ class DoseDateTimeViewController: UIViewController, UITextFieldDelegate {
 
         // Date Section
         
-        sectionHeaderTime.text = (variant == .standalone)
-        ? StringsProvider.string(forKey: .doseStepTwoTimeLabel)
-        : StringsProvider.string(forKey: .noticedStepThreeTime)
+        if variant == .standalone {
+            sectionHeaderTime.text = (variant == .standalone)
+            ? StringsProvider.string(forKey: .doseStepTwoTimeLabel)
+            : StringsProvider.string(forKey: .noticedStepThreeTime)
 
-        scrollStackView.stackView.addArrangedSubview(sectionHeaderTime)
-        scrollStackView.stackView.addBlankSpace(space: 8)
-        scrollStackView.stackView.addArrangedSubview(dateRow)
-        dateRow.autoSetDimension(.height, toSize: 44)
-        dateRow.addSubview(dateValueLabel); dateRow.addSubview(dateIcon); dateRow.addSubview(underlineTime)
-        dateValueLabel.autoAlignAxis(toSuperviewAxis: .horizontal)
-        dateValueLabel.autoPinEdge(.leading, to: .leading, of: dateRow)
-        dateIcon.autoAlignAxis(.horizontal, toSameAxisOf: dateValueLabel)
-        dateIcon.autoPinEdge(.trailing, to: .trailing, of: dateRow)
-        dateIcon.autoSetDimensions(to: CGSize(width: 24, height: 24))
-        underlineTime.autoPinEdge(.bottom, to: .bottom, of: dateRow)
-        underlineTime.autoPinEdgesToSuperviewEdges(with: .zero, excludingEdge: .top)
-        underlineTime.autoSetDimension(.height, toSize: 1)
-        scrollStackView.stackView.addArrangedSubview(datePicker)
-        datePicker.isHidden = true
-        scrollStackView.stackView.addBlankSpace(space: 36)
+            scrollStackView.stackView.addArrangedSubview(sectionHeaderTime)
+            scrollStackView.stackView.addBlankSpace(space: 8)
+            scrollStackView.stackView.addArrangedSubview(dateRow)
+            
+            dateRow.autoSetDimension(.height, toSize: 44)
+            dateRow.addSubview(dateValueLabel)
+            dateRow.addSubview(dateIcon)
+            dateRow.addSubview(underlineTime)
+            
+            dateValueLabel.autoAlignAxis(toSuperviewAxis: .horizontal)
+            dateValueLabel.autoPinEdge(.leading, to: .leading, of: dateRow)
+            dateIcon.autoAlignAxis(.horizontal, toSameAxisOf: dateValueLabel)
+            dateIcon.autoPinEdge(.trailing, to: .trailing, of: dateRow)
+            dateIcon.autoSetDimensions(to: CGSize(width: 24, height: 24))
+            underlineTime.autoPinEdge(.bottom, to: .bottom, of: dateRow)
+            underlineTime.autoPinEdgesToSuperviewEdges(with: .zero, excludingEdge: .top)
+            underlineTime.autoSetDimension(.height, toSize: 1)
+            scrollStackView.stackView.addArrangedSubview(datePicker)
+            datePicker.isHidden = true
+            scrollStackView.stackView.addBlankSpace(space: 36)
+        }
 
         // Dose Section
         
@@ -363,8 +374,8 @@ class DoseDateTimeViewController: UIViewController, UITextFieldDelegate {
     }
 
     @objc private func confirmTapped() {
-        guard let date = chosenDate, let amount = chosenDose else { return }
-        delegate?.doseDateTimeViewController(self, didSelect: date, amount: amount)
+        guard let amount = chosenDose else { return }
+        delegate?.doseDateTimeViewController(self, didSelect: nil, amount: amount)
     }
 
     @objc private func infoPressed() {

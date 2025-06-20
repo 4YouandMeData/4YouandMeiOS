@@ -224,6 +224,7 @@ class WeHaveNoticedEntryFormViewController: UIViewController {
             scrollStackView.stackView.addArrangedSubview(injectionQuantityLabel)
             scrollStackView.stackView.addBlankSpace(space: 8)
             scrollStackView.stackView.addArrangedSubview(injectionQuantityRow)
+            scrollStackView.stackView.addBlankSpace(space: 16)
         }
         
         scrollStackView.stackView.addArrangedSubview(ateLabel)
@@ -260,10 +261,10 @@ class WeHaveNoticedEntryFormViewController: UIViewController {
             scrollStackView.stackView.addArrangedSubview(ateFatLabel)
             scrollStackView.stackView.addBlankSpace(space: 8)
             scrollStackView.stackView.addArrangedSubview(ateFatRow)
+            scrollStackView.stackView.addBlankSpace(space: 16)
         }
 
         // Noticed physics & stress
-        scrollStackView.stackView.addBlankSpace(space: (injected || ateInPriorHour) ? 24 : 24)
         scrollStackView.stackView.addArrangedSubview(activityLabel)
         scrollStackView.stackView.addBlankSpace(space: 8)
         scrollStackView.stackView.addArrangedSubview(activityRow)
@@ -271,6 +272,7 @@ class WeHaveNoticedEntryFormViewController: UIViewController {
         scrollStackView.stackView.addArrangedSubview(stressLabel)
         scrollStackView.stackView.addBlankSpace(space: 8)
         scrollStackView.stackView.addArrangedSubview(stressRow)
+        scrollStackView.stackView.addBlankSpace(space: 24)
     }
 }
 

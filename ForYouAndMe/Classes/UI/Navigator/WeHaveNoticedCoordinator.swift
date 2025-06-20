@@ -20,7 +20,7 @@ struct FoodEntryData: Codable {
 
 struct DoseEntryData: Codable {
     let doseType: String
-    let date: Date
+    let date: Date?
     let amount: Double
 }
 
