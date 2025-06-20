@@ -21,6 +21,7 @@ protocol DoseTypeViewControllerDelegate: AnyObject {
 class DoseTypeViewController: UIViewController {
     
     private let variant: FlowVariant
+    
     private lazy var messages: [MessageInfo] = {
         if let storage = Services.shared.storageServices {
             let location: MessageInfoParameter = (variant == .embeddedInNoticed) ? .pageWeHaveNoticed : .pageMyDoses
@@ -32,6 +33,7 @@ class DoseTypeViewController: UIViewController {
 
     // MARK: - Public API
     weak var delegate: DoseTypeViewControllerDelegate?
+    var alert: Alert?
     
     private lazy var infoButton: UIBarButtonItem = {
         let item = UIBarButtonItem(
@@ -151,6 +153,15 @@ class DoseTypeViewController: UIViewController {
         )
         scrollStack.stackView.addLabel(attributedString: header, numberOfLines: 1)
         scrollStack.stackView.addBlankSpace(space: 36)
+        
+        if let alert = alert?.body {
+            scrollStack.stackView.addLabel(
+                withText: alert,
+                fontStyle: .paragraph,
+                color: ColorPalette.color(withType: .primaryText)
+            )
+            scrollStack.stackView.addBlankSpace(space: 40)
+        }
         
         // Subtitle: "What type did you use?"
         let message = (variant == .standalone)

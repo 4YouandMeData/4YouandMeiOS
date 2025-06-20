@@ -47,6 +47,8 @@ class ConsumptionAmountViewController: UIViewController {
 
     /// The type we ate (snack/meal)
     var selectedType: FoodEntryType!
+    var alert: Alert?
+    
     private let storage: CacheService
     private let navigator: AppNavigator
     weak var delegate: ConsumptionAmountViewControllerDelegate?
@@ -183,6 +185,7 @@ class ConsumptionAmountViewController: UIViewController {
         ? StringsProvider.string(forKey: .diaryNoteEatenStepFourthMessage)
             .replacingPlaceholders(with: [replacementString])
         : StringsProvider.string(forKey: .noticedStepEightMessage)
+            .replacingPlaceholders(with: [replacementString])
         
         let attrsNormal: [NSAttributedString.Key: Any] = [
             .font: UIFont.systemFont(ofSize: 17),
@@ -202,6 +205,15 @@ class ConsumptionAmountViewController: UIViewController {
         if let boldRange = messageKey.range(of: replacementString) {
             let nsRange = NSRange(boldRange, in: messageKey)
             attributed.addAttributes(attrsBold, range: nsRange)
+        }
+        
+        if let alert = alert?.body {
+            scrollStack.stackView.addLabel(
+                withText: alert,
+                fontStyle: .paragraph,
+                color: ColorPalette.color(withType: .primaryText)
+            )
+            scrollStack.stackView.addBlankSpace(space: 40)
         }
         
         scrollStack.stackView.addLabel(attributedString: attributed)

@@ -1,6 +1,6 @@
 {
   "name": "ForYouAndMe",
-  "version": "0.93.2",
+  "version": "0.95.7",
   "summary": "Framework for research studies apps",
   "description": "ForYouAndMe is a framework aimed to easily develop an app for research study",
   "homepage": "https://github.com/4YouandMeData/4YouandMeiOS",
@@ -9,15 +9,15 @@
     "file": "LICENSE"
   },
   "authors": {
-    "LeonardoPasseri": "leonardo@balzo.eu"
+    "Giuseppe Lapenta": "giuseppe@balzo.eu"
   },
   "source": {
     "git": "https://github.com/4YouandMeData/4YouandMeiOS.git",
-    "tag": "0.93.2"
+    "tag": "0.95.7"
   },
   "cocoapods_version": ">= 1.6.0",
   "pod_target_xcconfig": {
-    "EXCLUDED_ARCHS[sdk=iphonesimulator*]": "arm64"
+    "EXCLUDED_ARCHS[sdk=iphonesimulator*]": "x86_64 arm64"
   },
   "user_target_xcconfig": {
     "EXCLUDED_ARCHS[sdk=iphonesimulator*]": "arm64"
@@ -31,6 +31,10 @@
     "ForYouAndMe": [
       "ForYouAndMe/Assets/**/*.{json,xcassets}"
     ]
+  },
+  "vendored_frameworks": "ForYouAndMe/Frameworks/MirSmartDevice.framework",
+  "xcconfig": {
+    "FRAMEWORK_SEARCH_PATHS": "$(PODS_ROOT)/ForYouAndMe/Frameworks/**"
   },
   "frameworks": "UIKit",
   "dependencies": {
@@ -93,6 +97,9 @@
     ],
     "BalzoGPUImage2": [
       "~> 0.2.1"
+    ],
+    "TerraiOS": [
+      "~> 1.6.26"
     ],
     "JJFloatingActionButton": [
       "~> 3.0.1"

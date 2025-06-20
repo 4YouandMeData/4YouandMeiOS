@@ -25,6 +25,8 @@ class StressLevelViewController: UIViewController {
     
     weak var delegate: StressLevelViewControllerDelegate?
     
+    var alert: Alert?
+    
     // MARK: – Flow Variant
     
     /// Indicates whether this controller is running in “standalone” vs “noticed” mode.
@@ -146,6 +148,15 @@ class StressLevelViewController: UIViewController {
         )
         scrollStack.stackView.addLabel(attributedString: header, numberOfLines: 1)
         scrollStack.stackView.addBlankSpace(space: 36)
+        
+        if let alert = alert?.body {
+            scrollStack.stackView.addLabel(
+                withText: alert,
+                fontStyle: .paragraph,
+                color: ColorPalette.color(withType: .primaryText)
+            )
+            scrollStack.stackView.addBlankSpace(space: 40)
+        }
         
         let messageKey = StringsProvider.string(forKey: .noticedStepElevenMessage)
         

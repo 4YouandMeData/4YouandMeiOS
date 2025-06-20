@@ -28,6 +28,7 @@ protocol DoseDateTimeViewControllerDelegate: AnyObject {
 class DoseDateTimeViewController: UIViewController, UITextFieldDelegate {
 
     // MARK: - Public API
+    var alert: Alert?
 
     /// The display text selected in the previous step
     private let displayTitle: String
@@ -223,6 +224,15 @@ class DoseDateTimeViewController: UIViewController, UITextFieldDelegate {
         scrollStackView.stackView.addLabel(attributedString: title, numberOfLines: 1)
         scrollStackView.stackView.addBlankSpace(space: 36)
         
+        if let alert = alert?.body {
+            scrollStackView.stackView.addLabel(
+                withText: alert,
+                fontStyle: .paragraph,
+                color: ColorPalette.color(withType: .primaryText)
+            )
+            scrollStackView.stackView.addBlankSpace(space: 40)
+        }
+        
         let replacementString = displayTitle
 
         // Subtitle
@@ -230,6 +240,7 @@ class DoseDateTimeViewController: UIViewController, UITextFieldDelegate {
         ? StringsProvider.string(forKey: .doseStepTwoMessage)
             .replacingPlaceholders(with: [replacementString])
         : StringsProvider.string(forKey: .noticedStepThreeMessage)
+            .replacingPlaceholders(with: [replacementString])
         
         let attrsNormal: [NSAttributedString.Key: Any] = [
             .font: UIFont.systemFont(ofSize: 17),

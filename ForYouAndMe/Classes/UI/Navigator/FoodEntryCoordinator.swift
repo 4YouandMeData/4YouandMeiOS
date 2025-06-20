@@ -36,6 +36,7 @@ final class FoodEntryCoordinator: PagedActivitySectionCoordinator {
     
     // MARK: - Coordinator requirements
     var hidesBottomBarWhenPushed: Bool = false
+    var alert: Alert?
     
     // MARK: - ActivitySectionCoordinator requirements
     let repository: Repository
@@ -127,6 +128,7 @@ final class FoodEntryCoordinator: PagedActivitySectionCoordinator {
             let eatenTypeVC = EatenTypeViewController(variant: variant)
             eatenTypeVC.delegate = self
             self.rootEatenTypeVC = eatenTypeVC
+            eatenTypeVC.alert = self.alert
             return eatenTypeVC
             
         case .standalone:
@@ -181,6 +183,7 @@ extension FoodEntryCoordinator: EatenTypeViewControllerDelegate {
         let timeVC = EatenTimeViewController(selectedType: FoodEntryType(rawValue: select)!,
                                              variant: self.variant)
         timeVC.delegate = self
+        timeVC.alert = self.alert
         navigationController.pushViewController(
             timeVC,
             hidesBottomBarWhenPushed: hidesBottomBarWhenPushed,
@@ -211,6 +214,7 @@ extension FoodEntryCoordinator: EatenTimeViewControllerDelegate {
             let dateTimeVC = EatenDateTimeViewController(variant: self.variant)
             dateTimeVC.selectedType = FoodEntryType(rawValue: selectedFoodType!)!
             dateTimeVC.delegate = self
+            dateTimeVC.alert = self.alert
             navigationController.pushViewController(
                 dateTimeVC,
                 hidesBottomBarWhenPushed: hidesBottomBarWhenPushed,
@@ -232,6 +236,7 @@ extension FoodEntryCoordinator: EatenDateTimeViewControllerDelegate {
         let amountVC = ConsumptionAmountViewController(variant: self.variant)
         amountVC.selectedType = type
         amountVC.delegate = self
+        amountVC.alert = self.alert
         navigationController.pushViewController(
             amountVC,
             hidesBottomBarWhenPushed: hidesBottomBarWhenPushed,
@@ -255,6 +260,7 @@ extension FoodEntryCoordinator: ConsumptionAmountViewControllerDelegate {
         let nutrientVC = NutrientQuestionViewController(variant: self.variant)
         nutrientVC.selectedType = FoodEntryType(rawValue: selectedFoodType!)!
         nutrientVC.delegate = self
+        nutrientVC.alert = self.alert
         navigationController.pushViewController(
             nutrientVC,
             hidesBottomBarWhenPushed: hidesBottomBarWhenPushed,

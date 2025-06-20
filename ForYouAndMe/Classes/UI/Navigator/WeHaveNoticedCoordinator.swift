@@ -138,7 +138,8 @@ final class WeHaveNoticedCoordinator: PagedActivitySectionCoordinator {
     private var answeredFood: FoodEntryData?
     private var answeredActivity: ActivityLevel?
     private var answeredStress: StressLevel?
-    private var feed: Feed?
+    private var feed: Feed
+    private var alert: Alert
     private lazy var messages: [MessageInfo] = {
         let messages = self.cacheService.infoMessages?.messages(withLocation: .pageWeHaveNoticed)
         return messages ?? []
@@ -151,6 +152,7 @@ final class WeHaveNoticedCoordinator: PagedActivitySectionCoordinator {
          taskIdentifier: String,
          presenter: UIViewController,
          feed: Feed,
+         alert: Alert,
          completion: @escaping NotificationCallback) {
 
         self.repository = repository
@@ -159,6 +161,7 @@ final class WeHaveNoticedCoordinator: PagedActivitySectionCoordinator {
         self.taskIdentifier = taskIdentifier
         self.completionCallback = completion
         self.feed = feed
+        self.alert = alert
         
         self.pagedSectionData = PagedSectionData(
             welcomePage: Page(id: "wehaventiced_intro", type: "", title: "", body: "", image: nil),
@@ -173,7 +176,8 @@ final class WeHaveNoticedCoordinator: PagedActivitySectionCoordinator {
     /// this method creates one internally, embeds the insulin‐entry flow, and returns it.
     func getStartingPage() -> UIViewController {
         
-        let introVC = NoticedIntroViewController(navigator: self.navigator)
+        let introVC = NoticedIntroViewController(alert: self.alert,
+                                                 navigator: self.navigator)
         introVC.delegate = self
         introVC.messages = self.messages
         
@@ -207,7 +211,7 @@ extension WeHaveNoticedCoordinator: NoticedIntroViewControllerDelegate {
         )
         
         insulinCoordinator.messages = self.messages
-        
+        insulinCoordinator.alert = self.alert
         self.currentActivityCoordinator = insulinCoordinator
 
         let startVC = insulinCoordinator.getStartingPage()
@@ -227,6 +231,7 @@ extension WeHaveNoticedCoordinator: NoticedIntroViewControllerDelegate {
     private func showFoodIntro() {
         let foodIntroVC = EatenIntroViewController()
         foodIntroVC.delegate = self
+        foodIntroVC.alert = self.alert
         
         navigationController.pushViewController(
             foodIntroVC,
@@ -261,7 +266,7 @@ extension WeHaveNoticedCoordinator: EatenIntroViewControllerDelegate {
             onDataCallback: onDataCallback,
             completion: foodCompletion
         )
-        
+        foodCoordinator.alert = self.alert
         self.currentActivityCoordinator = foodCoordinator
         
         navigationController.pushViewController(
@@ -282,6 +287,7 @@ extension WeHaveNoticedCoordinator: EatenIntroViewControllerDelegate {
     private func showPhysicalActivity() {
         let activityVC = PhysicalActivityViewController(variant: .embeddedInNoticed)
         activityVC.delegate = self
+        activityVC.alert = self.alert
         
         navigationController.pushViewController(
             activityVC,
@@ -301,6 +307,7 @@ extension WeHaveNoticedCoordinator: PhysicalActivityViewControllerDelegate {
         
         let stressVC = StressLevelViewController(variant: .embeddedInNoticed)
         stressVC.delegate = self
+        stressVC.alert = self.alert
         
         navigationController.pushViewController(
             stressVC,
@@ -321,7 +328,7 @@ extension WeHaveNoticedCoordinator: StressLevelViewControllerDelegate {
     func stressLevelViewController(_ vc: StressLevelViewController,
                                    didSelect level: StressLevel) {
         self.answeredStress = level
-        if let tv = feed?.extractWeHaveNoticedTemplateValues() {
+        if let tv = feed.extractWeHaveNoticedTemplateValues() {
             let diaryNoteData = DiaryNoteWeHaveNoticedItem(diaryType: .weNoticed,
                                                            dosesData: self.answeredDose,
                                                            foodData: self.answeredFood,

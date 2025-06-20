@@ -8,6 +8,7 @@
 
 import UIKit
 import ForYouAndMe
+import TerraiOS
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -48,6 +49,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                                           checkResourcesAvailability: true,
                                           enableLocationServices: true,
                                           healthReadDataTypes: HealthDataType.allCases)
+        
+        Terra.setUpBackgroundDelivery()
+        
         return true
     }
     

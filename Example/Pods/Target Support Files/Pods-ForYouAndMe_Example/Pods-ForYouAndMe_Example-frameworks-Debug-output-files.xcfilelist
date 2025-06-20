@@ -11,6 +11,7 @@ ${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/FirebaseInstallations.framework
 ${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/FirebaseMessaging.framework
 ${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/FirebaseRemoteConfigInterop.framework
 ${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/FirebaseSessions.framework
+${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/MirSmartDevice.framework
 ${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/GoogleDataTransport.framework
 ${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/GoogleUtilities.framework
 ${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/JJFloatingActionButton.framework
@@ -32,3 +33,4 @@ ${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/TPKeyboardAvoiding.framework
 ${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/UberSignature.framework
 ${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Validator.framework
 ${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/nanopb.framework
+${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/TerraiOS.framework

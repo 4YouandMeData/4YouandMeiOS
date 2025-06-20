@@ -66,6 +66,7 @@ Pod::Spec.new do |s|
   s.dependency 'FYAMResearchKit', '~> 3.0.0'
   s.dependency 'StepSlider', '~> 1.8.0'
   s.dependency 'BalzoGPUImage2', '~> 0.2.1'
+  s.dependency 'TerraiOS', '~> 1.6.26'
   s.dependency 'JJFloatingActionButton', '~> 3.0.1'
 
   

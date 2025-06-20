@@ -16,6 +16,7 @@ protocol EatenTypeViewControllerDelegate: AnyObject {
 class EatenTypeViewController: UIViewController {
 
     weak var delegate: EatenTypeViewControllerDelegate?
+    var alert: Alert?
 
     private lazy var snackButton = makeOptionButton(type: .snack)
     private lazy var mealButton  = makeOptionButton(type: .meal)
@@ -131,6 +132,15 @@ class EatenTypeViewController: UIViewController {
         scrollStackView.stackView.addLabel(attributedString: boldString, numberOfLines: 1)
         
         scrollStackView.stackView.addBlankSpace(space: 36)
+        
+        if let alert = alert?.body {
+            scrollStackView.stackView.addLabel(
+                withText: alert,
+                fontStyle: .paragraph,
+                color: ColorPalette.color(withType: .primaryText)
+            )
+            scrollStackView.stackView.addBlankSpace(space: 40)
+        }
         
         let message = variant == .standalone
         ? StringsProvider.string(forKey: .diaryNoteEatenStepOneMessage)

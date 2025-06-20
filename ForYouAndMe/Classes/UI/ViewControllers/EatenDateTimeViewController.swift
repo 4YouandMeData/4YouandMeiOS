@@ -21,6 +21,7 @@ protocol EatenDateTimeViewControllerDelegate: AnyObject {
 class EatenDateTimeViewController: UIViewController {
 
     // MARK: – Public API
+    var alert: Alert?
     
     /// Type passed from the previous screen
     var selectedType: FoodEntryType!
@@ -172,6 +173,7 @@ class EatenDateTimeViewController: UIViewController {
         ? StringsProvider.string(forKey: .diaryNoteEatenStepThreeMessage)
             .replacingPlaceholders(with: [replacementString])
         : StringsProvider.string(forKey: .noticedStepSevenMessage)
+            .replacingPlaceholders(with: [replacementString])
 
         let paragraphStyle = NSMutableParagraphStyle()
         paragraphStyle.alignment = .center
@@ -211,6 +213,15 @@ class EatenDateTimeViewController: UIViewController {
         scrollStackView.stackView.addLabel(attributedString: boldString, numberOfLines: 1)
 
         scrollStackView.stackView.addBlankSpace(space: 36)
+        
+        if let alert = alert?.body {
+            scrollStackView.stackView.addLabel(
+                withText: alert,
+                fontStyle: .paragraph,
+                color: ColorPalette.color(withType: .primaryText)
+            )
+            scrollStackView.stackView.addBlankSpace(space: 40)
+        }
         
         // Subtitle
         scrollStackView.stackView.addArrangedSubview(subtitleLabel)

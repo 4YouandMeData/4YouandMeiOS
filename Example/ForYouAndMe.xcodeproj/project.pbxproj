@@ -8,7 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		0D15F83E2DE0B75D00C42FF3 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 0D15F83D2DE0B75D00C42FF3 /* GoogleService-Info.plist */; };
-		0D723E212D709DDE00F1E24C /* MirSmartDevice.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 0D723E202D709D5100F1E24C /* MirSmartDevice.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		0DC1F31B2CBE4AC1006640F4 /* ProjectInfo.plist in Resources */ = {isa = PBXBuildFile; fileRef = 0DC1F31A2CBE4AC1006640F4 /* ProjectInfo.plist */; };
 		2E98D4D4940B427E389BF212 /* Pods_ForYouAndMe_Tests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FB5091D469B4238DC8A764EE /* Pods_ForYouAndMe_Tests.framework */; };
 		30EB65AF2ACEA8F246180626 /* Pods_ForYouAndMe_Example.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AF8A33C493B50A7975565DB7 /* Pods_ForYouAndMe_Example.framework */; };
@@ -38,7 +37,6 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				0D723E212D709DDE00F1E24C /* MirSmartDevice.framework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -48,7 +46,6 @@
 /* Begin PBXFileReference section */
 		03978827A254ED1A837CCBA2 /* LICENSE */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; name = LICENSE; path = ../LICENSE; sourceTree = "<group>"; };
 		0D15F83D2DE0B75D00C42FF3 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
-		0D723E202D709D5100F1E24C /* MirSmartDevice.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MirSmartDevice.framework; path = /Users/giuslape/Development/Balzo/Clienti/4YouAndMe/MIR_PLUS_SDK_SpirobankSmart_Smartone_IOS_4.2.4/MIR_PLUS_SDK_SpirobankSmart_Smartone_IOS_4.2.4/MIR_PLUS_SDK_SpirobankSmart_Smartone_IOS_4.2.4/MirSmartDevice.framework; sourceTree = "<absolute>"; };
 		0DC1F31A2CBE4AC1006640F4 /* ProjectInfo.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = ProjectInfo.plist; sourceTree = "<group>"; };
 		1E64E7925EC10F50764E2283 /* Pods-ForYouAndMe_Example.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ForYouAndMe_Example.release.xcconfig"; path = "Target Support Files/Pods-ForYouAndMe_Example/Pods-ForYouAndMe_Example.release.xcconfig"; sourceTree = "<group>"; };
 		25CB4B629F5096CCA0D48864 /* Pods-ForYouAndMe_Tests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ForYouAndMe_Tests.release.xcconfig"; path = "Target Support Files/Pods-ForYouAndMe_Tests/Pods-ForYouAndMe_Tests.release.xcconfig"; sourceTree = "<group>"; };
@@ -110,7 +107,6 @@
 				8974CF8A267B848D003A6E61 /* HealthKit.framework */,
 				AF8A33C493B50A7975565DB7 /* Pods_ForYouAndMe_Example.framework */,
 				FB5091D469B4238DC8A764EE /* Pods_ForYouAndMe_Tests.framework */,
-				0D723E202D709D5100F1E24C /* MirSmartDevice.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";

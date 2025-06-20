@@ -21,6 +21,8 @@ class NutrientQuestionViewController: UIViewController {
     
     /// The food type (snack/meal) to display in title
     var selectedType: FoodEntryType!
+    var alert: Alert?
+    
     private let storage: CacheService
     private let navigator: AppNavigator
     private let variant: FlowVariant
@@ -124,6 +126,7 @@ class NutrientQuestionViewController: UIViewController {
         ? StringsProvider.string(forKey: .diaryNoteEatenStepFifthMessage)
             .replacingPlaceholders(with: [replacementString])
         : StringsProvider.string(forKey: .noticedStepNineMessage)
+            .replacingPlaceholders(with: [replacementString])
         
         let paragraph = NSMutableParagraphStyle()
         paragraph.alignment = .center
@@ -171,6 +174,15 @@ class NutrientQuestionViewController: UIViewController {
         scrollStack.stackView.addLabel(attributedString: boldString, numberOfLines: 1)
         
         scrollStack.stackView.addBlankSpace(space: 36)
+        
+        if let alert = alert?.body {
+            scrollStack.stackView.addLabel(
+                withText: alert,
+                fontStyle: .paragraph,
+                color: ColorPalette.color(withType: .primaryText)
+            )
+            scrollStack.stackView.addBlankSpace(space: 40)
+        }
         
         scrollStack.stackView.addLabel(attributedString: attributed)
         scrollStack.stackView.addBlankSpace(space: 24)

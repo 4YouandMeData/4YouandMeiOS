@@ -30,7 +30,7 @@ enum DoseType: String, Codable {
             case .pumpBolus:
                 return StringsProvider.string(forKey: .noticedStepTwoFirstButton)
             case .insulinInjection:
-                return StringsProvider.string(forKey: .noticedStepTwoFirstButton)
+                return StringsProvider.string(forKey: .noticedStepTwoSecondButton)
             }
         }
     }
@@ -46,6 +46,7 @@ final class InsulinEntryCoordinator: PagedActivitySectionCoordinator {
     let repository: Repository
     let navigator: AppNavigator
     var messages: [MessageInfo] = []
+    var alert: Alert?
     let taskIdentifier: String
     let disposeBag = DisposeBag()
     var activityPresenter: UIViewController? { activitySectionViewController }
@@ -120,6 +121,7 @@ final class InsulinEntryCoordinator: PagedActivitySectionCoordinator {
         case .embeddedInNoticed:
             let doseTypeVC = DoseTypeViewController(variant: self.variant)
             doseTypeVC.delegate = self
+            doseTypeVC.alert = self.alert
             return doseTypeVC
         }
         
@@ -169,6 +171,7 @@ extension InsulinEntryCoordinator: DoseTypeViewControllerDelegate {
         
         let dtVC = DoseDateTimeViewController(displayTitle: selectedDoseTypeText, variant: variant)
         dtVC.delegate = self
+        dtVC.alert = self.alert
         if variant == .embeddedInNoticed {
             vc.navigationController?.pushViewController(
                 dtVC,

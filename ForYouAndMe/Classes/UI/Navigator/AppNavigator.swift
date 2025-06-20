@@ -556,6 +556,15 @@ class AppNavigator {
             self.currentCoordinator = nil
         }
         
+        guard let alert = {
+            if case let .alert(alert) = data.notifiable {
+                return alert
+            }
+            return nil
+        }() else {
+            // Handle case where notifiable is not an alert
+            return
+        }
         // Instantiate the coordinator, passing the original presenter.
         let weHaveNoticedCoordinator = WeHaveNoticedCoordinator(
             repository: Services.shared.repository,
@@ -563,6 +572,7 @@ class AppNavigator {
             taskIdentifier: data.id,
             presenter: presenter,
             feed: data,
+            alert: alert,
             completion: completionCallback
         )
         

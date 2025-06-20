@@ -16,6 +16,9 @@ protocol EatenIntroViewControllerDelegate: AnyObject {
 
 class EatenIntroViewController: UIViewController {
     
+    // MARK: - Public API
+    var alert: Alert?
+    
     // MARK: – UI Elements
     
     private let scrollStack = ScrollStackView(
@@ -106,6 +109,15 @@ class EatenIntroViewController: UIViewController {
         )
         scrollStack.stackView.addLabel(attributedString: header, numberOfLines: 1)
         scrollStack.stackView.addBlankSpace(space: 36)
+        
+        if let alert = alert?.body {
+            scrollStack.stackView.addLabel(
+                withText: alert,
+                fontStyle: .paragraph,
+                color: ColorPalette.color(withType: .primaryText)
+            )
+            scrollStack.stackView.addBlankSpace(space: 40)
+        }
         
         scrollStack.stackView.addLabel(
             withText: StringsProvider.string(forKey: .noticedStepFourMessage),

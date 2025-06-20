@@ -15,6 +15,8 @@ protocol EatenTimeViewControllerDelegate: AnyObject {
 class EatenTimeViewController: UIViewController {
     
     var selectedType: FoodEntryType
+    var alert: Alert?
+    
     private let storage: CacheService
     private let navigator: AppNavigator
     private let variant: FlowVariant
@@ -123,6 +125,7 @@ class EatenTimeViewController: UIViewController {
             ? StringsProvider.string(forKey: .diaryNoteEatenStepTwoMessage)
                 .replacingPlaceholders(with: [replacementString])
             : StringsProvider.string(forKey: .noticedStepSixMessage)
+            .replacingPlaceholders(with: [replacementString])
 
         let paragraphStyle = NSMutableParagraphStyle()
         paragraphStyle.alignment = .center
@@ -162,8 +165,17 @@ class EatenTimeViewController: UIViewController {
         
         scrollStackView.stackView.addBlankSpace(space: 36)
         
+        if let alert = alert?.body {
+            scrollStackView.stackView.addLabel(
+                withText: alert,
+                fontStyle: .paragraph,
+                color: ColorPalette.color(withType: .primaryText)
+            )
+            scrollStackView.stackView.addBlankSpace(space: 40)
+        }
+        
         scrollStackView.stackView.addLabel(attributedString: attributed,
-                                           numberOfLines: 1)
+                                           numberOfLines: 0)
         
         scrollStackView.stackView.addBlankSpace(space: 44)
         

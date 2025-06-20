@@ -18,6 +18,7 @@ class NoticedIntroViewController: UIViewController {
     
     weak var delegate: NoticedIntroViewControllerDelegate?
     let navigator: AppNavigator
+    let alert: Alert
     
     var messages: [MessageInfo] = []
     
@@ -81,7 +82,9 @@ class NoticedIntroViewController: UIViewController {
         }
     }
     
-    init(navigator: AppNavigator) {
+    init(alert: Alert,
+         navigator: AppNavigator) {
+        self.alert = alert
         self.navigator = navigator
         super.init(nibName: nil, bundle: nil)
     }
@@ -130,6 +133,14 @@ class NoticedIntroViewController: UIViewController {
         scrollStack.stackView.addLabel(attributedString: header, numberOfLines: 1)
         scrollStack.stackView.addBlankSpace(space: 36)
         
+        if let alert = alert.body {
+            scrollStack.stackView.addLabel(
+                withText: alert,
+                fontStyle: .paragraph,
+                color: ColorPalette.color(withType: .primaryText)
+            )
+            scrollStack.stackView.addBlankSpace(space: 40)
+        }
         scrollStack.stackView.addLabel(
             withText: StringsProvider.string(forKey: .noticedStepOneMessage),
             fontStyle: .paragraph,
