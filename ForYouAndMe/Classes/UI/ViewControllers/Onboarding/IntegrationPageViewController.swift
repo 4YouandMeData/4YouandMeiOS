@@ -73,6 +73,7 @@ public class IntegrationPageViewController: UIViewController, PageProvider {
                         switch specialLinkBehavior {
                         case .download: return StringsProvider.string(forKey: .onboardingIntegrationDownloadButtonDefault)
                         case .open: return StringsProvider.string(forKey: .onboardingIntegrationOpenAppButtonDefault)
+                        case .active: return StringsProvider.string(forKey: .onboardingIntegrationLoginButtonDefault)
                         }
                     }()
                     view.setFirstButtonText(self.page.specialLinkLabel ?? defaultText)

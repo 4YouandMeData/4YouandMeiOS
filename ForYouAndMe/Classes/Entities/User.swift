@@ -44,6 +44,7 @@ struct User: Codable {
     let userPhases: [UserPhase]?
     let studyWalkthroughDone: Bool
     var userFlags: [UserFlag]
+    var terraRefID: String?
     
 }
 
@@ -72,5 +73,6 @@ user_flags
         case userPhases = "user_study_phases"
         case studyWalkthroughDone = "study_walkthrough_done"
         case userFlags = "user_flags"
+        case terraRefID = "terra_reference_id"
     }
 }

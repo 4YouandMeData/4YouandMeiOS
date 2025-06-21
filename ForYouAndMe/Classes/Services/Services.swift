@@ -35,6 +35,7 @@ class Services {
     private(set) var mirSpirometryService: MirSpirometryService!
     private(set) var deeplinkService: DeeplinkService!
     private(set) var deviceService: DeviceService!
+    private(set) var terraService: TerraService!
     
     private var window: UIWindow?
     
@@ -59,6 +60,9 @@ class Services {
         
         let notificationService = NotificationManager(withNotificationDeeplinkHandler: deeplinkService)
         self.services.append(notificationService)
+        
+        let terraService = TerraManager()
+        self.services.append(terraService)
         
         #if DEBUG
         let networkApiGateway =
@@ -117,6 +121,7 @@ class Services {
         self.mirSpirometryService = mirSpirometryService
         self.deeplinkService = deeplinkService
         self.deviceService = deviceService
+        self.terraService = terraService
         self.navigator.showSetupScreen()
     }
     

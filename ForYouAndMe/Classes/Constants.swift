@@ -32,6 +32,7 @@ struct Constants {
         static let ApiBaseUrlStr = "\(BaseUrl)/api"
         static let CharPageUrlStr = "\(BaseUrl)/web_view/charts/"
         static var YourDataUrlStr: String { ProjectInfo.YourDataUrl }
+        static var TerraDevID: String { ProjectInfo.TerraDevID }
     }
     
     struct Style {
@@ -132,7 +133,8 @@ struct Constants {
         static let TwitterAppSchema: URL = URL(string: "twitter://")!
         static let DexComStoreUrl: URL = URL(string: "itms-apps://apps.apple.com/us/app/dexcom-one/id6450965754")!
         static let DexComAppSchema: URL = URL(string: "dexcom://")!
-
+        static let TerraStoreUrl: URL = URL(string: "itms-apps://apps.apple.com/us/app/twitter/id333903271")!
+        static let TerraAppSchema: URL = URL(string: "terra://")!
     }
     
     struct Task {

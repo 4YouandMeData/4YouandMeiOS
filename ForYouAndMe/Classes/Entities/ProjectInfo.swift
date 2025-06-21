@@ -16,6 +16,7 @@ class ProjectInfo {
         case studyId = "study_id"
         case pinCodeSuffix = "pin_code_suffix"
         case yourDataUrl = "your_data_url"
+        case terraDevID = "terra_dev_id"
     }
     
     static var ApiBaseUrl: String { Self.getValue(forKey: .apiBaseUrl, defaultValue: "") }
@@ -23,6 +24,7 @@ class ProjectInfo {
     static var StudyId: String { Self.getValue(forKey: .studyId, defaultValue: "") }
     static var PinCodeSuffix: String { Self.getValue(forKey: .pinCodeSuffix, defaultValue: "")}
     static var YourDataUrl: String { Self.getValue(forKey: .yourDataUrl, defaultValue: "") }
+    static var TerraDevID: String { Self.getValue(forKey: .terraDevID, defaultValue: "")}
     
     static func validate() {
         ProjectInfoKey.allCases.forEach { key in
@@ -32,6 +34,7 @@ class ProjectInfo {
             case .studyId: _ = Self.getValue(forKey: key, defaultValue: "")
             case .pinCodeSuffix: _ = Self.getValue(forKey: key, defaultValue: "")
             case .yourDataUrl: _ = Self.getValue(forKey: key, defaultValue: "")
+            case .terraDevID: _ = Self.getValue(forKey: key, defaultValue: "")
             }
         }
     }

@@ -15,6 +15,7 @@ public enum Integration: String {
     case rescueTime = "rescuetime"
     case twitter
     case dexcom
+    case terra
     
     var storeUrl: URL {
         switch self {
@@ -25,6 +26,7 @@ public enum Integration: String {
         case .rescueTime: return Constants.Url.RescueTimeStoreUrl
         case .twitter: return Constants.Url.TwitterStoreUrl
         case .dexcom: return Constants.Url.DexComStoreUrl
+        case .terra: return Constants.Url.TerraStoreUrl
         }
     }
     
@@ -37,6 +39,7 @@ public enum Integration: String {
         case .rescueTime: return Constants.Url.RescueTimeAppSchema
         case .twitter: return Constants.Url.TwitterAppSchema
         case .dexcom: return Constants.Url.DexComAppSchema
+        case .terra: return Constants.Url.TerraAppSchema
         }
     }
     

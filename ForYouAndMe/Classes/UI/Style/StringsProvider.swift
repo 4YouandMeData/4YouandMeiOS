@@ -396,6 +396,7 @@ enum StringKey: String, CaseIterable, CodingKey {
     case instagramOauthTitle = "OAUTH_INSTAGRAM"
     case rescueTimeOauthTitle = "OAUTH_RESCUETIME"
     case dexComOauthTitle = "OAUTH_DEXCOM"
+    case terraTitle = "OAUTH_TERRA"
     
     // Phase
     case phaseSwitchMessage = "PHASE_SWITCH_PROMPT"

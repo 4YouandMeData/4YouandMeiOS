@@ -79,6 +79,7 @@ class FeedViewController: BaseViewController {
         self.tableView.autoPinEdge(.top, to: .bottom, of: self.headerView)
         
         self.checkForWalkThrough()
+        self.checkForHealthPermission()
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -143,6 +144,17 @@ class FeedViewController: BaseViewController {
             }, onFailure: { error in
                 print("FeedViewController - Error refreshing user: \(error.localizedDescription)")
             }).disposed(by: self.disposeBag)
+    }
+    
+    private func checkForHealthPermission() {
+        Services.shared.terraService
+            .initialize()
+            .flatMap {
+                Services.shared.terraService.connectToTerraIfAvailable()
+            }
+            .observe(on: MainScheduler.instance)
+            .subscribe(onSuccess: {}, onFailure: { _ in})
+            .disposed(by: disposeBag)
     }
     
     private func checkForWalkThrough() {

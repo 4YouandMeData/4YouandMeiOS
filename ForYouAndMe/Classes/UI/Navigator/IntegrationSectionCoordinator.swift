@@ -6,19 +6,23 @@
 //
 
 import Foundation
+import TerraiOS
+import RxSwift
 
 enum IntegrationSpecialLinkBehaviour: CaseIterable {
     static var allCases: [IntegrationSpecialLinkBehaviour] {
-        return [.download(app: nil), .open(app: nil)]
+        return [.download(app: nil), .open(app: nil), .active(app: nil)]
     }
     
     case download(app: Integration?)
     case open(app: Integration?)
+    case active(app: Integration?)
     
     var keyword: String {
         switch self {
         case .download: return "download"
         case .open: return "open"
+        case .active: return "active"
         }
     }
 }
@@ -27,6 +31,8 @@ class IntegrationSectionCoordinator {
     
     // MARK: - Coordinator
     var hidesBottomBarWhenPushed: Bool = false
+    
+    var terra: TerraManager?
     
     // MARK: - PagedSectionCoordinator
     var addAbortOnboardingButton: Bool = true
@@ -37,7 +43,8 @@ class IntegrationSectionCoordinator {
     
     private let sectionData: IntegrationSection
     private let completionCallback: NavigationControllerCallback
-    
+    private let disposeBag = DisposeBag()
+
     init(withSectionData sectionData: IntegrationSection,
          navigationController: UINavigationController,
          completionCallback: @escaping NavigationControllerCallback) {
@@ -91,6 +98,7 @@ extension IntegrationSectionCoordinator: IntegrationPageCoordinator {
                                                            allowBackwardNavigation: true,
                                                            onSuccessCallback: { loginViewController in
                                                             loginViewController.dismiss(animated: true, completion: { [weak self] in
+                                                                
                                                                 self?.onPagePrimaryButtonPressed(page: page)
                                                             })
                                                            },
@@ -121,6 +129,24 @@ extension IntegrationSectionCoordinator: IntegrationPageCoordinator {
                 return
             }
             self.navigator.openIntegrationApp(forIntegration: app)
+        case .active(let app):
+            guard let app = app else {
+                assertionFailure("Missing app for open behaviour")
+                return
+            }
+            
+            Services.shared.terraService
+                .initialize()
+                .flatMap {
+                    Services.shared.terraService.connectToTerraIfAvailable()
+                }
+                .observe(on: MainScheduler.instance)
+                .addProgress()
+                .subscribe(onSuccess: { [weak self] in
+                    self?.onPagePrimaryButtonPressed(page: page)
+                }, onFailure: { error in
+                })
+                .disposed(by: disposeBag)
         }
     }
 }

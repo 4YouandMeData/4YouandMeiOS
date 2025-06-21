@@ -140,7 +140,7 @@ public class SpyrometerResultsViewController: UIViewController {
     
     private func populateTable() {
 
-        let pefLiters  = Float(results.pef_cLs) / 100.0
+        let pefLiters  = Float(results.pef_cLs)
         let fev1Liters = Float(results.fev1_cL)
         
         let pefStd      = feed.pefThresholdStandard
@@ -151,7 +151,7 @@ public class SpyrometerResultsViewController: UIViewController {
         let pefTargetString: String = {
             if let std = pefStd {
                 // Esempio: “7.00 L/m”
-                return String(format: "%.2f L/m", std)
+                return String(format: "%.2f L/m", std * 0.6)
             } else {
                 return ""
             }
@@ -165,7 +165,7 @@ public class SpyrometerResultsViewController: UIViewController {
             }
         }()
         
-        let pefMeasuredString  = String(format: "%.2f L/m", pefLiters)
+        let pefMeasuredString  = String(format: "%.2f L/m", pefLiters * 0.6)
         let fev1MeasuredString = String(format: "%.2f L", fev1Liters)
         
         let pefStatus  = statusMessage(measured: pefLiters, standard: pefStd, warning: pefWarn)

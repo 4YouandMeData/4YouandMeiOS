@@ -23,6 +23,7 @@ extension Page {
         switch specialLinkBehaviour {
         case .download: return .download(app: self.integrationSpecialLinkApp)
         case .open: return .open(app: self.integrationSpecialLinkApp)
+        case .active: return .active(app: self.integrationSpecialLinkApp)
         }
     }
     

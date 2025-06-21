@@ -7,6 +7,7 @@
 
 import Foundation
 import RxSwift
+import TerraiOS
 
 class OptInSectionCoordinator {
     
