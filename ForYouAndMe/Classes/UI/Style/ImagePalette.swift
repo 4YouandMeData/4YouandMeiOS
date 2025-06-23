@@ -68,6 +68,7 @@ enum ImageName: String, CaseIterable {
     case reflectionBrainIcon = "brain_logo"
     case reflectionEyeIcon = "eye_logo"
     case surveyIcon = "survey_icon"
+    case terraIcon = "terra_icon"
 }
 
 enum TemplateImageName: String, CaseIterable {

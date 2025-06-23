@@ -120,7 +120,7 @@ fileprivate extension Integration {
         case .rescueTime: return .rescueTimeIcon
         case .twitter: return .twitterIcon
         case .dexcom: return .garminIcon
-        case .terra: return .garminIcon
+        case .terra: return .terraIcon
         }
     }
     var title: String {
