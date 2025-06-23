@@ -105,7 +105,6 @@ public class IntegrationPageViewController: UIViewController, PageProvider {
         } else {
             self.navigationItem.hidesBackButton = true
         }
-        
     }
     
     // MARK: Actions

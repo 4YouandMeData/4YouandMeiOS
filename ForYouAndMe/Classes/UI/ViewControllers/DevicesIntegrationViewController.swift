@@ -65,14 +65,18 @@ public class DevicesIntegrationViewController: UIViewController {
         }
         
         IntegrationProvider.oAuthIntegrations().forEach { integration in
+            var connected = currentUser.identities.contains(integration.rawValue)
+
+            if integration == .terra {
+                connected = false
+            }
             
-            let connected = currentUser.identities.contains(integration.rawValue)
             let item = DeviceItemView(withTitle: integration.title,
                 imageName: integration.icon,
                 connected: connected,
                 gestureCallback: { [weak self] in
-                    
-                    self?.navigator.showIntegrationLogin(loginUrl: connected ? integration.apiOAuthDeauthorizeUrl : integration.apiOAuthUrl,
+                let loginUrl = (connected) ? integration.apiOAuthDeauthorizeUrl : integration.apiOAuthUrl
+                self?.navigator.showIntegrationLogin(loginUrl: loginUrl,
                                                       navigationController: navigationController)
             })
             self.scrollStackView.stackView.addArrangedSubview(item)
