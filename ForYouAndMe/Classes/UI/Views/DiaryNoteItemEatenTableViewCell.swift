@@ -125,7 +125,7 @@ class DiaryNoteItemEatenTableViewCell: UITableViewCell {
     /// Configure cell with DiaryNoteItem of type .eaten
     public func display(data: DiaryNoteItem, onTap: @escaping () -> Void) {
         self.buttonPressedCallback = onTap
-        self.updateNoteTitle(data.title ?? "Survey Submitted")
+        self.updateNoteTitle(data.title ?? StringsProvider.string(forKey: .diaryNoteEatenCell))
         noteImageView.image = ImagePalette.image(withName: .surveyIcon)
     }
 

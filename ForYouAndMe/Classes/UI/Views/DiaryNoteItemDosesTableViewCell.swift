@@ -126,7 +126,7 @@ class DiaryNoteItemDosesTableViewCell: UITableViewCell {
         if let body = data.body {
             noteTitleLabel.text = body
         } else {
-            noteTitleLabel.text = "Survey Submitted"
+            noteTitleLabel.text = StringsProvider.string(forKey: .diaryNoteDosesCell)
         }
     }
 

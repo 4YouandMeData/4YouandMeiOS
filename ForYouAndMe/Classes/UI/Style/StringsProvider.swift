@@ -171,6 +171,9 @@ enum StringKey: String, CaseIterable, CodingKey {
     case diaryNoteTranscribeTextDescription = "DIARYNOTE_TRANSCRIBE_TEXT_DESCRIPTION"
     case diaryNoteTranscribeTextError = "DIARYNOTE_TRANSCRIBE_TEXT_ERROR"
     case diaryNotePlaceholder = "DIARY_NOTE_PLACEHOLDER"
+    case diaryNoteDosesCell = "DIARY_NOTE_DOSES_CELL"
+    case diaryNoteEatenCell = "DIARY_NOTE_EATEN_CELL"
+    case diaryNoteNoticedCell = "DIARY_NOTE_NOTICED_CELL"
     
     // I Have Eaten
     case diaryNoteFabEaten = "FAB_I_HAVE_EATEN"
