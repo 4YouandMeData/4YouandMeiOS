@@ -370,6 +370,8 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             return "v1/users/me"
         case .sendUserTimeZone:
             return "v1/users/me"
+        case .getTerraToken:
+            return "v1/terra/token"
         case .sendPushToken:
             return "v1/users/me/add_firebase_token"
         case .sendWalthroughDone:
@@ -427,6 +429,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         switch self {
         case .getGlobalConfig,
                 .getStudy,
+                .getTerraToken,
                 .getScreeningSection,
                 .getInformedConsentSection,
                 .getConsentSection,
@@ -500,6 +503,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
                 ? Bundle.getTestData(from: "TestGetUser")
                 : Bundle.getTestData(from: "TestGetUserNoOnboarding")
         case .submitProfilingOption: return "{}".utf8Encoded
+        case .getTerraToken: return "{}".utf8Encoded
         // Screening Section
         case .getScreeningSection: return Bundle.getTestData(from: "TestGetScreeningSection")
         // Informed Consent Section
@@ -588,6 +592,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         switch self {
         case .getGlobalConfig,
                 .getStudy,
+                .getTerraToken,
                 .getScreeningSection,
                 .getInformedConsentSection,
                 .getConsentSection,
@@ -942,6 +947,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
                 .getInformedConsentSection,
                 .getConsentSection,
                 .getOnboardingQuestionsSection,
+                .getTerraToken,
                 .getOptInSection,
                 .sendOptInPermission,
                 .submitProfilingOption,

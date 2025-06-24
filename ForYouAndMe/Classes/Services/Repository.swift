@@ -55,6 +55,8 @@ protocol Repository: AnyObject {
     func submitPhoneNumber(phoneNumber: String) -> Single<()>
     func verifyPhoneNumber(phoneNumber: String, validationCode: String) -> Single<User>
     func emailLogin(email: String) -> Single<User>
+    func getTerraToken() -> Single<TerraTokenResponse>
+    
     // Onboarding Section
     func submitProfilingOption(questionId: String, optionId: Int) -> Single<()>
     // Screening Section
@@ -78,6 +80,7 @@ protocol Repository: AnyObject {
     func notifyOnboardingCompleted() -> Single<()>
     // Integration Section
     func getIntegrationSection() -> Single<IntegrationSection>
+    
     // Tasks
     func getFeeds(fetchMode: FetchMode) -> Single<[Feed]>
     func getTasks(fetchMode: FetchMode) -> Single<[Feed]>

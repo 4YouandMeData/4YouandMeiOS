@@ -147,14 +147,16 @@ class FeedViewController: BaseViewController {
     }
     
     private func checkForHealthPermission() {
-        Services.shared.terraService
-            .initialize()
-            .flatMap {
-                Services.shared.terraService.connectToTerraIfAvailable()
-            }
-            .observe(on: MainScheduler.instance)
-            .subscribe(onSuccess: {}, onFailure: { _ in})
-            .disposed(by: disposeBag)
+        if IntegrationProvider.oAuthIntegrations().contains(.terra) {
+            Services.shared.terraService
+                .initialize()
+                .flatMap {
+                    Services.shared.terraService.connectToTerraIfAvailable()
+                }
+                .observe(on: MainScheduler.instance)
+                .subscribe(onSuccess: {}, onFailure: { _ in})
+                .disposed(by: disposeBag)
+        }
     }
     
     private func checkForWalkThrough() {

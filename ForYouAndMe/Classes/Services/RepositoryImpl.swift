@@ -128,6 +128,11 @@ extension RepositoryImpl: Repository {
             .do(onError: { error in print("Repository - error updateFirebaseToken: \(error.localizedDescription)") })
     }
     
+    func getTerraToken() -> Single<TerraTokenResponse> {
+        self.api.send(request: ApiRequest(serviceRequest: .getTerraToken))
+            .handleError()
+    }
+    
     enum SubmitPhoneNumberErrorCode: Int, CaseIterable { case missingPhoneNumber = 404 }
     
     func submitPhoneNumber(phoneNumber: String) -> Single<()> {

@@ -133,6 +133,7 @@ extension DefaultService {
         case .submitPhoneNumber: return "Verify Phone Number"
         case .verifyPhoneNumber: return "Login"
         case .emailLogin: return "Email Login"
+        case .getTerraToken: return "Get Terra Token"
         // Onboarding Section
         case .submitProfilingOption: return "Onboarding Section"
         // Screening Section

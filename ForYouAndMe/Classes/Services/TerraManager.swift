@@ -45,7 +45,7 @@ final class TerraManager: TerraService {
                 guard let refID = user.terraRefID ?? Services.shared.storageServices.user?.terraRefID else {
                     return .error(NSError(domain: "Terra", code: -2, userInfo: [NSLocalizedDescriptionKey: "Missing terraRefID"]))
                 }
-                return TerraManager.generateToken(referenceId: refID)
+                return TerraManager.generateToken()
             }
             .flatMap { token in
                 return Single.create { single in
@@ -69,32 +69,13 @@ final class TerraManager: TerraService {
             }
     }
 
-    static func generateToken(referenceId: String) -> Single<String> {
-        return Single.create { single in
-            var request = URLRequest(url: URL(string: "https://api.tryterra.co/v2/auth/generateAuthToken")!)
-            request.httpMethod = "POST"
-            request.setValue("0NSwfZcN0x2gZpQRtFS3ftQi8B1Ve8di", forHTTPHeaderField: "x-api-key")
-            request.setValue(Constants.Network.TerraDevID, forHTTPHeaderField: "dev-id")
-            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-
-            let body = ["reference_id": referenceId]
-            request.httpBody = try? JSONSerialization.data(withJSONObject: body, options: [])
-
-            URLSession.shared.dataTask(with: request) { data, _, error in
-                if let error = error {
-                    single(.failure(error))
-                    return
-                }
-                guard let data = data,
-                      let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-                      let token = json["token"] as? String else {
-                    single(.failure(NSError(domain: "Terra", code: -4, userInfo: [NSLocalizedDescriptionKey: "Invalid token response"])))
-                    return
-                }
-                single(.success(token))
-            }.resume()
-
-            return Disposables.create()
-        }
+    static func generateToken() -> Single<String> {
+        return Services.shared.repository.getTerraToken()
+                .map { $0.token }
     }
 }
+
+struct TerraTokenResponse: Codable, PlainDecodable {
+    let token: String
+}
+

@@ -76,6 +76,7 @@ enum DefaultService {
     case sendUserTimeZone(timeZoneIdentifier: String)
     case sendPushToken(token: String)
     case sendWalthroughDone
+    case getTerraToken
     // User Data
     case getUserData
     case getUserSettings
