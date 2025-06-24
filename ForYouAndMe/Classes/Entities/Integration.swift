@@ -16,6 +16,7 @@ public enum Integration: String {
     case twitter
     case dexcom
     case terra
+    case empatica
     
     var storeUrl: URL {
         switch self {
@@ -27,6 +28,7 @@ public enum Integration: String {
         case .twitter: return Constants.Url.TwitterStoreUrl
         case .dexcom: return Constants.Url.DexComStoreUrl
         case .terra: return Constants.Url.TerraStoreUrl
+        case .empatica: return Constants.Url.EmpaticaStoreUrl
         }
     }
     
@@ -40,6 +42,7 @@ public enum Integration: String {
         case .twitter: return Constants.Url.TwitterAppSchema
         case .dexcom: return Constants.Url.DexComAppSchema
         case .terra: return Constants.Url.TerraAppSchema
+        case .empatica: return Constants.Url.EmpaticaAppSchema
         }
     }
     

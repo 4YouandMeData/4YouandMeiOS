@@ -121,6 +121,7 @@ fileprivate extension Integration {
         case .twitter: return .twitterIcon
         case .dexcom: return .garminIcon
         case .terra: return .terraIcon
+        case .empatica: return .terraIcon
         }
     }
     var title: String {
@@ -133,6 +134,7 @@ fileprivate extension Integration {
         case .twitter: return StringsProvider.string(forKey: .twitterOauthTitle)
         case .dexcom: return StringsProvider.string(forKey: .dexComOauthTitle)
         case .terra: return StringsProvider.string(forKey: .terraTitle)
+        case .empatica: return StringsProvider.string(forKey: .empaticaTitle)
         }
     }
 }

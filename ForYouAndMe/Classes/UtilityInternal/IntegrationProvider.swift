@@ -16,7 +16,7 @@ class IntegrationProvider {
     }
     
     static func oAuthIntegration(withName name: String) -> Integration? {
-        guard let matchingOauthIntegration = self.integrationDatas.first(where: { $0.oAuthAvailable && $0.name == name }) else {
+        guard let matchingOauthIntegration = self.integrationDatas.first(where: { $0.name == name }) else {
             return nil
         }
         return Integration(rawValue: matchingOauthIntegration.name)

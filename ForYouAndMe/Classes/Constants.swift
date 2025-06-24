@@ -135,6 +135,8 @@ struct Constants {
         static let DexComAppSchema: URL = URL(string: "dexcom://")!
         static let TerraStoreUrl: URL = URL(string: "itms-apps://apps.apple.com/us/app/twitter/id333903271")!
         static let TerraAppSchema: URL = URL(string: "terra://")!
+        static let EmpaticaStoreUrl: URL = URL(string: "itms-apps://apps.apple.com/us/app/empatica-care/id1510409984")!
+        static let EmpaticaAppSchema: URL = URL(string: "empatica://")!
     }
     
     struct Task {
