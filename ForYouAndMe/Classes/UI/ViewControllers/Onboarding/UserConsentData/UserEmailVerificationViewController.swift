@@ -150,6 +150,7 @@ public class UserEmailVerificationViewController: UIViewController {
                                                   screenClass: String(describing: type(of: self))))
         self.navigationController?.navigationBar.apply(style: NavigationBarStyleCategory.active(hidden: false).style)
         self.navigationItem.hidesBackButton = true
+        self.navigationController?.interactivePopGestureRecognizer?.isEnabled = false
     }
     
     // MARK: Actions
