@@ -61,9 +61,6 @@ class Services {
         let notificationService = NotificationManager(withNotificationDeeplinkHandler: deeplinkService)
         self.services.append(notificationService)
         
-        let terraService = TerraManager()
-        self.services.append(terraService)
-        
         #if DEBUG
         let networkApiGateway =
             Constants.Test.NetworkStubsEnabled
@@ -82,6 +79,9 @@ class Services {
                                           analyticsService: analytics,
                                           storage: storage,
                                           reachability: reachabilityService)
+        
+        let terraService = TerraManager()
+        self.services.append(terraService)
         #else
         let healthService = DummyHealthManager()
         #endif

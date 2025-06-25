@@ -5,12 +5,13 @@
 //  Created by Giuseppe Lapenta on 20/06/25.
 //
 
+#if HEALTHKIT
+
 import Foundation
 import TerraiOS
 import RxSwift
 
 final class TerraManager: TerraService {
-
     private var terra: TerraiOS.TerraManager?
     private var isSDKInitialized = false
 
@@ -79,3 +80,4 @@ struct TerraTokenResponse: Codable, PlainDecodable {
     let token: String
 }
 
+#endif

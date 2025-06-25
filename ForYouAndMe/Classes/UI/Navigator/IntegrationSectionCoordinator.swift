@@ -130,11 +130,11 @@ extension IntegrationSectionCoordinator: IntegrationPageCoordinator {
             }
             self.navigator.openIntegrationApp(forIntegration: app)
         case .active(let app):
-            guard let app = app else {
+            guard let _ = app else {
                 assertionFailure("Missing app for open behaviour")
                 return
             }
-            
+            #if HEALTHKIT
             Services.shared.terraService
                 .initialize()
                 .flatMap {
@@ -144,9 +144,9 @@ extension IntegrationSectionCoordinator: IntegrationPageCoordinator {
                 .addProgress()
                 .subscribe(onSuccess: { [weak self] in
                     self?.onPagePrimaryButtonPressed(page: page)
-                }, onFailure: { error in
-                })
+                }, onFailure: { _ in })
                 .disposed(by: disposeBag)
+            #endif
         }
     }
 }

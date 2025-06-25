@@ -147,6 +147,7 @@ class FeedViewController: BaseViewController {
     }
     
     private func checkForHealthPermission() {
+    #if HEALTHKIT
         if IntegrationProvider.oAuthIntegrations().contains(.terra) {
             Services.shared.terraService
                 .initialize()
@@ -157,6 +158,8 @@ class FeedViewController: BaseViewController {
                 .subscribe(onSuccess: {}, onFailure: { _ in})
                 .disposed(by: disposeBag)
         }
+        
+    #endif
     }
     
     private func checkForWalkThrough() {
