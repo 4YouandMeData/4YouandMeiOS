@@ -228,6 +228,7 @@ extension ConsentUserDataSectionCoordinator: UserEmailCoordinator {
 
 extension ConsentUserDataSectionCoordinator: UserEmailVerificationCoordinator {
     func onUserEmailPressed() {
+        self.currentStepIndex -= 1
         self.navigationController.popToExpectedViewController(ofClass: UserEmailViewController.self, animated: true)
     }
     
