@@ -6,8 +6,10 @@
 //
 
 import Foundation
-import TerraiOS
 import RxSwift
+#if HEALTHKIT
+import TerraiOS
+#endif
 
 enum IntegrationSpecialLinkBehaviour: CaseIterable {
     static var allCases: [IntegrationSpecialLinkBehaviour] {
@@ -31,8 +33,9 @@ class IntegrationSectionCoordinator {
     
     // MARK: - Coordinator
     var hidesBottomBarWhenPushed: Bool = false
-    
+#if HEALTHKIT
     var terra: TerraManager?
+#endif
     
     // MARK: - PagedSectionCoordinator
     var addAbortOnboardingButton: Bool = true

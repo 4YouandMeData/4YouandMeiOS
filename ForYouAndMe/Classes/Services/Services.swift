@@ -110,6 +110,7 @@ class Services {
         #if HEALTHKIT
         healthService.networkDelegate = repository
         healthService.clearanceDelegate = repository
+        self.terraService = terraService
         #endif
         
         // Assign concreate services
@@ -121,7 +122,6 @@ class Services {
         self.mirSpirometryService = mirSpirometryService
         self.deeplinkService = deeplinkService
         self.deviceService = deviceService
-        self.terraService = terraService
         self.navigator.showSetupScreen()
     }
     

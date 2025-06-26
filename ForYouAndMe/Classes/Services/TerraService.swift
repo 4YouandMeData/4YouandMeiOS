@@ -5,6 +5,7 @@
 //  Created by Giuseppe Lapenta on 20/06/25.
 //
 
+#if HEALTHKIT
 import Foundation
 import TerraiOS
 import RxSwift
@@ -17,3 +18,5 @@ protocol TerraService {
 struct TerraGenerateTokenResponse: Decodable {
     let token: String
 }
+
+#endif

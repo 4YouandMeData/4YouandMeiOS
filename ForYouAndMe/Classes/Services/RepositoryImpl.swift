@@ -127,11 +127,12 @@ extension RepositoryImpl: Repository {
             .handleError()
             .do(onError: { error in print("Repository - error updateFirebaseToken: \(error.localizedDescription)") })
     }
-    
+#if HEALTHKIT
     func getTerraToken() -> Single<TerraTokenResponse> {
         self.api.send(request: ApiRequest(serviceRequest: .getTerraToken))
             .handleError()
     }
+#endif
     
     enum SubmitPhoneNumberErrorCode: Int, CaseIterable { case missingPhoneNumber = 404 }
     
