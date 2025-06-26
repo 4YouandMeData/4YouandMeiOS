@@ -35,8 +35,9 @@ class Services {
     private(set) var mirSpirometryService: MirSpirometryService!
     private(set) var deeplinkService: DeeplinkService!
     private(set) var deviceService: DeviceService!
+#if HEALTHKIT
     private(set) var terraService: TerraService!
-    
+#endif
     private var window: UIWindow?
     
     // MARK: - Public Methods
