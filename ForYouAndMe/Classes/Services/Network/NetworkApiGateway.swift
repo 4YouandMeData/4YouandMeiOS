@@ -689,9 +689,14 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             var params: [String: Any] = [:]
             params["custom_data"] = customDataParams
             return .requestParameters(parameters: ["user": params], encoding: JSONEncoding.default)
-        case .sendUserSettings(let seconds):
+        case .sendUserSettings(let seconds, let notificationTime):
             var params: [String: Any] = [:]
-            params["daily_survey_time_seconds_since_midnight"] = seconds
+            if let delay = seconds {
+                params["daily_survey_time_seconds_since_midnight"] = delay
+            }
+            if let time = notificationTime {
+                params["notification_time"] = time
+            }
             return .requestParameters(parameters: ["user_setting": params], encoding: JSONEncoding.default)
         case .sendPushToken(let token):
             var params: [String: Any] = [:]

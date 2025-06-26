@@ -66,6 +66,7 @@ enum AnalyticsScreens: String {
     case consentSignature = "ConsentSignature"
     case openPermissions = "Permissions"
     case openAppsAndDevices = "AppsAndDevices"
+    case openPreferences = "Preferences"
     case emailInsert = "Email"
     case emailVerification = "EmailVerification"
     case oAuth = "OAuth"

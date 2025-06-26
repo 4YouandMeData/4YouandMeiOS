@@ -90,6 +90,7 @@ enum TemplateImageName: String, CaseIterable {
     case closeButton = "close_button"
     case userInfoIcon = "user_info_icon"
     case devicesIcon = "devices_icon"
+    case preferenceIcon = "preference_icon"
     case reviewConsentIcon = "review_consent_icon"
     case permissionIcon = "permission_icon"
     case timingIcon = "survey_timing_icon"

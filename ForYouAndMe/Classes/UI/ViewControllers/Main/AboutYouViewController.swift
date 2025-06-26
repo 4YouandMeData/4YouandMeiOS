@@ -101,6 +101,24 @@ class AboutYouViewController: UIViewController {
 //            self.scrollStackView.stackView.addArrangedSubview(reviewConsent)
 //        }
         
+        let preferencesTitle = StringsProvider.string(forKey: .aboutYouPreferences)
+        let preferencesItem = GenericListItemView(withTitle: preferencesTitle,
+                                                  image: ImagePalette.templateImage(withName: .preferenceIcon) ?? UIImage(),
+                                                  colorType: .primary,
+                                                  style: .flatStyle,
+                                                  gestureCallback: { [weak self] in
+                                                    guard let navigationController = self?.navigationController else {
+                                                        fatalError("Navigation Controller is not present")
+                                                    }
+            self?.navigator.showPreferences(navigationController: navigationController,
+                                            title: preferencesTitle)
+                                                 })
+        self.scrollStackView.stackView.addArrangedSubview(preferencesItem)
+        
+        self.scrollStackView.stackView.addLineSeparator(lineColor: ColorPalette.color(withType: .inactive),
+                                                        inset: 21,
+                                                        isVertical: false)
+        
         let permissionTitle = StringsProvider.string(forKey: .aboutYouPermissions)
         let permissions = GenericListItemView(withTitle: permissionTitle,
                                               image: ImagePalette.templateImage(withName: .permissionIcon) ?? UIImage(),

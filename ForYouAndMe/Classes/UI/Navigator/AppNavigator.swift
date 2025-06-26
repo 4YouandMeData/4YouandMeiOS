@@ -829,6 +829,11 @@ class AppNavigator {
         navigationController.pushViewController(devicesViewController, animated: true)
     }
     
+    public func showPreferences(navigationController: UINavigationController, title: String) {
+        let devicesViewController = PreferencesViewController(withTitle: title)
+        navigationController.pushViewController(devicesViewController, animated: true)
+    }
+    
     public func showUserInfoPage(navigationController: UINavigationController,
                                  title: String,
                                  userInfoParameters: [UserInfoParameter]) {

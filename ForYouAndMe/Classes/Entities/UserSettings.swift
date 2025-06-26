@@ -13,6 +13,7 @@ struct UserSettings {
     let type: String
     
     var secondsFromMidnight: Int?
+    var notificationTime: Int?
 }
 
 extension UserSettings: JSONAPIMappable {
@@ -20,5 +21,6 @@ extension UserSettings: JSONAPIMappable {
         case id
         case type
         case secondsFromMidnight = "daily_survey_time_seconds_since_midnight"
+        case notificationTime = "notification_time"
     }
 }

@@ -114,7 +114,8 @@ protocol Repository: AnyObject {
     // User Data
     func getUserData() -> Single<UserData>
     func getUserSettings() -> Single<UserSettings>
-    func sendUserSettings(seconds: Int) -> Single<()>
+    func sendUserSettings(seconds: Int?, notificationTime: Int?) -> Single<()>
+    
     // Survey
     func getSurvey(surveyId: String) -> Single<SurveyGroup>
     func sendSurveyTaskResult(surveyTaskId: String, results: [SurveyResult]) -> Single<()>

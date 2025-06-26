@@ -535,8 +535,9 @@ extension RepositoryImpl: Repository {
             .handleError()
     }
     
-    func sendUserSettings(seconds: Int) -> Single<()> {
-        return self.api.send(request: ApiRequest(serviceRequest: .sendUserSettings(settings: seconds)))
+    func sendUserSettings(seconds: Int?, notificationTime: Int?) -> Single<()> {
+        return self.api.send(request: ApiRequest(serviceRequest: .sendUserSettings(settings: seconds,
+                                                                                   notificationTime: notificationTime)))
             .handleError()
     }
     

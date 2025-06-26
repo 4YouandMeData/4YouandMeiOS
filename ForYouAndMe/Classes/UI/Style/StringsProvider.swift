@@ -347,11 +347,16 @@ enum StringKey: String, CaseIterable, CodingKey {
     // About You
     case aboutYouUserInfo = "ABOUT_YOU_YOUR_PREGNANCY"
     case aboutYouAppsAndDevices = "ABOUT_YOU_APPS_AND_DEVICES"
+    case aboutYouPreferences = "ABOUT_YOU_PREFERENCES"
     case aboutYouReviewConsent = "ABOUT_YOU_REVIEW_CONSENT"
     case aboutYouPermissions = "ABOUT_YOU_PERMISSIONS"
     case aboutYouDailySurveyTiming = "ABOUT_YOU_DAILY_SURVEY_TIMING_TITLE"
     case disclaimerFooter = "ABOUT_YOU_DISCLAIMER"
     case dailySurveyTimingHidden = "DAILY_SURVEY_TIMING_HIDDEN"
+    case preferencesTitlePage = "PREFERENCES_TITLE_PAGE"
+    case preferencesHour = "PREFERENCES_HOUR"
+    case preferenceToggle = "PREFERENCES_TOGGLE"
+    
     // User Info
     case userInfoButtonEdit = "PROFILE_USER_INFO_BUTTON_EDIT"
     case userInfoButtonSubmit = "PROFILE_USER_INFO_BUTTON_SUBMIT"

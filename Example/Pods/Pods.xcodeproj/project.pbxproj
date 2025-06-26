@@ -272,6 +272,7 @@
 		0DC3C8311CE0715DFB0EEE6AF3286930 /* SharedSequence+Concurrency.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49D9CAA942D775CC44579A306A0CDD34 /* SharedSequence+Concurrency.swift */; };
 		0DC813E62FCEF6C6C3009180D7790BFE /* Result+Alamofire.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38934CDCF6F2F0A521354C6390DBC7B4 /* Result+Alamofire.swift */; };
 		0DD2AB03B760AD4EB5BF9064C27849AA /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 6D8E2946E391FA3A659B1149004D61D4 /* PrivacyInfo.xcprivacy */; };
+		0DE469002E0D50B0001FE066 /* PreferencesViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DE468FF2E0D50AA001FE066 /* PreferencesViewController.swift */; };
 		0DF8FE34207E063FD1D959ECD613C0F6 /* FIRCLSDemangleOperation.h in Headers */ = {isa = PBXBuildFile; fileRef = FEA1AF193F4C7D260B15DB957D597E4D /* FIRCLSDemangleOperation.h */; settings = {ATTRIBUTES = (Project, ); }; };
 		0DFD3190169A2D9B9C18F0A4DCAFA540 /* AddBlend_GLES.fsh in Resources */ = {isa = PBXBuildFile; fileRef = 92E45BC2D4E656B61DB932C620109718 /* AddBlend_GLES.fsh */; };
 		0E129D6BC23BCDFACDDD34457BA03399 /* NopDisposable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95E83BFCE0921FEBB302BFD109F99DA6 /* NopDisposable.swift */; };
@@ -4379,6 +4380,7 @@
 		0DC604C6B047F93AAEFC25F399867209 /* ORKReactionTimeStep.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = ORKReactionTimeStep.h; path = ResearchKit/ActiveTasks/ORKReactionTimeStep.h; sourceTree = "<group>"; };
 		0DD1EDE1FD4C401203E33CA7A0F5EC9A /* Matrix.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = Matrix.swift; path = framework/Source/Matrix.swift; sourceTree = "<group>"; };
 		0DD424496C3FD2315EA9902E478F5174 /* UIViewController+Internal.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = "UIViewController+Internal.swift"; sourceTree = "<group>"; };
+		0DE468FF2E0D50AA001FE066 /* PreferencesViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreferencesViewController.swift; sourceTree = "<group>"; };
 		0DE642272F01299CC5AFD37CF2830E21 /* HealthManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = HealthManager.swift; sourceTree = "<group>"; };
 		0DFCD4582F8C1F9F6097B5CFE8C10E92 /* FIRMessagingBackupExcludedPlist.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = FIRMessagingBackupExcludedPlist.m; path = FirebaseMessaging/Sources/Token/FIRMessagingBackupExcludedPlist.m; sourceTree = "<group>"; };
 		0E01FB2B7260534132E3EC81820E6346 /* UserConsent.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = UserConsent.swift; sourceTree = "<group>"; };
@@ -11298,6 +11300,7 @@
 		86ABA7A9AB3119413C40167D75CEC7DD /* ViewControllers */ = {
 			isa = PBXGroup;
 			children = (
+				0DE468FF2E0D50AA001FE066 /* PreferencesViewController.swift */,
 				685160E188E3DF1728053977F556EDC1 /* ActivitySectionViewController.swift */,
 				10BBB6573CFE26F8FF039EE5EECC8CC1 /* BaseViewController.swift */,
 				52C934AF444961D17037152A76240EBF /* BooleanQuestionsViewController.swift */,
@@ -16758,6 +16761,7 @@
 				4E944A5652789C67E438C5D504B2D35F /* VideoDiarySectionCoordinator.swift in Sources */,
 				988D02A7E85DE720C7E4CB39EE16A4DC /* WalkTask.swift in Sources */,
 				6D31B3FF6D7C14BAADA3EABC009910C9 /* WalkthroughViewController.swift in Sources */,
+				0DE469002E0D50B0001FE066 /* PreferencesViewController.swift in Sources */,
 				551C833D787380F1A1CB95BB0A40C124 /* WebViewViewController.swift in Sources */,
 				ADAE5C64696D50FBD4B23A3F9389670B /* WeHaveNoticedCoordinator.swift in Sources */,
 				8DC9166D6EE984A5E3D5AAA512A9DCA5 /* WeHaveNoticedEntryFormViewController.swift in Sources */,

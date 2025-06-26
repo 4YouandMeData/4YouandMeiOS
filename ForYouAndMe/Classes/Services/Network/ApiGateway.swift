@@ -80,7 +80,7 @@ enum DefaultService {
     // User Data
     case getUserData
     case getUserSettings
-    case sendUserSettings(settings: Int)
+    case sendUserSettings(settings: Int?, notificationTime: Int?)
     // Survey
     case getSurvey(surveyId: String)
     case sendSurveyTaskResultData(surveyTaskId: String, results: [SurveyResult])

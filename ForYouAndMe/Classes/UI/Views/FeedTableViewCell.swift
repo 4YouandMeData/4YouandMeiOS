@@ -109,7 +109,7 @@ class FeedTableViewCell: UITableViewCell {
         stackView.addArrangedSubview(self.feedDescriptionLabel)
         
         self.horizontalStackView.axis = .horizontal
-        self.horizontalStackView.distribution = .fillEqually
+        self.horizontalStackView.distribution = .fillProportionally
         stackView.addArrangedSubview(horizontalStackView)
         self.horizontalStackView.addArrangedSubview(self.buttonView)
         self.horizontalStackView.addArrangedSubview(self.skipButtonView)
@@ -151,7 +151,7 @@ class FeedTableViewCell: UITableViewCell {
                 self.skipButtonView.isHidden = false
                 self.skipButtonView.setButtonText(skipText)
                 
-                self.horizontalStackView.distribution = .fillEqually
+                self.horizontalStackView.distribution = .fillProportionally
                 
             } else {
                 
@@ -198,7 +198,7 @@ class FeedTableViewCell: UITableViewCell {
             self.skipButtonView.isHidden = false
             self.skipButtonView.setButtonText(skipText)
             
-            self.horizontalStackView.distribution = .fillEqually
+            self.horizontalStackView.distribution = .fillProportionally
             
         } else {
             

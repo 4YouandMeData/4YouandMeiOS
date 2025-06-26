@@ -14,6 +14,7 @@ public class SurveyScheduleViewController: UIViewController {
     private let navigator: AppNavigator
     private let analytics: AnalyticsService
     private let repository: Repository
+    private let notificationTime: Int? = nil
     private let disposeBag: DisposeBag = DisposeBag()
     
     private lazy var scrollStackView: ScrollStackView = {
@@ -129,15 +130,16 @@ public class SurveyScheduleViewController: UIViewController {
                 let date = secondsFromMidnight.dateFromSeconds()
                 print("\(date.string(withFormat: "HH:mm"))")
                 self.datePicker.date = date
-            }, onError: { error in
+            }, onFailure: { error in
                 print("SurveyScheduleViewController - Error refreshing user: \(error.localizedDescription)")
             }).disposed(by: self.disposeBag)
     }
     
     private func sendUserSettings() {
-        self.repository.sendUserSettings(seconds: self.datePicker.date.getSecondsSinceMidnight())
+        self.repository.sendUserSettings(seconds: self.datePicker.date.getSecondsSinceMidnight(),
+                                         notificationTime: self.notificationTime)
             .addProgress()
-            .subscribe(onError: { [weak self] error in
+            .subscribe(onFailure: { [weak self] error in
                     guard let self = self else { return }
                     self.navigator.handleError(error: error, presenter: self)
             }).disposed(by: self.disposeBag)
