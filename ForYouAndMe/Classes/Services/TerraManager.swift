@@ -43,9 +43,9 @@ final class TerraManager: TerraService {
     func connectToTerraIfAvailable() -> Single<Void> {
         return Services.shared.repository.refreshUser()
             .flatMap { user -> Single<String> in
-                guard let refID = user.terraRefID ?? Services.shared.storageServices.user?.terraRefID else {
-                    return .error(NSError(domain: "Terra", code: -2, userInfo: [NSLocalizedDescriptionKey: "Missing terraRefID"]))
-                }
+//                guard let refID = user.terraRefID ?? Services.shared.storageServices.user?.terraRefID else {
+//                    return .error(NSError(domain: "Terra", code: -2, userInfo: [NSLocalizedDescriptionKey: "Missing terraRefID"]))
+//                }
                 return TerraManager.generateToken()
             }
             .flatMap { token in
