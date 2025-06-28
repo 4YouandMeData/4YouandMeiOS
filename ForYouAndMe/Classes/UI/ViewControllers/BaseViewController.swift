@@ -17,6 +17,8 @@ class BaseViewController: UIViewController {
     
     // MARK: – Common Dependencies
     
+    var fabActionHandler: ((FabAction) -> Void)?
+    
     /// Use the shared services everywhere
     let navigator: AppNavigator
     let repository: Repository
@@ -36,6 +38,8 @@ class BaseViewController: UIViewController {
         return button
     }()
     
+    private var floatingButtonConfigured = false
+    
     // MARK: – Inizializzazione
     
     init() {
@@ -52,6 +56,7 @@ class BaseViewController: UIViewController {
     }
 
     deinit {
+        fabActionHandler = nil
         print("\(type(of: self)) deinit")
     }
     
@@ -78,7 +83,10 @@ class BaseViewController: UIViewController {
     
     // MARK: – Private Methods
     
-    private func setupFloatingButtonIfNeeded() {
+    func setupFloatingButtonIfNeeded() {
+        guard !floatingButtonConfigured else { return }
+        floatingButtonConfigured = true
+        
         let rawConfig = StringsProvider.string(forKey: .fabElements)
             .trimmingCharacters(in: .whitespacesAndNewlines)
         
@@ -145,7 +153,13 @@ class BaseViewController: UIViewController {
         actionInsulin.buttonColor          = ColorPalette.color(withType: .secondary)
         actionInsulin.action = { [weak self] _ in
             guard let self = self else { return }
-            self.navigator.openMyDosesViewController(presenter: self)
+            if let handler = self.fabActionHandler {
+                self.dismiss(animated: true) {
+                    handler(.insulin)
+                }
+            } else {
+                self.navigator.openMyDosesViewController(presenter: self)
+            }
         }
     }
     
@@ -158,7 +172,13 @@ class BaseViewController: UIViewController {
         actionNoticed.buttonColor          = ColorPalette.color(withType: .secondary)
         actionNoticed.action = { [weak self] _ in
             guard let self = self else { return }
-            self.navigator.openNoticedViewController(presenter: self)
+            if let handler = self.fabActionHandler {
+                self.dismiss(animated: true) {
+                    handler(.noticed)
+                }
+            } else {
+                self.navigator.openNoticedViewController(presenter: self)
+            }
         }
     }
     
@@ -171,7 +191,13 @@ class BaseViewController: UIViewController {
         actionEaten.buttonColor          = ColorPalette.color(withType: .secondary)
         actionEaten.action = { [weak self] _ in
             guard let self = self else { return }
-            self.navigator.openEatenViewController(presenter: self)
+            if let handler = self.fabActionHandler {
+                self.dismiss(animated: true) {
+                    handler(.eaten)
+                }
+            } else {
+                self.navigator.openEatenViewController(presenter: self)
+            }
         }
     }
 }

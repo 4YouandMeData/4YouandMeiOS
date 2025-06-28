@@ -9,7 +9,7 @@ import UIKit
 
 class FeedHeaderView: UIView {
     
-    private static let buttonWidth: CGFloat = 50.0
+    private static let buttonWidth: CGFloat = 70.0
     private static let height: CGFloat = 150.0
     
     private let titleLabel: UILabel = {
@@ -28,6 +28,7 @@ class FeedHeaderView: UIView {
         button.setImage(ImagePalette.image(withName: .mainLogo), for: .normal)
         button.imageView?.contentMode = .scaleAspectFit
         button.autoSetDimension(.width, toSize: Self.buttonWidth)
+        button.autoSetDimension(.height, toSize: Self.buttonWidth)
         return button
     }()
     
@@ -68,10 +69,16 @@ class FeedHeaderView: UIView {
         
         let stackView = UIStackView.create(withAxis: .horizontal, spacing: 16.0)
         self.addSubview(stackView)
-        stackView.autoPinEdgesToSuperviewSafeArea(with: UIEdgeInsets(top: 24.0,
-                                                                     left: Constants.Style.DefaultHorizontalMargins,
-                                                                     bottom: 24.0,
-                                                                     right: Constants.Style.DefaultHorizontalMargins))
+        
+        self.addSubview(self.profileButton)
+        
+        stackView.autoPinEdge(.leading, to: .trailing, of: self.profileButton, withOffset: 16.0)
+        stackView.autoPinEdge(toSuperviewEdge: .trailing, withInset: Constants.Style.DefaultHorizontalMargins)
+        stackView.autoPinEdge(toSuperviewSafeArea: .top, withInset: 24.0)
+        
+        self.profileButton.autoPinEdge(toSuperviewEdge: .leading, withInset: Constants.Style.DefaultHorizontalMargins)
+        self.profileButton.autoPinEdge(toSuperviewSafeArea: .top, withInset: 12.0)
+        self.profileButton.autoSetDimensions(to: CGSize(width: Self.buttonWidth, height: Self.buttonWidth))
         
         let textStackView = UIStackView.create(withAxis: .vertical, spacing: 10.0)
         textStackView.addArrangedSubview(self.titleLabel)
@@ -79,11 +86,7 @@ class FeedHeaderView: UIView {
         
         stackView.alignment = .center
         
-        stackView.addArrangedSubview(self.profileButton)
         stackView.addArrangedSubview(textStackView)
-        let emptySpaceView = UIView()
-        emptySpaceView.autoSetDimension(.width, toSize: Self.buttonWidth)
-        stackView.addArrangedSubview(emptySpaceView)
         
         stackView.addArrangedSubview(self.comingSoonButton)
     }

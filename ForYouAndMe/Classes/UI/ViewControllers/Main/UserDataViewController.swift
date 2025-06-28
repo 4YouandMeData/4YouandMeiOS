@@ -10,11 +10,14 @@ import RxSwift
 import WebKit
 
 enum ScriptMessage: String {
-    case chartPointTapped = "chartPointTapped"
-    case chartFullScreenTapped = "chartFullScreenTapped"
+    case chartPointTapped
+    case chartFullScreenTapped
+    case chartShareTapped
 }
 
 class UserDataViewController: UIViewController, WKNavigationDelegate, WKScriptMessageHandler {
+    
+    private var pendingFabAction: FabAction?
     
     // MARK: - AttributedTextStyles
     
@@ -192,10 +195,23 @@ class UserDataViewController: UIViewController, WKNavigationDelegate, WKScriptMe
 
         switch msg {
         case .chartPointTapped:
+        if let nav = self.presentedViewController as? UINavigationController,
+           let webVC = nav.viewControllers.first(where: { $0 is WebViewViewController }) as? WebViewViewController {
+            webVC.showFabIfNeeded()
+            webVC.onFabActionSelected = { [weak self] action in
+                guard let self = self else { return }
+                self.pendingFabAction = action
+                self.dismissRotateAndPresent(eventData: body)
+            }
+        } else {
             dismissRotateAndPresent(eventData: body)
+        }
 
         case .chartFullScreenTapped:
             handleFullScreenTap(body: body)
+            
+        case .chartShareTapped:
+            handleSharingTap(body: body)
         }
     }
     
@@ -203,17 +219,43 @@ class UserDataViewController: UIViewController, WKNavigationDelegate, WKScriptMe
     private func dismissRotateAndPresent(eventData: [String: Any]) {
 
         let afterDismiss = {
-            // this will wait the rotation animation before calling the closure
             OrientationManager.resetToDefaultWithCompletion {
-                self.handleChartPointTap(eventData: eventData, animated: true)
+                if let action = self.pendingFabAction {
+                    self.pendingFabAction = nil
+                    switch action {
+                    case .insulin:
+                        self.navigator.openMyDosesViewController(presenter: self)
+                    case .noticed:
+                        self.navigator.openNoticedViewController(presenter: self)
+                    case .eaten:
+                        self.navigator.openEatenViewController(presenter: self)
+                    }
+                } else {
+                    self.handleChartPointTap(eventData: eventData, animated: true)
+                }
             }
         }
-        
-        if let nav = navigationController {
+
+        if let nav = self.navigationController {
             nav.dismiss(animated: true, completion: afterDismiss)
         } else {
-            dismiss(animated: true, completion: afterDismiss)
+            self.dismiss(animated: true, completion: afterDismiss)
         }
+    }
+    
+    private func handleSharingTap(body: [String: Any]) {
+        let urlString = body["shareUrl"] as? String ?? "https://www.google.com"
+
+        guard let url = URL(string: urlString) else {
+            assertionFailure("URL invalido: \(urlString)")
+            return
+        }
+        
+        let activityViewController = UIActivityViewController(activityItems: [url], applicationActivities: nil)
+        activityViewController.popoverPresentationController?.sourceView = self.view
+
+        self.present(activityViewController, animated: true, completion: nil)
+        
     }
     
     private func handleFullScreenTap(body: [String: Any]) {
@@ -273,5 +315,18 @@ class UserDataViewController: UIViewController, WKNavigationDelegate, WKScriptMe
             isFromChart: true,
             animated: animated
         )
+    }
+}
+
+extension UIViewController {
+    func presentedViewController<T: UIViewController>(ofType type: T.Type) -> T? {
+        var presented = self.presentedViewController
+        while let current = presented {
+            if let match = current as? T {
+                return match
+            }
+            presented = current.presentedViewController
+        }
+        return nil
     }
 }

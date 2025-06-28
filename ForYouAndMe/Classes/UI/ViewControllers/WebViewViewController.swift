@@ -7,9 +7,18 @@
 //
 
 import UIKit
+import JJFloatingActionButton
 @preconcurrency import WebKit
 
-class WebViewViewController: UIViewController {
+enum FabAction {
+    case insulin
+    case noticed
+    case eaten
+}
+
+class WebViewViewController: BaseViewController {
+    
+    var onFabActionSelected: ((FabAction) -> Void)?
     
     private let webView: WKWebView
     private let progressView: UIProgressView = {
@@ -21,9 +30,6 @@ class WebViewViewController: UIViewController {
     private let allowNavigation: Bool
     private let url: URL?
     private let htmlString: String?
-    
-    private let navigator: AppNavigator
-    private let analytics: AnalyticsService
     
     private var progressObserver: NSKeyValueObservation?
     
@@ -52,9 +58,7 @@ class WebViewViewController: UIViewController {
         self.allowNavigation = allowNavigation
         self.url = url
         self.htmlString = htmlString
-        self.navigator = Services.shared.navigator
-        self.analytics = Services.shared.analytics
-        super.init(nibName: nil, bundle: nil)
+        super.init()
         self.title = title
     }
     
@@ -98,6 +102,13 @@ class WebViewViewController: UIViewController {
             guard let self = self else { return }
             self.progressView.progress = Float(self.webView.estimatedProgress)
         })
+        
+        self.setFabHidden(true)
+        self.floatingButton.delegate = self
+        self.fabActionHandler = { [weak self] action in
+            guard let self = self else { return }
+            self.onFabActionSelected?(action)
+        }
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -115,6 +126,11 @@ class WebViewViewController: UIViewController {
                 }
             }
         }
+    }
+    
+    override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        self.floatingButton.delegate = nil
     }
     
     // MARK: - Actions
@@ -150,6 +166,18 @@ class WebViewViewController: UIViewController {
         case -1009: self.navigator.handleError(error: RepositoryError.connectivityError, presenter: self)
         default: self.navigator.handleError(error: nil, presenter: self)
         }
+    }
+    
+    func showFabIfNeeded() {
+        self.setupFloatingButtonIfNeeded()
+        self.setFabHidden(false)
+        self.floatingButton.open(animated: true)
+    }
+}
+
+extension WebViewViewController: JJFloatingActionButtonDelegate {
+    func floatingActionButtonDidClose(_ button: JJFloatingActionButton) {
+        self.setFabHidden(true)
     }
 }
 

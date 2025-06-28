@@ -933,7 +933,10 @@ class AppNavigator {
         }
     }
     
-    public func openWebView(withTitle title: String, url: URL, presenter: UIViewController, configuration: WKWebViewConfiguration?) {
+    public func openWebView(withTitle title: String,
+                            url: URL,
+                            presenter: UIViewController,
+                            configuration: WKWebViewConfiguration?) {
         let webViewViewController = WebViewViewController(withTitle: title,
                                                           allowNavigation: true,
                                                           url: url,
@@ -941,6 +944,18 @@ class AppNavigator {
                                                           webViewConfiguration: configuration ?? WKWebViewConfiguration())
         let navigationViewController = UINavigationController(rootViewController: webViewViewController)
         navigationViewController.preventPopWithSwipe()
+        webViewViewController.onFabActionSelected = { [weak self] action in
+            guard let self = self else { return }
+            
+            switch action {
+            case .insulin:
+                self.openMyDosesViewController(presenter: presenter)
+            case .noticed:
+                self.openNoticedViewController(presenter: presenter)
+            case .eaten:
+                self.openEatenViewController(presenter: presenter)
+            }
+        }
         presenter.present(navigationViewController, animated: true)
     }
     
