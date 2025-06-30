@@ -55,7 +55,9 @@ public class FontPalette {
     }
     
     static func fontStyleData(forStyle style: FontStyle) -> FontStyleData {
-        return self.fontStyleMap[style] ?? style.defaultData
+        let data = self.fontStyleMap[style] ?? style.defaultData
+        let scaledFont = UIFontMetrics.default.scaledFont(for: data.font)
+        return FontStyleData(font: scaledFont, lineSpacing: data.lineSpacing, uppercase: data.uppercase)
     }
     
     static func checkFontAvailability() {
