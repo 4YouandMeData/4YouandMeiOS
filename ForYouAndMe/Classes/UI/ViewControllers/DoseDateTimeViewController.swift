@@ -184,6 +184,7 @@ class DoseDateTimeViewController: UIViewController, UITextFieldDelegate {
 
         setupLayout()
         setupActions()
+        initializeDefaultDate()
     }
 
     override func viewWillAppear(_ animated: Bool) {
@@ -351,6 +352,11 @@ class DoseDateTimeViewController: UIViewController, UITextFieldDelegate {
             pickerChanged(datePicker)
         }
     }
+    
+    private func initializeDefaultDate() {
+        let current = self.datePicker.date
+        self.chosenDate = current
+    }
 
     @objc private func pickerChanged(_ dp: UIDatePicker) {
         chosenDate = dp.date
@@ -375,7 +381,7 @@ class DoseDateTimeViewController: UIViewController, UITextFieldDelegate {
 
     @objc private func confirmTapped() {
         guard let amount = chosenDose else { return }
-        delegate?.doseDateTimeViewController(self, didSelect: nil, amount: amount)
+        delegate?.doseDateTimeViewController(self, didSelect: chosenDate, amount: amount)
     }
 
     @objc private func infoPressed() {
