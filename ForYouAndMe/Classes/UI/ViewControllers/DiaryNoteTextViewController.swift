@@ -66,6 +66,7 @@ class DiaryNoteTextViewController: UIViewController {
         let textView = UITextView()
         let style = NSMutableParagraphStyle()
         style.lineSpacing = 8
+        textView.isScrollEnabled = true
         textView.typingAttributes = [.foregroundColor: ColorPalette.color(withType: .primaryText),
                                      .font: FontPalette.fontStyleData(forStyle: .header3).font,
                                      .paragraphStyle: style]
@@ -146,6 +147,7 @@ class DiaryNoteTextViewController: UIViewController {
     
     deinit {
         print("DiaryNoteTextViewController - deinit")
+        NotificationCenter.default.removeObserver(self)
     }
     
     override func viewDidLoad() {
@@ -208,6 +210,8 @@ class DiaryNoteTextViewController: UIViewController {
         }).disposed(by: self.disposeBag)
         
         self.loadNote()
+        
+        self.addObservers()
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -215,7 +219,42 @@ class DiaryNoteTextViewController: UIViewController {
         self.navigationController?.navigationBar.apply(style: NavigationBarStyleCategory.primary(hidden: true).style)
     }
     
+    private func addObservers() {
+        NotificationCenter.default.addObserver(self,
+                                               selector: #selector(keyboardWillChangeFrame(_:)),
+                                               name: UIResponder.keyboardWillChangeFrameNotification,
+                                               object: nil)
+
+        NotificationCenter.default.addObserver(self,
+                                               selector: #selector(keyboardWillHide(_:)),
+                                               name: UIResponder.keyboardWillHideNotification,
+                                               object: nil)
+    }
+    
     // MARK: - Actions
+    
+    @objc private func keyboardWillChangeFrame(_ notification: Notification) {
+        guard let userInfo = notification.userInfo,
+              let keyboardFrame = userInfo[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect,
+              let duration = userInfo[UIResponder.keyboardAnimationDurationUserInfoKey] as? TimeInterval else { return }
+
+        let keyboardHeight = view.convert(keyboardFrame, from: nil).intersection(view.bounds).height
+
+        UIView.animate(withDuration: duration) {
+            self.textView.contentInset.bottom = keyboardHeight
+            self.textView.verticalScrollIndicatorInsets.bottom = keyboardHeight
+        }
+    }
+
+    @objc private func keyboardWillHide(_ notification: Notification) {
+        guard let userInfo = notification.userInfo,
+              let duration = userInfo[UIResponder.keyboardAnimationDurationUserInfoKey] as? TimeInterval else { return }
+
+        UIView.animate(withDuration: duration) {
+            self.textView.contentInset.bottom = 0
+            self.textView.verticalScrollIndicatorInsets.bottom = 0
+        }
+    }
     
     @objc private func closeButtonPressed() {
         self.genericCloseButtonPressed(completion: {
