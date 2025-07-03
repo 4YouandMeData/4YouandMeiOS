@@ -27,6 +27,20 @@ enum IntegrationSpecialLinkBehaviour: CaseIterable {
         case .active: return "active"
         }
     }
+    
+    var caseType: CaseType {
+        switch self {
+        case .download: return .download
+        case .open: return .open
+        case .active: return .active
+        }
+    }
+    
+    enum CaseType {
+        case download
+        case open
+        case active
+    }
 }
 
 class IntegrationSectionCoordinator {

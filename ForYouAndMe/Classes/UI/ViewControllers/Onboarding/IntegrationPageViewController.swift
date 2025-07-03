@@ -61,6 +61,15 @@ public class IntegrationPageViewController: UIViewController, PageProvider {
             let externalLinkBehavior = self.page.externalLinkUrl
             
             if nil != specialLinkBehavior || nil != externalLinkBehavior {
+                
+                if specialLinkBehavior?.caseType == .active {
+                    let view = GenericButtonView(withTextStyleCategory: .secondaryBackground(shadow: false))
+                    view.addTarget(target: self, action: #selector(self.specialLinkButtonPressed))
+                    let defaultText = StringsProvider.string(forKey: .onboardingIntegrationLoginButtonDefault)
+                    view.setButtonText(self.page.specialLinkLabel ?? defaultText)
+                    return view
+                }
+                
                 let view = DoubleButtonHorizontalView(styleCategory: .secondaryBackground(firstButtonPrimary: true,
                                                                                           secondButtonPrimary: false))
                 view.addTargetToSecondButton(target: self, action: #selector(self.primaryButtonPressed))
