@@ -12,7 +12,7 @@ import WebKit
 enum ScriptMessage: String {
     case chartPointTapped
     case chartFullScreenTapped
-    case chartShareTapped
+    case shareChart
 }
 
 class UserDataViewController: UIViewController, WKNavigationDelegate, WKScriptMessageHandler {
@@ -33,6 +33,7 @@ class UserDataViewController: UIViewController, WKNavigationDelegate, WKScriptMe
         let userContentController = WKUserContentController()
         userContentController.add(self, name: "chartPointTapped")
         userContentController.add(self, name: "chartFullScreenTapped")
+        userContentController.add(self, name: "shareChart")
         
         let configuration = WKWebViewConfiguration()
         configuration.userContentController = userContentController
@@ -210,7 +211,7 @@ class UserDataViewController: UIViewController, WKNavigationDelegate, WKScriptMe
         case .chartFullScreenTapped:
             handleFullScreenTap(body: body)
             
-        case .chartShareTapped:
+        case .shareChart:
             handleSharingTap(body: body)
         }
     }
@@ -244,7 +245,7 @@ class UserDataViewController: UIViewController, WKNavigationDelegate, WKScriptMe
     }
     
     private func handleSharingTap(body: [String: Any]) {
-        let urlString = body["shareUrl"] as? String ?? "https://www.google.com"
+        let urlString = body["url"] as? String ?? "https://www.google.com"
 
         guard let url = URL(string: urlString) else {
             assertionFailure("URL invalido: \(urlString)")
@@ -253,9 +254,11 @@ class UserDataViewController: UIViewController, WKNavigationDelegate, WKScriptMe
         
         let activityViewController = UIActivityViewController(activityItems: [url], applicationActivities: nil)
         activityViewController.popoverPresentationController?.sourceView = self.view
-
-        self.present(activityViewController, animated: true, completion: nil)
         
+        if let nav = self.presentedViewController as? UINavigationController,
+           let webVC = nav.viewControllers.first(where: { $0 is WebViewViewController }) as? WebViewViewController {
+            webVC.present(activityViewController, animated: true, completion: nil)
+        }
     }
     
     private func handleFullScreenTap(body: [String: Any]) {
