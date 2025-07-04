@@ -47,7 +47,14 @@ public enum Integration: String {
     }
     
     var apiOAuthUrl: URL {
-        return Constants.Url.ApiOAuthIntegrationBaseUrl.appendingPathComponent(self.rawValue)
+        if self == .terra {
+            var components = URLComponents(url: Constants.Url.ApiOAuthIntegrationBaseUrl.appendingPathComponent(self.rawValue), resolvingAgainstBaseURL: false)
+            let locale = Locale.current.languageCode ?? "en"
+            components?.queryItems = [URLQueryItem(name: "locale", value: locale)]
+            return components?.url ?? Constants.Url.ApiOAuthIntegrationBaseUrl.appendingPathComponent(self.rawValue)
+        } else {
+            return Constants.Url.ApiOAuthIntegrationBaseUrl.appendingPathComponent(self.rawValue)
+        }
     }
     
     var apiOAuthDeauthorizeUrl: URL {
