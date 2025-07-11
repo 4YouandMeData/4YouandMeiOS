@@ -68,15 +68,21 @@ class DiaryNoteTextViewController: UIViewController {
             withText: StringsProvider.string(forKey: .diaryNoteCreateTextTitle),
             fontStyle: .title,
             color: ColorPalette.color(withType: .primaryText),
-            textAlignment: .left
+            textAlignment: .center
         )
         
+        let emojiConfig = StringsProvider.string(forKey: .emojiList)
+
         let emptyView = UIView()
         emptyView.autoSetDimensions(to: CGSize(width: 24, height: 24))
-        titleRow.addArrangedSubview(emptyView)
-        titleRow.addArrangedSubview(titleLabel)
-        titleRow.addArrangedSubview(emojiButton)
-
+        
+        if !emojiConfig.isEmpty {
+            titleRow.addArrangedSubview(emptyView)
+            titleRow.addArrangedSubview(titleLabel)
+            titleRow.addArrangedSubview(emojiButton)
+        } else {
+            titleRow.addArrangedSubview(titleLabel)
+        }
         stackView.addArrangedSubview(titleRow)
         
         stackView.addLineSeparator(lineColor: ColorPalette.color(withType: .secondaryMenu), space: 0, isVertical: false)
