@@ -9,7 +9,7 @@ class SurveyQuestionPickOneWithImage: UIView {
     
     private var surveyQuestion: SurveyQuestion
     private static let optionWidth: CGFloat = 74.0
-    private var currentIndexSelected: Int? = nil
+    private var currentIndexSelected: String? = nil
     private weak var delegate: SurveyQuestionProtocol?
     
     private let stackView = UIStackView.create(withAxis: .vertical)
@@ -39,58 +39,10 @@ class SurveyQuestionPickOneWithImage: UIView {
             self.stackView.addArrangedSubview(optionView)
             self.stackView.addBlankSpace(space: 12)
         }
-        
-//        let options = self.surveyQuestion.options
-//        options?.forEach({ option in
-//            let horizontalStackView = UIStackView()
-//            horizontalStackView.axis = .horizontal
-//            
-//            // button
-//            let button = UIButton()
-//            button.contentEdgeInsets = UIEdgeInsets(top: 8.0, left: 8.0, bottom: 8.0, right: 8.0)
-//            button.addTarget(self, action: #selector(self.buttonPressed), for: .touchUpInside)
-//            button.tag = Int(option.id) ?? 0
-//            if self.currentIndexSelected == button.tag {
-//                button.setImage(ImagePalette.templateImage(withName: .radioButtonFilled), for: .normal)
-//                button.imageView?.tintColor = ColorPalette.color(withType: .primary)
-//            } else {
-//                button.setImage(ImagePalette.templateImage(withName: .radioButtonOutline), for: .normal)
-//                button.imageView?.tintColor = ColorPalette.color(withType: .inactive)
-//            }
-//            
-//            let buttonContainerView = UIView()
-//            buttonContainerView.addSubview(button)
-//            buttonContainerView.autoSetDimension(.width, toSize: Self.optionWidth)
-//            button.autoPinEdge(toSuperviewEdge: .leading)
-//            button.autoPinEdge(toSuperviewEdge: .trailing)
-//            button.autoPinEdge(toSuperviewEdge: .top, withInset: 0, relation: .greaterThanOrEqual)
-//            button.autoPinEdge(toSuperviewEdge: .bottom, withInset: 0, relation: .greaterThanOrEqual)
-//            button.autoAlignAxis(toSuperviewAxis: .horizontal)
-//            horizontalStackView.addArrangedSubview(buttonContainerView)
-//            
-//            // Label
-//            let answerLabel = UILabel()
-//            answerLabel.numberOfLines = 0
-//            answerLabel.attributedText = NSAttributedString.create(withText: option.value,
-//                                                                   fontStyle: .paragraph,
-//                                                                   color: ColorPalette.color(withType: .primaryText),
-//                                                                   textAlignment: .left)
-//            let answerContainerView = UIView()
-//            answerContainerView.addSubview(answerLabel)
-//            answerLabel.autoPinEdge(toSuperviewEdge: .leading)
-//            answerLabel.autoPinEdge(toSuperviewEdge: .trailing)
-//            answerLabel.autoPinEdge(toSuperviewEdge: .top, withInset: 0, relation: .greaterThanOrEqual)
-//            answerLabel.autoPinEdge(toSuperviewEdge: .bottom, withInset: 0, relation: .greaterThanOrEqual)
-//            answerLabel.autoAlignAxis(toSuperviewAxis: .horizontal)
-//            horizontalStackView.addArrangedSubview(answerContainerView)
-//            
-//            self.stackView.addArrangedSubview(horizontalStackView)
-//            self.stackView.addBlankSpace(space: 20)
-//        })
     }
     
     private func createOptionView(for option: SurveyQuestionOption, index: Int) -> UIView {
-        let isSelected = (index == self.currentIndexSelected)
+        let isSelected = option.id == self.currentIndexSelected
         
         let container = UIView()
         container.layer.cornerRadius = 12
@@ -105,7 +57,7 @@ class SurveyQuestionPickOneWithImage: UIView {
         // Interactions
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(optionTapped(_:)))
         container.addGestureRecognizer(tapGesture)
-        container.tag = index
+        container.tag = Int(option.id) ?? 0
         
         let horizontalStack = UIStackView()
         horizontalStack.axis = .horizontal
@@ -161,21 +113,16 @@ class SurveyQuestionPickOneWithImage: UIView {
     }
     
     @objc private func optionTapped(_ gesture: UITapGestureRecognizer) {
-        guard let index = gesture.view?.tag else { return }
-        self.currentIndexSelected = index
-        self.updateAnswers()
-        self.refresh()
-    }
-    
-    @objc func buttonPressed(button: UIButton) {
-        self.currentIndexSelected = button.tag
+        guard let id = gesture.view?.tag,
+                let selectedId = surveyQuestion.options?.first(where: { Int($0.id) == id })?.id else { return }
+        self.currentIndexSelected = selectedId
         self.updateAnswers()
         self.refresh()
     }
     
     private func updateAnswers() {
-        guard let index = self.currentIndexSelected else { return }
-        let response = SurveyPickResponse(answerId: "\(index)")
+        guard let id = self.currentIndexSelected else { return }
+        let response = SurveyPickResponse(answerId: id)
         self.delegate?.answerDidChange(self.surveyQuestion, answer: response)
     }
     
