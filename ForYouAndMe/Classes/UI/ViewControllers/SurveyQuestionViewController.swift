@@ -24,6 +24,12 @@ class SurveyQuestionViewController: UIViewController,
     
     private let pageData: SurveyQuestionPageData
     private let coordinator: SurveyQuestionViewCoordinator
+    private var shouldAbortOnSkip: Bool {
+        return StringsProvider
+            .string(forKey: .surveyButtonAbort)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .lowercased() == "true"
+    }
     
     private lazy var scrollView: UIScrollView = {
         let scrollView = TPKeyboardAvoidingScrollView()
@@ -165,7 +171,38 @@ class SurveyQuestionViewController: UIViewController,
     }
     
     @objc private func skipButtonPressed() {
-        self.coordinator.onSurveyQuestionSkipped(questionId: self.pageData.question.id)
+        if shouldAbortOnSkip {
+            let alert = UIAlertController(
+                title: StringsProvider.string(forKey: .surveyAbortTitle),
+                message: StringsProvider.string(forKey: .surveyAbortMessage),
+                preferredStyle: .alert
+            )
+
+            alert.addAction(UIAlertAction(
+                title: StringsProvider.string(forKey: .surveyAbortCancel),
+                style: .cancel,
+                handler: nil
+            ))
+
+            alert.addAction(UIAlertAction(
+                title: StringsProvider.string(forKey: .surveyAbortConfirm),
+                style: .destructive,
+                handler: { [weak self] _ in
+                    guard let self = self else { return }
+
+                    if let navigationController = self.navigationController {
+                        navigationController.dismiss(animated: true)
+                    } else {
+                        self.dismiss(animated: true)
+                    }
+                }
+            ))
+
+            self.present(alert, animated: true)
+
+        } else {
+            self.coordinator.onSurveyQuestionSkipped(questionId: self.pageData.question.id)
+        }
     }
     
     // MARK: - Private Methods
