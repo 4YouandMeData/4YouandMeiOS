@@ -12,6 +12,7 @@ typealias QuickActivityViewSelectionCallback = ((QuickActivityOption) -> Void)
 class QuickActivityView: UIView {
     
     private static let headerViewHeight: CGFloat = 120.0
+    private static let footerViewFooter: CGFloat = 32.0
     
     private static let expectedOptions: Int = 6
     private static let optionColumns: Int = 3
@@ -102,6 +103,7 @@ class QuickActivityView: UIView {
         stackView.addArrangedSubview(headerView)
         stackView.addBlankSpace(space: 12.0)
         stackView.addArrangedSubview(optionStackView)
+        
         stackView.addArrangedSubview(self.confirmButtonView)
     }
     

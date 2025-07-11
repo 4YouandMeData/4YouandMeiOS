@@ -18,6 +18,7 @@ class DiaryNoteTextViewController: UIViewController {
     private let repository: Repository
     private let analytics: AnalyticsService
     private let reflectionCoordinator: ReflectionSectionCoordinator?
+    private var selectedEmoji: EmojiItem?
         
     public fileprivate(set) var standardColor: UIColor = ColorPalette.color(withType: .primaryText)
     public fileprivate(set) var errorColor: UIColor = ColorPalette.color(withType: .primaryText)
@@ -35,6 +36,15 @@ class DiaryNoteTextViewController: UIViewController {
         return button
     }()
     
+    private lazy var emojiButton: UIButton = {
+        let button = UIButton()
+        button.setImage(ImagePalette.image(withName: .emojiICon), for: .normal)
+        button.tintColor = ColorPalette.color(withType: .primaryText)
+        button.autoSetDimensions(to: CGSize(width: 24, height: 24))
+        button.addTarget(self, action: #selector(emojiButtonTapped), for: .touchUpInside)
+        return button
+    }()
+    
     private lazy var headerView: UIView = {
         let containerView = UIView()
         
@@ -46,9 +56,28 @@ class DiaryNoteTextViewController: UIViewController {
         self.closeButton.autoPinEdgesToSuperviewEdges(with: .zero, excludingEdge: .trailing)
         stackView.addArrangedSubview(closeButtonContainerView)
 
-        stackView.addLabel(withText: StringsProvider.string(forKey: .diaryNoteCreateTextTitle),
-                           fontStyle: .title,
-                           colorType: .primaryText)
+        let titleRow = UIStackView()
+        titleRow.axis = .horizontal
+        titleRow.spacing = 8
+        titleRow.alignment = .center
+        titleRow.distribution = .equalSpacing
+        
+        // title Label
+        let titleLabel = UILabel()
+        titleLabel.attributedText = NSAttributedString.create(
+            withText: StringsProvider.string(forKey: .diaryNoteCreateTextTitle),
+            fontStyle: .title,
+            color: ColorPalette.color(withType: .primaryText),
+            textAlignment: .left
+        )
+        
+        let emptyView = UIView()
+        emptyView.autoSetDimensions(to: CGSize(width: 24, height: 24))
+        titleRow.addArrangedSubview(emptyView)
+        titleRow.addArrangedSubview(titleLabel)
+        titleRow.addArrangedSubview(emojiButton)
+
+        stackView.addArrangedSubview(titleRow)
         
         stackView.addLineSeparator(lineColor: ColorPalette.color(withType: .secondaryMenu), space: 0, isVertical: false)
         
@@ -322,6 +351,26 @@ class DiaryNoteTextViewController: UIViewController {
     
     @objc private func doneButtonPressed() {
         self.textView.resignFirstResponder()
+    }
+    
+    @objc private func emojiButtonTapped() {
+        let emojiConfig = StringsProvider.string(forKey: .emojiList)
+        let emojiItems = Constants.Misc.parseEmojiList(from: emojiConfig)
+        
+        let emojiVC = EmojiPopupViewController(emojis: emojiItems,
+                                               selected: self.selectedEmoji) { [weak self] selectedEmoji in
+            guard let self = self, let emoji = selectedEmoji else { return }
+            
+            self.selectedEmoji = emoji
+
+            self.emojiButton.setImage(nil, for: .normal)
+            self.emojiButton.setTitle(emoji.emoji, for: .normal)
+            self.emojiButton.titleLabel?.font = UIFont.systemFont(ofSize: 22)
+        }
+        
+        emojiVC.modalPresentationStyle = .overCurrentContext
+        emojiVC.modalTransitionStyle = .crossDissolve
+        self.present(emojiVC, animated: true)
     }
     
     // MARK: - Private Methods

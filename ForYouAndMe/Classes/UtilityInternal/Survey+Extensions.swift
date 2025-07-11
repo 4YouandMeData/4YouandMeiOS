@@ -26,7 +26,7 @@ extension SurveyResult {
                 return true
             }
             return false
-        case .pickOne:
+        case .pickOne, .pickOneImage:
             guard let options = self.question.options else { return false }
             guard let optionIdentifier = self.answer as? SurveyPickResponse else { return false }
             return options.contains(where: { $0.id == optionIdentifier.answerId })
@@ -66,6 +66,7 @@ extension SurveyResult {
             guard let stringValue = self.answer as? String else { return nil }
             return Int(stringValue)
         case .pickOne: return nil
+        case .pickOneImage: return nil
         case .pickMany: return nil
         case .textInput: return nil
         case .dateInput: return nil
@@ -78,7 +79,7 @@ extension SurveyResult {
     var optionsIdentifiers: [String]? {
         switch self.question.questionType {
         case .numerical: return nil
-        case .pickOne:
+        case .pickOne, .pickOneImage:
             guard let optionIdentifier = self.answer as? SurveyPickResponse else { return nil }
             let optionId = optionIdentifier.answerId
             return [optionId]
@@ -104,7 +105,7 @@ extension SurveyQuestion {
                   minimum < maximum else {
                 return false
             }
-        case .pickOne:
+        case .pickOne, .pickOneImage:
             guard let options = self.options, options.count > 0 else { return false }
         case .pickMany:
             guard let options = self.options, options.count > 0 else { return false }

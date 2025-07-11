@@ -14,6 +14,8 @@ struct SurveyQuestionPickerFactory {
             return SurveyQuestionNumerical(surveyQuestion: question, delegate: delegate)
         case .pickOne:
             return SurveyQuestionPickOne(surveyQuestion: question, delegate: delegate)
+        case .pickOneImage:
+            return SurveyQuestionPickOneWithImage(surveyQuestion: question, delegate: delegate)
         case .pickMany:
             return SurveyQuestionPickMany(surveyQuestion: question, delegate: delegate)
         case .textInput:

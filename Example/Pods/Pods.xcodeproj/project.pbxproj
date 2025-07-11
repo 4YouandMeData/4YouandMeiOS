@@ -264,6 +264,10 @@
 		0D6C7EA1B12048E35C3B01467994A5A1 /* ORKInstructionStepViewController.h in Headers */ = {isa = PBXBuildFile; fileRef = 93D917CCC09D7AED08EB388E509C1526 /* ORKInstructionStepViewController.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		0D6CE195194EFBD60E742E79436D8FA1 /* StyleCategory.swift in Sources */ = {isa = PBXBuildFile; fileRef = C51FF8AC40AA5E77F087E489DE50B97E /* StyleCategory.swift */; };
 		0D6D88D61FFB260203B01234D0A1CB42 /* distinct+RxCocoa.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893A93C65F6789C7295244A522713A2B /* distinct+RxCocoa.swift */; };
+		0D7DD7242E1EABA300A2783B /* SurveyQuestionPickOneWithImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D7DD7232E1EAB9B00A2783B /* SurveyQuestionPickOneWithImage.swift */; };
+		0D7DD7262E1FE65900A2783B /* ImageZoomViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D7DD7252E1FE65200A2783B /* ImageZoomViewController.swift */; };
+		0D7DD7282E2016A400A2783B /* EmojiPopUpViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D7DD7272E20169C00A2783B /* EmojiPopUpViewController.swift */; };
+		0D7DD72A2E20186000A2783B /* EmojiCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D7DD7292E20185D00A2783B /* EmojiCell.swift */; };
 		0D871FA62E05B22D0091566D /* TerraManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D871FA52E05B2280091566D /* TerraManager.swift */; };
 		0D871FA82E05B23B0091566D /* TerraService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D871FA72E05B2360091566D /* TerraService.swift */; };
 		0D8D8AAA40421360D8CD6019DAE8ADB5 /* WhiteBalance_GLES.fsh in Resources */ = {isa = PBXBuildFile; fileRef = 7B8BC02221FAC653E57434B1711F13A0 /* WhiteBalance_GLES.fsh */; };
@@ -4368,6 +4372,10 @@
 		0D5F63C448F22D3109651C2D509B1EDA /* Page+Integration.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = "Page+Integration.swift"; sourceTree = "<group>"; };
 		0D631E9908483F9525A6B3F36F16CC61 /* Quick.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Quick.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		0D6938D9E5DE282105421DEC9DD04453 /* ORKRoundTappingButton.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = ORKRoundTappingButton.m; path = ResearchKit/Common/ORKRoundTappingButton.m; sourceTree = "<group>"; };
+		0D7DD7232E1EAB9B00A2783B /* SurveyQuestionPickOneWithImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SurveyQuestionPickOneWithImage.swift; sourceTree = "<group>"; };
+		0D7DD7252E1FE65200A2783B /* ImageZoomViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageZoomViewController.swift; sourceTree = "<group>"; };
+		0D7DD7272E20169C00A2783B /* EmojiPopUpViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmojiPopUpViewController.swift; sourceTree = "<group>"; };
+		0D7DD7292E20185D00A2783B /* EmojiCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmojiCell.swift; sourceTree = "<group>"; };
 		0D871FA52E05B2280091566D /* TerraManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerraManager.swift; sourceTree = "<group>"; };
 		0D871FA72E05B2360091566D /* TerraService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerraService.swift; sourceTree = "<group>"; };
 		0D89CEE0EB59DD14D800DB83D930B98D /* MultiplyBlend.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = MultiplyBlend.swift; path = framework/Source/Operations/MultiplyBlend.swift; sourceTree = "<group>"; };
@@ -10964,6 +10972,7 @@
 		75AFDC8F5396BE28282476B3DE8D15CE /* Survey */ = {
 			isa = PBXGroup;
 			children = (
+				0D7DD7232E1EAB9B00A2783B /* SurveyQuestionPickOneWithImage.swift */,
 				61FB12F1A1325C393E599FA6AD605EE2 /* Slider.swift */,
 				5C87E622E2ADC61CE012E323A73CBA40 /* SurveyClickableImage.swift */,
 				59DD27545FF75370002BAAF77B1C31C6 /* SurveyQuestionDate.swift */,
@@ -11300,6 +11309,8 @@
 		86ABA7A9AB3119413C40167D75CEC7DD /* ViewControllers */ = {
 			isa = PBXGroup;
 			children = (
+				0D7DD7272E20169C00A2783B /* EmojiPopUpViewController.swift */,
+				0D7DD7252E1FE65200A2783B /* ImageZoomViewController.swift */,
 				0DE468FF2E0D50AA001FE066 /* PreferencesViewController.swift */,
 				685160E188E3DF1728053977F556EDC1 /* ActivitySectionViewController.swift */,
 				10BBB6573CFE26F8FF039EE5EECC8CC1 /* BaseViewController.swift */,
@@ -11844,6 +11855,7 @@
 		B9002C4CD5A9C05A9D68DC8596601548 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				0D7DD7292E20185D00A2783B /* EmojiCell.swift */,
 				C4DE765F0FB7A7585A45805C808D62B1 /* AboutYouHeaderView.swift */,
 				2284E7D2F79000BA0694C120D0504455 /* BluetoothNoDevices.swift */,
 				81F5E12F42B69E30725593B26452A5C5 /* BluetoothOffView.swift */,
@@ -16466,8 +16478,10 @@
 				00126C6BB922D2085042C4317782A2FC /* DosesEntryFormViewController.swift in Sources */,
 				20A42FF6D083DEA5AB7696ED2E84E44E /* DoseTypeViewController.swift in Sources */,
 				4491223ABC55F9A131D8EAF0811A420F /* DoubleButtonHorizontalView.swift in Sources */,
+				0D7DD7262E1FE65900A2783B /* ImageZoomViewController.swift in Sources */,
 				A4F98AEA453710A41D6DF4787B847C86 /* DoubleButtonVerticalView.swift in Sources */,
 				C9BB5BCD548FA88A222070F7E6FBD4FC /* DummyHealthManager.swift in Sources */,
+				0D7DD7282E2016A400A2783B /* EmojiPopUpViewController.swift in Sources */,
 				F4CCA9B0017F957B439E7D2628AAB022 /* EatenDateTimeViewController.swift in Sources */,
 				A723876A35D13ED96C37652B0097F7C1 /* EatenEntryFormViewController.swift in Sources */,
 				9D075EA64C49DFAEEB255DCF28192904 /* EatenIntroViewController.swift in Sources */,
@@ -16543,6 +16557,7 @@
 				26C40419EA75DC440EE27D95F324078F /* LoadingTableViewCell.swift in Sources */,
 				9D995D3615799312B589C0F00A617DC6 /* LoadingTranscribeAudio.swift in Sources */,
 				60DED61C247C77066AB4D31145535441 /* LoadingViewController.swift in Sources */,
+				0D7DD72A2E20186000A2783B /* EmojiCell.swift in Sources */,
 				54E110B61F0E78190462B39D111FA5B6 /* LocationPermission.swift in Sources */,
 				84649F24A4E4B8683AB719159F48606D /* Mappable.swift in Sources */,
 				7E84C022F4C7F45CAF52217B8BCCAC18 /* Mapper.swift in Sources */,
@@ -16676,6 +16691,7 @@
 				0D6CE195194EFBD60E742E79436D8FA1 /* StyleCategory.swift in Sources */,
 				2E7C8D38998B5BF0D103723D1921099C /* SuccessViewController.swift in Sources */,
 				1D7C0C81EDA8580626474B6202204408 /* Survey.swift in Sources */,
+				0D7DD7242E1EABA300A2783B /* SurveyQuestionPickOneWithImage.swift in Sources */,
 				03904C691C64F920125CC6D8D2165015 /* Survey+Extensions.swift in Sources */,
 				B62F824E654C219728E8C9C4DB8BAA50 /* SurveyClickableImage.swift in Sources */,
 				49C8962634CD634FE8EDF127A884EEE4 /* SurveyGroup.swift in Sources */,

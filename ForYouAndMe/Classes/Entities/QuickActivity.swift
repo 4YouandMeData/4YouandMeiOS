@@ -25,6 +25,9 @@ struct QuickActivity {
     var endColor: UIColor?
     @ColorDecodable
     var cardColor: UIColor?
+    
+    @FailableDecodable
+    var skippable: Bool?
 }
 
 extension QuickActivity: JSONAPIMappable {
@@ -38,6 +41,7 @@ extension QuickActivity: JSONAPIMappable {
         case startColor = "start_color"
         case endColor = "end_color"
         case cardColor = "card_color"
+        case skippable
     }
 }
 

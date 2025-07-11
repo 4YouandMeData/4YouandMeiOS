@@ -14,6 +14,10 @@ struct SurveyQuestionOption {
     let value: String
     let isNone: Bool?
     let isOther: Bool?
+    @ImageDecodable
+    var previewImage: UIImage?
+    @ImageDecodable
+    var fullScreenImage: UIImage?
 }
 
 extension SurveyQuestionOption: JSONAPIMappable {
@@ -23,5 +27,7 @@ extension SurveyQuestionOption: JSONAPIMappable {
         case value = "text"
         case isNone = "is_none"
         case isOther = "is_other"
+        case previewImage = "preview_image"
+        case fullScreenImage = "fullscreen_image"
     }
 }

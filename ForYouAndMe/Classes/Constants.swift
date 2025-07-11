@@ -113,6 +113,18 @@ struct Constants {
         static let WaitingTimeForLocation: DispatchTimeInterval = .seconds(10)
         static let MaxValidLocationAge: TimeInterval = 15.0
         static let PinCodeSuffix: String = ProjectInfo.PinCodeSuffix
+        
+        static func parseEmojiList(from config: String) -> [EmojiItem] {
+            return config
+                .components(separatedBy: ";")
+                .compactMap { pair in
+                    let parts = pair.components(separatedBy: ",")
+                    guard parts.count == 2,
+                          let unicodeScalar = UInt32(parts[0].replacingOccurrences(of: "U+", with: ""), radix: 16),
+                          let scalar = UnicodeScalar(unicodeScalar) else { return nil }
+                    return EmojiItem(emoji: String(scalar), label: parts[1])
+                }
+        }
     }
     
     struct Url {
@@ -197,6 +209,7 @@ struct Constants {
             }
             return "STUDY_INFO_\(paramVariable)_EXTRA"
         }
+        
         static var DefaultUserInfoParameters: [UserInfoParameter] {
             let userInfoParameters: [UserInfoParameter] = [
                 UserInfoParameter(identifier: Self.PreDeliveryParameterIdentifier,

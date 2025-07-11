@@ -208,7 +208,7 @@ extension SurveySectionCoordinator: SurveyQuestionViewCoordinator {
             if let numericValue = numericValue {
                 matchingTarget = result.question.targets?.getTargetMatchingCriteria(forNumber: numericValue)
             }
-        case .pickOne:
+        case .pickOne, .pickOneImage:
             if let optionsIdentifiers = result.optionsIdentifiers {
                 matchingTarget = result.question.targets?.getTargetMatchingCriteria(forOptionsIdentifiers: optionsIdentifiers)
             }

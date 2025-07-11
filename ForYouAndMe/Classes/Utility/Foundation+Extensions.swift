@@ -42,3 +42,9 @@ extension Sequence where Element: Hashable {
         return self.filter { set.insert($0).inserted }
     }
 }
+
+extension Array {
+    subscript(safe index: Int) -> Element? {
+        return indices.contains(index) ? self[index] : nil
+    }
+}

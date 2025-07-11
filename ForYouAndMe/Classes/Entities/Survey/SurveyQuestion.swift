@@ -17,6 +17,7 @@ enum SurveyQuestionType: String {
     case scale = "SurveyQuestionScale"
     case range = "SurveyQuestionRange"
     case clickable = "SurveyQuestionClickableImage"
+    case pickOneImage = "SurveyQuestionPickOneWithImage"
 }
 
 struct SurveyQuestion {
