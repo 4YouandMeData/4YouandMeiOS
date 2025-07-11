@@ -36,7 +36,7 @@ class DiaryNoteItemTextTableViewCell: UITableViewCell {
     
     private lazy var tagLabel: UILabel = {
         let label = UILabel()
-        label.text = "I HAVE NOTICED".uppercased()
+        label.text = StringsProvider.string(forKey: .diaryNoteTagNoticed)
         label.font = UIFont.systemFont(ofSize: 8, weight: .medium)
         label.textColor = ColorPalette.color(withType: .primaryText)
         label.numberOfLines = 1
@@ -134,13 +134,13 @@ class DiaryNoteItemTextTableViewCell: UITableViewCell {
         if let diaryType = DiaryNoteableType(rawValue: data.diaryNoteable?.type.lowercased() ?? "none") {
             switch diaryType {
             case .none, .chart:
-                self.tagLabel.text = "I Have Noticed"
+                self.tagLabel.text = StringsProvider.string(forKey: .diaryNoteTagNoticed)
                 self.noteTagContainer.backgroundColor = ColorPalette.color(withType: .noticedColor)
                 self.tagLabel.textColor = ColorPalette.color(withType: .noticedTextColor)
                 self.tagIconImageView.tintColor = ColorPalette.color(withType: .noticedTextColor)
                 self.tagIconImageView.image = ImagePalette.image(withName: .reflectionEyeIcon)
             case .task:
-                self.tagLabel.text = "Reflection"
+                self.tagLabel.text = StringsProvider.string(forKey: .diaryNoteTagReflection)
                 self.noteTagContainer.backgroundColor = ColorPalette.color(withType: .reflectionColor)
                 self.tagLabel.textColor = ColorPalette.color(withType: .reflectionTextColor)
                 self.tagIconImageView.tintColor = ColorPalette.color(withType: .reflectionTextColor)

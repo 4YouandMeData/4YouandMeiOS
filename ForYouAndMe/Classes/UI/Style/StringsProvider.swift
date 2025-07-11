@@ -177,6 +177,11 @@ enum StringKey: String, CaseIterable, CodingKey {
     case emojiList = "EMOJI_LIST"
     case emojiTitle = "EMOJI_TITLE"
     case emojiButtonText = "EMOJI_BUTTON"
+    case diaryNoteTagDoses = "DIARY_NOTE_TAG_DOSES"
+    case diaryNoteTagEaten = "DIARY_NOTE_TAG_EATEN"
+    case diaryNoteTagNoticed = "DIARY_NOTE_TAG_NOTICED"
+    case diaryNoteTagReflection = "DIARY_NOTE_TAG_REFLECTION"
+    case diaryNoteTagWeNoticed = "DIARY_NOTE_TAG_WE_NOTICED"
     
     // I Have Eaten
     case diaryNoteFabEaten = "FAB_I_HAVE_EATEN"

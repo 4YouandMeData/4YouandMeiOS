@@ -38,7 +38,7 @@ class DiaryNoteItemEatenTableViewCell: UITableViewCell {
     
     private lazy var tagLabel: UILabel = {
         let label = UILabel()
-        label.text = "I've Eaten"
+        label.text = StringsProvider.string(forKey: .diaryNoteTagEaten)
         label.font = UIFont.systemFont(ofSize: 8, weight: .medium)
         label.textColor = UIColor.init(hexString: Constants.Style.EatenColorText)
         label.numberOfLines = 1

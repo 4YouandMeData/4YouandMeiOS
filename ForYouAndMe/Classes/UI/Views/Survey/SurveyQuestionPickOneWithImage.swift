@@ -9,7 +9,7 @@ class SurveyQuestionPickOneWithImage: UIView {
     
     private var surveyQuestion: SurveyQuestion
     private static let optionWidth: CGFloat = 74.0
-    private var currentIndexSelected: String? = nil
+    private var currentIndexSelected: String?
     private weak var delegate: SurveyQuestionProtocol?
     
     private let stackView = UIStackView.create(withAxis: .vertical)
