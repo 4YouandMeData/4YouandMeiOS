@@ -15,6 +15,7 @@ enum EmojiTagCategory: String, CaseIterable {
     case reflections = "reflections"
     case iHaveEaten = "i_have_eaten"
     case iHaveNoticed = "i_have_noticed"
+    case none
 }
 
 final class EmojiPopupViewController: UIViewController {

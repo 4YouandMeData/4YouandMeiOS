@@ -74,7 +74,8 @@ class DiaryNoteTextViewController: UIViewController {
         let emptyView = UIView()
         emptyView.autoSetDimensions(to: CGSize(width: 24, height: 24))
         
-        if !self.emojiItems(for: .iHaveNoticed).isEmpty {
+        let category = self.categoryForEmoji(diaryNote: self.diaryNote)
+        if !self.emojiItems(for: category).isEmpty {
             titleRow.addArrangedSubview(emptyView)
             titleRow.addArrangedSubview(titleLabel)
             titleRow.addArrangedSubview(emojiButton)
@@ -359,7 +360,8 @@ class DiaryNoteTextViewController: UIViewController {
     
     @objc private func emojiButtonTapped() {
         
-        let emojiItems = self.emojiItems(for: .iHaveNoticed)
+        let category = self.categoryForEmoji(diaryNote: self.diaryNote)
+        let emojiItems = self.emojiItems(for: category)
         let emojiVC = EmojiPopupViewController(emojis: emojiItems,
                                                selected: self.selectedEmoji) { [weak self] selectedEmoji in
             guard let self = self, let emoji = selectedEmoji else { return }
@@ -380,6 +382,22 @@ class DiaryNoteTextViewController: UIViewController {
     
     private func emojiItems(for category: EmojiTagCategory) -> [EmojiItem] {
         return self.cache.feedbackList[category.rawValue] ?? []
+    }
+    
+    private func categoryForEmoji(diaryNote: DiaryNoteItem?) -> EmojiTagCategory {
+        var category: EmojiTagCategory
+        if let diaryType = DiaryNoteableType(rawValue: diaryNote?.diaryNoteable?.type.lowercased() ?? "none") {
+            switch diaryType {
+            case .none, .chart:
+                category = .iHaveNoticed
+            case .task:
+                category = .reflections
+            }
+        } else {
+            category = .none
+        }
+        
+        return category
     }
     
     private func updateNextButton(pageState: PageState) {
