@@ -325,8 +325,7 @@ public struct Mapper {
     ///
     /// - returns: A dictionary where the keys and values are created using their convertible implementations
     public func from<U: Convertible, T: Convertible>(_ field: String) throws -> [U: T]
-        where U == U.ConvertedType, T == T.ConvertedType
-    {
+        where U == U.ConvertedType, T == T.ConvertedType {
         let object = try self.JSONFromField(field)
         guard let data = object as? [AnyHashable: Any] else {
             throw MapperError.typeMismatchError(field: field, value: object, type: [AnyHashable: Any].self)
@@ -350,8 +349,7 @@ public struct Mapper {
     /// - returns: A dictionary where the keys and values are created using their convertible implementations
     ///            or nil if anything throws
     public func optionalFrom<U: Convertible, T: Convertible>(_ field: String) -> [U: T]?
-        where U == U.ConvertedType, T == T.ConvertedType
-    {
+        where U == U.ConvertedType, T == T.ConvertedType {
         return try? self.from(field)
     }
 

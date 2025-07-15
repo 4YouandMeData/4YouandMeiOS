@@ -13,6 +13,7 @@ protocol RepositoryStorage {
     var globalConfig: GlobalConfig? { get set }
     var user: User? { get set }
     var infoMessages: [MessageInfo]? { get set }
+    var feedbackList: [String: [EmojiItem]] {get set}
 }
 
 class RepositoryImpl {
@@ -64,6 +65,7 @@ class RepositoryImpl {
                 CountryCodeProvider.initialize(withcountryCodes: globalConfig.countryCodes)
                 IntegrationProvider.initialize(withIntegrationDatas: globalConfig.integrationDatas)
                 OnboardingSectionProvider.initialize(withOnboardingSectionGroups: globalConfig.onboardingSectionGroups)
+                self.storage.feedbackList = globalConfig.feedbackList
             })
             .toVoid()
     }

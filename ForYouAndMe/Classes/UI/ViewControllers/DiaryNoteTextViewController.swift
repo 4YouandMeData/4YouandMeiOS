@@ -70,13 +70,11 @@ class DiaryNoteTextViewController: UIViewController {
             color: ColorPalette.color(withType: .primaryText),
             textAlignment: .center
         )
-        
-        let emojiConfig = StringsProvider.string(forKey: .emojiList)
 
         let emptyView = UIView()
         emptyView.autoSetDimensions(to: CGSize(width: 24, height: 24))
         
-        if !emojiConfig.isEmpty {
+        if !self.emojiItems(for: .iHaveNoticed).isEmpty {
             titleRow.addArrangedSubview(emptyView)
             titleRow.addArrangedSubview(titleLabel)
             titleRow.addArrangedSubview(emojiButton)
@@ -154,7 +152,7 @@ class DiaryNoteTextViewController: UIViewController {
         return buttonView
     }()
     
-    private var storage: CacheService
+    private var cache: CacheService
     private var diaryNote: DiaryNoteItem?
     private let maxCharacters: Int = 2500
     private let isEditMode: Bool
@@ -166,7 +164,7 @@ class DiaryNoteTextViewController: UIViewController {
          reflectionCoordinator: ReflectionSectionCoordinator?) {
         self.navigator = Services.shared.navigator
         self.repository = Services.shared.repository
-        self.storage = Services.shared.storageServices
+        self.cache = Services.shared.storageServices
         self.analytics = Services.shared.analytics
         self.diaryNote = dataPoint
         self.isEditMode = isEditMode
@@ -360,9 +358,8 @@ class DiaryNoteTextViewController: UIViewController {
     }
     
     @objc private func emojiButtonTapped() {
-        let emojiConfig = StringsProvider.string(forKey: .emojiList)
-        let emojiItems = Constants.Misc.parseEmojiList(from: emojiConfig)
         
+        let emojiItems = self.emojiItems(for: .iHaveNoticed)
         let emojiVC = EmojiPopupViewController(emojis: emojiItems,
                                                selected: self.selectedEmoji) { [weak self] selectedEmoji in
             guard let self = self, let emoji = selectedEmoji else { return }
@@ -370,7 +367,7 @@ class DiaryNoteTextViewController: UIViewController {
             self.selectedEmoji = emoji
 
             self.emojiButton.setImage(nil, for: .normal)
-            self.emojiButton.setTitle(emoji.emoji, for: .normal)
+            self.emojiButton.setTitle(emoji.tag, for: .normal)
             self.emojiButton.titleLabel?.font = UIFont.systemFont(ofSize: 22)
         }
         
@@ -380,6 +377,10 @@ class DiaryNoteTextViewController: UIViewController {
     }
     
     // MARK: - Private Methods
+    
+    private func emojiItems(for category: EmojiTagCategory) -> [EmojiItem] {
+        return self.cache.feedbackList[category.rawValue] ?? []
+    }
     
     private func updateNextButton(pageState: PageState) {
         let button = self.footerView

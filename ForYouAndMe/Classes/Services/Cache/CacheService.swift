@@ -14,6 +14,7 @@ protocol CacheService {
     var firstUserAbsoluteLocation: UserLocation? { get set }
     var excludedUserDataAggregationIds: [String]? { get set }
     var infoMessages: [MessageInfo]? { get set }
+    var feedbackList: [String: [EmojiItem]] {get set}
     
     #if DEBUG
     func resetHealthKitCache()

@@ -180,7 +180,6 @@ enum StringKey: String, CaseIterable, CodingKey {
     case diaryNoteDosesCell = "DIARY_NOTE_DOSES_CELL"
     case diaryNoteEatenCell = "DIARY_NOTE_EATEN_CELL"
     case diaryNoteNoticedCell = "DIARY_NOTE_NOTICED_CELL"
-    case emojiList = "EMOJI_LIST"
     case emojiTitle = "EMOJI_TITLE"
     case emojiButtonText = "EMOJI_BUTTON"
     case diaryNoteTagDoses = "DIARY_NOTE_TAG_DOSES"

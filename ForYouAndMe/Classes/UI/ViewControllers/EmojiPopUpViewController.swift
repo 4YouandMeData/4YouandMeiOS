@@ -5,9 +5,16 @@
 //  Created by Giuseppe Lapenta on 10/07/25.
 //
 
-struct EmojiItem {
-    let emoji: String
-    let label: String
+struct EmojiItem: Codable, Equatable {
+    let tag: String
+    let label: String?
+}
+
+enum EmojiTagCategory: String, CaseIterable {
+    case myDoses = "my_doses"
+    case reflections = "reflections"
+    case iHaveEaten = "i_have_eaten"
+    case iHaveNoticed = "i_have_noticed"
 }
 
 final class EmojiPopupViewController: UIViewController {
@@ -37,7 +44,7 @@ final class EmojiPopupViewController: UIViewController {
         self.selected = selected
         super.init(nibName: nil, bundle: nil)
         self.selectedIndexPath = selected.flatMap { selectedItem in
-                return emojis.firstIndex(where: { $0.emoji == selectedItem.emoji && $0.label == selectedItem.label })
+            return emojis.firstIndex(where: { $0.tag == selectedItem.tag && $0.label == selectedItem.label })
                     .map { IndexPath(item: $0, section: 0) }
             }
         modalPresentationStyle = .overCurrentContext

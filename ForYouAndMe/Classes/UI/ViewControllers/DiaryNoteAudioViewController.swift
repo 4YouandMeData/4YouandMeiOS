@@ -29,6 +29,7 @@ class DiaryNoteAudioViewController: UIViewController {
     private var audioFileURL: URL?
     private let pageState: BehaviorRelay<PageState> = BehaviorRelay<PageState>(value: .listen)
     private let reflectionCoordinator: ReflectionSectionCoordinator?
+    private var selectedEmoji: EmojiItem?
     
     private var pollingDisposable: Disposable?
     private let pollingInterval: TimeInterval = 5.0 // Polling interval in seconds
@@ -56,6 +57,15 @@ class DiaryNoteAudioViewController: UIViewController {
         return button
     }()
     
+    private lazy var emojiButton: UIButton = {
+        let button = UIButton()
+        button.setImage(ImagePalette.image(withName: .emojiICon), for: .normal)
+        button.tintColor = ColorPalette.color(withType: .primaryText)
+        button.autoSetDimensions(to: CGSize(width: 24, height: 24))
+        button.addTarget(self, action: #selector(emojiButtonTapped), for: .touchUpInside)
+        return button
+    }()
+    
     private lazy var headerView: UIView = {
         let containerView = UIView()
         
@@ -67,9 +77,32 @@ class DiaryNoteAudioViewController: UIViewController {
         self.closeButton.autoPinEdgesToSuperviewEdges(with: .zero, excludingEdge: .trailing)
         stackView.addArrangedSubview(closeButtonContainerView)
 
-        stackView.addLabel(withText: StringsProvider.string(forKey: .diaryNoteCreateAudioTitle),
-                           fontStyle: .title,
-                           colorType: .primaryText)
+        let titleRow = UIStackView()
+        titleRow.axis = .horizontal
+        titleRow.spacing = 8
+        titleRow.alignment = .center
+        titleRow.distribution = .equalSpacing
+        
+        // title Label
+        let titleLabel = UILabel()
+        titleLabel.attributedText = NSAttributedString.create(
+            withText: StringsProvider.string(forKey: .diaryNoteCreateAudioTitle),
+            fontStyle: .title,
+            color: ColorPalette.color(withType: .primaryText),
+            textAlignment: .center
+        )
+
+        let emptyView = UIView()
+        emptyView.autoSetDimensions(to: CGSize(width: 24, height: 24))
+        
+        if !self.emojiItems(for: .iHaveNoticed).isEmpty {
+            titleRow.addArrangedSubview(emptyView)
+            titleRow.addArrangedSubview(titleLabel)
+            titleRow.addArrangedSubview(emojiButton)
+        } else {
+            titleRow.addArrangedSubview(titleLabel)
+        }
+        stackView.addArrangedSubview(titleRow)
         
         stackView.addLineSeparator(lineColor: ColorPalette.color(withType: .secondaryMenu), space: 0, isVertical: false)
         
@@ -178,7 +211,7 @@ class DiaryNoteAudioViewController: UIViewController {
         return scrollView
     }()
     
-    private var storage: CacheService
+    private var cache: CacheService
     private var diaryNoteItem: DiaryNoteItem?
     private let maxCharacters: Int = 500
     private var isEditMode: Bool
@@ -188,7 +221,7 @@ class DiaryNoteAudioViewController: UIViewController {
          reflectionCoordinator: ReflectionSectionCoordinator?) {
         self.navigator = Services.shared.navigator
         self.repository = Services.shared.repository
-        self.storage = Services.shared.storageServices
+        self.cache = Services.shared.storageServices
         self.analytics = Services.shared.analytics
         self.isEditMode = isEditMode
         self.diaryNoteItem = diaryNote
@@ -243,6 +276,10 @@ class DiaryNoteAudioViewController: UIViewController {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         self.navigationController?.navigationBar.apply(style: NavigationBarStyleCategory.primary(hidden: true).style)
+    }
+    
+    private func emojiItems(for category: EmojiTagCategory) -> [EmojiItem] {
+        return self.cache.feedbackList[category.rawValue] ?? []
     }
     
     // MARK: - Actions
@@ -320,6 +357,25 @@ class DiaryNoteAudioViewController: UIViewController {
     @objc private func onSliderValChanged(slider: UISlider, event: UIEvent) {
         let seekTime = TimeInterval(slider.value)
         audioPlayerManager.seek(to: seekTime)
+    }
+    
+    @objc private func emojiButtonTapped() {
+        
+        let emojiItems = self.emojiItems(for: .iHaveNoticed)
+        let emojiVC = EmojiPopupViewController(emojis: emojiItems,
+                                               selected: self.selectedEmoji) { [weak self] selectedEmoji in
+            guard let self = self, let emoji = selectedEmoji else { return }
+            
+            self.selectedEmoji = emoji
+
+            self.emojiButton.setImage(nil, for: .normal)
+            self.emojiButton.setTitle(emoji.tag, for: .normal)
+            self.emojiButton.titleLabel?.font = UIFont.systemFont(ofSize: 22)
+        }
+        
+        emojiVC.modalPresentationStyle = .overCurrentContext
+        emojiVC.modalTransitionStyle = .crossDissolve
+        self.present(emojiVC, animated: true)
     }
     
     // MARK: - Private Methods

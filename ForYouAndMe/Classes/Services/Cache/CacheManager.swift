@@ -16,6 +16,7 @@ class CacheManager: CacheService {
         case deviceUDID
         case userKey
         case infoMessages
+        case feedbackList
         case firstUserAbsoluteLocationKey
         case excludedUserDataAggregationIdsKey
         // BatchEventUploader keys
@@ -140,6 +141,15 @@ extension CacheManager: RepositoryStorage {
     var globalConfig: GlobalConfig? {
         get { self.load(forKey: CacheManagerKey.globalConfig.rawValue) }
         set { self.save(encodable: newValue, forKey: CacheManagerKey.globalConfig.rawValue) }
+    }
+    
+    var feedbackList: [String: [EmojiItem]] {
+        get {
+            return self.load(forKey: CacheManagerKey.feedbackList.rawValue) ?? [:]
+        }
+        set {
+            self.save(encodable: newValue, forKey: CacheManagerKey.feedbackList.rawValue)
+        }
     }
 }
 

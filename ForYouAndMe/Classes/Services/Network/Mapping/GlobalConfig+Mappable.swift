@@ -18,6 +18,7 @@ extension GlobalConfig: Mappable {
         try self.onboardingSectionGroups = self.requiredStringMap.extractOnboardingSectionGroups()
         try self.pinCodeLogin = map.from("pincode_login")
         self.phaseNames = self.requiredStringMap.extractPhaseNames()
+        try self.feedbackList = map.decodeEmojiItemDictionary("feedback_tagging_lists")
     }
 }
 
@@ -95,6 +96,30 @@ extension Mapper {
                 return nil
             }
             return IntegrationData(name: name, oAuthAvailable: oAuthAvailable)
+        }
+    }
+    
+    func decodeEmojiItemDictionary(_ field: String) throws -> [String: [EmojiItem]] {
+        return try self.from(field) { object in
+            guard let rawDict = object as? [String: [[String: Any]]] else {
+                throw MapperError.typeMismatchError(field: field, value: object, type: [String: [[String: Any]]].self)
+            }
+
+            var result: [String: [EmojiItem]] = [:]
+
+            for (key, array) in rawDict {
+                let emojiItems: [EmojiItem] = try array.map { item in
+                    guard let emoji = item["tag"] as? String else {
+                        throw MapperError.customError(field: field, message: "Missing 'tag' in item for key '\(key)'")
+                    }
+                    let label = item["label"] as? String ?? ""
+                    return EmojiItem(tag: emoji, label: label)
+                }
+
+                result[key] = emojiItems
+            }
+
+            return result
         }
     }
 }

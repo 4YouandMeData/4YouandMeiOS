@@ -41,7 +41,7 @@ final class EmojiCell: UICollectionViewCell {
     }
 
     func configure(with item: EmojiItem, selected: Bool) {
-        emojiLabel.text = item.emoji
+        emojiLabel.text = item.tag
         titleLabel.text = item.label
         contentView.backgroundColor = selected ? ColorPalette.color(withType: .inactive) : .clear
     }
