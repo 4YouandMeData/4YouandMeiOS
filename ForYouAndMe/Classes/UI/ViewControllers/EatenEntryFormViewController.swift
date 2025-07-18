@@ -6,7 +6,7 @@
 //
 
 import UIKit
-import PureLayout
+import RxSwift
 
 /// ViewController for "I've eaten..." form (read-only mode)
 class EatenEntryFormViewController: UIViewController {
@@ -35,6 +35,21 @@ class EatenEntryFormViewController: UIViewController {
                                            : StringsProvider.string(forKey: .diaryNoteEatenStepFifthSecondButton))
         }
     }
+    
+    private var selectedEmoji: EmojiItem?
+    private let repository: Repository = Services.shared.repository
+    private let navigator: AppNavigator = Services.shared.navigator
+    private var cache: CacheService = Services.shared.storageServices
+    private let disposeBag = DisposeBag()
+    
+    private lazy var emojiButton: UIButton = {
+        let button = UIButton()
+        button.setImage(ImagePalette.image(withName: .emojiICon), for: .normal)
+        button.tintColor = ColorPalette.color(withType: .primaryText)
+        button.autoSetDimensions(to: CGSize(width: 24, height: 24))
+        button.addTarget(self, action: #selector(emojiButtonTapped), for: .touchUpInside)
+        return button
+    }()
 
     // MARK: - Subviews
     private let scrollStackView = ScrollStackView(axis: .vertical, horizontalInset: 16)
@@ -218,7 +233,30 @@ class EatenEntryFormViewController: UIViewController {
                 }()
             ]
         )
-        scrollStackView.stackView.addLabel(attributedString: header, numberOfLines: 1)
+        
+        let titleRow = UIStackView()
+        titleRow.axis = .horizontal
+        titleRow.alignment = .center
+        titleRow.distribution = .equalSpacing
+        titleRow.spacing = 8
+
+        let titleLabel = UILabel()
+        titleLabel.attributedText = header
+        titleLabel.numberOfLines = 1
+
+        let emptyView = UIView()
+        emptyView.autoSetDimensions(to: CGSize(width: 24, height: 24))
+
+        let category = self.categoryForEmoji(diaryNote: self.diaryNote)
+        if let ca = category, !self.emojiItems(for: ca).isEmpty {
+            titleRow.addArrangedSubview(emptyView)
+            titleRow.addArrangedSubview(titleLabel)
+            titleRow.addArrangedSubview(emojiButton)
+        } else {
+            titleRow.addArrangedSubview(titleLabel)
+        }
+
+        scrollStackView.stackView.addArrangedSubview(titleRow)
         scrollStackView.stackView.addBlankSpace(space: 36)
 
         // Meal type
@@ -271,6 +309,12 @@ class EatenEntryFormViewController: UIViewController {
                                                                           bottom: 0,
                                                                           right: 0.0),
                                                        excludingEdge: .right)
+        if let emoji = self.diaryNote?.feedbackTags?.last {
+            self.selectedEmoji = emoji
+            self.emojiButton.setImage(nil, for: .normal)
+            self.emojiButton.setTitle(emoji.tag, for: .normal)
+            self.emojiButton.titleLabel?.font = UIFont.systemFont(ofSize: 22)
+        }
     }
 
     // MARK: - Actions (read-only)
@@ -292,5 +336,59 @@ class EatenEntryFormViewController: UIViewController {
         ctrl.layer.cornerRadius = 8
         ctrl.autoSetDimension(.height, toSize: 44)
         return ctrl
+    }
+    
+    private func emojiItems(for category: EmojiTagCategory) -> [EmojiItem] {
+        return self.cache.feedbackList[category.rawValue] ?? []
+    }
+
+    private func categoryForEmoji(diaryNote: DiaryNoteItem?) -> EmojiTagCategory? {
+        guard let diaryType = self.diaryNote?.diaryNoteType else {
+            return Optional.none
+        }
+        
+        switch diaryType {
+        case .doses:
+            return .myDoses
+        case .eaten:
+            return .iHaveEaten
+        case .weNoticed:
+            return .weHaveNoticed
+        case .text, .audio, .video:
+            return nil
+        }
+    }
+
+    // MARK: - Actions
+    @objc private func emojiButtonTapped() {
+        if let category = self.categoryForEmoji(diaryNote: self.diaryNote) {
+            
+            let emojiItems = self.emojiItems(for: category)
+            let emojiVC = EmojiPopupViewController(emojis: emojiItems,
+                                                   selected: self.selectedEmoji) { [weak self] selectedEmoji in
+                guard let self = self, let emoji = selectedEmoji else { return }
+                guard var diaryNote = self.diaryNote else { return }
+                
+                self.selectedEmoji = emoji
+                diaryNote.feedbackTags?.append(emoji)
+                self.emojiButton.setImage(nil, for: .normal)
+                self.emojiButton.setTitle(emoji.tag, for: .normal)
+                self.emojiButton.titleLabel?.font = UIFont.systemFont(ofSize: 22)
+                
+                self.repository.updateDiaryNoteText(diaryNote: diaryNote)
+                    .addProgress()
+                    .subscribe(onSuccess: { [weak self] in
+                        guard let self = self else { return }
+                        self.dismiss(animated: true)
+                    }, onFailure: { [weak self] error in
+                        guard let self = self else { return }
+                        self.navigator.handleError(error: error, presenter: self)
+                    }).disposed(by: self.disposeBag)
+            }
+
+            emojiVC.modalPresentationStyle = .overCurrentContext
+            emojiVC.modalTransitionStyle = .crossDissolve
+            self.present(emojiVC, animated: true)
+        }
     }
 }

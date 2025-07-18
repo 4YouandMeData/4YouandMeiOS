@@ -9,6 +9,19 @@ import Foundation
 
 typealias DiaryNoteData = [String: Any]
 
+extension EmojiItem: JSONAPIMappable {
+
+    static var includeList: String? = """
+feedback_tag
+"""
+    enum CodingKeys: String, CodingKey {
+        case id
+        case type
+        case tag
+        case label
+    }
+}
+
 public enum DiaryNotePayload {
     case food(mealType: String, quantity: String, significantNutrition: Bool)
     case doses(quantity: Int, doseType: String)
@@ -166,6 +179,8 @@ struct DiaryNoteItem: Codable {
     
     var payload: DiaryNotePayload?
     
+    var feedbackTags: [EmojiItem]?
+    
     init (id: String,
           type: String,
           diaryNoteId: Date,
@@ -199,7 +214,8 @@ struct DiaryNoteItem: Codable {
 extension DiaryNoteItem: JSONAPIMappable {
     
     static var includeList: String? = """
-diary_noteable
+diary_noteable,\
+feedback_tags
 """
     
     enum CodingKeys: String, CodingKey {
@@ -213,6 +229,7 @@ diary_noteable
         case transcribeStatus = "transcribe_status"
         case diaryNoteType = "diary_type"
         case rawData = "data"
+        case feedbackTags = "feedback_tags"
     }
     
     init(from decoder: Decoder) throws {
@@ -226,6 +243,8 @@ diary_noteable
         self.body = try container.decodeIfPresent(String.self, forKey: .body)
         self.diaryNoteable = try container.decodeIfPresent(DiaryNoteable.self, forKey: .diaryNoteable)
         self.diaryNoteType = try? container.decodeIfPresent(DiaryNoteItemType.self, forKey: .diaryNoteType)
+
+        self.feedbackTags = try? container.decodeIfPresent(Array<EmojiItem>.self, forKey: .feedbackTags)
         
         if let attachmentContainer = try? container.decodeIfPresent([String: String].self, forKey: .urlString),
            let attachmentURL = attachmentContainer["url"] {
@@ -327,5 +346,16 @@ diary_noteable
         try container.encodeIfPresent(body, forKey: .body)
         try container.encodeIfPresent(urlString, forKey: .urlString)
         try container.encodeIfPresent(diaryNoteable, forKey: .diaryNoteable)
+    }
+}
+
+struct DynamicKey: CodingKey {
+    var stringValue: String
+    var intValue: Int?
+
+    init?(stringValue: String) { self.stringValue = stringValue }
+    init?(intValue: Int) {
+        self.stringValue = "\(intValue)"
+        self.intValue = intValue
     }
 }

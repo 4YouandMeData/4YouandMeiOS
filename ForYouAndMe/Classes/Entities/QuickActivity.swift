@@ -41,7 +41,7 @@ extension QuickActivity: JSONAPIMappable {
         case startColor = "start_color"
         case endColor = "end_color"
         case cardColor = "card_color"
-        case skippable
+        case skippable = "with_optional_flag"
     }
 }
 

@@ -9,6 +9,14 @@ import UIKit
 
 class DiaryNoteItemAudioTableViewCell: UITableViewCell {
     
+    private lazy var emojiLabel: UILabel = {
+        let label = UILabel()
+        label.font = UIFont.systemFont(ofSize: 12)
+        label.textAlignment = .center
+        label.setContentHuggingPriority(.required, for: .horizontal)
+        return label
+    }()
+    
     /// This view contains the tag icon and label displayed above the note content.
     private lazy var noteTagContainer: UIStackView = {
         let container = UIStackView()
@@ -96,7 +104,15 @@ class DiaryNoteItemAudioTableViewCell: UITableViewCell {
         playerView.axis = .vertical
         playerView.distribution = .fill
         playerView.alignment = .leading
-        playerView.addArrangedSubview(self.noteTagContainer)
+        
+        let tagRow = UIStackView()
+        tagRow.axis = .horizontal
+        tagRow.spacing = 4.0
+        tagRow.alignment = .center
+        tagRow.addArrangedSubview(self.noteTagContainer)
+        tagRow.addArrangedSubview(self.emojiLabel)
+
+        playerView.addArrangedSubview(tagRow)
         playerView.addArrangedSubview(self.noteTitleLabel)
         playerView.spacing = 8.0
         
@@ -136,7 +152,13 @@ class DiaryNoteItemAudioTableViewCell: UITableViewCell {
         self.buttonPressedCallback = buttonPressedCallback
         self.updateNoteTitle(data.title ?? "Audio Recorded")
         noteImageView.image = ImagePalette.image(withName: .audioNoteListImage)
-        
+        if let emoji = data.feedbackTags?.last {
+            emojiLabel.text = emoji.tag
+            emojiLabel.isHidden = false
+        } else {
+            emojiLabel.text = nil
+            emojiLabel.isHidden = true
+        }
         if let diaryType = DiaryNoteableType(rawValue: data.diaryNoteable?.type.lowercased() ?? "none") {
             switch diaryType {
             case .none, .chart:

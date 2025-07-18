@@ -318,12 +318,22 @@ class DiaryNoteVideoViewController: UIViewController {
         let emojiVC = EmojiPopupViewController(emojis: emojiItems,
                                                selected: self.selectedEmoji) { [weak self] selectedEmoji in
             guard let self = self, let emoji = selectedEmoji else { return }
-            
+            guard var diaryNote = self.diaryNoteItem else { return }
+
             self.selectedEmoji = emoji
+            diaryNote.feedbackTags?.append(emoji)
 
             self.emojiButton.setImage(nil, for: .normal)
             self.emojiButton.setTitle(emoji.tag, for: .normal)
             self.emojiButton.titleLabel?.font = UIFont.systemFont(ofSize: 22)
+            
+            self.repository.updateDiaryNoteText(diaryNote: diaryNote)
+                .addProgress()
+                .subscribe(onSuccess: {},
+                           onFailure: { [weak self] error in
+                    guard let self = self else { return }
+                    self.navigator.handleError(error: error, presenter: self)
+                }).disposed(by: self.disposeBag)
         }
         
         emojiVC.modalPresentationStyle = .overCurrentContext
@@ -584,6 +594,13 @@ class DiaryNoteVideoViewController: UIViewController {
         self.playerView.videoURL = URL(string: videoURL)
         
         self.currentState = .view(isPlaying: false)
+        
+        if let emoji = self.diaryNoteItem?.feedbackTags?.last {
+            self.selectedEmoji = emoji
+            self.emojiButton.setImage(nil, for: .normal)
+            self.emojiButton.setTitle(emoji.tag, for: .normal)
+            self.emojiButton.titleLabel?.font = UIFont.systemFont(ofSize: 22)
+        }
     }
     
     private func setupUITrascribe(withContainer containerStackView: UIView) {

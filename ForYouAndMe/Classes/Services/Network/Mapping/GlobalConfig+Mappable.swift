@@ -113,7 +113,7 @@ extension Mapper {
                         throw MapperError.customError(field: field, message: "Missing 'tag' in item for key '\(key)'")
                     }
                     let label = item["label"] as? String ?? ""
-                    return EmojiItem(tag: emoji, label: label)
+                    return EmojiItem(id: "", type: "", tag: emoji, label: label)
                 }
 
                 result[key] = emojiItems

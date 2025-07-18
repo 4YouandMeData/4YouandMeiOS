@@ -9,6 +9,9 @@ import UIKit
 
 class QuickActivityOptionView: UIView {
     
+    private var option: QuickActivityOption?
+    private var isSelected: Bool = false
+    
     private static let maxImageHeight: CGFloat = 44.0
     
     private lazy var imageView: UIImageView = {
@@ -64,13 +67,24 @@ class QuickActivityOptionView: UIView {
     }
     
     public func display(item: QuickActivityOption, isSelected: Bool, tapCallback: @escaping NotificationCallback) {
-        self.tapCallback = tapCallback
-        self.imageView.loadAsyncImage(withURL: isSelected ? item.selectedImage : item.image,
-                                      placeHolderImage: Constants.Resources.AsyncImagePlaceholder,
-                                      targetSize: CGSize(width: UIScreen.main.bounds.width, height: Self.maxImageHeight))
-        self.textLabel.attributedText = NSAttributedString.create(withText: item.label ?? "",
-                                                                  fontStyle: .header3,
-                                                                  colorType: .secondaryText)
+        self.option = item
+            self.tapCallback = tapCallback
+            self.setSelected(isSelected)
+            self.textLabel.attributedText = NSAttributedString.create(
+                withText: item.label ?? "",
+                fontStyle: .header3,
+                colorType: .secondaryText)
+    }
+    
+    // MARK: - Public Function
+    public func setSelected(_ selected: Bool) {
+        self.isSelected = selected
+        guard let option = self.option else { return }
+        self.imageView.loadAsyncImage(
+            withURL: selected ? option.selectedImage : option.image,
+            placeHolderImage: Constants.Resources.AsyncImagePlaceholder,
+            targetSize: CGSize(width: UIScreen.main.bounds.width, height: Self.maxImageHeight)
+        )
     }
     
     // MARK: - Actions

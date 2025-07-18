@@ -368,6 +368,10 @@ extension RepositoryImpl: Repository {
             .handleError()
     }
     
+    func sendQuickActivitySkip(quickActivityTaskId: String) -> Single<()> {
+        return self.api.send(request: ApiRequest(serviceRequest: .sendSkipTask(taskId: quickActivityTaskId))).handleError()
+    }
+
     func sendTaskResult(taskId: String, taskResult: TaskNetworkResult) -> Single<()> {
         var sendRequest = self.api.send(request: ApiRequest(serviceRequest: .sendTaskResultData(taskId: taskId,
                                                                                                 resultData: taskResult.data)))

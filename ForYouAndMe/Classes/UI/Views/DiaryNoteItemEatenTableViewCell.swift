@@ -10,6 +10,15 @@ import PureLayout
 
 /// Cell for displaying "Eaten" diary entries
 class DiaryNoteItemEatenTableViewCell: UITableViewCell {
+    
+    private lazy var emojiLabel: UILabel = {
+        let label = UILabel()
+        label.font = UIFont.systemFont(ofSize: 12)
+        label.textAlignment = .center
+        label.setContentHuggingPriority(.required, for: .horizontal)
+        return label
+    }()
+    
     // MARK: - Views
     private lazy var noteTagContainer: UIStackView = {
         let container = UIStackView()
@@ -101,7 +110,15 @@ class DiaryNoteItemEatenTableViewCell: UITableViewCell {
         textStack.axis = .vertical
         textStack.alignment = .leading
         textStack.spacing = 8.0
-        textStack.addArrangedSubview(noteTagContainer)
+        
+        let tagRow = UIStackView()
+        tagRow.axis = .horizontal
+        tagRow.spacing = 4.0
+        tagRow.alignment = .center
+        tagRow.addArrangedSubview(self.noteTagContainer)
+        tagRow.addArrangedSubview(self.emojiLabel)
+
+        textStack.addArrangedSubview(tagRow)
         textStack.addArrangedSubview(noteTitleLabel)
         
         containerView.addArrangedSubview(textStack)
@@ -127,6 +144,13 @@ class DiaryNoteItemEatenTableViewCell: UITableViewCell {
         self.buttonPressedCallback = onTap
         self.updateNoteTitle(data.title ?? StringsProvider.string(forKey: .diaryNoteEatenCell))
         noteImageView.image = ImagePalette.image(withName: .surveyIcon)
+        if let emoji = data.feedbackTags?.last {
+            emojiLabel.text = emoji.tag
+            emojiLabel.isHidden = false
+        } else {
+            emojiLabel.text = nil
+            emojiLabel.isHidden = true
+        }
     }
 
     // MARK: - Actions

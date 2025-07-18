@@ -6,6 +6,8 @@
 //
 
 struct EmojiItem: Codable, Equatable {
+    let id: String
+    let type: String
     let tag: String
     let label: String?
 }
@@ -15,6 +17,7 @@ enum EmojiTagCategory: String, CaseIterable {
     case reflections = "reflections"
     case iHaveEaten = "i_have_eaten"
     case iHaveNoticed = "i_have_noticed"
+    case weHaveNoticed = "we_have_noticed"
     case none
 }
 

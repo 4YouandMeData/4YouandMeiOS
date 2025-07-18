@@ -37,13 +37,20 @@ class QuickActivityCollectionViewCell: UICollectionViewCell {
     }
 }
 
-typealias QuickActivityListConfirmCallback = ((QuickActivityItem) -> Void)
+typealias QuickActivityListConfirmCallback = ((QuickActivityItem, QuickActivityCompletion) -> Void)
 typealias QuickActivityListSelectionCallback = ((QuickActivityItem, QuickActivityOption) -> Void)
+
+enum QuickActivityCompletion {
+    case selection(QuickActivityOption)
+    case skip
+}
 
 class QuickActivityListTableViewCell: UITableViewCell {
     
     static let collectionViewHeight: CGFloat = 500.0
     static let pageControlHeight: CGFloat = 20.0
+    
+    private var skipSelections: Set<QuickActivityItem> = []
     
     private lazy var collectionView: UICollectionView = {
         let collectionViewLayout = UICollectionViewFlowLayout()
@@ -123,7 +130,7 @@ class QuickActivityListTableViewCell: UITableViewCell {
     
     private func updatePageControl() {
         var totalPagesCount = 4 // Default quick activity total number
-        if (StringsProvider.string(forKey: .quickActivitiesRemaining).isEmpty) {
+        if(StringsProvider.string(forKey: .quickActivitiesRemaining).isEmpty) {
             if let dynamicTotalPageCount = Int(StringsProvider.string(forKey: .quickActivityTotalNumber)) {
                 if dynamicTotalPageCount > 0 {
                     totalPagesCount = dynamicTotalPageCount
@@ -171,9 +178,17 @@ extension QuickActivityListTableViewCell: UICollectionViewDataSource {
                                            selectedOption: self.selections[item],
                                            defaultButtonText: defaultButtonText,
                                            confirmButtonCallback: { [weak self] in
-                self?.confirmCallback?(item)
+                
+                let isSkip = cell.quickActivityView.isSkippableSelected
+
+                if isSkip {
+                    self?.confirmCallback?(item, .skip)
+                } else if let selected = self?.selections[item] {
+                    self?.confirmCallback?(item, .selection(selected))
+                }
             }, selectionCallback: { [weak self] selectedOption in
                 self?.selections[item] = selectedOption
+                self?.skipSelections.remove(item)
                 self?.selectionCallback?(item, selectedOption)
                 self?.collectionView.reloadItems(at: [indexPath])
             })

@@ -349,13 +349,21 @@ extension FeedListManager: UITableViewDataSource {
             }
             cell.display(items: quickActivitySection.quickActivies,
                          selections: self.quickActivitySelections,
-                         confirmCallback: { [weak self] item in
+                         confirmCallback: { [weak self] item, completion in
                             guard let self = self else { return }
-                            guard let selectedOption = self.quickActivitySelections[item] else {
-                                assertionFailure("Missing selected quick activity option")
-                                return
+                            switch completion {
+                            case .skip:
+                                self.repository.sendQuickActivitySkip(quickActivityTaskId: item.taskId)
+                                    .addProgress()
+                                    .subscribe(onSuccess: {
+                                        self.reloadItems()
+                                    }, onFailure: { error in
+                                        self.navigator.handleError(error: error, presenter: self.delegate?.presenter ?? UIViewController())
+                                    }).disposed(by: self.disposeBag)
+                                
+                            case .selection(let option):
+                                self.sendQuickActiviyOption(option, forTaskId: item.taskId)
                             }
-                            self.sendQuickActiviyOption(selectedOption, forTaskId: item.taskId)
                          },
                          selectionCallback: { [weak self] (item, option) in
                             guard let self = self else { return }

@@ -9,6 +9,15 @@ import UIKit
 
 /// Cell for displaying "Doses" diary entries
 class DiaryNoteItemWeNoticedTableViewCell: UITableViewCell {
+    
+    private lazy var emojiLabel: UILabel = {
+        let label = UILabel()
+        label.font = UIFont.systemFont(ofSize: 12)
+        label.textAlignment = .center
+        label.setContentHuggingPriority(.required, for: .horizontal)
+        return label
+    }()
+    
     // MARK: - Views
     private lazy var noteTagContainer: UIStackView = {
         let container = UIStackView()
@@ -100,7 +109,16 @@ class DiaryNoteItemWeNoticedTableViewCell: UITableViewCell {
         textStack.axis = .vertical
         textStack.spacing = 8.0
         textStack.alignment = .leading
-        textStack.addArrangedSubview(noteTagContainer)
+        
+        let tagRow = UIStackView()
+        tagRow.axis = .horizontal
+        tagRow.spacing = 4.0
+        tagRow.alignment = .center
+        tagRow.addArrangedSubview(self.noteTagContainer)
+        tagRow.addArrangedSubview(self.emojiLabel)
+
+        textStack.addArrangedSubview(tagRow)
+        
         textStack.addArrangedSubview(noteTitleLabel)
         containerView.addArrangedSubview(textStack)
         
@@ -127,6 +145,13 @@ class DiaryNoteItemWeNoticedTableViewCell: UITableViewCell {
             noteTitleLabel.text = body
         } else {
             noteTitleLabel.text = StringsProvider.string(forKey: .diaryNoteNoticedCell)
+        }
+        if let emoji = data.feedbackTags?.last {
+            emojiLabel.text = emoji.tag
+            emojiLabel.isHidden = false
+        } else {
+            emojiLabel.text = nil
+            emojiLabel.isHidden = true
         }
     }
 

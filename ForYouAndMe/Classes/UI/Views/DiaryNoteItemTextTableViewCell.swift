@@ -9,6 +9,14 @@ import UIKit
 
 class DiaryNoteItemTextTableViewCell: UITableViewCell {
     
+    private lazy var emojiLabel: UILabel = {
+        let label = UILabel()
+        label.font = UIFont.systemFont(ofSize: 12)
+        label.textAlignment = .center
+        label.setContentHuggingPriority(.required, for: .horizontal)
+        return label
+    }()
+    
     /// This view contains the tag icon and label displayed above the note content.
     private lazy var noteTagContainer: UIStackView = {
         let container = UIStackView()
@@ -97,7 +105,16 @@ class DiaryNoteItemTextTableViewCell: UITableViewCell {
         textView.axis = .vertical
         textView.spacing = 4.0
         textView.alignment = .leading
-        textView.addArrangedSubview(self.noteTagContainer)
+        
+        let tagRow = UIStackView()
+        tagRow.axis = .horizontal
+        tagRow.spacing = 4.0
+        tagRow.alignment = .center
+        tagRow.addArrangedSubview(self.noteTagContainer)
+        tagRow.addArrangedSubview(self.emojiLabel)
+
+        textView.addArrangedSubview(tagRow)
+        
         textView.addArrangedSubview(self.noteTitleLabel)
         textView.addArrangedSubview(self.noteDescriptionLabel)
         
@@ -130,7 +147,13 @@ class DiaryNoteItemTextTableViewCell: UITableViewCell {
         self.updateNoteTitle(data.title ?? "")
         self.updateNoteDescription(data.body ?? "")
         noteImageView.image = ImagePalette.image(withName: .textNoteListImage)
-        
+        if let emoji = data.feedbackTags?.last {
+            emojiLabel.text = emoji.tag
+            emojiLabel.isHidden = false
+        } else {
+            emojiLabel.text = nil
+            emojiLabel.isHidden = true
+        }
         if let diaryType = DiaryNoteableType(rawValue: data.diaryNoteable?.type.lowercased() ?? "none") {
             switch diaryType {
             case .none, .chart:

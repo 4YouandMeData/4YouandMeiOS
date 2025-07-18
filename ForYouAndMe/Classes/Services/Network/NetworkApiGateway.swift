@@ -806,6 +806,20 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             var dataParams: [String: Any] = [:]
             dataParams["title"] = diaryNote.title
             dataParams["body"] = diaryNote.body
+            if let feedbackTags = diaryNote.feedbackTags, !feedbackTags.isEmpty {
+                let lastIndex = feedbackTags.count - 1
+                let attributes = feedbackTags.enumerated().map { index, item in
+                    var dict: [String: Any] = [
+                        "id": item.id,
+                        "tag": item.tag
+                    ]
+                    if index != lastIndex {
+                        dict["_destroy"] = true
+                    }
+                    return dict
+                }
+                dataParams["feedback_tags_attributes"] = attributes
+            }
             return .requestParameters(parameters: ["diary_note": dataParams], encoding: JSONEncoding.default)
         case .sendDiaryNoteText(let diaryNote, let fromChart):
             if fromChart {

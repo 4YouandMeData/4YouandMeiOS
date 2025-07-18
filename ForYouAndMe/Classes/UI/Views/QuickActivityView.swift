@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import RxSwift
 
 typealias QuickActivityViewSelectionCallback = ((QuickActivityOption) -> Void)
 
@@ -16,6 +17,9 @@ class QuickActivityView: UIView {
     
     private static let expectedOptions: Int = 6
     private static let optionColumns: Int = 3
+    
+    private var selectedOption: QuickActivityOption?
+    private let disposeBag = DisposeBag()
     
     private let gradientView: GradientView = {
         return GradientView(colors: [UIColor.white, UIColor.white],
@@ -37,10 +41,23 @@ class QuickActivityView: UIView {
     }()
     
     private lazy var confirmButtonView: GenericButtonView = {
-        let button = GenericButtonView(withTextStyleCategory: .feed, fillWidth: false, topInset: 30.0, bottomInset: 0.0)
+        let button = GenericButtonView(withTextStyleCategory: .feed, fillWidth: false, topInset: 0.0, bottomInset: 0.0)
         button.addTarget(target: self, action: #selector(self.confirmButtonPressed))
         return button
     }()
+    
+    private lazy var optionalCheckboxView: GenericTextCheckboxView = {
+        let checkbox = GenericTextCheckboxView(
+            isDefaultChecked: false,
+            styleCategory: .secondary(fontStyle: .paragraph, textFirst: false)
+        )
+        checkbox.setLabelText(StringsProvider.string(forKey: .quickActivitySkip))
+        return checkbox
+    }()
+    
+    public var isSkippableSelected: Bool {
+        return optionalCheckboxView.isCheckedSubject.value
+    }
     
     private var optionsViews: [QuickActivityOptionView] = []
     private var confirmButtonCallback: NotificationCallback?
@@ -86,7 +103,7 @@ class QuickActivityView: UIView {
         // Stack View
         let stackView = UIStackView.create(withAxis: .vertical)
         panelView.addSubview(stackView)
-        stackView.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets(top: 24.0, left: 8.0, bottom: 20.0, right: 8.0))
+        stackView.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets(top: 16.0, left: 8.0, bottom: 20.0, right: 8.0))
         
         // Content
         let headerView = UIView()
@@ -101,10 +118,21 @@ class QuickActivityView: UIView {
         headerStackView.addArrangedSubview(self.subtitleLabel)
         
         stackView.addArrangedSubview(headerView)
-        stackView.addBlankSpace(space: 12.0)
         stackView.addArrangedSubview(optionStackView)
+        stackView.addBlankSpace(space: 12.0)
+        
+        let optionalContainer = UIView()
+        optionalContainer.addSubview(self.optionalCheckboxView)
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(self.checkboxTapped))
+        optionalContainer.addGestureRecognizer(tapGesture)
+        self.isUserInteractionEnabled = true
+        self.optionalCheckboxView.autoAlignAxis(toSuperviewAxis: .vertical)
+        stackView.addArrangedSubview(optionalContainer)
+        stackView.addBlankSpace(space: 12.0)
+        self.optionalCheckboxView.isHidden = true
         
         stackView.addArrangedSubview(self.confirmButtonView)
+        
     }
     
     required init?(coder aDecoder: NSCoder) {
@@ -135,29 +163,59 @@ class QuickActivityView: UIView {
         let buttonText = item.buttonText ?? defaultButtonText
         self.confirmButtonView.setButtonText(buttonText)
         
-        var confirmButtonEnabled = false
+        self.selectedOption = selectedOption
+
         self.optionsViews.enumerated().forEach { (index, optionView) in
             optionView.resetContent()
-            
             if index < item.options.count {
                 let option = item.options[index]
                 let isSelected = selectedOption == option
                 if isSelected {
-                    confirmButtonEnabled = true
+                    self.selectedOption = option
                 }
                 optionView.display(item: option,
                                    isSelected: isSelected,
                                    tapCallback: { [weak self] in
-                                    self?.selectionCallback?(option)
+                    guard let self = self else { return }
+                    self.selectedOption = option
+                    self.optionsViews.forEach { $0.setSelected($0 === optionView) }
+                    self.optionalCheckboxView.updateCheckBox(false)
+                    self.selectionCallback?(option)
+                    self.updateConfirmButtonState()
                 })
             }
         }
-        self.confirmButtonView.setButtonEnabled(enabled: confirmButtonEnabled)
+        
+        let isSkippable = item.skippable == true
+        self.optionalCheckboxView.isHidden = !isSkippable
+        if !isSkippable {
+            self.optionalCheckboxView.updateCheckBox(false)
+        }
+        
+        self.optionalCheckboxView.isCheckedSubject
+            .asObservable()
+            .subscribe(onNext: { [weak self] isChecked in
+                guard let self = self else { return }
+                if isChecked {
+                    self.selectedOption = nil
+                    self.optionsViews.forEach { $0.setSelected(false) }
+                }
+                self.updateConfirmButtonState()
+            }).disposed(by: self.disposeBag)
+    }
+    
+    private func updateConfirmButtonState() {
+        let enabled = self.selectedOption != nil || self.optionalCheckboxView.isCheckedSubject.value
+        self.confirmButtonView.setButtonEnabled(enabled: enabled)
     }
     
     // MARK: - Actions
-    
     @objc private func confirmButtonPressed() {
         self.confirmButtonCallback?()
+    }
+    
+    @objc private func checkboxTapped() {
+        let currentValue = self.optionalCheckboxView.isCheckedSubject.value
+        self.optionalCheckboxView.updateCheckBox(!currentValue)
     }
 }
