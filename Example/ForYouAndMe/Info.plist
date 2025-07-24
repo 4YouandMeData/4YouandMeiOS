@@ -32,6 +32,18 @@
 	</array>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+    <key>NSSensorKitUsageDescription</key>
+    <string>SensorKit usage description.</string>
+    <key>NSSensorKitPrivacyPolicyURL</key>
+    <string>https://balzo.eu/privacy-policy/</string>
+    <key>NSSensorKitUsageDetail</key>
+    <dict>
+        <key>SRSensorUsageMotion</key>
+        <dict>
+            <key>Description</key>
+            <string>This describes how my app uses motion data.</string>
+        </dict>
+    </dict>
 	<key>NSAppleMusicUsageDescription</key>
 	<string>$(PRODUCT_NAME) uses Media Library during certain tasks.</string>
 	<key>NSBluetoothAlwaysUsageDescription</key>

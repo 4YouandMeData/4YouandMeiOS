@@ -580,7 +580,7 @@
 				CODE_SIGN_ENTITLEMENTS = ForYouAndMe_Example.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = G6RAKRKZPR;
+				DEVELOPMENT_TEAM = 25S45RFPZF;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/Frameworks",
@@ -593,7 +593,7 @@
 					"@executable_path/Frameworks",
 				);
 				MODULE_NAME = ExampleApp;
-				PRODUCT_BUNDLE_IDENTIFIER = eu.balzo.ForYouAndMeExample;
+				PRODUCT_BUNDLE_IDENTIFIER = com.czi.4youandme.staging;
 				PRODUCT_NAME = ForYouAndMe_Example;
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_SWIFT3_OBJC_INFERENCE = Default;
@@ -612,7 +612,7 @@
 				CODE_SIGN_ENTITLEMENTS = ForYouAndMe_Example.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = G6RAKRKZPR;
+				DEVELOPMENT_TEAM = 25S45RFPZF;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/Frameworks",
@@ -625,7 +625,7 @@
 					"@executable_path/Frameworks",
 				);
 				MODULE_NAME = ExampleApp;
-				PRODUCT_BUNDLE_IDENTIFIER = eu.balzo.ForYouAndMeExample;
+				PRODUCT_BUNDLE_IDENTIFIER = com.czi.4youandme.staging;
 				PRODUCT_NAME = ForYouAndMe_Example;
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_SWIFT3_OBJC_INFERENCE = Default;
