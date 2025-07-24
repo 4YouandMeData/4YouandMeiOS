@@ -26,7 +26,7 @@ struct FeedContent {
         if self.quickActivities.count > 0 {
             let items: [QuickActivityItem] = self.quickActivities.compactMap { feed in
                 switch feed.schedulable {
-                case .quickActivity(let quickActivity): return QuickActivityItem(taskId: feed.id, quickActivity: quickActivity)
+                case .quickActivity(let quickActivity): return QuickActivityItem(taskId: feed.id, quickActivity: quickActivity, optionalFlag: false)
                 default: return nil
                 }
             }
@@ -283,14 +283,15 @@ class FeedListManager: NSObject {
         self.tableView.scrollRectToVisible(CGRect(x: 0, y: 0, width: 1, height: 1), animated: false)
     }
     
-    private func sendQuickActiviyOption(_ option: QuickActivityOption, forTaskId taskId: String) {
+    private func sendQuickActiviyOption(_ option: QuickActivityOption, forTaskId taskId: String, optionalFlag: Bool) {
         guard let delegate = self.delegate else {
             assertionFailure("FeedListManager - Missing delegate")
             return
         }
         
         self.repository.sendQuickActivityResult(quickActivityTaskId: taskId,
-                                                quickActivityOption: option)
+                                                quickActivityOption: option,
+                                                optionalFlag: optionalFlag)
             .addProgress()
             .subscribe(onSuccess: { [weak self] in
                 guard let self = self else { return }
@@ -349,26 +350,18 @@ extension FeedListManager: UITableViewDataSource {
             }
             cell.display(items: quickActivitySection.quickActivies,
                          selections: self.quickActivitySelections,
-                         confirmCallback: { [weak self] item, completion in
-                            guard let self = self else { return }
-                            switch completion {
-                            case .skip:
-                                self.repository.sendQuickActivitySkip(quickActivityTaskId: item.taskId)
-                                    .addProgress()
-                                    .subscribe(onSuccess: {
-                                        self.reloadItems()
-                                    }, onFailure: { error in
-                                        self.navigator.handleError(error: error, presenter: self.delegate?.presenter ?? UIViewController())
-                                    }).disposed(by: self.disposeBag)
-                                
-                            case .selection(let option):
-                                self.sendQuickActiviyOption(option, forTaskId: item.taskId)
-                            }
-                         },
-                         selectionCallback: { [weak self] (item, option) in
-                            guard let self = self else { return }
-                            self.quickActivitySelections[item] = option
-                         })
+                         confirmCallback: { [weak self] item in
+                guard let self = self else { return }
+                guard let selectedOption = self.quickActivitySelections[item] else {
+                    assertionFailure("Missing selected quick activity option")
+                    return
+                }
+                self.sendQuickActiviyOption(selectedOption, forTaskId: item.taskId, optionalFlag: item.optionalFlag)
+            },
+             selectionCallback: { [weak self] (item, option) in
+                guard let self = self else { return }
+                self.quickActivitySelections[item] = option
+             })
             return cell
         } else if let feedSection = section as? FeedSection {
             

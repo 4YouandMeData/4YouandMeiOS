@@ -10,6 +10,7 @@ import UIKit
 struct QuickActivityItem {
     let taskId: String
     let quickActivity: QuickActivity
+    var optionalFlag: Bool
 }
 
 extension QuickActivityItem: Hashable, Equatable {
@@ -37,13 +38,8 @@ class QuickActivityCollectionViewCell: UICollectionViewCell {
     }
 }
 
-typealias QuickActivityListConfirmCallback = ((QuickActivityItem, QuickActivityCompletion) -> Void)
+typealias QuickActivityListConfirmCallback = ((QuickActivityItem) -> Void)
 typealias QuickActivityListSelectionCallback = ((QuickActivityItem, QuickActivityOption) -> Void)
-
-enum QuickActivityCompletion {
-    case selection(QuickActivityOption)
-    case skip
-}
 
 class QuickActivityListTableViewCell: UITableViewCell {
     
@@ -165,7 +161,7 @@ extension QuickActivityListTableViewCell: UICollectionViewDataSource {
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         if let cell = collectionView.dequeueReusableCell(ofType: QuickActivityCollectionViewCell.self, forIndexPath: indexPath) {
             let itemIndex = indexPath.row
-            let item = self.items[itemIndex]
+            var item = self.items[itemIndex]
             
             // All quick activities are designed to be performed atomically. However a new CR require the user
             // to perform them in order. A different submit button text is shown for all quick activities except
@@ -179,13 +175,9 @@ extension QuickActivityListTableViewCell: UICollectionViewDataSource {
                                            defaultButtonText: defaultButtonText,
                                            confirmButtonCallback: { [weak self] in
                 
-                let isSkip = cell.quickActivityView.isSkippableSelected
-
-                if isSkip {
-                    self?.confirmCallback?(item, .skip)
-                } else if let selected = self?.selections[item] {
-                    self?.confirmCallback?(item, .selection(selected))
-                }
+                item.optionalFlag = cell.quickActivityView.isSkippableSelected
+                self?.confirmCallback?(item)
+                
             }, selectionCallback: { [weak self] selectedOption in
                 self?.selections[item] = selectedOption
                 self?.skipSelections.remove(item)

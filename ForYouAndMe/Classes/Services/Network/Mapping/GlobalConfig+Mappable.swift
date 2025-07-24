@@ -18,7 +18,7 @@ extension GlobalConfig: Mappable {
         try self.onboardingSectionGroups = self.requiredStringMap.extractOnboardingSectionGroups()
         try self.pinCodeLogin = map.from("pincode_login")
         self.phaseNames = self.requiredStringMap.extractPhaseNames()
-        try self.feedbackList = map.decodeEmojiItemDictionary("feedback_tagging_lists")
+        self.feedbackList = try? map.decodeEmojiItemDictionary("feedback_tagging_lists")
     }
 }
 

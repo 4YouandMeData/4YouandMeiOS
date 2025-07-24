@@ -357,7 +357,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             return "v1/tasks"
         case .getTask(let taskId):
             return "v1/tasks/\(taskId)"
-        case .sendTaskResultData(let taskId, _), .sendSkipTask(let taskId):
+        case .sendTaskResultData(let taskId, _, _), .sendSkipTask(let taskId):
             return "v1/tasks/\(taskId)"
         case .sendTaskResultFile(let taskId, _):
             return "v1/tasks/\(taskId)/attach"
@@ -666,8 +666,9 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             params["possible_answer_id"] = answer.possibleAnswer.id
             params.addContext(context)
             return .requestParameters(parameters: ["answer": params], encoding: JSONEncoding.default)
-        case .sendTaskResultData(_, let resultData):
+        case .sendTaskResultData(_, var resultData, let optionalFlag):
             var params: [String: Any] = [:]
+            resultData["optional_flag"] = optionalFlag
             params["result"] = resultData
             return .requestParameters(parameters: ["task": params], encoding: JSONEncoding.default)
         case .sendTaskResultFile:

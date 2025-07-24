@@ -54,7 +54,7 @@ enum DefaultService {
     // Task
     case getTasks(paginationInfo: PaginationInfo?)
     case getTask(taskId: String)
-    case sendTaskResultData(taskId: String, resultData: TaskNetworkResultData)
+    case sendTaskResultData(taskId: String, resultData: TaskNetworkResultData, optionalFlag: Bool? = false)
     case sendTaskResultFile(taskId: String, resultFile: TaskNetworkResultFile)
     case sendSkipTask(taskId: String)
     case delayTask(taskId: String)

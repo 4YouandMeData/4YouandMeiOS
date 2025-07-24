@@ -65,7 +65,7 @@ class RepositoryImpl {
                 CountryCodeProvider.initialize(withcountryCodes: globalConfig.countryCodes)
                 IntegrationProvider.initialize(withIntegrationDatas: globalConfig.integrationDatas)
                 OnboardingSectionProvider.initialize(withOnboardingSectionGroups: globalConfig.onboardingSectionGroups)
-                self.storage.feedbackList = globalConfig.feedbackList
+                self.storage.feedbackList = globalConfig.feedbackList ?? [:]
             })
             .toVoid()
     }
@@ -361,15 +361,12 @@ extension RepositoryImpl: Repository {
             .handleError()
     }
     
-    func sendQuickActivityResult(quickActivityTaskId: String, quickActivityOption: QuickActivityOption) -> Single<()> {
+    func sendQuickActivityResult(quickActivityTaskId: String, quickActivityOption: QuickActivityOption, optionalFlag: Bool) -> Single<()> {
         let resultData = quickActivityOption.networkResultData.data
         return self.api.send(request: ApiRequest(serviceRequest: .sendTaskResultData(taskId: quickActivityTaskId,
-                                                                                     resultData: resultData)))
+                                                                                     resultData: resultData,
+                                                                                     optionalFlag: optionalFlag)))
             .handleError()
-    }
-    
-    func sendQuickActivitySkip(quickActivityTaskId: String) -> Single<()> {
-        return self.api.send(request: ApiRequest(serviceRequest: .sendSkipTask(taskId: quickActivityTaskId))).handleError()
     }
 
     func sendTaskResult(taskId: String, taskResult: TaskNetworkResult) -> Single<()> {

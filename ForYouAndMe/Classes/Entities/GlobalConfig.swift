@@ -17,7 +17,7 @@ struct GlobalConfig {
     let onboardingSectionGroups: [OnboardingSectionGroup]
     let pinCodeLogin: Bool
     let phaseNames: [String]
-    let feedbackList: [String: [EmojiItem]]
+    let feedbackList: [String: [EmojiItem]]?
 
 }
 

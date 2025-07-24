@@ -6,7 +6,6 @@
 //
 
 import UIKit
-import RxSwift
 
 typealias QuickActivityViewSelectionCallback = ((QuickActivityOption) -> Void)
 
@@ -19,7 +18,6 @@ class QuickActivityView: UIView {
     private static let optionColumns: Int = 3
     
     private var selectedOption: QuickActivityOption?
-    private let disposeBag = DisposeBag()
     
     private let gradientView: GradientView = {
         return GradientView(colors: [UIColor.white, UIColor.white],
@@ -51,7 +49,7 @@ class QuickActivityView: UIView {
             isDefaultChecked: false,
             styleCategory: .secondary(fontStyle: .paragraph, textFirst: false)
         )
-        checkbox.setLabelText(StringsProvider.string(forKey: .quickActivitySkip))
+        checkbox.setLabelText(StringsProvider.string(forKey: .quickActivityFlag))
         return checkbox
     }()
     
@@ -123,9 +121,6 @@ class QuickActivityView: UIView {
         
         let optionalContainer = UIView()
         optionalContainer.addSubview(self.optionalCheckboxView)
-        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(self.checkboxTapped))
-        optionalContainer.addGestureRecognizer(tapGesture)
-        self.isUserInteractionEnabled = true
         self.optionalCheckboxView.autoAlignAxis(toSuperviewAxis: .vertical)
         stackView.addArrangedSubview(optionalContainer)
         stackView.addBlankSpace(space: 12.0)
@@ -179,33 +174,34 @@ class QuickActivityView: UIView {
                     guard let self = self else { return }
                     self.selectedOption = option
                     self.optionsViews.forEach { $0.setSelected($0 === optionView) }
-                    self.optionalCheckboxView.updateCheckBox(false)
+                    if item.optionalFlag == true {
+                        self.optionalCheckboxView.updateCheckBox(false)
+                        self.optionalCheckboxView.isUserInteractionEnabled = true
+                        self.optionalCheckboxView.alpha = 1.0
+                    }
                     self.selectionCallback?(option)
                     self.updateConfirmButtonState()
                 })
             }
         }
         
-        let isSkippable = item.skippable == true
-        self.optionalCheckboxView.isHidden = !isSkippable
-        if !isSkippable {
-            self.optionalCheckboxView.updateCheckBox(false)
+        let optionalFlag = item.optionalFlag == true
+        self.optionalCheckboxView.isHidden = !optionalFlag
+
+        if optionalFlag {
+            if self.selectedOption != nil {
+                self.optionalCheckboxView.isUserInteractionEnabled = true
+                self.optionalCheckboxView.alpha = 1.0
+            } else {
+                self.optionalCheckboxView.updateCheckBox(false)
+                self.optionalCheckboxView.isUserInteractionEnabled = false
+                self.optionalCheckboxView.alpha = 0.5
+            }
         }
-        
-        self.optionalCheckboxView.isCheckedSubject
-            .asObservable()
-            .subscribe(onNext: { [weak self] isChecked in
-                guard let self = self else { return }
-                if isChecked {
-                    self.selectedOption = nil
-                    self.optionsViews.forEach { $0.setSelected(false) }
-                }
-                self.updateConfirmButtonState()
-            }).disposed(by: self.disposeBag)
     }
     
     private func updateConfirmButtonState() {
-        let enabled = self.selectedOption != nil || self.optionalCheckboxView.isCheckedSubject.value
+        let enabled = self.selectedOption != nil
         self.confirmButtonView.setButtonEnabled(enabled: enabled)
     }
     
@@ -215,6 +211,7 @@ class QuickActivityView: UIView {
     }
     
     @objc private func checkboxTapped() {
+        guard self.optionalCheckboxView.isUserInteractionEnabled else { return }
         let currentValue = self.optionalCheckboxView.isCheckedSubject.value
         self.optionalCheckboxView.updateCheckBox(!currentValue)
     }
