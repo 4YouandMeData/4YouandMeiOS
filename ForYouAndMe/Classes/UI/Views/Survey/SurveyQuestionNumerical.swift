@@ -39,6 +39,7 @@ class SurveyQuestionNumerical: UIView, UIPickerViewDelegate, UIPickerViewDataSou
         self.addSubview(pickerView)
         pickerView.autoPinEdgesToSuperviewEdges()
         pickerView.selectRow(0, inComponent: 0, animated: false)
+        self.pickerView(pickerView, didSelectRow: 0, inComponent: 0)
         
         self.autoSetDimension(.height, toSize: Constants.Style.SurveyPickerDefaultHeight)
     }

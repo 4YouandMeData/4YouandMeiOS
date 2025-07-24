@@ -45,6 +45,9 @@ class SurveyRangePicker: UIView {
         self.slider.addTarget(self, action: #selector(self.changeValue(_:)), for: .valueChanged)
         self.slider.maxCount = UInt(maximum)
         self.slider.setIndex(UInt(minimum), animated: false)
+        
+        self.changeValue(self.slider)
+        
         let minTrackStartColor = ColorPalette.color(withType: .primary)
         let maxTrackEndColor = ColorPalette.color(withType: .inactive)
         self.slider.trackColor = maxTrackEndColor
