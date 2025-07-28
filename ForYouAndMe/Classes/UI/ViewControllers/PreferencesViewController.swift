@@ -61,6 +61,8 @@ public class PreferencesViewController: UIViewController {
         self.view.addSubview(scrollStackView)
         self.scrollStackView.autoPinEdgesToSuperviewEdges(with: .zero, excludingEdge: .top)
         self.scrollStackView.autoPinEdge(.top, to: .bottom, of: headerView, withOffset: 30)
+        self.notificationSwitch.isOn = false
+        self.hourPicker.isEnabled = false
         
         self.refreshUI()
     }
@@ -113,9 +115,6 @@ public class PreferencesViewController: UIViewController {
 
         stackView.addBlankSpace(space: 40.0)
 
-        notificationSwitch.isOn = false
-        hourPicker.isEnabled = false
-
         notificationSwitch.addTarget(self, action: #selector(didToggleNotificationSwitch), for: .valueChanged)
     }
     
@@ -139,27 +138,36 @@ public class PreferencesViewController: UIViewController {
                 components.minute = 0
                 let calendar = Calendar.current
                 if let date = calendar.date(from: components) {
+                    self.hourPicker.isEnabled = true
                     self.hourPicker.date = date
+                    self.notificationSwitch.isOn = true
                 }
-                
-                self.notificationSwitch.isOn = true
-                self.hourPicker.isEnabled = true
-            
+                            
                 self.refreshUI()
             }, onFailure: { error in
                 print("SurveyScheduleViewController - Error refreshing user: \(error.localizedDescription)")
             }).disposed(by: self.disposeBag)
     }
     
-    private func updatePreferredHourOnServer(_ sender: UIDatePicker) {
-        let calendar = Calendar.current
-        let components = calendar.dateComponents([.hour], from: sender.date)
+    private func updatePreferredHourOnServer(_ sender: UIDatePicker?) {
+        if let datePicker = sender {
 
-        if let hour = components.hour {
-            let newDate = calendar.date(bySettingHour: hour, minute: 0, second: 0, of: sender.date)!
-            sender.setDate(newDate, animated: false)
-            
-            self.repository.sendUserSettings(seconds: nil, notificationTime: hour)
+            let calendar = Calendar.current
+            let components = calendar.dateComponents([.hour], from: datePicker.date)
+            if let hour = components.hour {
+                
+                let newDate = calendar.date(bySettingHour: hour, minute: 0, second: 0, of: datePicker.date)!
+                datePicker.setDate(newDate, animated: false)
+                
+                self.repository.sendUserSettings(seconds: nil, notificationTime: hour)
+                    .subscribe(onSuccess: {
+                        print("Notification time updated successfully")
+                    }, onFailure: { error in
+                        print("Error updating notification time: \(error.localizedDescription)")
+                    }).disposed(by: self.disposeBag)
+            }
+        } else {
+            self.repository.sendUserSettings(seconds: nil, notificationTime: nil)
                 .subscribe(onSuccess: {
                     print("Notification time updated successfully")
                 }, onFailure: { error in
@@ -176,6 +184,7 @@ public class PreferencesViewController: UIViewController {
     
     @objc private func didToggleNotificationSwitch(_ sender: UISwitch) {
         self.hourPicker.isEnabled = sender.isOn
+        self.updatePreferredHourOnServer(nil)
     }
     
     @objc private func didChangePreferredHour(_ sender: UIDatePicker) {
