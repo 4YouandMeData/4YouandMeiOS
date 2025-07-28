@@ -662,7 +662,11 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             return .requestParameters(parameters: ["user_permission": params], encoding: JSONEncoding.default)
         case .sendAnswer(let answer, let context):
             var params: [String: Any] = [:]
-            params["answer_text"] = answer.possibleAnswer.text
+            if let text = answer.answerText {
+                params["answer_text"] = text
+            } else {
+                params["answer_text"] = answer.possibleAnswer.text
+            }
             params["possible_answer_id"] = answer.possibleAnswer.id
             params.addContext(context)
             return .requestParameters(parameters: ["answer": params], encoding: JSONEncoding.default)
@@ -697,6 +701,8 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             }
             if let time = notificationTime {
                 params["notification_time"] = time
+            } else {
+                params["notification_time"] = NSNull()
             }
             return .requestParameters(parameters: ["user_setting": params], encoding: JSONEncoding.default)
         case .sendPushToken(let token):

@@ -190,7 +190,7 @@ public class InfoPageViewController: UIViewController, PageProvider {
             self.navigationItem.hidesBackButton = true
         }
         if self.pageData.addAbortOnboardingButton {
-            if let coordinator = self.coordinator as? SurveySectionCoordinator {
+            if self.coordinator is SurveySectionCoordinator {
                 let buttonItem = UIBarButtonItem(title: StringsProvider.string(forKey: .surveyButtonSkip),
                                                  style: .plain,
                                                  target: self,

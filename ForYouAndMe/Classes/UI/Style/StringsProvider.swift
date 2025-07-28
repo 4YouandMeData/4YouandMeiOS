@@ -88,6 +88,8 @@ enum StringKey: String, CaseIterable, CodingKey {
     case onboardingIntegrationDownloadButtonDefault = "ONBOARDING_WEARABLES_DOWNLOAD_BUTTON_DEFAULT"
     case onboardingIntegrationOpenAppButtonDefault = "ONBOARDING_WEARABLES_OPEN_APP_BUTTON_DEFAULT"
     case onboardingIntegrationLoginButtonDefault = "ONBOARDING_WEARABLES_LOGIN_BUTTON_DEFAULT"
+    case questionOtherEnabled = "QUESTION_OTHER_ENABLED"
+    case questionOtherText = "QUESTION_OTHER_TEXT"
     // Main
     case tabFeed = "TAB_FEED"
     case tabTask = "TAB_TASK"

@@ -7,6 +7,7 @@
 
 import Foundation
 import PureLayout
+import TPKeyboardAvoiding
 
 protocol QuestionViewCoordinator {
     func onQuestionAnsweredSuccess(answer: Answer)
@@ -16,9 +17,10 @@ class QuestionViewController: UIViewController {
     
     private let question: Question
     private let coordinator: QuestionViewCoordinator
+    private var otherAnswers: [String: String] = [:]
     
-    lazy private var tableView: UITableView = {
-        let tableView = UITableView()
+    lazy private var tableView: TPKeyboardAvoidingTableView = {
+        let tableView = TPKeyboardAvoidingTableView()
         tableView.dataSource = self
         tableView.registerCellsWithClass(PossibleAnswerTableViewCell.self)
         tableView.tableFooterView = UIView()
@@ -26,6 +28,7 @@ class QuestionViewController: UIViewController {
         tableView.estimatedRowHeight = 130.0
         tableView.separatorStyle = .none
         tableView.backgroundColor = .clear
+        tableView.keyboardDismissMode = .interactive
         return tableView
     }()
     
@@ -97,18 +100,26 @@ class QuestionViewController: UIViewController {
     
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
-        
         self.tableView.sizeHeaderToFit()
     }
     
     // MARK: Actions
     
     @objc private func confirmButtonPressed() {
-        guard let selectedPossibleAnswer = selectedPossibleAnswer else {
+        guard let selected = selectedPossibleAnswer else {
             assertionFailure("Missing selected possible answer")
             return
         }
-        self.coordinator.onQuestionAnsweredSuccess(answer: Answer(question: self.question, possibleAnswer: selectedPossibleAnswer))
+
+        let answerText = selected.isOther ? self.otherAnswers[selected.id] : nil
+
+        let answer = Answer(
+            question: self.question,
+            possibleAnswer: selected,
+            answerText: answerText
+        )
+
+        self.coordinator.onQuestionAnsweredSuccess(answer: answer)
     }
     
     // MARK: Private Methods
@@ -135,8 +146,16 @@ extension QuestionViewController: UITableViewDataSource {
         let item = self.items[indexPath.row]
         cell.display(data: item,
                      isSelected: self.selectedPossibleAnswer?.id == item.id,
+                     isOther: item.isOther,
+                     otherText: self.otherAnswers[item.id],
                      answerPressedCallback: { [weak self] in
-                        self?.selectedPossibleAnswer = item
+            self?.selectedPossibleAnswer = item
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                self?.tableView.scrollToRow(at: indexPath, at: .bottom, animated: true)
+            }
+        },
+                     otherAnswerChangedCallback: { [weak self] newText in
+            self?.otherAnswers[item.id] = newText
         })
         return cell
     }

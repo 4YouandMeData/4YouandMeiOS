@@ -80,7 +80,7 @@ public class BooleanQuestionsViewController: UIViewController {
     @objc private func confirmButtonPressed() {
         let answers: [Answer] = self.items.compactMap { optionalAnswer in
             if let possibleAnswer = optionalAnswer.possibleAnswer {
-                return Answer(question: optionalAnswer.question, possibleAnswer: possibleAnswer)
+                return Answer(question: optionalAnswer.question, possibleAnswer: possibleAnswer, answerText: "")
             } else {
                 return nil
             }
