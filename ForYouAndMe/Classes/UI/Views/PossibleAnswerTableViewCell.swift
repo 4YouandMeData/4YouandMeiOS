@@ -34,7 +34,7 @@ class PossibleAnswerTableViewCell: UITableViewCell {
         let view = GenericTextFieldView(keyboardType: .default, styleCategory: .secondary)
         view.delegate = self
         view.textField.attributedPlaceholder = NSAttributedString(
-            string: StringsProvider.string(forKey: .placeholderOtherField),
+            string: StringsProvider.string(forKey: .questionOtherHint),
             attributes: [
                 .foregroundColor: ColorPalette.color(withType: .secondaryText).applyAlpha(0.5)
             ]
@@ -52,42 +52,6 @@ class PossibleAnswerTableViewCell: UITableViewCell {
                                            right: Constants.Style.DefaultHorizontalMargins)
         self.selectionStyle = .none
         self.backgroundColor = .clear
-        
-//        let horizontalStackView = UIStackView()
-//        horizontalStackView.axis = .horizontal
-//        
-//        // Label
-//        let answerContainerView = UIView()
-//        answerContainerView.addSubview(self.answerLabel)
-//        self.answerLabel.autoPinEdge(toSuperviewEdge: .leading)
-//        self.answerLabel.autoPinEdge(toSuperviewEdge: .trailing)
-//        self.answerLabel.autoPinEdge(toSuperviewEdge: .top, withInset: 0, relation: .greaterThanOrEqual)
-//        self.answerLabel.autoPinEdge(toSuperviewEdge: .bottom, withInset: 0, relation: .greaterThanOrEqual)
-//        self.answerLabel.autoAlignAxis(toSuperviewAxis: .horizontal)
-//        horizontalStackView.addArrangedSubview(answerContainerView)
-//        
-//        // button
-//        let buttonContainerView = UIView()
-//        buttonContainerView.addSubview(self.button)
-//        buttonContainerView.autoSetDimension(.width, toSize: Self.optionWidth)
-//        self.button.autoPinEdge(toSuperviewEdge: .leading)
-//        self.button.autoPinEdge(toSuperviewEdge: .trailing)
-//        self.button.autoPinEdge(toSuperviewEdge: .top, withInset: 0, relation: .greaterThanOrEqual)
-//        self.button.autoPinEdge(toSuperviewEdge: .bottom, withInset: 0, relation: .greaterThanOrEqual)
-//        self.button.autoAlignAxis(toSuperviewAxis: .horizontal)
-//        horizontalStackView.addArrangedSubview(buttonContainerView)
-//        
-//        self.contentView.addSubview(horizontalStackView)
-//        horizontalStackView.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets(top: 0.0,
-//                                                                            left: Constants.Style.DefaultHorizontalMargins,
-//                                                                            bottom: 24.0,
-//                                                                            right: 0.0))
-//
-//        self.contentView.addSubview(self.otherTextFieldView)
-//        self.otherTextFieldView.autoPinEdge(.top, to: .bottom, of: horizontalStackView, withOffset: 8.0)
-//        self.otherTextFieldView.autoPinEdge(toSuperviewEdge: .leading, withInset: Constants.Style.DefaultHorizontalMargins)
-//        self.otherTextFieldView.autoPinEdge(toSuperviewEdge: .trailing, withInset: Constants.Style.DefaultHorizontalMargins)
-//        self.otherTextFieldView.autoPinEdge(toSuperviewEdge: .bottom, withInset: 8.0)
         
         // Vertical stack
         let verticalStackView = UIStackView()

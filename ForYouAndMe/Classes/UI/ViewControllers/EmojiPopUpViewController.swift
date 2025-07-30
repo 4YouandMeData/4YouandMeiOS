@@ -172,8 +172,11 @@ extension EmojiPopupViewController: UICollectionViewDataSource, UICollectionView
     func collectionView(_ collectionView: UICollectionView,
                         layout collectionViewLayout: UICollectionViewLayout,
                         sizeForItemAt indexPath: IndexPath) -> CGSize {
-        let totalSpacing: CGFloat = 2 * 16 + 2 * 8 // padding + inter item
-        let width = (collectionView.bounds.width - totalSpacing) / 3
+        let itemsPerRow: CGFloat = 4
+        let interItemSpacing: CGFloat = 16
+        let sectionInsets: CGFloat = 5
+        let totalSpacing = (itemsPerRow - 1) * interItemSpacing + 2 * sectionInsets
+        let width = (collectionView.bounds.width - totalSpacing) / itemsPerRow
         return CGSize(width: width, height: 80)
     }
 }

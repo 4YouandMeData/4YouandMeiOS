@@ -18,6 +18,7 @@ class QuestionViewController: UIViewController {
     private let question: Question
     private let coordinator: QuestionViewCoordinator
     private var otherAnswers: [String: String] = [:]
+    private var footerView: QuestionFooterView?
     
     lazy private var tableView: TPKeyboardAvoidingTableView = {
         let tableView = TPKeyboardAvoidingTableView()
@@ -85,6 +86,13 @@ class QuestionViewController: UIViewController {
                                                                       right: Constants.Style.DefaultHorizontalMargins))
         self.tableView.tableHeaderView = questionLabelContainerView
         
+        if ProjectInfo.StudyId.lowercased() == "saba" {
+            let footer = QuestionFooterView()
+            self.footerView = footer
+            footer.textFieldView.delegate = self
+            self.tableView.tableFooterView = footer
+        }
+        
         self.items = self.question.possibleAnswers
         
         self.tableView.reloadData()
@@ -101,6 +109,7 @@ class QuestionViewController: UIViewController {
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         self.tableView.sizeHeaderToFit()
+        self.tableView.sizeFooterToFit()
     }
     
     // MARK: Actions
@@ -111,7 +120,14 @@ class QuestionViewController: UIViewController {
             return
         }
 
-        let answerText = selected.isOther ? self.otherAnswers[selected.id] : nil
+        let answerText: String?
+        if selected.isOther {
+            answerText = self.otherAnswers[selected.id]
+        } else if ProjectInfo.StudyId.lowercased() == "saba" {
+            answerText = self.footerView?.textFieldView.text
+        } else {
+            answerText = nil
+        }
 
         let answer = Answer(
             question: self.question,
@@ -125,7 +141,12 @@ class QuestionViewController: UIViewController {
     // MARK: Private Methods
     
     private func updateConfirmButton() {
-        self.confirmButtonView.setButtonEnabled(enabled: self.selectedPossibleAnswer != nil)
+        let isSaba = ProjectInfo.StudyId.lowercased() == "saba"
+        let hasSelection = self.selectedPossibleAnswer != nil
+        let footerTextValid = self.footerView?.textFieldView.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false
+
+        let enabled = isSaba ? (hasSelection && footerTextValid) : hasSelection
+        self.confirmButtonView.setButtonEnabled(enabled: enabled)
     }
 }
 
@@ -149,14 +170,43 @@ extension QuestionViewController: UITableViewDataSource {
                      isOther: item.isOther,
                      otherText: self.otherAnswers[item.id],
                      answerPressedCallback: { [weak self] in
-            self?.selectedPossibleAnswer = item
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                self?.tableView.scrollToRow(at: indexPath, at: .bottom, animated: true)
+            guard let self = self else { return }
+            
+        if ProjectInfo.StudyId.lowercased() == "saba" {
+                self.footerView?.textFieldView.text = ""
+                self.footerView?.textFieldView.resignFirstResponder()
+                self.updateConfirmButton()
+            }
+            
+            self.selectedPossibleAnswer = item
+            
+            if ProjectInfo.StudyId.lowercased() == "saba" {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                    if let footer = self.footerView {
+                        let footerRect = self.tableView.convert(footer.frame, from: footer.superview)
+                        self.tableView.scrollRectToVisible(footerRect, animated: true)
+                    }
+                }
+            } else {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                    self.tableView.scrollToRow(at: indexPath, at: .bottom, animated: true)
+                }
             }
         },
                      otherAnswerChangedCallback: { [weak self] newText in
             self?.otherAnswers[item.id] = newText
         })
         return cell
+    }
+}
+
+extension QuestionViewController: GenericTextFieldViewDelegate {
+    func genericTextFieldDidChange(textField: GenericTextFieldView) {
+        self.updateConfirmButton()
+    }
+
+    func genericTextFieldShouldReturn(textField: GenericTextFieldView) -> Bool {
+        self.view.endEditing(true)
+        return true
     }
 }

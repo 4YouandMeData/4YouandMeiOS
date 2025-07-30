@@ -258,6 +258,7 @@
 		0CD0FC25B90850EE1BB7E30EC4A0496B /* SVProgressAnimatedView.m in Sources */ = {isa = PBXBuildFile; fileRef = F676F3F07FE74D6D05A39D6F9BB3AE2E /* SVProgressAnimatedView.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
 		0CEBF0939CAAB326ACB9669544684BB1 /* FIRLogger.h in Headers */ = {isa = PBXBuildFile; fileRef = DF45E2AF87CE992917B8602877FC6EEB /* FIRLogger.h */; settings = {ATTRIBUTES = (Project, ); }; };
 		0CF2D2DF44815BD099ACBAAE9F78C8B2 /* ORKReactionTimeViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 5294537DD08AFCE722C4FFB43960228F /* ORKReactionTimeViewController.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
+		0D084AE42E390DC700A2C20B /* QuestionFooter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D084AE32E390DC400A2C20B /* QuestionFooter.swift */; };
 		0D3A2422A4541D42FC8634B7B7D2C6DD /* PublishRelay+Signal.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0826F10F21DF5FACC148EF4D741D6237 /* PublishRelay+Signal.swift */; };
 		0D42CC977B3643CFF434FC2ADA095A2D /* PermissionProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = C56DD79136BAD94F94CCF7E56A5831B0 /* PermissionProtocol.swift */; };
 		0D64D6FE420691CD092F7E8671774F13 /* FIRAnalyticsInterop.h in Headers */ = {isa = PBXBuildFile; fileRef = 7EEBB32C75D8CC56E3FA5619CDAE6A73 /* FIRAnalyticsInterop.h */; settings = {ATTRIBUTES = (Project, ); }; };
@@ -4363,6 +4364,7 @@
 		0CCCBF7A8CE33AD9C8379443F16B0F9B /* SerialDispatch.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = SerialDispatch.swift; path = framework/Source/SerialDispatch.swift; sourceTree = "<group>"; };
 		0CD89EA3CCD65943461327EC383CD85F /* FIRMessagingRemoteNotificationsProxy.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = FIRMessagingRemoteNotificationsProxy.h; path = FirebaseMessaging/Sources/FIRMessagingRemoteNotificationsProxy.h; sourceTree = "<group>"; };
 		0CDDD4D86F00008A6E4A52DF4C7021C1 /* UIImageView+AlamofireImage.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = "UIImageView+AlamofireImage.swift"; sourceTree = "<group>"; };
+		0D084AE32E390DC400A2C20B /* QuestionFooter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuestionFooter.swift; sourceTree = "<group>"; };
 		0D0CA4AE51CB5E40D9C6D5FD7FC941A1 /* ORKVideoInstructionStep.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = ORKVideoInstructionStep.h; path = ResearchKit/Common/ORKVideoInstructionStep.h; sourceTree = "<group>"; };
 		0D0E082F5566047604DD7DC6D589C138 /* ORKSpeechRecognitionStepViewController.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = ORKSpeechRecognitionStepViewController.m; path = ResearchKit/ActiveTasks/ORKSpeechRecognitionStepViewController.m; sourceTree = "<group>"; };
 		0D35DA07F937F5886C6DBD1FA9C6E977 /* ORKSpeechRecognizer.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = ORKSpeechRecognizer.h; path = ResearchKit/ActiveTasks/ORKSpeechRecognizer.h; sourceTree = "<group>"; };
@@ -11855,6 +11857,7 @@
 		B9002C4CD5A9C05A9D68DC8596601548 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				0D084AE32E390DC400A2C20B /* QuestionFooter.swift */,
 				0D7DD7292E20185D00A2783B /* EmojiCell.swift */,
 				C4DE765F0FB7A7585A45805C808D62B1 /* AboutYouHeaderView.swift */,
 				2284E7D2F79000BA0694C120D0504455 /* BluetoothNoDevices.swift */,
@@ -16575,6 +16578,7 @@
 				0237C64E4CEB8C4D4C7AB9BE3726D966 /* NetworkApiGateway.swift in Sources */,
 				8EDA9CFF637376689DCB06E1B4F1D5CC /* NetworkUtility.swift in Sources */,
 				D611256F8A515BBA47FACF134FF784FE /* NineHoleTask.swift in Sources */,
+				0D084AE42E390DC700A2C20B /* QuestionFooter.swift in Sources */,
 				4E1C0ADEABFD78E67AE72A237F9646AC /* NoteVideoPlayerView.swift in Sources */,
 				B059C80440998EBE31C7AD6224DC8E02 /* NoticedIntroViewController.swift in Sources */,
 				9954B711D52A1215B122C49BF88BBBE7 /* NoticedViewController.swift in Sources */,

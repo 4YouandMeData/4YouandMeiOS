@@ -75,4 +75,54 @@ extension UILabel {
         
         self.attributedText = attributedText
     }
+    
+    func setHTMLFromString(_ htmlText: String,
+                           font: UIFont,
+                           color: String,
+                           alignment: NSTextAlignment = .left) {
+
+        let htmlStyle = """
+        <html>
+        <head>
+        <style>
+        body {
+            font-family: \(font.fontName);
+            font-size: \(font.pointSize)px;
+            color: \(color);
+        }
+        b { font-weight: bold; }
+        i { font-style: italic; }
+        </style>
+        </head>
+        <body>\(htmlText)</body>
+        </html>
+        """
+
+        guard let data = htmlStyle.data(using: .utf8) else {
+            self.text = htmlText
+            return
+        }
+
+        do {
+            let attributedString = try NSMutableAttributedString(
+                data: data,
+                options: [
+                    .documentType: NSAttributedString.DocumentType.html,
+                    .characterEncoding: String.Encoding.utf8.rawValue
+                ],
+                documentAttributes: nil
+            )
+
+            let range = NSRange(location: 0, length: attributedString.length)
+            let paragraphStyle = NSMutableParagraphStyle()
+            paragraphStyle.alignment = alignment
+            attributedString.addAttribute(.paragraphStyle, value: paragraphStyle, range: range)
+
+            self.attributedText = attributedString
+            self.numberOfLines = 0
+            self.textAlignment = alignment
+        } catch {
+            self.text = htmlText
+        }
+    }
 }
