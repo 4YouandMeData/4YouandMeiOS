@@ -16,7 +16,7 @@ class DiaryNoteVideoViewController: UIViewController {
     private static let RecordTrackingTimeInterval: TimeInterval = 0.1
     private let timeLabelAttributedTextStyle = AttributedTextStyle(fontStyle: .header2, colorType: .secondaryText)
     private var diaryNoteItem: DiaryNoteItem?
-    private let maxCharacters: Int = 500
+    private let maxCharacters: Int = 5000
     private var selectedEmoji: EmojiItem?
     
     private let navigator: AppNavigator
@@ -36,7 +36,7 @@ class DiaryNoteVideoViewController: UIViewController {
     private var hidePlayButtonTimer: Timer?
     private var isEditMode: Bool
     private var pollingDisposable: Disposable?
-    private let pollingInterval: TimeInterval = 5.0 // Polling interval in seconds
+    private let pollingInterval: TimeInterval = 10.0 // Polling interval in seconds
     private var isPollingActive: Bool = false
     private var reflectionCoordinator: ReflectionSectionCoordinator?
     
@@ -564,11 +564,18 @@ class DiaryNoteVideoViewController: UIViewController {
             
             let editButton = UIButton()
             editButton.setImage(ImagePalette.image(withName: .editAudioNote), for: .normal)
+            editButton.setTitle(StringsProvider.string(forKey: .diaryNoteCreateTextEdit), for: .normal)
+            editButton.setTitleColor(ColorPalette.color(withType: .primaryText), for: .normal)
+            editButton.backgroundColor = ColorPalette.color(withType: .inactive).applyAlpha(0.8)
             editButton.addTarget(self, action: #selector(self.editButtonPressed), for: .touchUpInside)
+            editButton.titleLabel?.font = FontPalette.fontStyleData(forStyle: .menu).font
+            editButton.imageEdgeInsets = UIEdgeInsets(top: 0, left: -4, bottom: 0, right: 4)
+            editButton.contentEdgeInsets = UIEdgeInsets(top: 3, left: 8, bottom: 3, right: 8)
+            editButton.layer.cornerRadius = 6.0
+            editButton.clipsToBounds = true
             containerTextView.addSubview(editButton)
             editButton.autoPinEdge(.bottom, to: .bottom, of: self.textView, withOffset: -8.0)
             editButton.autoPinEdge(.right, to: .right, of: self.textView, withOffset: -8.0)
-            editButton.autoSetDimension(.width, toSize: 24.0)
 
             // Placeholder label
             self.textView.addSubview(self.placeholderLabel)

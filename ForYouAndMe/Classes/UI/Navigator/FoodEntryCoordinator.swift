@@ -161,13 +161,27 @@ final class FoodEntryCoordinator: PagedActivitySectionCoordinator {
                                                significantNutrition: nutrientAnswer,
                                                fromChart: true)
                 .addProgress()
-                .subscribe(onSuccess: { [weak self] _ in
+                .subscribe(onSuccess: { [weak self] diaryNote in
                     guard let self = self else { return }
-                    completionCallback()
+                    switch self.variant {
+                    case .embeddedInNoticed:
+                        self.completionCallback()
+                    case .standalone:
+                        self.showSuccessPage(diaryNote: diaryNote)
+                    @unknown default:
+                        fatalError()
+                    }
                 }, onFailure: { _ in
                     
                 }).disposed(by: self.disposeBag)
         }
+    }
+    
+    private func showSuccessPage(diaryNote: DiaryNoteItem) {
+        let vc = FoodEntrySuccessViewController(diaryNote: diaryNote,
+                                                completion: self.completionCallback)
+        vc.modalPresentationStyle = .fullScreen
+        navigationController.pushViewController(vc, animated: true)
     }
 }
 

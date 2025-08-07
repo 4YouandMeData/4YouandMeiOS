@@ -342,14 +342,15 @@ extension WeHaveNoticedCoordinator: StressLevelViewControllerDelegate {
             
             self.repository.sendCombinedDiaryNote(diaryNote: diaryNoteData)
                 .addProgress()
-                .flatMap { diaryNoteItem -> Single<()> in
+                .flatMap { diaryNoteItem -> Single<DiaryNoteItem> in
                     let resultData: TaskNetworkResult = TaskNetworkResult(data: [
                         "diary_note_id": diaryNoteItem.id
                     ], attachedFile: nil)
-                    return self.repository.sendTaskResult(taskId: self.taskIdentifier, taskResult: resultData)
+                    return self.repository.sendTaskResult(taskId: self.taskIdentifier, taskResult: resultData).map { diaryNoteItem }
                 }
-                .subscribe(onSuccess: { [weak self] _ in
-                    self?.showSuccessPage()
+                .subscribe(onSuccess: { [weak self] diaryNote in
+                    guard let self = self else { return }
+                    self.showSuccessPage(with: diaryNote)
                 }, onFailure: { _ in
                     // handle error if needed
                 })
@@ -362,11 +363,8 @@ extension WeHaveNoticedCoordinator: StressLevelViewControllerDelegate {
         completionCallback()
     }
     
-    private func showSuccessPage() {
-        let successVC = SuccessViewController()
-        
-        successVC.onConfirm = { [weak self] in
-            guard let self = self else { return }
+    private func showSuccessPage(with diaryNote: DiaryNoteItem) {
+        let successVC = WeNoticedSuccessViewController(diaryNote: diaryNote) {
             self.completionCallback()
         }
         

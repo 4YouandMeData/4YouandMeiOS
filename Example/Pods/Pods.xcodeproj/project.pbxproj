@@ -259,6 +259,9 @@
 		0CEBF0939CAAB326ACB9669544684BB1 /* FIRLogger.h in Headers */ = {isa = PBXBuildFile; fileRef = DF45E2AF87CE992917B8602877FC6EEB /* FIRLogger.h */; settings = {ATTRIBUTES = (Project, ); }; };
 		0CF2D2DF44815BD099ACBAAE9F78C8B2 /* ORKReactionTimeViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 5294537DD08AFCE722C4FFB43960228F /* ORKReactionTimeViewController.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
 		0D084AE42E390DC700A2C20B /* QuestionFooter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D084AE32E390DC400A2C20B /* QuestionFooter.swift */; };
+		0D084B7A2E4276B500A2C20B /* FoodEntrySuccessViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D084B792E4276B400A2C20B /* FoodEntrySuccessViewController.swift */; };
+		0D084B7C2E4297FD00A2C20B /* InsulinEntrySuccessViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D084B7B2E4297FB00A2C20B /* InsulinEntrySuccessViewController.swift */; };
+		0D084B7E2E4335C600A2C20B /* WeNoticedSuccessViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D084B7D2E4335BE00A2C20B /* WeNoticedSuccessViewController.swift */; };
 		0D3A2422A4541D42FC8634B7B7D2C6DD /* PublishRelay+Signal.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0826F10F21DF5FACC148EF4D741D6237 /* PublishRelay+Signal.swift */; };
 		0D42CC977B3643CFF434FC2ADA095A2D /* PermissionProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = C56DD79136BAD94F94CCF7E56A5831B0 /* PermissionProtocol.swift */; };
 		0D64D6FE420691CD092F7E8671774F13 /* FIRAnalyticsInterop.h in Headers */ = {isa = PBXBuildFile; fileRef = 7EEBB32C75D8CC56E3FA5619CDAE6A73 /* FIRAnalyticsInterop.h */; settings = {ATTRIBUTES = (Project, ); }; };
@@ -4365,6 +4368,9 @@
 		0CD89EA3CCD65943461327EC383CD85F /* FIRMessagingRemoteNotificationsProxy.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = FIRMessagingRemoteNotificationsProxy.h; path = FirebaseMessaging/Sources/FIRMessagingRemoteNotificationsProxy.h; sourceTree = "<group>"; };
 		0CDDD4D86F00008A6E4A52DF4C7021C1 /* UIImageView+AlamofireImage.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = "UIImageView+AlamofireImage.swift"; sourceTree = "<group>"; };
 		0D084AE32E390DC400A2C20B /* QuestionFooter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuestionFooter.swift; sourceTree = "<group>"; };
+		0D084B792E4276B400A2C20B /* FoodEntrySuccessViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodEntrySuccessViewController.swift; sourceTree = "<group>"; };
+		0D084B7B2E4297FB00A2C20B /* InsulinEntrySuccessViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InsulinEntrySuccessViewController.swift; sourceTree = "<group>"; };
+		0D084B7D2E4335BE00A2C20B /* WeNoticedSuccessViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeNoticedSuccessViewController.swift; sourceTree = "<group>"; };
 		0D0CA4AE51CB5E40D9C6D5FD7FC941A1 /* ORKVideoInstructionStep.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = ORKVideoInstructionStep.h; path = ResearchKit/Common/ORKVideoInstructionStep.h; sourceTree = "<group>"; };
 		0D0E082F5566047604DD7DC6D589C138 /* ORKSpeechRecognitionStepViewController.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = ORKSpeechRecognitionStepViewController.m; path = ResearchKit/ActiveTasks/ORKSpeechRecognitionStepViewController.m; sourceTree = "<group>"; };
 		0D35DA07F937F5886C6DBD1FA9C6E977 /* ORKSpeechRecognizer.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = ORKSpeechRecognizer.h; path = ResearchKit/ActiveTasks/ORKSpeechRecognizer.h; sourceTree = "<group>"; };
@@ -11311,6 +11317,9 @@
 		86ABA7A9AB3119413C40167D75CEC7DD /* ViewControllers */ = {
 			isa = PBXGroup;
 			children = (
+				0D084B7D2E4335BE00A2C20B /* WeNoticedSuccessViewController.swift */,
+				0D084B7B2E4297FB00A2C20B /* InsulinEntrySuccessViewController.swift */,
+				0D084B792E4276B400A2C20B /* FoodEntrySuccessViewController.swift */,
 				0D7DD7272E20169C00A2783B /* EmojiPopUpViewController.swift */,
 				0D7DD7252E1FE65200A2783B /* ImageZoomViewController.swift */,
 				0DE468FF2E0D50AA001FE066 /* PreferencesViewController.swift */,
@@ -16674,7 +16683,9 @@
 				4579042DAAFF1C3C59C464C91AF8987A /* SpeechPermission.swift in Sources */,
 				0AFC26119BBBA90EFD820FC49796CC46 /* SpiroDeviceDisconnectedViewController.swift in Sources */,
 				24AE6170048102E7F62EECA40EC228ED /* SpirometryWarningViewController.swift in Sources */,
+				0D084B7C2E4297FD00A2C20B /* InsulinEntrySuccessViewController.swift in Sources */,
 				1B5B1C8E626613BF4C5522F7C9505749 /* SpiroPopoverController.swift in Sources */,
+				0D084B7E2E4335C600A2C20B /* WeNoticedSuccessViewController.swift in Sources */,
 				04F108049563BA0B414395D7E02CC9C3 /* SpiroTableView.swift in Sources */,
 				57C4940C12D69A0278CBF65400BBB448 /* SpyroBar.swift in Sources */,
 				8E674217AF7C4D229CFAEAA4A49F0F4B /* SpyrometerIntroTestViewController.swift in Sources */,
@@ -16770,6 +16781,7 @@
 				BAD015DFBF71C796F138587C8DA65F3A /* UserEmailViewController.swift in Sources */,
 				5CC34FE64F0964680AC379A2B394AC13 /* UserInfoHeaderView.swift in Sources */,
 				7C8B3B7D8F2E66A4201BD90901C84280 /* UserInfoParameter.swift in Sources */,
+				0D084B7A2E4276B500A2C20B /* FoodEntrySuccessViewController.swift in Sources */,
 				D1DDAC01F087CC1523DB0743B87E8F71 /* UserInfoViewController.swift in Sources */,
 				9BA0F45567A9274A9F95F6564D9E4534 /* UserLocation.swift in Sources */,
 				8881B23E4772513BBF0ED2036EA54B7E /* UserNameViewController.swift in Sources */,

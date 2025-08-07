@@ -1,17 +1,17 @@
 {
   "images" : [
     {
-      "filename" : "Layer_2.png",
+      "filename" : "addEmoji_FILL.png",
       "idiom" : "universal",
       "scale" : "1x"
     },
     {
-      "filename" : "Layer_2@2x.png",
+      "filename" : "addEmoji_FILL@2x.png",
       "idiom" : "universal",
       "scale" : "2x"
     },
     {
-      "filename" : "Layer_2@3x.png",
+      "filename" : "addEmoji_FILL@3x.png",
       "idiom" : "universal",
       "scale" : "3x"
     }

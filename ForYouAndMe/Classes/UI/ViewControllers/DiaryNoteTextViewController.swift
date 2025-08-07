@@ -19,6 +19,42 @@ class DiaryNoteTextViewController: UIViewController {
     private let analytics: AnalyticsService
     private let reflectionCoordinator: ReflectionSectionCoordinator?
     private var selectedEmoji: EmojiItem?
+    private var originalBody: String?
+    private lazy var titleRow: UIStackView = {
+        let stack = UIStackView()
+        stack.axis = .horizontal
+        stack.spacing = 8
+        stack.alignment = .center
+        stack.distribution = .equalSpacing
+        return stack
+    }()
+    
+    private lazy var titleLabel: UILabel = {
+        let label = UILabel()
+        label.attributedText = NSAttributedString.create(
+            withText: StringsProvider.string(forKey: .diaryNoteCreateTextTitle),
+            fontStyle: .title,
+            color: ColorPalette.color(withType: .primaryText),
+            textAlignment: .center
+        )
+        return label
+    }()
+    
+    
+    private lazy var editButton: UIButton = {
+        let button = UIButton()
+        button.setImage(ImagePalette.image(withName: .editAudioNote), for: .normal)
+        button.setTitle(StringsProvider.string(forKey: .diaryNoteCreateTextEdit), for: .normal)
+        button.setTitleColor(ColorPalette.color(withType: .primaryText), for: .normal)
+        button.backgroundColor = ColorPalette.color(withType: .inactive).applyAlpha(0.8)
+        button.titleLabel?.font = FontPalette.fontStyleData(forStyle: .menu).font
+        button.imageEdgeInsets = UIEdgeInsets(top: 0, left: -4, bottom: 0, right: 4)
+        button.contentEdgeInsets = UIEdgeInsets(top: 3, left: 8, bottom: 3, right: 8)
+        button.layer.cornerRadius = 6.0
+        button.clipsToBounds = true
+        button.addTarget(self, action: #selector(editButtonPressed), for: .touchUpInside)
+        return button
+    }()
         
     public fileprivate(set) var standardColor: UIColor = ColorPalette.color(withType: .primaryText)
     public fileprivate(set) var errorColor: UIColor = ColorPalette.color(withType: .primaryText)
@@ -56,26 +92,12 @@ class DiaryNoteTextViewController: UIViewController {
         self.closeButton.autoPinEdgesToSuperviewEdges(with: .zero, excludingEdge: .trailing)
         stackView.addArrangedSubview(closeButtonContainerView)
 
-        let titleRow = UIStackView()
-        titleRow.axis = .horizontal
-        titleRow.spacing = 8
-        titleRow.alignment = .center
-        titleRow.distribution = .equalSpacing
-        
-        // title Label
-        let titleLabel = UILabel()
-        titleLabel.attributedText = NSAttributedString.create(
-            withText: StringsProvider.string(forKey: .diaryNoteCreateTextTitle),
-            fontStyle: .title,
-            color: ColorPalette.color(withType: .primaryText),
-            textAlignment: .center
-        )
-
         let emptyView = UIView()
         emptyView.autoSetDimensions(to: CGSize(width: 24, height: 24))
         
         let category = self.categoryForEmoji(diaryNote: self.diaryNote)
-        if !self.emojiItems(for: category).isEmpty {
+        if !self.emojiItems(for: category).isEmpty,
+           self.isEditMode {
             titleRow.addArrangedSubview(emptyView)
             titleRow.addArrangedSubview(titleLabel)
             titleRow.addArrangedSubview(emojiButton)
@@ -118,10 +140,21 @@ class DiaryNoteTextViewController: UIViewController {
         toolBar.tintColor = ColorPalette.color(withType: .primary)
         toolBar.sizeToFit()
         
-        let doneButton = UIBarButtonItem(barButtonSystemItem: .done, target: self, action: #selector(self.doneButtonPressed))
+        let cancelButton = UIBarButtonItem(
+            barButtonSystemItem: .cancel,
+            target: self,
+            action: #selector(self.cancelEdit)
+        )
+
+        let doneButton = UIBarButtonItem(
+            barButtonSystemItem: .done,
+            target: self,
+            action: #selector(self.doneButtonPressed)
+        )
+        
         let spaceButton = UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil)
         
-        toolBar.setItems([spaceButton, doneButton], animated: false)
+        toolBar.setItems([cancelButton, spaceButton, doneButton], animated: false)
         textView.inputAccessoryView = toolBar
         
         return textView
@@ -155,7 +188,7 @@ class DiaryNoteTextViewController: UIViewController {
     
     private var cache: CacheService
     private var diaryNote: DiaryNoteItem?
-    private let maxCharacters: Int = 2500
+    private let maxCharacters: Int = 5000
     private let isEditMode: Bool
     private let isFromChart: Bool
     
@@ -204,6 +237,10 @@ class DiaryNoteTextViewController: UIViewController {
                                                                       left: 12.0,
                                                                       bottom: 0,
                                                                       right: 12.0))
+        containerTextView.addSubview(self.editButton)
+        self.editButton.autoPinEdge(.bottom, to: .bottom, of: self.textView, withOffset: -8.0)
+        self.editButton.autoPinEdge(.right, to: .right, of: self.textView, withOffset: -8.0)
+        
         // Limit label
         containerTextView.addSubview(self.limitLabel)
         self.limitLabel.autoPinEdge(.top, to: .bottom, of: self.textView)
@@ -235,12 +272,11 @@ class DiaryNoteTextViewController: UIViewController {
             guard let self = self else { return }
             self.updateNextButton(pageState: newPageState)
             self.updateTextFields(pageState: newPageState)
+            self.updateTitleRow()
             self.view.endEditing(true)
-            // Disable confirm button initially in edit if no text
-            if newPageState == .edit {
-                let hasText = !(self.textView.text.isEmpty)
-                self.footerView.setButtonEnabled(enabled: hasText)
-            }
+            
+            let shouldShowEditButton = (self.diaryNote != nil && newPageState == .read)
+            self.editButton.isHidden = !shouldShowEditButton
         }).disposed(by: self.disposeBag)
         
         if let emoji = self.diaryNote?.feedbackTags?.last {
@@ -251,7 +287,7 @@ class DiaryNoteTextViewController: UIViewController {
         }
         
         self.loadNote()
-        
+        self.updateTitleRow()
         self.addObservers()
     }
     
@@ -273,6 +309,17 @@ class DiaryNoteTextViewController: UIViewController {
     }
     
     // MARK: - Actions
+    
+    @objc private func cancelEdit() {
+        self.textView.text = self.originalBody
+        self.placeholderLabel.isHidden = !(self.originalBody?.isEmpty ?? true)
+
+        if self.diaryNote != nil {
+            self.pageState.accept(.read)
+        } else {
+            self.pageState.accept(.edit)
+        }
+    }
     
     @objc private func keyboardWillChangeFrame(_ notification: Notification) {
         guard let userInfo = notification.userInfo,
@@ -304,67 +351,71 @@ class DiaryNoteTextViewController: UIViewController {
     }
     
     @objc private func editButtonPressed() {
+        self.originalBody = self.textView.text
         self.pageState.accept(.edit)
-    }
-    
-    @objc private func confirmButtonPressed() {
-        
-        if isEditMode {
-            if let diaryNote, self.diaryNote != nil {
-                self.repository.updateDiaryNoteText(diaryNote: diaryNote)
-                    .addProgress()
-                    .subscribe(onSuccess: { [weak self] in
-                        guard let self = self else { return }
-                        self.closeButtonPressed()
-                    }, onFailure: { [weak self] error in
-                        guard let self = self else { return }
-                        self.navigator.handleError(error: error, presenter: self)
-                    }).disposed(by: self.disposeBag)
-                self.pageState.accept(.read)
-            }
-                
-        } else {
-            if let diaryNote, self.diaryNote?.diaryNoteable != nil {
-                self.repository.sendDiaryNoteText(diaryNote: diaryNote, fromChart: true)
-                    .addProgress()
-                    .subscribe(onSuccess: { [weak self] diaryNote in
-                        guard let self = self else { return }
-                        guard let coordinator = self.reflectionCoordinator else {
-                            return self.closeButtonPressed()
-                        }
-                        coordinator.onReflectionCreated(presenter: self, reflectionType: .text, diaryNote: diaryNote)
-                    }, onFailure: { [weak self] error in
-                        guard let self = self else { return }
-                        self.navigator.handleError(error: error, presenter: self)
-                    }).disposed(by: self.disposeBag)
-                self.pageState.accept(.read)
-            } else {
-                let newDiaryNote = DiaryNoteItem(diaryNoteId: self.diaryNote?.diaryNoteId.string(withFormat: dateTimeFormat),
-                                                 body: self.textView.text,
-                                                 interval: nil,
-                                                 diaryNoteable: nil)
-
-                self.repository.sendDiaryNoteText(diaryNote: newDiaryNote, fromChart: false)
-                    .addProgress()
-                    .subscribe(onSuccess: { [weak self] diaryNote in
-                        guard let self = self else { return }
-                        guard let coordinator = self.reflectionCoordinator else {
-                            return self.closeButtonPressed()
-                        }
-                        coordinator.onReflectionCreated(presenter: self, reflectionType: .text, diaryNote: diaryNote)
-                    }, onFailure: { [weak self] error in
-                        guard let self = self else { return }
-                        self.navigator.handleError(error: error, presenter: self)
-                    }).disposed(by: self.disposeBag)
-                self.pageState.accept(.read)
-            }
-        }
+        self.textView.becomeFirstResponder()
     }
     
     @objc private func doneButtonPressed() {
         self.textView.resignFirstResponder()
+
+        // Update existing note
+        if var diaryNote = self.diaryNote {
+            diaryNote.body = self.textView.text
+
+            // Case: update via send (when linked to a diaryNoteable)
+            if diaryNote.diaryNoteable != nil {
+                self.repository.sendDiaryNoteText(diaryNote: diaryNote, fromChart: true)
+                    .addProgress()
+                    .subscribe(onSuccess: { [weak self] savedNote in
+                        guard let self = self else { return }
+                        self.diaryNote = savedNote
+                        self.pageState.accept(.read)
+                    }, onFailure: { [weak self] error in
+                        guard let self = self else { return }
+                        self.navigator.handleError(error: error, presenter: self)
+                    }).disposed(by: self.disposeBag)
+            } else {
+                // Case: normal update
+                self.repository.updateDiaryNoteText(diaryNote: diaryNote)
+                    .addProgress()
+                    .subscribe(onSuccess: { [weak self] in
+                        self?.diaryNote = diaryNote
+                        self?.pageState.accept(.read)
+                    }, onFailure: { [weak self] error in
+                        guard let self = self else { return }
+                        self.navigator.handleError(error: error, presenter: self)
+                    }).disposed(by: self.disposeBag)
+            }
+
+        } else {
+            // Case: create new note
+            let newDiaryNote = DiaryNoteItem(
+                diaryNoteId: nil,
+                body: self.textView.text,
+                interval: nil,
+                diaryNoteable: nil
+            )
+
+            self.repository.sendDiaryNoteText(diaryNote: newDiaryNote, fromChart: false)
+                .addProgress()
+                .subscribe(onSuccess: { [weak self] savedNote in
+                    guard let self = self else { return }
+                    self.diaryNote = savedNote
+                    if let coordinator = self.reflectionCoordinator {
+                        coordinator.onReflectionCreated(presenter: self, reflectionType: .text, diaryNote: savedNote)
+                    } else {
+                        self.textView.text = savedNote.body
+                        self.placeholderLabel.isHidden = ((savedNote.body?.isEmpty) == nil)
+                        self.pageState.accept(.read)
+                    }
+                }, onFailure: { [weak self] error in
+                    guard let self = self else { return }
+                    self.navigator.handleError(error: error, presenter: self)
+                }).disposed(by: self.disposeBag)
+        }
     }
-    
+
     @objc private func emojiButtonTapped() {
         
         let category = self.categoryForEmoji(diaryNote: self.diaryNote)
@@ -396,7 +447,32 @@ class DiaryNoteTextViewController: UIViewController {
     }
     
     // MARK: - Private Methods
-    
+    private func updateTitleRow() {
+        // Clear previous subviews
+        self.titleRow.arrangedSubviews.forEach {
+            self.titleRow.removeArrangedSubview($0)
+            $0.removeFromSuperview()
+        }
+
+        let category = self.categoryForEmoji(diaryNote: self.diaryNote)
+        let hasEmojis = !self.emojiItems(for: category).isEmpty
+
+        // Conditions to show emoji button
+        let noteExists = self.diaryNote != nil
+        let isCreatingFromChart = self.isEditMode && self.isFromChart && self.diaryNote?.diaryNoteable != nil
+        let shouldShowEmojiButton = noteExists && hasEmojis && !isCreatingFromChart
+
+        if shouldShowEmojiButton {
+            let emptyView = UIView()
+            emptyView.autoSetDimensions(to: CGSize(width: 24, height: 24))
+            self.titleRow.addArrangedSubview(emptyView)
+            self.titleRow.addArrangedSubview(titleLabel)
+            self.titleRow.addArrangedSubview(emojiButton)
+        } else {
+            self.titleRow.addArrangedSubview(titleLabel)
+        }
+    }
+
     private func emojiItems(for category: EmojiTagCategory) -> [EmojiItem] {
         return self.cache.feedbackList[category.rawValue] ?? []
     }
@@ -421,26 +497,31 @@ class DiaryNoteTextViewController: UIViewController {
         let button = self.footerView
         switch pageState {
         case .edit:
-            button.setButtonText(StringsProvider.string(forKey: .diaryNoteCreateTextConfirm))
-            button.addTarget(target: self, action: #selector(self.confirmButtonPressed))
+            button.setButtonText(StringsProvider.string(forKey: .diaryNoteCreateTextSave))
+            button.setButtonEnabled(enabled: true)
+            button.addTarget(target: self, action: #selector(self.closeButtonPressed))
         case .read:
-            button.setButtonText(StringsProvider.string(forKey: .diaryNoteCreateTextEdit))
-            button.addTarget(target: self, action: #selector(self.editButtonPressed))
+            button.setButtonText(StringsProvider.string(forKey: .diaryNoteCreateTextSave))
+            button.setButtonEnabled(enabled: true)
+            button.addTarget(target: self, action: #selector(self.closeButtonPressed))
         }
     }
 
     private func updateTextFields(pageState: PageState) {
         let textView = self.textView
+        let editButton = self.editButton
         self.placeholderLabel.isHidden = !textView.text.isEmpty
         switch pageState {
         case .edit:
             textView.isEditable = true
             textView.isUserInteractionEnabled = true
             textView.textColor = self.standardColor
+            editButton.isHidden = true
         case .read:
             textView.isEditable = false
             textView.isUserInteractionEnabled = false
             textView.textColor = self.inactiveColor
+            editButton.isHidden = false
         }
     }
     

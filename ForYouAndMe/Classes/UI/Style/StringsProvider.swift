@@ -192,7 +192,10 @@ enum StringKey: String, CaseIterable, CodingKey {
     case diaryNoteTagNoticed = "DIARY_NOTE_TAG_NOTICED"
     case diaryNoteTagReflection = "DIARY_NOTE_TAG_REFLECTION"
     case diaryNoteTagWeNoticed = "DIARY_NOTE_TAG_WE_NOTICED"
-    
+    case diaryNoteNoticedEmojiTitle = "DIARY_NOTE_NOTICED_STEP_EMOJI_TITLE"
+    case diaryNoteNoticedEmojiSubtitle = "DIARY_NOTE_NOTICED_STEP_EMOJI_SUBTITLE"
+    case diaryNoteNoticedEmojiClickMessage = "DIARY_NOTE_NOTICED_STEP_EMOJI_CLICK_MESSAGE"
+    case diaryNoteNoticedEmojiCloseButton = "DIARY_NOTE_NOTICED_STEP_EMOJI_CLOSE_BUTTON"
     // I Have Eaten
     case diaryNoteFabEaten = "FAB_I_HAVE_EATEN"
     case diaryNoteEatenStepOneTitle = "EATEN_STEP_ONE_TITLE"
@@ -217,6 +220,10 @@ enum StringKey: String, CaseIterable, CodingKey {
     case diaryNoteEatenStepFifthSecondButton = "EATEN_STEP_FIFTH_SECOND_BUTTON"
     case diaryNoteEatenNextButton = "EATEN_NEXT_BUTTON"
     case diaryNoteEatenConfirmButton = "EATEN_CONFIRM_BUTTON"
+    case diaryNoteEatenEmojiTitle = "DIARY_NOTE_EATEN_STEP_EMOJI_TITLE"
+    case diaryNoteEatenEmojiSubtitle = "DIARY_NOTE_EATEN_STEP_EMOJI_SUBTITLE"
+    case diaryNoteEatenEmojiClickMessage = "DIARY_NOTE_EATEN_STEP_EMOJI_CLICK_MESSAGE"
+    case diaryNoteEatenEmojiCloseButton = "DIARY_NOTE_EATEN_STEP_EMOJI_CLOSE_BUTTON"
     
     // My Doses
     case diaryNoteFabDoses = "FAB_MY_DOSES"
@@ -231,6 +238,10 @@ enum StringKey: String, CaseIterable, CodingKey {
     case doseStepTwoUnitsLabel = "DOSE_STEP_TWO_UNITS_LABEL"
     case doseStepTwoDosesLabel = "DOSE_STEP_TWO_DOSES_LABEL"
     case doseStepTwoConfirmButton = "DOSE_STEP_TWO_CONFIRM_BUTTON"
+    case diaryNoteDosesEmojiTitle = "DIARY_NOTE_DOSES_STEP_EMOJI_TITLE"
+    case diaryNoteDosesEmojiSubtitle = "DIARY_NOTE_DOSES_STEP_EMOJI_SUBTITLE"
+    case diaryNoteDosesEmojiClickMessage = "DIARY_NOTE_DOSES_STEP_EMOJI_CLICK_MESSAGE"
+    case diaryNoteDosesEmojiCloseButton = "DIARY_NOTE_DOSES_STEP_EMOJI_CLOSE_BUTTON"
     
     // Video Diary
     case videoDiaryRecorderInfoFilter = "VIDEO_DIARY_RECORDER_INFO_FILTER"
@@ -299,6 +310,10 @@ enum StringKey: String, CaseIterable, CodingKey {
     case reflectionTaskBody = "REFLECTION_TASK_BODY"
     case reflectionTaskLearnMore = "REFLECTION_TASK_LEARN_MORE"
     case reflectionLearnMoreClose = "REFLECTION_LEARN_MORE_CLOSE"
+    case reflectionEmojiTitle = "DIARY_NOTE_REFLECTION_STEP_EMOJI_TITLE"
+    case reflectionEmojiSubtitle = "DIARY_NOTE_REFLECTION_STEP_EMOJI_SUBTITLE"
+    case reflectionEmojiClickMessage = "DIARY_NOTE_REFLECTION_STEP_EMOJI_CLICK_MESSAGE"
+    case reflectionEmojiCloseButton = "DIARY_NOTE_REFLECTION_STEP_EMOJI_CLOSE_BUTTON"
     
     // We have Noticed
     case noticedStepOneTitle = "NOTICED_STEP_ONE_TITLE"

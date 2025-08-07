@@ -156,13 +156,21 @@ final class InsulinEntryCoordinator: PagedActivitySectionCoordinator {
                 fromChart: false
             )
             .addProgress()
-            .subscribe(onSuccess: { [weak self] _ in
-                self?.completionCallback()
+            .subscribe(onSuccess: { [weak self] diaryNote in
+                guard let self = self else { return }
+                self.showSuccessPage(diaryNote: diaryNote)   
             }, onFailure: { _ in
                 // handle error if needed
             })
             .disposed(by: disposeBag)
         }
+    }
+    
+    private func showSuccessPage(diaryNote: DiaryNoteItem) {
+        let vc = InsulinEntrySuccessViewController(diaryNote: diaryNote,
+                                                completion: self.completionCallback)
+        vc.modalPresentationStyle = .fullScreen
+        navigationController.pushViewController(vc, animated: true)
     }
 }
 
