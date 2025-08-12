@@ -17,7 +17,7 @@ enum DoseType: String, Codable {
     func displayText(usingVariant variant: FlowVariant) -> String {
         
         switch variant {
-        case .standalone:
+        case .standalone, .fromChart(_):
             switch self {
             case .pumpBolus:
                 return StringsProvider.string(forKey: .doseStepOneFirstButton)
@@ -108,23 +108,19 @@ final class InsulinEntryCoordinator: PagedActivitySectionCoordinator {
     
     // MARK: – Flow start
     func getStartingPage() -> UIViewController {
-        
-        switch variant {
-        case .standalone:
-            let vc = DoseTypeViewController(variant: self.variant)
-            vc.delegate = self
-            
-            self.activitySectionViewController =
-              ActivitySectionViewController(coordinator: self,
-                                            startingViewController: vc)
+        let vc = DoseTypeViewController(variant: self.variant)
+        vc.delegate = self
+        vc.alert = self.alert
+
+        if variant.isEmbeddedInNoticed {
+            return vc
+        } else {
+            self.activitySectionViewController = ActivitySectionViewController(
+                coordinator: self,
+                startingViewController: vc
+            )
             return activitySectionViewController!
-        case .embeddedInNoticed:
-            let doseTypeVC = DoseTypeViewController(variant: self.variant)
-            doseTypeVC.delegate = self
-            doseTypeVC.alert = self.alert
-            return doseTypeVC
         }
-        
     }
     
     // MARK: – Save & finish
@@ -136,11 +132,10 @@ final class InsulinEntryCoordinator: PagedActivitySectionCoordinator {
             return
         }
         
-        if variant == .embeddedInNoticed {
+        if case .embeddedInNoticed = variant {
             onData?(type, nil, amount)
             self.completionCallback()
         } else {
-            
             // Perform the API call with collected data
             guard let type = selectedDoseType,
                   let date = doseDate,
@@ -153,14 +148,16 @@ final class InsulinEntryCoordinator: PagedActivitySectionCoordinator {
                 doseType: type,
                 date: date,
                 amount: amount,
-                fromChart: false
+                fromChart: variant.isFromChart,
+                diaryNote: variant.chartDiaryNote
             )
             .addProgress()
             .subscribe(onSuccess: { [weak self] diaryNote in
                 guard let self = self else { return }
-                self.showSuccessPage(diaryNote: diaryNote)   
-            }, onFailure: { _ in
-                // handle error if needed
+                self.showSuccessPage(diaryNote: diaryNote)
+            }, onFailure: { [weak self] error in
+                guard let presenter = self?.activitySectionViewController else { return }
+                self?.navigator.handleError(error: error, presenter: presenter)
             })
             .disposed(by: disposeBag)
         }
@@ -188,7 +185,7 @@ extension InsulinEntryCoordinator: DoseTypeViewControllerDelegate {
         let dtVC = DoseDateTimeViewController(displayTitle: selectedDoseTypeText, variant: variant)
         dtVC.delegate = self
         dtVC.alert = self.alert
-        if variant == .embeddedInNoticed {
+        if case .embeddedInNoticed = variant {
             vc.navigationController?.pushViewController(
                 dtVC,
                 animated: true

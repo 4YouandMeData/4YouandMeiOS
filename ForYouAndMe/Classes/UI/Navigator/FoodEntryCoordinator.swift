@@ -19,7 +19,7 @@ enum FoodEntryType: String {
             case .snack: return StringsProvider.string(forKey: .noticedStepFiveFirstButton)
             case .meal:  return StringsProvider.string(forKey: .noticedStepFiveSecondButton)
             }
-        case .standalone:
+        case .standalone, .fromChart(_):
             switch self {
             case .snack: return StringsProvider.string(forKey: .diaryNoteEatenStepOneFirstButton)
             case .meal:  return StringsProvider.string(forKey: .diaryNoteEatenStepOneSecondButton)
@@ -66,7 +66,7 @@ final class FoodEntryCoordinator: PagedActivitySectionCoordinator {
             }
             return nav
             
-        case .standalone:
+        case .standalone, .fromChart(_):
             guard let nav = activitySectionViewController?.internalNavigationController else {
                 fatalError("ActivitySectionViewController not initialized")
             }
@@ -131,7 +131,7 @@ final class FoodEntryCoordinator: PagedActivitySectionCoordinator {
             eatenTypeVC.alert = self.alert
             return eatenTypeVC
             
-        case .standalone:
+        case .standalone, .fromChart(_):
             let eatenTypeVC = EatenTypeViewController(variant: variant)
             eatenTypeVC.delegate = self
             
@@ -151,30 +151,33 @@ final class FoodEntryCoordinator: PagedActivitySectionCoordinator {
             return
         }
         
-        if variant == .embeddedInNoticed {
+        if variant.isEmbeddedInNoticed {
             self.onDataCallback?(selectedFoodType, snackDate, quantitySelection, nutrientAnswer)
             self.completionCallback()
-        } else {
-            self.repository.sendDiaryNoteEaten(date: snackDate,
-                                               mealType: selectedFoodType.lowercased(),
-                                               quantity: quantitySelection,
-                                               significantNutrition: nutrientAnswer,
-                                               fromChart: true)
-                .addProgress()
-                .subscribe(onSuccess: { [weak self] diaryNote in
-                    guard let self = self else { return }
-                    switch self.variant {
-                    case .embeddedInNoticed:
-                        self.completionCallback()
-                    case .standalone:
-                        self.showSuccessPage(diaryNote: diaryNote)
-                    @unknown default:
-                        fatalError()
-                    }
-                }, onFailure: { _ in
-                    
-                }).disposed(by: self.disposeBag)
+            return
         }
+        
+        self.repository.sendDiaryNoteEaten(date: snackDate,
+                                           mealType: selectedFoodType.lowercased(),
+                                           quantity: quantitySelection,
+                                           significantNutrition: nutrientAnswer,
+                                           fromChart: variant.isFromChart,
+                                           diaryNote: variant.chartDiaryNote)
+            .addProgress()
+            .subscribe(onSuccess: { [weak self] diaryNote in
+                guard let self = self else { return }
+                switch self.variant {
+                case .embeddedInNoticed:
+                    self.completionCallback()
+                case .standalone, .fromChart(_):
+                    self.showSuccessPage(diaryNote: diaryNote)
+                @unknown default:
+                    fatalError()
+                }
+            }, onFailure: { _ in
+                
+            }).disposed(by: self.disposeBag)
+        
     }
     
     private func showSuccessPage(diaryNote: DiaryNoteItem) {
@@ -189,12 +192,8 @@ extension FoodEntryCoordinator: EatenTypeViewControllerDelegate {
     func eatenTypeViewController(_ vc: EatenTypeViewController, didSelect type: FoodEntryType) {
         selectedFoodType = type.rawValue
         
-        guard let select = selectedFoodType else {
-            return
-        }
-        
         // Navigate to time selection screen
-        let timeVC = EatenTimeViewController(selectedType: FoodEntryType(rawValue: select)!,
+        let timeVC = EatenTimeViewController(selectedType: type,
                                              variant: self.variant)
         timeVC.delegate = self
         timeVC.alert = self.alert
@@ -212,11 +211,20 @@ extension FoodEntryCoordinator: EatenTypeViewControllerDelegate {
 
 extension FoodEntryCoordinator: EatenTimeViewControllerDelegate {
     func eatenTimeViewController(_ vc: EatenTimeViewController, didSelect relative: EatenTimeViewController.TimeRelative) {
+        
+        guard let selectedFoodType = self.selectedFoodType,
+              let type = FoodEntryType(rawValue: selectedFoodType) else { return }
+        
         if relative == .withinHour {
-            snackDate = Date()
+            
+            if let note = variant.chartDiaryNote {
+                snackDate = note.diaryNoteId
+            } else {
+                snackDate = Date()
+            }
             
             let amountVC = ConsumptionAmountViewController(variant: self.variant)
-            amountVC.selectedType = FoodEntryType(rawValue: selectedFoodType!)!
+            amountVC.selectedType = type
             amountVC.delegate = self
             navigationController.pushViewController(
                 amountVC,
@@ -224,9 +232,8 @@ extension FoodEntryCoordinator: EatenTimeViewControllerDelegate {
                 animated: true
             )
         } else {
-            
             let dateTimeVC = EatenDateTimeViewController(variant: self.variant)
-            dateTimeVC.selectedType = FoodEntryType(rawValue: selectedFoodType!)!
+            dateTimeVC.selectedType = type
             dateTimeVC.delegate = self
             dateTimeVC.alert = self.alert
             navigationController.pushViewController(
@@ -269,10 +276,12 @@ extension FoodEntryCoordinator: ConsumptionAmountViewControllerDelegate {
     func consumptionAmountViewController(_ vc: ConsumptionAmountViewController,
                                          didSelect amount: String) {
         quantitySelection = amount
+        guard let selectedFoodType = self.selectedFoodType,
+              let type = FoodEntryType(rawValue: selectedFoodType) else { return }
         
         // Next: nutrient question screen
         let nutrientVC = NutrientQuestionViewController(variant: self.variant)
-        nutrientVC.selectedType = FoodEntryType(rawValue: selectedFoodType!)!
+        nutrientVC.selectedType = type
         nutrientVC.delegate = self
         nutrientVC.alert = self.alert
         navigationController.pushViewController(

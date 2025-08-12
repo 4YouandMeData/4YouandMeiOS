@@ -83,9 +83,17 @@ class EatenDateTimeViewController: UIViewController {
         return dp
     }()
     
+    private var isStandalone: Bool {
+        if case .standalone = variant {
+            return true
+        } else {
+            return false
+        }
+    }
+    
     private lazy var footerView: GenericButtonView = {
         let buttonView = GenericButtonView(withTextStyleCategory: .secondaryBackground(shadow: false))
-        let buttonKey = (variant == .standalone)
+        let buttonKey = isStandalone
         ? StringsProvider.string(forKey: .diaryNoteEatenNextButton)
         : StringsProvider.string(forKey: .noticedStepNextButton)
         buttonView.setButtonText(buttonKey)
@@ -111,7 +119,7 @@ class EatenDateTimeViewController: UIViewController {
     }
     
     private lazy var messages: [MessageInfo] = {
-        let location: MessageInfoParameter = (variant == .embeddedInNoticed) ? .pageWeHaveNoticed : .pageIHaveEeaten
+        let location: MessageInfoParameter = (isStandalone) ? .pageIHaveEeaten : .pageWeHaveNoticed
         let messages = self.storage.infoMessages?.messages(withLocation: location)
         return messages ?? []
     }()
@@ -169,7 +177,7 @@ class EatenDateTimeViewController: UIViewController {
         // Transform input text to bold using attributed string
         let replacementString = selectedType.displayTextUsingVariant(variant: self.variant).lowercased()
         
-        let messageKey = (variant == .standalone)
+        let messageKey = (isStandalone)
         ? StringsProvider.string(forKey: .diaryNoteEatenStepThreeMessage)
             .replacingPlaceholders(with: [replacementString])
         : StringsProvider.string(forKey: .noticedStepSevenMessage)
@@ -200,7 +208,7 @@ class EatenDateTimeViewController: UIViewController {
         
         subtitleLabel.attributedText = attributed
         
-        let titleKey = (variant == .standalone)
+        let titleKey = (isStandalone)
         ? StringsProvider.string(forKey: .diaryNoteEatenStepThreeTitle)
         : StringsProvider.string(forKey: .noticedStepSevenTitle)
         let boldAttrsTitle: [NSAttributedString.Key: Any] = [
@@ -228,7 +236,7 @@ class EatenDateTimeViewController: UIViewController {
         scrollStackView.stackView.addBlankSpace(space: 70)
         
         // Section header
-        sectionHeader.text = (variant == .standalone)
+        sectionHeader.text = (isStandalone)
         ? StringsProvider.string(forKey: .diaryNoteEatenStepThreeTime)
         : StringsProvider.string(forKey: .noticedStepSevenTime)
         
@@ -294,7 +302,7 @@ class EatenDateTimeViewController: UIViewController {
     }
     
     @objc private func infoButtonPressed() {
-        let location: MessageInfoParameter = (variant == .embeddedInNoticed) ? .pageWeHaveNoticed : .pageIHaveEeaten
+        let location: MessageInfoParameter = (isStandalone) ? .pageIHaveEeaten : .pageWeHaveNoticed
         self.navigator.openMessagePage(withLocation: location, presenter: self)
     }
 }

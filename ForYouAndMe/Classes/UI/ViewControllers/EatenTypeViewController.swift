@@ -36,6 +36,14 @@ class EatenTypeViewController: UIViewController {
             return item
     }()
     
+    private var isStandalone: Bool {
+        if case .standalone = variant {
+            return true
+        } else {
+            return false
+        }
+    }
+    
     init(variant: FlowVariant) {
         self.navigator = Services.shared.navigator
         self.storage = Services.shared.storageServices
@@ -53,7 +61,7 @@ class EatenTypeViewController: UIViewController {
     
     private lazy var footerView: GenericButtonView = {
         let buttonView = GenericButtonView(withTextStyleCategory: .secondaryBackground(shadow: false))
-        let text = variant == .standalone
+        let text = isStandalone
         ? StringsProvider.string(forKey: .diaryNoteEatenNextButton)
         : StringsProvider.string(forKey: .noticedStepNextButton)
         buttonView.setButtonText(text)
@@ -64,7 +72,7 @@ class EatenTypeViewController: UIViewController {
     }()
     
     private lazy var messages: [MessageInfo] = {
-        let location: MessageInfoParameter = (variant == .embeddedInNoticed) ? .pageWeHaveNoticed : .pageIHaveEeaten
+        let location: MessageInfoParameter = isStandalone ? .pageIHaveEeaten : .pageWeHaveNoticed
         let messages = self.storage.infoMessages?.messages(withLocation: location)
         return messages ?? []
     }()
@@ -90,7 +98,7 @@ class EatenTypeViewController: UIViewController {
         switch variant {
         case .embeddedInNoticed:
             addCustomBackButton()
-        case .standalone:
+        case .standalone, .fromChart(_):
             self.navigationItem.leftBarButtonItem = self.closeButton
         }
     }
@@ -118,7 +126,7 @@ class EatenTypeViewController: UIViewController {
         let paragraphStyle = NSMutableParagraphStyle()
             paragraphStyle.alignment = .center
         
-        let text = variant == .standalone
+        let text = isStandalone
         ? StringsProvider.string(forKey: .diaryNoteEatenStepOneTitle)
         : StringsProvider.string(forKey: .noticedStepFiveTitle)
         
@@ -142,7 +150,7 @@ class EatenTypeViewController: UIViewController {
             scrollStackView.stackView.addBlankSpace(space: 40)
         }
         
-        let message = variant == .standalone
+        let message = isStandalone
         ? StringsProvider.string(forKey: .diaryNoteEatenStepOneMessage)
         : StringsProvider.string(forKey: .noticedStepFiveMessage)
         
@@ -198,7 +206,7 @@ class EatenTypeViewController: UIViewController {
     }
 
     @objc private func infoButtonPressed() {
-        let location: MessageInfoParameter = (variant == .embeddedInNoticed) ? .pageWeHaveNoticed : .pageIHaveEeaten
+        let location: MessageInfoParameter = isStandalone ? .pageIHaveEeaten : .pageWeHaveNoticed
         self.navigator.openMessagePage(withLocation: location, presenter: self)
     }
 }

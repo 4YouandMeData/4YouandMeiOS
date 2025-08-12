@@ -8,6 +8,7 @@
 import UIKit
 import RxSwift
 import WebKit
+import JJFloatingActionButton
 
 enum ScriptMessage: String {
     case chartPointTapped
@@ -15,9 +16,10 @@ enum ScriptMessage: String {
     case shareChart
 }
 
-class UserDataViewController: UIViewController, WKNavigationDelegate, WKScriptMessageHandler {
+class UserDataViewController: BaseViewController, WKNavigationDelegate, WKScriptMessageHandler {
     
     private var pendingFabAction: FabAction?
+    private var pendingDiaryNoteItem: DiaryNoteItem?
     
     // MARK: - AttributedTextStyles
     
@@ -54,25 +56,12 @@ class UserDataViewController: UIViewController, WKNavigationDelegate, WKScriptMe
     }()
     
     private lazy var messages: [MessageInfo] = {
-        let messages = self.storage.infoMessages?.messages(withLocation: .tabUserData)
+        let messages = self.cacheService.infoMessages?.messages(withLocation: .tabUserData)
         return messages ?? []
     }()
-
-    // Stored so they can be used by the filter page
-    private let navigator: AppNavigator
-    private let repository: Repository
-    private let storage: CacheService
-    private let analytics: AnalyticsService
     
-    private let disposeBag = DisposeBag()
-    
-    init() {
-        self.navigator = Services.shared.navigator
-        self.repository = Services.shared.repository
-        self.storage = Services.shared.storageServices
-        self.analytics = Services.shared.analytics
-        
-        super.init(nibName: nil, bundle: nil)
+    override init() {
+        super.init()
     }
     
     required init?(coder: NSCoder) {
@@ -87,7 +76,26 @@ class UserDataViewController: UIViewController, WKNavigationDelegate, WKScriptMe
         super.viewDidLoad()
         
         self.view.backgroundColor = ColorPalette.color(withType: .fourth)
+        self.setFabHidden(true)
+        self.floatingButton.delegate = self
         
+        self.fabActionHandler = { [weak self] action in
+            guard let self = self, let diaryNote = self.pendingDiaryNoteItem else { return }
+
+            switch action {
+            case .insulin:
+                self.navigator.openMyDosesViewController(presenter: self, diaryNote: diaryNote)
+            case .noticed:
+                self.navigator.openNoticedViewController(presenter: self, diaryNote: diaryNote)
+            case .eaten:
+                self.navigator.openEatenViewController(presenter: self, diaryNote: diaryNote)
+            }
+
+            // Reset after action
+            self.pendingDiaryNoteItem = nil
+            self.setFabHidden(true)
+        }
+
         // Header View
         let headerView = SingleTextHeaderView()
         headerView.setTitleText(StringsProvider.string(forKey: .tabUserDataTitle))
@@ -310,14 +318,18 @@ class UserDataViewController: UIViewController, WKNavigationDelegate, WKScriptMe
             interval: interval,
             diaryNoteable: diaryNoteable
         )
-
-        // Present the diary note screen, flagging that it originated from a chart tap
-        navigator.presentDiaryNotes(
-            diaryNote: diaryNote,
-            presenter: self,
-            isFromChart: true,
-            animated: animated
-        )
+        
+        self.pendingDiaryNoteItem = diaryNote
+        
+//        // Present the diary note screen, flagging that it originated from a chart tap
+//        navigator.presentDiaryNotes(
+//            diaryNote: diaryNote,
+//            presenter: self,
+//            isFromChart: true,
+//            animated: animated
+//        )
+        self.setFabHidden(false)
+        self.floatingButton.open()
     }
 }
 
@@ -331,5 +343,14 @@ extension UIViewController {
             presented = current.presentedViewController
         }
         return nil
+    }
+}
+
+// MARK: - JJFloatingActionButtonDelegate
+extension UserDataViewController: JJFloatingActionButtonDelegate {
+
+    // Called when the menu finished closing
+    func floatingActionButtonDidClose(_ actionButton: JJFloatingActionButton) {
+        self.setFabHidden(true)
     }
 }

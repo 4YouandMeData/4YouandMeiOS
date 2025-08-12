@@ -118,9 +118,17 @@ class DoseDateTimeViewController: UIViewController, UITextFieldDelegate {
         view.backgroundColor = ColorPalette.color(withType: .primary)
         return view
     }()
+    
+    private var isStandalone: Bool {
+        if case .standalone = variant {
+            return true
+        } else {
+            return false
+        }
+    }
 
     private lazy var footerView: GenericButtonView = {
-        let key = (variant == .standalone)
+        let key = isStandalone
         ? StringsProvider.string(forKey: .doseStepTwoConfirmButton)
         : StringsProvider.string(forKey: .noticedStepConfirmButton)
         let gv = GenericButtonView(withTextStyleCategory: .secondaryBackground(shadow: false))
@@ -136,7 +144,7 @@ class DoseDateTimeViewController: UIViewController, UITextFieldDelegate {
     private var chosenDose: Double? { didSet { updateFooter() }}
     private func updateFooter() {
         switch self.variant {
-        case .standalone:
+        case .standalone, .fromChart(_):
             footerView.setButtonEnabled(enabled: chosenDate != nil && chosenDose != nil)
         case .embeddedInNoticed:
             footerView.setButtonEnabled(enabled: chosenDose != nil)
@@ -144,7 +152,7 @@ class DoseDateTimeViewController: UIViewController, UITextFieldDelegate {
     }
     
     private lazy var messages: [MessageInfo] = {
-        let location: MessageInfoParameter = (variant == .embeddedInNoticed) ? .pageWeHaveNoticed : .pageMyDoses
+        let location: MessageInfoParameter = isStandalone ? .pageMyDoses : .pageWeHaveNoticed
         let messages = self.storage.infoMessages?.messages(withLocation: location)
         return messages ?? []
     }()
@@ -213,7 +221,7 @@ class DoseDateTimeViewController: UIViewController, UITextFieldDelegate {
         scrollStackView.autoPinEdgesToSuperviewSafeArea(with: .zero, excludingEdge: .bottom)
 
         // Title
-        let titleKey = (variant == .standalone)
+        let titleKey = isStandalone
         ? StringsProvider.string(forKey: .doseStepTwoTitle)
         : StringsProvider.string(forKey: .noticedStepThreeTitle)
         let paragraph = NSMutableParagraphStyle()
@@ -242,7 +250,7 @@ class DoseDateTimeViewController: UIViewController, UITextFieldDelegate {
         let replacementString = displayTitle
 
         // Subtitle
-        let messageKey = (variant == .standalone)
+        let messageKey = isStandalone
         ? StringsProvider.string(forKey: .doseStepTwoMessage)
             .replacingPlaceholders(with: [replacementString])
         : StringsProvider.string(forKey: .noticedStepThreeMessage)
@@ -274,8 +282,8 @@ class DoseDateTimeViewController: UIViewController, UITextFieldDelegate {
 
         // Date Section
         
-        if variant == .standalone {
-            sectionHeaderTime.text = (variant == .standalone)
+        if case .standalone = variant {
+            sectionHeaderTime.text = isStandalone
             ? StringsProvider.string(forKey: .doseStepTwoTimeLabel)
             : StringsProvider.string(forKey: .noticedStepThreeTime)
 
@@ -303,7 +311,7 @@ class DoseDateTimeViewController: UIViewController, UITextFieldDelegate {
 
         // Dose Section
         
-        sectionHeaderDose.text = (variant == .standalone)
+        sectionHeaderDose.text = isStandalone
         ? StringsProvider.string(forKey: .doseStepTwoUnitsLabel)
         : StringsProvider.string(forKey: .noticedStepThreeUnit)
         
@@ -312,7 +320,7 @@ class DoseDateTimeViewController: UIViewController, UITextFieldDelegate {
         scrollStackView.stackView.addArrangedSubview(doseRow)
         doseRow.autoSetDimension(.height, toSize: 44)
         
-        doseTextField.placeholder = (variant == .standalone)
+        doseTextField.placeholder = isStandalone
         ? StringsProvider.string(forKey: .doseStepTwoUnitsLabel)
         : StringsProvider.string(forKey: .noticedStepThreeUnit)
         
@@ -385,7 +393,7 @@ class DoseDateTimeViewController: UIViewController, UITextFieldDelegate {
     }
 
     @objc private func infoPressed() {
-        let location: MessageInfoParameter = (variant == .embeddedInNoticed) ? .pageWeHaveNoticed : .pageMyDoses
+        let location: MessageInfoParameter = isStandalone ? .pageMyDoses : .pageWeHaveNoticed
         navigator.openMessagePage(withLocation: location,
                                   presenter: self)
     }

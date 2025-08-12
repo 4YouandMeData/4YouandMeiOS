@@ -30,7 +30,7 @@ enum ConsumptionQuantity: String {
             case .asUsual:  return StringsProvider.string(forKey: .noticedStepEightSecondButton)
             case .lessThanUsual: return StringsProvider.string(forKey: .noticedStepEightThirdButton)
             }
-        case .standalone:
+        case .standalone, .fromChart(_):
             switch self {
             case .moreThanUsual: return StringsProvider.string(forKey: .diaryNoteEatenStepFourthFirstButton)
             case .asUsual:  return StringsProvider.string(forKey: .diaryNoteEatenStepFourthSecondButton)
@@ -60,23 +60,31 @@ class ConsumptionAmountViewController: UIViewController {
         axis: .vertical,
         horizontalInset: Constants.Style.DefaultHorizontalMargins
     )
+    
+    private var isStandalone: Bool {
+        if case .standalone = variant {
+            return true
+        } else {
+            return false
+        }
+    }
 
     private lazy var moreButton: OptionButton = makeOption(
-        text: (variant == .standalone)
+        text: isStandalone
         ? StringsProvider.string(forKey: .diaryNoteEatenStepFourthFirstButton)
         : StringsProvider.string(forKey: .noticedStepEightFirstButton),
         iconName: .plusIcon,
         value: .moreThanUsual
     )
     private lazy var sameButton: OptionButton = makeOption(
-        text: (variant == .standalone)
+        text: isStandalone
         ? StringsProvider.string(forKey: .diaryNoteEatenStepFourthSecondButton)
         : StringsProvider.string(forKey: .noticedStepEightSecondButton),
         iconName: .equalsIcon,
         value: .asUsual
     )
     private lazy var lessButton: OptionButton = makeOption(
-        text: (variant == .standalone)
+        text: isStandalone
         ? StringsProvider.string(forKey: .diaryNoteEatenStepFourthThirdButton)
         : StringsProvider.string(forKey: .noticedStepEightThirdButton),
         iconName: .minusIcon,
@@ -85,7 +93,7 @@ class ConsumptionAmountViewController: UIViewController {
 
     private lazy var footerView: GenericButtonView = {
         let buttonView = GenericButtonView(withTextStyleCategory: .secondaryBackground(shadow: false))
-        let buttonKey = (variant == .standalone)
+        let buttonKey = isStandalone
         ? StringsProvider.string(forKey: .diaryNoteEatenNextButton)
         : StringsProvider.string(forKey: .noticedStepNextButton)
         buttonView.setButtonText(buttonKey)
@@ -104,7 +112,7 @@ class ConsumptionAmountViewController: UIViewController {
     }
     
     private lazy var messages: [MessageInfo] = {
-        let location: MessageInfoParameter = (variant == .embeddedInNoticed) ? .pageWeHaveNoticed : .pageIHaveEeaten
+        let location: MessageInfoParameter = isStandalone ? .pageIHaveEeaten : .pageWeHaveNoticed
         let messages = self.storage.infoMessages?.messages(withLocation: location)
         return messages ?? []
     }()
@@ -161,7 +169,7 @@ class ConsumptionAmountViewController: UIViewController {
         scrollStack.autoPinEdgesToSuperviewSafeArea(with: .zero, excludingEdge: .bottom)
 
         // Title
-        let buttonKey = (variant == .standalone)
+        let buttonKey = isStandalone
         ? StringsProvider.string(forKey: .diaryNoteEatenStepFourthTitle)
         : StringsProvider.string(forKey: .noticedStepEightTitle)
         
@@ -181,7 +189,7 @@ class ConsumptionAmountViewController: UIViewController {
         let replacementString = selectedType.displayTextUsingVariant(variant: self.variant).lowercased()
 
         // Subtitle
-        let messageKey = (variant == .standalone)
+        let messageKey = isStandalone
         ? StringsProvider.string(forKey: .diaryNoteEatenStepFourthMessage)
             .replacingPlaceholders(with: [replacementString])
         : StringsProvider.string(forKey: .noticedStepEightMessage)
@@ -270,7 +278,7 @@ class ConsumptionAmountViewController: UIViewController {
     }
     
     @objc private func infoButtonPressed() {
-        let location: MessageInfoParameter = (variant == .embeddedInNoticed) ? .pageWeHaveNoticed : .pageIHaveEeaten
+        let location: MessageInfoParameter = isStandalone ? .pageIHaveEeaten : .pageWeHaveNoticed
         self.navigator.openMessagePage(withLocation: location, presenter: self)
     }
 }

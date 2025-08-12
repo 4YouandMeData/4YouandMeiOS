@@ -620,28 +620,33 @@ class AppNavigator {
                                   presenter: UIViewController,
                                   isEditMode: Bool,
                                   isFromChart: Bool) {
-        let diaryNoteTextViewController = DiaryNoteTextViewController(withDataPoint: diaryNote,
-                                                                      isEditMode: isEditMode,
-                                                                      isFromChart: isFromChart,
-                                                                      reflectionCoordinator: nil)
+        let diaryNoteTextViewController = DiaryNoteTextViewController(
+            withDataPoint: diaryNote,
+            isEditMode: isEditMode,
+            isFromChart: isFromChart,
+            reflectionCoordinator: nil
+        )
         diaryNoteTextViewController.modalPresentationStyle = .fullScreen
+
         if !isFromChart {
-            presenter.dismiss(animated: true) {
-                // Get the topmost view controller after dismissal
-                guard let topViewController = self.getTopMostViewController() else {
-                    assertionFailure("Unable to find a top-most view controller to present DiaryNoteTextViewController")
-                    return
-                }
-                topViewController.present(diaryNoteTextViewController, animated: true, completion: nil)
+            presenter.dismiss(animated: true) { [weak self] in
+                guard let self = self,
+                      let top = self.getTopMostViewController() else { return }
+                top.present(diaryNoteTextViewController, animated: true, completion: nil)
             }
         } else {
-            guard let navigationController = presenter.navigationController else {
-                assertionFailure("Missing UINavigationController")
-                return
+            if let navigationController = presenter.navigationController {
+                navigationController.pushViewController(
+                    diaryNoteTextViewController,
+                    hidesBottomBarWhenPushed: true,
+                    animated: true
+                )
+            } else {
+                // Fallback: wrap & present if no nav available
+                let nav = UINavigationController(rootViewController: diaryNoteTextViewController)
+                nav.modalPresentationStyle = .fullScreen
+                presenter.present(nav, animated: true, completion: nil)
             }
-            navigationController.pushViewController(diaryNoteTextViewController,
-                                                    hidesBottomBarWhenPushed: true,
-                                                    animated: true)
         }
     }
     
@@ -651,24 +656,16 @@ class AppNavigator {
                                    isFromChart: Bool) {
         let diaryNoteAudioViewController = DiaryNoteAudioViewController(withDiaryNote: diaryNote,
                                                                         isEditMode: isEditMode,
+                                                                        isFromChart: isFromChart,
                                                                         reflectionCoordinator: nil)
         diaryNoteAudioViewController.modalPresentationStyle = .fullScreen
-        if !isFromChart {
-            presenter.dismiss(animated: true) {
-                guard let topViewController = self.getTopMostViewController() else {
-                    assertionFailure("Unable to find a top-most view controller to present DiaryNoteTextViewController")
-                    return
-                }
-                topViewController.present(diaryNoteAudioViewController, animated: true, completion: nil)
-            }
-        } else {
-            guard let navigationController = presenter.navigationController else {
-                assertionFailure("Missing UINavigationController")
+        
+        presenter.dismiss(animated: true) {
+            guard let topViewController = self.getTopMostViewController() else {
+                assertionFailure("Unable to find a top-most view controller to present DiaryNoteTextViewController")
                 return
             }
-            navigationController.pushViewController(diaryNoteAudioViewController,
-                                                    hidesBottomBarWhenPushed: true,
-                                                    animated: true)
+            topViewController.present(diaryNoteAudioViewController, animated: true, completion: nil)
         }
     }
     
@@ -680,27 +677,17 @@ class AppNavigator {
                                                                         isEdit: isEdit,
                                                                         reflectionCoordinator: nil)
         diaryNoteVideoViewController.modalPresentationStyle = .fullScreen
-        if !isFromChart {
-            presenter.dismiss(animated: true) {
-                guard let topViewController = self.getTopMostViewController() else {
-                    assertionFailure("Unable to find a top-most view controller to present DiaryNoteTextViewController")
-                    return
-                }
-                topViewController.present(diaryNoteVideoViewController, animated: true, completion: nil)
-            }
-        } else {
-            guard let navigationController = presenter.navigationController else {
-                assertionFailure("Missing UINavigationController")
+        presenter.dismiss(animated: true) {
+            guard let topViewController = self.getTopMostViewController() else {
+                assertionFailure("Unable to find a top-most view controller to present DiaryNoteTextViewController")
                 return
             }
-            navigationController.pushViewController(diaryNoteVideoViewController,
-                                                    hidesBottomBarWhenPushed: true,
-                                                    animated: true)
+            topViewController.present(diaryNoteVideoViewController, animated: true, completion: nil)
         }
     }
     
     public func openNoticedViewController(presenter: UIViewController) {
-        let noticedViewController = NoticedViewController()
+        let noticedViewController = NoticedViewController(with: nil)
         noticedViewController.modalPresentationStyle = .formSheet
         presenter.present(noticedViewController, animated: true)
     }
@@ -1223,6 +1210,60 @@ extension UIViewController {
                        message: message,
                        actions: [dismissAction],
                        tintColor: ColorPalette.color(withType: .primary))
+    }
+}
+
+extension AppNavigator {
+    
+    func openNoticedViewController(presenter: UIViewController, diaryNote: DiaryNoteItem) {
+
+        let noticedVC = NoticedViewController(with: diaryNote)
+        noticedVC.modalPresentationStyle = .formSheet
+        presenter.present(noticedVC, animated: true)
+    }
+
+    func openEatenViewController(presenter: UIViewController, diaryNote: DiaryNoteItem) {
+
+        let completion: NotificationCallback = { [weak self, weak presenter] in
+            presenter?.dismiss(animated: true, completion: nil)
+            self?.currentActivityCoordinator = nil
+        }
+
+        let coordinator = FoodEntryCoordinator(
+            repository: self.repository,
+            navigator: self,
+            taskIdentifier: "foodEntry",
+            variant: .fromChart(diaryNote: diaryNote),
+            onDataCallback: { _, _, _, _ in },
+            completion: completion
+        )
+
+        let startVC = coordinator.getStartingPage()
+        startVC.modalPresentationStyle = .fullScreen
+        presenter.present(startVC, animated: true)
+        self.currentActivityCoordinator = coordinator
+    }
+
+    func openMyDosesViewController(presenter: UIViewController, diaryNote: DiaryNoteItem) {
+        
+        let completion: NotificationCallback = { [weak self, weak presenter] in
+            presenter?.dismiss(animated: true, completion: nil)
+            self?.currentActivityCoordinator = nil
+        }
+
+        let coordinator = InsulinEntryCoordinator(
+            repository: self.repository,
+            navigator: self,
+            variant: .fromChart(diaryNote: diaryNote),
+            taskIdentifier: "insulinEntry",
+            onData: { _, _, _ in },
+            completion: completion
+        )
+
+        let startVC = coordinator.getStartingPage()
+        startVC.modalPresentationStyle = .fullScreen
+        presenter.present(startVC, animated: true)
+        self.currentActivityCoordinator = coordinator
     }
 }
 

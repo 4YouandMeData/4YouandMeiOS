@@ -48,6 +48,13 @@ class DiaryNoteAudioViewController: UIViewController {
     private let totalTime = Constants.Misc.AudioDiaryMaxDurationSeconds
     private var recordDurationTime: TimeInterval = 0.0
     
+    private let isFromChart: Bool
+    private var wasJustCreatedHere: Bool = false
+
+    private var isChartLinkedNote: Bool {
+        return isFromChart && (diaryNoteItem?.diaryNoteable != nil)
+    }
+    
     private var shouldShowEmojiButton: Bool {
         guard let diaryNote = self.diaryNoteItem else { return false }
         
@@ -241,12 +248,14 @@ class DiaryNoteAudioViewController: UIViewController {
     
     init(withDiaryNote diaryNote: DiaryNoteItem?,
          isEditMode: Bool,
+         isFromChart: Bool,
          reflectionCoordinator: ReflectionSectionCoordinator?) {
         self.navigator = Services.shared.navigator
         self.repository = Services.shared.repository
         self.cache = Services.shared.storageServices
         self.analytics = Services.shared.analytics
         self.isEditMode = isEditMode
+        self.isFromChart = isFromChart
         self.diaryNoteItem = diaryNote
         self.reflectionCoordinator = reflectionCoordinator
         super.init(nibName: nil, bundle: nil)

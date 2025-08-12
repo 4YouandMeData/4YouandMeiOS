@@ -840,7 +840,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             }
             
             return .requestJSONEncodable(diaryNote)
-        case .sendDiaryNoteEaten(let date, let mealType, let quantity, let significantNutrition, _):
+        case .sendDiaryNoteEaten(let date, let mealType, let quantity, let significantNutrition, let isFromChart, let diaryNote):
             var data: [String: Any] = [:]
             data["quantity"] = quantity
             data["with_significant_protein_fiber_or_fat"] = significantNutrition
@@ -851,17 +851,35 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             dataParams["datetime_ref"] = date.string(withFormat: dateTimeFormat)
             dataParams["diary_type"] = DiaryNoteItemType.eaten.rawValue
             
+            if isFromChart, let note = diaryNote {
+                dataParams["diary_noteable_type"] = note.diaryNoteable?.type
+                dataParams["diary_noteable_id"]   = note.diaryNoteable?.id
+                if let interval = note.interval, !interval.isEmpty {
+                    dataParams["interval"] = interval
+                }
+            }
+            
             return .requestParameters(parameters: ["diary_note": dataParams], encoding: JSONEncoding.default)
             
-        case .sendDiaryNoteDoses(let doseType, let date, let amount, _):
+        case .sendDiaryNoteDoses(let doseType, let date, let amount, let fromChart, let diaryNote):
             var data: [String: Any] = [:]
             data["dose_type"] = doseType
             data["quantity"] = amount
             
-            var dataParams: [String: Any] = [:]
-            dataParams["data"] = data
-            dataParams["datetime_ref"] = date.string(withFormat: dateTimeFormat)
-            dataParams["diary_type"] = DiaryNoteItemType.doses.rawValue
+            var dataParams: [String: Any] = [
+                "data": data,
+                "datetime_ref": date.string(withFormat: dateTimeFormat),
+                "diary_type": DiaryNoteItemType.doses.rawValue
+            ]
+            
+            if fromChart, let note = diaryNote {
+                dataParams["diary_noteable_type"] = note.diaryNoteable?.type
+                dataParams["diary_noteable_id"]   = note.diaryNoteable?.id
+
+                if let interval = note.interval, !interval.isEmpty {
+                    dataParams["interval"] = interval
+                }
+            }
             
             return .requestParameters(parameters: ["diary_note": dataParams], encoding: JSONEncoding.default)
         case .sendCombinedDiaryNote(let diaryNote):

@@ -9,7 +9,38 @@ import RxSwift
 enum FlowVariant {
     case standalone
     case embeddedInNoticed
+    case fromChart(diaryNote: DiaryNoteItem)
 }
+
+// MARK: - FlowVariant helpers
+extension FlowVariant {
+    /// true for `.fromChart(_)`
+    var isFromChart: Bool {
+        if case .fromChart = self { return true }
+        return false
+    }
+
+    /// Unwraps the associated note when `.fromChart`
+    var chartDiaryNote: DiaryNoteItem? {
+        if case let .fromChart(note) = self { return note }
+        return nil
+    }
+
+    /// Treat `.fromChart` like standalone for UI copy, messages, buttons
+    var isStandaloneLike: Bool {
+        switch self {
+        case .standalone, .fromChart: return true
+        case .embeddedInNoticed:      return false
+        }
+    }
+
+    /// Convenience flag
+    var isEmbeddedInNoticed: Bool {
+        if case .embeddedInNoticed = self { return true }
+        return false
+    }
+}
+
 
 struct FoodEntryData: Codable {
     let mealType: String

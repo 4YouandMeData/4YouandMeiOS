@@ -22,9 +22,14 @@ class DoseTypeViewController: UIViewController {
     
     private let variant: FlowVariant
     
+    private var isStandaloneLike: Bool { variant.isStandaloneLike }
+
+    // Optional: quick accessor to the chart note
+    private var chartDiaryNote: DiaryNoteItem? { variant.chartDiaryNote }
+    
     private lazy var messages: [MessageInfo] = {
         if let storage = Services.shared.storageServices {
-            let location: MessageInfoParameter = (variant == .embeddedInNoticed) ? .pageWeHaveNoticed : .pageMyDoses
+            let location: MessageInfoParameter = isStandaloneLike ? .pageMyDoses : .pageWeHaveNoticed
             let messages = storage.infoMessages?.messages(withLocation: location)
             return messages ?? []
         }
@@ -69,7 +74,7 @@ class DoseTypeViewController: UIViewController {
     }()
     
     private lazy var footerView: GenericButtonView = {
-        let buttonText = (variant == .standalone)
+        let buttonText = isStandaloneLike
         ? StringsProvider.string(forKey: .doseNextButton)
         : StringsProvider.string(forKey: .noticedStepNextButton)
         let buttonView = GenericButtonView(withTextStyleCategory: .secondaryBackground(shadow: false))
@@ -111,7 +116,7 @@ class DoseTypeViewController: UIViewController {
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        if variant == .embeddedInNoticed {
+        if case .embeddedInNoticed = variant {
             addCustomBackButton()
             navigationItem.rightBarButtonItem = self.messages.count > 0 ? self.infoButton : nil
         }
@@ -126,7 +131,7 @@ class DoseTypeViewController: UIViewController {
     
     private func setupLayout() {
         
-        if variant == .standalone {
+        if variant.isStandaloneLike {
             self.navigationItem.leftBarButtonItem = self.closeButton
         }
 
@@ -135,7 +140,7 @@ class DoseTypeViewController: UIViewController {
         scrollStack.autoPinEdgesToSuperviewSafeArea(with: .zero, excludingEdge: .bottom)
         
         // Header: "Add a dose"
-        let title = (variant == .standalone)
+        let title = isStandaloneLike
         ? StringsProvider.string(forKey: .doseStepOneTitle)
         : StringsProvider.string(forKey: .noticedStepTwoTitle)
         
@@ -164,7 +169,7 @@ class DoseTypeViewController: UIViewController {
         }
         
         // Subtitle: "What type did you use?"
-        let message = (variant == .standalone)
+        let message = isStandaloneLike
         ? StringsProvider.string(forKey: .doseStepOneMessage)
         : StringsProvider.string(forKey: .noticedStepTwoMessage)
         
@@ -229,7 +234,7 @@ class DoseTypeViewController: UIViewController {
     
     @objc private func infoButtonPressed() {
         let navigator = Services.shared.navigator
-        let location: MessageInfoParameter = (variant == .embeddedInNoticed) ? .pageWeHaveNoticed : .pageMyDoses
+        let location: MessageInfoParameter = isStandaloneLike ? .pageMyDoses : .pageWeHaveNoticed
         navigator?.openMessagePage(withLocation: location, presenter: self)
     }
 }

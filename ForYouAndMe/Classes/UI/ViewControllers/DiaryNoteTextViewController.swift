@@ -20,6 +20,8 @@ class DiaryNoteTextViewController: UIViewController {
     private let reflectionCoordinator: ReflectionSectionCoordinator?
     private var selectedEmoji: EmojiItem?
     private var originalBody: String?
+    private var wasJustCreatedHere: Bool = false
+
     private lazy var titleRow: UIStackView = {
         let stack = UIStackView()
         stack.axis = .horizontal
@@ -40,6 +42,9 @@ class DiaryNoteTextViewController: UIViewController {
         return label
     }()
     
+    private var isChartLinkedNote: Bool {
+        return isFromChart && (diaryNote?.diaryNoteable != nil)
+    }
     
     private lazy var editButton: UIButton = {
         let button = UIButton()
@@ -181,7 +186,7 @@ class DiaryNoteTextViewController: UIViewController {
         
         let buttonView = GenericButtonView(withTextStyleCategory: .secondaryBackground())
         buttonView.setButtonText(StringsProvider.string(forKey: .diaryNoteCreateTextSave))
-        buttonView.addTarget(target: self, action: #selector(self.editButtonPressed))
+        buttonView.addTarget(target: self, action: #selector(self.footerTapped))
         
         return buttonView
     }()
@@ -268,16 +273,18 @@ class DiaryNoteTextViewController: UIViewController {
                                                                               bottom: 10,
                                                                               right: 10))
         
-        self.pageState.subscribe(onNext: { [weak self] newPageState in
-            guard let self = self else { return }
-            self.updateNextButton(pageState: newPageState)
-            self.updateTextFields(pageState: newPageState)
-            self.updateTitleRow()
-            self.view.endEditing(true)
-            
-            let shouldShowEditButton = (self.diaryNote != nil && newPageState == .read)
-            self.editButton.isHidden = !shouldShowEditButton
-        }).disposed(by: self.disposeBag)
+        self.pageState
+            .subscribe(onNext: { [weak self] newState in
+                guard let self = self else { return }
+                self.updateNextButton(pageState: newState)
+                self.updateTextFields(pageState: newState)
+                self.updateTitleRow()
+                self.view.endEditing(true)
+
+                let shouldShowEditButton = (self.diaryNote != nil && newState == .read)
+                self.editButton.isHidden = !shouldShowEditButton
+            })
+            .disposed(by: self.disposeBag)
         
         if let emoji = self.diaryNote?.feedbackTags?.last {
             self.selectedEmoji = emoji
@@ -344,6 +351,33 @@ class DiaryNoteTextViewController: UIViewController {
         }
     }
     
+    @objc private func footerTapped() {
+        switch pageState.value {
+        case .edit:
+            self.doneButtonPressed()
+        case .read:
+            if isChartLinkedNote || wasJustCreatedHere {
+                self.closeSelf()   // “Close” behavior
+            } else {
+                self.closeButtonPressed()
+            }
+        }
+    }
+    
+    /// Close helper: dismiss or pop depending on presentation
+    private func closeSelf() {
+        // If embedded in a nav and it's modally presented with a single VC, dismiss the nav
+        if let nav = self.navigationController {
+            if nav.presentingViewController != nil, nav.viewControllers.count <= 1 {
+                nav.dismiss(animated: true, completion: nil)
+            } else {
+                nav.popViewController(animated: true)
+            }
+        } else {
+            self.dismiss(animated: true, completion: nil)
+        }
+    }
+    
     @objc private func closeButtonPressed() {
         self.genericCloseButtonPressed(completion: {
             self.navigator.switchToDiaryTab(presenter: self)
@@ -402,8 +436,10 @@ class DiaryNoteTextViewController: UIViewController {
                 .subscribe(onSuccess: { [weak self] savedNote in
                     guard let self = self else { return }
                     self.diaryNote = savedNote
+                    self.wasJustCreatedHere = true
                     if let coordinator = self.reflectionCoordinator {
                         coordinator.onReflectionCreated(presenter: self, reflectionType: .text, diaryNote: savedNote)
+                        self.pageState.accept(.read)
                     } else {
                         self.textView.text = savedNote.body
                         self.placeholderLabel.isHidden = ((savedNote.body?.isEmpty) == nil)
@@ -454,24 +490,44 @@ class DiaryNoteTextViewController: UIViewController {
             $0.removeFromSuperview()
         }
 
-        let category = self.categoryForEmoji(diaryNote: self.diaryNote)
-        let hasEmojis = !self.emojiItems(for: category).isEmpty
+        let category   = self.categoryForEmoji(diaryNote: self.diaryNote)
+        let hasEmojis  = !self.emojiItems(for: category).isEmpty
+        let noteExists = (self.diaryNote != nil)
 
-        // Conditions to show emoji button
-        let noteExists = self.diaryNote != nil
-        let isCreatingFromChart = self.isEditMode && self.isFromChart && self.diaryNote?.diaryNoteable != nil
-        let shouldShowEmojiButton = noteExists && hasEmojis && !isCreatingFromChart
+        // A chart–linked note: created from chart and has a noteable
+        let isChartLinkedNote = self.isFromChart && (self.diaryNote?.diaryNoteable != nil)
+
+        // Hide back when a chart-linked note has been created and we are in READ
+        let hideBackInHeader = (self.pageState.value == .read) && (isChartLinkedNote || wasJustCreatedHere)
+
+        // Show emoji when the note exists and we're in READ state,
+        //  even if it came from the chart. Keep the reflection exception if needed.
+        let isCreatingFromReflection =
+            !self.isEditMode &&
+            self.reflectionCoordinator != nil &&
+            self.diaryNote?.diaryNoteable?.type.lowercased() == "task" &&
+            (self.diaryNote?.body?.isEmpty ?? true)
+
+        let shouldShowEmojiButton =
+            noteExists &&
+            hasEmojis &&
+            (self.pageState.value == .read) &&
+            !isCreatingFromReflection  // preserve this rule
 
         if shouldShowEmojiButton {
-            let emptyView = UIView()
-            emptyView.autoSetDimensions(to: CGSize(width: 24, height: 24))
-            self.titleRow.addArrangedSubview(emptyView)
-            self.titleRow.addArrangedSubview(titleLabel)
-            self.titleRow.addArrangedSubview(emojiButton)
+            let spacer = UIView()
+            spacer.autoSetDimensions(to: CGSize(width: 24, height: 24))
+            self.titleRow.addArrangedSubview(spacer)
+            self.titleRow.addArrangedSubview(self.titleLabel)
+            self.titleRow.addArrangedSubview(self.emojiButton)
         } else {
-            self.titleRow.addArrangedSubview(titleLabel)
+            self.titleRow.addArrangedSubview(self.titleLabel)
         }
+
+        // Hide/show back button
+        self.closeButton.isHidden = hideBackInHeader
     }
+
 
     private func emojiItems(for category: EmojiTagCategory) -> [EmojiItem] {
         return self.cache.feedbackList[category.rawValue] ?? []
@@ -494,18 +550,23 @@ class DiaryNoteTextViewController: UIViewController {
     }
     
     private func updateNextButton(pageState: PageState) {
-        let button = self.footerView
         switch pageState {
         case .edit:
-            button.setButtonText(StringsProvider.string(forKey: .diaryNoteCreateTextSave))
-            button.setButtonEnabled(enabled: true)
-            button.addTarget(target: self, action: #selector(self.closeButtonPressed))
+            footerView.setButtonText(StringsProvider.string(forKey: .diaryNoteCreateTextSave))
+            footerView.setButtonEnabled(enabled: !self.textView.text.isEmpty)
+
         case .read:
-            button.setButtonText(StringsProvider.string(forKey: .diaryNoteCreateTextSave))
-            button.setButtonEnabled(enabled: true)
-            button.addTarget(target: self, action: #selector(self.closeButtonPressed))
+            if isChartLinkedNote || wasJustCreatedHere {
+                // After creation → show Close
+                footerView.setButtonText(StringsProvider.string(forKey: .diaryNoteNoticedEmojiCloseButton))
+                footerView.setButtonEnabled(enabled: true)
+            } else {
+                footerView.setButtonText(StringsProvider.string(forKey: .diaryNoteCreateTextSave))
+                footerView.setButtonEnabled(enabled: true)
+            }
         }
     }
+
 
     private func updateTextFields(pageState: PageState) {
         let textView = self.textView

@@ -15,6 +15,11 @@ class NoticedViewController: UIViewController {
     private let repository: Repository
     private var storage: CacheService
     private var studyInfoSection: StudyInfoSection?
+    private var diaryNote: DiaryNoteItem?
+    
+    private var isFromChart: Bool {
+        return diaryNote?.diaryNoteable != nil
+    }
     
     private let disposeBag = DisposeBag()
     
@@ -63,11 +68,12 @@ class NoticedViewController: UIViewController {
         return scrollStackView
     }()
     
-    init() {
+    init(with diaryNote: DiaryNoteItem?) {
         self.navigator = Services.shared.navigator
         self.analytics = Services.shared.analytics
         self.repository = Services.shared.repository
         self.storage = Services.shared.storageServices
+        self.diaryNote = diaryNote
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -125,7 +131,10 @@ class NoticedViewController: UIViewController {
                                             style: .shadowStyle,
                                             gestureCallback: { [weak self] in
             guard let self = self else { return }
-            self.navigator.openDiaryNoteText(diaryNote: nil, presenter: self, isEditMode: false, isFromChart: false)
+            self.navigator.openDiaryNoteText(diaryNote: self.diaryNote,
+                                             presenter: self,
+                                             isEditMode: false,
+                                             isFromChart: self.isFromChart)
         })
         self.scrollStackView.stackView.addArrangedSubview(writePage)
         
@@ -137,7 +146,10 @@ class NoticedViewController: UIViewController {
                                             style: .shadowStyle,
                                             gestureCallback: { [weak self] in
             guard let self = self else { return }
-            self.navigator.openDiaryNoteAudio(diaryNote: nil, presenter: self, isEditMode: false, isFromChart: false)
+            self.navigator.openDiaryNoteAudio(diaryNote: self.diaryNote,
+                                              presenter: self,
+                                              isEditMode: false,
+                                              isFromChart: self.isFromChart)
         })
         self.scrollStackView.stackView.addArrangedSubview(audioPage)
     
@@ -149,10 +161,10 @@ class NoticedViewController: UIViewController {
                                             style: .shadowStyle,
                                             gestureCallback: { [weak self] in
             guard let self = self else { return }
-            self.navigator.openDiaryNoteVideo(diaryNote: nil,
+            self.navigator.openDiaryNoteVideo(diaryNote: self.diaryNote,
                                               isEdit: false,
                                               presenter: self,
-                                              isFromChart: false)
+                                              isFromChart: self.isFromChart)
         })
         self.scrollStackView.stackView.addArrangedSubview(videoPage)
     }

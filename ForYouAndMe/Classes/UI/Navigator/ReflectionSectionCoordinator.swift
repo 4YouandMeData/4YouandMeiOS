@@ -148,6 +148,7 @@ class ReflectionSectionCoordinator: NSObject, PagedActivitySectionCoordinator {
                                           diaryNoteable: diaryNoteable)
             let diaryNoteAudioViewController = DiaryNoteAudioViewController(withDiaryNote: dataPoint,
                                                                             isEditMode: false,
+                                                                            isFromChart: false,
                                                                             reflectionCoordinator: self)
             
             self.activityPresenter?.view.backgroundColor = ColorPalette.color(withType: .secondary)
