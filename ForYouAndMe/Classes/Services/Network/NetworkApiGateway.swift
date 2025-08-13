@@ -816,10 +816,15 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             if let feedbackTags = diaryNote.feedbackTags, !feedbackTags.isEmpty {
                 let lastIndex = feedbackTags.count - 1
                 let attributes = feedbackTags.enumerated().map { index, item in
-                    var dict: [String: Any] = [
-                        "id": item.id,
-                        "tag": item.tag
-                    ]
+                    var dict: [String: Any] = [:]
+                    if item.tag != "none" {
+                         dict = [
+                            "id": item.id,
+                            "tag": item.tag
+                        ]
+                    } else {
+                        dict["_destroy"] = true
+                    }
                     if index != lastIndex {
                         dict["_destroy"] = true
                     }

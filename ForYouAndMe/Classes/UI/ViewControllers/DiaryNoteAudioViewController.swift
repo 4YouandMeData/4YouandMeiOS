@@ -55,6 +55,11 @@ class DiaryNoteAudioViewController: UIViewController {
         return isFromChart && (diaryNoteItem?.diaryNoteable != nil)
     }
     
+    private var isLinked: Bool {
+        return diaryNoteItem?.diaryNoteable != nil
+    }
+
+    
     private var shouldShowEmojiButton: Bool {
         guard let diaryNote = self.diaryNoteItem else { return false }
         
@@ -337,6 +342,10 @@ class DiaryNoteAudioViewController: UIViewController {
     }
     
     @objc private func closeButtonPressed() {
+        if let coordinator = self.reflectionCoordinator {
+            coordinator.showSuccessPage()
+            return
+        }
         self.genericCloseButtonPressed(completion: {
             self.navigator.switchToDiaryTab(presenter: self)
         })
@@ -350,39 +359,55 @@ class DiaryNoteAudioViewController: UIViewController {
     @objc private func saveButtonPressed() {
         AppNavigator.pushProgressHUD()
         guard let audioUrl = self.audioFileURL,
-              let audioData = try? Data.init(contentsOf: audioUrl) else {
+              let audioData = try? Data(contentsOf: audioUrl) else {
             assertionFailure("Couldn't transform result data to expected network representation")
             return
         }
-         
+
         let audioResultFile = DiaryNoteFile(data: audioData, fileExtension: .m4a)
-        self.repository.sendDiaryNoteAudio(diaryNoteRef: diaryNoteItem ?? DiaryNoteItem(diaryNoteId: nil,
-                                                                                        body: nil,
-                                                                                        interval: nil,
-                                                                                        diaryNoteable: nil),
-                                           file: audioResultFile,
-                                           fromChart: false)
+
+        let ref = diaryNoteItem ?? DiaryNoteItem(
+            diaryNoteId: nil,
+            body: nil,
+            interval: nil,
+            diaryNoteable: nil
+        )
+
+        repository
+            .sendDiaryNoteAudio(
+                diaryNoteRef: ref,
+                file: audioResultFile,
+                fromChart: isLinked
+            )
             .do(onDispose: { AppNavigator.popProgressHUD() })
             .observe(on: MainScheduler.instance)
             .subscribe(onSuccess: { [weak self] diaryNote in
                 guard let self = self else { return }
                 self.diaryNoteItem = diaryNote
+                self.wasJustCreatedHere = true   // allinea al testo
                 self.closeButton.isHidden = true
                 self.updateTitleRow()
-                guard let coordinator = self.reflectionCoordinator else {
-                    try? FileManager.default.removeItem(atPath: Constants.Note.NoteResultURL.path)
-                    DispatchQueue.main.async {
-                        self.pageState.accept(.transcribe)
-                        self.startPolling() // Start polling after successful creation
-                    }
-                    return
+
+                // Reflection Flow
+                if let coordinator = self.reflectionCoordinator {
+                    coordinator.onReflectionCreated(
+                        presenter: self,
+                        reflectionType: .audio,
+                        diaryNote: diaryNote
+                    )
                 }
-                coordinator.onReflectionCreated(presenter: self, reflectionType: .audio, diaryNote: diaryNote)
+
+                // Standard Flow
+                try? FileManager.default.removeItem(atPath: Constants.Note.NoteResultURL.path)
+                DispatchQueue.main.async {
+                    self.pageState.accept(.transcribe)
+                    self.startPolling()
+                }
             }, onFailure: { [weak self] error in
                 guard let self = self else { return }
-                self.navigator.handleError(error: error,
-                                           presenter: self)
-            }).disposed(by: self.disposeBag)
+                self.navigator.handleError(error: error, presenter: self)
+            })
+            .disposed(by: self.disposeBag)
     }
     
     @objc private func updateButtonPressed() {

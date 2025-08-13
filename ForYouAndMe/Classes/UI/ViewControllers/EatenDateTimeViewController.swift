@@ -249,6 +249,9 @@ class EatenDateTimeViewController: UIViewController {
         dateRow.addSubview(dateValueLabel)
         dateRow.addSubview(dateIcon)
         dateRow.addSubview(underline)
+        if let note = variant.chartDiaryNote {
+            chosenDate = note.diaryNoteId
+        }
         
         dateValueLabel.autoAlignAxis(toSuperviewAxis: .horizontal)
         dateValueLabel.autoPinEdge(.leading, to: .leading, of: dateRow)

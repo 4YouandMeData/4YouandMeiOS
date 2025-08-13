@@ -216,13 +216,7 @@ extension FoodEntryCoordinator: EatenTimeViewControllerDelegate {
               let type = FoodEntryType(rawValue: selectedFoodType) else { return }
         
         if relative == .withinHour {
-            
-            if let note = variant.chartDiaryNote {
-                snackDate = note.diaryNoteId
-            } else {
-                snackDate = Date()
-            }
-            
+            snackDate = Date()
             let amountVC = ConsumptionAmountViewController(variant: self.variant)
             amountVC.selectedType = type
             amountVC.delegate = self
@@ -232,6 +226,10 @@ extension FoodEntryCoordinator: EatenTimeViewControllerDelegate {
                 animated: true
             )
         } else {
+            if let note = variant.chartDiaryNote {
+                snackDate = note.diaryNoteId
+            }
+            
             let dateTimeVC = EatenDateTimeViewController(variant: self.variant)
             dateTimeVC.selectedType = type
             dateTimeVC.delegate = self

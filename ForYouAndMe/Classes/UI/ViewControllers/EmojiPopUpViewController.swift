@@ -23,7 +23,7 @@ enum EmojiTagCategory: String, CaseIterable {
 
 final class EmojiPopupViewController: UIViewController {
 
-    private let emojis: [EmojiItem]
+    private var emojis: [EmojiItem]
     private let onSave: (EmojiItem?) -> Void
     private let selected: EmojiItem?
 
@@ -44,6 +44,9 @@ final class EmojiPopupViewController: UIViewController {
          onSave: @escaping (EmojiItem?) -> Void) {
         
         self.emojis = emojis
+        if !emojis.isEmpty {
+            self.emojis.insert(EmojiItem(id: "", type: "", tag: "❌", label: "none"), at: 0)
+        }
         self.onSave = onSave
         self.selected = selected
         super.init(nibName: nil, bundle: nil)

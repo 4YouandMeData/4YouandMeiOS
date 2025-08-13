@@ -112,7 +112,7 @@ extension Mapper {
                     guard let emoji = item["tag"] as? String else {
                         throw MapperError.customError(field: field, message: "Missing 'tag' in item for key '\(key)'")
                     }
-                    let label = item["label"] as? String ?? ""
+                    let label = item["label"] as? String ?? " "
                     return EmojiItem(id: "", type: "", tag: emoji, label: label)
                 }
 

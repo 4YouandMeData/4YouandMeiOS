@@ -479,6 +479,11 @@ class DiaryNoteVideoViewController: UIViewController {
     }
     
     @objc private func closeButtonPressed() {
+        if let coordinator = self.reflectionCoordinator {
+            coordinator.showSuccessPage()
+            return
+        }
+        
         self.genericCloseButtonPressed(completion: {
             self.navigator.switchToDiaryTab(presenter: self)
         })
@@ -903,15 +908,19 @@ class DiaryNoteVideoViewController: UIViewController {
             .subscribe(onSuccess: { [weak self] diaryNote in
                 guard let self = self else { return }
                 self.diaryNoteItem = diaryNote
-                guard let coordinator = self.reflectionCoordinator else {
-                    self.onRecordCompleted()
-                    DispatchQueue.main.async {
-                        self.startPolling() // Start polling after successful creation
-                        self.setupUIVideoWatch()
-                    }
-                    return
+                self.onRecordCompleted()
+                DispatchQueue.main.async {
+                    self.startPolling()
+                    self.setupUIVideoWatch()
                 }
-                coordinator.onReflectionCreated(presenter: self, reflectionType: .video, diaryNote: diaryNote)
+                
+                if let coordinator = self.reflectionCoordinator {
+                    coordinator.onReflectionCreated(
+                        presenter: self,
+                        reflectionType: .video,
+                        diaryNote: diaryNote
+                    )
+                }
             }, onFailure: { [weak self] error in
                 guard let self = self else { return }
                 self.navigator.handleError(error: error,

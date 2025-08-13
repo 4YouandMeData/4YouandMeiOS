@@ -31,6 +31,23 @@ class DiaryNoteTextViewController: UIViewController {
         return stack
     }()
     
+    private var isLinked: Bool {
+        return diaryNote?.diaryNoteable != nil
+    }
+
+    private var isFirstSaveInThisVC: Bool {
+        return !isEditMode && !wasJustCreatedHere
+    }
+
+    private var mustSendInsteadOfUpdate: Bool {
+        return diaryNote == nil || isFirstSaveInThisVC
+    }
+    
+    private var isReflectionLinkedNote: Bool {
+        guard reflectionCoordinator != nil else { return false }
+        return diaryNote?.diaryNoteable?.type.lowercased() == "task"
+    }
+    
     private lazy var titleLabel: UILabel = {
         let label = UILabel()
         label.attributedText = NSAttributedString.create(
@@ -194,7 +211,7 @@ class DiaryNoteTextViewController: UIViewController {
     private var cache: CacheService
     private var diaryNote: DiaryNoteItem?
     private let maxCharacters: Int = 5000
-    private let isEditMode: Bool
+    private var isEditMode: Bool
     private let isFromChart: Bool
     
     init(withDataPoint dataPoint: DiaryNoteItem?,
@@ -356,11 +373,7 @@ class DiaryNoteTextViewController: UIViewController {
         case .edit:
             self.doneButtonPressed()
         case .read:
-            if isChartLinkedNote || wasJustCreatedHere {
-                self.closeSelf()   // “Close” behavior
-            } else {
-                self.closeButtonPressed()
-            }
+            self.closeButtonPressed()
         }
     }
     
@@ -379,6 +392,10 @@ class DiaryNoteTextViewController: UIViewController {
     }
     
     @objc private func closeButtonPressed() {
+        if let coordinator = self.reflectionCoordinator {
+            coordinator.showSuccessPage()
+            return
+        }
         self.genericCloseButtonPressed(completion: {
             self.navigator.switchToDiaryTab(presenter: self)
         })
@@ -391,64 +408,60 @@ class DiaryNoteTextViewController: UIViewController {
     }
     
     @objc private func doneButtonPressed() {
-        self.textView.resignFirstResponder()
+        textView.resignFirstResponder()
 
-        // Update existing note
-        if var diaryNote = self.diaryNote {
-            diaryNote.body = self.textView.text
-
-            // Case: update via send (when linked to a diaryNoteable)
-            if diaryNote.diaryNoteable != nil {
-                self.repository.sendDiaryNoteText(diaryNote: diaryNote, fromChart: true)
-                    .addProgress()
-                    .subscribe(onSuccess: { [weak self] savedNote in
-                        guard let self = self else { return }
-                        self.diaryNote = savedNote
-                        self.pageState.accept(.read)
-                    }, onFailure: { [weak self] error in
-                        guard let self = self else { return }
-                        self.navigator.handleError(error: error, presenter: self)
-                    }).disposed(by: self.disposeBag)
-            } else {
-                // Case: normal update
-                self.repository.updateDiaryNoteText(diaryNote: diaryNote)
-                    .addProgress()
-                    .subscribe(onSuccess: { [weak self] in
-                        self?.diaryNote = diaryNote
-                        self?.pageState.accept(.read)
-                    }, onFailure: { [weak self] error in
-                        guard let self = self else { return }
-                        self.navigator.handleError(error: error, presenter: self)
-                    }).disposed(by: self.disposeBag)
-            }
-
+        var noteToSave: DiaryNoteItem
+        if var existing = diaryNote {
+            existing.body = textView.text
+            noteToSave = existing
         } else {
-            // Case: create new note
-            let newDiaryNote = DiaryNoteItem(
+            noteToSave = DiaryNoteItem(
                 diaryNoteId: nil,
-                body: self.textView.text,
+                body: textView.text,
                 interval: nil,
                 diaryNoteable: nil
             )
+        }
 
-            self.repository.sendDiaryNoteText(diaryNote: newDiaryNote, fromChart: false)
+        if mustSendInsteadOfUpdate {
+           
+            repository.sendDiaryNoteText(
+                diaryNote: noteToSave,
+                fromChart: isLinked
+            )
+            .addProgress()
+            .subscribe(onSuccess: { [weak self] saved in
+                guard let self = self else { return }
+                self.diaryNote = saved
+                self.wasJustCreatedHere = true
+                self.isEditMode = true
+                
+                if self.isLinked && self.isReflectionLinkedNote {
+                    self.reflectionCoordinator?.onReflectionCreated(
+                        presenter: self,
+                        reflectionType: .text,
+                        diaryNote: saved
+                    )
+                }
+                self.pageState.accept(.read)
+            }, onFailure: { [weak self] error in
+                guard let self = self else { return }
+                self.navigator.handleError(error: error, presenter: self)
+            })
+            .disposed(by: disposeBag)
+
+        } else {
+            // Edit successivi (anche se la nota è linkata)
+            repository.updateDiaryNoteText(diaryNote: noteToSave)
                 .addProgress()
-                .subscribe(onSuccess: { [weak self] savedNote in
-                    guard let self = self else { return }
-                    self.diaryNote = savedNote
-                    self.wasJustCreatedHere = true
-                    if let coordinator = self.reflectionCoordinator {
-                        coordinator.onReflectionCreated(presenter: self, reflectionType: .text, diaryNote: savedNote)
-                        self.pageState.accept(.read)
-                    } else {
-                        self.textView.text = savedNote.body
-                        self.placeholderLabel.isHidden = ((savedNote.body?.isEmpty) == nil)
-                        self.pageState.accept(.read)
-                    }
+                .subscribe(onSuccess: { [weak self] in
+                    self?.diaryNote = noteToSave
+                    self?.pageState.accept(.read)
                 }, onFailure: { [weak self] error in
                     guard let self = self else { return }
                     self.navigator.handleError(error: error, presenter: self)
-                }).disposed(by: self.disposeBag)
+                })
+                .disposed(by: disposeBag)
         }
     }
 
@@ -497,9 +510,6 @@ class DiaryNoteTextViewController: UIViewController {
         // A chart–linked note: created from chart and has a noteable
         let isChartLinkedNote = self.isFromChart && (self.diaryNote?.diaryNoteable != nil)
 
-        // Hide back when a chart-linked note has been created and we are in READ
-        let hideBackInHeader = (self.pageState.value == .read) && (isChartLinkedNote || wasJustCreatedHere)
-
         // Show emoji when the note exists and we're in READ state,
         //  even if it came from the chart. Keep the reflection exception if needed.
         let isCreatingFromReflection =
@@ -507,12 +517,15 @@ class DiaryNoteTextViewController: UIViewController {
             self.reflectionCoordinator != nil &&
             self.diaryNote?.diaryNoteable?.type.lowercased() == "task" &&
             (self.diaryNote?.body?.isEmpty ?? true)
+        
+        // Hide back when a chart-linked note has been created and we are in READ
+        let hideBackInHeader = (self.pageState.value == .read) && (isChartLinkedNote || wasJustCreatedHere || self.diaryNote != nil || !isCreatingFromReflection)
 
         let shouldShowEmojiButton =
             noteExists &&
             hasEmojis &&
             (self.pageState.value == .read) &&
-            !isCreatingFromReflection  // preserve this rule
+            !isCreatingFromReflection
 
         if shouldShowEmojiButton {
             let spacer = UIView()
@@ -527,7 +540,6 @@ class DiaryNoteTextViewController: UIViewController {
         // Hide/show back button
         self.closeButton.isHidden = hideBackInHeader
     }
-
 
     private func emojiItems(for category: EmojiTagCategory) -> [EmojiItem] {
         return self.cache.feedbackList[category.rawValue] ?? []
@@ -556,7 +568,7 @@ class DiaryNoteTextViewController: UIViewController {
             footerView.setButtonEnabled(enabled: !self.textView.text.isEmpty)
 
         case .read:
-            if isChartLinkedNote || wasJustCreatedHere {
+            if isChartLinkedNote || wasJustCreatedHere || self.diaryNote != nil {
                 // After creation → show Close
                 footerView.setButtonText(StringsProvider.string(forKey: .diaryNoteNoticedEmojiCloseButton))
                 footerView.setButtonEnabled(enabled: true)
@@ -566,7 +578,6 @@ class DiaryNoteTextViewController: UIViewController {
             }
         }
     }
-
 
     private func updateTextFields(pageState: PageState) {
         let textView = self.textView

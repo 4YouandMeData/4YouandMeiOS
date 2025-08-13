@@ -65,7 +65,12 @@ enum DefaultService {
     case updateDiaryNoteText(diaryItem: DiaryNoteItem)
     case sendDiaryNoteAudio(noteId: DiaryNoteItem, attachment: DiaryNoteFile, fromChart: Bool)
     case sendDiaryNoteVideo(noteId: DiaryNoteItem, attachment: DiaryNoteFile)
-    case sendDiaryNoteEaten(date: Date, mealType: String, quantity: String, significantNutrition: Bool, fromChart: Bool, diaryNote: DiaryNoteItem?)
+    case sendDiaryNoteEaten(date: Date,
+                            mealType: String,
+                            quantity: String,
+                            significantNutrition: Bool,
+                            fromChart: Bool,
+                            diaryNote: DiaryNoteItem?)
     case sendDiaryNoteDoses(doseType: String, date: Date, amount: Double, fromChart: Bool, diaryNote: DiaryNoteItem?)
     case sendCombinedDiaryNote(diaryNote: DiaryNoteWeHaveNoticedItem)
     case deleteDiaryNote(noteId: String)

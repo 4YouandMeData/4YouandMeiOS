@@ -41,7 +41,6 @@ extension FlowVariant {
     }
 }
 
-
 struct FoodEntryData: Codable {
     let mealType: String
     let date: Date

@@ -92,10 +92,7 @@ class ReflectionSectionCoordinator: NSObject, PagedActivitySectionCoordinator {
         self.repository.sendTaskResult(taskId: self.taskIdentifier,
                                        taskResult: TaskNetworkResult(data: taskResult, attachedFile: nil))
             .addProgress()
-            .subscribe(onSuccess: { [weak self] in
-                guard let self = self else { return }
-                 self.showSuccessPage()
-            }, onFailure: { [weak self] error in
+            .subscribe(onSuccess: {}, onFailure: { [weak self] error in
                 guard let self = self else { return }
                 
                 self.navigator.handleError(
