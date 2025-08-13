@@ -59,7 +59,6 @@ class DiaryNoteAudioViewController: UIViewController {
         return diaryNoteItem?.diaryNoteable != nil
     }
 
-    
     private var shouldShowEmojiButton: Bool {
         guard let diaryNote = self.diaryNoteItem else { return false }
         
@@ -443,8 +442,9 @@ class DiaryNoteAudioViewController: UIViewController {
             self.selectedEmoji = emoji
             diaryNote.feedbackTags?.append(emoji)
 
+            let tag = (emoji.label != "none") ? emoji.tag : nil
             self.emojiButton.setImage(nil, for: .normal)
-            self.emojiButton.setTitle(emoji.tag, for: .normal)
+            self.emojiButton.setTitle(tag, for: .normal)
             self.emojiButton.titleLabel?.font = UIFont.systemFont(ofSize: 22)
             
             self.repository.updateDiaryNoteText(diaryNote: diaryNote)

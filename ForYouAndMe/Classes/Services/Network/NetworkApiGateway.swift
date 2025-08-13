@@ -817,7 +817,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
                 let lastIndex = feedbackTags.count - 1
                 let attributes = feedbackTags.enumerated().map { index, item in
                     var dict: [String: Any] = [:]
-                    if item.tag != "none" {
+                    if item.label != "none" {
                          dict = [
                             "id": item.id,
                             "tag": item.tag

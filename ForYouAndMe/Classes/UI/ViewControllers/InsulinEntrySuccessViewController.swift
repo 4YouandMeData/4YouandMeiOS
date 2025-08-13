@@ -125,8 +125,10 @@ final class InsulinEntrySuccessViewController: UIViewController {
 
     private func updateEmojiButton() {
         guard let emoji = selectedEmoji else { return }
-        emojiButton.setImage(nil, for: .normal)
-        emojiButton.setTitle(emoji.tag, for: .normal)
+        
+        let tag = (emoji.label != "none") ? emoji.tag : nil
+        self.emojiButton.setImage(nil, for: .normal)
+        self.emojiButton.setTitle(tag, for: .normal)
         emojiButton.titleLabel?.font = UIFont.systemFont(ofSize: 32)
         emojiButton.setTitleColor(ColorPalette.color(withType: .primaryText), for: .normal)
         diaryNote.feedbackTags?.append(emoji)

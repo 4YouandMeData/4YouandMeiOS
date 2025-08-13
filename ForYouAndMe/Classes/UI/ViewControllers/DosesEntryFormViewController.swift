@@ -255,8 +255,10 @@ class DosesEntryFormViewController: UIViewController {
                 
                 self.selectedEmoji = emoji
                 diaryNote.feedbackTags?.append(emoji)
+                
+                let tag = (emoji.label != "none") ? emoji.tag : nil
                 self.emojiButton.setImage(nil, for: .normal)
-                self.emojiButton.setTitle(emoji.tag, for: .normal)
+                self.emojiButton.setTitle(tag, for: .normal)
                 self.emojiButton.titleLabel?.font = UIFont.systemFont(ofSize: 22)
                 
                 self.repository.updateDiaryNoteText(diaryNote: diaryNote)
