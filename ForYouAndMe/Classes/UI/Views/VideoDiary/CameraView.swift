@@ -78,6 +78,7 @@ class CameraView: UIView {
     private(set) var currentCameraPosition: AVCaptureDevice.Position?
     private var outputFileURL: URL?
     private var isCameraInitialized: Bool = false
+    private var shouldResumeAfterReinit = false
     
     private var mergedFileName = ""
     
@@ -129,14 +130,15 @@ class CameraView: UIView {
     
     func startRecording(delete: Bool = true) {
         if delete {
-            do {
-                try FileManager.default.removeItem(at: self.outputFileURL!)
-            } catch {
-                print("Couldn't initialize movie, error: \(error)")
+            if let url = self.outputFileURL, FileManager.default.fileExists(atPath: url.path) {
+                do { try FileManager.default.removeItem(at: url) } catch {
+                    print("removeItem error: \(error)")
+                }
             }
         }
         
         do {
+            guard !isRecording else { return }
             let movieSize = Size(width: 1080, height: 1920)
             self.movieOutput = try MovieOutput(URL: self.outputFileURL!, size: movieSize, liveVideo: true)
             videoCamera.audioEncodingTarget = movieOutput
@@ -512,30 +514,30 @@ extension CameraView {
         
         if(isRecording && movieOutput != nil ){ // Recover capture session
             saturationFilter --> movieOutput!  
-            movieOutput!.startRecording()
+//            movieOutput!.startRecording()
         }
     }
     
     // Reinitialization of camera filters : stop -> remove all targets -> init camera -> add to parent view
     func reinitializeCamera() {
         if isRecording {
+            shouldResumeAfterReinit = true
             stopRecording()
         }
         do {
             self.videoCamera.stopCapture()
             self.videoCamera.removeAllTargets()
             self.videoCamera = nil
-            
-            try self.addCameraPreviewLayer() // add preview layer on this view
-            
-            if isRecording { // recover recording session
+            try self.addCameraPreviewLayer()
+            if shouldResumeAfterReinit {
+                shouldResumeAfterReinit = false
                 self.startRecording(delete: false)
             }
         } catch {
             print("Couldn't reinitialize camera with error: \(error)")
         }
     }
-    
+
     // Oval mask
     func createOverlay(radius: CGFloat) -> UIView {
         let overlayView = UIView(frame: self.frame)

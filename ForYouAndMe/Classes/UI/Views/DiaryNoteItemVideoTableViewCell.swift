@@ -150,7 +150,7 @@ class DiaryNoteItemVideoTableViewCell: UITableViewCell {
     
     public func display(data: DiaryNoteItem, buttonPressedCallback: @escaping NotificationCallback) {
         self.buttonPressedCallback = buttonPressedCallback
-        self.updateNoteTitle(data.title ?? "Video Recorded")
+        self.updateNoteTitle(data.title ?? StringsProvider.string(forKey: .diaryNoteVideoCell))
         noteImageView.image = ImagePalette.templateImage(withName: .videoIcon)
         noteImageView.tintColor = .black
         if let emoji = data.feedbackTags?.last {
@@ -187,8 +187,9 @@ class DiaryNoteItemVideoTableViewCell: UITableViewCell {
                                                  textAlignment: .left)
         self.timeLabel.setShortTime(duration: Int(duration),
                                     attributedTextStyle: attibutedStyle)
-        let totalTimeString = NSAttributedString.create(withText: "Total time: ",
-                                                        attributedTextStyle: attibutedStyle)
+        let totalTimeString = NSAttributedString.create(
+            withText: StringsProvider.string(forKey: .diaryNoteTotalTimeCell),
+            attributedTextStyle: attibutedStyle)
         let string = NSMutableAttributedString(attributedString: totalTimeString)
         string.append(self.timeLabel.attributedText ?? NSAttributedString())
         self.timeLabel.attributedText = string
