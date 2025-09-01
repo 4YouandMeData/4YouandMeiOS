@@ -97,6 +97,7 @@ class CameraView: UIView {
         super.init(frame: .zero)
         self.prepareCameraView()
         self.addObservers()
+        self.currentCameraPosition = .back
     }
     
     required init?(coder: NSCoder) {
@@ -129,25 +130,21 @@ class CameraView: UIView {
     }
     
     func startRecording(delete: Bool = true) {
-        if delete {
-            if let url = self.outputFileURL, FileManager.default.fileExists(atPath: url.path) {
-                do { try FileManager.default.removeItem(at: url) } catch {
-                    print("removeItem error: \(error)")
-                }
-            }
-        }
+        guard let outputURL = self.outputFileURL else { return } // <-- no force unwrap
+        guard let videoCamera = self.videoCamera else { return } // <-- guard camera ready
         
+        if delete, FileManager.default.fileExists(atPath: outputURL.path) {
+            try? FileManager.default.removeItem(at: outputURL)
+        }
         do {
-            guard !isRecording else { return }
             let movieSize = Size(width: 1080, height: 1920)
-            self.movieOutput = try MovieOutput(URL: self.outputFileURL!, size: movieSize, liveVideo: true)
+            self.movieOutput = try MovieOutput(URL: outputURL, size: movieSize, liveVideo: true)
             videoCamera.audioEncodingTarget = movieOutput
             self.isRecording = true
             saturationFilter --> movieOutput!
             movieOutput!.startRecording()
         } catch {
             print("Couldn't start movie recording, error: \(error)")
-
         }
     }
     
@@ -296,8 +293,11 @@ class CameraView: UIView {
     }
 
     private func returnDocumentsDirectoryFile(fileName: String, fileExtension: String) throws -> URL? {
-        let fileURL = Constants.Task.VideoResultURL.appendingPathComponent(fileName).appendingPathExtension(fileExtension)
-        return fileURL
+        let dir = Constants.Task.VideoResultURL
+        if !FileManager.default.fileExists(atPath: dir.path) {
+            try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        }
+        return dir.appendingPathComponent(fileName).appendingPathExtension(fileExtension)
     }
     
     private func isHardwareAuthorized(block: () -> Void) {
@@ -330,9 +330,8 @@ class CameraView: UIView {
                     do {
                         // Everything in async. Delegate the error
                         
-                        try self?.addCameraPreviewLayer()
+                        self?.addCameraPreviewLayer()
                         try self?.configureCaptureDevices()
-                        try self?.setOutputFileURL()
                         self?.isCameraInitialized = true
                     } catch let error {
                         Async.mainQueue { [weak self] in
@@ -462,59 +461,65 @@ extension CameraView: AVCaptureFileOutputRecordingDelegate {
 extension CameraView {
     
     // Add Camera Preview
-    private func addCameraPreviewLayer() throws {
-        
+    // CameraView.addCameraPreviewLayer()
+    private func addCameraPreviewLayer() {
         DispatchQueue.main.async {
             do {
-                let cameraDirection: PhysicalCameraLocation = self.currentCameraPosition == .front ? .frontFacing : .backFacing
+                let cameraDirection: PhysicalCameraLocation = (self.currentCameraPosition == .front) ? .frontFacing : .backFacing
                 self.videoCamera = try Camera(sessionPreset: .hd1920x1080, location: cameraDirection)
 
                 self.requireCameraFilters()
                 self.videoCamera?.startCapture() // start GPUImage camera preview filtering
+
+                // Mark as ready only here (on main, after successful init)
+                self.isCameraInitialized = true
             } catch {
+                // Do NOT crash: report the error via delegate
                 self.videoCamera = nil
-                
-                fatalError("Could not initialize rendering pipeline: \(error)")
+                self.isCameraInitialized = false
+                // Choose the most fitting error
+                self.delegate?.hasCaptureSessionErrorOccurred(error: .invalidOperation)
+                return
             }
-            
+
+            // Safe UI setup
             if self.ovalMask == nil {
                 let ovalRadius = self.bounds.width/2 - 10
-                self.ovalMask = self.createOverlay(radius: ovalRadius )
+                self.ovalMask = self.createOverlay(radius: ovalRadius)
             } else {
                 self.ovalMask.removeFromSuperview()
             }
-            self.renderView.frame = self.bounds // update gpuimage:renderview bounds
+            self.renderView.frame = self.bounds
             self.renderView.removeFromSuperview()
-            self.addSubview(self.renderView) // add gpuimage's camera preview view to current view
-            self.addSubview(self.ovalMask) // oval mask
-            self.setNeedsDisplay()
+            self.addSubview(self.renderView)
+            self.addSubview(self.ovalMask ?? UIView())
+            self.setNeedsLayout()
             self.layoutIfNeeded()
-            
         }
     }
     
     // Definition of current filter
     func requireCameraFilters() {
-        self.videoCamera.removeAllTargets()
-        self.adaptiveThresholdFilter.removeAllTargets()
-        self.saturationFilter.removeAllTargets()
-        self.contrastFilter.removeAllTargets()
-        self.colorInversionFilter.removeAllTargets()
+        guard let videoCamera = self.videoCamera else { return } // <-- guard
+        
+        videoCamera.removeAllTargets()
+        adaptiveThresholdFilter.removeAllTargets()
+        saturationFilter.removeAllTargets()
+        contrastFilter.removeAllTargets()
+        colorInversionFilter.removeAllTargets()
         
         if filterMode == .on {
-            self.saturationFilter.saturation = 1.0
+            saturationFilter.saturation = 1.0
             adaptiveThresholdFilter.edgeStrength = 0.8
-            self.contrastFilter.contrast =  1.4
+            contrastFilter.contrast = 1.4
             videoCamera --> saturationFilter --> adaptiveThresholdFilter --> colorInversionFilter --> contrastFilter --> renderView
         } else {
-            self.saturationFilter.saturation = 1.0
+            saturationFilter.saturation = 1.0
             videoCamera --> saturationFilter --> renderView
-    
         }
         
-        if(isRecording && movieOutput != nil ){ // Recover capture session
-            saturationFilter --> movieOutput!  
-//            movieOutput!.startRecording()
+        if isRecording, let movieOutput {
+            saturationFilter --> movieOutput  // recover capture path if needed
         }
     }
     
@@ -524,17 +529,14 @@ extension CameraView {
             shouldResumeAfterReinit = true
             stopRecording()
         }
-        do {
-            self.videoCamera.stopCapture()
-            self.videoCamera.removeAllTargets()
-            self.videoCamera = nil
-            try self.addCameraPreviewLayer()
-            if shouldResumeAfterReinit {
-                shouldResumeAfterReinit = false
-                self.startRecording(delete: false)
-            }
-        } catch {
-            print("Couldn't reinitialize camera with error: \(error)")
+        // Use optional chaining to avoid IUO crash
+        self.videoCamera?.stopCapture()
+        self.videoCamera?.removeAllTargets()
+        self.videoCamera = nil
+        self.addCameraPreviewLayer() // now non-throwing
+        if shouldResumeAfterReinit {
+            shouldResumeAfterReinit = false
+            self.startRecording(delete: false)
         }
     }
 

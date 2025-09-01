@@ -66,6 +66,7 @@ final class FoodEntrySuccessViewController: UIViewController {
         navigationController?.navigationBar.apply(
             style: NavigationBarStyleCategory.secondary(hidden: true).style
         )
+        navigationController?.preventPopWithSwipe()
     }
 
     // MARK: - UI Setup

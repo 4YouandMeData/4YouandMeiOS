@@ -73,13 +73,11 @@ class SuccessViewController: UIViewController {
         view.addSubview(scrollStack)
         scrollStack.autoPinEdgesToSuperviewSafeArea(with: .zero, excludingEdge: .bottom)
         
-        // Add a bit di spazio dall’alto
         scrollStack.stackView.addBlankSpace(space: 100)
         
         // Title
         scrollStack.stackView.addArrangedSubview(titleLabel)
         
-        // Spazio tra titolo e corpo
         scrollStack.stackView.addBlankSpace(space: 20)
         
         // Body

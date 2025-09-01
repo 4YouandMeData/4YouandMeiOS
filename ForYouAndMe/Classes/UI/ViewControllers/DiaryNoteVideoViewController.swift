@@ -253,7 +253,7 @@ class DiaryNoteVideoViewController: UIViewController {
         toolBar.sizeToFit()
         
         let cancelButton = UIBarButtonItem(barButtonSystemItem: .cancel, target: self, action: #selector(self.cancelEdit))
-        let doneButton = UIBarButtonItem(barButtonSystemItem: .done, target: self, action: #selector(self.doneButtonPressed))
+        let doneButton = UIBarButtonItem(barButtonSystemItem: .save, target: self, action: #selector(self.doneButtonPressed))
         let spaceButton = UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil)
         toolBar.setItems([cancelButton, spaceButton, doneButton], animated: false)
 
@@ -320,11 +320,23 @@ class DiaryNoteVideoViewController: UIViewController {
     // MARK: - Actions
     
     @objc private func cancelEdit() {
-        self.view.endEditing(true)
-        self.textView.text = self.originalText // Restore original body text
-        self.textViewDidChange(self.textView)  // Update counter and placeholder
-        self.textView.isEditable = false
-        self.footerView.isHidden = false
+        let cancelAction = UIAlertAction(title: StringsProvider.string(forKey: .diaryNoteCancelConfirm),
+                                         style: .default,
+                                         handler: { [weak self] _ in
+            guard let self = self else { return }
+            self.view.endEditing(true)
+            self.textView.text = self.originalText // Restore original body text
+            self.textViewDidChange(self.textView)  // Update counter and placeholder
+            self.textView.isEditable = false
+            self.footerView.isHidden = false
+        })
+        let confirmAction = UIAlertAction(title: StringsProvider.string(forKey: .diaryNoteCancelCancel),
+                                          style: .destructive,
+                                          handler: nil)
+        self.showAlert(withTitle: StringsProvider.string(forKey: .diaryNoteCancelTitle),
+                       message: StringsProvider.string(forKey: .diaryNoteCancelBody),
+                       actions: [cancelAction, confirmAction],
+                       tintColor: ColorPalette.color(withType: .primary))
     }
     
     @objc private func emojiButtonTapped() {
@@ -475,7 +487,6 @@ class DiaryNoteVideoViewController: UIViewController {
         self.textView.resignFirstResponder()
         self.footerView.isHidden = false
         self.footerView.setButtonEnabled(enabled: true)
-        self.originalText = self.textView.text
         self.updateButtonPressed()
     }
     
@@ -506,6 +517,7 @@ class DiaryNoteVideoViewController: UIViewController {
                     self.textView.isEditable = false
                     self.textView.isSelectable = false
                     self.footerView.isHidden = false
+                    self.originalText = self.textView.text
                 }, onFailure: { [weak self] error in
                     guard let self = self else { return }
                     self.navigator.handleError(error: error, presenter: self)
