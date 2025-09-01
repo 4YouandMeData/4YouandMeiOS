@@ -199,6 +199,11 @@ enum StringKey: String, CaseIterable, CodingKey {
     case diaryNoteNoticedEmojiSubtitle = "DIARY_NOTE_NOTICED_STEP_EMOJI_SUBTITLE"
     case diaryNoteNoticedEmojiClickMessage = "DIARY_NOTE_NOTICED_STEP_EMOJI_CLICK_MESSAGE"
     case diaryNoteNoticedEmojiCloseButton = "DIARY_NOTE_NOTICED_STEP_EMOJI_CLOSE_BUTTON"
+    case diaryNoteCancelBody = "DIARY_NOTE_CANCEL_BODY"
+    case diaryNoteCancelTitle = "DIARY_NOTE_CANCEL_TITLE"
+    case diaryNoteCancelCancel = "DIARY_NOTE_CANCEL_CANCEL"
+    case diaryNoteCancelConfirm = "DIARY_NOTE_CANCEL_CONFIRM"
+
     // I Have Eaten
     case diaryNoteFabEaten = "FAB_I_HAVE_EATEN"
     case diaryNoteEatenStepOneTitle = "EATEN_STEP_ONE_TITLE"
