@@ -17,7 +17,9 @@ class FeedViewController: BaseViewController {
                                tableView: self.tableView,
                                delegate: self,
                                pageSize: Constants.Misc.FeedPageSize,
-                               pullToRefresh: true)
+                               pullToRefresh: true,
+                               isInfiniteScrollEnabled: true,
+                               forceSabaFooterForTesting: true)
     }()
     
     private lazy var headerView: FeedHeaderView = {

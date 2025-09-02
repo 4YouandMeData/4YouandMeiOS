@@ -112,7 +112,37 @@ class FeedListManager: NSObject {
     
     private weak var delegate: FeedListManagerDelegate?
     
-    private var sections: [FeedListSection] { return self.content?.sections ?? [] }
+    // MARK: SABA gating + testing override
+    private let isInfiniteScrollEnabled: Bool
+    private let forceSabaFooterForTesting: Bool
+    private var isSabaEffective: Bool {
+        // NOTE: enable SABA behavior when real SABA or when testing override is on
+        return ProjectInfo.StudyId.lowercased() == "saba" || forceSabaFooterForTesting
+    }
+
+    // UI-window of visible feed items for SABA mode (nil = show all)
+    private var visibleItemLimit: Int?
+    private let sabaStep: Int = 2  // NOTE: number of items revealed per tap
+
+    // Keep a “visible content” snapshot for SABA mode
+    private var visibleContent: FeedContent?
+
+    // Footer button views
+    private weak var footerContainer: UIView?
+    private weak var footerButtonView: GenericButtonView?
+
+    // When we increase the window, we remember where to scroll
+    private var pendingScrollGlobalIndex: Int?
+
+    // Use visible content when present
+    private var sections: [FeedListSection] {
+        // NOTE: Avoid lazy-var “mutating getter” issue by binding to var
+        if var v = self.visibleContent { return v.sections }
+        if var c = self.content { return c.sections }
+        return []
+    }
+    
+//    private var sections: [FeedListSection] { return self.content?.sections ?? [] }
     private var content: FeedContent?
     private var hasMoreContent: Bool = false
     private var currentRequestDisposable: Disposable?
@@ -130,12 +160,17 @@ class FeedListManager: NSObject {
          tableView: UITableView,
          delegate: FeedListManagerDelegate,
          pageSize: Int?,
-         pullToRefresh: Bool = true) {
+         pullToRefresh: Bool = true,
+         isInfiniteScrollEnabled: Bool = true,
+         forceSabaFooterForTesting: Bool = false) {
+        
         self.repository = repository
         self.navigator = navigator
         self.tableView = tableView
         self.analytics = Services.shared.analytics
         self.delegate = delegate
+        self.isInfiniteScrollEnabled = isInfiniteScrollEnabled
+        self.forceSabaFooterForTesting = forceSabaFooterForTesting
         self.pageSize = {
             if let pageSize = pageSize {
                 return max(1, pageSize)
@@ -156,6 +191,11 @@ class FeedListManager: NSObject {
         self.tableView.tableFooterView = UIView()
         self.tableView.separatorStyle = .none
         self.tableView.estimatedRowHeight = 300.0
+        
+        if self.isSabaEffective {
+            self.visibleItemLimit = self.sabaStep // show first 2 items initially
+            self.installFooterButton(title: "Mostra altri 2", style: .secondaryBackground(shadow: false))
+        }
         
         // Pull to refresh
         if pullToRefresh {
@@ -192,6 +232,9 @@ class FeedListManager: NSObject {
     public func viewDidLayoutSubviews() {
         self.tableView.reloadData()
         self.tableView.sizeHeaderToFit()
+        if let footer = self.footerContainer, self.isSabaEffective {
+            self.setTableFooterView(footer)
+        }
     }
     
     // MARK: - Private Methods
@@ -213,8 +256,12 @@ class FeedListManager: NSObject {
                 guard let self = self else { return }
                 self.updateHasContent(withFeedContent: content)
                 self.content = content
+                // SABA: recompute visible window
+                self.recalcVisibleContent()
+                
                 self.handleRefreshEnd()
                 self.errorView.hideView()
+                self.updateFooterVisibility() // SABA: show/hide footer accordingly
                 onCompletion?()
             }, onFailure: { [weak self] error in
                 guard let self = self else { return }
@@ -238,6 +285,9 @@ class FeedListManager: NSObject {
             return
         }
         
+        // SABA: disable footer while loading
+        if self.isSabaEffective { self.footerButtonView?.setButtonEnabled(enabled: false) }
+        
         let pageIndex = (self.content?.itemCount ?? 0) / pageSize
         let paginationInfo = PaginationInfo(pageSize: pageSize, pageIndex: pageIndex)
         self.currentRequestDisposable = delegate.getDataProviderSingle(repository: self.repository,
@@ -248,10 +298,18 @@ class FeedListManager: NSObject {
                 guard let self = self else { return }
                 self.updateHasContent(withFeedContent: content)
                 self.content = self.content.merge(withContent: content)
+                
+                // SABA: after fetching, recompute window + scroll if needed
+                self.recalcVisibleContent()
                 self.tableView.reloadData()
                 self.errorView.hideView()
+                self.footerButtonView?.setButtonEnabled(enabled: true)
+                self.updateFooterVisibility()
+                self.scrollToPendingTargetIfAny()
+                
             }, onFailure: { error in
                 delegate.showError(error: error)
+                self.footerButtonView?.setButtonEnabled(enabled: true)
             })
     }
     
@@ -303,6 +361,123 @@ class FeedListManager: NSObject {
             }).disposed(by: self.disposeBag)
     }
     
+    // MARK: - Footer Button (GenericButtonView)
+
+    private func installFooterButton(title: String, style: GenericButtonTextStyleCategory) {
+        let container = UIView()
+        container.backgroundColor = .clear
+
+        let button = GenericButtonView(withTextStyleCategory: style,
+                                       fillWidth: true,
+                                       horizontalInset: Constants.Style.DefaultHorizontalMargins,
+                                       height: Constants.Style.DefaultFooterHeight)
+        container.addSubview(button)
+        button.autoPinEdgesToSuperviewEdges()
+        button.setButtonText(title)
+        button.addTarget(target: self, action: #selector(self.footerButtonTapped))
+
+        self.footerContainer = container
+        self.footerButtonView = button
+
+        // Initially hidden; will be shown by updateFooterVisibility() when we know hasMore
+        self.setTableFooterView(container)
+        self.updateFooterVisibility()
+    }
+
+    @objc private func footerButtonTapped() {
+        // NOTE: Increase window by 2 and fetch more if needed, then scroll to first newly revealed row
+        let oldLimit = self.visibleItemLimit ?? 0
+        let newLimit = oldLimit + self.sabaStep
+        self.visibleItemLimit = newLimit
+        self.recalcVisibleContent()
+        self.tableView.reloadData()
+
+        // Remember where to scroll (first newly revealed global index)
+        self.pendingScrollGlobalIndex = oldLimit
+
+        // If we don't have enough loaded items to satisfy the new window, fetch the next page
+        let loadedCount = (self.content?.feedItems.count ?? 0)
+        if newLimit > loadedCount, self.hasMoreContent {
+            self.footerButtonView?.setButtonEnabled(enabled: false)
+            self.appendItems()
+        } else {
+            self.scrollToPendingTargetIfAny()
+            self.updateFooterVisibility()
+        }
+    }
+
+    private func setTableFooterView(_ view: UIView) {
+        // NOTE: Size footer to fit Auto Layout content
+        view.setNeedsLayout()
+        view.layoutIfNeeded()
+        let w = self.tableView.bounds.width
+        let h = view.systemLayoutSizeFitting(
+            CGSize(width: w, height: UIView.layoutFittingCompressedSize.height),
+            withHorizontalFittingPriority: .required,
+            verticalFittingPriority: .fittingSizeLevel
+        ).height
+        view.frame = CGRect(x: 0, y: 0, width: w, height: h)
+        self.tableView.tableFooterView = (self.isSabaEffective ? view : UIView())
+    }
+
+    private func updateFooterVisibility() {
+        // NOTE: Footer is used only in SABA mode and only if there is more to show or fetch
+        guard self.isSabaEffective else {
+            self.tableView.tableFooterView = UIView()
+            return
+        }
+        guard let footer = self.footerContainer else { return }
+
+        let totalLoaded = self.content?.feedItems.count ?? 0
+        let visible = self.visibleItemLimit ?? totalLoaded
+        let hasMoreToReveal = visible < totalLoaded
+        let canFetchMore = self.hasMoreContent
+
+        if hasMoreToReveal || canFetchMore {
+            self.setTableFooterView(footer)
+            self.footerButtonView?.setButtonEnabled(enabled: true)
+        } else {
+            self.tableView.tableFooterView = UIView()
+        }
+    }
+    
+    // MARK: - Visible content for SABA
+
+    private func recalcVisibleContent() {
+        guard self.isSabaEffective, let content = self.content else {
+            self.visibleContent = nil
+            return
+        }
+        guard let limit = self.visibleItemLimit else {
+            self.visibleContent = content
+            return
+        }
+
+        // NOTE: Keep the same order used by sections: most-recent-first
+        let sorted = content.feedItems.sorted { $0.fromDate > $1.fromDate }
+        let clamped = min(limit, sorted.count)
+        let limitedItems = Array(sorted.prefix(clamped))
+        self.visibleContent = FeedContent(withQuickActivities: content.quickActivities,
+                                          feedItems: limitedItems)
+    }
+
+    private func scrollToPendingTargetIfAny() {
+        // NOTE: Scroll to the first newly revealed row (global index in the visible feed items)
+        guard let target = self.pendingScrollGlobalIndex else { return }
+        self.pendingScrollGlobalIndex = nil
+
+        // Build flat index-path list for visible feed items (exclude quick-activity section)
+        var flat: [IndexPath] = []
+        for (sectionIndex, section) in self.sections.enumerated() {
+            guard let fs = section as? FeedSection else { continue }
+            for row in 0..<fs.feedItems.count {
+                flat.append(IndexPath(row: row, section: sectionIndex))
+            }
+        }
+        guard target >= 0, target < flat.count else { return }
+        self.tableView.scrollToRow(at: flat[target], at: .top, animated: true)
+    }
+    
     // MARK: - Actions
     
     @objc private func refreshControlPulled() {
@@ -317,9 +492,8 @@ extension FeedListManager: UITableViewDataSource {
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        if self.hasMoreContent, section == self.sections.count - 1 {
-            // If there is more content and this is the last section
-            // add one cell for the loading cell
+        if !self.isSabaEffective, self.isInfiniteScrollEnabled,
+           self.hasMoreContent, section == self.sections.count - 1 {
             return self.sections[section].numberOfRows + 1
         } else {
             return self.sections[section].numberOfRows
@@ -329,7 +503,7 @@ extension FeedListManager: UITableViewDataSource {
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         
         let getLoadingCell: (() -> UITableViewCell) = {
-            assert(self.hasMoreContent, "No need to show the Loading cell")
+            assert(!self.isSabaEffective && self.isInfiniteScrollEnabled && self.hasMoreContent, "No need to show the Loading cell")
             guard let cell = tableView.dequeueReusableCellOfType(type: LoadingTableViewCell.self, forIndexPath: indexPath) else {
                 assertionFailure("LoadingTableViewCell not registered")
                 return UITableViewCell()
@@ -467,8 +641,10 @@ extension FeedListManager: UITableViewDataSource {
     }
     
     func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
-        if cell is LoadingTableViewCell, self.hasMoreContent {
-            print("FeedListManager - load more contents")
+        if !self.isSabaEffective,
+           self.isInfiniteScrollEnabled,
+           cell is LoadingTableViewCell,
+           self.hasMoreContent {
             self.appendItems()
         }
     }
