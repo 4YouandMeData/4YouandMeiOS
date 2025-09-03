@@ -15,6 +15,11 @@ fileprivate extension Schedulable {
         default: return false
         }
     }
+    
+    var isSurvey: Bool {
+        if case .survey = self { return true }
+        return false
+    }
 }
 
 struct FeedContent {
@@ -75,10 +80,15 @@ protocol FeedListManagerDelegate: AnyObject {
     func getDataProviderSingle(repository: Repository, fetchMode: FetchMode) -> Single<FeedContent>
     func onListRefresh()
     func showError(error: Error)
+    
+    /// Return true if the given survey is the "Daily Inputs" one (SABA rule).
+    /// Default: false.
+    func isDailyInputsSurvey(_ survey: Survey) -> Bool
 }
 
 extension FeedListManagerDelegate {
     func onListRefresh() {}
+    func isDailyInputsSurvey(_ survey: Survey) -> Bool { false }
 }
 
 protocol FeedListSection {
@@ -118,6 +128,19 @@ class FeedListManager: NSObject {
     private var isSabaEffective: Bool {
         // NOTE: enable SABA behavior when real SABA or when testing override is on
         return ProjectInfo.StudyId.lowercased() == "saba" || forceSabaFooterForTesting
+    }
+    
+    // Helper: check "non-daily" survey
+    private func isDailySurvey(_ feed: Feed) -> Bool {
+        guard let sched = feed.schedulable else { return false }
+        switch sched {
+        case .survey(let survey):
+            // Delegate decides if this is "Daily Inputs"
+            let isDailyInputs = self.delegate?.isDailyInputsSurvey(survey) ?? false
+            return isDailyInputs
+        default:
+            return false
+        }
     }
 
     // UI-window of visible feed items for SABA mode (nil = show all)
@@ -194,7 +217,7 @@ class FeedListManager: NSObject {
         
         if self.isSabaEffective {
             self.visibleItemLimit = self.sabaStep // show first 2 items initially
-            self.installFooterButton(title: "Mostra altri 2", style: .secondaryBackground(shadow: false))
+            self.installFooterButton(style: .secondaryBackground(shadow: false))
         }
         
         // Pull to refresh
@@ -255,13 +278,16 @@ class FeedListManager: NSObject {
             .subscribe(onSuccess: { [weak self] content in
                 guard let self = self else { return }
                 self.updateHasContent(withFeedContent: content)
-                self.content = content
+                
+                // Apply SABA reward rule for display
+                self.content = self.applySabaRewardRule(to: content)
+                
                 // SABA: recompute visible window
                 self.recalcVisibleContent()
-                
                 self.handleRefreshEnd()
                 self.errorView.hideView()
                 self.updateFooterVisibility() // SABA: show/hide footer accordingly
+                self.updateFooterTitle()
                 onCompletion?()
             }, onFailure: { [weak self] error in
                 guard let self = self else { return }
@@ -297,7 +323,8 @@ class FeedListManager: NSObject {
             .subscribe(onSuccess: { [weak self] content in
                 guard let self = self else { return }
                 self.updateHasContent(withFeedContent: content)
-                self.content = self.content.merge(withContent: content)
+                let merged = self.content.merge(withContent: content)
+                self.content = self.applySabaRewardRule(to: merged)
                 
                 // SABA: after fetching, recompute window + scroll if needed
                 self.recalcVisibleContent()
@@ -305,6 +332,7 @@ class FeedListManager: NSObject {
                 self.errorView.hideView()
                 self.footerButtonView?.setButtonEnabled(enabled: true)
                 self.updateFooterVisibility()
+                self.updateFooterTitle()
                 self.scrollToPendingTargetIfAny()
                 
             }, onFailure: { error in
@@ -363,7 +391,7 @@ class FeedListManager: NSObject {
     
     // MARK: - Footer Button (GenericButtonView)
 
-    private func installFooterButton(title: String, style: GenericButtonTextStyleCategory) {
+    private func installFooterButton(style: GenericButtonTextStyleCategory) {
         let container = UIView()
         container.backgroundColor = .clear
 
@@ -373,7 +401,7 @@ class FeedListManager: NSObject {
                                        height: Constants.Style.DefaultFooterHeight)
         container.addSubview(button)
         button.autoPinEdgesToSuperviewEdges()
-        button.setButtonText(title)
+        self.updateFooterTitle()
         button.addTarget(target: self, action: #selector(self.footerButtonTapped))
 
         self.footerContainer = container
@@ -403,6 +431,7 @@ class FeedListManager: NSObject {
         } else {
             self.scrollToPendingTargetIfAny()
             self.updateFooterVisibility()
+            self.updateFooterTitle()
         }
     }
 
@@ -478,6 +507,68 @@ class FeedListManager: NSObject {
         self.tableView.scrollToRow(at: flat[target], at: .top, animated: true)
     }
     
+    // MARK: - Footer title update
+
+    // MARK: - Remaining surveys count (loaded only)
+
+    /// Count remaining surveys among the *loaded* feed items:
+    /// totalLoadedSurveys - visibleSurveys(in the current SABA window).
+    private func remainingSurveysCount() -> Int {
+        // If not in SABA (or no content), nothing to compute
+        guard self.isSabaEffective, let content = self.content else { return 0 }
+
+        // Keep same ordering used by sections (newest first)
+        let sorted = content.feedItems.sorted { $0.fromDate > $1.fromDate }
+
+        // How many surveys are loaded
+        let totalLoadedSurveys = sorted.reduce(0) { $0 + (( $1.schedulable?.isSurvey == true ) ? 1 : 0) }
+
+        // How many surveys are currently visible (within the visibleItemLimit window)
+        let limit = min(self.visibleItemLimit ?? sorted.count, sorted.count)
+        let visiblePrefix = sorted.prefix(limit)
+        let visibleSurveys = visiblePrefix.reduce(0) { $0 + (( $1.schedulable?.isSurvey == true ) ? 1 : 0) }
+
+        return max(totalLoadedSurveys - visibleSurveys, 0)
+    }
+
+    /// Update footer button title with remaining *surveys*.
+    private func updateFooterTitle() {
+        guard self.isSabaEffective, let button = self.footerButtonView else { return }
+        let remaining = self.remainingSurveysCount()
+        let title = StringsProvider.string(forKey: .footerFeedButton,
+                                           withParameters: ["\(remaining)"])
+        button.setButtonText(title)
+    }
+    
+    // Apply SABA rule: hide reward items while there is at least one non-daily survey in the list.
+    private func applySabaRewardRule(to content: FeedContent) -> FeedContent {
+        // Only enforce in SABA
+        guard isSabaEffective else { return content }
+
+        // If there is any non-daily survey still present, remove rewards
+        let hasBlockingSurvey = content.feedItems.contains(where: { self.isDailySurvey($0) })
+
+        if hasBlockingSurvey {
+            let filteredFeedItems = content.feedItems.filter { feed in
+                // Keep everything except reward notifiable
+                if let notifiable = feed.notifiable {
+                    switch notifiable {
+                    case .reward:
+                        return false
+                    default:
+                        return true
+                    }
+                }
+                return true
+            }
+            return FeedContent(withQuickActivities: content.quickActivities,
+                               feedItems: filteredFeedItems)
+        } else {
+            // No blocking surveys -> rewards can be shown
+            return content
+        }
+    }
+
     // MARK: - Actions
     
     @objc private func refreshControlPulled() {

@@ -10,16 +10,36 @@ import RxSwift
 import JJFloatingActionButton
 
 class FeedViewController: BaseViewController {
+    private var isSaba: Bool {
+        return ProjectInfo.StudyId.lowercased() == "saba"
+    }
     
+    private var forceSabaForTesting: Bool {
+        #if DEBUG
+        return false
+        #else
+        return false
+        #endif
+    }
+    
+    private var effectiveIsSaba: Bool {
+        return isSaba || forceSabaForTesting
+    }
+    
+    private var feedPageSize: Int? {
+        return effectiveIsSaba ? Constants.Misc.SabaPageSize : Constants.Misc.FeedPageSize
+    }
+
     private lazy var listManager: FeedListManager = {
+        
         return FeedListManager(repository: self.repository,
                                navigator: self.navigator,
                                tableView: self.tableView,
                                delegate: self,
-                               pageSize: Constants.Misc.FeedPageSize,
+                               pageSize: self.feedPageSize,
                                pullToRefresh: true,
                                isInfiniteScrollEnabled: true,
-                               forceSabaFooterForTesting: true)
+                               forceSabaFooterForTesting: self.forceSabaForTesting)
     }()
     
     private lazy var headerView: FeedHeaderView = {
@@ -203,6 +223,23 @@ extension FeedViewController: FeedListManagerDelegate {
                              navigator: self.navigator,
                              repository: self.repository,
                              disposeBag: self.disposeBag)
+    }
+    
+    func isDailyInputsSurvey(_ survey: Survey) -> Bool {
+        // Example strategies (pick the one that matches your model):
+        // By exact title (case-insensitive)
+//        if let title = survey.title?.lowercased(), title == "daily inputs" {
+//            return true
+//        }
+        
+        if Int(survey.id) == 25 {
+            return true
+        }
+
+        // By tags/metadata if you have them
+        // if survey.tags.contains("daily_inputs") { return true }
+
+        return false
     }
     
     func showError(error: Error) {

@@ -454,6 +454,8 @@ enum StringKey: String, CaseIterable, CodingKey {
     case phaseSwitchButtonCancel = "PHASE_SWITCH_BUTTON_NO"
     case phaseNames = "STUDY_PHASES"
     
+    case footerFeedButton = "FOOTER_FEED_BUTTON"
+    
     var defaultValue: String {
         switch self {
         case .setupErrorTitle: return "Uh, oh!"
