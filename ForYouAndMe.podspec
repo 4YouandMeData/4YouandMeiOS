@@ -8,7 +8,7 @@
 
 Pod::Spec.new do |s|
   s.name             = 'ForYouAndMe'
-  s.version          = '0.97.6'
+  s.version          = '0.97.7'
   s.summary          = 'Framework for research studies apps'
   s.description      = <<-DESC
                        ForYouAndMe is a framework aimed to easily develop an app for research study
@@ -28,11 +28,13 @@ Pod::Spec.new do |s|
   s.static_framework = true
 
   s.pod_target_xcconfig = {
-    'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'x86_64 arm64'
+    'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'x86_64 arm64',
+    'IPHONEOS_DEPLOYMENT_TARGET' => '15.6'
   }
 
   s.user_target_xcconfig = {
-    'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'arm64'
+    'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'arm64',
+    'IPHONEOS_DEPLOYMENT_TARGET' => '15.6'
   }
 
   s.xcconfig = {
