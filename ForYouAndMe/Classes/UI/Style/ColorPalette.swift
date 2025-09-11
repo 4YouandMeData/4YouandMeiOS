@@ -6,6 +6,11 @@
 //  Copyright © 2020 Balzo srl. All rights reserved.
 //
 
+//  ColorPalette.swift
+//  ForYouAndMe
+//
+//  Dark Mode–ready
+
 import UIKit
 import SVProgressHUD
 
@@ -35,6 +40,7 @@ enum ColorType: String, CaseIterable, CodingKey {
     case noticedColor = "noticed_color"
     case noticedTextColor = "noticed_text_color"
     
+    /// Default (Light) palette
     var defaultColor: UIColor {
         switch self {
         case .primary: return UIColor(hexRGB: 0x140F26)
@@ -61,27 +67,142 @@ enum ColorType: String, CaseIterable, CodingKey {
         case .noticedTextColor: return UIColor(hexRGB: 0x007AFF)
         }
     }
+    
+    /// Default (Dark) palette — sensata per partire; puoi affinarla con i tuoi brand colors.
+    var defaultDarkColor: UIColor {
+        switch self {
+        case .primary: return UIColor(hexRGB: 0x0B0A14)          // darker background
+        case .secondary: return UIColor(hexRGB: 0x1C1C1E)        // card bg
+        case .tertiary: return UIColor(hexRGB: 0x34CBD9)         // keep accent
+        case .fourth: return UIColor(hexRGB: 0x2C2C2E)           // elevated bg
+        case .primaryText: return UIColor(hexRGB: 0xF2F2F7)      // primary label
+        case .fabTextColor: return UIColor(hexRGB: 0x000000)     // black on light FAB
+        case .secondaryText: return UIColor(hexRGB: 0xD1D1D6)    // secondary label
+        case .tertiaryText: return UIColor(hexRGB: 0x34CBD9)     // accent text
+        case .fourthText: return UIColor(hexRGB: 0x8E8E93)       // tertiary label
+        case .primaryMenu: return UIColor(hexRGB: 0x0B0A14)
+        case .secondaryMenu: return UIColor(hexRGB: 0x636366)
+        case .active: return UIColor(hexRGB: 0x54C788)
+        case .inactive: return UIColor(hexRGB: 0x3A3A3C)
+        case .gradientPrimaryEnd: return UIColor(hexRGB: 0x0B99AE)
+        case .gradientTertiaryEnd: return UIColor(hexRGB: 0x25B8C9)
+        case .fabColorDefault: return UIColor(hexRGB: 0xFFFFFF)
+        case .fabOutlineColor: return UIColor(hexRGB: 0x5A5A5A)
+        case .secondaryBackgroungColor: return UIColor(hexRGB: 0x2C2C2E)
+        case .reflectionColor: return UIColor(hexRGB: 0x5B4E2A)  // warmer dark bg
+        case .reflectionTextColor: return UIColor(hexRGB: 0xFFD99B)
+        case .noticedColor: return UIColor(hexRGB: 0x0A2540)     // dark blue bg
+        case .noticedTextColor: return UIColor(hexRGB: 0x61A8FF)
+        }
+    }
 }
 
-class ColorPalette {
+final class ColorPalette {
     
-    private static var colorMap: ColorMap = [:]
+    // MARK: - State
     
+    private static var lightMap: ColorMap = [:]
+    private static var darkMap: ColorMap = [:]
+    
+    // MARK: - Init
+    
+    /// Backward compatible initializer: same map used for both Light & Dark.
     static func initialize(withColorMap colorMap: ColorMap) {
-        self.colorMap = colorMap
-        SVProgressHUD.setForegroundColor(ColorPalette.color(withType: .primary))
+        self.lightMap = colorMap
+        self.darkMap = colorMap
+        refreshThirdPartyAppearances(for: UITraitCollection.current)
     }
     
+    /// New: provide distinct light/dark maps.
+    static func initialize(light lightMap: ColorMap, dark darkMap: ColorMap? = nil) {
+        self.lightMap = lightMap
+        // If dark not provided, synthesize from defaults
+        self.darkMap = darkMap ?? Self.synthesizedDark(from: lightMap)
+        refreshThirdPartyAppearances(for: UITraitCollection.current)
+    }
+    
+    // MARK: - Lookup
+    
+    /// Returns a dynamic UIColor that resolves based on the current UIUserInterfaceStyle.
     static func color(withType type: ColorType) -> UIColor {
-        return self.colorMap[type] ?? type.defaultColor
+        // Build a dynamic provider so the color auto-updates on theme change
+        return UIColor { trait in
+            let isDark = (trait.userInterfaceStyle == .dark)
+            let map = isDark ? darkMap : lightMap
+            // Prefer configured map; otherwise fall back to sensible defaults
+            let configured = map[type]
+            let fallback = isDark ? type.defaultDarkColor : type.defaultColor
+            return configured ?? fallback
+        }
     }
     
-    // Fixed colors
-    static var shadowColor = UIColor(hexRGBA: 0x30374029)
-    static var overlayColor = UIColor(hexRGBA: 0x30374080)
+    // MARK: - Fixed Colors (now dynamic)
     
-    static var errorPrimaryColor = UIColor(hexRGB: 0x303740)
-    static var errorSecondaryColor = UIColor(hexRGB: 0xFFFFFF)
-    static var borderWarningColor =  UIColor(hexRGB: 0xFFCC00)
-    static var warningColor = UIColor(hexRGB: 0xFEF5EB)
+    /// Shadow adjusted for light/dark
+    static var shadowColor: UIColor = UIColor { trait in
+        // NOTE: keep alpha similar to original (0x29 ~ 16%) but tune base tone
+        let base = (trait.userInterfaceStyle == .dark) ? UIColor.black : UIColor(hexRGB: 0x303740)
+        return base.withAlphaComponent(0.16)
+    }
+    
+    /// Overlay adjusted for light/dark
+    static var overlayColor: UIColor = UIColor { trait in
+        let base = (trait.userInterfaceStyle == .dark) ? UIColor.black : UIColor(hexRGB: 0x303740)
+        return base.withAlphaComponent(0.5)
+    }
+    
+    static var errorPrimaryColor: UIColor = UIColor { trait in
+        return (trait.userInterfaceStyle == .dark) ? UIColor(hexRGB: 0xF2F2F7) : UIColor(hexRGB: 0x303740)
+    }
+    static var errorSecondaryColor: UIColor = UIColor { trait in
+        return (trait.userInterfaceStyle == .dark) ? UIColor(hexRGB: 0x1C1C1E) : UIColor(hexRGB: 0xFFFFFF)
+    }
+    static var borderWarningColor: UIColor = UIColor { _ in UIColor(hexRGB: 0xFFCC00) }
+    static var warningColor: UIColor = UIColor { trait in
+        return (trait.userInterfaceStyle == .dark) ? UIColor(hexRGB: 0x3A2F1F) : UIColor(hexRGB: 0xFEF5EB)
+    }
+    
+    // MARK: - Third-party refresh
+    
+    /// Call this when traits change to keep third-party components in sync (e.g., SVProgressHUD).
+    static func refreshThirdPartyAppearances(for trait: UITraitCollection) {
+        // SVProgressHUD doesn't auto-resolve dynamic colors; resolve explicitly.
+        let primary = color(withType: .primary).resolvedColor(with: trait)
+        SVProgressHUD.setForegroundColor(primary)
+    }
+    
+    // MARK: - Helpers
+    
+    /// Creates a dark map by using configured light colors where present,
+    /// otherwise using `defaultDarkColor`.
+    private static func synthesizedDark(from light: ColorMap) -> ColorMap {
+        var result: ColorMap = [:]
+        for type in ColorType.allCases {
+            // If a dark override is missing, prefer the same light color if it's already suitable,
+            // otherwise fall back to default dark.
+            let fallback = type.defaultDarkColor
+            // Heuristic: if light color is very dark, reuse it.
+            if let candidate = light[type], candidate.isVisuallyDark {
+                result[type] = candidate
+            } else {
+                result[type] = fallback
+            }
+        }
+        return result
+    }
+}
+
+// MARK: - Small utilities
+
+private extension UIColor {
+    /// Very rough luminance check to decide if a color is "dark enough".
+    /// Useful to synthesize a dark map from a light map without manual overrides.
+    var isVisuallyDark: Bool {
+        // Extract RGB in sRGB
+        var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
+        guard self.getRed(&r, green: &g, blue: &b, alpha: &a) else { return false }
+        // Relative luminance approximation
+        let luminance = 0.2126*r + 0.7152*g + 0.0722*b
+        return luminance < 0.35
+    }
 }

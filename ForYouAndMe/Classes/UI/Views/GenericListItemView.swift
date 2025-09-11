@@ -27,7 +27,7 @@ class GenericListItemView: UIView {
         super.init(frame: .zero)
         
         self.gestureCallback = gestureCallback
-        self.backgroundColor = ColorPalette.color(withType: .secondary)
+        self.backgroundColor = ColorPalette.color(withType: .secondaryBackgroungColor)
         
         let stackView = UIStackView()
         stackView.axis = .horizontal

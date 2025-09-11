@@ -74,8 +74,6 @@ class TaskViewController: BaseViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        self.view.backgroundColor = ColorPalette.color(withType: .secondary)
-        
         // Header View
         let headerView = SingleTextHeaderView()
         headerView.setTitleText(StringsProvider.string(forKey: .tabTaskTitle))

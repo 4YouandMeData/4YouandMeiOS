@@ -60,7 +60,8 @@ class RepositoryImpl {
         }()
         return request
             .do(onSuccess: { (globalConfig: GlobalConfig) in
-                ColorPalette.initialize(withColorMap: globalConfig.colorMap)
+                ColorPalette.initialize(light: globalConfig.colorMap, dark: globalConfig.darkColorMap)
+                globalConfig.logColorMapDiff(light: globalConfig.colorMap, dark: globalConfig.darkColorMap)
                 StringsProvider.initialize(withFullStringMap: globalConfig.fullStringMap, requiredStringMap: globalConfig.requiredStringMap)
                 CountryCodeProvider.initialize(withcountryCodes: globalConfig.countryCodes)
                 IntegrationProvider.initialize(withIntegrationDatas: globalConfig.integrationDatas)

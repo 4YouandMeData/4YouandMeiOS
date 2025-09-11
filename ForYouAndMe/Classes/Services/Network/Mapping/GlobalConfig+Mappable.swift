@@ -11,6 +11,7 @@ import Foundation
 extension GlobalConfig: Mappable {
     init(map: Mapper) throws {
         try self.colorMap = map.from("color_palette")
+        try self.darkColorMap = map.from("dark_mode_color_palette")
         try self.requiredStringMap = map.from("strings")
         try self.fullStringMap = map.from("strings")
         try self.countryCodes = map.from("country_codes", transformation: Mapper.errorIfEmpty)

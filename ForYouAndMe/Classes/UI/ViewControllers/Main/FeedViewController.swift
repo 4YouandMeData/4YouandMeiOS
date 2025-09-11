@@ -89,9 +89,6 @@ class FeedViewController: BaseViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        // TODO: Handle secondary color background when pull to refresh (should be primary gradient)
-        self.view.backgroundColor = ColorPalette.color(withType: .secondary)
-        
         // Header View
         self.view.addSubview(self.headerView)
         self.headerView.autoPinEdgesToSuperviewEdges(with: .zero, excludingEdge: .bottom)

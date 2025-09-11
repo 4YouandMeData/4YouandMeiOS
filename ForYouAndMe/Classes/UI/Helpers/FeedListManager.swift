@@ -137,7 +137,7 @@ class FeedListManager: NSObject {
         case .survey(let survey):
             // Delegate decides if this is "Daily Inputs"
             let isDailyInputs = self.delegate?.isDailyInputsSurvey(survey) ?? false
-            return isDailyInputs
+            return !isDailyInputs
         default:
             return false
         }

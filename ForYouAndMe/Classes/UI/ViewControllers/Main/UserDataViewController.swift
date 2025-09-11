@@ -75,7 +75,6 @@ class UserDataViewController: BaseViewController, WKNavigationDelegate, WKScript
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        self.view.backgroundColor = ColorPalette.color(withType: .fourth)
         self.setFabHidden(true)
         self.floatingButton.delegate = self
         
@@ -135,15 +134,17 @@ class UserDataViewController: BaseViewController, WKNavigationDelegate, WKScript
     // MARK: WebView Methods
     
     private func loadWebViewWithSessionToken() {
-        
-        guard let url = URL(string: Constants.Network.YourDataUrlStr) else {
+        guard let baseURL = URL(string: Constants.Network.YourDataUrlStr) else {
             assertionFailure("Cannot retrieve url from given string: \(Constants.Network.YourDataUrlStr)")
             self.navigator.handleError(error: nil, presenter: self)
             return
         }
         
+        // Add dark_mode query param
+        let url = self.urlBySettingDarkModeParam(baseURL)
+        
         guard let domain = url.host else {
-            assertionFailure("Cannot retrieve domain from given url: \(Constants.Network.YourDataUrlStr)")
+            assertionFailure("Cannot retrieve domain from given url: \(url.absoluteString)")
             self.navigator.handleError(error: nil, presenter: self)
             return
         }
@@ -173,7 +174,6 @@ class UserDataViewController: BaseViewController, WKNavigationDelegate, WKScript
         request.httpShouldHandleCookies = true
         self.webView.configuration.websiteDataStore.httpCookieStore.setCookie(authenticationCookie, completionHandler: { [weak self] in
             guard let self = self else { return }
-            print("ReactiveAuthWebViewController - Authentication cookie setup done")
             self.webView.load(request)
         })
     }
@@ -271,17 +271,19 @@ class UserDataViewController: BaseViewController, WKNavigationDelegate, WKScript
     
     private func handleFullScreenTap(body: [String: Any]) {
         guard let chartId = body["chartId"] as? NSNumber else { return }
-        let query = body["queryString"] as? String ?? ""
-        let urlString = Constants.Network.CharPageUrlStr + chartId.stringValue + query
-
-        guard let url = URL(string: urlString) else {
-            assertionFailure("URL invalido: \(urlString)")
+        let query = body["queryString"] as? String
+        
+        // Base = page URL + chartId; extra query = payload
+        guard let baseURL = URL(string: Constants.Network.CharPageUrlStr + chartId.stringValue) else {
+            assertionFailure("Invalid base URL")
             return
         }
-
+        
+        let finalURL = buildURL(base: baseURL, mergingQueryString: query)
+        
         navigator.openWebView(
             withTitle: "",
-            url: url,
+            url: finalURL,
             presenter: self,
             configuration: webView.configuration
         )
@@ -352,5 +354,58 @@ extension UserDataViewController: JJFloatingActionButtonDelegate {
     // Called when the menu finished closing
     func floatingActionButtonDidClose(_ actionButton: JJFloatingActionButton) {
         self.setFabHidden(true)
+    }
+}
+
+// MARK: - Dark Mode URL helper
+private extension UserDataViewController {
+    /// Returns true if current trait is dark
+    var isDarkModeActive: Bool {
+        // NOTE: use current view's trait collection
+        return self.traitCollection.userInterfaceStyle == .dark
+    }
+    
+    /// Adds or updates `dark_mode=true|false` in the given URL.
+    /// - Important: preserves existing query items.
+    func urlBySettingDarkModeParam(_ url: URL) -> URL {
+        // Build components safely
+        guard var comps = URLComponents(url: url, resolvingAgainstBaseURL: false) else { return url }
+        var items = comps.queryItems ?? []
+        // Remove any existing `dark_mode` before appending the fresh value
+        items.removeAll { $0.name == "dark_mode" }
+        items.append(URLQueryItem(name: "dark_mode", value: isDarkModeActive ? "true" : "false"))
+        comps.queryItems = items
+        return comps.url ?? url
+    }
+    
+    /// Merges an arbitrary `queryString` (possibly starting with '?') into a base URL
+    /// and also sets the `dark_mode` param.
+    func buildURL(base baseURL: URL, mergingQueryString queryString: String?) -> URL {
+        guard var comps = URLComponents(url: baseURL, resolvingAgainstBaseURL: false) else { return baseURL }
+        
+        // Start from existing items (if any)
+        var items = comps.queryItems ?? []
+        
+        // Parse and merge extra query coming from JS payload (e.g. "?interval=day&foo=bar")
+        if let qs = queryString, !qs.isEmpty {
+            // Strip leading '?'
+            var tmp = URLComponents()
+            tmp.query = qs.hasPrefix("?") ? String(qs.dropFirst()) : qs
+            if let extra = tmp.queryItems {
+                items.append(contentsOf: extra)
+            }
+        }
+        
+        // Remove duplicates by name keeping the last occurrence
+        var dedup: [String: URLQueryItem] = [:]
+        for it in items { dedup[it.name] = it }
+        items = Array(dedup.values)
+        
+        // Set dark_mode
+        items.removeAll { $0.name == "dark_mode" }
+        items.append(URLQueryItem(name: "dark_mode", value: isDarkModeActive ? "true" : "false"))
+        
+        comps.queryItems = items
+        return comps.url ?? baseURL
     }
 }
