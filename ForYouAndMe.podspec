@@ -8,7 +8,7 @@
 
 Pod::Spec.new do |s|
   s.name             = 'ForYouAndMe'
-  s.version          = '0.97.9'
+  s.version          = '0.98.0'
   s.summary          = 'Framework for research studies apps'
   s.description      = <<-DESC
                        ForYouAndMe is a framework aimed to easily develop an app for research study
@@ -27,18 +27,6 @@ Pod::Spec.new do |s|
 
   s.static_framework = true
 
-  s.pod_target_xcconfig = {
-    'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'x86_64 arm64'
-  }
-
-  s.user_target_xcconfig = {
-    'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'arm64'
-  }
-
-  s.xcconfig = {
-    'FRAMEWORK_SEARCH_PATHS' => '$(PODS_ROOT)/ForYouAndMe/Frameworks/**'
-  }
-
   s.frameworks = 'UIKit'
 
   s.subspec 'Core' do |core|
@@ -46,7 +34,52 @@ Pod::Spec.new do |s|
     core.resource_bundles = {
       'ForYouAndMe' => ['ForYouAndMe/Assets/**/*.{json,xcassets}']
     }
-    core.vendored_frameworks = 'ForYouAndMe/Frameworks/MirSmartDevice.framework'
+    
+    core.vendored_frameworks = 'ForYouAndMe/Frameworks/MirSmartDevice.xcframework'
+    
+    # EMBED: script phase che copia e firma la slice corretta
+    core.script_phases = [
+      {
+        :name => 'Embed MirSmartDevice.xcframework',
+        :execution_position => :after_compile,
+        :shell_path => '/bin/sh',
+        :input_files => [
+          '${PODS_TARGET_SRCROOT}/ForYouAndMe/Frameworks/MirSmartDevice.xcframework/ios-arm64/MirSmartDevice.framework/MirSmartDevice',
+          '${PODS_TARGET_SRCROOT}/ForYouAndMe/Frameworks/MirSmartDevice.xcframework/ios-arm64_x86_64-simulator/MirSmartDevice.framework/MirSmartDevice'
+        ],
+        :output_files => [
+          '${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/MirSmartDevice.framework/MirSmartDevice'
+        ],
+        :script => <<-'SCRIPT'
+  set -euo pipefail
+  # All comments must be in English.
+
+  # Prefer using PODS_TARGET_SRCROOT so it works both as dev pod and as installed pod.
+  XCFRAMEWORK_ROOT="${PODS_TARGET_SRCROOT}/ForYouAndMe/Frameworks/MirSmartDevice.xcframework"
+  DEST_DIR="${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}"
+
+  if [[ "${PLATFORM_NAME}" == "iphonesimulator" ]]; then
+    SLICE_DIR="ios-arm64_x86_64-simulator"
+  else
+    SLICE_DIR="ios-arm64"
+  fi
+
+  SRC_FRAMEWORK="${XCFRAMEWORK_ROOT}/${SLICE_DIR}/MirSmartDevice.framework"
+
+  echo "Embedding ${SRC_FRAMEWORK} -> ${DEST_DIR}"
+  mkdir -p "${DEST_DIR}"
+  rsync -a --delete "${SRC_FRAMEWORK}" "${DEST_DIR}"
+
+  # Code sign if needed
+  if [[ -n "${EXPANDED_CODE_SIGN_IDENTITY:-}" && "${CODE_SIGNING_ALLOWED}" != "NO" ]]; then
+    /usr/bin/codesign --force --sign "${EXPANDED_CODE_SIGN_IDENTITY}" \
+      --preserve-metadata=identifier,entitlements \
+      "${DEST_DIR}/MirSmartDevice.framework"
+  fi
+  SCRIPT
+      }
+    ]
+    
     core.dependency 'Moya/RxSwift', '~> 15.0.0'
     core.dependency 'Moya/ReactiveSwift', '~> 15.0.0'
     core.dependency 'AlamofireImage', '~> 4.3.0'
