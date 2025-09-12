@@ -15,6 +15,10 @@ class StudyInfoViewController: UIViewController {
     private let repository: Repository
     private let storage: CacheService
     private var studyInfoSection: StudyInfoSection?
+    private var isSabaEffective: Bool {
+        // NOTE: enable SABA behavior when real SABA or when testing override is on
+        return ProjectInfo.StudyId.lowercased() == "saba"
+    }
     
     private let disposeBag = DisposeBag()
     
@@ -88,7 +92,7 @@ class StudyInfoViewController: UIViewController {
             guard let self = self else { return }
             self.studyInfoSection = infoSection
             self.refreshUI()
-        }, onError: { [weak self] error in
+        }, onFailure: { [weak self] error in
             guard let self = self else { return }
             print("StudyInfo View Controller - Error retrieve studyInfo page: \(error.localizedDescription)")
             self.refreshUI()
@@ -98,6 +102,21 @@ class StudyInfoViewController: UIViewController {
     
     private func showPage(page: Page, isModal: Bool) {
         self.navigator.showInfoDetailPage(presenter: self, page: page, isModal: isModal)
+    }
+    
+    // MARK: - SABA Hardcoded Page
+    private func makeSabaDeletionPage() -> Page {
+        return Page(
+            id: "saba-deletion-info",
+            image: nil,
+            title: "Eliminazione account",
+            body:
+    """
+    <p>Hai il diritto di richiedere la cancellazione del tuo account e dei dati personali associati in qualsiasi momento.</p> <p>Per procedere con l&#39;eliminazione dell’account, ti chiediamo di inviare una richiesta via email all&#39;indirizzo:</p> <p><strong>📧 <a href="mailto:saba@nuraxi.ai">saba@nuraxi.ai</a></strong></p> <p>o richiedere l&#39;eliminazione attraverso il form alla <a href="https://www.nuraxi.ai/saba-account">pagina ufficiale</a></p> <p>Nel messaggio, ti invitiamo a specificare:</p> <ul> <li>L’indirizzo email associato al tuo account<br></li> <li>L’oggetto: <strong>Richiesta di eliminazione account</strong><br></li> <li>Eventuali ulteriori dettagli per aiutarci a identificare correttamente il tuo profilo<br></li> </ul> <p>Una volta ricevuta la richiesta, provvederemo a eliminare definitivamente il tuo account e i dati associati entro <strong>30 giorni lavorativi</strong>. Riceverai una conferma via email al termine del processo.</p> <blockquote> <p>⚠️ <strong>Nota:</strong> La cancellazione dell&#39;account è permanente e non reversibile. Tutti i dati associati saranno rimossi dai nostri sistemi.</p> </blockquote>
+    """,
+            buttonFirstLabel: nil,
+            buttonSecondLabel: nil
+        )
     }
     
     private func refreshUI() {
@@ -160,6 +179,23 @@ class StudyInfoViewController: UIViewController {
             self.scrollStackView.stackView.addArrangedSubview(faq)
         }
         
+        // ===== SABA: extra page (hardcoded) =====
+        if self.isSabaEffective {
+            let sabaPage = self.makeSabaDeletionPage()
+            let sabaTile = GenericListItemView(
+                withTitle: sabaPage.title,
+                image: ImagePalette.templateImage(withName: .deleteAccount) ?? UIImage(),
+                colorType: .primary,
+                style: .flatStyle,
+                gestureCallback: { [weak self] in
+                    guard let self = self else { return }
+                    self.showPage(page: sabaPage, isModal: false)
+                }
+            )
+            self.scrollStackView.stackView.addArrangedSubview(sabaTile)
+        }
+        // =======================================
+
         self.scrollStackView.layoutIfNeeded()
         
         let footerHeight: CGFloat = 40.0
