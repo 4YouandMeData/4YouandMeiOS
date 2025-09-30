@@ -12,7 +12,7 @@ class DiaryNoteEmptyView: UIView {
     init(withTopOffset topOffset: CGFloat) {
         super.init(frame: .zero)
         
-        self.backgroundColor = ColorPalette.color(withType: .secondary)
+        self.backgroundColor = ColorPalette.color(withType: .secondaryBackgroungColor)
         
         let stackView = UIStackView()
         stackView.axis = .vertical

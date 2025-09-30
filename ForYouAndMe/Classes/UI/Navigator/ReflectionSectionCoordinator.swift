@@ -92,10 +92,7 @@ class ReflectionSectionCoordinator: NSObject, PagedActivitySectionCoordinator {
         self.repository.sendTaskResult(taskId: self.taskIdentifier,
                                        taskResult: TaskNetworkResult(data: taskResult, attachedFile: nil))
             .addProgress()
-            .subscribe(onSuccess: { [weak self] in
-                guard let self = self else { return }
-                 self.showSuccessPage()
-            }, onFailure: { [weak self] error in
+            .subscribe(onSuccess: {}, onFailure: { [weak self] error in
                 guard let self = self else { return }
                 
                 self.navigator.handleError(
@@ -148,6 +145,7 @@ class ReflectionSectionCoordinator: NSObject, PagedActivitySectionCoordinator {
                                           diaryNoteable: diaryNoteable)
             let diaryNoteAudioViewController = DiaryNoteAudioViewController(withDiaryNote: dataPoint,
                                                                             isEditMode: false,
+                                                                            isFromChart: false,
                                                                             reflectionCoordinator: self)
             
             self.activityPresenter?.view.backgroundColor = ColorPalette.color(withType: .secondary)

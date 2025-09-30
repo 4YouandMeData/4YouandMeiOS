@@ -40,7 +40,7 @@ public class PermissionViewController: UIViewController {
     public override func viewDidLoad() {
         super.viewDidLoad()
         
-        self.view.backgroundColor = ColorPalette.color(withType: .secondary)
+        self.view.backgroundColor = ColorPalette.color(withType: .secondaryBackgroungColor)
         
         // Header View
         let headerView = InfoDetailHeaderView(withTitle: self.titleString )

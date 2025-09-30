@@ -31,7 +31,7 @@ class SurveyQuestionTextInput: UIView, UITextViewDelegate {
         toolBar.tintColor = ColorPalette.color(withType: .primary)
         toolBar.sizeToFit()
         
-        let doneButton = UIBarButtonItem(barButtonSystemItem: .done, target: self, action: #selector(self.doneButtonPressed))
+        let doneButton = UIBarButtonItem(barButtonSystemItem: .save, target: self, action: #selector(self.doneButtonPressed))
         let spaceButton = UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil)
         
         toolBar.setItems([spaceButton, doneButton], animated: false)

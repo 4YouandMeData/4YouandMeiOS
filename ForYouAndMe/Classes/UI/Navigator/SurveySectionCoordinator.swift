@@ -49,7 +49,7 @@ class SurveySectionCoordinator {
     public func getStartingPage() -> UIViewController {
         if let welcomePage = self.sectionData.welcomePage {
             let infoPageData = InfoPageData(page: welcomePage,
-                                    addAbortOnboardingButton: false,
+                                    addAbortOnboardingButton: true,
                                     addCloseButton: false,
                                     allowBackwardNavigation: true,
                                     bodyTextAlignment: .left,

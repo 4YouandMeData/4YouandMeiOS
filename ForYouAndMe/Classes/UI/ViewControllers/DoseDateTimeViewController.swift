@@ -120,7 +120,7 @@ class DoseDateTimeViewController: UIViewController, UITextFieldDelegate {
     }()
 
     private lazy var footerView: GenericButtonView = {
-        let key = (variant == .standalone)
+        let key = variant.isStandaloneLike
         ? StringsProvider.string(forKey: .doseStepTwoConfirmButton)
         : StringsProvider.string(forKey: .noticedStepConfirmButton)
         let gv = GenericButtonView(withTextStyleCategory: .secondaryBackground(shadow: false))
@@ -132,11 +132,19 @@ class DoseDateTimeViewController: UIViewController, UITextFieldDelegate {
 
     // MARK: - State
 
-    private var chosenDate: Date? { didSet { updateFooter() }}
+    private var chosenDate: Date? { didSet {
+        updateFooter()
+        if let date = chosenDate {
+            let fmt = DateFormatter()
+            fmt.dateStyle = .short
+            fmt.timeStyle = .short
+            dateValueLabel.text = fmt.string(from: date)
+        }
+    }}
     private var chosenDose: Double? { didSet { updateFooter() }}
     private func updateFooter() {
         switch self.variant {
-        case .standalone:
+        case .standalone, .fromChart(_):
             footerView.setButtonEnabled(enabled: chosenDate != nil && chosenDose != nil)
         case .embeddedInNoticed:
             footerView.setButtonEnabled(enabled: chosenDose != nil)
@@ -144,7 +152,7 @@ class DoseDateTimeViewController: UIViewController, UITextFieldDelegate {
     }
     
     private lazy var messages: [MessageInfo] = {
-        let location: MessageInfoParameter = (variant == .embeddedInNoticed) ? .pageWeHaveNoticed : .pageMyDoses
+        let location: MessageInfoParameter = variant.isStandaloneLike ? .pageMyDoses : .pageWeHaveNoticed
         let messages = self.storage.infoMessages?.messages(withLocation: location)
         return messages ?? []
     }()
@@ -184,7 +192,6 @@ class DoseDateTimeViewController: UIViewController, UITextFieldDelegate {
 
         setupLayout()
         setupActions()
-        initializeDefaultDate()
     }
 
     override func viewWillAppear(_ animated: Bool) {
@@ -213,7 +220,7 @@ class DoseDateTimeViewController: UIViewController, UITextFieldDelegate {
         scrollStackView.autoPinEdgesToSuperviewSafeArea(with: .zero, excludingEdge: .bottom)
 
         // Title
-        let titleKey = (variant == .standalone)
+        let titleKey = variant.isStandaloneLike
         ? StringsProvider.string(forKey: .doseStepTwoTitle)
         : StringsProvider.string(forKey: .noticedStepThreeTitle)
         let paragraph = NSMutableParagraphStyle()
@@ -242,7 +249,7 @@ class DoseDateTimeViewController: UIViewController, UITextFieldDelegate {
         let replacementString = displayTitle
 
         // Subtitle
-        let messageKey = (variant == .standalone)
+        let messageKey = variant.isStandaloneLike
         ? StringsProvider.string(forKey: .doseStepTwoMessage)
             .replacingPlaceholders(with: [replacementString])
         : StringsProvider.string(forKey: .noticedStepThreeMessage)
@@ -274,10 +281,8 @@ class DoseDateTimeViewController: UIViewController, UITextFieldDelegate {
 
         // Date Section
         
-        if variant == .standalone {
-            sectionHeaderTime.text = (variant == .standalone)
-            ? StringsProvider.string(forKey: .doseStepTwoTimeLabel)
-            : StringsProvider.string(forKey: .noticedStepThreeTime)
+        if variant.isStandaloneLike {
+            sectionHeaderTime.text = StringsProvider.string(forKey: .doseStepTwoTimeLabel)
 
             scrollStackView.stackView.addArrangedSubview(sectionHeaderTime)
             scrollStackView.stackView.addBlankSpace(space: 8)
@@ -287,6 +292,9 @@ class DoseDateTimeViewController: UIViewController, UITextFieldDelegate {
             dateRow.addSubview(dateValueLabel)
             dateRow.addSubview(dateIcon)
             dateRow.addSubview(underlineTime)
+            if let note = variant.chartDiaryNote {
+                chosenDate = note.diaryNoteId
+            } 
             
             dateValueLabel.autoAlignAxis(toSuperviewAxis: .horizontal)
             dateValueLabel.autoPinEdge(.leading, to: .leading, of: dateRow)
@@ -303,7 +311,7 @@ class DoseDateTimeViewController: UIViewController, UITextFieldDelegate {
 
         // Dose Section
         
-        sectionHeaderDose.text = (variant == .standalone)
+        sectionHeaderDose.text = variant.isStandaloneLike
         ? StringsProvider.string(forKey: .doseStepTwoUnitsLabel)
         : StringsProvider.string(forKey: .noticedStepThreeUnit)
         
@@ -312,7 +320,7 @@ class DoseDateTimeViewController: UIViewController, UITextFieldDelegate {
         scrollStackView.stackView.addArrangedSubview(doseRow)
         doseRow.autoSetDimension(.height, toSize: 44)
         
-        doseTextField.placeholder = (variant == .standalone)
+        doseTextField.placeholder = variant.isStandaloneLike
         ? StringsProvider.string(forKey: .doseStepTwoUnitsLabel)
         : StringsProvider.string(forKey: .noticedStepThreeUnit)
         
@@ -352,18 +360,9 @@ class DoseDateTimeViewController: UIViewController, UITextFieldDelegate {
             pickerChanged(datePicker)
         }
     }
-    
-    private func initializeDefaultDate() {
-        let current = self.datePicker.date
-        self.chosenDate = current
-    }
 
     @objc private func pickerChanged(_ dp: UIDatePicker) {
         chosenDate = dp.date
-        let fmt = DateFormatter()
-        fmt.dateStyle = .short
-        fmt.timeStyle = .short
-        dateValueLabel.text = fmt.string(from: dp.date)
     }
 
     @objc private func doseChanged(_ tf: UITextField) {
@@ -385,7 +384,7 @@ class DoseDateTimeViewController: UIViewController, UITextFieldDelegate {
     }
 
     @objc private func infoPressed() {
-        let location: MessageInfoParameter = (variant == .embeddedInNoticed) ? .pageWeHaveNoticed : .pageMyDoses
+        let location: MessageInfoParameter = variant.isStandaloneLike ? .pageMyDoses : .pageWeHaveNoticed
         navigator.openMessagePage(withLocation: location,
                                   presenter: self)
     }

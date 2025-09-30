@@ -35,4 +35,32 @@ public extension UITableView {
         headerView.removeConstraints(temporaryWidthConstraints)
         headerView.translatesAutoresizingMaskIntoConstraints = true
     }
+    
+    func sizeFooterToFit() {
+            guard let footerView = self.tableFooterView else { return }
+            footerView.translatesAutoresizingMaskIntoConstraints = false
+
+            let footerWidth = footerView.bounds.size.width
+            let temporaryWidthConstraints = NSLayoutConstraint.constraints(
+                withVisualFormat: "[footerView(width)]",
+                options: NSLayoutConstraint.FormatOptions(rawValue: 0),
+                metrics: ["width": footerWidth],
+                views: ["footerView": footerView]
+            )
+
+            footerView.addConstraints(temporaryWidthConstraints)
+
+            footerView.setNeedsLayout()
+            footerView.layoutIfNeeded()
+
+            let footerSize = footerView.systemLayoutSizeFitting(UIView.layoutFittingCompressedSize)
+            var frame = footerView.frame
+            frame.size.height = footerSize.height
+            footerView.frame = frame
+
+            self.tableFooterView = footerView
+
+            footerView.removeConstraints(temporaryWidthConstraints)
+            footerView.translatesAutoresizingMaskIntoConstraints = true
+        }
 }

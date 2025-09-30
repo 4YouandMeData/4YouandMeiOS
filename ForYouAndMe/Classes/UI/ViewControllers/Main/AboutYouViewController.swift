@@ -38,7 +38,7 @@ class AboutYouViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        self.view.backgroundColor = ColorPalette.color(withType: .secondary)
+        self.view.backgroundColor = ColorPalette.color(withType: .secondaryBackgroungColor)
         
         // Header View
         self.view.addSubview(self.headerView)

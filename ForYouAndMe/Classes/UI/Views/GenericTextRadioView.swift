@@ -24,11 +24,9 @@ class GenericTextRadioView: UIView {
          textFirst: Bool,
          text: String) {
         
-        
         self.radioButton = GenericRadioButtonView(isDefaultSelected: isDefaultSelected,
                                                   styleCategory: radioStyle)
         super.init(frame: .zero)
-        
         
         let styleData = FontPalette.fontStyleData(forStyle: fontStyle)
         let paragraph = NSMutableParagraphStyle(); paragraph.alignment = .left

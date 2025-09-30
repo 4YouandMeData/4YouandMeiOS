@@ -108,6 +108,7 @@ class SurveyClickableImage: UIView {
         let percentY = point.y / height
         
         let response = SurveyClickableResponse(
+            answerId: "0",
             top: Double(percentY * 100),
             left: Double(percentX * 100)
             )
@@ -155,7 +156,16 @@ class SurveyClickableImage: UIView {
     }
 }
 
-struct SurveyClickableResponse: Equatable, Codable {
+struct SurveyClickableResponse: Equatable {
+    var answerId: String
     var top: Double
     var left: Double
+}
+
+extension SurveyClickableResponse: Codable {
+    enum CodingKeys: String, CodingKey {
+        case answerId = "answer_id"
+        case top
+        case left
+    }
 }

@@ -100,11 +100,13 @@ protocol Repository: AnyObject {
     func sendDiaryNoteEaten(date: Date, mealType: String,
                             quantity: String,
                             significantNutrition: Bool,
-                            fromChart: Bool) -> Single<DiaryNoteItem>
+                            fromChart: Bool,
+                            diaryNote: DiaryNoteItem?) -> Single<DiaryNoteItem>
     func sendDiaryNoteDoses(doseType: String,
                             date: Date,
                             amount: Double,
-                            fromChart: Bool) -> Single<DiaryNoteItem>
+                            fromChart: Bool,
+                            diaryNote: DiaryNoteItem?) -> Single<DiaryNoteItem>
     func sendCombinedDiaryNote(diaryNote: DiaryNoteWeHaveNoticedItem) -> Single<DiaryNoteItem>
     func updateDiaryNoteText(diaryNote: DiaryNoteItem) -> Single<()>
     func deleteDiaryNote(noteID: String) -> Single<()>

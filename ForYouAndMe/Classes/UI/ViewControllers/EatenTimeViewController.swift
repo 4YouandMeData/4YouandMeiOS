@@ -35,7 +35,7 @@ class EatenTimeViewController: UIViewController {
                     return StringsProvider.string(forKey: .noticedStepSixFirstButton)
                 }
                 
-            case .standalone:
+            case .standalone, .fromChart(_):
                 switch self {
                 case .earlier:
                     return StringsProvider.string(forKey: .diaryNoteEatenStepTwoSecondButton)
@@ -49,11 +49,19 @@ class EatenTimeViewController: UIViewController {
     private lazy var withinHourButton: OptionButton = makeOptionButton(type: .withinHour)
     private lazy var earlierButton: OptionButton = makeOptionButton(type: .earlier)
     
+    private var isStandalone: Bool {
+        if case .standalone = variant {
+            return true
+        } else {
+            return false
+        }
+    }
+    
     weak var delegate: EatenTimeViewControllerDelegate?
     
     private lazy var footerView: GenericButtonView = {
         let buttonView = GenericButtonView(withTextStyleCategory: .secondaryBackground(shadow: false))
-        let buttonKey = (variant == .standalone)
+        let buttonKey = isStandalone
         ? StringsProvider.string(forKey: .diaryNoteEatenNextButton)
         : StringsProvider.string(forKey: .noticedStepNextButton)
         buttonView.setButtonText(buttonKey)
@@ -71,7 +79,7 @@ class EatenTimeViewController: UIViewController {
     }
     
     private lazy var messages: [MessageInfo] = {
-        let location: MessageInfoParameter = (variant == .embeddedInNoticed) ? .pageWeHaveNoticed : .pageIHaveEeaten
+        let location: MessageInfoParameter = isStandalone ? .pageIHaveEeaten : .pageWeHaveNoticed
         let messages = self.storage.infoMessages?.messages(withLocation: location)
         return messages ?? []
     }()
@@ -121,7 +129,7 @@ class EatenTimeViewController: UIViewController {
         
         let replacementString = selectedType.displayTextUsingVariant(variant: self.variant).lowercased()
 
-        let messageKey = (variant == .standalone)
+        let messageKey = isStandalone
             ? StringsProvider.string(forKey: .diaryNoteEatenStepTwoMessage)
                 .replacingPlaceholders(with: [replacementString])
             : StringsProvider.string(forKey: .noticedStepSixMessage)
@@ -151,7 +159,7 @@ class EatenTimeViewController: UIViewController {
         }
         
         // Transform input text to bold using attributed string
-        let titleKey = (variant == .standalone)
+        let titleKey = isStandalone
         ? StringsProvider.string(forKey: .diaryNoteEatenStepTwoTitle)
         : StringsProvider.string(forKey: .noticedStepSixTitle)
         
@@ -221,7 +229,7 @@ class EatenTimeViewController: UIViewController {
     }
     
     @objc private func infoButtonPressed() {
-        let location: MessageInfoParameter = (variant == .embeddedInNoticed) ? .pageWeHaveNoticed : .pageIHaveEeaten
+        let location: MessageInfoParameter = isStandalone ? .pageIHaveEeaten : .pageWeHaveNoticed
         self.navigator.openMessagePage(withLocation: location, presenter: self)
     }
 }

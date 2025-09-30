@@ -35,16 +35,24 @@ class NutrientQuestionViewController: UIViewController {
         horizontalInset: Constants.Style.DefaultHorizontalMargins
     )
     
-    private lazy var yesButton: OptionButton = makeOption(text: (variant == .standalone)
+    private var isStandalone: Bool {
+        if case .standalone = variant {
+            return true
+        } else {
+            return false
+        }
+    }
+    
+    private lazy var yesButton: OptionButton = makeOption(text: isStandalone
                                                           ? StringsProvider.string(forKey: .diaryNoteEatenStepFifthFirstButton)
                                                           : StringsProvider.string(forKey: .noticedStepNineFirstButton))
-    private lazy var noButton: OptionButton = makeOption(text: (variant == .standalone)
+    private lazy var noButton: OptionButton = makeOption(text: isStandalone
                                                          ? StringsProvider.string(forKey: .diaryNoteEatenStepFifthSecondButton)
                                                          : StringsProvider.string(forKey: .noticedStepNineSecondButton))
     
     private lazy var footerView: GenericButtonView = {
         let buttonView = GenericButtonView(withTextStyleCategory: .secondaryBackground(shadow: false))
-        let buttonKey = (variant == .standalone)
+        let buttonKey = isStandalone
         ? StringsProvider.string(forKey: .diaryNoteEatenConfirmButton)
         : StringsProvider.string(forKey: .noticedStepConfirmButton)
         buttonView.setButtonText(buttonKey)
@@ -63,7 +71,7 @@ class NutrientQuestionViewController: UIViewController {
     }
     
     private lazy var messages: [MessageInfo] = {
-        let location: MessageInfoParameter = (variant == .embeddedInNoticed) ? .pageWeHaveNoticed : .pageIHaveEeaten
+        let location: MessageInfoParameter = (isStandalone) ? .pageIHaveEeaten : .pageWeHaveNoticed
         let messages = self.storage.infoMessages?.messages(withLocation: location)
         return messages ?? []
     }()
@@ -122,7 +130,7 @@ class NutrientQuestionViewController: UIViewController {
         let replacementString = selectedType.displayTextUsingVariant(variant: self.variant).lowercased()
         
         // Title: attributed string
-        let messageKey = (variant == .standalone)
+        let messageKey = isStandalone
         ? StringsProvider.string(forKey: .diaryNoteEatenStepFifthMessage)
             .replacingPlaceholders(with: [replacementString])
         : StringsProvider.string(forKey: .noticedStepNineMessage)
@@ -162,7 +170,7 @@ class NutrientQuestionViewController: UIViewController {
         applyBold(to: typeKey)
         ["protein", "fiber", "fat", "proteine", "fibre", "grassi"].forEach { applyBold(to: $0) }
         
-        let baseTitle = (variant == .standalone)
+        let baseTitle = isStandalone
         ? StringsProvider.string(forKey: .diaryNoteEatenStepFifthTitle)
         : StringsProvider.string(forKey: .noticedStepNineTitle)
         let boldAttrsTitle: [NSAttributedString.Key: Any] = [
@@ -226,7 +234,7 @@ class NutrientQuestionViewController: UIViewController {
     }
     
     @objc private func infoButtonPressed() {
-        let location: MessageInfoParameter = (variant == .embeddedInNoticed) ? .pageWeHaveNoticed : .pageIHaveEeaten
+        let location: MessageInfoParameter = isStandalone ? .pageIHaveEeaten : .pageWeHaveNoticed
         self.navigator.openMessagePage(withLocation: location, presenter: self)
     }
 }

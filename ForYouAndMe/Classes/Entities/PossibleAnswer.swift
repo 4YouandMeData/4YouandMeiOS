@@ -22,3 +22,11 @@ extension PossibleAnswer: Equatable {
         return lhs.id == rhs.id
     }
 }
+
+extension PossibleAnswer {
+    var isOther: Bool {
+        guard StringsProvider.string(forKey: .questionOtherEnabled).lowercased() == "true" else { return false }
+        let otherKeyword = StringsProvider.string(forKey: .questionOtherText).lowercased()
+        return self.text.lowercased().contains(otherKeyword)
+    }
+}

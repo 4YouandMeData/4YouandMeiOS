@@ -10,6 +10,7 @@ import Foundation
 struct Answer {
     let question: Question
     let possibleAnswer: PossibleAnswer
+    let answerText: String?
 }
 
 struct ProfilingAnswer {

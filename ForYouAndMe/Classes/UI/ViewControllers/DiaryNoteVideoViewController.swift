@@ -16,8 +16,15 @@ class DiaryNoteVideoViewController: UIViewController {
     private static let RecordTrackingTimeInterval: TimeInterval = 0.1
     private let timeLabelAttributedTextStyle = AttributedTextStyle(fontStyle: .header2, colorType: .secondaryText)
     private var diaryNoteItem: DiaryNoteItem?
-    private let maxCharacters: Int = 500
+    private let maxCharacters: Int = 5000
     private var selectedEmoji: EmojiItem?
+    private var originalText: String?
+    
+    private var shouldShowEmojiButton: Bool {
+        guard let diaryNote = self.diaryNoteItem else { return false }
+        let hasEmoji = !self.emojiItems(for: self.categoryForEmoji(diaryNote: diaryNote)).isEmpty
+        return hasEmoji && self.isEditMode
+    }
     
     private let navigator: AppNavigator
     private let repository: Repository
@@ -36,7 +43,7 @@ class DiaryNoteVideoViewController: UIViewController {
     private var hidePlayButtonTimer: Timer?
     private var isEditMode: Bool
     private var pollingDisposable: Disposable?
-    private let pollingInterval: TimeInterval = 5.0 // Polling interval in seconds
+    private let pollingInterval: TimeInterval = 10.0 // Polling interval in seconds
     private var isPollingActive: Bool = false
     private var reflectionCoordinator: ReflectionSectionCoordinator?
     
@@ -245,10 +252,11 @@ class DiaryNoteVideoViewController: UIViewController {
         toolBar.tintColor = ColorPalette.color(withType: .primary)
         toolBar.sizeToFit()
         
-        let doneButton = UIBarButtonItem(barButtonSystemItem: .done, target: self, action: #selector(self.doneButtonPressed))
+        let cancelButton = UIBarButtonItem(barButtonSystemItem: .cancel, target: self, action: #selector(self.cancelEdit))
+        let doneButton = UIBarButtonItem(barButtonSystemItem: .save, target: self, action: #selector(self.doneButtonPressed))
         let spaceButton = UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil)
-        
-        toolBar.setItems([spaceButton, doneButton], animated: false)
+        toolBar.setItems([cancelButton, spaceButton, doneButton], animated: false)
+
         textView.inputAccessoryView = toolBar
         
         return textView
@@ -311,6 +319,26 @@ class DiaryNoteVideoViewController: UIViewController {
     
     // MARK: - Actions
     
+    @objc private func cancelEdit() {
+        let cancelAction = UIAlertAction(title: StringsProvider.string(forKey: .diaryNoteCancelConfirm),
+                                         style: .default,
+                                         handler: { [weak self] _ in
+            guard let self = self else { return }
+            self.view.endEditing(true)
+            self.textView.text = self.originalText // Restore original body text
+            self.textViewDidChange(self.textView)  // Update counter and placeholder
+            self.textView.isEditable = false
+            self.footerView.isHidden = false
+        })
+        let confirmAction = UIAlertAction(title: StringsProvider.string(forKey: .diaryNoteCancelCancel),
+                                          style: .destructive,
+                                          handler: nil)
+        self.showAlert(withTitle: StringsProvider.string(forKey: .diaryNoteCancelTitle),
+                       message: StringsProvider.string(forKey: .diaryNoteCancelBody),
+                       actions: [cancelAction, confirmAction],
+                       tintColor: ColorPalette.color(withType: .primary))
+    }
+    
     @objc private func emojiButtonTapped() {
         
         let category = self.categoryForEmoji(diaryNote: self.diaryNoteItem)
@@ -323,8 +351,9 @@ class DiaryNoteVideoViewController: UIViewController {
             self.selectedEmoji = emoji
             diaryNote.feedbackTags?.append(emoji)
 
+            let tag = (emoji.label != "none") ? emoji.tag : nil
             self.emojiButton.setImage(nil, for: .normal)
-            self.emojiButton.setTitle(emoji.tag, for: .normal)
+            self.emojiButton.setTitle(tag, for: .normal)
             self.emojiButton.titleLabel?.font = UIFont.systemFont(ofSize: 22)
             
             self.repository.updateDiaryNoteText(diaryNote: diaryNote)
@@ -458,9 +487,15 @@ class DiaryNoteVideoViewController: UIViewController {
         self.textView.resignFirstResponder()
         self.footerView.isHidden = false
         self.footerView.setButtonEnabled(enabled: true)
+        self.updateButtonPressed()
     }
     
     @objc private func closeButtonPressed() {
+        if let coordinator = self.reflectionCoordinator {
+            coordinator.showSuccessPage()
+            return
+        }
+        
         self.genericCloseButtonPressed(completion: {
             self.navigator.switchToDiaryTab(presenter: self)
         })
@@ -481,7 +516,8 @@ class DiaryNoteVideoViewController: UIViewController {
                     guard let self = self else { return }
                     self.textView.isEditable = false
                     self.textView.isSelectable = false
-                    self.footerView.isHidden = true
+                    self.footerView.isHidden = false
+                    self.originalText = self.textView.text
                 }, onFailure: { [weak self] error in
                     guard let self = self else { return }
                     self.navigator.handleError(error: error, presenter: self)
@@ -524,10 +560,11 @@ class DiaryNoteVideoViewController: UIViewController {
                     
         self.headerView.autoPinEdges(toSuperviewMarginsExcludingEdge: .bottom)
         self.footerView.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets.zero, excludingEdge: .top)
-        self.footerView.setButtonText(StringsProvider.string(forKey: .diaryNoteCreateVideoSave))
-        self.footerView.setButtonEnabled(enabled: false)
-        self.footerView.isHidden = true
-        self.footerView.addTarget(target: self, action: #selector(self.updateButtonPressed))
+        self.footerView.setButtonText(StringsProvider.string(forKey: .diaryNoteNoticedEmojiCloseButton))
+        self.footerView.setButtonEnabled(enabled: true)
+        self.footerView.isHidden = false
+        self.closeButton.isHidden = true
+        self.footerView.addTarget(target: self, action: #selector(self.closeButtonPressed))
         
         self.scrollView.autoPinEdge(.top, to: .bottom, of: self.headerView)
         self.scrollView.autoPinEdge(.leading, to: .leading, of: self.view)
@@ -549,6 +586,7 @@ class DiaryNoteVideoViewController: UIViewController {
             self.textView.isEditable = false
             self.textView.isSelectable = false
             self.textView.text = self.diaryNoteItem?.body
+            self.originalText = self.diaryNoteItem?.body
             self.textView.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets(top: 0,
                                                                           left: 12.0,
                                                                           bottom: 0,
@@ -564,11 +602,18 @@ class DiaryNoteVideoViewController: UIViewController {
             
             let editButton = UIButton()
             editButton.setImage(ImagePalette.image(withName: .editAudioNote), for: .normal)
+            editButton.setTitle(StringsProvider.string(forKey: .diaryNoteCreateTextEdit), for: .normal)
+            editButton.setTitleColor(ColorPalette.color(withType: .primaryText), for: .normal)
+            editButton.backgroundColor = ColorPalette.color(withType: .inactive).applyAlpha(0.8)
             editButton.addTarget(self, action: #selector(self.editButtonPressed), for: .touchUpInside)
+            editButton.titleLabel?.font = FontPalette.fontStyleData(forStyle: .menu).font
+            editButton.imageEdgeInsets = UIEdgeInsets(top: 0, left: -4, bottom: 0, right: 4)
+            editButton.contentEdgeInsets = UIEdgeInsets(top: 3, left: 8, bottom: 3, right: 8)
+            editButton.layer.cornerRadius = 6.0
+            editButton.clipsToBounds = true
             containerTextView.addSubview(editButton)
             editButton.autoPinEdge(.bottom, to: .bottom, of: self.textView, withOffset: -8.0)
             editButton.autoPinEdge(.right, to: .right, of: self.textView, withOffset: -8.0)
-            editButton.autoSetDimension(.width, toSize: 24.0)
 
             // Placeholder label
             self.textView.addSubview(self.placeholderLabel)
@@ -876,15 +921,19 @@ class DiaryNoteVideoViewController: UIViewController {
             .subscribe(onSuccess: { [weak self] diaryNote in
                 guard let self = self else { return }
                 self.diaryNoteItem = diaryNote
-                guard let coordinator = self.reflectionCoordinator else {
-                    self.onRecordCompleted()
-                    DispatchQueue.main.async {
-                        self.startPolling() // Start polling after successful creation
-                        self.setupUIVideoWatch()
-                    }
-                    return
+                self.onRecordCompleted()
+                DispatchQueue.main.async {
+                    self.startPolling()
+                    self.setupUIVideoWatch()
                 }
-                coordinator.onReflectionCreated(presenter: self, reflectionType: .video, diaryNote: diaryNote)
+                
+                if let coordinator = self.reflectionCoordinator {
+                    coordinator.onReflectionCreated(
+                        presenter: self,
+                        reflectionType: .video,
+                        diaryNote: diaryNote
+                    )
+                }
             }, onFailure: { [weak self] error in
                 guard let self = self else { return }
                 self.navigator.handleError(error: error,

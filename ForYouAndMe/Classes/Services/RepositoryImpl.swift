@@ -60,7 +60,8 @@ class RepositoryImpl {
         }()
         return request
             .do(onSuccess: { (globalConfig: GlobalConfig) in
-                ColorPalette.initialize(withColorMap: globalConfig.colorMap)
+                ColorPalette.initialize(light: globalConfig.colorMap, dark: globalConfig.darkColorMap)
+                globalConfig.logColorMapDiff(light: globalConfig.colorMap, dark: globalConfig.darkColorMap)
                 StringsProvider.initialize(withFullStringMap: globalConfig.fullStringMap, requiredStringMap: globalConfig.requiredStringMap)
                 CountryCodeProvider.initialize(withcountryCodes: globalConfig.countryCodes)
                 IntegrationProvider.initialize(withIntegrationDatas: globalConfig.integrationDatas)
@@ -430,26 +431,30 @@ extension RepositoryImpl: Repository {
                             mealType: String,
                             quantity: String,
                             significantNutrition: Bool,
-                            fromChart: Bool) -> Single<DiaryNoteItem> {
+                            fromChart: Bool,
+                            diaryNote: DiaryNoteItem?) -> Single<DiaryNoteItem> {
         return self.api.send(request: ApiRequest(serviceRequest:
                 .sendDiaryNoteEaten(date: date,
                                     mealType: mealType,
                                     quantity: quantity,
                                     significantNutrition: significantNutrition,
-                                    fromChart: fromChart)))
+                                    fromChart: fromChart,
+                                    diaryNote: diaryNote)))
             .handleError()
     }
     
     func sendDiaryNoteDoses(doseType: String,
                             date: Date,
                             amount: Double,
-                            fromChart: Bool) -> Single<DiaryNoteItem> {
+                            fromChart: Bool,
+                            diaryNote: DiaryNoteItem?) -> Single<DiaryNoteItem> {
         return self.api.send(request: ApiRequest(serviceRequest:
                 .sendDiaryNoteDoses(
                     doseType: doseType,
                     date: date,
                     amount: amount,
-                    fromChart: fromChart)))
+                    fromChart: fromChart,
+                    diaryNote: diaryNote)))
         .handleError()
     }
     

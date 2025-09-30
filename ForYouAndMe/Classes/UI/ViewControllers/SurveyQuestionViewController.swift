@@ -231,4 +231,8 @@ class SurveyQuestionViewController: UIViewController,
         print("SurveyQuestionViewController - Answer Did Change: \(answer)")
         self.answer = answer
     }
+    
+    func surveyQuestion(_ question: SurveyQuestion, didUpdateValidity isValid: Bool) {
+        self.confirmButtonView.setButtonEnabled(enabled: isValid)
+    }
 }

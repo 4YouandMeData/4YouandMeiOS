@@ -67,6 +67,10 @@ class SurveyQuestionScale: UIView {
         dummyView.setContentHuggingPriority(UILayoutPriority(100), for: .vertical)
         
         self.autoSetDimension(.height, toSize: Constants.Style.SurveyPickerDefaultHeight)
+        
+        if let firstValue = self.values.first {
+            self.delegate?.answerDidChange(self.surveyQuestion, answer: firstValue)
+        }
     }
     
     // MARK: - Private Methods

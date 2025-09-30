@@ -8,6 +8,7 @@
 import UIKit
 import RxSwift
 import WebKit
+import JJFloatingActionButton
 
 enum ScriptMessage: String {
     case chartPointTapped
@@ -15,9 +16,10 @@ enum ScriptMessage: String {
     case shareChart
 }
 
-class UserDataViewController: UIViewController, WKNavigationDelegate, WKScriptMessageHandler {
+class UserDataViewController: BaseViewController, WKNavigationDelegate, WKScriptMessageHandler {
     
     private var pendingFabAction: FabAction?
+    private var pendingDiaryNoteItem: DiaryNoteItem?
     
     // MARK: - AttributedTextStyles
     
@@ -54,25 +56,12 @@ class UserDataViewController: UIViewController, WKNavigationDelegate, WKScriptMe
     }()
     
     private lazy var messages: [MessageInfo] = {
-        let messages = self.storage.infoMessages?.messages(withLocation: .tabUserData)
+        let messages = self.cacheService.infoMessages?.messages(withLocation: .tabUserData)
         return messages ?? []
     }()
-
-    // Stored so they can be used by the filter page
-    private let navigator: AppNavigator
-    private let repository: Repository
-    private let storage: CacheService
-    private let analytics: AnalyticsService
     
-    private let disposeBag = DisposeBag()
-    
-    init() {
-        self.navigator = Services.shared.navigator
-        self.repository = Services.shared.repository
-        self.storage = Services.shared.storageServices
-        self.analytics = Services.shared.analytics
-        
-        super.init(nibName: nil, bundle: nil)
+    override init() {
+        super.init()
     }
     
     required init?(coder: NSCoder) {
@@ -86,8 +75,26 @@ class UserDataViewController: UIViewController, WKNavigationDelegate, WKScriptMe
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        self.view.backgroundColor = ColorPalette.color(withType: .fourth)
+        self.setFabHidden(true)
+        self.floatingButton.delegate = self
         
+        self.fabActionHandler = { [weak self] action in
+            guard let self = self, let diaryNote = self.pendingDiaryNoteItem else { return }
+
+            switch action {
+            case .insulin:
+                self.navigator.openMyDosesViewController(presenter: self, diaryNote: diaryNote)
+            case .noticed:
+                self.navigator.openNoticedViewController(presenter: self, diaryNote: diaryNote)
+            case .eaten:
+                self.navigator.openEatenViewController(presenter: self, diaryNote: diaryNote)
+            }
+
+            // Reset after action
+            self.pendingDiaryNoteItem = nil
+            self.setFabHidden(true)
+        }
+
         // Header View
         let headerView = SingleTextHeaderView()
         headerView.setTitleText(StringsProvider.string(forKey: .tabUserDataTitle))
@@ -127,15 +134,17 @@ class UserDataViewController: UIViewController, WKNavigationDelegate, WKScriptMe
     // MARK: WebView Methods
     
     private func loadWebViewWithSessionToken() {
-        
-        guard let url = URL(string: Constants.Network.YourDataUrlStr) else {
+        guard let baseURL = URL(string: Constants.Network.YourDataUrlStr) else {
             assertionFailure("Cannot retrieve url from given string: \(Constants.Network.YourDataUrlStr)")
             self.navigator.handleError(error: nil, presenter: self)
             return
         }
         
+        // Add dark_mode query param
+        let url = self.urlBySettingDarkModeParam(baseURL)
+        
         guard let domain = url.host else {
-            assertionFailure("Cannot retrieve domain from given url: \(Constants.Network.YourDataUrlStr)")
+            assertionFailure("Cannot retrieve domain from given url: \(url.absoluteString)")
             self.navigator.handleError(error: nil, presenter: self)
             return
         }
@@ -165,7 +174,6 @@ class UserDataViewController: UIViewController, WKNavigationDelegate, WKScriptMe
         request.httpShouldHandleCookies = true
         self.webView.configuration.websiteDataStore.httpCookieStore.setCookie(authenticationCookie, completionHandler: { [weak self] in
             guard let self = self else { return }
-            print("ReactiveAuthWebViewController - Authentication cookie setup done")
             self.webView.load(request)
         })
     }
@@ -263,17 +271,19 @@ class UserDataViewController: UIViewController, WKNavigationDelegate, WKScriptMe
     
     private func handleFullScreenTap(body: [String: Any]) {
         guard let chartId = body["chartId"] as? NSNumber else { return }
-        let query = body["queryString"] as? String ?? ""
-        let urlString = Constants.Network.CharPageUrlStr + chartId.stringValue + query
-
-        guard let url = URL(string: urlString) else {
-            assertionFailure("URL invalido: \(urlString)")
+        let query = body["queryString"] as? String
+        
+        // Base = page URL + chartId; extra query = payload
+        guard let baseURL = URL(string: Constants.Network.CharPageUrlStr + chartId.stringValue) else {
+            assertionFailure("Invalid base URL")
             return
         }
-
+        
+        let finalURL = buildURL(base: baseURL, mergingQueryString: query)
+        
         navigator.openWebView(
             withTitle: "",
-            url: url,
+            url: finalURL,
             presenter: self,
             configuration: webView.configuration
         )
@@ -310,14 +320,18 @@ class UserDataViewController: UIViewController, WKNavigationDelegate, WKScriptMe
             interval: interval,
             diaryNoteable: diaryNoteable
         )
-
-        // Present the diary note screen, flagging that it originated from a chart tap
-        navigator.presentDiaryNotes(
-            diaryNote: diaryNote,
-            presenter: self,
-            isFromChart: true,
-            animated: animated
-        )
+        
+        self.pendingDiaryNoteItem = diaryNote
+        
+//        // Present the diary note screen, flagging that it originated from a chart tap
+//        navigator.presentDiaryNotes(
+//            diaryNote: diaryNote,
+//            presenter: self,
+//            isFromChart: true,
+//            animated: animated
+//        )
+        self.setFabHidden(false)
+        self.floatingButton.open()
     }
 }
 
@@ -331,5 +345,67 @@ extension UIViewController {
             presented = current.presentedViewController
         }
         return nil
+    }
+}
+
+// MARK: - JJFloatingActionButtonDelegate
+extension UserDataViewController: JJFloatingActionButtonDelegate {
+
+    // Called when the menu finished closing
+    func floatingActionButtonDidClose(_ actionButton: JJFloatingActionButton) {
+        self.setFabHidden(true)
+    }
+}
+
+// MARK: - Dark Mode URL helper
+private extension UserDataViewController {
+    /// Returns true if current trait is dark
+    var isDarkModeActive: Bool {
+        // NOTE: use current view's trait collection
+        return self.traitCollection.userInterfaceStyle == .dark
+    }
+    
+    /// Adds or updates `dark_mode=true|false` in the given URL.
+    /// - Important: preserves existing query items.
+    func urlBySettingDarkModeParam(_ url: URL) -> URL {
+        // Build components safely
+        guard var comps = URLComponents(url: url, resolvingAgainstBaseURL: false) else { return url }
+        var items = comps.queryItems ?? []
+        // Remove any existing `dark_mode` before appending the fresh value
+        items.removeAll { $0.name == "dark_mode" }
+        items.append(URLQueryItem(name: "dark_mode", value: isDarkModeActive ? "true" : "false"))
+        comps.queryItems = items
+        return comps.url ?? url
+    }
+    
+    /// Merges an arbitrary `queryString` (possibly starting with '?') into a base URL
+    /// and also sets the `dark_mode` param.
+    func buildURL(base baseURL: URL, mergingQueryString queryString: String?) -> URL {
+        guard var comps = URLComponents(url: baseURL, resolvingAgainstBaseURL: false) else { return baseURL }
+        
+        // Start from existing items (if any)
+        var items = comps.queryItems ?? []
+        
+        // Parse and merge extra query coming from JS payload (e.g. "?interval=day&foo=bar")
+        if let qs = queryString, !qs.isEmpty {
+            // Strip leading '?'
+            var tmp = URLComponents()
+            tmp.query = qs.hasPrefix("?") ? String(qs.dropFirst()) : qs
+            if let extra = tmp.queryItems {
+                items.append(contentsOf: extra)
+            }
+        }
+        
+        // Remove duplicates by name keeping the last occurrence
+        var dedup: [String: URLQueryItem] = [:]
+        for it in items { dedup[it.name] = it }
+        items = Array(dedup.values)
+        
+        // Set dark_mode
+        items.removeAll { $0.name == "dark_mode" }
+        items.append(URLQueryItem(name: "dark_mode", value: isDarkModeActive ? "true" : "false"))
+        
+        comps.queryItems = items
+        return comps.url ?? baseURL
     }
 }

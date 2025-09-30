@@ -11,6 +11,7 @@ import Foundation
 extension GlobalConfig: Mappable {
     init(map: Mapper) throws {
         try self.colorMap = map.from("color_palette")
+        self.darkColorMap = try? map.from("dark_mode_color_palette")
         try self.requiredStringMap = map.from("strings")
         try self.fullStringMap = map.from("strings")
         try self.countryCodes = map.from("country_codes", transformation: Mapper.errorIfEmpty)
@@ -112,7 +113,7 @@ extension Mapper {
                     guard let emoji = item["tag"] as? String else {
                         throw MapperError.customError(field: field, message: "Missing 'tag' in item for key '\(key)'")
                     }
-                    let label = item["label"] as? String ?? ""
+                    let label = item["label"] as? String ?? " "
                     return EmojiItem(id: "", type: "", tag: emoji, label: label)
                 }
 

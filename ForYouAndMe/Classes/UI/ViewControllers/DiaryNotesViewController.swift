@@ -90,6 +90,7 @@ class DiaryNotesViewController: BaseViewController {
         tableView.registerCellsWithClass(DiaryNoteItemWeNoticedTableViewCell.self)
         tableView.contentInsetAdjustmentBehavior = .never
         tableView.backgroundView = self.diaryNoteEmptyView
+        tableView.backgroundColor = .clear
         tableView.dataSource = self
         tableView.delegate = self
         tableView.estimatedRowHeight = 130.0
@@ -134,8 +135,6 @@ class DiaryNotesViewController: BaseViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-        self.view.backgroundColor = ColorPalette.color(withType: .secondary)
         
         if self.dataPointID == nil {
             // Header View

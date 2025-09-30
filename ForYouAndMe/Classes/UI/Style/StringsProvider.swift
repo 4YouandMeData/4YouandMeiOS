@@ -88,6 +88,10 @@ enum StringKey: String, CaseIterable, CodingKey {
     case onboardingIntegrationDownloadButtonDefault = "ONBOARDING_WEARABLES_DOWNLOAD_BUTTON_DEFAULT"
     case onboardingIntegrationOpenAppButtonDefault = "ONBOARDING_WEARABLES_OPEN_APP_BUTTON_DEFAULT"
     case onboardingIntegrationLoginButtonDefault = "ONBOARDING_WEARABLES_LOGIN_BUTTON_DEFAULT"
+    case questionOtherEnabled = "QUESTION_OTHER_ENABLED"
+    case questionOtherText = "QUESTION_OTHER_TEXT"
+    case questionOtherHint = "QUESTION_OTHER_HINT"
+    case questionFooter = "QUESTION_FOOTER"
     // Main
     case tabFeed = "TAB_FEED"
     case tabTask = "TAB_TASK"
@@ -180,7 +184,10 @@ enum StringKey: String, CaseIterable, CodingKey {
     case diaryNotePlaceholder = "DIARY_NOTE_PLACEHOLDER"
     case diaryNoteDosesCell = "DIARY_NOTE_DOSES_CELL"
     case diaryNoteEatenCell = "DIARY_NOTE_EATEN_CELL"
+    case diaryNoteTotalTimeCell = "DIARY_NOTE_TOTAL_TIME_CELL"
     case diaryNoteNoticedCell = "DIARY_NOTE_NOTICED_CELL"
+    case diaryNoteAudioCell = "DIARY_NOTE_AUDIO_CELL"
+    case diaryNoteVideoCell = "DIARY_NOTE_VIDEO_CELL"
     case emojiTitle = "EMOJI_TITLE"
     case emojiButtonText = "EMOJI_BUTTON"
     case diaryNoteTagDoses = "DIARY_NOTE_TAG_DOSES"
@@ -188,7 +195,15 @@ enum StringKey: String, CaseIterable, CodingKey {
     case diaryNoteTagNoticed = "DIARY_NOTE_TAG_NOTICED"
     case diaryNoteTagReflection = "DIARY_NOTE_TAG_REFLECTION"
     case diaryNoteTagWeNoticed = "DIARY_NOTE_TAG_WE_NOTICED"
-    
+    case diaryNoteNoticedEmojiTitle = "DIARY_NOTE_NOTICED_STEP_EMOJI_TITLE"
+    case diaryNoteNoticedEmojiSubtitle = "DIARY_NOTE_NOTICED_STEP_EMOJI_SUBTITLE"
+    case diaryNoteNoticedEmojiClickMessage = "DIARY_NOTE_NOTICED_STEP_EMOJI_CLICK_MESSAGE"
+    case diaryNoteNoticedEmojiCloseButton = "DIARY_NOTE_NOTICED_STEP_EMOJI_CLOSE_BUTTON"
+    case diaryNoteCancelBody = "DIARY_NOTE_CANCEL_BODY"
+    case diaryNoteCancelTitle = "DIARY_NOTE_CANCEL_TITLE"
+    case diaryNoteCancelCancel = "DIARY_NOTE_CANCEL_CANCEL"
+    case diaryNoteCancelConfirm = "DIARY_NOTE_CANCEL_CONFIRM"
+
     // I Have Eaten
     case diaryNoteFabEaten = "FAB_I_HAVE_EATEN"
     case diaryNoteEatenStepOneTitle = "EATEN_STEP_ONE_TITLE"
@@ -213,6 +228,10 @@ enum StringKey: String, CaseIterable, CodingKey {
     case diaryNoteEatenStepFifthSecondButton = "EATEN_STEP_FIFTH_SECOND_BUTTON"
     case diaryNoteEatenNextButton = "EATEN_NEXT_BUTTON"
     case diaryNoteEatenConfirmButton = "EATEN_CONFIRM_BUTTON"
+    case diaryNoteEatenEmojiTitle = "DIARY_NOTE_EATEN_STEP_EMOJI_TITLE"
+    case diaryNoteEatenEmojiSubtitle = "DIARY_NOTE_EATEN_STEP_EMOJI_SUBTITLE"
+    case diaryNoteEatenEmojiClickMessage = "DIARY_NOTE_EATEN_STEP_EMOJI_CLICK_MESSAGE"
+    case diaryNoteEatenEmojiCloseButton = "DIARY_NOTE_EATEN_STEP_EMOJI_CLOSE_BUTTON"
     
     // My Doses
     case diaryNoteFabDoses = "FAB_MY_DOSES"
@@ -227,6 +246,10 @@ enum StringKey: String, CaseIterable, CodingKey {
     case doseStepTwoUnitsLabel = "DOSE_STEP_TWO_UNITS_LABEL"
     case doseStepTwoDosesLabel = "DOSE_STEP_TWO_DOSES_LABEL"
     case doseStepTwoConfirmButton = "DOSE_STEP_TWO_CONFIRM_BUTTON"
+    case diaryNoteDosesEmojiTitle = "DIARY_NOTE_DOSES_STEP_EMOJI_TITLE"
+    case diaryNoteDosesEmojiSubtitle = "DIARY_NOTE_DOSES_STEP_EMOJI_SUBTITLE"
+    case diaryNoteDosesEmojiClickMessage = "DIARY_NOTE_DOSES_STEP_EMOJI_CLICK_MESSAGE"
+    case diaryNoteDosesEmojiCloseButton = "DIARY_NOTE_DOSES_STEP_EMOJI_CLOSE_BUTTON"
     
     // Video Diary
     case videoDiaryRecorderInfoFilter = "VIDEO_DIARY_RECORDER_INFO_FILTER"
@@ -295,6 +318,10 @@ enum StringKey: String, CaseIterable, CodingKey {
     case reflectionTaskBody = "REFLECTION_TASK_BODY"
     case reflectionTaskLearnMore = "REFLECTION_TASK_LEARN_MORE"
     case reflectionLearnMoreClose = "REFLECTION_LEARN_MORE_CLOSE"
+    case reflectionEmojiTitle = "DIARY_NOTE_REFLECTION_STEP_EMOJI_TITLE"
+    case reflectionEmojiSubtitle = "DIARY_NOTE_REFLECTION_STEP_EMOJI_SUBTITLE"
+    case reflectionEmojiClickMessage = "DIARY_NOTE_REFLECTION_STEP_EMOJI_CLICK_MESSAGE"
+    case reflectionEmojiCloseButton = "DIARY_NOTE_REFLECTION_STEP_EMOJI_CLOSE_BUTTON"
     
     // We have Noticed
     case noticedStepOneTitle = "NOTICED_STEP_ONE_TITLE"
@@ -426,6 +453,8 @@ enum StringKey: String, CaseIterable, CodingKey {
     case phaseSwitchButtonConfirm = "PHASE_SWITCH_BUTTON_YES"
     case phaseSwitchButtonCancel = "PHASE_SWITCH_BUTTON_NO"
     case phaseNames = "STUDY_PHASES"
+    
+    case footerFeedButton = "FOOTER_FEED_BUTTON"
     
     var defaultValue: String {
         switch self {

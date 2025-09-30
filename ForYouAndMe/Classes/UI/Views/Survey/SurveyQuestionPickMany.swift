@@ -94,6 +94,11 @@ class SurveyQuestionPickMany: UIView {
                 })
                 .disposed(by: self.disposeBag)
             
+            DispatchQueue.main.async { [weak self] in
+                guard let self = self else { return }
+                self.delegate?.surveyQuestion(self.surveyQuestion, didUpdateValidity: false)
+            }
+            
             self.checkBoxAnswers.append(checkBox)
             let checkBoxContainerView = UIView()
             checkBoxContainerView.addSubview(checkBox)
@@ -168,6 +173,12 @@ class SurveyQuestionPickMany: UIView {
         }
         self.delegate?.answerDidChange(self.surveyQuestion,
                                            answer: surveyResponses)
+        
+        let isValid = !surveyResponses.isEmpty
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+            self.delegate?.surveyQuestion(self.surveyQuestion, didUpdateValidity: isValid)
+        }
     }
 }
 

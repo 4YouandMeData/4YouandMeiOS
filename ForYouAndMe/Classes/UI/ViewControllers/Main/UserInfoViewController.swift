@@ -55,7 +55,7 @@ class UserInfoViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        self.view.backgroundColor = ColorPalette.color(withType: .secondary)
+        self.view.backgroundColor = ColorPalette.color(withType: .secondaryBackgroungColor)
         
         // ScrollView
         self.view.addSubview(self.scrollView)

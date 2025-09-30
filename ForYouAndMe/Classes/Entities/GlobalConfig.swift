@@ -10,6 +10,7 @@ import Foundation
 
 struct GlobalConfig {
     let colorMap: ColorMap
+    let darkColorMap: ColorMap?
     let requiredStringMap: RequiredStringMap
     let fullStringMap: FullStringMap
     let countryCodes: [String]
@@ -24,6 +25,7 @@ struct GlobalConfig {
 extension GlobalConfig: Codable {
     private enum CodingKeys: CodingKey {
         case colorMapDictionary
+        case darkColorMapDictionary
         case requiredStringMapDictionary
         case fullStringMapDictionary
         case countryCodesArray
@@ -38,6 +40,15 @@ extension GlobalConfig: Codable {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.colorMap = try (container.decode(CodableDictionary.self, forKey: .colorMapDictionary).decoded)
             .mapValues { (codableColor: CodableColor) in codableColor.uiColor }
+        // Dark color map (optional)
+        if let darkWrap = try container.decodeIfPresent(
+            CodableDictionary<ColorType, CodableColor>.self,
+            forKey: .darkColorMapDictionary
+        ) {
+            self.darkColorMap = darkWrap.decoded.mapValues { $0.uiColor }
+        } else {
+            self.darkColorMap = nil
+        }
         self.requiredStringMap = try container.decode(CodableDictionary.self, forKey: .requiredStringMapDictionary).decoded
         self.fullStringMap = try container.decode(Dictionary<String, String>.self, forKey: .fullStringMapDictionary)
         self.countryCodes = try container.decode(Array<String>.self, forKey: .countryCodesArray)
@@ -51,6 +62,10 @@ extension GlobalConfig: Codable {
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(CodableDictionary(self.colorMap.mapValues { CodableColor(uiColor: $0) }), forKey: .colorMapDictionary)
+        if let dark = self.darkColorMap {
+            try container.encode(CodableDictionary(dark.mapValues { CodableColor(uiColor: $0) }),
+                                 forKey: .darkColorMapDictionary)
+        }
         try container.encode(CodableDictionary(self.requiredStringMap), forKey: .requiredStringMapDictionary)
         try container.encode(self.fullStringMap, forKey: .fullStringMapDictionary)
         try container.encode(self.countryCodes, forKey: .countryCodesArray)
@@ -59,5 +74,13 @@ extension GlobalConfig: Codable {
         try container.encode(self.pinCodeLogin, forKey: .pincodeLogin)
         try container.encode(self.phaseNames, forKey: .phaseNamesArray)
         try container.encode(self.feedbackList, forKey: .feedbackList)
+    }
+    
+    func logColorMapDiff(light: ColorMap, dark: ColorMap?) {
+        guard let dark else { return }
+        let missing = Set(light.keys).subtracting(dark.keys)
+        if !missing.isEmpty {
+            print("⚠️ Dark map missing overrides for: \(missing.map { $0.rawValue })")
+        }
     }
 }

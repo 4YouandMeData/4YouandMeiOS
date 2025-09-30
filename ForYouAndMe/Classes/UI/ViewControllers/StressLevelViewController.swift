@@ -125,7 +125,7 @@ class StressLevelViewController: UIViewController {
             self.navigationItem.rightBarButtonItem = (self.messages.count < 1)
                 ? nil
                 : comingSoonItem
-        case .standalone:
+        case .standalone, .fromChart(_):
             self.navigationItem.leftBarButtonItem = self.closeButton
         }
     }

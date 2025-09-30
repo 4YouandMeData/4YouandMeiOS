@@ -36,7 +36,7 @@ public class InfoDetailPageViewController: UIViewController, PageProvider {
     public override func viewDidLoad() {
         super.viewDidLoad()
         
-        self.view.backgroundColor = ColorPalette.color(withType: .secondary)
+        self.view.backgroundColor = ColorPalette.color(withType: .secondaryBackgroungColor)
         
         if self.pageData.isModal {
             self.loadModalPage()

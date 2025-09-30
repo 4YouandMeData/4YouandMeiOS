@@ -30,9 +30,10 @@ class DiaryNoteAudioViewController: UIViewController {
     private let pageState: BehaviorRelay<PageState> = BehaviorRelay<PageState>(value: .listen)
     private let reflectionCoordinator: ReflectionSectionCoordinator?
     private var selectedEmoji: EmojiItem?
+    private var originalText: String?
     
     private var pollingDisposable: Disposable?
-    private let pollingInterval: TimeInterval = 5.0 // Polling interval in seconds
+    private let pollingInterval: TimeInterval = 10.0 // Polling interval in seconds
     private var isPollingActive: Bool = false
     
     private let disposeBag = DisposeBag()
@@ -46,6 +47,34 @@ class DiaryNoteAudioViewController: UIViewController {
     
     private let totalTime = Constants.Misc.AudioDiaryMaxDurationSeconds
     private var recordDurationTime: TimeInterval = 0.0
+    
+    private let isFromChart: Bool
+    private var wasJustCreatedHere: Bool = false
+    
+    /// Returns true when user is creating a brand-new note (no id yet and not in edit mode)
+    private var isCreatingNewNote: Bool {
+        return (self.diaryNoteItem?.id == nil) && (self.isEditMode == false)
+    }
+
+    private var isChartLinkedNote: Bool {
+        return isFromChart && (diaryNoteItem?.diaryNoteable != nil)
+    }
+    
+    private var isLinked: Bool {
+        return diaryNoteItem?.diaryNoteable != nil
+    }
+
+    private var shouldShowEmojiButton: Bool {
+        guard let diaryNote = self.diaryNoteItem else { return false }
+        
+        let hasEmoji = !self.emojiItems(for: self.categoryForEmoji(diaryNote: diaryNote)).isEmpty
+        
+        // Hide the button when creating a note (whether from chart or normal flow)
+        let isEditNote = self.isEditMode
+        let isRecording = self.pageState.value == .record
+        
+        return hasEmoji && isEditNote && !isRecording
+    }
     
     private lazy var closeButton: UIButton = {
         let button = UIButton()
@@ -66,6 +95,15 @@ class DiaryNoteAudioViewController: UIViewController {
         return button
     }()
     
+    private lazy var titleRow: UIStackView = {
+        let stackView = UIStackView()
+        stackView.axis = .horizontal
+        stackView.spacing = 8
+        stackView.alignment = .center
+        stackView.distribution = .equalSpacing
+        return stackView
+    }()
+    
     private lazy var headerView: UIView = {
         let containerView = UIView()
         
@@ -76,12 +114,6 @@ class DiaryNoteAudioViewController: UIViewController {
         closeButtonContainerView.addSubview(self.closeButton)
         self.closeButton.autoPinEdgesToSuperviewEdges(with: .zero, excludingEdge: .trailing)
         stackView.addArrangedSubview(closeButtonContainerView)
-
-        let titleRow = UIStackView()
-        titleRow.axis = .horizontal
-        titleRow.spacing = 8
-        titleRow.alignment = .center
-        titleRow.distribution = .equalSpacing
         
         // title Label
         let titleLabel = UILabel()
@@ -95,8 +127,7 @@ class DiaryNoteAudioViewController: UIViewController {
         let emptyView = UIView()
         emptyView.autoSetDimensions(to: CGSize(width: 24, height: 24))
         
-        let category = self.categoryForEmoji(diaryNote: self.diaryNoteItem)
-        if !self.emojiItems(for: category).isEmpty {
+        if self.shouldShowEmojiButton {
             titleRow.addArrangedSubview(emptyView)
             titleRow.addArrangedSubview(titleLabel)
             titleRow.addArrangedSubview(emojiButton)
@@ -138,10 +169,16 @@ class DiaryNoteAudioViewController: UIViewController {
         toolBar.tintColor = ColorPalette.color(withType: .primary)
         toolBar.sizeToFit()
         
-        let doneButton = UIBarButtonItem(barButtonSystemItem: .done, target: self, action: #selector(self.doneButtonPressed))
+        let cancelButton = UIBarButtonItem(
+                barButtonSystemItem: .cancel,
+                target: self,
+                action: #selector(cancelEdit)
+            )
+        
+        let doneButton = UIBarButtonItem(barButtonSystemItem: .save, target: self, action: #selector(self.doneButtonPressed))
         let spaceButton = UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil)
         
-        toolBar.setItems([spaceButton, doneButton], animated: false)
+        toolBar.setItems([cancelButton, spaceButton, doneButton], animated: false)
         textView.inputAccessoryView = toolBar
         
         return textView
@@ -214,17 +251,19 @@ class DiaryNoteAudioViewController: UIViewController {
     
     private var cache: CacheService
     private var diaryNoteItem: DiaryNoteItem?
-    private let maxCharacters: Int = 500
+    private let maxCharacters: Int = 5000
     private var isEditMode: Bool
     
     init(withDiaryNote diaryNote: DiaryNoteItem?,
          isEditMode: Bool,
+         isFromChart: Bool,
          reflectionCoordinator: ReflectionSectionCoordinator?) {
         self.navigator = Services.shared.navigator
         self.repository = Services.shared.repository
         self.cache = Services.shared.storageServices
         self.analytics = Services.shared.analytics
         self.isEditMode = isEditMode
+        self.isFromChart = isFromChart
         self.diaryNoteItem = diaryNote
         self.reflectionCoordinator = reflectionCoordinator
         super.init(nibName: nil, bundle: nil)
@@ -252,10 +291,12 @@ class DiaryNoteAudioViewController: UIViewController {
         // Footer
         self.view.addSubview(self.footerView)
         footerView.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets.zero, excludingEdge: .top)
-        footerView.setButtonText(StringsProvider.string(forKey: .diaryNoteCreateAudioSave))
+        footerView.setButtonText(StringsProvider.string(forKey: .diaryNoteNoticedEmojiCloseButton))
         self.footerView.setButtonEnabled(enabled: false)
         
         self.setupUI()
+        // Ensure initial visibility after UI and initial state are set
+        self.updateCloseButtonVisibility()
         
         self.scrollView.autoPinEdge(.top, to: .bottom, of: self.headerView)
         self.scrollView.autoPinEdge(.leading, to: .leading, of: self.view)
@@ -270,6 +311,8 @@ class DiaryNoteAudioViewController: UIViewController {
             .subscribe(onNext: { [weak self] newPageState in
                 self?.updateNextButton(pageState: newPageState)
                 self?.updateTextFields(pageState: newPageState)
+                self?.updateTitleRow()
+                self?.updateCloseButtonVisibility()
                 self?.view.endEditing(true)
         }).disposed(by: self.disposeBag)
         
@@ -297,7 +340,30 @@ class DiaryNoteAudioViewController: UIViewController {
         self.textView.becomeFirstResponder()
     }
     
+    @objc private func cancelEdit() {
+        let cancelAction = UIAlertAction(title: StringsProvider.string(forKey: .diaryNoteCancelConfirm),
+                                         style: .default,
+                                         handler: { [weak self] _ in
+            guard let self = self else { return }
+            self.view.endEditing(true)
+            self.textView.text = self.originalText
+            self.textViewDidChange(self.textView)
+            self.pageState.accept(.listen)
+        })
+        let confirmAction = UIAlertAction(title: StringsProvider.string(forKey: .diaryNoteCancelCancel),
+                                          style: .destructive,
+                                          handler: nil)
+        self.showAlert(withTitle: StringsProvider.string(forKey: .diaryNoteCancelTitle),
+                       message: StringsProvider.string(forKey: .diaryNoteCancelBody),
+                       actions: [cancelAction, confirmAction],
+                       tintColor: ColorPalette.color(withType: .primary))
+    }
+    
     @objc private func closeButtonPressed() {
+        if let coordinator = self.reflectionCoordinator {
+            coordinator.showSuccessPage()
+            return
+        }
         self.genericCloseButtonPressed(completion: {
             self.navigator.switchToDiaryTab(presenter: self)
         })
@@ -305,42 +371,62 @@ class DiaryNoteAudioViewController: UIViewController {
     
     @objc private func doneButtonPressed() {
         self.textView.resignFirstResponder()
+        self.updateButtonPressed()
     }
     
     @objc private func saveButtonPressed() {
         AppNavigator.pushProgressHUD()
         guard let audioUrl = self.audioFileURL,
-              let audioData = try? Data.init(contentsOf: audioUrl) else {
+              let audioData = try? Data(contentsOf: audioUrl) else {
             assertionFailure("Couldn't transform result data to expected network representation")
             return
         }
-         
+
         let audioResultFile = DiaryNoteFile(data: audioData, fileExtension: .m4a)
-        self.repository.sendDiaryNoteAudio(diaryNoteRef: diaryNoteItem ?? DiaryNoteItem(diaryNoteId: nil,
-                                                                                        body: nil,
-                                                                                        interval: nil,
-                                                                                        diaryNoteable: nil),
-                                           file: audioResultFile,
-                                           fromChart: false)
+
+        let ref = diaryNoteItem ?? DiaryNoteItem(
+            diaryNoteId: nil,
+            body: nil,
+            interval: nil,
+            diaryNoteable: nil
+        )
+
+        repository
+            .sendDiaryNoteAudio(
+                diaryNoteRef: ref,
+                file: audioResultFile,
+                fromChart: isLinked
+            )
             .do(onDispose: { AppNavigator.popProgressHUD() })
             .observe(on: MainScheduler.instance)
             .subscribe(onSuccess: { [weak self] diaryNote in
                 guard let self = self else { return }
                 self.diaryNoteItem = diaryNote
-                guard let coordinator = self.reflectionCoordinator else {
-                    try? FileManager.default.removeItem(atPath: Constants.Note.NoteResultURL.path)
-                    DispatchQueue.main.async {
-                        self.pageState.accept(.transcribe)
-                        self.startPolling() // Start polling after successful creation
-                    }
-                    return
+                self.wasJustCreatedHere = true
+                self.updateCloseButtonVisibility()
+                self.originalText = diaryNote.body
+                self.updateTitleRow()
+
+                // Reflection Flow
+                if let coordinator = self.reflectionCoordinator {
+                    coordinator.onReflectionCreated(
+                        presenter: self,
+                        reflectionType: .audio,
+                        diaryNote: diaryNote
+                    )
                 }
-                coordinator.onReflectionCreated(presenter: self, reflectionType: .audio, diaryNote: diaryNote)
+
+                // Standard Flow
+                try? FileManager.default.removeItem(atPath: Constants.Note.NoteResultURL.path)
+                DispatchQueue.main.async {
+                    self.pageState.accept(.transcribe)
+                    self.startPolling()
+                }
             }, onFailure: { [weak self] error in
                 guard let self = self else { return }
-                self.navigator.handleError(error: error,
-                                           presenter: self)
-            }).disposed(by: self.disposeBag)
+                self.navigator.handleError(error: error, presenter: self)
+            })
+            .disposed(by: self.disposeBag)
     }
     
     @objc private func updateButtonPressed() {
@@ -349,8 +435,7 @@ class DiaryNoteAudioViewController: UIViewController {
             self.repository.updateDiaryNoteText(diaryNote: diaryNote)
                 .addProgress()
                 .subscribe(onSuccess: { [weak self] in
-                    guard let self = self else { return }
-                    self.closeButtonPressed()
+                    self?.originalText = self?.textView.text
                 }, onFailure: { [weak self] error in
                     guard let self = self else { return }
                     self.navigator.handleError(error: error, presenter: self)
@@ -379,8 +464,9 @@ class DiaryNoteAudioViewController: UIViewController {
             self.selectedEmoji = emoji
             diaryNote.feedbackTags?.append(emoji)
 
+            let tag = (emoji.label != "none") ? emoji.tag : nil
             self.emojiButton.setImage(nil, for: .normal)
-            self.emojiButton.setTitle(emoji.tag, for: .normal)
+            self.emojiButton.setTitle(tag, for: .normal)
             self.emojiButton.titleLabel?.font = UIFont.systemFont(ofSize: 22)
             
             self.repository.updateDiaryNoteText(diaryNote: diaryNote)
@@ -397,6 +483,13 @@ class DiaryNoteAudioViewController: UIViewController {
     }
     
     // MARK: - Private Methods
+    
+    /// Show close button only while creating a new note (record state)
+    private func updateCloseButtonVisibility() {
+        // Show only if creating a new note AND we are in .record
+        let showClose = self.isCreatingNewNote && (self.pageState.value == .record || self.pageState.value == .saveRecord)
+        self.closeButton.isHidden = !showClose
+    }
     
     private func setupUI() {
         self.scrollView.subviews.forEach { $0.removeFromSuperview() }
@@ -530,11 +623,19 @@ class DiaryNoteAudioViewController: UIViewController {
         
         let editButton = UIButton()
         editButton.setImage(ImagePalette.image(withName: .editAudioNote), for: .normal)
+        editButton.setTitle(StringsProvider.string(forKey: .diaryNoteCreateTextEdit), for: .normal)
+        editButton.setTitleColor(ColorPalette.color(withType: .primaryText), for: .normal)
+        editButton.backgroundColor = ColorPalette.color(withType: .inactive).applyAlpha(0.8)
         editButton.addTarget(self, action: #selector(self.editButtonPressed), for: .touchUpInside)
+        editButton.titleLabel?.font = FontPalette.fontStyleData(forStyle: .menu).font
+        editButton.imageEdgeInsets = UIEdgeInsets(top: 0, left: -4, bottom: 0, right: 4)
+        editButton.contentEdgeInsets = UIEdgeInsets(top: 3, left: 8, bottom: 3, right: 8)
+        editButton.layer.cornerRadius = 6.0
+        editButton.clipsToBounds = true
         containerTextView.addSubview(editButton)
         editButton.autoPinEdge(.bottom, to: .bottom, of: self.textView, withOffset: -8.0)
         editButton.autoPinEdge(.right, to: .right, of: self.textView, withOffset: -8.0)
-        editButton.autoSetDimension(.width, toSize: 24.0)
+//        editButton.autoSetDimension(.width, toSize: 24.0)
 
         // Placeholder label
         self.textView.addSubview(self.placeholderLabel)
@@ -567,8 +668,6 @@ class DiaryNoteAudioViewController: UIViewController {
                                                                     bottom: 8.0,
                                                                     right: 26.0))
         containerStackView.addArrangedSubview(containerLoadingView)
-        
-        self.footerView.addTarget(target: self, action: #selector(self.updateButtonPressed))
     }
     
     private func updateNextButton(pageState: PageState) {
@@ -577,21 +676,31 @@ class DiaryNoteAudioViewController: UIViewController {
         case .edit:
             button.isHidden = false
             button.setButtonEnabled(enabled: true)
-            button.addTarget(target: self, action: #selector(self.updateButtonPressed))
+            button.setButtonText(StringsProvider.string(forKey: .diaryNoteNoticedEmojiCloseButton))
+            button.addTarget(target: self, action: #selector(self.closeButtonPressed))
         case .listen:
-            button.isHidden = true
+            self.originalText = self.textView.text
+            button.isHidden = false
             self.isEditMode = true
+            button.setButtonEnabled(enabled: true)
+            button.setButtonText(StringsProvider.string(forKey: .diaryNoteNoticedEmojiCloseButton))
+            button.addTarget(target: self, action: #selector(self.closeButtonPressed))
         case .transcribe:
-            button.isHidden = true
+            button.isHidden = false
             self.isEditMode = true
+            button.setButtonEnabled(enabled: true)
+            button.setButtonText(StringsProvider.string(forKey: .diaryNoteNoticedEmojiCloseButton))
+            button.addTarget(target: self, action: #selector(self.closeButtonPressed))
             self.setupUI()
         case .record:
             button.isHidden = true
         case .saveRecord:
             button.isHidden = false
             button.setButtonEnabled(enabled: true)
+            button.setButtonText(StringsProvider.string(forKey: .diaryNoteCreateAudioSave))
             button.addTarget(target: self, action: #selector(self.saveButtonPressed))
         }
+        self.updateCloseButtonVisibility()
     }
     
     private func updateTextFields(pageState: PageState) {
@@ -615,8 +724,34 @@ class DiaryNoteAudioViewController: UIViewController {
         }
     }
     
-    // MARK: - Polling Methods
+    private func updateTitleRow() {
+        self.titleRow.arrangedSubviews.forEach {
+            self.titleRow.removeArrangedSubview($0)
+            $0.removeFromSuperview()
+        }
+        
+        let titleLabel = UILabel()
+        titleLabel.attributedText = NSAttributedString.create(
+            withText: StringsProvider.string(forKey: .diaryNoteCreateAudioTitle),
+            fontStyle: .title,
+            color: ColorPalette.color(withType: .primaryText),
+            textAlignment: .center
+        )
+        
+        if self.shouldShowEmojiButton {
+            let emptyView = UIView()
+            emptyView.autoSetDimensions(to: CGSize(width: 24, height: 24))
+            titleRow.addArrangedSubview(emptyView)
+            titleRow.addArrangedSubview(titleLabel)
+            titleRow.addArrangedSubview(emojiButton)
+        } else {
+            titleRow.addArrangedSubview(titleLabel)
+        }
+        
+        self.updateCloseButtonVisibility()
+    }
 
+    // MARK: - Polling Methods
     private func startPolling() {
         guard let diaryNoteId = self.diaryNoteItem?.id, !isPollingActive else { return }
 

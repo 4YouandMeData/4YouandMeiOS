@@ -20,10 +20,10 @@ final class EmojiCell: UICollectionViewCell {
     }
 
     private func setupUI() {
-        emojiLabel.font = UIFont.systemFont(ofSize: 40)
+        emojiLabel.font = UIFont.systemFont(ofSize: 35)
         emojiLabel.textAlignment = .center
 
-        titleLabel.font = FontPalette.fontStyleData(forStyle: .paragraph).font
+        titleLabel.font = FontPalette.fontStyleData(forStyle: .header3).font
         titleLabel.textColor = .darkGray
         titleLabel.textAlignment = .center
 
