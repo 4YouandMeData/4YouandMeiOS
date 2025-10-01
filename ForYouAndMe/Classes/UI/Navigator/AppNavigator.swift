@@ -11,6 +11,7 @@ import SVProgressHUD
 import RxSwift
 import SafariServices
 import WebKit
+import SensorKit
 
 enum InternalDeeplinkKey: String {
     case feed
@@ -1023,6 +1024,42 @@ class AppNavigator {
                             message: StringsProvider.string(forKey: .permissionHealthSettingsMessage),
                             actions: [cancelAction, settingsAction])
     }
+    
+    public func showSensorKitPermissionSettingsAlert(presenter: UIViewController,
+                                                     missingSensors: Set<SRSensor>) {
+            let cancelAction = UIAlertAction(title: StringsProvider.string(forKey: .permissionCancel),
+                                             style: .cancel,
+                                             handler: nil)
+            let settingsAction = UIAlertAction(title: StringsProvider.string(forKey: .permissionSettings),
+                                               style: .default,
+                                               handler: { [weak self] _ in self?.openSettings() })
+
+            let sensorsList = missingSensors
+                .map { s -> String in
+                    switch s {
+                    case .accelerometer:       return "Accelerometer"
+                    case .rotationRate:        return "Rotation"
+                    case .ambientLightSensor:  return "Ambient light"
+                    case .ambientPressure:     return "Pressure"
+                    case .visits:              return "Visits"
+                    case .pedometerData:       return "Pedometer"
+                    case .deviceUsageReport:   return "Device Usage"
+                    case .phoneUsageReport:    return "Phone Usage"
+                    case .messagesUsageReport: return "Message Usage"
+                    case .keyboardMetrics:     return "Keyboard Metrics"
+                    default:                   return s.rawValue
+                    }
+                }
+                .sorted()
+                .joined(separator: ", ")
+
+            let title   = "Abilita Sensor Kit"
+            let message = String(format: "Alcuni sensori risultano disattivati: \(sensorsList). Puoi abilitarli in Impostazioni.")
+
+            presenter.showAlert(withTitle: title,
+                                message: message,
+                                actions: [cancelAction, settingsAction])
+        }
     
     // Helper function to get the top-most view controller
     private func getTopMostViewController() -> UIViewController? {

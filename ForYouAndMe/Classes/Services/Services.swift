@@ -8,6 +8,9 @@
 
 import UIKit
 import RxSwift
+#if HEALTHKIT
+import SensorKit
+#endif
 
 protocol InitializableService {
     var isInitialized: Bool { get }
@@ -37,6 +40,10 @@ class Services {
     private(set) var deviceService: DeviceService!
 #if HEALTHKIT
     private(set) var terraService: TerraService!
+    private(set) var sensorKitService: SensorKitService!
+#endif
+#if SENSORKIT
+    
 #endif
     private var window: UIWindow?
     
@@ -83,10 +90,42 @@ class Services {
         
         let terraService = TerraManager()
         self.services.append(terraService)
+        
+        let skMappers: [SRSensor: SensorSampleMapper] = [
+            .accelerometer: AccelerometerMapper(),
+            .rotationRate: RotationRateMapper(),
+            .ambientLightSensor: AmbientLightMapper(),
+            .ambientPressure: AmbientPressureMapper(),
+            .visits: VisitsMapper(),
+            .pedometerData: PedometerMapper(),
+            .deviceUsageReport: DeviceUsageReportMapper(),
+            .phoneUsageReport: PhoneUsageReportMapper(),
+            .messagesUsageReport: MessagesUsageReportMapper(),
+            .keyboardMetrics: KeyboardMetricsMapper()
+        ]
+
+        let skSensors: [SRSensor] = Array(Constants.SensorKit.RequestedSensors.filter { skMappers[$0] != nil })
+
+        let skStorage: SensorKitManagerStorage = DefaultsSensorStorage()
+        let skReachability: SensorKitManagerReachability = NWPathReachability()
+
+        let sensorKitService = SensorKitManager(
+            withReadSensors: skSensors,
+            analyticsService: analytics,
+            storage: skStorage,
+            reachability: skReachability,
+            mappers: skMappers
+        )
+
+        self.services.append(sensorKitService)
         #else
         let healthService = DummyHealthManager()
         #endif
         services.append(healthService)
+        
+        #if SENSORKIT
+        
+        #endif
         
         let repository = RepositoryImpl(api: networkApiGateway,
                                         storage: storage,
@@ -112,6 +151,12 @@ class Services {
         healthService.networkDelegate = repository
         healthService.clearanceDelegate = repository
         self.terraService = terraService
+        
+        sensorKitService.networkDelegate = repository
+        sensorKitService.clearanceDelegate = repository
+        
+        self.sensorKitService = sensorKitService
+        
         #endif
         
         // Assign concreate services
@@ -123,6 +168,7 @@ class Services {
         self.mirSpirometryService = mirSpirometryService
         self.deeplinkService = deeplinkService
         self.deviceService = deviceService
+        
         self.navigator.showSetupScreen()
     }
     

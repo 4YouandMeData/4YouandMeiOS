@@ -32,18 +32,6 @@
 	</array>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
-    <key>NSSensorKitUsageDescription</key>
-    <string>SensorKit usage description.</string>
-    <key>NSSensorKitPrivacyPolicyURL</key>
-    <string>https://balzo.eu/privacy-policy/</string>
-    <key>NSSensorKitUsageDetail</key>
-    <dict>
-        <key>SRSensorUsageMotion</key>
-        <dict>
-            <key>Description</key>
-            <string>This describes how my app uses motion data.</string>
-        </dict>
-    </dict>
 	<key>NSAppleMusicUsageDescription</key>
 	<string>$(PRODUCT_NAME) uses Media Library during certain tasks.</string>
 	<key>NSBluetoothAlwaysUsageDescription</key>
@@ -68,6 +56,71 @@
 	<string>$(PRODUCT_NAME) records audio during certain tasks.</string>
 	<key>NSMotionUsageDescription</key>
 	<string>$(PRODUCT_NAME) will use your motion data for your active tasks.</string>
+	<key>NSSensorKitPrivacyPolicyURL</key>
+	<string>https://balzo.eu/privacy-policy/</string>
+	<key>NSSensorKitUsageDescription</key>
+	<string>SensorKit usage description.</string>
+	<key>NSSensorKitUsageDetail</key>
+	<dict>
+		<key>SRSensorUsageAmbientLightSensor</key>
+		<dict>
+			<key>Description</key>
+			<string>Usiamo il livello di luce ambientale per correlazioni con ritmo e contesto.</string>
+			<key>Required</key>
+			<true/>
+		</dict>
+		<key>SRSensorUsageDeviceUsage</key>
+		<dict>
+			<key>Description</key>
+			<string>Usiamo report aggregati sull&apos;uso del dispositivo (tempo schermo, sblocchi, notifiche) per analisi statistiche.</string>
+			<key>Required</key>
+			<string>YES</string>
+		</dict>
+		<key>SRSensorUsageElevation</key>
+		<dict>
+			<key>Description</key>
+			<string>Usiamo il barometro per stimare la pressione ambientale e variazioni di quota.</string>
+			<key>Required</key>
+			<string>YES</string>
+		</dict>
+		<key>SRSensorUsageKeyboardMetrics</key>
+		<dict>
+			<key>Description</key>
+			<string>Usiamo metriche di digitazione (conteggio tasti, cancellazioni, autocorrezioni) in forma aggregata per analisi statistiche.</string>
+			<key>Required</key>
+			<string>YES</string>
+		</dict>
+		<key>SRSensorUsageMessageUsage</key>
+		<dict>
+			<key>Description</key>
+			<string>Usiamo report aggregati sull&apos;uso dei messaggi (quantità, invio/ricezione, allegati) per analisi statistiche.</string>
+			<key>Required</key>
+			<string>YES</string>
+		</dict>
+		<key>SRSensorUsageMotion</key>
+		<string>Usiamo i dati di movimento (accelerometro/rotazione) per stimare attività e contesto.</string>
+		<key>SRSensorUsagePedometer</key>
+		<dict>
+			<key>NSUsageDescription</key>
+			<string>Usiamo il pedometro per stimare i livelli di attività e camminata ai fini dello studio.</string>
+			<key>Required</key>
+			<true/>
+		</dict>
+		<key>SRSensorUsagePhoneUsage</key>
+		<dict>
+			<key>Description</key>
+			<string>Usiamo report aggregati sull&apos;uso del telefono (chiamate e durate) per analisi statistiche.</string>
+			<key>Required</key>
+			<string>YES</string>
+		</dict>
+		<key>SRSensorUsageVisits</key>
+		<dict>
+			<key>Description</key>
+			<string>Usiamo gli eventi di visita (arrivo/partenza) per analisi aggregate di permanenza.</string>
+			<key>Required</key>
+			<string>YES</string>
+		</dict>
+	</dict>
 	<key>NSSpeechRecognitionUsageDescription</key>
 	<string>$(PRODUCT_NAME) uses Speech Recognition during certain tasks.</string>
 	<key>UILaunchStoryboardName</key>
@@ -82,6 +135,8 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>UIUserInterfaceStyle</key>
+	<string>Light</string>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
 </dict>

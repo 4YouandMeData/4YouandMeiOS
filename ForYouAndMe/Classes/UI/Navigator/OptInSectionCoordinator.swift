@@ -28,6 +28,7 @@ class OptInSectionCoordinator {
     
     private let healthService: HealthService
     private let deviceService: DeviceService
+    private let sensorKitService: SensorKitService
     
     var answers: [Question: PossibleAnswer] = [:]
     
@@ -38,6 +39,8 @@ class OptInSectionCoordinator {
         self.navigator = Services.shared.navigator
         self.healthService = Services.shared.healthService
         self.deviceService = Services.shared.deviceService
+        self.sensorKitService = Services.shared.sensorKitService
+        
         self.sectionData = sectionData
         self.navigationController = navigationController
         self.completionCallback = completionCallback
@@ -108,11 +111,13 @@ extension OptInSectionCoordinator: OptInPermissionCoordinator {
         
         let systemPermissionRequests: Single<()> = optInPermission.systemPermissions
             .reduce(Single.just(())) { (result, systemPermission) in
-                switch systemPermission {
-                case .health: return result.flatMap {
+            switch systemPermission {
+            case .health:
+                return result.flatMap {
                     return granted ? self.healthService.requestPermissions().catchAndReturn(()) : Single.just(())
                 }
-                case .location: return result.flatMap {
+            case .location:
+                return result.flatMap {
                     guard self.deviceService.locationServicesAvailable else {
                         // location services not enabled for this study: do nothing (no native permission popup should be shown)
                         return Single.just(())
@@ -120,12 +125,32 @@ extension OptInSectionCoordinator: OptInPermissionCoordinator {
                     let permission: Permission = Constants.Misc.DefaultLocationPermission
                     return granted ? permission.request().catchAndReturn(()) : Single.just(())
                 }
-                case .notification: return result.flatMap {
+            case .notification:
+                return result.flatMap {
                     let permission: Permission = .notification
                     return granted ? permission.request().catchAndReturn(()) : Single.just(())
                 }
+            case .sensorKit:
+                return result.flatMap {
+                    guard let manager = Services.shared.sensorKitService as? SensorKitManager,
+                                  manager.serviceAvailable
+                    else { return .just(()) }
+
+                    if granted {
+                        // Ask OS -> start readers -> sync
+                        return manager.requestPermissions()
+                            .do(onSuccess: {
+                                manager.ensureRecordingStarted()
+                                manager.triggerSync(reason: "optin")
+                            })
+                            .catchAndReturn(())
+                    } else {
+                        manager.refreshRecordingBasedOnClearance()
+                        return .just(())
+                    }
                 }
             }
+        }
         
         systemPermissionRequests
             .flatMap { self.repository.sendOptInPermission(permission: optInPermission, granted: granted) }

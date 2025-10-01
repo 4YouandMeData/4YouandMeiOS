@@ -199,6 +199,7 @@ extension DefaultService {
         case .sendDeviceData: return "Send Phone Events"
         // Health
         case .sendHealthData: return "Send Health Data"
+        case .sendSensorKitData: return "Send SensorKit Data"
         // Phase
         case .createUserPhase: return "Create User Phase"
         case .updateUserPhase: return "Update User Phase"

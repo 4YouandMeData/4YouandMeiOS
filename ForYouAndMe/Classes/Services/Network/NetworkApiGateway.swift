@@ -392,7 +392,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         case .sendDeviceData:
             return "v1/phone_events"
         // Health
-        case .sendHealthData, .sendSpyroResults:
+        case .sendHealthData, .sendSpyroResults, .sendSensorKitData:
             return "v1/integration_datas"
         // Phase
         case .createUserPhase(let phaseId):
@@ -461,6 +461,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
                 .sendAnswer,
                 .sendDeviceData,
                 .sendHealthData,
+                .sendSensorKitData,
                 .sendSpyroResults,
                 .createUserPhase,
                 .sendDiaryNoteText,
@@ -570,6 +571,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         case .sendDeviceData: return "{}".utf8Encoded
         // Health
         case .sendHealthData: return "{}".utf8Encoded
+        case .sendSensorKitData: return "{}".utf8Encoded
         case .sendSpyroResults: return "{}".utf8Encoded
         // User Phase
         case .createUserPhase: return "{}".utf8Encoded
@@ -774,6 +776,17 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             dataParams["source"] = source
             if let subsourceKey = healthData.keys.first, !subsourceKey.isEmpty {
                 dataParams["subsource"] = subsourceKey
+            } else {
+                dataParams["subsource"] = "generic"
+            }
+            return .requestParameters(parameters: ["integration_data": dataParams], encoding: JSONEncoding.default)
+        case .sendSensorKitData(let sensorData):
+            // Expected `sensorData` shape (from bridge):
+            // ["sensor": "<sensor_name>", "records": [[...], ...]]
+            var dataParams: [String: Any] = ["data": sensorData]
+            dataParams["source"] = "sensor_kit"
+            if let sub = sensorData["sensor"] as? String, !sub.isEmpty {
+                dataParams["subsource"] = sub
             } else {
                 dataParams["subsource"] = "generic"
             }
@@ -1029,6 +1042,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
                 .delayTask,
                 .sendDeviceData,
                 .sendHealthData,
+                .sendSensorKitData,
                 .sendSpyroResults,
                 .createUserPhase,
                 .updateUserPhase,

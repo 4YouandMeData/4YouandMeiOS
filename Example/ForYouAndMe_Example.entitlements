@@ -16,13 +16,13 @@
 	<true/>
 	<key>com.apple.developer.sensorkit.reader.allow</key>
 	<array>
-		<string>keyboard-metrics</string>
-		<string>device-usage</string>
-		<string>messages-usage</string>
+		<string>media-events</string>
 		<string>phone-usage</string>
 		<string>motion-accelerometer</string>
-		<string>media-events</string>
 		<string>visits</string>
+		<string>device-usage</string>
+		<string>keyboard-metrics</string>
+		<string>messages-usage</string>
 	</array>
 </dict>
 </plist>

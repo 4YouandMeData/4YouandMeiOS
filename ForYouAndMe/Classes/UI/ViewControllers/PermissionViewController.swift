@@ -16,6 +16,7 @@ public class PermissionViewController: UIViewController {
     private let analytics: AnalyticsService
     private let healthService: HealthService
     private let deviceService: DeviceService
+    private let sensorKitService: SensorKitService
     private let disposeBag: DisposeBag = DisposeBag()
     
     private lazy var scrollStackView: ScrollStackView = {
@@ -30,6 +31,7 @@ public class PermissionViewController: UIViewController {
         self.analytics = Services.shared.analytics
         self.healthService = Services.shared.healthService
         self.deviceService = Services.shared.deviceService
+        self.sensorKitService = Services.shared.sensorKitService
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -109,6 +111,23 @@ public class PermissionViewController: UIViewController {
             healthItem.autoSetDimension(.height, toSize: 72, relation: .greaterThanOrEqual)
             self.scrollStackView.stackView.addArrangedSubview(healthItem)
         }
+        
+        // --- SensorKit ---
+        if self.sensorKitService.serviceAvailable,
+           self.repository.currentUser?.getHasAgreedTo(systemPermission: .sensorKit) ?? false {
+
+            let skTitle = "Sensor Kit"
+            let skItem = PermissionItemView(
+                withTitle: skTitle,
+                isAuthorized: nil,
+                iconName: .healthIcon,
+                gestureCallback: { [weak self] in
+                    self?.handleSensorKitPermission()
+                }
+            )
+            skItem.autoSetDimension(.height, toSize: 72, relation: .greaterThanOrEqual)
+            self.scrollStackView.stackView.addArrangedSubview(skItem)
+        }
             
         self.scrollStackView.stackView.addBlankSpace(space: 40.0)
     }
@@ -172,5 +191,53 @@ public class PermissionViewController: UIViewController {
                 guard let self = self else { return }
                 self.navigator.handleError(error: error, presenter: self)
             }).disposed(by: self.disposeBag)
+    }
+    
+    private func handleSensorKitPermission() {
+        // We need the concrete manager to access utility methods
+        guard let manager = self.sensorKitService as? SensorKitManager else { return }
+
+        manager.getIsAuthorizationStatusUndetermined()
+            .subscribe(onSuccess: { [weak self] undetermined in
+                guard let self = self else { return }
+
+                if undetermined {
+                    // Ask OS only for .notDetermined sensors
+                    manager.requestPermissions()
+                        .subscribe(onSuccess: { [weak self] in
+                            guard let self = self else { return }
+                            // Start readers and sync now that we (may) have permissions
+                            manager.ensureRecordingStarted()
+                            manager.triggerSync(reason: "permissions_view")
+                            self.refreshStatus()
+                            // Optional analytics:
+                            // self.analytics.track(event: .sensorKitPermissionChanged("allow"))
+                        }, onFailure: { [weak self] error in
+                            guard let self = self else { return }
+                            self.navigator.handleError(error: error, presenter: self)
+                        })
+                        .disposed(by: self.disposeBag)
+
+                } else {
+                    // Either authorized or denied. If denied → show settings alert, else just start+sync.
+                    let gaps = manager.authorizationGaps() // (undetermined, denied)
+                    if gaps.denied.isEmpty == false {
+                        // Your dedicated SensorKit settings alert (come per Health)
+                        self.navigator.showSensorKitPermissionSettingsAlert(
+                            presenter: self,
+                            missingSensors: gaps.denied
+                        )
+                    } else {
+                        // Already authorized → ensure recording + sync
+                        manager.ensureRecordingStarted()
+                        manager.triggerSync(reason: "permissions_view_already")
+                        self.refreshStatus()
+                    }
+                }
+            }, onFailure: { [weak self] error in
+                guard let self = self else { return }
+                self.navigator.handleError(error: error, presenter: self)
+            })
+            .disposed(by: self.disposeBag)
     }
 }

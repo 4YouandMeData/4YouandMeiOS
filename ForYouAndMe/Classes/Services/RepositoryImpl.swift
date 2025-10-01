@@ -119,6 +119,7 @@ extension RepositoryImpl: Repository {
     func logOut() {
         self.storage.user = nil
         self.api.logOut()
+        (Services.shared.sensorKitService as? SensorKitManager)?.refreshRecordingBasedOnClearance()
     }
     
     var infoMessages: [MessageInfo]? {
@@ -843,5 +844,31 @@ fileprivate extension FetchMode {
             }
         case .append(let paginationInfo): return paginationInfo
         }
+    }
+}
+
+/// Use the dedicated API case .sendSensorKitData to upload SensorKit batches.
+/// The payload shape is provided by SensorNetworkBridge:
+///   ["sensor": "<sensor_name>", "records": [[...], ...]]
+extension RepositoryImpl: SensorKitManagerNetworkDelegate {
+    func uploadSensorNetworkData(_ data: [String: Any], source: String) -> Single<()> {
+        // NOTE: `source` is ignored here because DefaultService.sendSensorKitData
+        // enforces "sensor_kit" as the source.
+        return self.api
+            .send(request: ApiRequest(serviceRequest: .sendSensorKitData(sensorData: data)))
+            .handleError() // visible if this extension stays in RepositoryImpl.swift
+    }
+}
+
+// MARK: - SensorKitManagerClearanceDelegate
+
+/// Gate SensorKit uploads based on user consent for SensorKit permission.
+extension RepositoryImpl: SensorKitManagerClearanceDelegate {
+    var sensorManagerCanRun: Bool {
+        // Must be logged in AND have SensorKit consent
+        guard self.isLoggedIn else { return false }
+        
+        // Reuse the same consent mechanism, but check `.sensorKit`
+        return self.currentUser?.getHasAgreedTo(systemPermission: .sensorKit) ?? false
     }
 }

@@ -93,6 +93,8 @@ enum DefaultService {
     case sendDeviceData(deviceData: DeviceData)
     // Health
     case sendHealthData(healthData: HealthNetworkData, source: String)
+    //SensorKit
+    case sendSensorKitData(sensorData: SensorNetworkData)
     // User Phase
     case createUserPhase(phaseId: String)
     case updateUserPhase(userPhaseId: String)
