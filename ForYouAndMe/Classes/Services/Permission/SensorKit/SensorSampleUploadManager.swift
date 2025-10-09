@@ -306,7 +306,6 @@ public final class SensorSampleUploadManager {
                 // "At-least-once" (simple): advance now; queued batches will be retried until uploaded.
                 self.storage.setLastCursor(w.end, for: sensor)
 
-                // If you prefer "exactly-once after upload success", move setLastCursor(w.end, ...) *after* a successful drain.
                 self.drainQueue(for: sensor, baseDate: w.end)
 
                 // Next window

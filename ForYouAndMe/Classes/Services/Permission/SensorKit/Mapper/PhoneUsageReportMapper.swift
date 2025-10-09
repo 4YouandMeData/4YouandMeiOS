@@ -4,161 +4,189 @@
 //
 //  Created by Giuseppe Lapenta on 01/08/25.
 //
+//
+//  PhoneUsageReportMapper.swift
+//
 
 import Foundation
 import SensorKit
-import CoreMotion
 
-/// Maps SensorKit phone usage aggregated reports into JSON-ready records.
-/// We use KVC to stay resilient across potential SDK field changes.
+/// Convert SRAbsoluteTime back to Date using CFAbsoluteTime epoch (2001-01-01).
+private func dateFromSRAbsoluteTime(_ srTime: SRAbsoluteTime) -> Date {
+    let cf = srTime.toCFAbsoluteTime()
+    return Date(timeIntervalSinceReferenceDate: cf)
+}
+
+// MARK: - Mapper
+
+/// Maps SensorKit `SRPhoneUsageReport` into JSON-ready dictionaries.
+/// NOTE: Authorization and `startRecording()` are handled elsewhere.
 final class PhoneUsageReportMapper: NSObject, SensorSampleMapper {
 
-    // This mapper handles the phone usage aggregated report
     var sensor: SRSensor { .phoneUsageReport }
 
     private let reader = SRSensorReader(sensor: .phoneUsageReport)
     private var pendingCompletion: ((Result<[[String: Any]], Error>) -> Void)?
-    private var collected: [[String: Any]] = []
+    private var collected = [[String: Any]]()
 
-    // Apple withholds last 24h of SensorKit data
+    // Apple withholds last 24h of SensorKit data (absolute hours)
     private static let holdingPeriod: TimeInterval = 24 * 60 * 60
 
-    func fetchAndMap(from: Date,
-                     to: Date,
-                     completion: @escaping (Result<[[String : Any]], Error>) -> Void) {
+    // MARK: - Errors
 
-        precondition(pendingCompletion == nil, "PhoneUsageReportMapper: concurrent fetch not supported")
+    private enum MapperError: LocalizedError {
+        case busy
+        case notAuthorized(sensor: SRSensor, status: SRAuthorizationStatus)
 
-        // Respect 24h holding period
-        let safeTo = min(to, Date().addingTimeInterval(-Self.holdingPeriod))
+        var errorDescription: String? {
+            switch self {
+            case .busy:
+                return "Mapper is busy: a fetch is already in flight."
+            case let .notAuthorized(sensor, status):
+                return "SensorKit not authorized for \(sensor). Status: \(status)."
+            }
+        }
+    }
+
+    // MARK: - SensorSampleMapper
+
+    /// Fetch the given [from, to) window, honoring the 24h embargo and mapping SRPhoneUsageReport.
+    func fetchAndMap(
+        from: Date,
+        to: Date,
+        completion: @escaping (Result<[[String: Any]], Error>) -> Void
+    ) {
+        // Avoid crashing on concurrent calls
+        guard pendingCompletion == nil else {
+            completion(.failure(MapperError.busy))
+            return
+        }
+
+        // Enforce embargo: do not read within last 24h
+        let embargoCutoff = Date().addingTimeInterval(-Self.holdingPeriod)
+        let safeTo = min(to, embargoCutoff)
         guard from < safeTo else {
             completion(.success([]))
             return
         }
 
-        // Build request converting Date -> SRAbsoluteTime (CFAbsoluteTime since 2001-01-01)
         let req = SRFetchRequest()
         req.device = SRDevice.current
-        req.from = SRAbsoluteTime.fromCFAbsoluteTime(_cf: from.timeIntervalSinceReferenceDate)
-        req.to   = SRAbsoluteTime.fromCFAbsoluteTime(_cf: safeTo.timeIntervalSinceReferenceDate)
+        req.from = from.srAbsoluteTime
+        req.to = safeTo.srAbsoluteTime
 
         collected.removeAll(keepingCapacity: true)
         pendingCompletion = completion
         reader.delegate = self
-        reader.fetch(req) // delegate-based API
+        reader.fetch(req)
     }
 }
 
 // MARK: - SRSensorReaderDelegate
+
 extension PhoneUsageReportMapper: SRSensorReaderDelegate {
 
-    func sensorReader(_ reader: SRSensorReader,
-                      fetching fetchRequest: SRFetchRequest,
-                      didFetchResult result: SRFetchResult<AnyObject>) -> Bool {
+    func sensorReader(
+        _ reader: SRSensorReader,
+        fetching fetchRequest: SRFetchRequest,
+        didFetchResult result: SRFetchResult<AnyObject>
+    ) -> Bool {
+        // Attach SRFetchResult.timestamp as recorded_at
+        let recordedAt = dateFromSRAbsoluteTime(result.timestamp)
 
-        if let obj = result.sample as? NSObject {
-            if let rec = Self.mapPhoneUsage(obj) {
-                collected.append(rec)
-            }
-        } else if let list = result.sample as? CMSensorDataList {
-            // If the SDK ever wraps multiple items in a list, iterate it
-            for element in FastEnumerationSequence(base: list) {
-                guard let obj = element as? NSObject else { continue }
-                if let rec = Self.mapPhoneUsage(obj) {
-                    collected.append(rec)
-                }
-            }
+        // Usage reports are aggregated objects (no CMSensorDataList expected)
+        if let report = result.sample as? NSObject,
+           let record = Self.mapPhoneUsage(report, recordedAt: recordedAt) {
+            collected.append(record)
         }
-        return true // continue fetching
+        return true // continue
     }
 
-    func sensorReader(_ reader: SRSensorReader, didCompleteFetch fetchRequest: SRFetchRequest) {
-        guard let completion = pendingCompletion else { return }
-        let out = collected
+    func sensorReader(
+        _ reader: SRSensorReader,
+        didCompleteFetch fetchRequest: SRFetchRequest
+    ) {
+        finish(.success(collected))
+    }
+
+    func sensorReader(
+        _ reader: SRSensorReader,
+        fetching fetchRequest: SRFetchRequest,
+        failedWithError error: Error
+    ) {
+        finish(.failure(error))
+    }
+
+    // Centralized cleanup + callback
+    private func finish(_ result: Result<[[String: Any]], Error>) {
+        let completion = pendingCompletion
         pendingCompletion = nil
         collected.removeAll(keepingCapacity: false)
-        completion(.success(out))
+        reader.delegate = nil
+        completion?(result)
+    }
+}
+
+// MARK: - Mapping (documented keys only)
+
+private extension PhoneUsageReportMapper {
+
+    // --- Safe KVC (only call value(forKey:) if the selector exists) ---
+    static func valueIfResponds(_ obj: NSObject, _ key: String) -> Any? {
+        let sel = NSSelectorFromString(key)
+        guard obj.responds(to: sel) else { return nil }
+        return obj.value(forKey: key)
     }
 
-    func sensorReader(_ reader: SRSensorReader,
-                      fetching fetchRequest: SRFetchRequest,
-                      failedWithError error: any Error) {
-        guard let completion = pendingCompletion else { return }
-        pendingCompletion = nil
-        collected.removeAll(keepingCapacity: false)
-        completion(.failure(error))
+    static func kvcDate(_ obj: NSObject, key: String) -> Date? {
+        valueIfResponds(obj, key) as? Date
     }
 
-    // MARK: - Mapping helpers
+    static func intValue(_ obj: NSObject, key: String) -> Int? {
+        (valueIfResponds(obj, key) as? NSNumber)?.intValue
+    }
 
-    /// Extract common phone-usage metrics (calls, durations, breakdown) using KVC.
-    /// We normalize a small set of fields to stable keys.
-    private static func mapPhoneUsage(_ obj: NSObject) -> [String: Any]? {
-        let fmt = ISO8601DateFormatter()
-
-        // Time bounds
-        let start: Date = (obj.value(forKey: "startDate") as? Date)
-                       ?? (obj.value(forKey: "start") as? Date)
-                       ?? Date.distantPast
-        let end:   Date = (obj.value(forKey: "endDate") as? Date)
-                       ?? (obj.value(forKey: "end") as? Date)
-                       ?? start
-
-        var rec: [String: Any] = [
-            "start": fmt.string(from: start),
-            "end":   fmt.string(from: end),
-            "device_kind": "iphone"
-        ]
-
-        // Aggregate counters/durations (we probe multiple aliases)
-        let numericAliases: [(inKey: String, outKey: String, isDuration: Bool)] = [
-            // total calls
-            ("totalCalls",           "calls",           false),
-            ("callCount",            "calls",           false),
-            // incoming / outgoing
-            ("incomingCalls",        "incoming_calls",  false),
-            ("totalIncomingCalls",   "incoming_calls",  false),
-            ("outgoingCalls",        "outgoing_calls",  false),
-            ("totalOutgoingCalls",   "outgoing_calls",  false),
-            // total duration (seconds)
-            ("totalCallDuration",    "call_duration_s", true),
-            ("callsDuration",        "call_duration_s", true),
-            // voip/facetime/cellular breakdowns (seconds)
-            ("voipCallDuration",         "voip_duration_s",       true),
-            ("totalVoIPCallDuration",    "voip_duration_s",       true),
-            ("faceTimeAudioDuration",    "facetime_audio_s",      true),
-            ("faceTimeVideoDuration",    "facetime_video_s",      true),
-            ("cellularCallDuration",     "cellular_call_s",       true)
-        ]
-
-        for a in numericAliases {
-            if let n = obj.value(forKey: a.inKey) as? NSNumber {
-                rec[a.outKey] = a.isDuration ? n.doubleValue : n.intValue
-            }
+    /// Extract seconds from either Measurement<UnitDuration> or numeric TimeInterval.
+    static func seconds(_ obj: NSObject, key: String) -> Double? {
+        if let m = valueIfResponds(obj, key) as? Measurement<UnitDuration> {
+            return m.converted(to: .seconds).value
         }
-
-        // Optional per-app/ per-service breakdown
-        // Common containers: "applications" / "services" / "communicationApps"
-        if let apps = (obj.value(forKey: "applications") as? NSArray)
-                   ?? (obj.value(forKey: "services") as? NSArray)
-                   ?? (obj.value(forKey: "communicationApps") as? NSArray) {
-            var arr: [[String: Any]] = []
-            for any in apps {
-                guard let app = any as? NSObject else { continue }
-                let bundle = (app.value(forKey: "bundleIdentifier") as? String)
-                          ?? (app.value(forKey: "bundleId") as? String)
-                let cnt    = (app.value(forKey: "callCount") as? NSNumber)?.intValue
-                let dur    = (app.value(forKey: "callDuration") as? NSNumber)?.doubleValue
-                          ?? (app.value(forKey: "totalCallDuration") as? NSNumber)?.doubleValue
-
-                var entry: [String: Any] = [:]
-                if let b = bundle { entry["bundle_id"] = b }
-                if let c = cnt    { entry["calls"] = c }
-                if let d = dur    { entry["duration_s"] = d }
-                if !entry.isEmpty { arr.append(entry) }
-            }
-            if !arr.isEmpty { rec["apps"] = arr }
+        if let n = valueIfResponds(obj, key) as? NSNumber {
+            return n.doubleValue
         }
+        return nil
+    }
+
+    /// Map SRPhoneUsageReport -> flat JSON using documented keys.
+    static func mapPhoneUsage(
+        _ obj: NSObject,
+        recordedAt: Date?
+    ) -> [String: Any]? {
+        // Guard the expected class name to avoid KVC crashes on other sample types.
+        let typeName = NSStringFromClass(type(of: obj))
+        guard typeName.contains("PhoneUsageReport") else { return nil }
+
+        let iso = ISO8601DateFormatter()
+        var rec: [String: Any] = [:]
+
+        // Timestamp when the framework recorded the sample (SRFetchResult.timestamp)
+        if let ts = recordedAt { rec["recorded_at"] = iso.string(from: ts) }
+
+        // Period bounds if present
+        if let start = kvcDate(obj, key: "startDate") { rec["start"] = iso.string(from: start) }
+        if let end = kvcDate(obj, key: "endDate") { rec["end"] = iso.string(from: end) }
+
+        // Duration that the report spans (Measurement<UnitDuration>)
+        if let dur = seconds(obj, key: "duration") { rec["duration_s"] = dur } // Apple: duration. :contentReference[oaicite:5]{index=5}
+
+        // Documented counters & durations
+        if let v = intValue(obj, key: "totalIncomingCalls") { rec["total_incoming_calls"] = v } // :contentReference[oaicite:6]{index=6}
+        if let v = intValue(obj, key: "totalOutgoingCalls") { rec["total_outgoing_calls"] = v } // :contentReference[oaicite:7]{index=7}
+        if let v = seconds(obj, key: "totalPhoneCallDuration") { rec["total_phone_call_duration_s"] = v } // :contentReference[oaicite:8]{index=8}
+        if let v = intValue(obj, key: "totalUniqueContacts") { rec["total_unique_contacts"] = v } // :contentReference[oaicite:9]{index=9}
+
+        // Device tag
+        rec["device_kind"] = "iphone"
 
         return rec
     }
