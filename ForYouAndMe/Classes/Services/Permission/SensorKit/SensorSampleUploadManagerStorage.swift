@@ -50,20 +50,20 @@ public final class DefaultsSensorStorage: SensorSampleUploadManagerStorage, Sens
 
     // MARK: - Queue
 
-    public func enqueueBatch(_ batch: [[String : Any]], for sensor: SRSensor) {
+    public func enqueueBatch(_ batch: [[String: Any]], for sensor: SRSensor) {
         syncQueue.sync {
-            var q = loadQueue(for: sensor)
-            q.append(batch)
-            saveQueue(q, for: sensor)
+            var queue = loadQueue(for: sensor)
+            queue.append(batch)
+            saveQueue(queue, for: sensor)
         }
     }
 
-    public func dequeueNextBatch(for sensor: SRSensor) -> [[String : Any]]? {
+    public func dequeueNextBatch(for sensor: SRSensor) -> [[String: Any]]? {
         return syncQueue.sync {
-            var q = loadQueue(for: sensor)
-            guard !q.isEmpty else { return nil }
-            let head = q.removeFirst()
-            saveQueue(q, for: sensor)
+            var queue = loadQueue(for: sensor)
+            guard !queue.isEmpty else { return nil }
+            let head = queue.removeFirst()
+            saveQueue(queue, for: sensor)
             return head
         }
     }

@@ -10,6 +10,7 @@
 		03234CB4831657B20FF504F7 /* Pods_ForYouAndMe_Example.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 644148C497011A02116D3F7E /* Pods_ForYouAndMe_Example.framework */; };
 		0D15F83E2DE0B75D00C42FF3 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 0D15F83D2DE0B75D00C42FF3 /* GoogleService-Info.plist */; };
 		0DC1F31B2CBE4AC1006640F4 /* ProjectInfo.plist in Resources */ = {isa = PBXBuildFile; fileRef = 0DC1F31A2CBE4AC1006640F4 /* ProjectInfo.plist */; };
+		0DD608542E8D88FA00E9D2C3 /* SensorKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0DD608532E8D88FA00E9D2C3 /* SensorKit.framework */; };
 		607FACD61AFB9204008FA782 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 607FACD51AFB9204008FA782 /* AppDelegate.swift */; };
 		607FACDD1AFB9204008FA782 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 607FACDC1AFB9204008FA782 /* Images.xcassets */; };
 		607FACE01AFB9204008FA782 /* LaunchScreen.xib in Resources */ = {isa = PBXBuildFile; fileRef = 607FACDE1AFB9204008FA782 /* LaunchScreen.xib */; };
@@ -48,6 +49,7 @@
 		0C247CF1554CEBF10066659F /* Pods-ForYouAndMe_Example.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ForYouAndMe_Example.debug.xcconfig"; path = "Target Support Files/Pods-ForYouAndMe_Example/Pods-ForYouAndMe_Example.debug.xcconfig"; sourceTree = "<group>"; };
 		0D15F83D2DE0B75D00C42FF3 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		0DC1F31A2CBE4AC1006640F4 /* ProjectInfo.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = ProjectInfo.plist; sourceTree = "<group>"; };
+		0DD608532E8D88FA00E9D2C3 /* SensorKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SensorKit.framework; path = System/Library/Frameworks/SensorKit.framework; sourceTree = SDKROOT; };
 		33A9E001A189A153870011A7 /* Pods_ForYouAndMe_Tests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_ForYouAndMe_Tests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		476199379F45E8AA9A61B477 /* Pods-ForYouAndMe_Example.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ForYouAndMe_Example.release.xcconfig"; path = "Target Support Files/Pods-ForYouAndMe_Example/Pods-ForYouAndMe_Example.release.xcconfig"; sourceTree = "<group>"; };
 		4BCA341441201CB8A7DED062 /* ForYouAndMe.podspec */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; name = ForYouAndMe.podspec; path = ../ForYouAndMe.podspec; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.ruby; };
@@ -75,6 +77,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				8974CF8B267B848D003A6E61 /* HealthKit.framework in Frameworks */,
+				0DD608542E8D88FA00E9D2C3 /* SensorKit.framework in Frameworks */,
 				03234CB4831657B20FF504F7 /* Pods_ForYouAndMe_Example.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -104,6 +107,7 @@
 		43FCC7C65E649FFFBFEA13F8 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				0DD608532E8D88FA00E9D2C3 /* SensorKit.framework */,
 				8974CF8A267B848D003A6E61 /* HealthKit.framework */,
 				644148C497011A02116D3F7E /* Pods_ForYouAndMe_Example.framework */,
 				33A9E001A189A153870011A7 /* Pods_ForYouAndMe_Tests.framework */,
@@ -592,6 +596,7 @@
 				CODE_SIGN_ENTITLEMENTS = ForYouAndMe_Example.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 15;
 				DEVELOPMENT_TEAM = 25S45RFPZF;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
@@ -604,11 +609,17 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
+				MARKETING_VERSION = 1.2;
 				MODULE_NAME = ExampleApp;
 				PRODUCT_BUNDLE_IDENTIFIER = com.czi.4youandme.staging;
 				PRODUCT_NAME = ForYouAndMe_Example;
 				PROVISIONING_PROFILE_SPECIFIER = "";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_SWIFT3_OBJC_INFERENCE = Default;
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Debug;
 		};
@@ -624,6 +635,7 @@
 				CODE_SIGN_ENTITLEMENTS = ForYouAndMe_Example.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 15;
 				DEVELOPMENT_TEAM = 25S45RFPZF;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
@@ -636,11 +648,17 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
+				MARKETING_VERSION = 1.2;
 				MODULE_NAME = ExampleApp;
 				PRODUCT_BUNDLE_IDENTIFIER = com.czi.4youandme.staging;
 				PRODUCT_NAME = ForYouAndMe_Example;
 				PROVISIONING_PROFILE_SPECIFIER = "";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_SWIFT3_OBJC_INFERENCE = Default;
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Release;
 		};

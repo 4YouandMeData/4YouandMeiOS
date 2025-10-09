@@ -15,11 +15,11 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>1.0</string>
+	<string>$(MARKETING_VERSION)</string>
 	<key>CFBundleSignature</key>
 	<string>????</string>
 	<key>CFBundleVersion</key>
-	<string>1</string>
+	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>LSApplicationCategoryType</key>
 	<string></string>
 	<key>LSApplicationQueriesSchemes</key>
@@ -72,7 +72,7 @@
 		<key>SRSensorUsageDeviceUsage</key>
 		<dict>
 			<key>Description</key>
-			<string>Usiamo report aggregati sull&apos;uso del dispositivo (tempo schermo, sblocchi, notifiche) per analisi statistiche.</string>
+			<string>Usiamo report aggregati sull'uso del dispositivo (tempo schermo, sblocchi, notifiche) per analisi statistiche.</string>
 			<key>Required</key>
 			<string>YES</string>
 		</dict>
@@ -93,12 +93,17 @@
 		<key>SRSensorUsageMessageUsage</key>
 		<dict>
 			<key>Description</key>
-			<string>Usiamo report aggregati sull&apos;uso dei messaggi (quantità, invio/ricezione, allegati) per analisi statistiche.</string>
+			<string>Usiamo report aggregati sull'uso dei messaggi (quantità, invio/ricezione, allegati) per analisi statistiche.</string>
 			<key>Required</key>
 			<string>YES</string>
 		</dict>
 		<key>SRSensorUsageMotion</key>
-		<string>Usiamo i dati di movimento (accelerometro/rotazione) per stimare attività e contesto.</string>
+		<dict>
+			<key>Description</key>
+			<string>Usiamo i dati di movimento (accelerometro/rotazione) per stimare attività e contesto.</string>
+			<key>Required</key>
+			<string>YES</string>
+		</dict>
 		<key>SRSensorUsagePedometer</key>
 		<dict>
 			<key>NSUsageDescription</key>
@@ -109,7 +114,7 @@
 		<key>SRSensorUsagePhoneUsage</key>
 		<dict>
 			<key>Description</key>
-			<string>Usiamo report aggregati sull&apos;uso del telefono (chiamate e durate) per analisi statistiche.</string>
+			<string>Usiamo report aggregati sull'uso del telefono (chiamate e durate) per analisi statistiche.</string>
 			<key>Required</key>
 			<string>YES</string>
 		</dict>

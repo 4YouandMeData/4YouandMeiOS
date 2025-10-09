@@ -166,10 +166,10 @@ final class SensorKitManager: SensorKitService {
         for sensor in self.readSensors {
             // Reuse or create the reader for this sensor
             let reader: SRSensorReader = {
-                if let r = recordingReaders[sensor] { return r }
-                let r = SRSensorReader(sensor: sensor)
-                recordingReaders[sensor] = r
-                return r
+                if let reader = recordingReaders[sensor] { return reader }
+                let reader = SRSensorReader(sensor: sensor)
+                recordingReaders[sensor] = reader
+                return reader
             }()
 
             // Start recording this sensor
@@ -197,8 +197,8 @@ extension SensorKitManager: InitializableService {
     func initialize() -> Single<()> {
         self.isInitialized = true
         // Start the upload logic (reachability listeners + initial sync).
-        self.sensorSampleUploadManager.startUploadLogic()
         self.ensureRecordingStarted()
+        self.sensorSampleUploadManager.startUploadLogic()
         self.addApplicationDidBecomeActiveObserver()
 
         return .just(())
