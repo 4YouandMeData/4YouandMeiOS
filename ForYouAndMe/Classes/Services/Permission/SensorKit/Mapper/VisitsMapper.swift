@@ -7,142 +7,206 @@
 
 import Foundation
 import SensorKit
-import CoreMotion
 
-/// Maps SensorKit "visits" into JSON-ready records.
-/// We avoid compile-time coupling and use KVC to be resilient to SDK changes.
+private func dateFromSRAbsoluteTime(_ srTime: SRAbsoluteTime) -> Date {
+    let cf = srTime.toCFAbsoluteTime()
+    return Date(timeIntervalSinceReferenceDate: cf)
+}
+
+// MARK: - Mapper
+
+/// Maps SensorKit `SRVisit` samples into JSON-ready dictionaries (documented keys only).
+/// NOTE: Authorization and `startRecording()` are handled elsewhere.
 final class VisitsMapper: NSObject, SensorSampleMapper {
 
-    // This mapper handles the "visits" stream
     var sensor: SRSensor { .visits }
 
     private let reader = SRSensorReader(sensor: .visits)
     private var pendingCompletion: ((Result<[[String: Any]], Error>) -> Void)?
-    private var collected: [[String: Any]] = []
+    private var collected = [[String: Any]]()
 
-    // Apple withholds last ~24h of SensorKit data
+    // Apple withholds last 24h of SensorKit data
     private static let holdingPeriod: TimeInterval = 24 * 60 * 60
 
-    func fetchAndMap(from: Date,
-                     to: Date,
-                     completion: @escaping (Result<[[String : Any]], Error>) -> Void) {
+    // Errors
+    private enum MapperError: LocalizedError {
+        case busy
+        case notAuthorized(status: SRAuthorizationStatus)
 
-        precondition(pendingCompletion == nil, "VisitsMapper: concurrent fetch not supported")
+        var errorDescription: String? {
+            switch self {
+            case .busy:
+                return "Mapper is busy: a fetch is already in flight."
+            case let .notAuthorized(status):
+                return "SensorKit not authorized for visits. Status: \(status)."
+            }
+        }
+    }
 
-        // Respect 24h holding period
-        let safeTo = min(to, Date().addingTimeInterval(-Self.holdingPeriod))
+    // MARK: - SensorSampleMapper
+
+    func fetchAndMap(
+        from: Date,
+        to: Date,
+        completion: @escaping (Result<[[String: Any]], Error>) -> Void
+    ) {
+        // Prevent concurrent fetches
+        guard pendingCompletion == nil else {
+            completion(.failure(MapperError.busy))
+            return
+        }
+
+        // Enforce 24h embargo
+        let embargoCutoff = Date().addingTimeInterval(-Self.holdingPeriod)
+        let safeTo = min(to, embargoCutoff)
         guard from < safeTo else {
             completion(.success([]))
             return
         }
 
-        // Build request converting Date -> SRAbsoluteTime (CFAbsoluteTime since 2001-01-01)
+        // Build request
         let req = SRFetchRequest()
         req.device = SRDevice.current
-        req.from = SRAbsoluteTime.fromCFAbsoluteTime(_cf: from.timeIntervalSinceReferenceDate)
-        req.to   = SRAbsoluteTime.fromCFAbsoluteTime(_cf: safeTo.timeIntervalSinceReferenceDate)
+        req.from = from.srAbsoluteTime
+        req.to = safeTo.srAbsoluteTime
 
         collected.removeAll(keepingCapacity: true)
         pendingCompletion = completion
         reader.delegate = self
-        reader.fetch(req) // delegate-based API (no trailing closure)
+        reader.fetch(req)
     }
 }
 
 // MARK: - SRSensorReaderDelegate
+
 extension VisitsMapper: SRSensorReaderDelegate {
 
-    func sensorReader(_ reader: SRSensorReader,
-                      fetching fetchRequest: SRFetchRequest,
-                      didFetchResult result: SRFetchResult<AnyObject>) -> Bool {
+    func sensorReader(
+        _ reader: SRSensorReader,
+        fetching fetchRequest: SRFetchRequest,
+        didFetchResult result: SRFetchResult<AnyObject>
+    ) -> Bool {
+        // Attach SRFetchResult.timestamp as recorded_at
+        let recordedAt = dateFromSRAbsoluteTime(result.timestamp)
 
-        if let list = result.sample as? CMSensorDataList {
-            // Iterate batched results via NSFastEnumeration wrapper (already defined in the project)
-            for element in FastEnumerationSequence(base: list) {
-                guard let obj = element as? NSObject else { continue }
-                if let rec = Self.mapVisit(obj) {
-                    collected.append(rec)
-                }
-            }
-        } else if let obj = result.sample as? NSObject {
-            if let rec = Self.mapVisit(obj) {
-                collected.append(rec)
-            }
+        // SRVisit arrives as single objects (no CMSensorDataList expected)
+        if let visit = result.sample as? NSObject,
+           let record = Self.mapVisit(visit, recordedAt: recordedAt) {
+            collected.append(record)
         }
         return true // continue fetching
     }
 
     func sensorReader(_ reader: SRSensorReader, didCompleteFetch fetchRequest: SRFetchRequest) {
-        guard let completion = pendingCompletion else { return }
-        let out = collected
-        pendingCompletion = nil
-        collected.removeAll(keepingCapacity: false)
-        completion(.success(out))
+        finish(.success(collected))
     }
 
-    func sensorReader(_ reader: SRSensorReader,
-                      fetching fetchRequest: SRFetchRequest,
-                      failedWithError error: any Error) {
-        guard let completion = pendingCompletion else { return }
-        pendingCompletion = nil
-        collected.removeAll(keepingCapacity: false)
-        completion(.failure(error))
+    func sensorReader(
+        _ reader: SRSensorReader,
+        fetching fetchRequest: SRFetchRequest,
+        failedWithError error: Error
+    ) {
+        finish(.failure(error))
     }
 
-    // MARK: - Mapping helpers
+    private func finish(_ result: Result<[[String: Any]], Error>) {
+        let completion = pendingCompletion
+        pendingCompletion = nil
+        collected.removeAll(keepingCapacity: false)
+        reader.delegate = nil
+        completion?(result)
+    }
+}
 
-    /// KVC-based extraction of a visit sample.
-    /// Normalized fields:
-    ///  - start, end: ISO8601 strings
-    ///  - lat, lon: doubles (if available)
-    ///  - accuracy_m: double (if available)
-    ///  - confidence: int (if available)
-    ///  - device_kind: "iphone"
-    private static func mapVisit(_ obj: NSObject) -> [String: Any]? {
-        let fmt = ISO8601DateFormatter()
+// MARK: - Mapping (documented keys only, safe KVC)
 
-        // Time bounds (best-effort)
-        let start: Date = (obj.value(forKey: "arrivalDate") as? Date)
-                       ?? (obj.value(forKey: "arrival") as? Date)
-                       ?? (obj.value(forKey: "startDate") as? Date)
-                       ?? (obj.value(forKey: "start") as? Date)
-                       ?? Date.distantPast
+private extension VisitsMapper {
 
-        let end: Date? = (obj.value(forKey: "departureDate") as? Date)
-                      ?? (obj.value(forKey: "departure") as? Date)
-                      ?? (obj.value(forKey: "endDate") as? Date)
-                      ?? (obj.value(forKey: "end") as? Date)
+    // Safe KVC helpers
+    static func valueIfResponds(_ obj: NSObject, _ key: String) -> Any? {
+        let sel = NSSelectorFromString(key)
+        guard obj.responds(to: sel) else { return nil }
+        return obj.value(forKey: key)
+    }
 
-        // Location: try multiple shapes (flat keys / nested center/location)
-        let lat: Double? =
-              (obj.value(forKey: "latitude") as? NSNumber)?.doubleValue
-           ?? (obj.value(forKeyPath: "center.latitude") as? NSNumber)?.doubleValue
-           ?? (obj.value(forKeyPath: "location.coordinate.latitude") as? NSNumber)?.doubleValue
+    static func string(_ obj: NSObject, key: String) -> String? {
+        valueIfResponds(obj, key) as? String
+    }
 
-        let lon: Double? =
-              (obj.value(forKey: "longitude") as? NSNumber)?.doubleValue
-           ?? (obj.value(forKeyPath: "center.longitude") as? NSNumber)?.doubleValue
-           ?? (obj.value(forKeyPath: "location.coordinate.longitude") as? NSNumber)?.doubleValue
+    static func uuidString(_ obj: NSObject, key: String) -> String? {
+        if let u = valueIfResponds(obj, key) as? UUID { return u.uuidString }
+        return string(obj, key: key) // fallback if bridged as string
+    }
 
-        let hAcc: Double? =
-              (obj.value(forKey: "horizontalAccuracy") as? NSNumber)?.doubleValue
-           ?? (obj.value(forKeyPath: "location.horizontalAccuracy") as? NSNumber)?.doubleValue
+    static func seconds(from dateInterval: DateInterval?) -> Double? {
+        guard let di = dateInterval else { return nil }
+        return di.duration
+    }
 
-        // Confidence/category (optional; names may vary)
-        let conf: Int? =
-              (obj.value(forKey: "confidence") as? NSNumber)?.intValue
-           ?? (obj.value(forKey: "placeConfidence") as? NSNumber)?.intValue
+    static func kvcDateInterval(_ obj: NSObject, key: String) -> DateInterval? {
+        valueIfResponds(obj, key) as? DateInterval
+    }
 
-        // Compose output; require at least a start time.
-        var rec: [String: Any] = [
-            "start": fmt.string(from: start),
-            "device_kind": "iphone"
-        ]
-        if let end = end { rec["end"] = fmt.string(from: end) }
-        if let la = lat, let lo = lon { rec["lat"] = la; rec["lon"] = lo }
-        if let acc = hAcc { rec["accuracy_m"] = acc }
-        if let c = conf { rec["confidence"] = c }
+    static func double(_ obj: NSObject, key: String) -> Double? {
+        (valueIfResponds(obj, key) as? NSNumber)?.doubleValue
+    }
 
-        return rec
+    static func enumString(_ any: Any?) -> String? {
+        guard let any else { return nil }
+        // Prefer rawValue (String) when exposed; else type description
+        if let o = any as? NSObject,
+           let raw = valueIfResponds(o, "rawValue") as? String {
+            return raw
+        }
+        return String(describing: any)
+    }
+
+    static func isSRVisit(_ obj: NSObject) -> Bool {
+        NSStringFromClass(type(of: obj)).contains("SRVisit")
+    }
+
+    /// Map SRVisit → JSON (identifier, arrival/departure intervals, distanceFromHome, locationCategory, recorded_at)
+    static func mapVisit(_ obj: NSObject, recordedAt: Date?) -> [String: Any]? {
+        guard isSRVisit(obj) else { return nil }
+
+        let iso = ISO8601DateFormatter()
+        var rec: [String: Any] = ["device_kind": "iphone"]
+
+        // When SensorKit recorded this sample
+        if let ts = recordedAt { rec["recorded_at"] = iso.string(from: ts) }
+
+        // Unique location identifier (UUID)
+        if let id = uuidString(obj, key: "identifier") {
+            rec["location_id"] = id // maps to “unique geographic location” per docs
+        }
+
+        // Arrival and departure windows (DateInterval → {start,end} ISO-8601)
+        if let arr = kvcDateInterval(obj, key: "arrivalDateInterval") {
+            rec["arrival"] = [
+                "start": iso.string(from: arr.start),
+                "end": iso.string(from: arr.end)
+            ]
+        }
+        if let dep = kvcDateInterval(obj, key: "departureDateInterval") {
+            rec["departure"] = [
+                "start": iso.string(from: dep.start),
+                "end": iso.string(from: dep.end)
+            ]
+        }
+
+        // Distance from home (meters)
+        if let d = double(obj, key: "distanceFromHome") {
+            rec["distance_from_home_m"] = d
+        }
+
+        // Location category enum → readable string (e.g., home/work/school/…)
+        if let cat = enumString(valueIfResponds(obj, "locationCategory")) {
+            rec["location_category"] = cat
+        }
+
+        // NB: SRVisit does NOT expose raw coordinates (privacy); we do not emit lat/lon.
+
+        // If nothing was mapped (extreme edge), return nil to skip
+        return rec.count > 1 ? rec : nil
     }
 }
