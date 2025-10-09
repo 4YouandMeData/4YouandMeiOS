@@ -5,163 +5,189 @@
 //  Created by Giuseppe Lapenta on 01/08/25.
 //
 
+//
+//  MessagesUsageReportMapper.swift
+//
+
 import Foundation
 import SensorKit
-import CoreMotion
 
-/// Maps SensorKit messages usage aggregated reports into JSON-ready records.
-/// Uses KVC to stay resilient across SDK field/name variations.
+
+/// Convert SRAbsoluteTime back to Date using CFAbsoluteTime epoch (2001-01-01).
+private func dateFromSRAbsoluteTime(_ srTime: SRAbsoluteTime) -> Date {
+    let cf = srTime.toCFAbsoluteTime()
+    return Date(timeIntervalSinceReferenceDate: cf)
+}
+
+// MARK: - Mapper
+
+/// Maps SensorKit `SRMessagesUsageReport` into JSON-ready dictionaries.
+/// NOTE: Authorization and `startRecording()` are handled elsewhere.
 final class MessagesUsageReportMapper: NSObject, SensorSampleMapper {
 
-    // This mapper handles the messages usage aggregated report
+    // Expose the sensor this mapper handles
     var sensor: SRSensor { .messagesUsageReport }
 
     private let reader = SRSensorReader(sensor: .messagesUsageReport)
     private var pendingCompletion: ((Result<[[String: Any]], Error>) -> Void)?
-    private var collected: [[String: Any]] = []
+    private var collected = [[String: Any]]()
 
-    // Apple withholds last 24h of SensorKit data
+    // Apple withholds last 24h of SensorKit data (absolute hours)
     private static let holdingPeriod: TimeInterval = 24 * 60 * 60
 
-    func fetchAndMap(from: Date,
-                     to: Date,
-                     completion: @escaping (Result<[[String: Any]], Error>) -> Void) {
+    // MARK: - Errors
 
-        precondition(pendingCompletion == nil, "MessagesUsageReportMapper: concurrent fetch not supported")
+    private enum MapperError: LocalizedError {
+        case busy
+        case notAuthorized(sensor: SRSensor, status: SRAuthorizationStatus)
 
-        // Respect 24h holding period
-        let safeTo = min(to, Date().addingTimeInterval(-Self.holdingPeriod))
+        var errorDescription: String? {
+            switch self {
+            case .busy:
+                return "Mapper is busy: a fetch is already in flight."
+            case let .notAuthorized(sensor, status):
+                return "SensorKit not authorized for \(sensor). Status: \(status)."
+            }
+        }
+    }
+
+    // MARK: - SensorSampleMapper
+
+    /// Fetch the given [from, to) window, honoring the 24h embargo and mapping SRMessagesUsageReport.
+    func fetchAndMap(
+        from: Date,
+        to: Date,
+        completion: @escaping (Result<[[String: Any]], Error>) -> Void
+    ) {
+        // Avoid crashing on concurrent calls
+        guard pendingCompletion == nil else {
+            completion(.failure(MapperError.busy))
+            return
+        }
+
+        // Enforce embargo: do not read within last 24h
+        let embargoCutoff = Date().addingTimeInterval(-Self.holdingPeriod)
+        let safeTo = min(to, embargoCutoff)
         guard from < safeTo else {
             completion(.success([]))
             return
         }
 
-        // Build request converting Date -> SRAbsoluteTime (CFAbsoluteTime since 2001-01-01)
         let req = SRFetchRequest()
         req.device = SRDevice.current
-        req.from = SRAbsoluteTime.fromCFAbsoluteTime(_cf: from.timeIntervalSinceReferenceDate)
-        req.to   = SRAbsoluteTime.fromCFAbsoluteTime(_cf: safeTo.timeIntervalSinceReferenceDate)
+        req.from = from.srAbsoluteTime
+        req.to = safeTo.srAbsoluteTime
 
         collected.removeAll(keepingCapacity: true)
         pendingCompletion = completion
         reader.delegate = self
-        reader.fetch(req) // delegate-based API
+        reader.fetch(req)
     }
 }
 
 // MARK: - SRSensorReaderDelegate
+
 extension MessagesUsageReportMapper: SRSensorReaderDelegate {
 
-    func sensorReader(_ reader: SRSensorReader,
-                      fetching fetchRequest: SRFetchRequest,
-                      didFetchResult result: SRFetchResult<AnyObject>) -> Bool {
+    func sensorReader(
+        _ reader: SRSensorReader,
+        fetching fetchRequest: SRFetchRequest,
+        didFetchResult result: SRFetchResult<AnyObject>
+    ) -> Bool {
+        // Attach SRFetchResult.timestamp as recorded_at
+        let recordedAt = dateFromSRAbsoluteTime(result.timestamp)
 
-        if let obj = result.sample as? NSObject {
-            if let rec = Self.mapMessagesUsage(obj) {
-                collected.append(rec)
-            }
-        } else if let list = result.sample as? CMSensorDataList {
-            // Iterate potential batched results via NSFastEnumeration wrapper
-            for element in FastEnumerationSequence(base: list) {
-                guard let obj = element as? NSObject else { continue }
-                if let rec = Self.mapMessagesUsage(obj) {
-                    collected.append(rec)
-                }
-            }
+        // Usage reports arrive as single aggregated objects (no CMSensorDataList).
+        if let report = result.sample as? NSObject,
+           let record = Self.mapMessagesUsage(report, recordedAt: recordedAt) {
+            collected.append(record)
         }
-        return true // continue fetching
+        return true // continue
     }
 
-    func sensorReader(_ reader: SRSensorReader, didCompleteFetch fetchRequest: SRFetchRequest) {
-        guard let completion = pendingCompletion else { return }
-        let out = collected
+    func sensorReader(
+        _ reader: SRSensorReader,
+        didCompleteFetch fetchRequest: SRFetchRequest
+    ) {
+        finish(.success(collected))
+    }
+
+    func sensorReader(
+        _ reader: SRSensorReader,
+        fetching fetchRequest: SRFetchRequest,
+        failedWithError error: Error
+    ) {
+        finish(.failure(error))
+    }
+
+    // Centralized cleanup + callback
+    private func finish(_ result: Result<[[String: Any]], Error>) {
+        let completion = pendingCompletion
         pendingCompletion = nil
         collected.removeAll(keepingCapacity: false)
-        completion(.success(out))
+        reader.delegate = nil
+        completion?(result)
+    }
+}
+
+// MARK: - Mapping (documented keys only)
+
+private extension MessagesUsageReportMapper {
+
+    // --- Safe KVC (only call value(forKey:) if the selector exists) ---
+    static func valueIfResponds(_ obj: NSObject, _ key: String) -> Any? {
+        let sel = NSSelectorFromString(key)
+        guard obj.responds(to: sel) else { return nil }
+        return obj.value(forKey: key)
     }
 
-    func sensorReader(_ reader: SRSensorReader,
-                      fetching fetchRequest: SRFetchRequest,
-                      failedWithError error: any Error) {
-        guard let completion = pendingCompletion else { return }
-        pendingCompletion = nil
-        collected.removeAll(keepingCapacity: false)
-        completion(.failure(error))
+    static func kvcDate(_ obj: NSObject, key: String) -> Date? {
+        valueIfResponds(obj, key) as? Date
     }
 
-    // MARK: - Mapping helpers
+    static func intValue(_ obj: NSObject, key: String) -> Int? {
+        (valueIfResponds(obj, key) as? NSNumber)?.intValue
+    }
 
-    /// Extract common messages-usage metrics using KVC and normalize to stable keys.
-    private static func mapMessagesUsage(_ obj: NSObject) -> [String: Any]? {
-        let fmt = ISO8601DateFormatter()
-
-        // Time bounds
-        let start: Date = (obj.value(forKey: "startDate") as? Date)
-                       ?? (obj.value(forKey: "start") as? Date)
-                       ?? Date.distantPast
-        let end:   Date = (obj.value(forKey: "endDate") as? Date)
-                       ?? (obj.value(forKey: "end") as? Date)
-                       ?? start
-
-        var rec: [String: Any] = [
-            "start": fmt.string(from: start),
-            "end":   fmt.string(from: end),
-            "device_kind": "iphone"
-        ]
-
-        // Aggregate counters (probe multiple aliases)
-        let numericAliases: [(inKey: String, outKey: String)] = [
-            // totals
-            ("totalMessages",      "messages"),
-            ("messageCount",       "messages"),
-            // sent / received
-            ("messagesSent",       "messages_sent"),
-            ("sentMessages",       "messages_sent"),
-            ("messagesReceived",   "messages_received"),
-            ("receivedMessages",   "messages_received"),
-            // attachments
-            ("attachmentsCount",   "attachments"),
-            ("totalAttachments",   "attachments"),
-            // conversations
-            ("conversationsCount", "conversations"),
-            ("totalConversations", "conversations")
-        ]
-        for pair in numericAliases {
-            if let n = obj.value(forKey: pair.inKey) as? NSNumber {
-                rec[pair.outKey] = n.intValue
-            }
+    static func seconds(_ obj: NSObject, key: String) -> Double? {
+        if let m = valueIfResponds(obj, key) as? Measurement<UnitDuration> {
+            return m.converted(to: .seconds).value
         }
-
-        // Optional breakdown per-app / per-service
-        // Common containers: "applications", "services", "messagingApps"
-        if let apps = (obj.value(forKey: "applications") as? NSArray)
-                   ?? (obj.value(forKey: "services") as? NSArray)
-                   ?? (obj.value(forKey: "messagingApps") as? NSArray) {
-            var arr: [[String: Any]] = []
-            for any in apps {
-                guard let app = any as? NSObject else { continue }
-                let bundle = (app.value(forKey: "bundleIdentifier") as? String)
-                          ?? (app.value(forKey: "bundleId") as? String)
-                let total  = (app.value(forKey: "messageCount") as? NSNumber)?.intValue
-                          ?? (app.value(forKey: "totalMessages") as? NSNumber)?.intValue
-                let sent   = (app.value(forKey: "messagesSent") as? NSNumber)?.intValue
-                          ?? (app.value(forKey: "sentMessages") as? NSNumber)?.intValue
-                let recv   = (app.value(forKey: "messagesReceived") as? NSNumber)?.intValue
-                          ?? (app.value(forKey: "receivedMessages") as? NSNumber)?.intValue
-                let att    = (app.value(forKey: "attachmentsCount") as? NSNumber)?.intValue
-                          ?? (app.value(forKey: "totalAttachments") as? NSNumber)?.intValue
-
-                var entry: [String: Any] = [:]
-                if let b = bundle { entry["bundle_id"] = b }
-                if let t = total  { entry["messages"] = t }
-                if let s = sent   { entry["messages_sent"] = s }
-                if let r = recv   { entry["messages_received"] = r }
-                if let a = att    { entry["attachments"] = a }
-
-                if !entry.isEmpty { arr.append(entry) }
-            }
-            if !arr.isEmpty { rec["apps"] = arr }
+        if let n = valueIfResponds(obj, key) as? NSNumber {
+            return n.doubleValue
         }
+        return nil
+    }
+
+    /// Map SRMessagesUsageReport -> flat JSON using documented keys.
+    static func mapMessagesUsage(
+        _ obj: NSObject,
+        recordedAt: Date?
+    ) -> [String: Any]? {
+        // Guard the expected class name to avoid KVC crashes on other sample types.
+        let typeName = NSStringFromClass(type(of: obj))
+        guard typeName.contains("MessagesUsageReport") else { return nil }
+
+        let iso = ISO8601DateFormatter()
+        var rec: [String: Any] = [:]
+
+        // Timestamp when the framework recorded the sample (SRFetchResult.timestamp)
+        if let ts = recordedAt { rec["recorded_at"] = iso.string(from: ts) }
+
+        // Period bounds if present on this report type
+        if let start = kvcDate(obj, key: "startDate") { rec["start"] = iso.string(from: start) }
+        if let end = kvcDate(obj, key: "endDate") { rec["end"] = iso.string(from: end) }
+
+        // Duration that the report spans
+        if let dur = seconds(obj, key: "duration") { rec["duration_s"] = dur } // :contentReference[oaicite:1]{index=1}
+
+        // Documented counters
+        if let v = intValue(obj, key: "totalIncomingMessages") { rec["total_incoming_messages"] = v } // :contentReference[oaicite:2]{index=2}
+        if let v = intValue(obj, key: "totalOutgoingMessages") { rec["total_outgoing_messages"] = v } // :contentReference[oaicite:3]{index=3}
+        if let v = intValue(obj, key: "totalUniqueContacts")  { rec["total_unique_contacts"]  = v } // :contentReference[oaicite:4]{index=4}
+
+        // Explicit device tag
+        rec["device_kind"] = "iphone"
 
         return rec
     }
