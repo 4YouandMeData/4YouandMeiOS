@@ -16,7 +16,9 @@ public class PermissionViewController: UIViewController {
     private let analytics: AnalyticsService
     private let healthService: HealthService
     private let deviceService: DeviceService
+#if HEALTHKIT
     private let sensorKitService: SensorKitService
+#endif
     private let disposeBag: DisposeBag = DisposeBag()
     
     private lazy var scrollStackView: ScrollStackView = {
@@ -31,7 +33,9 @@ public class PermissionViewController: UIViewController {
         self.analytics = Services.shared.analytics
         self.healthService = Services.shared.healthService
         self.deviceService = Services.shared.deviceService
+#if HEALTHKIT
         self.sensorKitService = Services.shared.sensorKitService
+#endif
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -113,6 +117,7 @@ public class PermissionViewController: UIViewController {
         }
         
         // --- SensorKit ---
+#if HEALTHKIT
         if self.sensorKitService.serviceAvailable,
            self.repository.currentUser?.getHasAgreedTo(systemPermission: .sensorKit) ?? false {
 
@@ -128,6 +133,7 @@ public class PermissionViewController: UIViewController {
             skItem.autoSetDimension(.height, toSize: 72, relation: .greaterThanOrEqual)
             self.scrollStackView.stackView.addArrangedSubview(skItem)
         }
+#endif
             
         self.scrollStackView.stackView.addBlankSpace(space: 40.0)
     }
@@ -194,6 +200,7 @@ public class PermissionViewController: UIViewController {
     }
     
     private func handleSensorKitPermission() {
+#if HEALTHKIT
         // We need the concrete manager to access utility methods
         guard let manager = self.sensorKitService as? SensorKitManager else { return }
 
@@ -239,5 +246,6 @@ public class PermissionViewController: UIViewController {
                 self.navigator.handleError(error: error, presenter: self)
             })
             .disposed(by: self.disposeBag)
+#endif
     }
 }

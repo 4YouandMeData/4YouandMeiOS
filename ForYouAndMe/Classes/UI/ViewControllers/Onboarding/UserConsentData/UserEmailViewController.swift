@@ -9,7 +9,6 @@ import Foundation
 import PureLayout
 import TPKeyboardAvoiding
 import RxSwift
-import Validator
 
 protocol UserEmailCoordinator {
     func onUserEmailSubmitted(email: String)

@@ -28,7 +28,9 @@ class OptInSectionCoordinator {
     
     private let healthService: HealthService
     private let deviceService: DeviceService
+    #if HEALTHKIT
     private let sensorKitService: SensorKitService
+    #endif
     
     var answers: [Question: PossibleAnswer] = [:]
     
@@ -39,7 +41,9 @@ class OptInSectionCoordinator {
         self.navigator = Services.shared.navigator
         self.healthService = Services.shared.healthService
         self.deviceService = Services.shared.deviceService
+#if HEALTHKIT
         self.sensorKitService = Services.shared.sensorKitService
+#endif
         
         self.sectionData = sectionData
         self.navigationController = navigationController
@@ -131,6 +135,7 @@ extension OptInSectionCoordinator: OptInPermissionCoordinator {
                     return granted ? permission.request().catchAndReturn(()) : Single.just(())
                 }
             case .sensorKit:
+            #if HEALTHKIT
                 return result.flatMap {
                     guard let manager = Services.shared.sensorKitService as? SensorKitManager,
                                   manager.serviceAvailable
@@ -149,6 +154,9 @@ extension OptInSectionCoordinator: OptInPermissionCoordinator {
                         return .just(())
                     }
                 }
+            #else
+                return .just(())
+            #endif
             }
         }
         

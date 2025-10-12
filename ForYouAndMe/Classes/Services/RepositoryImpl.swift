@@ -119,7 +119,9 @@ extension RepositoryImpl: Repository {
     func logOut() {
         self.storage.user = nil
         self.api.logOut()
+        #if HEALTHKIT
         (Services.shared.sensorKitService as? SensorKitManager)?.refreshRecordingBasedOnClearance()
+        #endif
     }
     
     var infoMessages: [MessageInfo]? {

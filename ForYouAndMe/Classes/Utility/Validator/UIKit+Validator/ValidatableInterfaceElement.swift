@@ -14,8 +14,8 @@ public protocol ValidatableInterfaceElement {
     func validateOnInputChange(enabled: Bool)
 }
 
-private var ValidatableInterfaceElementRulesKey: UInt8 = 0
-private var ValidatableInterfaceElementHandlerKey: UInt8 = 0
+private var validatableInterfaceElementRulesKey: UInt8 = 0
+private var validatableInterfaceElementHandlerKey: UInt8 = 0
 
 extension ValidatableInterfaceElement {
 
@@ -56,14 +56,14 @@ extension ValidatableInterfaceElement {
         
         get {
         
-            return objc_getAssociatedObject(self, &ValidatableInterfaceElementRulesKey) as? ValidationRuleSet<InputType>
+            return objc_getAssociatedObject(self, &validatableInterfaceElementRulesKey) as? ValidationRuleSet<InputType>
         }
         
         set(newValue) {
             
             if let n = newValue {
             
-                objc_setAssociatedObject(self, &ValidatableInterfaceElementRulesKey, n as AnyObject, objc_AssociationPolicy.OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+                objc_setAssociatedObject(self, &validatableInterfaceElementRulesKey, n as AnyObject, objc_AssociationPolicy.OBJC_ASSOCIATION_RETAIN_NONATOMIC)
             }
         }
     }
@@ -72,14 +72,14 @@ extension ValidatableInterfaceElement {
         
         get {
         
-            return objc_getAssociatedObject(self, &ValidatableInterfaceElementHandlerKey) as? (ValidationResult) -> Void
+            return objc_getAssociatedObject(self, &validatableInterfaceElementHandlerKey) as? (ValidationResult) -> Void
         }
         
         set(newValue) {
         
             if let n = newValue {
             
-                objc_setAssociatedObject(self, &ValidatableInterfaceElementHandlerKey, n as AnyObject, objc_AssociationPolicy.OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+                objc_setAssociatedObject(self, &validatableInterfaceElementHandlerKey, n as AnyObject, objc_AssociationPolicy.OBJC_ASSOCIATION_RETAIN_NONATOMIC)
             }
         }
     }
