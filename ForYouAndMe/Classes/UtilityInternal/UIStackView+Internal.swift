@@ -14,12 +14,21 @@ extension UIStackView {
                          horizontalInset: CGFloat = 0) {
         
         let fontStyleData = FontPalette.fontStyleData(forStyle: fontStyle)
+        let textColor = ColorPalette.color(withType: colorType)
+        let comps = textColor.components
+        let cssColor: String = {
+            if let c = comps {
+                return "rgba(\(Int(c.red * 255)), \(Int(c.green * 255)), \(Int(c.blue * 255)), \(c.alpha))"
+            } else {
+                return "rgba(0, 0, 0, 1.0)"
+            }
+        }()
         let modifiedFont = String(format: """
                                     <span style=\"font-family: \(fontStyleData.font.fontName);\
                                     table, th, td {\
                                     border: 1px solid black;\
                                     };\
-                                    font-size: \(fontStyleData.font.pointSize)\">%@</span>
+                                    font-size: \(fontStyleData.font.pointSize);color: \(cssColor);">%@</span>
                                     """, text) as String
 
         guard let htmlString = modifiedFont.htmlToAttributedString else {
