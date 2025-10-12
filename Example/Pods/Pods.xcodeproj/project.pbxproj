@@ -233,6 +233,7 @@
 		0D8D8AAA40421360D8CD6019DAE8ADB5 /* WhiteBalance_GLES.fsh in Resources */ = {isa = PBXBuildFile; fileRef = 7B8BC02221FAC653E57434B1711F13A0 /* WhiteBalance_GLES.fsh */; };
 		0D9A9868B0265B4C84FC604C09D74DB3 /* UIImageView+Internal.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6CDAA190DA7625E0747FC6448E94D1B /* UIImageView+Internal.swift */; };
 		0DB4D8F9C242BC6AC075ED5E622C60A2 /* SpyrometerResultsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53CBB8DD36FFBB55CE7315DE1D51D004 /* SpyrometerResultsViewController.swift */; };
+		0DC2B6672E97D9E200FA32B5 /* MediaEventsMapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DC2B6662E97D9E000FA32B5 /* MediaEventsMapper.swift */; };
 		0DC813E62FCEF6C6C3009180D7790BFE /* Result+Alamofire.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38934CDCF6F2F0A521354C6390DBC7B4 /* Result+Alamofire.swift */; };
 		0DD608402E8D4B5D00E9D2C3 /* RotationRateMapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DD6083F2E8D4B5500E9D2C3 /* RotationRateMapper.swift */; };
 		0DD608422E8D535000E9D2C3 /* AmbientLightMapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DD608412E8D534F00E9D2C3 /* AmbientLightMapper.swift */; };
@@ -4400,6 +4401,7 @@
 		0DBA38190FB4DF70F2B5D3FAFDDB4B0B /* RxSwift-prefix.pch */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = "RxSwift-prefix.pch"; sourceTree = "<group>"; };
 		0DBECE58794B07768A82A4F75CA3D1B8 /* RecursiveLock.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = RecursiveLock.swift; path = Platform/RecursiveLock.swift; sourceTree = "<group>"; };
 		0DC018ED81F78B58627EB7C983D00D7D /* CombineLatest.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = CombineLatest.swift; path = RxSwift/Observables/CombineLatest.swift; sourceTree = "<group>"; };
+		0DC2B6662E97D9E000FA32B5 /* MediaEventsMapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaEventsMapper.swift; sourceTree = "<group>"; };
 		0DC604C6B047F93AAEFC25F399867209 /* ORKReactionTimeStep.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = ORKReactionTimeStep.h; path = ResearchKit/ActiveTasks/ORKReactionTimeStep.h; sourceTree = "<group>"; };
 		0DD1EDE1FD4C401203E33CA7A0F5EC9A /* Matrix.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = Matrix.swift; path = framework/Source/Matrix.swift; sourceTree = "<group>"; };
 		0DD6083F2E8D4B5500E9D2C3 /* RotationRateMapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RotationRateMapper.swift; sourceTree = "<group>"; };
@@ -9248,6 +9250,7 @@
 		0DD6083E2E8D4B4B00E9D2C3 /* Mapper */ = {
 			isa = PBXGroup;
 			children = (
+				0DC2B6662E97D9E000FA32B5 /* MediaEventsMapper.swift */,
 				0DD6084F2E8D5F3A00E9D2C3 /* KeyboardMetricsMapper.swift */,
 				0DD6084D2E8D5E3900E9D2C3 /* MessagesUsageReportMapper.swift */,
 				0DD6084B2E8D5DA800E9D2C3 /* PhoneUsageReportMapper.swift */,
@@ -18612,6 +18615,7 @@
 				7E06E0EED701B24E8D14D0FE14386589 /* SurveyGroupSectionCoordinator.swift in Sources */,
 				6211F6758D172BEB8BE9BF01F0F6A5E0 /* SurveyQuestion.swift in Sources */,
 				9A360BA3E4868CE2E4F379C52529F321 /* SurveyQuestionDate.swift in Sources */,
+				0DC2B6672E97D9E200FA32B5 /* MediaEventsMapper.swift in Sources */,
 				E3974446BAE3C5D895279B1F554E05C3 /* SurveyQuestionNumerical.swift in Sources */,
 				9F0A936D103263C19BE106E88723CF1B /* SurveyQuestionOption.swift in Sources */,
 				3E9F4CF10F912CB9A022DB5BE9ABE7B7 /* SurveyQuestionPickerFactory.swift in Sources */,

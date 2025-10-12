@@ -91,18 +91,35 @@ class Services {
         let terraService = TerraManager()
         self.services.append(terraService)
         
-        let skMappers: [SRSensor: SensorSampleMapper] = [
-            .accelerometer: AccelerometerMapper(),
-            .rotationRate: RotationRateMapper(),
-            .ambientLightSensor: AmbientLightMapper(),
-            .ambientPressure: AmbientPressureMapper(),
-            .visits: VisitsMapper(),
-            .pedometerData: PedometerMapper(),
-            .deviceUsageReport: DeviceUsageReportMapper(),
-            .phoneUsageReport: PhoneUsageReportMapper(),
-            .messagesUsageReport: MessagesUsageReportMapper(),
-            .keyboardMetrics: KeyboardMetricsMapper()
-        ]
+        var skMappers: [SRSensor: SensorSampleMapper] = [:]
+        if #available(iOS 16.4, *) {
+            skMappers = [
+                .accelerometer: AccelerometerMapper(),
+                .mediaEvents: MediaEventsMapper(),
+                //            .rotationRate: RotationRateMapper(),
+                //            .ambientLightSensor: AmbientLightMapper(),
+                //            .ambientPressure: AmbientPressureMapper(),
+                    .visits: VisitsMapper(),
+                //            .pedometerData: PedometerMapper(),
+                .deviceUsageReport: DeviceUsageReportMapper(),
+                .phoneUsageReport: PhoneUsageReportMapper(),
+                .messagesUsageReport: MessagesUsageReportMapper(),
+                .keyboardMetrics: KeyboardMetricsMapper()
+            ]
+        } else {
+            skMappers = [
+                .accelerometer: AccelerometerMapper(),
+                //            .rotationRate: RotationRateMapper(),
+                //            .ambientLightSensor: AmbientLightMapper(),
+                //            .ambientPressure: AmbientPressureMapper(),
+                    .visits: VisitsMapper(),
+                //            .pedometerData: PedometerMapper(),
+                .deviceUsageReport: DeviceUsageReportMapper(),
+                .phoneUsageReport: PhoneUsageReportMapper(),
+                .messagesUsageReport: MessagesUsageReportMapper(),
+                .keyboardMetrics: KeyboardMetricsMapper()
+            ]
+        }
 
         let skSensors: [SRSensor] = Array(Constants.SensorKit.RequestedSensors.filter { skMappers[$0] != nil })
 
