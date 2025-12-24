@@ -19,4 +19,8 @@ typealias InsulinDataCallback = (_ doseType: String,
 typealias FoodDataCallback = (_ mealType: String,
                               _ date: Date,
                               _ quantity: String,
-                              _ hasNutrients: Bool) -> Void
+                              _ hasNutrients: Bool,
+                              _ canSpecifyCalories: Bool?,
+                              _ caloriesValue: Int?,
+                              _ canSpecifyCarbs: Bool?,
+                              _ carbsValue: Int?) -> Void

@@ -709,7 +709,7 @@ class AppNavigator {
             navigator: self,
             taskIdentifier: "foodEntry",
             variant: .standalone,
-            onDataCallback: {_, _, _, _ in},
+            onDataCallback: {_, _, _, _,_,_,_,_   in},
             completion: completion
         )
 
@@ -1271,7 +1271,7 @@ extension AppNavigator {
             navigator: self,
             taskIdentifier: "foodEntry",
             variant: .fromChart(diaryNote: diaryNote),
-            onDataCallback: { _, _, _, _ in },
+            onDataCallback: { _, _, _, _, _, _, _, _ in },
             completion: completion
         )
 

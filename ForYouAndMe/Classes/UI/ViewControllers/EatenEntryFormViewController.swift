@@ -203,7 +203,7 @@ class EatenEntryFormViewController: UIViewController {
         
         if let payload = note.payload {
             switch payload {
-            case .food(let mealType, let quantity, let significantNutrition):
+            case .food(let mealType, let quantity, let significantNutrition, let canSpecifyCalories, let caloriesValue, let carbsGrams):
                 selectedMealType = FoodEntryType(rawValue: mealType)
                 selectedQuantity = ConsumptionQuantity(rawValue: quantity)
                 selectedProtein = significantNutrition as Bool

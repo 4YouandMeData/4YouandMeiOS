@@ -65,13 +65,29 @@ extension Page {
             buttonFirstLabel: "more than usual",
             buttonSecondLabel: "the same amount as usual"
         )
-        // Both first and second lead to nutrient
+        // Both first and second lead to calories
+        page.buttonFirstPage = PageRef(id: Page.calories.id, type: Page.calories.type)
+        page.buttonSecondPage = PageRef(id: Page.calories.id, type: Page.calories.type)
+        return page
+    }
+
+    /// Step 5: Calories question
+    static var calories: Page {
+        var page = Page(
+            id: "calories",
+            image: nil,
+            title: "I've eaten...",
+            body: "Can you specify the approximate amount of calories in your snack?",
+            buttonFirstLabel: "Yes",
+            buttonSecondLabel: "No"
+        )
+        // Both choices lead to nutrient
         page.buttonFirstPage = PageRef(id: Page.nutrient.id, type: Page.nutrient.type)
         page.buttonSecondPage = PageRef(id: Page.nutrient.id, type: Page.nutrient.type)
         return page
     }
 
-    /// Step 5: Nutrient content question
+    /// Step 6: Nutrient content question
     static var nutrient: Page {
         var page = Page(
             id: "nutrient",
@@ -87,7 +103,7 @@ extension Page {
         return page
     }
 
-    /// Step 6: Confirmation
+    /// Step 7: Confirmation
     static var confirm: Page {
         let page = Page(
             id: "confirm",
