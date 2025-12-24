@@ -18,14 +18,18 @@ public class PreferencesViewController: UIViewController {
     private let repository: Repository
     private var notificationSwitch = UISwitch()
     private var hourLabel = UILabel()
-    private let hourPicker: UIDatePicker = {
-        let picker = UIDatePicker()
-        picker.datePickerMode = .time
-        picker.preferredDatePickerStyle = .wheels
-        picker.locale = Locale(identifier: "en_GB")
-        picker.minuteInterval = 60
-        return picker
+    private lazy var hourPickerButton: UIButton = {
+        let button = UIButton(type: .system)
+        button.setTitleColor(ColorPalette.color(withType: .primaryText), for: .normal)
+        button.titleLabel?.font = FontPalette.fontStyleData(forStyle: .paragraph).font
+        button.contentHorizontalAlignment = .right
+        button.addTarget(self, action: #selector(showHourPicker), for: .touchUpInside)
+        return button
     }()
+    private var hourPickerView: UIPickerView?
+    private var hourItems: [String] = []
+    private var selectedHour: Int = 0
+    private var currentAlertController: UIAlertController?
 
     private let disposeBag = DisposeBag()
     
@@ -62,15 +66,96 @@ public class PreferencesViewController: UIViewController {
         self.scrollStackView.autoPinEdgesToSuperviewEdges(with: .zero, excludingEdge: .top)
         self.scrollStackView.autoPinEdge(.top, to: .bottom, of: headerView, withOffset: 30)
         self.notificationSwitch.isOn = false
-        self.hourPicker.isEnabled = false
+        self.hourPickerButton.isEnabled = false
         
+        self.generateHourItems()
         self.refreshUI()
+    }
+    
+    // MARK: - Helper Methods
+    
+    private func generateHourItems() {
+        let calendar = Calendar.current
+        let formatter = DateFormatter()
+        formatter.locale = Locale.current
+        
+        // Get locale-appropriate hour format
+        if let dateFormat = DateFormatter.dateFormat(fromTemplate: "j", options: 0, locale: Locale.current) {
+            formatter.dateFormat = dateFormat
+        } else {
+            // Fallback: check if locale uses 12-hour format
+            let testFormatter = DateFormatter()
+            testFormatter.locale = Locale.current
+            if let testFormat = DateFormatter.dateFormat(fromTemplate: "hma", options: 0, locale: Locale.current) {
+                testFormatter.dateFormat = testFormat
+                let testDate = calendar.date(bySettingHour: 12, minute: 0, second: 0, of: calendar.startOfDay(for: Date()))!
+                let testString = testFormatter.string(from: testDate)
+                if testString.contains("AM") || testString.contains("PM") || testString.contains("am") || testString.contains("pm") {
+                    formatter.dateFormat = "h a"
+                } else {
+                    formatter.dateFormat = "HH"
+                }
+            } else {
+                formatter.dateFormat = "HH"
+            }
+        }
+        
+        self.hourItems = []
+        let baseDate = calendar.startOfDay(for: Date())
+        
+        for hour in 0..<24 {
+            if let date = calendar.date(bySettingHour: hour, minute: 0, second: 0, of: baseDate) {
+                let displayText = formatter.string(from: date)
+                self.hourItems.append(displayText)
+            }
+        }
+    }
+    
+    private func updateHourButtonTitle() {
+        if selectedHour < hourItems.count {
+            hourPickerButton.setTitle(hourItems[selectedHour], for: .normal)
+        }
+    }
+    
+    @objc private func showHourPicker() {
+        guard hourPickerButton.isEnabled else { return }
+        
+        let alertController = UIAlertController(title: nil, message: "\n\n\n\n\n\n\n\n", preferredStyle: .actionSheet)
+        self.currentAlertController = alertController
+        
+        let pickerFrame = CGRect(x: 0, y: 0, width: alertController.view.bounds.width - 20, height: 216)
+        let picker = UIPickerView(frame: pickerFrame)
+        picker.delegate = self
+        picker.dataSource = self
+        picker.selectRow(selectedHour, inComponent: 0, animated: false)
+        self.hourPickerView = picker
+        
+        alertController.view.addSubview(picker)
+        picker.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            picker.centerXAnchor.constraint(equalTo: alertController.view.centerXAnchor),
+            picker.topAnchor.constraint(equalTo: alertController.view.topAnchor, constant: 50)
+        ])
+        
+        // For iPad
+        if let popover = alertController.popoverPresentationController {
+            popover.sourceView = hourPickerButton
+            popover.sourceRect = hourPickerButton.bounds
+        }
+        
+        self.present(alertController, animated: true)
+    }
+    
+    private func dismissPickerAndUpdate() {
+        guard let alertController = self.currentAlertController else { return }
+        alertController.dismiss(animated: true) { [weak self] in
+            self?.currentAlertController = nil
+            self?.hourPickerView = nil
+        }
     }
     
     private func refreshUI() {
         self.scrollStackView.stackView.arrangedSubviews.forEach({ $0.removeFromSuperview() })
-        
-        hourPicker.addTarget(self, action: #selector(didChangePreferredHour), for: .valueChanged)
 
         let stackView = scrollStackView.stackView
         stackView.addLabel(withText: StringsProvider.string(forKey: .preferencesTitlePage),
@@ -101,14 +186,13 @@ public class PreferencesViewController: UIViewController {
         hourLabel.font = FontPalette.fontStyleData(forStyle: .paragraph).font
         hourLabel.textColor = ColorPalette.color(withType: .primaryText)
         hourLabel.text = StringsProvider.string(forKey: .preferencesHour)
+        
+        updateHourButtonTitle()
             
-        let timePickerStack = UIStackView(arrangedSubviews: [hourLabel, hourPicker])
+        let timePickerStack = UIStackView(arrangedSubviews: [hourLabel, hourPickerButton])
         timePickerStack.axis = .horizontal
         timePickerStack.alignment = .center
         timePickerStack.distribution = .equalSpacing
-
-        hourPicker.datePickerMode = .time
-        hourPicker.preferredDatePickerStyle = .compact
 
         stackView.addArrangedSubview(timePickerStack)
         timePickerStack.autoSetDimension(.height, toSize: 40.0)
@@ -133,47 +217,24 @@ public class PreferencesViewController: UIViewController {
                     return
                 }
                 
-                var components = DateComponents()
-                components.hour = hourValue
-                components.minute = 0
-                let calendar = Calendar.current
-                if let date = calendar.date(from: components) {
-                    self.hourPicker.isEnabled = true
-                    self.hourPicker.date = date
-                    self.notificationSwitch.isOn = true
-                }
-                            
+                self.selectedHour = hourValue
+                self.hourPickerButton.isEnabled = true
+                self.notificationSwitch.isOn = true
+                self.updateHourButtonTitle()
                 self.refreshUI()
             }, onFailure: { error in
                 print("SurveyScheduleViewController - Error refreshing user: \(error.localizedDescription)")
             }).disposed(by: self.disposeBag)
     }
     
-    private func updatePreferredHourOnServer(_ sender: UIDatePicker?) {
-        if let datePicker = sender {
-
-            let calendar = Calendar.current
-            let components = calendar.dateComponents([.hour], from: datePicker.date)
-            if let hour = components.hour {
-                
-                let newDate = calendar.date(bySettingHour: hour, minute: 0, second: 0, of: datePicker.date)!
-                datePicker.setDate(newDate, animated: false)
-                
-                self.repository.sendUserSettings(seconds: nil, notificationTime: hour)
-                    .subscribe(onSuccess: {
-                        print("Notification time updated successfully")
-                    }, onFailure: { error in
-                        print("Error updating notification time: \(error.localizedDescription)")
-                    }).disposed(by: self.disposeBag)
-            }
-        } else {
-            self.repository.sendUserSettings(seconds: nil, notificationTime: nil)
-                .subscribe(onSuccess: {
-                    print("Notification time updated successfully")
-                }, onFailure: { error in
-                    print("Error updating notification time: \(error.localizedDescription)")
-                }).disposed(by: self.disposeBag)
-        }
+    private func updatePreferredHourOnServer() {
+        let hour = self.selectedHour
+        self.repository.sendUserSettings(seconds: nil, notificationTime: hour)
+            .subscribe(onSuccess: {
+                print("Notification time updated successfully")
+            }, onFailure: { error in
+                print("Error updating notification time: \(error.localizedDescription)")
+            }).disposed(by: self.disposeBag)
     }
     
     // MARK: Actions
@@ -183,12 +244,55 @@ public class PreferencesViewController: UIViewController {
     }
     
     @objc private func didToggleNotificationSwitch(_ sender: UISwitch) {
-        self.hourPicker.isEnabled = sender.isOn
-        self.updatePreferredHourOnServer(nil)
+        self.hourPickerButton.isEnabled = sender.isOn
+        
+        if sender.isOn {
+            // If no hour is selected, set current hour as default
+            if self.selectedHour == 0 && hourItems.count > 0 {
+                let calendar = Calendar.current
+                let currentHour = calendar.component(.hour, from: Date())
+                self.selectedHour = currentHour
+                self.updateHourButtonTitle()
+            }
+            self.updatePreferredHourOnServer()
+        } else {
+            // When switch is turned off, reset to hour 0 and send nil to disable notifications
+            self.selectedHour = 0
+            self.updateHourButtonTitle()
+            self.repository.sendUserSettings(seconds: nil, notificationTime: nil)
+                .subscribe(onSuccess: {
+                    print("Notification time updated successfully")
+                }, onFailure: { error in
+                    print("Error updating notification time: \(error.localizedDescription)")
+                }).disposed(by: self.disposeBag)
+        }
+    }
+}
+
+// MARK: - UIPickerViewDataSource & UIPickerViewDelegate
+
+extension PreferencesViewController: UIPickerViewDataSource, UIPickerViewDelegate {
+    public func numberOfComponents(in pickerView: UIPickerView) -> Int {
+        return 1
     }
     
-    @objc private func didChangePreferredHour(_ sender: UIDatePicker) {
-        guard self.notificationSwitch.isOn else { return }
-        self.updatePreferredHourOnServer(sender)
+    public func pickerView(_ pickerView: UIPickerView, numberOfRowsInComponent component: Int) -> Int {
+        return hourItems.count
+    }
+    
+    public func pickerView(_ pickerView: UIPickerView, titleForRow row: Int, forComponent component: Int) -> String? {
+        return hourItems[row]
+    }
+    
+    public func pickerView(_ pickerView: UIPickerView, didSelectRow row: Int, inComponent component: Int) {
+        // Update selected hour when picker stops
+        self.selectedHour = row
+        self.updateHourButtonTitle()
+        self.updatePreferredHourOnServer()
+        
+        // Dismiss the alert after a short delay to allow the picker animation to complete
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
+            self?.dismissPickerAndUpdate()
+        }
     }
 }
