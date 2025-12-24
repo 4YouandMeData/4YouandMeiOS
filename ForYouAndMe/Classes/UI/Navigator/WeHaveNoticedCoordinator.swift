@@ -46,6 +46,9 @@ struct FoodEntryData: Codable {
     let date: Date
     let quantity: String
     let hasNutrients: Bool
+    let canSpecifyCalories: Bool?
+    let caloriesValue: Int?
+    let carbsGrams: Int?
 }
 
 struct DoseEntryData: Codable {
@@ -281,11 +284,14 @@ extension WeHaveNoticedCoordinator: EatenIntroViewControllerDelegate {
             self.showPhysicalActivity()
         }
         
-        let onDataCallback: FoodDataCallback = { [weak self] mealType, snackDate, quantity, hasNutrient in
+        let onDataCallback: FoodDataCallback = { [weak self] mealType, snackDate, quantity, hasNutrient, canSpecifyCalories, caloriesValue, canSpecifyCarbs, carbsValue in
             self?.answeredFood = FoodEntryData(mealType: mealType,
                                                date: snackDate,
                                                quantity: quantity,
-                                               hasNutrients: hasNutrient)
+                                               hasNutrients: hasNutrient,
+                                               canSpecifyCalories: canSpecifyCalories,
+                                               caloriesValue: caloriesValue,
+                                               carbsGrams: carbsValue)
         }
         
         let foodCoordinator = FoodEntryCoordinator(

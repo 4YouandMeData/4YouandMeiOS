@@ -23,7 +23,7 @@ feedback_tag
 }
 
 public enum DiaryNotePayload {
-    case food(mealType: String, quantity: String, significantNutrition: Bool)
+    case food(mealType: String, quantity: String, significantNutrition: Bool, canSpecifyCalories: Bool?, caloriesValue: Int?, carbsGrams: Int?)
     case doses(quantity: Int, doseType: String)
     case noticed(
         physicalActivity: String,
@@ -127,6 +127,18 @@ extension DiaryNoteable: JSONAPIMappable {
         case id
         case type
     }
+}
+
+struct DiaryNoteEatenData {
+    let date: Date
+    let mealType: String
+    let quantity: String
+    let significantNutrition: Bool
+    let canSpecifyCalories: Bool?
+    let caloriesValue: Int?
+    let carbsGrams: Int?
+    let fromChart: Bool
+    let diaryNote: DiaryNoteItem?
 }
 
 struct DiaryNoteWeHaveNoticedItem: Codable {
@@ -269,7 +281,12 @@ feedback_tags
                 let meal = raw["meal_type"]?.value as? String ?? ""
                 let qty  = raw["quantity"]?.value as? String ?? raw["food_quantity"]?.value as? String ?? ""
                 let fat  = raw["with_significant_protein_fiber_or_fat"]?.value as? Bool ?? false
-                payload = .food(mealType: meal, quantity: qty, significantNutrition: fat)
+                let canSpecify = raw["can_specify_calories"]?.value as? Bool
+                let calories = (raw["calories"]?.value as? Int)
+                ?? (raw["calories"]?.value as? Double).flatMap { Int($0) }
+                let carbs = (raw["carbs_grams"]?.value as? Int)
+                ?? (raw["carbs_grams"]?.value as? Double).flatMap { Int($0) }
+                payload = .food(mealType: meal, quantity: qty, significantNutrition: fat, canSpecifyCalories: canSpecify, caloriesValue: calories, carbsGrams: carbs)
                 
             case .doses:
                 let qty = (raw["quantity"]?.value as? Int)

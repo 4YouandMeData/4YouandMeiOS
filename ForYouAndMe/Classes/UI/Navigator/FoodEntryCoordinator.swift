@@ -85,7 +85,11 @@ final class FoodEntryCoordinator: PagedActivitySectionCoordinator {
     private var selectedFoodType: String?
     private var snackDate: Date?
     private var quantitySelection: String?
+    private var caloriesAnswer: Bool?
+    private var caloriesValue: Int?
     private var nutrientAnswer: Bool?
+    private var carbsAnswer: Bool?
+    private var carbsValue: Int?
     private let variant: FlowVariant
     private var rootEatenTypeVC: EatenTypeViewController?
     
@@ -111,6 +115,7 @@ final class FoodEntryCoordinator: PagedActivitySectionCoordinator {
             .timeRelative,
             .dateTime,
             .quantity,
+            .calories,
             .nutrient,
             .confirm
         ]
@@ -152,17 +157,23 @@ final class FoodEntryCoordinator: PagedActivitySectionCoordinator {
         }
         
         if variant.isEmbeddedInNoticed {
-            self.onDataCallback?(selectedFoodType, snackDate, quantitySelection, nutrientAnswer)
+            self.onDataCallback?(selectedFoodType, snackDate, quantitySelection, nutrientAnswer, caloriesAnswer, caloriesValue, carbsAnswer, carbsValue)
             self.completionCallback()
             return
         }
         
-        self.repository.sendDiaryNoteEaten(date: snackDate,
-                                           mealType: selectedFoodType.lowercased(),
-                                           quantity: quantitySelection,
-                                           significantNutrition: nutrientAnswer,
-                                           fromChart: variant.isFromChart,
-                                           diaryNote: variant.chartDiaryNote)
+        let eatenData = DiaryNoteEatenData(
+            date: snackDate,
+            mealType: selectedFoodType.lowercased(),
+            quantity: quantitySelection,
+            significantNutrition: nutrientAnswer,
+            canSpecifyCalories: caloriesAnswer,
+            caloriesValue: caloriesValue,
+            carbsGrams: carbsValue,
+            fromChart: variant.isFromChart,
+            diaryNote: variant.chartDiaryNote
+        )
+        self.repository.sendDiaryNoteEaten(data: eatenData)
             .addProgress()
             .subscribe(onSuccess: { [weak self] diaryNote in
                 guard let self = self else { return }
@@ -277,7 +288,70 @@ extension FoodEntryCoordinator: ConsumptionAmountViewControllerDelegate {
         guard let selectedFoodType = self.selectedFoodType,
               let type = FoodEntryType(rawValue: selectedFoodType) else { return }
         
-        // Next: nutrient question screen
+        // Next: calories question screen
+        let caloriesVC = CaloriesQuestionViewController(variant: self.variant)
+        caloriesVC.selectedType = type
+        caloriesVC.delegate = self
+        caloriesVC.alert = self.alert
+        navigationController.pushViewController(
+            caloriesVC,
+            hidesBottomBarWhenPushed: hidesBottomBarWhenPushed,
+            animated: true
+        )
+    }
+    
+    func consumptionAmountViewControllerDidCancel(_ vc: ConsumptionAmountViewController) {
+        completionCallback()
+    }
+}
+
+// MARK: – CaloriesQuestionViewControllerDelegate
+extension FoodEntryCoordinator: CaloriesQuestionViewControllerDelegate {
+    func caloriesQuestionViewController(_ vc: CaloriesQuestionViewController,
+                                        didAnswer canSpecify: Bool) {
+        caloriesAnswer = canSpecify
+        guard let selectedFoodType = self.selectedFoodType,
+              let type = FoodEntryType(rawValue: selectedFoodType) else { return }
+        
+        if canSpecify {
+            // User answered Yes - navigate to calories input screen
+            let caloriesInputVC = CaloriesInputViewController(variant: self.variant)
+            caloriesInputVC.selectedType = type
+            caloriesInputVC.delegate = self
+            caloriesInputVC.alert = self.alert
+            navigationController.pushViewController(
+                caloriesInputVC,
+                hidesBottomBarWhenPushed: hidesBottomBarWhenPushed,
+                animated: true
+            )
+        } else {
+            // User answered No - skip directly to nutrient question
+            let nutrientVC = NutrientQuestionViewController(variant: self.variant)
+            nutrientVC.selectedType = type
+            nutrientVC.delegate = self
+            nutrientVC.alert = self.alert
+            navigationController.pushViewController(
+                nutrientVC,
+                hidesBottomBarWhenPushed: hidesBottomBarWhenPushed,
+                animated: true
+            )
+        }
+    }
+    
+    func caloriesQuestionViewControllerDidCancel(_ vc: CaloriesQuestionViewController) {
+        completionCallback()
+    }
+}
+
+// MARK: – CaloriesInputViewControllerDelegate
+extension FoodEntryCoordinator: CaloriesInputViewControllerDelegate {
+    func caloriesInputViewController(_ vc: CaloriesInputViewController,
+                                     didEnterCalories value: Int) {
+        caloriesValue = value
+        guard let selectedFoodType = self.selectedFoodType,
+              let type = FoodEntryType(rawValue: selectedFoodType) else { return }
+        
+        // Move to nutrient question screen
         let nutrientVC = NutrientQuestionViewController(variant: self.variant)
         nutrientVC.selectedType = type
         nutrientVC.delegate = self
@@ -289,7 +363,7 @@ extension FoodEntryCoordinator: ConsumptionAmountViewControllerDelegate {
         )
     }
     
-    func consumptionAmountViewControllerDidCancel(_ vc: ConsumptionAmountViewController) {
+    func caloriesInputViewControllerDidCancel(_ vc: CaloriesInputViewController) {
         completionCallback()
     }
 }
@@ -299,11 +373,67 @@ extension FoodEntryCoordinator: NutrientQuestionViewControllerDelegate {
     func nutrientQuestionViewController(_ vc: NutrientQuestionViewController,
                                         didAnswer hasNutrients: Bool) {
         nutrientAnswer = hasNutrients
+        guard let selectedFoodType = self.selectedFoodType,
+              let type = FoodEntryType(rawValue: selectedFoodType) else { return }
         
-        self.saveAllAndFinish()
+        // Move to carbohydrates question screen
+        let carbsVC = CarbohydratesQuestionViewController(variant: self.variant)
+        carbsVC.selectedType = type
+        carbsVC.delegate = self
+        carbsVC.alert = self.alert
+        navigationController.pushViewController(
+            carbsVC,
+            hidesBottomBarWhenPushed: hidesBottomBarWhenPushed,
+            animated: true
+        )
     }
     
     func nutrientQuestionViewControllerDidCancel(_ vc: NutrientQuestionViewController) {
+        completionCallback()
+    }
+}
+
+// MARK: – CarbohydratesQuestionViewControllerDelegate
+extension FoodEntryCoordinator: CarbohydratesQuestionViewControllerDelegate {
+    func carbohydratesQuestionViewController(_ vc: CarbohydratesQuestionViewController,
+                                        didAnswer canSpecify: Bool) {
+        carbsAnswer = canSpecify
+        guard let selectedFoodType = self.selectedFoodType,
+              let type = FoodEntryType(rawValue: selectedFoodType) else { return }
+        
+        if canSpecify {
+            // User answered Yes - navigate to carbohydrates input screen
+            let carbsInputVC = CarbohydratesInputViewController(variant: self.variant)
+            carbsInputVC.selectedType = type
+            carbsInputVC.delegate = self
+            carbsInputVC.alert = self.alert
+            navigationController.pushViewController(
+                carbsInputVC,
+                hidesBottomBarWhenPushed: hidesBottomBarWhenPushed,
+                animated: true
+            )
+        } else {
+            // User answered No - finish the flow
+            self.saveAllAndFinish()
+        }
+    }
+    
+    func carbohydratesQuestionViewControllerDidCancel(_ vc: CarbohydratesQuestionViewController) {
+        completionCallback()
+    }
+}
+
+// MARK: – CarbohydratesInputViewControllerDelegate
+extension FoodEntryCoordinator: CarbohydratesInputViewControllerDelegate {
+    func carbohydratesInputViewController(_ vc: CarbohydratesInputViewController,
+                                     didEnterCarbohydrates value: Int) {
+        carbsValue = value
+        
+        // Finish the flow
+        self.saveAllAndFinish()
+    }
+    
+    func carbohydratesInputViewControllerDidCancel(_ vc: CarbohydratesInputViewController) {
         completionCallback()
     }
 }
