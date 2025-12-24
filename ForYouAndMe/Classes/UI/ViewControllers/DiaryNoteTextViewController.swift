@@ -144,6 +144,11 @@ class DiaryNoteTextViewController: UIViewController {
         return textView
     }()
     
+    private lazy var doneButton: UIBarButtonItem = {
+        let button = UIBarButtonItem(barButtonSystemItem: .save, target: self, action: #selector(self.doneButtonPressed))
+        return button
+    }()
+    
     private lazy var editingToolbar: UIToolbar = {
         let toolBar = UIToolbar()
         toolBar.barStyle = .default
@@ -152,7 +157,6 @@ class DiaryNoteTextViewController: UIViewController {
         toolBar.sizeToFit()
 
         let cancelButton = UIBarButtonItem(barButtonSystemItem: .cancel, target: self, action: #selector(self.cancelEdit))
-        let doneButton = UIBarButtonItem(barButtonSystemItem: .save, target: self, action: #selector(self.doneButtonPressed))
         let spaceButton = UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil)
         toolBar.setItems([cancelButton, spaceButton, doneButton], animated: false)
         return toolBar
@@ -374,6 +378,13 @@ class DiaryNoteTextViewController: UIViewController {
     @objc private func doneButtonPressed() {
         textView.resignFirstResponder()
         
+        // Validate that text is not empty or only whitespace
+        let trimmedText = textView.text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedText.isEmpty else {
+            // Show error feedback - text is empty
+            return
+        }
+        
         var noteToSave: DiaryNoteItem
         if var existing = diaryNote {
             existing.body = textView.text
@@ -529,6 +540,10 @@ class DiaryNoteTextViewController: UIViewController {
             textView.inputAccessoryView = editingToolbar
             textView.textColor = self.standardColor
             editButton.isHidden = true
+            
+            // Update save button state when entering edit mode
+            let trimmedText = textView.text.trimmingCharacters(in: .whitespacesAndNewlines)
+            self.doneButton.isEnabled = !trimmedText.isEmpty
 
         case .read:
             textView.isEditable = false
@@ -586,11 +601,20 @@ extension DiaryNoteTextViewController: UITextViewDelegate {
     func textViewDidBeginEditing(_ textView: UITextView) {
         self.originalBody = textView.text
         self.placeholderLabel.isHidden = !textView.text.isEmpty
+        
+        // Update save button state when editing begins
+        let trimmedText = textView.text.trimmingCharacters(in: .whitespacesAndNewlines)
+        self.doneButton.isEnabled = !trimmedText.isEmpty
     }
     
     func textViewDidChange(_ textView: UITextView) {
         self.placeholderLabel.isHidden = !textView.text.isEmpty
         self.limitLabel.text = "\(textView.text.count) / \(self.maxCharacters)"
+        
+        // Enable/disable save button based on whether text is empty or only whitespace
+        let trimmedText = textView.text.trimmingCharacters(in: .whitespacesAndNewlines)
+        self.doneButton.isEnabled = !trimmedText.isEmpty
+        
         if textView.text.count <= self.maxCharacters {
             textView.layer.borderColor = ColorPalette.color(withType: .inactive).cgColor
             self.limitLabel.textColor = ColorPalette.color(withType: .inactive)
