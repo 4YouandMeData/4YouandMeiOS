@@ -40,7 +40,8 @@ class DatePickerHandler: NSObject, UITextFieldDelegate {
         
         super.init()
         
-        self.pickerView.backgroundColor = .white
+        self.pickerView.backgroundColor = ColorPalette.color(withType: .secondary)
+        self.pickerView.setValue(ColorPalette.color(withType: .primaryText), forKey: "textColor")
         self.pickerView.datePickerMode = datePickerMode
         self.textField.inputView = self.pickerView
         self.textField.delegate = self

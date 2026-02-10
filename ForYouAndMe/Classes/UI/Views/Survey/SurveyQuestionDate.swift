@@ -32,6 +32,7 @@ class SurveyQuestionDate: UIView {
         datePicker.datePickerMode = .date
         datePicker.tintColor = ColorPalette.color(withType: .primary)
         datePicker.backgroundColor = ColorPalette.color(withType: .secondary)
+        datePicker.setValue(ColorPalette.color(withType: .primaryText), forKey: "textColor")
         datePicker.addTarget(self, action: #selector(self.handleDatePicker), for: .valueChanged)
         self.handleDatePicker(datePicker)
         stackView.addArrangedSubview(datePicker)
