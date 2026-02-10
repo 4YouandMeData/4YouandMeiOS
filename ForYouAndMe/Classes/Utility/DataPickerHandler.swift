@@ -39,7 +39,7 @@ class DataPickerHandler<T: DataPickerItem>: NSObject, UIPickerViewDelegate, UIPi
         
         super.init()
         
-        self.pickerView.backgroundColor = .white
+        self.pickerView.backgroundColor = ColorPalette.color(withType: .secondary)
         self.pickerView.delegate = self
         self.pickerView.dataSource = self
         self.textField.inputView = self.pickerView
@@ -151,8 +151,11 @@ class DataPickerHandler<T: DataPickerItem>: NSObject, UIPickerViewDelegate, UIPi
     
     // MARK: PickerView Delegate
     
-    func pickerView(_ pickerView: UIPickerView, titleForRow row: Int, forComponent component: Int) -> String? {
-        return self.pickerData[row].displayText
+    func pickerView(_ pickerView: UIPickerView, attributedTitleForRow row: Int, forComponent component: Int) -> NSAttributedString? {
+        return NSAttributedString(
+            string: self.pickerData[row].displayText,
+            attributes: [.foregroundColor: ColorPalette.color(withType: .primaryText)]
+        )
     }
     
     func pickerView(_ pickerView: UIPickerView, didSelectRow row: Int, inComponent component: Int) {
