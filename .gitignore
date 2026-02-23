@@ -94,3 +94,9 @@ GoogleService-Info.plist
 #Project Info file should be excluded
 ProjectInfo.plist
 .DS_Store
+
+# Claude code
+
+.claude
+CLAUDE.md
+CLAUDE-*.md
