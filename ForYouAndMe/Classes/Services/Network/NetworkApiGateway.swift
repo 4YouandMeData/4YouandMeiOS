@@ -858,18 +858,26 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             }
             
             return .requestJSONEncodable(diaryNote)
-        case .sendDiaryNoteEaten(let date, let mealType, let quantity, let significantNutrition, let isFromChart, let diaryNote):
-            var data: [String: Any] = [:]
-            data["quantity"] = quantity
-            data["with_significant_protein_fiber_or_fat"] = significantNutrition
-            data["meal_type"] = mealType
+        case .sendDiaryNoteEaten(let data):
+            var payloadData: [String: Any] = [:]
+            payloadData["meal_type"] = data.mealType
+            payloadData["quantity"] = data.quantity
+            payloadData["with_significant_protein_fiber_or_fat"] = data.significantNutrition
+            // Only include calories if value is provided
+            if let calories = data.caloriesValue {
+                payloadData["calories"] = calories
+            }
+            // Only include carbs_grams if value is provided
+            if let carbs = data.carbsGrams {
+                payloadData["carbs_grams"] = carbs
+            }
             
             var dataParams: [String: Any] = [:]
-            dataParams["data"] = data
-            dataParams["datetime_ref"] = date.string(withFormat: dateTimeFormat)
+            dataParams["data"] = payloadData
+            dataParams["datetime_ref"] = data.date.string(withFormat: dateTimeFormat)
             dataParams["diary_type"] = DiaryNoteItemType.eaten.rawValue
             
-            if isFromChart, let note = diaryNote {
+            if data.fromChart, let note = data.diaryNote {
                 dataParams["diary_noteable_type"] = note.diaryNoteable?.type
                 dataParams["diary_noteable_id"]   = note.diaryNoteable?.id
                 if let interval = note.interval, !interval.isEmpty {
@@ -920,6 +928,14 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
                     data["meal_type"] = food.mealType
                     data["food_quantity"] = food.quantity
                     data["with_significant_protein_fiber_or_fat"] = food.hasNutrients
+                    // Only include calories if value is provided
+                    if let calories = food.caloriesValue {
+                        data["calories"] = calories
+                    }
+                    // Only include carbs_grams if value is provided
+                    if let carbs = food.carbsGrams {
+                        data["carbs_grams"] = carbs
+                    }
                 }
             
             var dataParams: [String: Any] = [:]

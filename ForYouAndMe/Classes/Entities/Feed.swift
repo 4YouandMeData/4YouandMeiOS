@@ -231,7 +231,7 @@ struct FeedResolvedTemplate: Decodable {
             } else {
                 self.resolved = resolvedString
             }
-        } else if let resolvedInt = try? container.decodeIfPresent(Int.self, forKey: .resolved) {
+        } else if let resolvedInt = try? container.decodeIfPresent(Float.self, forKey: .resolved) {
             self.resolved = "\(resolvedInt)"
         } else {
             self.resolved = nil
