@@ -201,6 +201,36 @@ struct NilIfEmptyString: Decodable, OptionalCodingWrapper {
     }
 }
 
+/// Decodes a value that may be a JSON string, number, or null, and normalizes it to a String?.
+@propertyWrapper
+struct FlexibleStringDecodable: Decodable, OptionalCodingWrapper {
+
+    var wrappedValue: String?
+
+    init(wrappedValue: String?) {
+        self.wrappedValue = wrappedValue
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        if container.decodeNil() {
+            self.wrappedValue = nil
+        } else if let string = try? container.decode(String.self), false == string.isEmpty {
+            self.wrappedValue = string
+        } else if let intValue = try? container.decode(Int.self) {
+            self.wrappedValue = String(intValue)
+        } else if let doubleValue = try? container.decode(Double.self) {
+            if doubleValue == doubleValue.rounded() {
+                self.wrappedValue = String(Int(doubleValue))
+            } else {
+                self.wrappedValue = String(doubleValue)
+            }
+        } else {
+            self.wrappedValue = nil
+        }
+    }
+}
+
 @propertyWrapper
 struct ImageDecodable: Decodable, OptionalCodingWrapper {
     

@@ -16,10 +16,11 @@ struct SurveyTarget {
     var criteria: SurveyTargetCriteria?
     let minimum: Int?
     let maximum: Int?
-    let questionId: String?
-    @NilIfEmptyString
+    @FlexibleStringDecodable
+    var questionId: String?
+    @FlexibleStringDecodable
     var answerId: String?
-    @NilIfEmptyString
+    @FlexibleStringDecodable
     var blockId: String?
 }
 

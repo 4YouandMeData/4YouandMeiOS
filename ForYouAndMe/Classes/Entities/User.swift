@@ -34,7 +34,7 @@ struct User: Codable {
     let isOnboardingCompleted: Bool
     let daysInStudy: Int
     let identities: [String]
-    let points: Int
+    let points: Int?
     @ExcludeInvalidCodable
     var agreedPermissions: [SystemPermission]
     @TimeZoneCodable
