@@ -158,7 +158,7 @@ class FeedViewController: BaseViewController {
                 }
                 self.headerView.setTitleText(user.getFeedTitle(repository: self.repository))
                 self.headerView.setSubtitleText(user.getFeedSubtitle(repository: self.repository))
-                self.tableViewHeaderView.setPoints(user.points)
+                self.tableViewHeaderView.setPoints(user.points ?? 0)
                 self.tableViewHeaderView.refreshUI()
             }, onFailure: { error in
                 print("FeedViewController - Error refreshing user: \(error.localizedDescription)")
