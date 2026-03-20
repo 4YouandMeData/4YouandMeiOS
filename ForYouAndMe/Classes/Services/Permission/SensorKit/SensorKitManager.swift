@@ -122,20 +122,37 @@ final class SensorKitManager: SensorKitService {
     var serviceAvailable: Bool { true }
 
     /// Requests SensorKit authorization for all not-determined sensors in `readSensors`.
+    /// Requests each sensor individually so one unapproved sensor does not crash the whole batch.
     func requestPermissions() -> Single<()> {
         // Build the set of sensors still undetermined
         let toAsk = readSensors.filter { SRSensorReader(sensor: $0).authorizationStatus == .notDetermined }
         guard !toAsk.isEmpty else { return .just(()) }
 
         return Single.create { observer in
-            SRSensorReader.requestAuthorization(sensors: Set(toAsk)) { error in
-                // Always hop to main (UI consistency)
-                DispatchQueue.main.async {
-                    if let error = error {
-                        // Track & bubble up (do not crash)
+            if #available(iOS 17.4, *) {
+                Task { @MainActor in
+                    var firstError: Error?
+                    for sensor in toAsk {
+                        do {
+                            try await SRSensorReader.requestAuthorization(sensors: [sensor])
+                        } catch {
+                            if firstError == nil { firstError = error }
+                            #if DEBUG
+                            print("SensorKitManager – requestAuthorization failed for \(sensor.rawValue): \(error)")
+                            #endif
+                        }
+                    }
+                    if let error = firstError {
                         self.analyticsService.track(event: .healthError(healthError: .permissionRequestError(underlyingError: error)))
-                        observer(.failure(SensorKitError.permissionRequestError(underlyingError: error)))
-                    } else {
+                    }
+                    observer(.success(()))
+                }
+            } else {
+                self.requestAuthorizationSequentially(sensors: toAsk) { firstError in
+                    DispatchQueue.main.async {
+                        if let error = firstError {
+                            self.analyticsService.track(event: .healthError(healthError: .permissionRequestError(underlyingError: error)))
+                        }
                         observer(.success(()))
                     }
                 }
@@ -178,6 +195,32 @@ final class SensorKitManager: SensorKitService {
             print("SensorKitManager - startRecording(\(sensor.rawValue))")
             #endif
         }
+    }
+
+    /// Requests authorization for each sensor one at a time using the completion-based API.
+    /// Used on iOS 16.4–17.3 where the async API is unavailable.
+    private func requestAuthorizationSequentially(sensors: [SRSensor],
+                                                  completion: @escaping (_ firstError: Error?) -> Void) {
+        var remaining = sensors
+        var firstError: Error?
+
+        func next() {
+            guard let sensor = remaining.first else {
+                completion(firstError)
+                return
+            }
+            remaining.removeFirst()
+            SRSensorReader.requestAuthorization(sensors: [sensor]) { error in
+                if let error, firstError == nil {
+                    firstError = error
+                    #if DEBUG
+                    print("SensorKitManager – requestAuthorization failed for \(sensor.rawValue): \(error)")
+                    #endif
+                }
+                next()
+            }
+        }
+        next()
     }
 
     /// Optional: stop recording for all sensors (e.g., on logout).
@@ -308,17 +351,39 @@ extension SensorKitManager {
     }
 
     /// Ask only for sensors that are .notDetermined. No-op if none.
+    /// Requests each sensor individually so one unapproved sensor does not crash the whole batch.
     func requestPermissionsIfNeeded() -> Single<()> {
         let toAsk = self.readSensors.filter { SRSensorReader(sensor: $0).authorizationStatus == .notDetermined }
         guard !toAsk.isEmpty else { return .just(()) }
 
         return Single.create { observer in
-            SRSensorReader.requestAuthorization(sensors: Set(toAsk)) { error in
-                DispatchQueue.main.async {
-                    if let error {
-                        observer(.failure(SensorKitError.permissionRequestError(underlyingError: error)))
+            if #available(iOS 17.4, *) {
+                Task { @MainActor in
+                    var firstError: Error?
+                    for sensor in toAsk {
+                        do {
+                            try await SRSensorReader.requestAuthorization(sensors: [sensor])
+                        } catch {
+                            if firstError == nil { firstError = error }
+                            #if DEBUG
+                            print("SensorKitManager – requestAuthorization failed for \(sensor.rawValue): \(error)")
+                            #endif
+                        }
+                    }
+                    if let firstError {
+                        observer(.failure(SensorKitError.permissionRequestError(underlyingError: firstError)))
                     } else {
                         observer(.success(()))
+                    }
+                }
+            } else {
+                self.requestAuthorizationSequentially(sensors: toAsk) { firstError in
+                    DispatchQueue.main.async {
+                        if let firstError {
+                            observer(.failure(SensorKitError.permissionRequestError(underlyingError: firstError)))
+                        } else {
+                            observer(.success(()))
+                        }
                     }
                 }
             }
