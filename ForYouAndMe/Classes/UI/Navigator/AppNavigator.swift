@@ -11,7 +11,9 @@ import SVProgressHUD
 import RxSwift
 import SafariServices
 import WebKit
+#if HEALTHKIT
 import SensorKit
+#endif
 
 enum InternalDeeplinkKey: String {
     case feed
@@ -1025,6 +1027,7 @@ class AppNavigator {
                             actions: [cancelAction, settingsAction])
     }
     
+#if HEALTHKIT
     public func showSensorKitPermissionSettingsAlert(presenter: UIViewController,
                                                      missingSensors: Set<SRSensor>) {
             let cancelAction = UIAlertAction(title: StringsProvider.string(forKey: .permissionCancel),
@@ -1060,7 +1063,8 @@ class AppNavigator {
                                 message: message,
                                 actions: [cancelAction, settingsAction])
         }
-    
+#endif
+
     // Helper function to get the top-most view controller
     private func getTopMostViewController() -> UIViewController? {
         guard let rootViewController = UIApplication.shared.windows.first?.rootViewController else {
