@@ -90,6 +90,13 @@
 			<key>Required</key>
 			<string>YES</string>
 		</dict>
+		<key>SRSensorUsageMediaEvents</key>
+		<dict>
+			<key>Description</key>
+			<string>Usiamo eventi multimediali (riproduzione musica e contenuti) in forma aggregata per analisi statistiche.</string>
+			<key>Required</key>
+			<string>YES</string>
+		</dict>
 		<key>SRSensorUsageMessageUsage</key>
 		<dict>
 			<key>Description</key>

@@ -11,7 +11,7 @@ enum SystemPermission: String, Codable {
     case location
     case health
     case notification
-    case sensorKit = "speech_recognition"
+    case sensorKit = "sensorkit"
 }
 
 struct OptInPermission {

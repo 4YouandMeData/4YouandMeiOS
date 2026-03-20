@@ -29,7 +29,7 @@ class OptInSectionCoordinator {
     private let healthService: HealthService
     private let deviceService: DeviceService
     #if HEALTHKIT
-    private let sensorKitService: SensorKitService
+    private let sensorKitService: SensorKitService?
     #endif
     
     var answers: [Question: PossibleAnswer] = [:]

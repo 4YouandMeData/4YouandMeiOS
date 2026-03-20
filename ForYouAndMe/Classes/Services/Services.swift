@@ -40,7 +40,7 @@ class Services {
     private(set) var deviceService: DeviceService!
 #if HEALTHKIT
     private(set) var terraService: TerraService!
-    private(set) var sensorKitService: SensorKitService!
+    private(set) var sensorKitService: SensorKitService?
 #endif
 #if SENSORKIT
     
@@ -91,50 +91,54 @@ class Services {
         let terraService = TerraManager()
         self.services.append(terraService)
         
-        var skMappers: [SRSensor: SensorSampleMapper] = [:]
-        if #available(iOS 16.4, *) {
-            skMappers = [
-                .accelerometer: AccelerometerMapper(),
-                .mediaEvents: MediaEventsMapper(),
-                //            .rotationRate: RotationRateMapper(),
-                //            .ambientLightSensor: AmbientLightMapper(),
-                //            .ambientPressure: AmbientPressureMapper(),
-                    .visits: VisitsMapper(),
-                //            .pedometerData: PedometerMapper(),
-                .deviceUsageReport: DeviceUsageReportMapper(),
-                .phoneUsageReport: PhoneUsageReportMapper(),
-                .messagesUsageReport: MessagesUsageReportMapper(),
-                .keyboardMetrics: KeyboardMetricsMapper()
-            ]
-        } else {
-            skMappers = [
-                .accelerometer: AccelerometerMapper(),
-                //            .rotationRate: RotationRateMapper(),
-                //            .ambientLightSensor: AmbientLightMapper(),
-                //            .ambientPressure: AmbientPressureMapper(),
-                    .visits: VisitsMapper(),
-                //            .pedometerData: PedometerMapper(),
-                .deviceUsageReport: DeviceUsageReportMapper(),
-                .phoneUsageReport: PhoneUsageReportMapper(),
-                .messagesUsageReport: MessagesUsageReportMapper(),
-                .keyboardMetrics: KeyboardMetricsMapper()
-            ]
+        var sensorKitService: SensorKitManager?
+        if NSClassFromString("SRSensorReader") != nil {
+            var skMappers: [SRSensor: SensorSampleMapper] = [:]
+            if #available(iOS 16.4, *) {
+                skMappers = [
+                    .accelerometer: AccelerometerMapper(),
+                    .mediaEvents: MediaEventsMapper(),
+                    //            .rotationRate: RotationRateMapper(),
+                    //            .ambientLightSensor: AmbientLightMapper(),
+                    //            .ambientPressure: AmbientPressureMapper(),
+                        .visits: VisitsMapper(),
+                    //            .pedometerData: PedometerMapper(),
+                    .deviceUsageReport: DeviceUsageReportMapper(),
+                    .phoneUsageReport: PhoneUsageReportMapper(),
+                    .messagesUsageReport: MessagesUsageReportMapper(),
+                    .keyboardMetrics: KeyboardMetricsMapper()
+                ]
+            } else {
+                skMappers = [
+                    .accelerometer: AccelerometerMapper(),
+                    //            .rotationRate: RotationRateMapper(),
+                    //            .ambientLightSensor: AmbientLightMapper(),
+                    //            .ambientPressure: AmbientPressureMapper(),
+                        .visits: VisitsMapper(),
+                    //            .pedometerData: PedometerMapper(),
+                    .deviceUsageReport: DeviceUsageReportMapper(),
+                    .phoneUsageReport: PhoneUsageReportMapper(),
+                    .messagesUsageReport: MessagesUsageReportMapper(),
+                    .keyboardMetrics: KeyboardMetricsMapper()
+                ]
+            }
+
+            let skSensors: [SRSensor] = Array(Constants.SensorKit.RequestedSensors.filter { skMappers[$0] != nil })
+
+            let skStorage: SensorKitManagerStorage = DefaultsSensorStorage()
+            let skReachability: SensorKitManagerReachability = NWPathReachability()
+
+            let skManager = SensorKitManager(
+                withReadSensors: skSensors,
+                analyticsService: analytics,
+                storage: skStorage,
+                reachability: skReachability,
+                mappers: skMappers
+            )
+
+            self.services.append(skManager)
+            sensorKitService = skManager
         }
-
-        let skSensors: [SRSensor] = Array(Constants.SensorKit.RequestedSensors.filter { skMappers[$0] != nil })
-
-        let skStorage: SensorKitManagerStorage = DefaultsSensorStorage()
-        let skReachability: SensorKitManagerReachability = NWPathReachability()
-
-        let sensorKitService = SensorKitManager(
-            withReadSensors: skSensors,
-            analyticsService: analytics,
-            storage: skStorage,
-            reachability: skReachability,
-            mappers: skMappers
-        )
-
-        self.services.append(sensorKitService)
         #else
         let healthService = DummyHealthManager()
         #endif
@@ -169,10 +173,11 @@ class Services {
         healthService.clearanceDelegate = repository
         self.terraService = terraService
         
-        sensorKitService.networkDelegate = repository
-        sensorKitService.clearanceDelegate = repository
-        
-        self.sensorKitService = sensorKitService
+        if let sensorKitService = sensorKitService {
+            sensorKitService.networkDelegate = repository
+            sensorKitService.clearanceDelegate = repository
+            self.sensorKitService = sensorKitService
+        }
         
         #endif
         

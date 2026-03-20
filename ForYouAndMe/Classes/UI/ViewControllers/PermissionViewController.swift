@@ -17,7 +17,7 @@ public class PermissionViewController: UIViewController {
     private let healthService: HealthService
     private let deviceService: DeviceService
 #if HEALTHKIT
-    private let sensorKitService: SensorKitService
+    private let sensorKitService: SensorKitService?
 #endif
     private let disposeBag: DisposeBag = DisposeBag()
     
@@ -118,7 +118,7 @@ public class PermissionViewController: UIViewController {
         
         // --- SensorKit ---
 #if HEALTHKIT
-        if self.sensorKitService.serviceAvailable,
+        if self.sensorKitService?.serviceAvailable == true,
            self.repository.currentUser?.getHasAgreedTo(systemPermission: .sensorKit) ?? false {
 
             let skTitle = "Sensor Kit"
