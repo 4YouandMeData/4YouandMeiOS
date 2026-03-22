@@ -1,7 +1,487 @@
+## Release 0.98.13
 
-- ProjectInfo_sample file added
+- Styled hour picker button as a tappable input field in Preferences.
+
+## Release 0.98.12
+
+- Fixed hour picker overflow in Preferences action sheet.
+- Fixed containerView access level for transition animator.
+
+## Release 0.98.11
+
+- Fixed SensorKit weak-linking and runtime guards to prevent iPad crash.
+- Fixed per-sensor SensorKit authorization and verifyPlist crash.
+- Restored CZI bundle ID for SensorKit entitlement.
+- Fixed User.points decoding and SurveyTarget flexible ID parsing.
+
+## Release 0.98.10
+
+- Pod dependency update.
+
+## Release 0.98.9
+
+- Fixed picker text color invisible in dark mode.
+
+## Release 0.98.8
+
+- Added calories and carbohydrates steps to food entry flows.
+- Replaced time picker with hour-only picker in Preferences.
+- Prevented saving empty text in "I have noticed" entries.
+- Fixed picker layout overflow in Preferences.
+
+## Release 0.98.5
+
+- Added calories and carbohydrates steps to food entry flows.
+- Replaced time picker with hour-only picker in Preferences.
+- Prevented saving empty text in "I have noticed" entries.
+
+## Release 0.98.4
+
+- Fixed validation issue.
+
+## Release 0.98.3
+
+- Removed SensorKit permission requirement.
+
+## Release 0.98.2
+
+- Added SensorKit data collection (accelerometer, phone usage, messages, keyboard, visit mappers).
+- Dark mode improvements.
+
+## Release 0.98.1
+
+- Added delete account functionality.
+
+## Release 0.98.0
+
+- Version bump.
+
+## Release 0.97.9
+
+- Version bump.
+
+## Release 0.97.8
+
+- Version bump.
+
+## Release 0.97.7
+
+- Version bump.
+
+## Release 0.97.6
+
+- Added dark mode support.
+
+## Release 0.97.5
+
+- Fixed bugs on survey clickable image.
+
+## Release 0.97.4
+
+- Added footer button for expanding feed.
+- Added display button for new activity.
+- Diary note improvements.
+
+## Release 0.97.3
+
+- Fixed video crash.
+
+## Release 0.97.2
+
+- Refactored diary note text and audio views.
+- Refactored diary note access from charts.
+- Various bug fixes.
+
+## Release 0.97.1
+
+- "Other" option and emoji improvements.
+
+## Release 0.97.0
+
+- Added "Other" option in screening questions.
+- Fixed preferences null value on switch off.
+
+## Release 0.96.9
+
+- Added default response on surveys.
+- Added skip button on survey block welcome page.
+- Emoji with feedback list.
+
+## Release 0.96.8
+
+- Emoji handler improvements.
+- Handle reflections and "I have noticed" entries.
+- Emoji tag on diary note edit.
+
+## Release 0.96.7
+
+- Skip logic improvements for surveys.
+- Emoji popup and empty emoji handling.
+- Terra locale and handling improvements.
+- Share chart feature.
+- Dynamic font support.
+- Diary note text scrollable textview.
+- Fixed survey pick-one-with-image index bug.
+- Fixed MyDoses bug.
+
+## Release 0.96.6
+
+- Disabled Terra integration.
+- FAB button improvements.
+
+## Release 0.96.5
+
+- Pod subspec restructuring.
+
+## Release 0.96.4
+
+- Removed Terra dependency.
+
+## Release 0.96.3
+
+- Made Terra integration optional.
+
+## Release 0.96.2
+
+- Added Preferences section.
+- Fixed onboarding bug.
+- Made Terra optional.
+- Added Empatica integration.
+
+## Release 0.96.1
+
+- Prevented swipe-back navigation in certain flows.
+- Terra token handling.
+
+## Release 0.96.0
+
+- Added Terra icon.
+
+## Release 0.95.9
+
+- Terra integration.
+- Diary note strings.
+
+## Release 0.95.8
+
+- Terra SDK integration.
+- "We have noticed" form and show first response.
+
+## Release 0.95.7
+
+- "We have noticed" improvements.
+- Doses diary note.
+- Eaten detail view.
+- Diary notes cell improvements.
+
+## Release 0.95.6
+
+- Fixed messages in food entry.
+
+## Release 0.95.5
+
+- Push notification improvements.
+- Font adjustments.
+
+## Release 0.95.4
+
+- Added question feature.
+
+## Release 0.95.3
+
+- Added FEV1 spirometry measurement.
+
+## Release 0.95.2
+
+- Added "We have noticed" and "We have eaten" flows.
+- Added radio button and clickable image indicators.
+- Spirometer table and warning message improvements.
+- Skip button added.
+
+## Release 0.95.1
+
+- Added markdown support in opt-in section.
+
+## Release 0.95.0
+
+- Medical alert feature.
+- Spirometer table results.
+- Dynamic FAB button elements with centralized management.
+- Dexcom integration.
+- Walkthrough improvements.
+- Reflection and MyDoses messaging.
+- Reset button.
+
+## Release 0.94.9
+
+- Added "I have eaten" strings.
+- MyDoses feature.
+
+## Release 0.94.8
+
+- Added configurable strings from server.
+- Info messages improvements.
+
+## Release 0.94.7
+
+- "I have eaten" feature.
+- Fixed info messages bug.
+- Added max tap limit on survey clickable image.
+- Handle missing tasks.
+- Reset click function.
+
+## Release 0.94.6
+
+- Fixed empty diary note handling.
+- Handle back navigation in video daily reflection.
+- Hidden back button in consent flow.
+
+## Release 0.94.5
+
+- Handle diary notes from full-screen chart.
+- Fixed visualization on incomplete activity.
+
+## Release 0.94.4
+
+- Landscape chart view.
+- Added clickable image survey question type.
+- Fixed visualization issues.
+
+## Release 0.94.3
+
+- Made welcome page optional (FUAM-1473).
+- Reflection tags.
+
+## Release 0.94.2
+
+- Version bump.
+
+## Release 0.94.1
+
+- Added reflection activity.
+- Send diary note ID to reflection task.
+- Diary note tag support.
+
+## Release 0.94.0
+
+- Consent flow improvements.
+- Progress view on surveys.
+- Spirometer disconnect handling.
+- User flag setting.
+
+## Release 0.93.91
+
+- Podspec improvements.
+
+## Release 0.93.9
+
+- Version bump.
+
+## Release 0.93.8
+
+- Version bump.
+
+## Release 0.93.7
+
+- Added Mir spirometry framework.
+
+## Release 0.93.6
+
+- Version bump.
+
+## Release 0.93.5
+
+- Added Mir spirometry framework packaging.
+
+## Release 0.93.4
+
+- Added Mir Spirometer device integration (Bluetooth scanning, connection, test execution).
+- HealthKit data chunk upload.
+- Consent full text background color fix.
+- NSObject-to-JSON conversion utilities.
+
+## Release 0.93.3
+
+- Added HealthKit data subsource support.
+
+## Release 0.93.2
+
+- Added study-specific strings.
+
+## Release 0.93.1
+
+- Moved files to Classes directory for pod structure.
+
+## Release 0.93.0
+
+- Privacy fixes.
+- Removed unused files.
+
+## Release 0.92.8
+
+- Skip logic improvements (FUAM-1148).
+- Updated reachability handling.
+
+## Release 0.92.7
+
+- Version bump.
+
+## Release 0.92.6
+
+- Bold styling on walkthrough titles.
+
+## Release 0.92.5
+
+- Version bump.
+
+## Release 0.92.4
+
+- Skip logic by block.
+- Pod update for privacy compliance.
+
+## Release 0.92.3
+
+- Updated camera view library.
+
+## Release 0.92.2
+
+- Walkthrough completion handling.
+- Transcribe note view.
+- "I have noticed" feature.
+- Fixed skip button.
+
+## Release 0.92.1
+
+- Added video diary from chart.
+
+## Release 0.92.0
+
+- Added video diary notes (create, send, edit).
+- Walkthrough feature.
+- Dynamic info messages.
+- FAB button visualization improvements.
+- Save button shown only in edit mode.
+
+## Release 0.91.1
+
+- Fixed bug on edit audio note.
+
+## Release 0.91.0
+
+- Added audio note transcription with polling and status handling.
+- Edit text on audio notes.
+- Transcription loading, error, and pending status views.
+
+## Release 0.90.9
+
+- Audio note transcription features (see 0.91.0).
+
+## Release 0.90.8
+
+- Refactored save audio/text notes from charts.
+- Fixed pagination.
+
+## Release 0.90.7
+
+- Diary notes divided in sections.
+
+## Release 0.90.6
+
+- Updated welcome view controller.
+
+## Release 0.90.5
+
+- Added "Coming Soon" button to feed.
+- Added CZI logo.
+- "I have noticed" messages.
+- Fixed pagination and chart point label visibility.
+- Diary images updated.
+- Removed bounces in webview and handled full screen for page view.
+
+## Release 0.90.4
+
+- Version bump.
+
+## Release 0.90.3
+
+- Version bump.
+
+## Release 0.90.2
+
+- Added slider thumb image.
+- Pause button for stop recording.
+- Webview reload support.
+- Removed Charts pod dependency.
+- Hide title on text note.
+- Disabled save button during recording.
+
+## Release 0.90.1
+
+- Spec update.
+
+## Release 0.90.0
+
+- Added Diary tab with text, audio, and note management (CRUD).
+- Floating action button (FAB) for diary entry creation.
+- Audio recording and playback with format handling (10 min max).
+- Delete note functionality.
+- Full-screen modal presentation for note creation.
+- Bottom bar hidden on push navigation.
+
+## Release 0.89.0
+
+- Temporary fix for missing phone country code on iOS 16.4.1.
+
+## Release 0.88.0
+
+- Quick activity label logic changed.
+
+## Release 0.87.0
+
+- Quick activities counter label empty case handled.
+
+## Release 0.86.0
+
+- Simplified expression that was breaking CocoaPods lib lint validation.
+
+## Release 0.85.0
+
+- Re-updated pod dependencies and removed pod folder from gitignore.
+
+## Release 0.84.0
+
+- Added phase-based feed header (title/subtitle based on user phase).
+- User info parameter improvements (confirmation popup, description field, irreversible change handling).
+- Phase FAQ override support.
+- Camera filters (GPUImage integration).
+- Fixed permission denied alert regression.
+
+## Release 0.83.0
+
+- Upgraded Charts pod to version 4.1.0.
+- Updated source repository in podspec.
+
+## Release 0.82.0
+
+- Sent url_images_encoding flag for feed and task API calls.
+
+## Release 0.81.0
+
+- Replaced UIImage with URL for images in feed/task entities; fetched images asynchronously using AlamofireImage.
+
+## Release 0.80.0
+
+- Version bump.
+
+## Release 0.79.0
+
+- Set feed pagination page size to 10.
+- Added ProjectInfo_sample file and documentation updates.
 
 ## Release 0.78.0
+
+- Shown consent section group for new notifiable type "consent".
+- Updated expected notifiable tile link_url for consent flow.
 
 ## Release 0.77.0
 
@@ -99,7 +579,7 @@
 
 - Added HealthKit capability. Restored HealthManager class with conditional implementation. Defined HealthReadType enum.
 
-- fixed overlapping text in Pick many. 
+- fixed overlapping text in Pick many.
 
 - Fixed missing keyboard dismiss when other option is deselected.
 
@@ -195,9 +675,9 @@
 
 ## Release 0.49.0
 
--Keywords in feed reward title replaced during parsing. 
+-Keywords in feed reward title replaced during parsing.
 
--Pod dependency from Japx/RxCodableMoya with BLZJapx/RxCodableMoya (this fork allow parsing of meta) replaced. 
+-Pod dependency from Japx/RxCodableMoya with BLZJapx/RxCodableMoya (this fork allow parsing of meta) replaced.
 
 -Pods Replaced.
 
@@ -399,7 +879,7 @@
 
 -Fix rotation bug
 
-## Release 0.22.0. 
+## Release 0.22.0.
 
 -Migration to https://github.com/4youandme/4YouandmeiOS.
 
@@ -1262,7 +1742,7 @@
 
 
 
-## Release 0.4.0. 
+## Release 0.4.0.
 
 -Configured swiftlint. Updated podspec homepage to a reachable one. Cleared warnings. Updated PodFile to show only dev pod warnings.
 
@@ -1271,4 +1751,3 @@
 -Cleanup podspecs. Updated tag.
 
 -Created Pod. Added Third party libraries. Integrated Firebase on Example project. Setup pod to show image from xcassets. Shown test view controller.
-
