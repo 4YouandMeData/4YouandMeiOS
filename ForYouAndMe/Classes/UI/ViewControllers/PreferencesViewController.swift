@@ -26,10 +26,9 @@ public class PreferencesViewController: UIViewController {
         button.addTarget(self, action: #selector(showHourPicker), for: .touchUpInside)
         return button
     }()
-    private var hourPickerView: UIPickerView?
     private var hourItems: [String] = []
     private var selectedHour: Int = 0
-    private var currentAlertController: UIAlertController?
+    private var previousSelectedHour: Int = 0
 
     private let disposeBag = DisposeBag()
     
@@ -119,39 +118,24 @@ public class PreferencesViewController: UIViewController {
     
     @objc private func showHourPicker() {
         guard hourPickerButton.isEnabled else { return }
-        
-        let alertController = UIAlertController(title: nil, message: "\n\n\n\n\n\n\n\n", preferredStyle: .actionSheet)
-        self.currentAlertController = alertController
-        
-        let pickerFrame = CGRect(x: 0, y: 0, width: alertController.view.bounds.width - 20, height: 216)
-        let picker = UIPickerView(frame: pickerFrame)
-        picker.delegate = self
-        picker.dataSource = self
-        picker.selectRow(selectedHour, inComponent: 0, animated: false)
-        self.hourPickerView = picker
-        
-        alertController.view.addSubview(picker)
-        picker.translatesAutoresizingMaskIntoConstraints = false
-        NSLayoutConstraint.activate([
-            picker.centerXAnchor.constraint(equalTo: alertController.view.centerXAnchor),
-            picker.topAnchor.constraint(equalTo: alertController.view.topAnchor, constant: 50)
-        ])
-        
-        // For iPad
-        if let popover = alertController.popoverPresentationController {
-            popover.sourceView = hourPickerButton
-            popover.sourceRect = hourPickerButton.bounds
+
+        self.previousSelectedHour = self.selectedHour
+
+        let pickerVC = HourPickerViewController()
+        pickerVC.hourItems = self.hourItems
+        pickerVC.selectedRow = self.selectedHour
+        pickerVC.onDone = { [weak self] row in
+            guard let self = self else { return }
+            self.selectedHour = row
+            self.updateHourButtonTitle()
+            self.updatePreferredHourOnServer()
         }
-        
-        self.present(alertController, animated: true)
-    }
-    
-    private func dismissPickerAndUpdate() {
-        guard let alertController = self.currentAlertController else { return }
-        alertController.dismiss(animated: true) { [weak self] in
-            self?.currentAlertController = nil
-            self?.hourPickerView = nil
+        pickerVC.onCancel = { [weak self] in
+            guard let self = self else { return }
+            self.selectedHour = self.previousSelectedHour
+            self.updateHourButtonTitle()
         }
+        self.present(pickerVC, animated: true)
     }
     
     private func refreshUI() {
@@ -269,30 +253,195 @@ public class PreferencesViewController: UIViewController {
     }
 }
 
-// MARK: - UIPickerViewDataSource & UIPickerViewDelegate
+// MARK: - HourPickerViewController
 
-extension PreferencesViewController: UIPickerViewDataSource, UIPickerViewDelegate {
-    public func numberOfComponents(in pickerView: UIPickerView) -> Int {
-        return 1
+private class HourPickerViewController: UIViewController, UIPickerViewDataSource, UIPickerViewDelegate {
+
+    var hourItems: [String] = []
+    var selectedRow: Int = 0
+    var onDone: ((Int) -> Void)?
+    var onCancel: (() -> Void)?
+
+    fileprivate let containerView = UIView()
+    private let pickerView = UIPickerView()
+
+    override init(nibName nibNameOrNil: String?, bundle nibBundleOrNil: Bundle?) {
+        super.init(nibName: nibNameOrNil, bundle: nibBundleOrNil)
+        modalPresentationStyle = .custom
+        transitioningDelegate = self
     }
-    
-    public func pickerView(_ pickerView: UIPickerView, numberOfRowsInComponent component: Int) -> Int {
-        return hourItems.count
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
     }
-    
-    public func pickerView(_ pickerView: UIPickerView, titleForRow row: Int, forComponent component: Int) -> String? {
-        return hourItems[row]
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+
+        // Dimmed backdrop
+        view.backgroundColor = .clear
+        let dimmedView = UIView()
+        dimmedView.backgroundColor = UIColor.black.withAlphaComponent(0.4)
+        view.addSubview(dimmedView)
+        dimmedView.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            dimmedView.topAnchor.constraint(equalTo: view.topAnchor),
+            dimmedView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            dimmedView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            dimmedView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+        ])
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(cancelTapped))
+        dimmedView.addGestureRecognizer(tapGesture)
+
+        // Container
+        containerView.backgroundColor = .systemBackground
+        containerView.layer.cornerRadius = 16
+        containerView.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner]
+        containerView.clipsToBounds = true
+        view.addSubview(containerView)
+        containerView.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            containerView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            containerView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            containerView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+        ])
+
+        // Toolbar
+        let toolbar = UIToolbar()
+        toolbar.isTranslucent = false
+        toolbar.barTintColor = .systemBackground
+        toolbar.setShadowImage(UIImage(), forToolbarPosition: .any)
+        let cancelButton = UIBarButtonItem(barButtonSystemItem: .cancel, target: self, action: #selector(cancelTapped))
+        let flexSpace = UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil)
+        let doneButton = UIBarButtonItem(barButtonSystemItem: .done, target: self, action: #selector(doneTapped))
+        toolbar.items = [cancelButton, flexSpace, doneButton]
+        containerView.addSubview(toolbar)
+        toolbar.translatesAutoresizingMaskIntoConstraints = false
+
+        // Separator
+        let separator = UIView()
+        separator.backgroundColor = UIColor.separator
+        containerView.addSubview(separator)
+        separator.translatesAutoresizingMaskIntoConstraints = false
+
+        // Picker
+        pickerView.delegate = self
+        pickerView.dataSource = self
+        pickerView.selectRow(selectedRow, inComponent: 0, animated: false)
+        containerView.addSubview(pickerView)
+        pickerView.translatesAutoresizingMaskIntoConstraints = false
+
+        NSLayoutConstraint.activate([
+            toolbar.topAnchor.constraint(equalTo: containerView.topAnchor),
+            toolbar.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
+            toolbar.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
+            toolbar.heightAnchor.constraint(equalToConstant: 44),
+
+            separator.topAnchor.constraint(equalTo: toolbar.bottomAnchor),
+            separator.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
+            separator.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
+            separator.heightAnchor.constraint(equalToConstant: 1.0 / UIScreen.main.scale),
+
+            pickerView.topAnchor.constraint(equalTo: separator.bottomAnchor),
+            pickerView.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
+            pickerView.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
+            pickerView.heightAnchor.constraint(equalToConstant: 216),
+            pickerView.bottomAnchor.constraint(equalTo: containerView.safeAreaLayoutGuide.bottomAnchor)
+        ])
     }
-    
-    public func pickerView(_ pickerView: UIPickerView, didSelectRow row: Int, inComponent component: Int) {
-        // Update selected hour when picker stops
-        self.selectedHour = row
-        self.updateHourButtonTitle()
-        self.updatePreferredHourOnServer()
-        
-        // Dismiss the alert after a short delay to allow the picker animation to complete
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
-            self?.dismissPickerAndUpdate()
+
+    @objc private func doneTapped() {
+        let row = pickerView.selectedRow(inComponent: 0)
+        dismiss(animated: true) { [weak self] in
+            self?.onDone?(row)
+        }
+    }
+
+    @objc private func cancelTapped() {
+        dismiss(animated: true) { [weak self] in
+            self?.onCancel?()
+        }
+    }
+
+    // MARK: - UIPickerViewDataSource & UIPickerViewDelegate
+
+    func numberOfComponents(in pickerView: UIPickerView) -> Int { 1 }
+
+    func pickerView(_ pickerView: UIPickerView, numberOfRowsInComponent component: Int) -> Int {
+        hourItems.count
+    }
+
+    func pickerView(_ pickerView: UIPickerView, titleForRow row: Int, forComponent component: Int) -> String? {
+        hourItems[row]
+    }
+
+    func pickerView(_ pickerView: UIPickerView, didSelectRow row: Int, inComponent component: Int) {
+        selectedRow = row
+    }
+}
+
+// MARK: - HourPickerViewController Transition
+
+extension HourPickerViewController: UIViewControllerTransitioningDelegate {
+
+    func animationController(forPresented presented: UIViewController,
+                             presenting: UIViewController,
+                             source: UIViewController) -> UIViewControllerAnimatedTransitioning? {
+        HourPickerTransition(presenting: true)
+    }
+
+    func animationController(forDismissed dismissed: UIViewController) -> UIViewControllerAnimatedTransitioning? {
+        HourPickerTransition(presenting: false)
+    }
+}
+
+private class HourPickerTransition: NSObject, UIViewControllerAnimatedTransitioning {
+
+    private let presenting: Bool
+
+    init(presenting: Bool) {
+        self.presenting = presenting
+    }
+
+    func transitionDuration(using transitionContext: UIViewControllerContextTransitioning?) -> TimeInterval { 0.3 }
+
+    func animateTransition(using transitionContext: UIViewControllerContextTransitioning) {
+        if presenting {
+            guard let toView = transitionContext.view(forKey: .to),
+                  let toVC = transitionContext.viewController(forKey: .to) as? HourPickerViewController else { return }
+            let container = transitionContext.containerView
+            toView.frame = transitionContext.finalFrame(for: toVC)
+            container.addSubview(toView)
+
+            toView.layoutIfNeeded()
+            let sheetHeight = toVC.containerView.frame.height
+            toVC.containerView.transform = CGAffineTransform(translationX: 0, y: sheetHeight)
+            toView.backgroundColor = .clear
+
+            UIView.animate(withDuration: transitionDuration(using: transitionContext),
+                           delay: 0,
+                           options: .curveEaseOut,
+                           animations: {
+                toVC.containerView.transform = .identity
+                toView.backgroundColor = UIColor.black.withAlphaComponent(0.4)
+            }, completion: { finished in
+                transitionContext.completeTransition(finished)
+            })
+        } else {
+            guard let fromView = transitionContext.view(forKey: .from),
+                  let fromVC = transitionContext.viewController(forKey: .from) as? HourPickerViewController else { return }
+            let sheetHeight = fromVC.containerView.frame.height
+
+            UIView.animate(withDuration: transitionDuration(using: transitionContext),
+                           delay: 0,
+                           options: .curveEaseIn,
+                           animations: {
+                fromVC.containerView.transform = CGAffineTransform(translationX: 0, y: sheetHeight)
+                fromView.backgroundColor = .clear
+            }, completion: { finished in
+                fromView.removeFromSuperview()
+                transitionContext.completeTransition(finished)
+            })
         }
     }
 }
