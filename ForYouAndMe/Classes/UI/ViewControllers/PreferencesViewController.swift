@@ -19,11 +19,17 @@ public class PreferencesViewController: UIViewController {
     private var notificationSwitch = UISwitch()
     private var hourLabel = UILabel()
     private lazy var hourPickerButton: UIButton = {
-        let button = UIButton(type: .system)
+        let button = UIButton(type: .custom)
         button.setTitleColor(ColorPalette.color(withType: .primaryText), for: .normal)
         button.titleLabel?.font = FontPalette.fontStyleData(forStyle: .paragraph).font
-        button.contentHorizontalAlignment = .right
+        button.contentHorizontalAlignment = .center
+        button.contentEdgeInsets = UIEdgeInsets(top: 6, left: 12, bottom: 6, right: 12)
+        button.backgroundColor = ColorPalette.color(withType: .fourth)
+        button.layer.cornerRadius = 8
+        button.clipsToBounds = true
         button.addTarget(self, action: #selector(showHourPicker), for: .touchUpInside)
+        button.addTarget(self, action: #selector(pickerButtonTouchDown), for: .touchDown)
+        button.addTarget(self, action: #selector(pickerButtonTouchUp), for: [.touchUpInside, .touchUpOutside, .touchCancel])
         return button
     }()
     private var hourItems: [String] = []
@@ -66,6 +72,7 @@ public class PreferencesViewController: UIViewController {
         self.scrollStackView.autoPinEdge(.top, to: .bottom, of: headerView, withOffset: 30)
         self.notificationSwitch.isOn = false
         self.hourPickerButton.isEnabled = false
+        self.hourPickerButton.alpha = 0.5
         
         self.generateHourItems()
         self.refreshUI()
@@ -203,6 +210,7 @@ public class PreferencesViewController: UIViewController {
                 
                 self.selectedHour = hourValue
                 self.hourPickerButton.isEnabled = true
+                self.hourPickerButton.alpha = 1.0
                 self.notificationSwitch.isOn = true
                 self.updateHourButtonTitle()
                 self.refreshUI()
@@ -229,7 +237,8 @@ public class PreferencesViewController: UIViewController {
     
     @objc private func didToggleNotificationSwitch(_ sender: UISwitch) {
         self.hourPickerButton.isEnabled = sender.isOn
-        
+        self.hourPickerButton.alpha = sender.isOn ? 1.0 : 0.5
+
         if sender.isOn {
             // If no hour is selected, set current hour as default
             if self.selectedHour == 0 && hourItems.count > 0 {
@@ -249,6 +258,18 @@ public class PreferencesViewController: UIViewController {
                 }, onFailure: { error in
                     print("Error updating notification time: \(error.localizedDescription)")
                 }).disposed(by: self.disposeBag)
+        }
+    }
+
+    @objc private func pickerButtonTouchDown() {
+        UIView.animate(withDuration: 0.1) {
+            self.hourPickerButton.transform = CGAffineTransform(scaleX: 0.95, y: 0.95)
+        }
+    }
+
+    @objc private func pickerButtonTouchUp() {
+        UIView.animate(withDuration: 0.1) {
+            self.hourPickerButton.transform = .identity
         }
     }
 }
