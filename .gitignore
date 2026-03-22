@@ -95,9 +95,8 @@ GoogleService-Info.plist
 ProjectInfo.plist
 .DS_Store
 
-# Claude code
+# Visual Studio Code
+.vscode
 
-.claude
-CLAUDE.md
-CLAUDE-*.md
-jira.md
+# Claude Code
+.claude/*.local.json
