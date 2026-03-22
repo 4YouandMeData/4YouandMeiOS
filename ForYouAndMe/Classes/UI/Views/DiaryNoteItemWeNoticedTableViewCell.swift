@@ -63,7 +63,6 @@ class DiaryNoteItemWeNoticedTableViewCell: UITableViewCell {
 
     private lazy var noteTitleLabel: UILabel = {
         let lbl = UILabel()
-        lbl.font = UIFont.preferredFont(forTextStyle: .body)
         lbl.numberOfLines = 1
         return lbl
     }()
@@ -141,11 +140,7 @@ class DiaryNoteItemWeNoticedTableViewCell: UITableViewCell {
     /// Configure cell with DiaryNoteItem of type .doses
     public func display(data: DiaryNoteItem, onTap: @escaping () -> Void) {
         self.buttonPressedCallback = onTap
-        if let body = data.body {
-            noteTitleLabel.text = body
-        } else {
-            noteTitleLabel.text = StringsProvider.string(forKey: .diaryNoteNoticedCell)
-        }
+        self.updateNoteTitle(data.body ?? StringsProvider.string(forKey: .diaryNoteNoticedCell))
         if let emoji = data.feedbackTags?.last {
             emojiLabel.text = emoji.tag
             emojiLabel.isHidden = false
@@ -158,5 +153,15 @@ class DiaryNoteItemWeNoticedTableViewCell: UITableViewCell {
     // MARK: - Actions
     @objc private func cellTapped() {
         buttonPressedCallback?()
+    }
+
+    // MARK: - Private
+    private func updateNoteTitle(_ title: String) {
+        let attributedString = NSAttributedString.create(withText: title,
+                                                         fontStyle: .paragraph,
+                                                         colorType: .primaryText,
+                                                         textAlignment: .left,
+                                                         underlined: false)
+        self.noteTitleLabel.attributedText = attributedString
     }
 }

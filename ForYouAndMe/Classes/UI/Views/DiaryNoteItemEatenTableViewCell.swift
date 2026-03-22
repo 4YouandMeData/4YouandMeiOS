@@ -64,7 +64,6 @@ class DiaryNoteItemEatenTableViewCell: UITableViewCell {
 
     private lazy var noteTitleLabel: UILabel = {
         let lbl = UILabel()
-        lbl.font = UIFont.preferredFont(forTextStyle: .body)
         lbl.numberOfLines = 1
         return lbl
     }()
