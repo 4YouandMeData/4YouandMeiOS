@@ -262,7 +262,7 @@ private class HourPickerViewController: UIViewController, UIPickerViewDataSource
     var onDone: ((Int) -> Void)?
     var onCancel: (() -> Void)?
 
-    private let containerView = UIView()
+    fileprivate let containerView = UIView()
     private let pickerView = UIPickerView()
 
     override init(nibName nibNameOrNil: String?, bundle nibBundleOrNil: Bundle?) {
