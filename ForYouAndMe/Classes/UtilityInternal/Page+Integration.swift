@@ -38,5 +38,6 @@ extension Page {
         let specialLinkAppString = specialLinkValue.replacingCharacters(in: startIndex..<endIndex, with: "")
         
         return IntegrationProvider.oAuthIntegration(withName: specialLinkAppString)
+            ?? Integration(rawValue: specialLinkAppString)
     }
 }
