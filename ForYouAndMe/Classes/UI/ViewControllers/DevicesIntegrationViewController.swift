@@ -122,6 +122,7 @@ fileprivate extension Integration {
         case .dexcom: return .garminIcon
         case .terra: return .terraIcon
         case .empatica: return .terraIcon
+        case .abbottFreestyleLibre3: return .garminIcon // Not OAuth-enabled, won't appear here
         }
     }
     var title: String {
@@ -135,6 +136,7 @@ fileprivate extension Integration {
         case .dexcom: return StringsProvider.string(forKey: .dexComOauthTitle)
         case .terra: return StringsProvider.string(forKey: .terraTitle)
         case .empatica: return StringsProvider.string(forKey: .empaticaTitle)
+        case .abbottFreestyleLibre3: return "" // Not OAuth-enabled, won't appear here
         }
     }
 }
