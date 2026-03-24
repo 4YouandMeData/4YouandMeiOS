@@ -199,7 +199,7 @@ class DoseDateTimeViewController: UIViewController, UITextFieldDelegate {
         super.viewWillAppear(animated)
         navigationController?.navigationBar.apply(style: NavigationBarStyleCategory.secondary(hidden: false).style)
         if isFirstScreen {
-            addCustomBackButton(withImage: ImagePalette.templateImage(withName: .backButtonNavigation)) { [weak self] in
+            addCustomCloseButton { [weak self] in
                 guard let self = self else { return }
                 self.delegate?.doseDateTimeViewControllerDidCancel(self)
             }
