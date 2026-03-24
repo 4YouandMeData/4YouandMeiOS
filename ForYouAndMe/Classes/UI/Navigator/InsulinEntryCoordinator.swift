@@ -116,6 +116,7 @@ final class InsulinEntryCoordinator: PagedActivitySectionCoordinator {
             let dtVC = DoseDateTimeViewController(displayTitle: selectedDoseTypeText!, variant: variant)
             dtVC.delegate = self
             dtVC.alert = self.alert
+            dtVC.isFirstScreen = true
 
             if variant.isEmbeddedInNoticed {
                 return dtVC
