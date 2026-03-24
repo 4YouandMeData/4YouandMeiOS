@@ -18,7 +18,8 @@ public class FYAMManager {
                                appleWatchAlternativeIntegrations: [Integration],
                                checkResourcesAvailability: Bool = false,
                                enableLocationServices: Bool = true,
-                               healthReadDataTypes: [HealthDataType] = []) -> UIWindow {
+                               healthReadDataTypes: [HealthDataType] = [],
+                               defaultDoseType: DoseType? = nil) -> UIWindow {
         let window = UIWindow(frame: UIScreen.main.bounds)
         window.makeKeyAndVisible()
         
@@ -43,7 +44,8 @@ public class FYAMManager {
         let servicesSetupData = ServicesSetupData(showDefaultUserInfo: showDefaultUserInfo,
                                                   enableLocationServices: enableLocationServices,
                                                   healthReadDataTypes: healthReadDataTypes,
-                                                  appleWatchAlternativeIntegrations: appleWatchAlternativeIntegrations)
+                                                  appleWatchAlternativeIntegrations: appleWatchAlternativeIntegrations,
+                                                  defaultDoseType: defaultDoseType)
         Services.shared.setup(withWindow: window, servicesSetupData: servicesSetupData)
         
         return window

@@ -9,7 +9,7 @@ import UIKit
 import RxSwift
 
 /// Available dose types
-enum DoseType: String, Codable {
+public enum DoseType: String, Codable {
     case pumpBolus        = "bolus_dose"
     case insulinInjection = "insulin_injection"
     
@@ -108,6 +108,26 @@ final class InsulinEntryCoordinator: PagedActivitySectionCoordinator {
     
     // MARK: – Flow start
     func getStartingPage() -> UIViewController {
+        // If a default dose type is configured, skip the selection step
+        if let defaultDose = Services.shared.defaultDoseType {
+            selectedDoseType = defaultDose.rawValue
+            selectedDoseTypeText = defaultDose.displayText(usingVariant: self.variant)
+
+            let dtVC = DoseDateTimeViewController(displayTitle: selectedDoseTypeText!, variant: variant)
+            dtVC.delegate = self
+            dtVC.alert = self.alert
+
+            if variant.isEmbeddedInNoticed {
+                return dtVC
+            } else {
+                self.activitySectionViewController = ActivitySectionViewController(
+                    coordinator: self,
+                    startingViewController: dtVC
+                )
+                return activitySectionViewController!
+            }
+        }
+
         let vc = DoseTypeViewController(variant: self.variant)
         vc.delegate = self
         vc.alert = self.alert

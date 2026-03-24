@@ -22,6 +22,7 @@ struct ServicesSetupData {
     let enableLocationServices: Bool
     let healthReadDataTypes: [HealthDataType]
     let appleWatchAlternativeIntegrations: [Integration]
+    let defaultDoseType: DoseType?
 }
 
 class Services {
@@ -45,12 +46,14 @@ class Services {
 #if SENSORKIT
     
 #endif
+    private(set) var defaultDoseType: DoseType?
     private var window: UIWindow?
     
     // MARK: - Public Methods
     
     func setup(withWindow window: UIWindow, servicesSetupData: ServicesSetupData) {
         self.window = window
+        self.defaultDoseType = servicesSetupData.defaultDoseType
         
         let studyId = Constants.Network.StudyId
         
