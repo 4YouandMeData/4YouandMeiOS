@@ -29,6 +29,7 @@ class DoseDateTimeViewController: UIViewController, UITextFieldDelegate {
 
     // MARK: - Public API
     var alert: Alert?
+    var isFirstScreen: Bool = false
 
     /// The display text selected in the previous step
     private let displayTitle: String
@@ -197,7 +198,14 @@ class DoseDateTimeViewController: UIViewController, UITextFieldDelegate {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         navigationController?.navigationBar.apply(style: NavigationBarStyleCategory.secondary(hidden: false).style)
-        addCustomBackButton()
+        if isFirstScreen {
+            addCustomCloseButton(withImage: ImagePalette.templateImage(withName: .closeButton)) { [weak self] in
+                guard let self = self else { return }
+                self.delegate?.doseDateTimeViewControllerDidCancel(self)
+            }
+        } else {
+            addCustomBackButton()
+        }
     }
 
     // MARK: - Setup
