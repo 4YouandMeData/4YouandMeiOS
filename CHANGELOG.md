@@ -1,3 +1,17 @@
+## Release 0.98.16
+
+- Fixed back button non-functional when dose type step is skipped via configuration; now shows close (X) button that dismisses the flow.
+
+## Release 0.98.15
+
+- Added configurable default dose type (`defaultDoseType` on `FYAMManager.startup()`). When set, the dose type selection step is skipped and the configured value is used in the API payload.
+- Added Abbott FreeStyle Libre 3 integration support (download-only, no OAuth).
+- Fixed crash when tapping download link for integrations not registered in the backend.
+
+## Release 0.98.14
+
+- Fixed inconsistent font in Compass Log diary entry cells.
+
 ## Release 0.98.13
 
 - Styled hour picker button as a tappable input field in Preferences.
