@@ -4,7 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**ForYouAndMe** is an iOS CocoaPods framework (+ Example app) for building research study mobile apps. It handles onboarding, surveys, diary notes, health data collection, wearable integrations, and task management. Current version: 0.98.2, deployment target: iOS 15.6, Swift 5.2+.
+**ForYouAndMe** is an iOS CocoaPods framework (+ Example app) for building research study mobile apps. It handles onboarding, surveys, diary notes, health data collection, wearable integrations, and task management. Deployment target: iOS 15.6, Swift 5.2+.
+
+The pod version is defined in `ForYouAndMe.podspec` (`s.version`). Consuming apps (e.g. BetaTrack, CZI) reference it from the public GitHub repo via tag-based version pinning in their Podfiles.
 
 ## Build & Run Commands
 
@@ -85,6 +87,44 @@ ForYouAndMe/Classes/
 ModelMapper/            # Custom JSON mapping library
 Example/                # Host app, tests, Podfile
 ```
+
+## Git Workflow & Branching
+
+**Git-flow model** with two long-lived branches and two remotes:
+
+| Branch | Purpose |
+|--------|---------|
+| `develop` | Integration branch — all feature/bugfix PRs merge here |
+| `master` | Release branch — receives merges from develop for releases |
+
+**Remotes:**
+| Remote | URL | Purpose |
+|--------|-----|---------|
+| `origin` | `git@bitbucket.org:toconsulting/4youandmeios.git` | Internal (Bitbucket) — PRs, CI |
+| `github` | `https://github.com/4YouandMeData/4YouandMeiOS.git` | Public — pod source for consuming apps |
+
+**Branch naming:** `feature/FUAM-XXXX-short-description` or `bugfix/FUAM-XXXX-short-description`.
+
+**PR workflow:** Feature/bugfix branches are created from `develop`, PRs are opened on Bitbucket (`origin`), and merged back into `develop`.
+
+## Release & Versioning
+
+Releases follow a strict sequence:
+
+1. **Bump version** — update `s.version` in `ForYouAndMe.podspec` on `develop`, commit (`chore: Bump pod version to X.Y.Z`)
+2. **Update CHANGELOG.md** — add release notes on `develop`
+3. **Push develop** — to both `origin` and `github`
+4. **Merge to master** — `git checkout master && git merge develop`
+5. **Tag from master** — `git tag X.Y.Z` (lightweight tag on the version-bump commit)
+6. **Push master + tag** — to both remotes: `git push origin master --tags && git push github master --tags`
+
+**Important:** Tags MUST be created from `master`, not `develop`. The podspec `s.source` references `github` as the pod source repo, so the tag must exist there for `pod install` to work in consuming apps.
+
+**Consuming apps** add the pod in their Podfile like:
+```ruby
+pod 'ForYouAndMe', '~> 0.98.16'
+```
+They pull from the public GitHub repo via the tag. After a release, consuming apps run `pod update ForYouAndMe` to pick up the new version.
 
 ## CI/CD
 
