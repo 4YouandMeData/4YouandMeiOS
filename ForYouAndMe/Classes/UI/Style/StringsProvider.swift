@@ -475,6 +475,7 @@ enum StringKey: String, CaseIterable, CodingKey {
     case dexComOauthTitle = "OAUTH_DEXCOM"
     case terraTitle = "OAUTH_TERRA"
     case empaticaTitle = "OAUTH_EMPATICA"
+    case cronometerOauthTitle = "OAUTH_CRONOMETER"
 
     // Phase
     case phaseSwitchMessage = "PHASE_SWITCH_PROMPT"

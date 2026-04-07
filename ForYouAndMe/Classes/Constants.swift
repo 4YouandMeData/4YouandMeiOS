@@ -138,6 +138,8 @@ struct Constants {
         static let TerraAppSchema: URL = URL(string: "terra://")!
         static let EmpaticaStoreUrl: URL = URL(string: "itms-apps://apps.apple.com/us/app/empatica-care/id1510409984")!
         static let EmpaticaAppSchema: URL = URL(string: "empatica://")!
+        static let CronometerStoreUrl: URL = URL(string: "itms-apps://apps.apple.com/us/app/cronometer-nutrition-tracker/id1145935738")!
+        static let CronometerAppSchema: URL = URL(string: "cronometer://")!
         static let AbbottFreestyleLibre3StoreUrl: URL = URL(string: "itms-apps://apps.apple.com/us/app/freestyle-libre-3-us/id1524572429")!
         static let AbbottFreestyleLibre3AppSchema: URL = URL(string: "freestylelibre3://")!
     }

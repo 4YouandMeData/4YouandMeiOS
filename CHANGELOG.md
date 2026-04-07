@@ -1,3 +1,7 @@
+## Release 0.98.17
+
+- Added Cronometer integration to "Your Apps & Devices" screen with connect/disconnect support (FUAM-2639).
+
 ## Release 0.98.16
 
 - Fixed back button non-functional when dose type step is skipped via configuration; now shows close (X) button that dismisses the flow.

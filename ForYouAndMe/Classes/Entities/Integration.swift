@@ -17,6 +17,7 @@ public enum Integration: String {
     case dexcom
     case terra
     case empatica
+    case cronometer
     case abbottFreestyleLibre3 = "abbott-freestyle-3"
 
     var storeUrl: URL {
@@ -30,6 +31,7 @@ public enum Integration: String {
         case .dexcom: return Constants.Url.DexComStoreUrl
         case .terra: return Constants.Url.TerraStoreUrl
         case .empatica: return Constants.Url.EmpaticaStoreUrl
+        case .cronometer: return Constants.Url.CronometerStoreUrl
         case .abbottFreestyleLibre3: return Constants.Url.AbbottFreestyleLibre3StoreUrl
         }
     }
@@ -45,6 +47,7 @@ public enum Integration: String {
         case .dexcom: return Constants.Url.DexComAppSchema
         case .terra: return Constants.Url.TerraAppSchema
         case .empatica: return Constants.Url.EmpaticaAppSchema
+        case .cronometer: return Constants.Url.CronometerAppSchema
         case .abbottFreestyleLibre3: return Constants.Url.AbbottFreestyleLibre3AppSchema
         }
     }

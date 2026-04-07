@@ -31,5 +31,24 @@ class TableOfContentsSpec: QuickSpec {
                 }
             }
         }
+
+        context("Integration enum") {
+
+            it("resolves cronometer from raw value") {
+                let integration = Integration(rawValue: "cronometer")
+                expect(integration).toNot(beNil())
+                expect(integration) == .cronometer
+            }
+
+            it("builds correct OAuth URL for cronometer") {
+                let url = Integration.cronometer.apiOAuthUrl
+                expect(url.path).to(contain("cronometer"))
+            }
+
+            it("builds correct deauthorize URL for cronometer") {
+                let url = Integration.cronometer.apiOAuthDeauthorizeUrl
+                expect(url.path).to(contain("cronometer"))
+            }
+        }
     }
 }

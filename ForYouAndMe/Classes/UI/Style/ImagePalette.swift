@@ -69,6 +69,7 @@ enum ImageName: String, CaseIterable {
     case reflectionEyeIcon = "eye_logo"
     case surveyIcon = "survey_icon"
     case terraIcon = "terra_icon"
+    case cronometerIcon = "cronometer_icon"
     case pinchZoom = "pinch_zoom"
     case emojiICon = "emoji_icon"
 }
