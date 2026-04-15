@@ -403,7 +403,17 @@ class DoseDateTimeViewController: UIViewController, UITextFieldDelegate {
         textField.resignFirstResponder()
         return true
     }
-    
+
+    func textField(_ textField: UITextField,
+                   shouldChangeCharactersIn range: NSRange,
+                   replacementString string: String) -> Bool {
+        guard textField === doseTextField else { return true }
+        let newText = textField.getNewString(forRange: range, replacementString: string)
+        return NumericInputValidator.shouldAcceptDecimal(newText: newText,
+                                                         maxIntegerDigits: 4,
+                                                         maxFractionDigits: 2)
+    }
+
     // Dismiss keyboard when tapping outside
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         super.touchesBegan(touches, with: event)
