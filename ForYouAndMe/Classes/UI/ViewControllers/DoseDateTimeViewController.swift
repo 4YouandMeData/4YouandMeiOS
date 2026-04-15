@@ -374,7 +374,7 @@ class DoseDateTimeViewController: UIViewController, UITextFieldDelegate {
     }
 
     @objc private func doseChanged(_ tf: UITextField) {
-        if let txt = tf.text, let val = Double(txt) {
+        if let txt = tf.text, let val = Double(NumericInputValidator.normalizedDecimalString(txt)) {
             chosenDose = val
         } else {
             chosenDose = nil

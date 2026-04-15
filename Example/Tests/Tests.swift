@@ -124,6 +124,24 @@ class TableOfContentsSpec: QuickSpec {
 
             it("rejects empty integer part") {
                 expect(NumericInputValidator.shouldAcceptDecimal(newText: ".5", maxIntegerDigits: 4, maxFractionDigits: 2)) == false
+                expect(NumericInputValidator.shouldAcceptDecimal(newText: ",5", maxIntegerDigits: 4, maxFractionDigits: 2)) == false
+            }
+
+            it("accepts comma as decimal separator (non-US locales)") {
+                expect(NumericInputValidator.shouldAcceptDecimal(newText: "0,5", maxIntegerDigits: 4, maxFractionDigits: 2)) == true
+                expect(NumericInputValidator.shouldAcceptDecimal(newText: "9999,99", maxIntegerDigits: 4, maxFractionDigits: 2)) == true
+                expect(NumericInputValidator.shouldAcceptDecimal(newText: "1,234", maxIntegerDigits: 4, maxFractionDigits: 2)) == false
+            }
+
+            it("rejects multiple separators of any kind") {
+                expect(NumericInputValidator.shouldAcceptDecimal(newText: "1,2,3", maxIntegerDigits: 4, maxFractionDigits: 2)) == false
+                expect(NumericInputValidator.shouldAcceptDecimal(newText: "1.2,3", maxIntegerDigits: 4, maxFractionDigits: 2)) == false
+            }
+
+            it("normalizes comma to dot for parsing") {
+                expect(NumericInputValidator.normalizedDecimalString("9,5")) == "9.5"
+                expect(NumericInputValidator.normalizedDecimalString("9.5")) == "9.5"
+                expect(Double(NumericInputValidator.normalizedDecimalString("9,5"))) == 9.5
             }
         }
     }
