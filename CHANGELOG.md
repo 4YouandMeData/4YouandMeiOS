@@ -1,3 +1,7 @@
+## Release 0.98.18
+
+- Added input validation to numeric fields in My Doses (dose amount) and I've Eaten (calories, carbohydrates): max 9999 / 4 digits integer part, 2 decimal places for dose, no leading zeros, numeric only (FUAM-2965).
+
 ## Release 0.98.17
 
 - Added Cronometer integration to "Your Apps & Devices" screen with connect/disconnect support (FUAM-2639).

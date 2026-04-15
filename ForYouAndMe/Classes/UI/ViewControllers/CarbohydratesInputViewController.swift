@@ -53,7 +53,6 @@ class CarbohydratesInputViewController: UIViewController, UITextFieldDelegate {
         tf.keyboardType = .numberPad
         tf.font = .preferredFont(forTextStyle: .body)
         tf.textColor = ColorPalette.color(withType: .primaryText)
-        tf.text = "0"
         return tf
     }()
     
@@ -291,6 +290,14 @@ class CarbohydratesInputViewController: UIViewController, UITextFieldDelegate {
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
         textField.resignFirstResponder()
         return true
+    }
+
+    func textField(_ textField: UITextField,
+                   shouldChangeCharactersIn range: NSRange,
+                   replacementString string: String) -> Bool {
+        guard textField === carbohydratesTextField else { return true }
+        let newText = textField.getNewString(forRange: range, replacementString: string)
+        return NumericInputValidator.shouldAcceptInteger(newText: newText, maxDigits: 4)
     }
 }
 
