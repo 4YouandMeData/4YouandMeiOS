@@ -1,3 +1,8 @@
+## Release 0.98.19
+
+- Replaced the deprecated vendored Validator library with a lightweight native `EmailValidator` built on `NSPredicate`; removed ~708 LOC of unused rule/pattern/UIKit-extension code (FUAM-2604).
+- Extended the read-only "I've eaten" diary detail view to render the optional `calories` and `carbs_grams` fields when present in the payload, and reordered the rows to match the input-flow question order (meal type → date/time → quantity → calories → protein/fiber/fat → carbohydrates) (FUAM-2985). Requires two new study string keys: `DIARY_NOTE_EATEN_DETAIL_CALORIES_LABEL`, `DIARY_NOTE_EATEN_DETAIL_CARBOHYDRATES_LABEL`.
+
 ## Release 0.98.18
 
 - Added input validation to numeric fields in My Doses (dose amount) and I've Eaten (calories, carbohydrates): max 9999 / 4 digits integer part, 2 decimal places for dose, no leading zeros, numeric only (FUAM-2965).
