@@ -35,7 +35,21 @@ class EatenEntryFormViewController: UIViewController {
                                            : StringsProvider.string(forKey: .diaryNoteEatenStepFifthSecondButton))
         }
     }
-    
+    private var selectedCalories: Int? {
+        didSet {
+            caloriesValueLabel.text = selectedCalories.map {
+                "\($0) \(StringsProvider.string(forKey: .diaryNoteEatenStepCaloriesAmountUnitsLabel))"
+            }
+        }
+    }
+    private var selectedCarbs: Int? {
+        didSet {
+            carbsValueLabel.text = selectedCarbs.map {
+                "\($0) \(StringsProvider.string(forKey: .diaryNoteEatenStepCarbohydratesAmountUnitsLabel))"
+            }
+        }
+    }
+
     private var selectedEmoji: EmojiItem?
     private let repository: Repository = Services.shared.repository
     private let navigator: AppNavigator = Services.shared.navigator
@@ -177,6 +191,26 @@ class EatenEntryFormViewController: UIViewController {
     private let proteinValueLabel: UILabel = createValueLabel()
     private let proteinRow: UIControl = createRowControl()
 
+    private let caloriesLabel: UILabel = {
+        let lbl = UILabel()
+        lbl.text = StringsProvider.string(forKey: .diaryNoteEatenDetailCaloriesLabel)
+        lbl.font = FontPalette.fontStyleData(forStyle: .paragraphBold).font
+        lbl.numberOfLines = 0
+        return lbl
+    }()
+    private let caloriesValueLabel: UILabel = createValueLabel()
+    private let caloriesRow: UIControl = createRowControl()
+
+    private let carbsLabel: UILabel = {
+        let lbl = UILabel()
+        lbl.text = StringsProvider.string(forKey: .diaryNoteEatenDetailCarbohydratesLabel)
+        lbl.font = FontPalette.fontStyleData(forStyle: .paragraphBold).font
+        lbl.numberOfLines = 0
+        return lbl
+    }()
+    private let carbsValueLabel: UILabel = createValueLabel()
+    private let carbsRow: UIControl = createRowControl()
+
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -203,10 +237,12 @@ class EatenEntryFormViewController: UIViewController {
         
         if let payload = note.payload {
             switch payload {
-            case .food(let mealType, let quantity, let significantNutrition, let canSpecifyCalories, let caloriesValue, let carbsGrams):
+            case .food(let mealType, let quantity, let significantNutrition, _, let caloriesValue, let carbsGrams):
                 selectedMealType = FoodEntryType(rawValue: mealType)
                 selectedQuantity = ConsumptionQuantity(rawValue: quantity)
                 selectedProtein = significantNutrition as Bool
+                selectedCalories = caloriesValue
+                selectedCarbs = carbsGrams
             default:
                 fatalError("")
             }
@@ -299,7 +335,24 @@ class EatenEntryFormViewController: UIViewController {
 
         scrollStackView.stackView.addBlankSpace(space: 24)
 
-        // Protein
+        // Rows below follow the same order as the "I've eaten" input flow:
+        // calories → significant protein/fiber/fat → carbohydrates.
+
+        // Calories (only if present in payload)
+        if selectedCalories != nil {
+            scrollStackView.stackView.addArrangedSubview(caloriesLabel)
+            scrollStackView.stackView.addBlankSpace(space: 8)
+            scrollStackView.stackView.addArrangedSubview(caloriesRow)
+            caloriesRow.addSubview(caloriesValueLabel)
+            caloriesValueLabel.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets(top: 0,
+                                                                                left: 8.0,
+                                                                                bottom: 0,
+                                                                                right: 0.0),
+                                                            excludingEdge: .right)
+            scrollStackView.stackView.addBlankSpace(space: 24)
+        }
+
+        // Protein / fiber / fat
         scrollStackView.stackView.addArrangedSubview(proteinLabel)
         scrollStackView.stackView.addBlankSpace(space: 8)
         scrollStackView.stackView.addArrangedSubview(proteinRow)
@@ -309,6 +362,21 @@ class EatenEntryFormViewController: UIViewController {
                                                                           bottom: 0,
                                                                           right: 0.0),
                                                        excludingEdge: .right)
+
+        // Carbohydrates (only if present in payload)
+        if selectedCarbs != nil {
+            scrollStackView.stackView.addBlankSpace(space: 24)
+            scrollStackView.stackView.addArrangedSubview(carbsLabel)
+            scrollStackView.stackView.addBlankSpace(space: 8)
+            scrollStackView.stackView.addArrangedSubview(carbsRow)
+            carbsRow.addSubview(carbsValueLabel)
+            carbsValueLabel.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets(top: 0,
+                                                                             left: 8.0,
+                                                                             bottom: 0,
+                                                                             right: 0.0),
+                                                         excludingEdge: .right)
+        }
+
         if let emoji = self.diaryNote?.feedbackTags?.last {
             self.selectedEmoji = emoji
             self.emojiButton.setImage(nil, for: .normal)

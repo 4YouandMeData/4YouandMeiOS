@@ -240,6 +240,8 @@ enum StringKey: String, CaseIterable, CodingKey {
     case diaryNoteEatenStepCarbohydratesAmountTitle = "EATEN_STEP_CARBOHYDRATES_AMOUNT_TITLE"
     case diaryNoteEatenStepCarbohydratesAmountMessage = "EATEN_STEP_CARBOHYDRATES_AMOUNT_MESSAGE"
     case diaryNoteEatenStepCarbohydratesAmountUnitsLabel = "EATEN_STEP_CARBOHYDRATES_AMOUNT_UNITS_LABEL"
+    case diaryNoteEatenDetailCaloriesLabel = "DIARY_NOTE_EATEN_DETAIL_CALORIES_LABEL"
+    case diaryNoteEatenDetailCarbohydratesLabel = "DIARY_NOTE_EATEN_DETAIL_CARBOHYDRATES_LABEL"
     case diaryNoteEatenNextButton = "EATEN_NEXT_BUTTON"
     case diaryNoteEatenConfirmButton = "EATEN_CONFIRM_BUTTON"
     case diaryNoteEatenEmojiTitle = "DIARY_NOTE_EATEN_STEP_EMOJI_TITLE"
