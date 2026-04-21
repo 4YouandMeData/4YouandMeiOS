@@ -144,5 +144,55 @@ class TableOfContentsSpec: QuickSpec {
                 expect(Double(NumericInputValidator.normalizedDecimalString("9,5"))) == 9.5
             }
         }
+
+        context("EmailValidator") {
+
+            it("accepts standard addresses") {
+                expect(EmailValidator.isValid("foo@bar.com")) == true
+                expect(EmailValidator.isValid("user@example.org")) == true
+                expect(EmailValidator.isValid("a.b@c.co.uk")) == true
+            }
+
+            it("accepts addresses with plus tags and dots in local part") {
+                expect(EmailValidator.isValid("foo+tag@bar.com")) == true
+                expect(EmailValidator.isValid("first.last@example.com")) == true
+                expect(EmailValidator.isValid("first.last+tag@sub.example.com")) == true
+            }
+
+            it("accepts addresses with digits and hyphens") {
+                expect(EmailValidator.isValid("user123@my-domain.com")) == true
+                expect(EmailValidator.isValid("42@a1.io")) == true
+            }
+
+            it("rejects empty and whitespace-only strings") {
+                expect(EmailValidator.isValid("")) == false
+                expect(EmailValidator.isValid("   ")) == false
+            }
+
+            it("rejects strings missing the @ symbol") {
+                expect(EmailValidator.isValid("foo")) == false
+                expect(EmailValidator.isValid("foo.bar.com")) == false
+            }
+
+            it("rejects strings missing a domain TLD") {
+                expect(EmailValidator.isValid("foo@bar")) == false
+                expect(EmailValidator.isValid("foo@bar.")) == false
+            }
+
+            it("rejects strings missing a local part or domain") {
+                expect(EmailValidator.isValid("@bar.com")) == false
+                expect(EmailValidator.isValid("foo@.com")) == false
+            }
+
+            it("rejects strings with invalid characters") {
+                expect(EmailValidator.isValid("foo bar@baz.com")) == false
+                expect(EmailValidator.isValid("foo@bar .com")) == false
+                expect(EmailValidator.isValid("foo@@bar.com")) == false
+            }
+
+            it("rejects single-character TLDs") {
+                expect(EmailValidator.isValid("foo@bar.c")) == false
+            }
+        }
     }
 }
