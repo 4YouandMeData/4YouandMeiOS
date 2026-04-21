@@ -15,11 +15,7 @@ protocol UserEmailCoordinator {
 }
 
 public class UserEmailViewController: UIViewController {
-    
-    private class UserEmailValidationError: ValidationError {
-        var message: String = ""
-    }
-    
+
     private let navigator: AppNavigator
     private let repository: Repository
     private let analytics: AnalyticsService
@@ -45,11 +41,7 @@ public class UserEmailViewController: UIViewController {
     private lazy var emailFieldView: GenericTextFieldView = {
         let view = GenericTextFieldView(keyboardType: .emailAddress, styleCategory: .primary)
         view.validationCallback = { text -> Bool in
-            let rule = ValidationRulePattern(pattern: EmailValidationPattern.standard, error: UserEmailValidationError())
-            switch text.validate(rule: rule) {
-            case .valid: return true
-            case .invalid: return false
-            }
+            return EmailValidator.isValid(text)
         }
         view.textField.textContentType = .emailAddress
         view.textField.autocapitalizationType = .none
