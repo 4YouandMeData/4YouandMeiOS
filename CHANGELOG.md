@@ -1,3 +1,7 @@
+## Release 0.98.20
+
+- Fixed crash when tapping Next on a quick activity card without picking an option. The Next button is now disabled until an option is selected, matching the intended behaviour (FUAM-2990).
+
 ## Release 0.98.19
 
 - Replaced the deprecated vendored Validator library with a lightweight native `EmailValidator` built on `NSPredicate`; removed ~708 LOC of unused rule/pattern/UIKit-extension code (FUAM-2604).
