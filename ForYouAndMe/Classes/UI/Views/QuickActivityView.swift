@@ -198,6 +198,8 @@ class QuickActivityView: UIView {
                 self.optionalCheckboxView.alpha = 0.5
             }
         }
+
+        self.updateConfirmButtonState()
     }
     
     private func updateConfirmButtonState() {
