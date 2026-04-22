@@ -113,13 +113,22 @@ extension OptInSectionCoordinator: OptInPermissionCoordinator {
             return
         }
         
+        // FUAM-3014: system permission prompts (HealthKit, SensorKit, …) dismiss asynchronously.
+        // Their completion handlers can fire while the presenting view controller is still
+        // animating out, so presenting the next prompt immediately lands on a view that is
+        // no longer in the window hierarchy — UIKit silently drops the presentation and the
+        // chain hangs. A small delay between steps gives the previous prompt's dismissal
+        // animation time to finish before the next step runs.
+        let interStepDelay: Single<()> = Single.just(())
+            .delay(.milliseconds(500), scheduler: MainScheduler.instance)
+
         let systemPermissionRequests: Single<()> = optInPermission.systemPermissions
             .reduce(Single.just(())) { (result, systemPermission) in
             switch systemPermission {
             case .health:
                 return result.flatMap {
                     return granted ? self.healthService.requestPermissions().catchAndReturn(()) : Single.just(())
-                }
+                }.flatMap { interStepDelay }
             case .location:
                 return result.flatMap {
                     guard self.deviceService.locationServicesAvailable else {
@@ -128,12 +137,12 @@ extension OptInSectionCoordinator: OptInPermissionCoordinator {
                     }
                     let permission: Permission = Constants.Misc.DefaultLocationPermission
                     return granted ? permission.request().catchAndReturn(()) : Single.just(())
-                }
+                }.flatMap { interStepDelay }
             case .notification:
                 return result.flatMap {
                     let permission: Permission = .notification
                     return granted ? permission.request().catchAndReturn(()) : Single.just(())
-                }
+                }.flatMap { interStepDelay }
             case .sensorKit:
             #if HEALTHKIT
                 return result.flatMap {
@@ -153,7 +162,7 @@ extension OptInSectionCoordinator: OptInPermissionCoordinator {
                         manager.refreshRecordingBasedOnClearance()
                         return .just(())
                     }
-                }
+                }.flatMap { interStepDelay }
             #else
                 return .just(())
             #endif
