@@ -266,7 +266,10 @@ enum StringKey: String, CaseIterable, CodingKey {
     case diaryNoteDosesEmojiSubtitle = "DIARY_NOTE_DOSES_STEP_EMOJI_SUBTITLE"
     case diaryNoteDosesEmojiClickMessage = "DIARY_NOTE_DOSES_STEP_EMOJI_CLICK_MESSAGE"
     case diaryNoteDosesEmojiCloseButton = "DIARY_NOTE_DOSES_STEP_EMOJI_CLOSE_BUTTON"
-    
+
+    // Hot Flash
+    case diaryNoteFabHotFlash = "FAB_HOT_FLASH"
+
     // Video Diary
     case videoDiaryRecorderInfoFilter = "VIDEO_DIARY_RECORDER_INFO_FILTER"
     case videoDiaryRecorderTitle = "VIDEO_DIARY_RECORDER_TITLE"

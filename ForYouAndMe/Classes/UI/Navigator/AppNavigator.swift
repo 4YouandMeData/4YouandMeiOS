@@ -944,6 +944,9 @@ class AppNavigator {
                 self.openNoticedViewController(presenter: presenter)
             case .eaten:
                 self.openEatenViewController(presenter: presenter)
+            case .hotFlash:
+                // TODO(FUAM-2xxx): wire openHotFlashViewController
+                break
             }
         }
         presenter.present(navigationViewController, animated: true)

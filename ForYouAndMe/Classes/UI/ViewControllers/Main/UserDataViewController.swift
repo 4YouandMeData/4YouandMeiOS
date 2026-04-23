@@ -88,6 +88,9 @@ class UserDataViewController: BaseViewController, WKNavigationDelegate, WKScript
                 self.navigator.openNoticedViewController(presenter: self, diaryNote: diaryNote)
             case .eaten:
                 self.navigator.openEatenViewController(presenter: self, diaryNote: diaryNote)
+            case .hotFlash:
+                // TODO(FUAM-2xxx): wire openHotFlashViewController
+                break
             }
 
             // Reset after action
@@ -238,6 +241,9 @@ class UserDataViewController: BaseViewController, WKNavigationDelegate, WKScript
                         self.navigator.openNoticedViewController(presenter: self)
                     case .eaten:
                         self.navigator.openEatenViewController(presenter: self)
+                    case .hotFlash:
+                        // TODO(FUAM-2xxx): wire openHotFlashViewController
+                        break
                     }
                 } else {
                     self.handleChartPointTap(eventData: eventData, animated: true)

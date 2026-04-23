@@ -133,6 +133,8 @@ class BaseViewController: UIViewController {
                 addNoticedFabItem()
             case "eaten":
                 addEatenFabItem()
+            case "hot_flash":
+                addHotFlashFabItem()
             default:
                 // Keyword sconosciuta: ignoro o loggo
                 print("BaseViewController: unknown FAB element '\(element)' – skipping")
@@ -198,6 +200,24 @@ class BaseViewController: UIViewController {
             } else {
                 self.navigator.openEatenViewController(presenter: self)
             }
+        }
+    }
+
+    private func addHotFlashFabItem() {
+        let actionHotFlash = floatingButton.addItem()
+        actionHotFlash.titleLabel.text      = StringsProvider.string(forKey: .diaryNoteFabHotFlash)
+        actionHotFlash.titleLabel.textColor = ColorPalette.color(withType: .fabTextColor)
+        actionHotFlash.imageView.image      = ImagePalette.templateImage(withName: .hotFlashIcon)
+        actionHotFlash.imageView.tintColor  = ColorPalette.color(withType: .primaryText)
+        actionHotFlash.buttonColor          = ColorPalette.color(withType: .secondary)
+        actionHotFlash.action = { [weak self] _ in
+            guard let self = self else { return }
+            if let handler = self.fabActionHandler {
+                self.dismiss(animated: true) {
+                    handler(.hotFlash)
+                }
+            }
+            // TODO(FUAM-2xxx): navigator.openHotFlashViewController fallback once implemented
         }
     }
 }

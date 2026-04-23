@@ -388,8 +388,11 @@ extension DiaryNotesViewController: UITableViewDataSource {
                     guard let self = self else { return }
                     self.navigator.openNoticedFormViewController(presenter: self, noticedItem: diaryNote)
                 })
-                
+
                 return cell
+            case .hotFlash:
+                // TODO(FUAM-2xxx): render dedicated HotFlash cell
+                return UITableViewCell()
             }
         } else {
             assertionFailure("Unhandled Diary Note Item type: \(diaryNote.self)")
@@ -429,7 +432,7 @@ extension DiaryNotesViewController: UITableViewDelegate {
             switch diaryNote.diaryNoteType {
             case .text:
                 return 80 // Variable Height for text note
-            case .audio, .video, .eaten, .doses, .weNoticed:
+            case .audio, .video, .eaten, .doses, .weNoticed, .hotFlash:
                 return 100 // Fixed Height for audio and video note
             case .none:
                 return UITableView.automaticDimension

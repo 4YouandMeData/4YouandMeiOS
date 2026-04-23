@@ -25,6 +25,7 @@ feedback_tag
 public enum DiaryNotePayload {
     case food(mealType: String, quantity: String, significantNutrition: Bool, canSpecifyCalories: Bool?, caloriesValue: Int?, carbsGrams: Int?)
     case doses(quantity: Int, doseType: String)
+    case hotFlash(date: Date)
     case noticed(
         physicalActivity: String,
         oldValue: Double,
@@ -108,6 +109,7 @@ enum DiaryNoteItemType: String, Codable {
     case eaten = "food_diary"
     case doses = "insulin_diary"
     case weNoticed = "we_have_noticed"
+    case hotFlash = "hot_flash_diary"
 }
 
 enum DiaryNoteableType: String, Codable {
@@ -344,7 +346,15 @@ feedback_tags
                     ateQuantity: ateQty,
                     ateFat: ateFat
                 )
-                
+
+            case .hotFlash:
+                let date: Date = {
+                    if let sx = raw["datetime_ref"]?.value as? String,
+                       let dx = isoFmt.date(from: sx) { return dx }
+                    return self.diaryNoteId
+                }()
+                payload = .hotFlash(date: date)
+
             default:
                 break
             }

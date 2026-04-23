@@ -422,7 +422,7 @@ class EatenEntryFormViewController: UIViewController {
             return .iHaveEaten
         case .weNoticed:
             return .weHaveNoticed
-        case .text, .audio, .video:
+        case .text, .audio, .video, .hotFlash:
             return nil
         }
     }
