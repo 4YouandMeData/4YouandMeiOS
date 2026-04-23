@@ -269,6 +269,8 @@ enum StringKey: String, CaseIterable, CodingKey {
 
     // Hot Flash
     case diaryNoteFabHotFlash = "FAB_HOT_FLASH"
+    case diaryNoteTagHotFlash = "DIARY_NOTE_TAG_HOT_FLASH"
+    case diaryNoteHotFlashCell = "DIARY_NOTE_HOT_FLASH_CELL"
 
     // Video Diary
     case videoDiaryRecorderInfoFilter = "VIDEO_DIARY_RECORDER_INFO_FILTER"

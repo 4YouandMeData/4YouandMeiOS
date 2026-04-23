@@ -88,6 +88,7 @@ class DiaryNotesViewController: BaseViewController {
         tableView.registerCellsWithClass(DiaryNoteItemEatenTableViewCell.self)
         tableView.registerCellsWithClass(DiaryNoteItemDosesTableViewCell.self)
         tableView.registerCellsWithClass(DiaryNoteItemWeNoticedTableViewCell.self)
+        tableView.registerCellsWithClass(DiaryNoteItemHotFlashTableViewCell.self)
         tableView.contentInsetAdjustmentBehavior = .never
         tableView.backgroundView = self.diaryNoteEmptyView
         tableView.backgroundColor = .clear
@@ -391,8 +392,16 @@ extension DiaryNotesViewController: UITableViewDataSource {
 
                 return cell
             case .hotFlash:
-                // TODO(FUAM-2xxx): render dedicated HotFlash cell
-                return UITableViewCell()
+                guard let cell = tableView.dequeueReusableCellOfType(type: DiaryNoteItemHotFlashTableViewCell.self,
+                                                                     forIndexPath: indexPath) else {
+                    assertionFailure("DiaryNoteItemHotFlashTableViewCell not registered")
+                    return UITableViewCell()
+                }
+                cell.display(data: diaryNote, onTap: {
+                    // TODO(FUAM-2xxx): open Hot Flash form view controller
+                })
+
+                return cell
             }
         } else {
             assertionFailure("Unhandled Diary Note Item type: \(diaryNote.self)")
