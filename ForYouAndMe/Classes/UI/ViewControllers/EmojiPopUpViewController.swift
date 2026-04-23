@@ -18,6 +18,7 @@ enum EmojiTagCategory: String, CaseIterable {
     case iHaveEaten = "i_have_eaten"
     case iHaveNoticed = "i_have_noticed"
     case weHaveNoticed = "we_have_noticed"
+    case hotFlash = "hot_flash"
     case none
 }
 

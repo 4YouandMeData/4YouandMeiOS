@@ -457,6 +457,12 @@ extension RepositoryImpl: Repository {
         .handleError()
     }
 
+    func sendDiaryNoteHotFlash(data: DiaryNoteHotFlashData) -> Single<DiaryNoteItem> {
+        return self.api.send(request: ApiRequest(serviceRequest:
+                .sendDiaryNoteHotFlash(data: data)))
+            .handleError()
+    }
+
     func updateDiaryNoteText(diaryNote: DiaryNoteItem) -> Single<()> {
         return self.api.send(request: ApiRequest(serviceRequest: .updateDiaryNoteText(diaryItem: diaryNote)))
             .handleError()

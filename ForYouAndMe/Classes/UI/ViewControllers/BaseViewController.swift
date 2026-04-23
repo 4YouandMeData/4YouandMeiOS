@@ -216,8 +216,9 @@ class BaseViewController: UIViewController {
                 self.dismiss(animated: true) {
                     handler(.hotFlash)
                 }
+            } else {
+                self.navigator.openHotFlashViewController(presenter: self)
             }
-            // TODO(FUAM-2xxx): navigator.openHotFlashViewController fallback once implemented
         }
     }
 }

@@ -103,6 +103,7 @@ protocol Repository: AnyObject {
                             amount: Double,
                             fromChart: Bool,
                             diaryNote: DiaryNoteItem?) -> Single<DiaryNoteItem>
+    func sendDiaryNoteHotFlash(data: DiaryNoteHotFlashData) -> Single<DiaryNoteItem>
     func sendCombinedDiaryNote(diaryNote: DiaryNoteWeHaveNoticedItem) -> Single<DiaryNoteItem>
     func updateDiaryNoteText(diaryNote: DiaryNoteItem) -> Single<()>
     func deleteDiaryNote(noteID: String) -> Single<()>

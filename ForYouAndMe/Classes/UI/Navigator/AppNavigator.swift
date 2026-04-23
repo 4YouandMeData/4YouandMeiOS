@@ -42,6 +42,7 @@ class AppNavigator {
     private var pushPermissionCompleted: Bool = false
     private var currentCoordinator: Coordinator?
     private weak var currentActivityCoordinator: ActivitySectionCoordinator?
+    private var hotFlashCoordinator: HotFlashCoordinator?
     
     private var isTaskInProgress: Bool {
         return nil != self.currentActivityCoordinator
@@ -726,6 +727,29 @@ class AppNavigator {
         self.currentActivityCoordinator = coordinator
     }
     
+    public func openHotFlashViewController(presenter: UIViewController) {
+        assert(self.hotFlashCoordinator == nil, "Another hot flash flow is already in progress")
+
+        let completion: NotificationCallback = { [weak self, weak presenter] in
+            presenter?.dismiss(animated: true, completion: nil)
+            self?.hotFlashCoordinator = nil
+        }
+
+        let coordinator = HotFlashCoordinator(
+            repository: self.repository,
+            navigator: self,
+            variant: .standalone,
+            completion: completion
+        )
+
+        let startVC = coordinator.getStartingPage()
+        startVC.modalPresentationStyle = .fullScreen
+
+        presenter.present(startVC, animated: true, completion: nil)
+
+        self.hotFlashCoordinator = coordinator
+    }
+
     public func openMyDosesViewController(presenter: UIViewController) {
         // Prevent overlapping flows
         assert(self.currentActivityCoordinator == nil, "Another activity is already in progress")
@@ -1288,8 +1312,28 @@ extension AppNavigator {
         self.currentActivityCoordinator = coordinator
     }
 
+    func openHotFlashViewController(presenter: UIViewController, diaryNote: DiaryNoteItem) {
+
+        let completion: NotificationCallback = { [weak self, weak presenter] in
+            presenter?.dismiss(animated: true, completion: nil)
+            self?.hotFlashCoordinator = nil
+        }
+
+        let coordinator = HotFlashCoordinator(
+            repository: self.repository,
+            navigator: self,
+            variant: .fromChart(diaryNote: diaryNote),
+            completion: completion
+        )
+
+        let startVC = coordinator.getStartingPage()
+        startVC.modalPresentationStyle = .fullScreen
+        presenter.present(startVC, animated: true)
+        self.hotFlashCoordinator = coordinator
+    }
+
     func openMyDosesViewController(presenter: UIViewController, diaryNote: DiaryNoteItem) {
-        
+
         let completion: NotificationCallback = { [weak self, weak presenter] in
             presenter?.dismiss(animated: true, completion: nil)
             self?.currentActivityCoordinator = nil

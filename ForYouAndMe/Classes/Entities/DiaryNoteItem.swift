@@ -143,6 +143,12 @@ struct DiaryNoteEatenData {
     let diaryNote: DiaryNoteItem?
 }
 
+struct DiaryNoteHotFlashData {
+    let date: Date
+    let fromChart: Bool
+    let diaryNote: DiaryNoteItem?
+}
+
 struct DiaryNoteWeHaveNoticedItem: Codable {
     
     let diaryType: DiaryNoteItemType
