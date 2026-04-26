@@ -107,5 +107,8 @@ Pod::Spec.new do |s|
 
   s.subspec 'Terra' do |terra|
     terra.dependency 'TerraiOS', '~> 1.6.26'
+    terra.pod_target_xcconfig = {
+      'SWIFT_ACTIVE_COMPILATION_CONDITIONS' => '$(inherited) TERRA'
+    }
   end
 end

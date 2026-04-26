@@ -55,7 +55,7 @@ protocol Repository: AnyObject {
     func submitPhoneNumber(phoneNumber: String) -> Single<()>
     func verifyPhoneNumber(phoneNumber: String, validationCode: String) -> Single<User>
     func emailLogin(email: String) -> Single<User>
-#if HEALTHKIT
+#if TERRA
     func getTerraToken() -> Single<TerraTokenResponse>
 #endif
     

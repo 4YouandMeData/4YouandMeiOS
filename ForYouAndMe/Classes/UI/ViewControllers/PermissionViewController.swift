@@ -16,7 +16,7 @@ public class PermissionViewController: UIViewController {
     private let analytics: AnalyticsService
     private let healthService: HealthService
     private let deviceService: DeviceService
-#if HEALTHKIT
+#if SENSORKIT
     private let sensorKitService: SensorKitService?
 #endif
     private let disposeBag: DisposeBag = DisposeBag()
@@ -33,7 +33,7 @@ public class PermissionViewController: UIViewController {
         self.analytics = Services.shared.analytics
         self.healthService = Services.shared.healthService
         self.deviceService = Services.shared.deviceService
-#if HEALTHKIT
+#if SENSORKIT
         self.sensorKitService = Services.shared.sensorKitService
 #endif
         super.init(nibName: nil, bundle: nil)
@@ -117,7 +117,7 @@ public class PermissionViewController: UIViewController {
         }
         
         // --- SensorKit ---
-#if HEALTHKIT
+#if SENSORKIT
         if self.sensorKitService?.serviceAvailable == true,
            self.repository.currentUser?.getHasAgreedTo(systemPermission: .sensorKit) ?? false {
 
@@ -200,7 +200,7 @@ public class PermissionViewController: UIViewController {
     }
     
     private func handleSensorKitPermission() {
-#if HEALTHKIT
+#if SENSORKIT
         // We need the concrete manager to access utility methods
         guard let manager = self.sensorKitService as? SensorKitManager else { return }
 
