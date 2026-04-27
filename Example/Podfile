@@ -12,8 +12,6 @@ target 'ForYouAndMe_Example' do
     
     pod 'Quick', '~> 1.2.0'
     pod 'Nimble', '~> 7.0'
-    pod 'FBSnapshotTestCase' , '~> 2.1.4'
-    pod 'Nimble-Snapshots' , '~> 6.3.0'
     pod 'SwiftLint'
   end
 end
@@ -36,6 +34,24 @@ post_install do |installer|
         config.build_settings['SWIFT_OPTIMIZATION_LEVEL'] = '-Onone'
         # Enable HealthKit
         config.build_settings['SWIFT_ACTIVE_COMPILATION_CONDITIONS'] = '$(inherited) HEALTHKIT'
+      end
+    end
+
+    # Test pods (Quick / Nimble) link against XCTest — enable test search paths
+    # so Xcode can resolve libswiftXCTest.dylib for device + simulator builds.
+    # Xcode 26 ships swiftXCTest at .../usr/lib/swift-5.0/<platform>/, so we add
+    # that path explicitly because Nimble's stock xcconfig only points at
+    # swift/<platform>/.
+    if ['Quick', 'Nimble'].include?(target.name)
+      target.build_configurations.each do |config|
+        config.build_settings['ENABLE_TESTING_SEARCH_PATHS'] = 'YES'
+        config.build_settings['LIBRARY_SEARCH_PATHS'] = [
+          '$(inherited)',
+          '"$(PLATFORM_DIR)/Developer/usr/lib"',
+          '"${TOOLCHAIN_DIR}/usr/lib/swift-5.0/${PLATFORM_NAME}"',
+          '"${TOOLCHAIN_DIR}/usr/lib/swift/${PLATFORM_NAME}"',
+          '/usr/lib/swift'
+        ]
       end
     end
   end
