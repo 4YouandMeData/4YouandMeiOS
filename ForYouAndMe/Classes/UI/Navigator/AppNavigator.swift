@@ -819,7 +819,7 @@ class AppNavigator {
         // Get the first view controller of the flow
         vc.modalPresentationStyle = .fullScreen
         vc.configure(with: noticedItem)
-        
+
         guard let navigationController = presenter.navigationController else {
             assertionFailure("Missing UINavigationController")
             return
@@ -828,7 +828,22 @@ class AppNavigator {
                                                 hidesBottomBarWhenPushed: true,
                                                 animated: true)
     }
-    
+
+    public func openHotFlashFormViewController(presenter: UIViewController, hotFlashItem: DiaryNoteItem) {
+
+        let vc = HotFlashEntryFormViewController()
+        vc.modalPresentationStyle = .fullScreen
+        vc.configure(with: hotFlashItem)
+
+        guard let navigationController = presenter.navigationController else {
+            assertionFailure("Missing UINavigationController")
+            return
+        }
+        navigationController.pushViewController(vc,
+                                                hidesBottomBarWhenPushed: true,
+                                                animated: true)
+    }
+
     // MARK: About You
     
     public func showAboutYouPage(presenter: UIViewController) {

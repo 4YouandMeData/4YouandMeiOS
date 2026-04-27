@@ -138,7 +138,7 @@ class DiaryNoteItemHotFlashTableViewCell: UITableViewCell {
     /// Configure cell with DiaryNoteItem of type .hotFlash
     public func display(data: DiaryNoteItem, onTap: @escaping () -> Void) {
         self.buttonPressedCallback = onTap
-        self.updateNoteTitle(data.title ?? StringsProvider.string(forKey: .diaryNoteHotFlashCell))
+        self.updateNoteTitle(StringsProvider.string(forKey: .diaryNoteHotFlashCell))
         noteImageView.image = ImagePalette.image(withName: .surveyIcon)
         if let emoji = data.feedbackTags?.last {
             emojiLabel.text = emoji.tag

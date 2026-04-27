@@ -70,7 +70,7 @@ final class EmojiPopupViewController: UIViewController {
         view.backgroundColor = UIColor.black.withAlphaComponent(0.6)
         
         let cardView = UIView()
-        cardView.backgroundColor = ColorPalette.color(withType: .gradientPrimaryEnd)
+        cardView.backgroundColor = ColorPalette.color(withType: .secondary)
         cardView.layer.cornerRadius = 20
         cardView.clipsToBounds = true
         view.addSubview(cardView)

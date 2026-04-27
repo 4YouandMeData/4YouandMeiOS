@@ -49,8 +49,8 @@ struct Constants {
         static let DosesColorText = "#2E3288"
         static let WeNoticedColorBackground = "#FF9694"
         static let WeNoticedColorText = "#8E2E2C"
-        static let HotFlashColorBackground = "#FFD59E"
-        static let HotFlashColorText = "#8A4A00"
+        static let HotFlashColorBackground = "#F2B3D4"
+        static let HotFlashColorText = "#8D3462"
         static let FormBackgroundColor = "#EEEEEE"
     }
     struct Resources {

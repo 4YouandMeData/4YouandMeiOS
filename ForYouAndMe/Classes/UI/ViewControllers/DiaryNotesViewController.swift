@@ -397,8 +397,9 @@ extension DiaryNotesViewController: UITableViewDataSource {
                     assertionFailure("DiaryNoteItemHotFlashTableViewCell not registered")
                     return UITableViewCell()
                 }
-                cell.display(data: diaryNote, onTap: {
-                    // TODO(FUAM-2xxx): open Hot Flash form view controller
+                cell.display(data: diaryNote, onTap: { [weak self] in
+                    guard let self = self else { return }
+                    self.navigator.openHotFlashFormViewController(presenter: self, hotFlashItem: diaryNote)
                 })
 
                 return cell
