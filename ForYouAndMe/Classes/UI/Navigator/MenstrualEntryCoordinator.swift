@@ -45,6 +45,7 @@ final class MenstrualEntryCoordinator: PagedActivitySectionCoordinator {
     private var selectedDate: Date?
     private var flowAmount: MenstrualFlowAmount?
     private var periodRelated: MenstrualPeriodRelated?
+    private var periodRelatedExplanation: String?
     private var note: String?
 
     // MARK: - Initialization
@@ -98,6 +99,7 @@ final class MenstrualEntryCoordinator: PagedActivitySectionCoordinator {
             date: date,
             flowAmount: flow,
             periodRelated: related,
+            periodRelatedExplanation: self.periodRelatedExplanation,
             note: self.note,
             fromChart: variant.isFromChart,
             diaryNote: variant.chartDiaryNote
@@ -177,6 +179,15 @@ private extension MenstrualEntryCoordinator {
                                                 animated: true)
     }
 
+    func pushExplainStep() {
+        let explainVC = MenstrualExplainViewController(variant: variant)
+        explainVC.delegate = self
+        explainVC.alert = self.alert
+        navigationController.pushViewController(explainVC,
+                                                hidesBottomBarWhenPushed: hidesBottomBarWhenPushed,
+                                                animated: true)
+    }
+
     func pushNoteStep() {
         let noteVC = MenstrualNoteViewController(variant: variant)
         noteVC.delegate = self
@@ -201,6 +212,21 @@ extension MenstrualEntryCoordinator: MenstrualPeriodRelatedViewControllerDelegat
     func menstrualPeriodRelatedViewController(_ vc: MenstrualPeriodRelatedViewController,
                                               didSelect related: MenstrualPeriodRelated) {
         self.periodRelated = related
+        // "Let me explain" introduces an extra free-text step before the
+        // standard final note. All other answers go straight to the note.
+        if related == .letMeExplain {
+            pushExplainStep()
+        } else {
+            pushNoteStep()
+        }
+    }
+}
+
+// MARK: - MenstrualExplainViewControllerDelegate
+extension MenstrualEntryCoordinator: MenstrualExplainViewControllerDelegate {
+    func menstrualExplainViewController(_ vc: MenstrualExplainViewController,
+                                        didFinishWith explanation: String?) {
+        self.periodRelatedExplanation = explanation
         pushNoteStep()
     }
 }

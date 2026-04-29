@@ -895,6 +895,9 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             payloadData["flow_amount"] = data.flowAmount.rawValue
             payloadData["period_related"] = data.periodRelated.rawValue
             payloadData["bleeding"] = data.bleeding.rawValue
+            if let explanation = data.periodRelatedExplanation, !explanation.isEmpty {
+                payloadData["period_related_note"] = explanation
+            }
             if let note = data.note, !note.isEmpty {
                 payloadData["note"] = note
             }

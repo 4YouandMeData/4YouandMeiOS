@@ -22,6 +22,7 @@ class MenstrualNetworkTaskSpec: QuickSpec {
                     date: date,
                     flowAmount: .moderate,
                     periodRelated: .yes,
+                    periodRelatedExplanation: nil,
                     note: "Started today",
                     fromChart: false,
                     diaryNote: nil
@@ -52,6 +53,7 @@ class MenstrualNetworkTaskSpec: QuickSpec {
                     date: date,
                     flowAmount: .spotting,
                     periodRelated: .notSure,
+                    periodRelatedExplanation: nil,
                     note: nil,
                     fromChart: false,
                     diaryNote: nil
@@ -71,6 +73,7 @@ class MenstrualNetworkTaskSpec: QuickSpec {
                     date: date,
                     flowAmount: .light,
                     periodRelated: .no,
+                    periodRelatedExplanation: nil,
                     note: "",
                     fromChart: false,
                     diaryNote: nil
@@ -89,6 +92,7 @@ class MenstrualNetworkTaskSpec: QuickSpec {
                     date: date,
                     flowAmount: .heavy,
                     periodRelated: .letMeExplain,
+                    periodRelatedExplanation: nil,
                     note: "Heavy after IUD",
                     fromChart: false,
                     diaryNote: nil
@@ -98,6 +102,40 @@ class MenstrualNetworkTaskSpec: QuickSpec {
                 let payload = (params?["diary_note"] as? [String: Any])?["data"] as? [String: Any]
                 expect(payload?["bleeding"] as? String).to(equal("other"))
                 expect(payload?["period_related"] as? String).to(equal("let_me_explain"))
+            }
+
+            it("emits period_related_note when an explanation is provided") {
+                let data = DiaryNoteMenstrualData(
+                    date: date,
+                    flowAmount: .heavy,
+                    periodRelated: .letMeExplain,
+                    periodRelatedExplanation: "After IUD insertion",
+                    note: "Heavy after IUD",
+                    fromChart: false,
+                    diaryNote: nil
+                )
+                let service = DefaultService.sendDiaryNoteMenstrual(data: data)
+                let params = unwrapRequestParameters(service.task)
+                let payload = (params?["diary_note"] as? [String: Any])?["data"] as? [String: Any]
+                expect(payload?["period_related_note"] as? String).to(equal("After IUD insertion"))
+            }
+
+            it("omits period_related_note when explanation is nil or empty") {
+                for explanation in [nil, ""] as [String?] {
+                    let data = DiaryNoteMenstrualData(
+                        date: date,
+                        flowAmount: .light,
+                        periodRelated: .yes,
+                        periodRelatedExplanation: explanation,
+                        note: nil,
+                        fromChart: false,
+                        diaryNote: nil
+                    )
+                    let service = DefaultService.sendDiaryNoteMenstrual(data: data)
+                    let params = unwrapRequestParameters(service.task)
+                    let payload = (params?["diary_note"] as? [String: Any])?["data"] as? [String: Any]
+                    expect(payload?["period_related_note"]).to(beNil())
+                }
             }
         }
     }

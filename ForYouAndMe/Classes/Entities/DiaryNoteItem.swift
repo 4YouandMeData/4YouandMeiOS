@@ -200,6 +200,9 @@ struct DiaryNoteMenstrualData {
     let date: Date
     let flowAmount: MenstrualFlowAmount
     let periodRelated: MenstrualPeriodRelated
+    /// Free-form text shown when the user taps "Let me explain" on step 4.
+    /// Captured before the final note step so the two inputs stay separate.
+    let periodRelatedExplanation: String?
     let note: String?
     let fromChart: Bool
     let diaryNote: DiaryNoteItem?

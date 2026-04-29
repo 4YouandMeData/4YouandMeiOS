@@ -19,6 +19,7 @@ class DiaryNoteMenstrualDataSpec: QuickSpec {
                     date: Date(timeIntervalSince1970: 1_750_000_000),
                     flowAmount: .light,
                     periodRelated: .yes,
+                    periodRelatedExplanation: nil,
                     note: nil,
                     fromChart: false,
                     diaryNote: nil
@@ -31,6 +32,7 @@ class DiaryNoteMenstrualDataSpec: QuickSpec {
                     date: Date(),
                     flowAmount: .moderate,
                     periodRelated: .no,
+                    periodRelatedExplanation: nil,
                     note: "spotting after exercise",
                     fromChart: false,
                     diaryNote: nil
@@ -44,6 +46,7 @@ class DiaryNoteMenstrualDataSpec: QuickSpec {
                     date: Date(),
                     flowAmount: .heavy,
                     periodRelated: .notSure,
+                    periodRelatedExplanation: nil,
                     note: nil,
                     fromChart: false,
                     diaryNote: nil)
@@ -51,6 +54,7 @@ class DiaryNoteMenstrualDataSpec: QuickSpec {
                     date: Date(),
                     flowAmount: .veryHeavy,
                     periodRelated: .letMeExplain,
+                    periodRelatedExplanation: nil,
                     note: "after IUD insertion",
                     fromChart: true,
                     diaryNote: nil)
@@ -63,6 +67,7 @@ class DiaryNoteMenstrualDataSpec: QuickSpec {
                     date: Date(),
                     flowAmount: .spotting,
                     periodRelated: .yes,
+                    periodRelatedExplanation: nil,
                     note: nil,
                     fromChart: true,
                     diaryNote: nil)

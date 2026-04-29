@@ -1,24 +1,25 @@
 //
-//  MenstrualNoteViewController.swift
+//  MenstrualExplainViewController.swift
 //  ForYouAndMe
 //
-//  FUAM-2935 — Step 5 of menstrual cycle wizard. Optional free text note,
-//  capped at 2500 characters. Done is always available.
+//  FUAM-2935 — Optional sub-step shown only when the user picks
+//  "Let me explain" on the period-related question. Captures a free-text
+//  explanation; tapping Next then leads to the standard final note step.
 //
 
 import UIKit
 import PureLayout
 
-protocol MenstrualNoteViewControllerDelegate: AnyObject {
-    func menstrualNoteViewController(_ vc: MenstrualNoteViewController, didFinishWithNote note: String?)
+protocol MenstrualExplainViewControllerDelegate: AnyObject {
+    func menstrualExplainViewController(_ vc: MenstrualExplainViewController, didFinishWith explanation: String?)
 }
 
-final class MenstrualNoteViewController: UIViewController, UITextViewDelegate {
+final class MenstrualExplainViewController: UIViewController, UITextViewDelegate {
 
-    private static let noteCharacterLimit: Int = 2500
+    private static let characterLimit: Int = 2500
 
     var alert: Alert?
-    weak var delegate: MenstrualNoteViewControllerDelegate?
+    weak var delegate: MenstrualExplainViewControllerDelegate?
 
     private let variant: FlowVariant
     private let navigator: AppNavigator
@@ -38,7 +39,7 @@ final class MenstrualNoteViewController: UIViewController, UITextViewDelegate {
 
     private lazy var placeholderLabel: UILabel = {
         let lbl = UILabel()
-        lbl.text = StringsProvider.string(forKey: .menstrualStepNotePlaceholder)
+        lbl.text = StringsProvider.string(forKey: .menstrualStepExplainPlaceholder)
         lbl.textColor = .placeholderText
         lbl.font = .preferredFont(forTextStyle: .body)
         lbl.numberOfLines = 0
@@ -47,9 +48,9 @@ final class MenstrualNoteViewController: UIViewController, UITextViewDelegate {
 
     private lazy var footerView: GenericButtonView = {
         let view = GenericButtonView(withTextStyleCategory: .secondaryBackground(shadow: false))
-        view.setButtonText(StringsProvider.string(forKey: .menstrualDoneButton))
+        view.setButtonText(StringsProvider.string(forKey: .menstrualNextButton))
         view.setButtonEnabled(enabled: true)
-        view.addTarget(target: self, action: #selector(doneTapped))
+        view.addTarget(target: self, action: #selector(nextTapped))
         return view
     }()
 
@@ -66,16 +67,6 @@ final class MenstrualNoteViewController: UIViewController, UITextViewDelegate {
         view.backgroundColor = ColorPalette.color(withType: .secondary)
         setupLayout()
         setupKeyboardDismissGesture()
-    }
-
-    private func setupKeyboardDismissGesture() {
-        let tap = UITapGestureRecognizer(target: self, action: #selector(dismissKeyboard))
-        tap.cancelsTouchesInView = false
-        view.addGestureRecognizer(tap)
-    }
-
-    @objc private func dismissKeyboard() {
-        view.endEditing(true)
     }
 
     override func viewWillAppear(_ animated: Bool) {
@@ -100,7 +91,7 @@ final class MenstrualNoteViewController: UIViewController, UITextViewDelegate {
         ]
         scrollStackView.stackView.addLabel(
             attributedString: NSAttributedString(
-                string: StringsProvider.string(forKey: .menstrualStepNoteTitle),
+                string: StringsProvider.string(forKey: .menstrualStepExplainTitle),
                 attributes: titleAttrs),
             numberOfLines: 0)
 
@@ -113,7 +104,7 @@ final class MenstrualNoteViewController: UIViewController, UITextViewDelegate {
         ]
         scrollStackView.stackView.addLabel(
             attributedString: NSAttributedString(
-                string: StringsProvider.string(forKey: .menstrualStepNoteMessage),
+                string: StringsProvider.string(forKey: .menstrualStepExplainMessage),
                 attributes: messageAttrs),
             numberOfLines: 0)
 
@@ -132,11 +123,21 @@ final class MenstrualNoteViewController: UIViewController, UITextViewDelegate {
         scrollStackView.scrollView.autoPinEdge(.bottom, to: .top, of: footerView)
     }
 
-    @objc private func doneTapped() {
+    private func setupKeyboardDismissGesture() {
+        let tap = UITapGestureRecognizer(target: self, action: #selector(dismissKeyboard))
+        tap.cancelsTouchesInView = false
+        view.addGestureRecognizer(tap)
+    }
+
+    @objc private func dismissKeyboard() {
+        view.endEditing(true)
+    }
+
+    @objc private func nextTapped() {
         view.endEditing(true)
         let trimmed = textView.text.trimmingCharacters(in: .whitespacesAndNewlines)
-        let note: String? = trimmed.isEmpty ? nil : trimmed
-        delegate?.menstrualNoteViewController(self, didFinishWithNote: note)
+        let explanation: String? = trimmed.isEmpty ? nil : trimmed
+        delegate?.menstrualExplainViewController(self, didFinishWith: explanation)
     }
 
     // MARK: - UITextViewDelegate
@@ -145,7 +146,7 @@ final class MenstrualNoteViewController: UIViewController, UITextViewDelegate {
         let currentText = textView.text ?? ""
         guard let stringRange = Range(range, in: currentText) else { return false }
         let updated = currentText.replacingCharacters(in: stringRange, with: text)
-        return updated.count <= Self.noteCharacterLimit
+        return updated.count <= Self.characterLimit
     }
 
     func textViewDidChange(_ textView: UITextView) {
