@@ -3,8 +3,10 @@
 //  ForYouAndMe
 //
 //  Response payload returned by POST /v1/tasks/{taskId}/result when the user
-//  submits a Quick Activity. The optional `task_id` references a follow-up
-//  task (typically a Survey) that the user is prompted to start immediately.
+//  submits a Quick Activity. The optional `task_ids` array references one or
+//  more follow-up tasks (typically a Survey) that the user is prompted to
+//  start immediately. Today the array is expected to carry at most one entry,
+//  but the contract is plural so the backend can grow without a client change.
 //
 //  See FUAM-3037.
 //
@@ -13,19 +15,19 @@ import Foundation
 
 struct QuickActivityResultResponse: Decodable, Equatable {
 
-    let taskId: String?
+    let taskIds: [String]
 
     enum CodingKeys: String, CodingKey {
-        case taskId = "task_id"
+        case taskIds = "task_ids"
     }
 
-    init(taskId: String?) {
-        self.taskId = taskId
+    init(taskIds: [String]) {
+        self.taskIds = taskIds
     }
 
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        self.taskId = try container.decodeIfPresent(String.self, forKey: .taskId)
+        self.taskIds = (try container.decodeIfPresent([String].self, forKey: .taskIds)) ?? []
     }
 }
 
@@ -36,8 +38,10 @@ enum QuickActivityNextStep: Equatable {
     case launchLinkedTask(taskId: String)
 
     init(response: QuickActivityResultResponse) {
-        if let taskId = response.taskId, !taskId.isEmpty {
-            self = .launchLinkedTask(taskId: taskId)
+        // Today the backend returns at most one linked task. Pick the first
+        // non-empty id; ignore the rest until the UX is defined for N > 1.
+        if let firstId = response.taskIds.first(where: { !$0.isEmpty }) {
+            self = .launchLinkedTask(taskId: firstId)
         } else {
             self = .continueFlow
         }

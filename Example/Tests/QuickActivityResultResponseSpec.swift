@@ -22,43 +22,54 @@ class QuickActivityResultResponseSpec: QuickSpec {
 
         describe("QuickActivityResultResponse decoding") {
 
-            it("parses task_id when present") {
-                let json = "{\"task_id\": \"abc-123\"}".data(using: .utf8)!
+            it("parses task_ids when present") {
+                let json = "{\"task_ids\": [\"abc-123\", \"abc-456\"]}".data(using: .utf8)!
                 let decoded = try? JSONDecoder().decode(QuickActivityResultResponse.self, from: json)
                 expect(decoded).toNot(beNil())
-                expect(decoded?.taskId) == "abc-123"
+                expect(decoded?.taskIds) == ["abc-123", "abc-456"]
             }
 
-            it("returns nil taskId when task_id key is absent") {
+            it("returns an empty array when task_ids key is absent") {
                 let json = "{}".data(using: .utf8)!
                 let decoded = try? JSONDecoder().decode(QuickActivityResultResponse.self, from: json)
                 expect(decoded).toNot(beNil())
-                expect(decoded?.taskId).to(beNil())
+                expect(decoded?.taskIds) == []
             }
 
-            it("returns nil taskId when task_id is JSON null") {
-                let json = "{\"task_id\": null}".data(using: .utf8)!
+            it("returns an empty array when task_ids is JSON null") {
+                let json = "{\"task_ids\": null}".data(using: .utf8)!
                 let decoded = try? JSONDecoder().decode(QuickActivityResultResponse.self, from: json)
                 expect(decoded).toNot(beNil())
-                expect(decoded?.taskId).to(beNil())
+                expect(decoded?.taskIds) == []
+            }
+
+            it("returns an empty array when task_ids is an empty list") {
+                let json = "{\"task_ids\": []}".data(using: .utf8)!
+                let decoded = try? JSONDecoder().decode(QuickActivityResultResponse.self, from: json)
+                expect(decoded?.taskIds) == []
             }
 
             it("ignores unrelated extra fields") {
-                let json = "{\"task_id\": \"abc\", \"extra\": 42, \"meta\": {\"x\": true}}".data(using: .utf8)!
+                let json = "{\"task_ids\": [\"abc\"], \"extra\": 42, \"meta\": {\"x\": true}}".data(using: .utf8)!
                 let decoded = try? JSONDecoder().decode(QuickActivityResultResponse.self, from: json)
-                expect(decoded?.taskId) == "abc"
+                expect(decoded?.taskIds) == ["abc"]
             }
         }
 
         describe("QuickActivityNextStep") {
 
-            it("is .continueFlow when response has no task id") {
-                let response = QuickActivityResultResponse(taskId: nil)
+            it("is .continueFlow when response carries no task ids") {
+                let response = QuickActivityResultResponse(taskIds: [])
                 expect(QuickActivityNextStep(response: response)) == .continueFlow
             }
 
-            it("is .launchLinkedTask with the parsed id when task_id is present") {
-                let response = QuickActivityResultResponse(taskId: "task-99")
+            it("is .continueFlow when every id is empty") {
+                let response = QuickActivityResultResponse(taskIds: ["", ""])
+                expect(QuickActivityNextStep(response: response)) == .continueFlow
+            }
+
+            it("is .launchLinkedTask with the first non-empty id when present") {
+                let response = QuickActivityResultResponse(taskIds: ["", "task-99", "task-100"])
                 expect(QuickActivityNextStep(response: response)) == .launchLinkedTask(taskId: "task-99")
             }
         }

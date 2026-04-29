@@ -79,7 +79,7 @@ class HotFlashFlowSpec: QuickSpec {
 
             it("records the inputs passed to sendQuickActivityResult and returns the stubbed response") {
                 let repo = MockRepository()
-                repo.quickActivityResultResponse = .just(QuickActivityResultResponse(taskId: "linked-1"))
+                repo.quickActivityResultResponse = .just(QuickActivityResultResponse(taskIds: ["linked-1"]))
 
                 let option = QuickActivityOption(id: "opt-1", type: "quick_activity_option", label: "label", image: nil, selectedImage: nil)
                 var captured: QuickActivityResultResponse?
@@ -94,7 +94,7 @@ class HotFlashFlowSpec: QuickSpec {
                 expect(repo.sendQuickActivityResultCallCount) == 1
                 expect(repo.lastQuickActivityTaskId) == "qa-1"
                 expect(repo.lastQuickActivityOption?.id) == "opt-1"
-                expect(captured?.taskId) == "linked-1"
+                expect(captured?.taskIds) == ["linked-1"]
             }
         }
     }
