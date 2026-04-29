@@ -154,18 +154,40 @@ struct SchedulableDecodable: Decodable {
     
     init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
-        
-        if let activity = try? container.decode(Activity.self),
+
+        // FUAM-3037 DEBUG: detailed decoding diagnostics. Remove once feed
+        // schedulable parsing is back to green on staging.
+        let activityResult = Result(catching: { try container.decode(Activity.self) })
+        let quickActivityResult = Result(catching: { try container.decode(QuickActivity.self) })
+        let surveyResult = Result(catching: { try container.decode(Survey.self) })
+
+        if case .success(let activity) = activityResult,
            Schedulable.activity(activity: activity).schedulableType == activity.type,
            activity.taskType != nil {
             self.wrappedValue = .activity(activity: activity)
-        } else if let quickActivity = try? container.decode(QuickActivity.self),
-            Schedulable.quickActivity(quickActivity: quickActivity).schedulableType == quickActivity.type {
+        } else if case .success(let quickActivity) = quickActivityResult,
+                  Schedulable.quickActivity(quickActivity: quickActivity).schedulableType == quickActivity.type {
             self.wrappedValue = .quickActivity(quickActivity: quickActivity)
-        } else if let survey = try? container.decode(Survey.self),
-            Schedulable.survey(survey: survey).schedulableType == survey.type {
+        } else if case .success(let survey) = surveyResult,
+                  Schedulable.survey(survey: survey).schedulableType == survey.type {
             self.wrappedValue = .survey(survey: survey)
         } else {
+            print("[SchedulableDecodable] FAILED to match any schedulable.")
+            if case .failure(let error) = activityResult {
+                print("  - Activity decode error: \(error)")
+            } else if case .success(let activity) = activityResult {
+                print("  - Activity decoded but type mismatch (got '\(activity.type)') or taskType nil (\(String(describing: activity.taskType)))")
+            }
+            if case .failure(let error) = quickActivityResult {
+                print("  - QuickActivity decode error: \(error)")
+            } else if case .success(let qa) = quickActivityResult {
+                print("  - QuickActivity decoded but type mismatch (got '\(qa.type)', expected 'quick_activity')")
+            }
+            if case .failure(let error) = surveyResult {
+                print("  - Survey decode error: \(error)")
+            } else if case .success(let survey) = surveyResult {
+                print("  - Survey decoded but type mismatch (got '\(survey.type)')")
+            }
             self.wrappedValue = nil
         }
     }

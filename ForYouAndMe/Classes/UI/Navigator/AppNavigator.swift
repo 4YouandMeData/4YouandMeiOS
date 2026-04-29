@@ -485,7 +485,43 @@ class AppNavigator {
             assertionFailure("Unhandle Type")
         }
     }
-    
+
+    // MARK: Linked Task Prompt (FUAM-3037)
+
+    public func presentLinkedTaskPrompt(taskId: String,
+                                        presenter: UIViewController,
+                                        onDismiss: (() -> Void)? = nil) {
+        let data = LinkedTaskPromptViewController.Data(
+            title: StringsProvider.string(forKey: .quickActivityLinkedTaskPromptTitle),
+            body: StringsProvider.string(forKey: .quickActivityLinkedTaskPromptBody),
+            confirmButtonText: StringsProvider.string(forKey: .quickActivityLinkedTaskPromptConfirmButton),
+            cancelButtonText: StringsProvider.string(forKey: .quickActivityLinkedTaskPromptCancelButton)
+        )
+        let promptVC = LinkedTaskPromptViewController(
+            data: data,
+            onConfirm: { [weak self] in
+                self?.launchLinkedTask(taskId: taskId, presenter: presenter, onDismiss: onDismiss)
+            },
+            onCancel: { onDismiss?() }
+        )
+        presenter.present(promptVC, animated: true)
+    }
+
+    private func launchLinkedTask(taskId: String,
+                                  presenter: UIViewController,
+                                  onDismiss: (() -> Void)?) {
+        self.repository.getTask(taskId: taskId)
+            .addProgress()
+            .subscribe(onSuccess: { [weak self] feed in
+                guard let self = self else { return }
+                self.startFeedFlow(withFeed: feed, presenter: presenter)
+            }, onFailure: { [weak self] error in
+                guard let self = self else { return }
+                self.handleError(error: error, presenter: presenter)
+                onDismiss?()
+            }).disposed(by: self.disposeBag)
+    }
+
     public func startTaskSection(withTask task: Feed,
                                  activity: Activity,
                                  taskOptions: TaskOptions?, presenter: UIViewController) {

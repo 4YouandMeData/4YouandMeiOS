@@ -286,6 +286,12 @@ enum StringKey: String, CaseIterable, CodingKey {
     case diaryNoteHotFlashEmojiCloseButton = "DIARY_NOTE_HOT_FLASH_STEP_EMOJI_CLOSE_BUTTON"
     case diaryNoteHotFlashDetailCloseButton = "DIARY_NOTE_HOT_FLASH_DETAIL_CLOSE_BUTTON"
 
+    // Quick Activity linked task prompt (FUAM-3037)
+    case quickActivityLinkedTaskPromptTitle = "QUICK_ACTIVITY_LINKED_TASK_PROMPT_TITLE"
+    case quickActivityLinkedTaskPromptBody = "QUICK_ACTIVITY_LINKED_TASK_PROMPT_BODY"
+    case quickActivityLinkedTaskPromptConfirmButton = "QUICK_ACTIVITY_LINKED_TASK_PROMPT_CONFIRM_BUTTON"
+    case quickActivityLinkedTaskPromptCancelButton = "QUICK_ACTIVITY_LINKED_TASK_PROMPT_CANCEL_BUTTON"
+
     // Video Diary
     case videoDiaryRecorderInfoFilter = "VIDEO_DIARY_RECORDER_INFO_FILTER"
     case videoDiaryRecorderTitle = "VIDEO_DIARY_RECORDER_TITLE"

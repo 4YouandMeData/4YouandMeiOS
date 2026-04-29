@@ -69,6 +69,33 @@ class HotFlashFlowSpec: QuickSpec {
                 expect(repo.updateDiaryNoteTextCallCount) == 1
                 expect(repo.lastUpdatedDiaryNote?.id) == "abc"
             }
+
+            it("records the taskId passed to getTask") {
+                let repo = MockRepository()
+                _ = repo.getTask(taskId: "task-xyz")
+                expect(repo.getTaskCallCount) == 1
+                expect(repo.lastRequestedTaskId) == "task-xyz"
+            }
+
+            it("records the inputs passed to sendQuickActivityResult and returns the stubbed response") {
+                let repo = MockRepository()
+                repo.quickActivityResultResponse = .just(QuickActivityResultResponse(taskId: "linked-1"))
+
+                let option = QuickActivityOption(id: "opt-1", type: "quick_activity_option", label: "label", image: nil, selectedImage: nil)
+                var captured: QuickActivityResultResponse?
+                let disposeBag = DisposeBag()
+
+                repo.sendQuickActivityResult(quickActivityTaskId: "qa-1",
+                                             quickActivityOption: option,
+                                             optionalFlag: false)
+                    .subscribe(onSuccess: { captured = $0 })
+                    .disposed(by: disposeBag)
+
+                expect(repo.sendQuickActivityResultCallCount) == 1
+                expect(repo.lastQuickActivityTaskId) == "qa-1"
+                expect(repo.lastQuickActivityOption?.id) == "opt-1"
+                expect(captured?.taskId) == "linked-1"
+            }
         }
     }
 }

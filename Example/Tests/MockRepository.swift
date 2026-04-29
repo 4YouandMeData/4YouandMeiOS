@@ -21,9 +21,18 @@ final class MockRepository: Repository {
     private(set) var updateDiaryNoteTextCallCount = 0
     private(set) var lastUpdatedDiaryNote: DiaryNoteItem?
 
+    private(set) var sendQuickActivityResultCallCount = 0
+    private(set) var lastQuickActivityTaskId: String?
+    private(set) var lastQuickActivityOption: QuickActivityOption?
+
+    private(set) var getTaskCallCount = 0
+    private(set) var lastRequestedTaskId: String?
+
     // MARK: - Stubbed responses
     var hotFlashResult: Single<DiaryNoteItem> = .never()
     var updateDiaryNoteTextResult: Single<()> = .just(())
+    var quickActivityResultResponse: Single<QuickActivityResultResponse> = .just(QuickActivityResultResponse(taskId: nil))
+    var getTaskResult: Single<Feed> = .never()
 
     // MARK: - Hot Flash methods (under test)
     func sendDiaryNoteHotFlash(data: DiaryNoteHotFlashData) -> Single<DiaryNoteItem> {
@@ -75,8 +84,17 @@ final class MockRepository: Repository {
 
     func getFeeds(fetchMode: FetchMode) -> Single<[Feed]> { .never() }
     func getTasks(fetchMode: FetchMode) -> Single<[Feed]> { .never() }
-    func getTask(taskId: String) -> Single<Feed> { .never() }
-    func sendQuickActivityResult(quickActivityTaskId: String, quickActivityOption: QuickActivityOption, optionalFlag: Bool) -> Single<()> { .never() }
+    func getTask(taskId: String) -> Single<Feed> {
+        getTaskCallCount += 1
+        lastRequestedTaskId = taskId
+        return getTaskResult
+    }
+    func sendQuickActivityResult(quickActivityTaskId: String, quickActivityOption: QuickActivityOption, optionalFlag: Bool) -> Single<QuickActivityResultResponse> {
+        sendQuickActivityResultCallCount += 1
+        lastQuickActivityTaskId = quickActivityTaskId
+        lastQuickActivityOption = quickActivityOption
+        return quickActivityResultResponse
+    }
     func sendSkipTask(taskId: String) -> Single<()> { .never() }
     func sendTaskResult(taskId: String, taskResult: TaskNetworkResult) -> Single<()> { .never() }
     func delayTask(taskId: String) -> Single<()> { .never() }

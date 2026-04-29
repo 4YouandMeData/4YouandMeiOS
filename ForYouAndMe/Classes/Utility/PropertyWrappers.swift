@@ -130,21 +130,24 @@ struct FailableCodable<Wrapped: Codable>: Codable, OptionalCodingWrapper {
 struct ExcludeInvalid<Element: Decodable>: Decodable {
 
     var wrappedValue: [Element]
-    
+
     init(from decoder: Decoder) throws {
 
         var container = try decoder.unkeyedContainer()
-        
+
         var elements = [Element]()
         if let count = container.count {
             elements.reserveCapacity(count)
         }
 
         while !container.isAtEnd {
-            if let element = try container.decode(FailableDecodable<Element>.self).wrappedValue {
+            // FUAM-3037 DEBUG: capture the actual decode error per element
+            // instead of relying on FailableDecodable's silent try?.
+            do {
+                let element = try container.decode(Element.self)
                 elements.append(element)
-            } else {
-                print("Invalid item exclude from array")
+            } catch {
+                print("[ExcludeInvalid<\(Element.self)>] Item excluded — decode error: \(error)")
             }
         }
 

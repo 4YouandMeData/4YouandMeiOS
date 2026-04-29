@@ -351,6 +351,20 @@ extension RepositoryImpl: Repository {
     func getFeeds(fetchMode: FetchMode) -> Single<[Feed]> {
         return self.api.send(request: ApiRequest(serviceRequest: .getFeeds(paginationInfo: fetchMode.paginationInfo)))
             .map { (items: ExcludeInvalid<Feed>) in items.wrappedValue }
+            .do(onSuccess: { feeds in
+                // FUAM-3037 DEBUG: track what comes back from /v1/feeds
+                var qa = 0, activities = 0, surveys = 0, notifiables = 0, other = 0
+                for feed in feeds {
+                    switch feed.schedulable {
+                    case .quickActivity: qa += 1
+                    case .activity: activities += 1
+                    case .survey: surveys += 1
+                    case .none: notifiables += feed.notifiable != nil ? 1 : 0
+                    }
+                    if feed.schedulable == nil && feed.notifiable == nil { other += 1 }
+                }
+                print("[getFeeds] total=\(feeds.count) quickActivities=\(qa) activities=\(activities) surveys=\(surveys) notifiables=\(notifiables) other=\(other)")
+            })
             .handleError()
     }
     
@@ -365,11 +379,21 @@ extension RepositoryImpl: Repository {
             .handleError()
     }
     
-    func sendQuickActivityResult(quickActivityTaskId: String, quickActivityOption: QuickActivityOption, optionalFlag: Bool) -> Single<()> {
+    func sendQuickActivityResult(quickActivityTaskId: String, quickActivityOption: QuickActivityOption, optionalFlag: Bool) -> Single<QuickActivityResultResponse> {
         let resultData = quickActivityOption.networkResultData.data
-        return self.api.send(request: ApiRequest(serviceRequest: .sendTaskResultData(taskId: quickActivityTaskId,
-                                                                                     resultData: resultData,
-                                                                                     optionalFlag: optionalFlag)))
+        let request = ApiRequest(serviceRequest: .sendTaskResultData(taskId: quickActivityTaskId,
+                                                                     resultData: resultData,
+                                                                     optionalFlag: optionalFlag))
+        let typedRequest: Single<QuickActivityResultResponse> = self.api.send(request: request)
+        return typedRequest
+            .catch { error in
+                // Tolerate empty / non-JSON success bodies (legacy backend behavior pre-FUAM-3037).
+                // Only swallow decoding failures; surface real network/server errors.
+                if case ApiError.cannotParseData = error {
+                    return .just(QuickActivityResultResponse(taskId: nil))
+                }
+                return .error(error)
+            }
             .handleError()
     }
 
