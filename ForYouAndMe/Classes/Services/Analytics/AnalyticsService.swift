@@ -201,6 +201,7 @@ extension DefaultService {
         case .sendDiaryNoteAudio: return "Send Diary Note Audio"
         case .sendDiaryNoteVideo: return "Send Diary Note Video"
         case .sendDiaryNoteEaten: return "Send Diary Note Eaten"
+        case .sendDiaryNoteMenstrual: return "Send Diary Note Menstrual"
         case .sendDiaryNoteDoses: return "Send Diary Note Doses"
         case .sendCombinedDiaryNote: return "Send We Have Noticed Diary Note"
         case .sendDiaryNoteHotFlash: return "Send Diary Note Hot Flash"

@@ -459,6 +459,12 @@ extension RepositoryImpl: Repository {
                 .sendDiaryNoteEaten(data: data)))
             .handleError()
     }
+
+    func sendDiaryNoteMenstrual(data: DiaryNoteMenstrualData) -> Single<DiaryNoteItem> {
+        return self.api.send(request: ApiRequest(serviceRequest:
+                .sendDiaryNoteMenstrual(data: data)))
+            .handleError()
+    }
     
     func sendDiaryNoteDoses(doseType: String,
                             date: Date,

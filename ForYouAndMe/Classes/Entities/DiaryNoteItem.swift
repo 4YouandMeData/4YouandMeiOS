@@ -43,6 +43,13 @@ public enum DiaryNotePayload {
         ateQuantity: String?,
         ateFat: Bool?
     )
+    case menstrual(
+        date: Date,
+        flowAmount: String,
+        periodRelated: String,
+        bleeding: String,
+        note: String?
+    )
 }
 
 public struct AnyCodable: Codable {
@@ -110,6 +117,7 @@ enum DiaryNoteItemType: String, Codable {
     case doses = "insulin_diary"
     case weNoticed = "we_have_noticed"
     case hotFlash = "hot_flash_diary"
+    case menstrualPeriod = "menstrual_period_diary"
 }
 
 enum DiaryNoteableType: String, Codable {
@@ -147,6 +155,46 @@ struct DiaryNoteHotFlashData {
     let date: Date
     let fromChart: Bool
     let diaryNote: DiaryNoteItem?
+}
+
+enum MenstrualBleeding: String {
+    case yes
+    case no
+    case other
+}
+
+enum MenstrualFlowAmount: String, CaseIterable {
+    case spotting
+    case light
+    case moderate
+    case heavy
+    case veryHeavy = "very_heavy"
+}
+
+enum MenstrualPeriodRelated: String, CaseIterable {
+    case yes
+    case no
+    case notSure = "not_sure"
+    case letMeExplain = "let_me_explain"
+
+    var bleeding: MenstrualBleeding {
+        switch self {
+        case .yes: return .yes
+        case .no: return .no
+        case .notSure, .letMeExplain: return .other
+        }
+    }
+}
+
+struct DiaryNoteMenstrualData {
+    let date: Date
+    let flowAmount: MenstrualFlowAmount
+    let periodRelated: MenstrualPeriodRelated
+    let note: String?
+    let fromChart: Bool
+    let diaryNote: DiaryNoteItem?
+
+    var bleeding: MenstrualBleeding { periodRelated.bleeding }
 }
 
 struct DiaryNoteWeHaveNoticedItem: Codable {
@@ -360,6 +408,21 @@ feedback_tags
                     return self.diaryNoteId
                 }()
                 payload = .hotFlash(date: date)
+
+            case .menstrualPeriod:
+                let dateStr = raw["date"]?.value as? String
+                let date: Date = dateStr.flatMap { isoFmt.date(from: $0) } ?? self.diaryNoteId
+                let flow = raw["flow_amount"]?.value as? String ?? ""
+                let related = raw["period_related"]?.value as? String ?? ""
+                let bleeding = raw["bleeding"]?.value as? String ?? ""
+                let note = raw["note"]?.value as? String
+                payload = .menstrual(
+                    date: date,
+                    flowAmount: flow,
+                    periodRelated: related,
+                    bleeding: bleeding,
+                    note: note
+                )
 
             default:
                 break

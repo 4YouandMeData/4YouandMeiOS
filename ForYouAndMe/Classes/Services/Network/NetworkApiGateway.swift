@@ -405,7 +405,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             return "v1/diary_notes/\(diaryNoteId)"
         case .sendDiaryNoteText:
             return "v1/diary_notes"
-        case .sendDiaryNoteEaten, .sendDiaryNoteDoses, .sendCombinedDiaryNote, .sendDiaryNoteHotFlash:
+        case .sendDiaryNoteEaten, .sendDiaryNoteDoses, .sendCombinedDiaryNote, .sendDiaryNoteHotFlash, .sendDiaryNoteMenstrual:
             return "v1/diary_notes"
         case .deleteDiaryNote(let diaryNoteId):
             return "v1/diary_notes/\(diaryNoteId)"
@@ -466,6 +466,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
                 .sendDiaryNoteAudio,
                 .sendDiaryNoteVideo,
                 .sendDiaryNoteEaten,
+                .sendDiaryNoteMenstrual,
                 .sendDiaryNoteDoses,
                 .sendCombinedDiaryNote,
                 .sendDiaryNoteHotFlash:
@@ -580,6 +581,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         case .sendDiaryNoteAudio: return "{}".utf8Encoded
         case .sendDiaryNoteVideo: return "{}".utf8Encoded
         case .sendDiaryNoteEaten: return "{}".utf8Encoded
+        case .sendDiaryNoteMenstrual: return "{}".utf8Encoded
         case .sendDiaryNoteDoses: return "{}".utf8Encoded
         case .sendCombinedDiaryNote: return "{}".utf8Encoded
         case .sendDiaryNoteHotFlash: return "{}".utf8Encoded
@@ -886,7 +888,32 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             }
             
             return .requestParameters(parameters: ["diary_note": dataParams], encoding: JSONEncoding.default)
-            
+
+        case .sendDiaryNoteMenstrual(let data):
+            var payloadData: [String: Any] = [:]
+            payloadData["date"] = data.date.string(withFormat: dateTimeFormat)
+            payloadData["flow_amount"] = data.flowAmount.rawValue
+            payloadData["period_related"] = data.periodRelated.rawValue
+            payloadData["bleeding"] = data.bleeding.rawValue
+            if let note = data.note, !note.isEmpty {
+                payloadData["note"] = note
+            }
+
+            var dataParams: [String: Any] = [:]
+            dataParams["data"] = payloadData
+            dataParams["datetime_ref"] = data.date.string(withFormat: dateTimeFormat)
+            dataParams["diary_type"] = DiaryNoteItemType.menstrualPeriod.rawValue
+
+            if data.fromChart, let note = data.diaryNote {
+                dataParams["diary_noteable_type"] = note.diaryNoteable?.type
+                dataParams["diary_noteable_id"]   = note.diaryNoteable?.id
+                if let interval = note.interval, !interval.isEmpty {
+                    dataParams["interval"] = interval
+                }
+            }
+
+            return .requestParameters(parameters: ["diary_note": dataParams], encoding: JSONEncoding.default)
+
         case .sendDiaryNoteDoses(let doseType, let date, let amount, let fromChart, let diaryNote):
             var data: [String: Any] = [:]
             data["dose_type"] = doseType
@@ -1086,6 +1113,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
                 .sendDiaryNoteAudio,
                 .sendDiaryNoteVideo,
                 .sendDiaryNoteEaten,
+                .sendDiaryNoteMenstrual,
                 .sendDiaryNoteDoses,
                 .sendCombinedDiaryNote,
                 .sendDiaryNoteHotFlash,

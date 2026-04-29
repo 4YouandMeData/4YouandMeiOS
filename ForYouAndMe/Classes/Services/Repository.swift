@@ -98,6 +98,7 @@ protocol Repository: AnyObject {
     func sendDiaryNoteAudio(diaryNoteRef: DiaryNoteItem, file: DiaryNoteFile, fromChart: Bool) -> Single<DiaryNoteItem>
     func sendDiaryNoteVideo(diaryNoteRef: DiaryNoteItem, file: DiaryNoteFile) -> Single<DiaryNoteItem>
     func sendDiaryNoteEaten(data: DiaryNoteEatenData) -> Single<DiaryNoteItem>
+    func sendDiaryNoteMenstrual(data: DiaryNoteMenstrualData) -> Single<DiaryNoteItem>
     func sendDiaryNoteDoses(doseType: String,
                             date: Date,
                             amount: Double,
