@@ -216,7 +216,7 @@ extension ReflectionSectionCoordinator: ReflectionViewCoordinator {
         case .text:
             self.sendResult(taskResult: taskResultData, presenter: presenter)
             return
-        case .eaten, .doses, .weNoticed, .hotFlash:
+        case .eaten, .doses, .weNoticed, .hotFlash, .menstrualPeriod:
             return
         }
     }

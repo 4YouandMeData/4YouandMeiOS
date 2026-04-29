@@ -404,6 +404,10 @@ extension DiaryNotesViewController: UITableViewDataSource {
                 })
 
                 return cell
+            case .menstrualPeriod:
+                // FUAM-2933 will introduce the dedicated menstrual cycle cell.
+                assertionFailure("Menstrual cycle cell not yet implemented (FUAM-2933)")
+                return UITableViewCell()
             }
         } else {
             // Forward-compat: backend may return diary_type values this app version
@@ -445,7 +449,7 @@ extension DiaryNotesViewController: UITableViewDelegate {
             switch diaryNote.diaryNoteType {
             case .text:
                 return 80 // Variable Height for text note
-            case .audio, .video, .eaten, .doses, .weNoticed, .hotFlash:
+            case .audio, .video, .eaten, .doses, .weNoticed, .hotFlash, .menstrualPeriod:
                 return 100 // Fixed Height for audio and video note
             case .none:
                 return UITableView.automaticDimension
