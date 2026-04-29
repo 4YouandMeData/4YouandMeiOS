@@ -786,6 +786,15 @@ class AppNavigator {
         self.hotFlashCoordinator = coordinator
     }
 
+    public func openMenstrualPeriodDetail(presenter: UIViewController,
+                                          entries: [DiaryNoteItem]) {
+        let detailVC = MenstrualPeriodDetailViewController(entries: entries)
+        detailVC.delegate = self
+        let nav = UINavigationController(rootViewController: detailVC)
+        nav.modalPresentationStyle = .fullScreen
+        presenter.present(nav, animated: true, completion: nil)
+    }
+
     public func openMenstrualEntryViewController(presenter: UIViewController,
                                                  variant: FlowVariant = .standalone,
                                                  alert: Alert? = nil) {
@@ -1492,6 +1501,23 @@ extension MainTab {
             self = .studyInfo
         default:
             return nil
+        }
+    }
+}
+
+// MARK: - MenstrualPeriodDetailViewControllerDelegate (FUAM-2934)
+
+extension AppNavigator: MenstrualPeriodDetailViewControllerDelegate {
+    public func menstrualPeriodDetailViewControllerDidRequestAdd(_ vc: MenstrualPeriodDetailViewController) {
+        // Re-open the wizard on top of the detail navigation stack.
+        self.openMenstrualEntryViewController(presenter: vc, variant: .standalone, alert: nil)
+    }
+
+    public func menstrualPeriodDetailViewControllerDidClose(_ vc: MenstrualPeriodDetailViewController) {
+        if let presenter = vc.presentingViewController {
+            presenter.dismiss(animated: true, completion: nil)
+        } else {
+            vc.navigationController?.popViewController(animated: true)
         }
     }
 }

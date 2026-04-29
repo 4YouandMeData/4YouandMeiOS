@@ -290,6 +290,14 @@ enum StringKey: String, CaseIterable, CodingKey {
     case menstrualSuccessMessage = "MENSTRUAL_SUCCESS_MESSAGE"
     case menstrualSuccessDoneButton = "MENSTRUAL_SUCCESS_DONE_BUTTON"
     case diaryNoteMenstrualCell = "DIARY_NOTE_MENSTRUAL_CELL"
+    case menstrualDetailTitle = "MENSTRUAL_DETAIL_TITLE"
+    case menstrualDetailMessage = "MENSTRUAL_DETAIL_MESSAGE"
+    case menstrualDetailAddButton = "MENSTRUAL_DETAIL_ADD_BUTTON"
+    case menstrualDetailCloseButton = "MENSTRUAL_DETAIL_CLOSE_BUTTON"
+    case menstrualDetailDeleteTitle = "MENSTRUAL_DETAIL_DELETE_TITLE"
+    case menstrualDetailDeleteMessage = "MENSTRUAL_DETAIL_DELETE_MESSAGE"
+    case menstrualDetailDeleteConfirm = "MENSTRUAL_DETAIL_DELETE_CONFIRM"
+    case menstrualDetailDeleteCancel = "MENSTRUAL_DETAIL_DELETE_CANCEL"
 
     // My Doses
     case diaryNoteFabDoses = "FAB_MY_DOSES"
