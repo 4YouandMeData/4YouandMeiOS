@@ -11,6 +11,7 @@ import PureLayout
 protocol MenstrualWhenViewControllerDelegate: AnyObject {
     func menstrualWhenViewController(_ vc: MenstrualWhenViewController,
                                      didSelect when: MenstrualWhenViewController.WhenChoice)
+    func menstrualWhenViewControllerDidCancel(_ vc: MenstrualWhenViewController)
 }
 
 final class MenstrualWhenViewController: UIViewController {
@@ -25,6 +26,16 @@ final class MenstrualWhenViewController: UIViewController {
 
     private let variant: FlowVariant
     private let navigator: AppNavigator
+
+    private lazy var closeButton: UIBarButtonItem = {
+        let item = UIBarButtonItem(
+            image: ImagePalette.templateImage(withName: .closeButton),
+            style: .plain,
+            target: self,
+            action: #selector(closeButtonPressed))
+        item.tintColor = ColorPalette.color(withType: .primaryText)
+        return item
+    }()
 
     private lazy var todayButton: OptionButton = makeOptionButton(
         title: StringsProvider.string(forKey: .menstrualStepWhenTodayButton),
@@ -62,7 +73,9 @@ final class MenstrualWhenViewController: UIViewController {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         navigationController?.navigationBar.apply(style: NavigationBarStyleCategory.secondary(hidden: false).style)
-        addCustomBackButton()
+        // First step is the modal root: a back button has nowhere to pop to.
+        // Show a close button that dismisses the wizard, mirroring EatenTypeViewController.
+        navigationItem.leftBarButtonItem = closeButton
     }
 
     private func setupLayout() {
@@ -135,5 +148,9 @@ final class MenstrualWhenViewController: UIViewController {
     @objc private func nextTapped() {
         guard let choice = selectedChoice else { return }
         delegate?.menstrualWhenViewController(self, didSelect: choice)
+    }
+
+    @objc private func closeButtonPressed() {
+        delegate?.menstrualWhenViewControllerDidCancel(self)
     }
 }

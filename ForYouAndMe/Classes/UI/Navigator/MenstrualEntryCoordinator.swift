@@ -142,6 +142,10 @@ extension MenstrualEntryCoordinator: MenstrualWhenViewControllerDelegate {
                                                     animated: true)
         }
     }
+
+    func menstrualWhenViewControllerDidCancel(_ vc: MenstrualWhenViewController) {
+        completionCallback()
+    }
 }
 
 // MARK: - MenstrualDateViewControllerDelegate
