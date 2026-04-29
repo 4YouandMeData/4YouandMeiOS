@@ -23,6 +23,7 @@
 		D49139CBE6C91709303100F3 /* MockRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5495EE5799F86F4CFC72D79C /* MockRepository.swift */; };
 		EE11B2B115B9C8FF3BDADD8A /* HotFlashFlowSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D15300B2C812D2C4F61D24D /* HotFlashFlowSpec.swift */; };
 		3037A0010001F37A0001AAAA /* QuickActivityResultResponseSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3037A0020001F37A0001AAAA /* QuickActivityResultResponseSpec.swift */; };
+		3037A0030001F37A0001AAAA /* LinkedTaskPromptViewControllerSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3037A0040001F37A0001AAAA /* LinkedTaskPromptViewControllerSpec.swift */; };
 		FD1803EF27DB53B8C9F42A0A /* Pods_ForYouAndMe_Example.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4A19BBC48234E68C2CA29E93 /* Pods_ForYouAndMe_Example.framework */; };
 /* End PBXBuildFile section */
 
@@ -71,6 +72,7 @@
 		740172F89A311B9AA2C13AD2 /* Pods-ForYouAndMe_Example.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ForYouAndMe_Example.debug.xcconfig"; path = "Target Support Files/Pods-ForYouAndMe_Example/Pods-ForYouAndMe_Example.debug.xcconfig"; sourceTree = "<group>"; };
 		7D15300B2C812D2C4F61D24D /* HotFlashFlowSpec.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = HotFlashFlowSpec.swift; sourceTree = "<group>"; };
 		3037A0020001F37A0001AAAA /* QuickActivityResultResponseSpec.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = QuickActivityResultResponseSpec.swift; sourceTree = "<group>"; };
+		3037A0040001F37A0001AAAA /* LinkedTaskPromptViewControllerSpec.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LinkedTaskPromptViewControllerSpec.swift; sourceTree = "<group>"; };
 		894A3B012566DC82005460AC /* OnboardingSectionProviderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingSectionProviderTests.swift; sourceTree = "<group>"; };
 		894BEE6B24AE52DD00254DC6 /* ForYouAndMe_Example.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ForYouAndMe_Example.entitlements; sourceTree = "<group>"; };
 		8974CF8A267B848D003A6E61 /* HealthKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = HealthKit.framework; path = System/Library/Frameworks/HealthKit.framework; sourceTree = SDKROOT; };
@@ -181,6 +183,7 @@
 				6FB4FE2622BA26C4D740851D /* DiaryNoteItemHotFlashSpec.swift */,
 				FDEC3D590EF34F2247235AC7 /* DiaryNoteItemHotFlashCellSpec.swift */,
 				3037A0020001F37A0001AAAA /* QuickActivityResultResponseSpec.swift */,
+				3037A0040001F37A0001AAAA /* LinkedTaskPromptViewControllerSpec.swift */,
 			);
 			path = Tests;
 			sourceTree = "<group>";
@@ -465,6 +468,7 @@
 				6736A9A6F90FD76C5D860804 /* DiaryNoteItemHotFlashSpec.swift in Sources */,
 				825E98DCF4144B27CAD832B9 /* DiaryNoteItemHotFlashCellSpec.swift in Sources */,
 				3037A0010001F37A0001AAAA /* QuickActivityResultResponseSpec.swift in Sources */,
+				3037A0030001F37A0001AAAA /* LinkedTaskPromptViewControllerSpec.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
