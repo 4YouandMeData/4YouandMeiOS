@@ -169,6 +169,16 @@ enum MenstrualFlowAmount: String, CaseIterable {
     case moderate
     case heavy
     case veryHeavy = "very_heavy"
+
+    var iconName: TemplateImageName {
+        switch self {
+        case .spotting:  return .menstrualFlowSpotting
+        case .light:     return .menstrualFlowLight
+        case .moderate:  return .menstrualFlowModerate
+        case .heavy:     return .menstrualFlowHeavy
+        case .veryHeavy: return .menstrualFlowVeryHeavy
+        }
+    }
 }
 
 enum MenstrualPeriodRelated: String, CaseIterable {

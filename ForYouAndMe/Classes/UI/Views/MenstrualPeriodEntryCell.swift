@@ -21,8 +21,7 @@ final class MenstrualPeriodEntryCell: UITableViewCell {
     private let iconView: UIImageView = {
         let iv = UIImageView()
         iv.contentMode = .scaleAspectFit
-        // FUAM-2945: replace placeholder once dedicated menstrual icon ships
-        iv.image = ImagePalette.templateImage(withName: .clockIcon)
+        iv.image = ImagePalette.templateImage(withName: .menstrualCycleIcon)
         iv.tintColor = ColorPalette.color(withType: .primary)
         iv.autoSetDimensions(to: CGSize(width: 24, height: 24))
         return iv

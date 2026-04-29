@@ -112,8 +112,13 @@ final class MenstrualFlowViewController: UIViewController {
 
     private func makeOptionButton(title: String, flow: MenstrualFlowAmount) -> OptionButton {
         let btn = OptionButton()
-        btn.layoutStyle = .textLeft(padding: 16)
+        btn.layoutStyle = .horizontal(spacing: 16, horizontalAlignment: .leading)
+        let img = ImagePalette.templateImage(withName: flow.iconName)?
+            .withRenderingMode(.alwaysTemplate)
+        btn.setImage(img, for: .normal)
+        btn.tintColor = ColorPalette.color(withType: .primary)
         btn.setTitle(title, for: .normal)
+        btn.titleLabel?.font = FontPalette.fontStyleData(forStyle: .paragraph).font
         btn.addTarget(self, action: #selector(optionTapped(_:)), for: .touchUpInside)
         return btn
     }
