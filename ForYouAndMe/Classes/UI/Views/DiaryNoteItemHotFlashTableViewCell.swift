@@ -138,7 +138,19 @@ class DiaryNoteItemHotFlashTableViewCell: UITableViewCell {
     /// Configure cell with DiaryNoteItem of type .hotFlash
     public func display(data: DiaryNoteItem, onTap: @escaping () -> Void) {
         self.buttonPressedCallback = onTap
-        self.updateNoteTitle(StringsProvider.string(forKey: .diaryNoteHotFlashCell))
+
+        let date: Date
+        if case .hotFlash(let payloadDate)? = data.payload {
+            date = payloadDate
+        } else {
+            date = data.diaryNoteId
+        }
+        let fmt = DateFormatter()
+        fmt.dateStyle = .short
+        fmt.timeStyle = .short
+        let template = StringsProvider.string(forKey: .diaryNoteHotFlashCell)
+        self.updateNoteTitle(String(format: template, fmt.string(from: date)))
+
         noteImageView.image = ImagePalette.image(withName: .surveyIcon)
         if let emoji = data.feedbackTags?.last {
             emojiLabel.text = emoji.tag
