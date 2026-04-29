@@ -5,7 +5,7 @@ import Nimble
 @testable import ForYouAndMe
 
 class TableOfContentsSpec: QuickSpec {
-    override func spec() {
+    override class func spec() {
         context("these will pass") {
 
             it("can do maths") {

@@ -4,6 +4,15 @@ PODS:
     - Alamofire (~> 5.8)
   - BalzoGPUImage2 (0.2.1)
   - CountryPickerView (3.1.3)
+  - CwlCatchException (2.2.1):
+    - CwlCatchExceptionSupport (~> 2.2.1)
+  - CwlCatchExceptionSupport (2.2.1)
+  - CwlMachBadInstructionHandler (2.2.2)
+  - CwlPosixPreconditionTesting (2.2.2)
+  - CwlPreconditionTesting (2.2.2):
+    - CwlCatchException (~> 2.2.1)
+    - CwlMachBadInstructionHandler (~> 2.2.2)
+    - CwlPosixPreconditionTesting (~> 2.2.2)
   - Firebase/Analytics (11.7.0):
     - Firebase/Core
   - Firebase/Core (11.7.0):
@@ -169,7 +178,8 @@ PODS:
     - nanopb/encode (= 3.30910.0)
   - nanopb/decode (3.30910.0)
   - nanopb/encode (3.30910.0)
-  - Nimble (7.3.4)
+  - Nimble (13.8.0):
+    - CwlPreconditionTesting (~> 2.2.0)
   - OAuthSwift (2.1.2)
   - PhoneNumberKit (3.3.1):
     - PhoneNumberKit/PhoneNumberKitCore (= 3.3.1)
@@ -181,7 +191,7 @@ PODS:
   - PromisesSwift (2.4.0):
     - PromisesObjC (= 2.4.0)
   - PureLayout (3.1.9)
-  - Quick (1.2.0)
+  - Quick (7.6.2)
   - ReachabilitySwift (5.2.4)
   - ReactiveSwift (6.6.1)
   - RxCocoa (6.9.0):
@@ -211,8 +221,8 @@ PODS:
 
 DEPENDENCIES:
   - ForYouAndMe (from `../`)
-  - Nimble (~> 7.0)
-  - Quick (~> 1.2.0)
+  - Nimble (~> 13.0)
+  - Quick (~> 7.0)
   - SwiftLint
 
 SPEC REPOS:
@@ -221,6 +231,11 @@ SPEC REPOS:
     - AlamofireImage
     - BalzoGPUImage2
     - CountryPickerView
+    - CwlCatchException
+    - CwlCatchExceptionSupport
+    - CwlMachBadInstructionHandler
+    - CwlPosixPreconditionTesting
+    - CwlPreconditionTesting
     - Firebase
     - FirebaseAnalytics
     - FirebaseCore
@@ -268,6 +283,11 @@ SPEC CHECKSUMS:
   AlamofireImage: 843953fa97bee5f561cf05d83abd759e590b068d
   BalzoGPUImage2: ee8b3dd936584af13657c4c2ad49fa02ef35f98b
   CountryPickerView: 383c09949f7455de9892db7ce3400b10da090150
+  CwlCatchException: 7acc161b299a6de7f0a46a6ed741eae2c8b4d75a
+  CwlCatchExceptionSupport: 54ccab8d8c78907b57f99717fb19d4cc3bce02dc
+  CwlMachBadInstructionHandler: dae4fdd124d45c9910ac240287cc7b898f4502a1
+  CwlPosixPreconditionTesting: ecd095aa2129e740b44301c34571e8d85906fb88
+  CwlPreconditionTesting: 67a0047dd4de4382b93442c0e3f25207f984f35a
   Firebase: a64bf6a8546e6eab54f1c715cd6151f39d2329f4
   FirebaseAnalytics: bc9e565af9044ba8d6c6e4157e4edca8e5fdf7ec
   FirebaseCore: 3227e35f4197a924206fbcdc0349325baf4f5de4
@@ -287,13 +307,13 @@ SPEC CHECKSUMS:
   JJFloatingActionButton: 6a20da0a36bc2c5e2097e754b5e765aa9e4b6365
   Moya: 138f0573e53411fb3dc17016add0b748dfbd78ee
   nanopb: fad817b59e0457d11a5dfbde799381cd727c1275
-  Nimble: 051e3d8912d40138fa5591c78594f95fb172af37
+  Nimble: 84982ec98b5dfc0ffe9ae2ed4c0b2fc57807c2d5
   OAuthSwift: b95e3a54955d762aecf996e5088f69092623819b
   PhoneNumberKit: ff153d5e299f6da566cb73c6aa71e354933b2932
   PromisesObjC: f5707f49cb48b9636751c5b2e7d227e43fba9f47
   PromisesSwift: 9d77319bbe72ebf6d872900551f7eeba9bce2851
   PureLayout: 5fb5e5429519627d60d079ccb1eaa7265ce7cf88
-  Quick: 58d203b1c5e27fff7229c4c1ae445ad7069a7a08
+  Quick: b8bec97cd4b9f21da0472d45580f763b801fc353
   ReachabilitySwift: 32793e867593cfc1177f5d16491e3a197d2fccda
   ReactiveSwift: fab34244ad908808dc822bae352a058c8837c4ca
   RxCocoa: ac16414696ae706516be3e1ab00fcce5bdc9be8a
@@ -307,6 +327,6 @@ SPEC CHECKSUMS:
   TPKeyboardAvoiding: d55b3ea7b362540af8fcf36aa3ed2e87bf210cc6
   UberSignature: 99e67e9cf182f393b882a743801bc18690cca347
 
-PODFILE CHECKSUM: 90d67592f1a198a93f0b2de5724d9cae4ab9fa9c
+PODFILE CHECKSUM: 606d98d7e957f21549f857985262ff4cfd62f8f3
 
 COCOAPODS: 1.16.2
