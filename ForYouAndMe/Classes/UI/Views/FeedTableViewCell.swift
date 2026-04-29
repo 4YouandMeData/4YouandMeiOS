@@ -233,12 +233,12 @@ class FeedTableViewCell: UITableViewCell {
     
     public func display(data: Alert, wehaveNoticed: Bool, buttonPressedCallback: @escaping NotificationCallback) {
         self.buttonPressedCallback = buttonPressedCallback
-        
+
         self.updateGradientView(startColor: data.startColor, endColor: data.endColor, singleColor: data.cardColor)
         self.setFeedImage(imageUrl: data.image)
         self.setFeedTitle(text: data.title)
         self.setFeedDescription(text: data.body)
-        
+
         if nil != data.urlString || wehaveNoticed {
             let buttonText = data.buttonText ?? StringsProvider.string(forKey: .alertButtonDefault)
             self.buttonView.isHidden = false
@@ -247,6 +247,43 @@ class FeedTableViewCell: UITableViewCell {
             assert(data.buttonText == nil, "Existing button text for notifiable without urlString")
             self.buttonView.removeFromSuperview()
         }
+    }
+
+    /// Display variant for pinned alerts (e.g. menstrual tracking feed card).
+    /// Renders title/body, primary action ("Yes"), and an optional secondary action ("No")
+    /// when `data.secondaryButtonText` is present.
+    public func display(pinnedAlert data: Alert,
+                        onPrimary: @escaping NotificationCallback,
+                        onSecondary: NotificationCallback?) {
+        self.buttonPressedCallback = onPrimary
+        self.skipButtonPressedCallback = onSecondary
+
+        self.updateGradientView(startColor: data.startColor, endColor: data.endColor, singleColor: data.cardColor)
+        self.setFeedImage(imageUrl: data.image)
+        self.setFeedTitle(text: data.title)
+        self.setFeedDescription(text: data.body)
+
+        let primaryText = data.buttonText ?? StringsProvider.string(forKey: .alertButtonDefault)
+        self.buttonView.isHidden = false
+        self.buttonView.setButtonText(primaryText)
+
+        if let secondaryText = data.secondaryButtonText, onSecondary != nil {
+            if self.horizontalStackView.arrangedSubviews.contains(self.skipButtonView) == false {
+                self.horizontalStackView.addArrangedSubview(self.skipButtonView)
+            }
+            self.skipButtonView.isHidden = false
+            self.skipButtonView.setButtonText(secondaryText)
+            self.horizontalStackView.distribution = .fillEqually
+        } else {
+            if self.horizontalStackView.arrangedSubviews.contains(self.skipButtonView) {
+                self.horizontalStackView.removeArrangedSubview(self.skipButtonView)
+                self.skipButtonView.removeFromSuperview()
+            }
+            self.skipButtonView.isHidden = true
+            self.horizontalStackView.distribution = .fill
+        }
+
+        self.horizontalStackView.isHidden = false
     }
     
     public func display(data: Reward, buttonPressedCallback: @escaping NotificationCallback) {

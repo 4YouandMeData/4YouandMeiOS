@@ -10,7 +10,7 @@ import Foundation
 struct Alert {
     let id: String
     let type: String
-    
+
     @NilIfEmptyString
     var title: String?
     @NilIfEmptyString
@@ -20,14 +20,18 @@ struct Alert {
     @NilIfEmptyString
     var buttonText: String?
     @NilIfEmptyString
+    var secondaryButtonText: String?
+    @NilIfEmptyString
     var urlString: String?
-    
+
     @ColorDecodable
     var startColor: UIColor?
     @ColorDecodable
     var endColor: UIColor?
     @ColorDecodable
     var cardColor: UIColor?
+
+    var pinned: Bool?
 }
 
 extension Alert: JSONAPIMappable {
@@ -38,9 +42,15 @@ extension Alert: JSONAPIMappable {
         case body = "description"
         case image
         case buttonText = "task_action_button_label"
+        case secondaryButtonText = "secondary_button_label"
         case urlString = "link_url"
         case startColor = "start_color"
         case endColor = "end_color"
         case cardColor = "card_color"
+        case pinned
     }
+}
+
+extension Alert {
+    var isPinned: Bool { pinned ?? false }
 }
