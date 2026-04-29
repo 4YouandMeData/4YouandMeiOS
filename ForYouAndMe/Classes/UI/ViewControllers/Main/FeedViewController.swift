@@ -206,7 +206,13 @@ extension FeedViewController: FeedListManagerDelegate {
     }
     
     func getDataProviderSingle(repository: Repository, fetchMode: FetchMode) -> Single<FeedContent> {
-        return self.repository.getFeeds(fetchMode: fetchMode).map { FeedContent(withFeeds: $0) }
+        return self.repository.getFeeds(fetchMode: fetchMode).map { feeds in
+            #if DEBUG
+            return FeedContent(withFeeds: FeedAlertStub.inject(into: feeds))
+            #else
+            return FeedContent(withFeeds: feeds)
+            #endif
+        }
     }
     
     func onListRefresh() {
