@@ -245,8 +245,9 @@ class DiaryNotesViewController: BaseViewController {
                         .addProgress()
                         .subscribe(onSuccess: { [weak self] diaryNote in
                             guard let self = self else { return }
-                            self.diaryNoteItems = diaryNote
-                            self.sections = createDiaryNoteSections(from: diaryNote)
+                            let supported = diaryNote.filter { $0.diaryNoteType != nil }
+                            self.diaryNoteItems = supported
+                            self.sections = createDiaryNoteSections(from: supported)
                             self.updateUI()
 
                         }, onFailure: { [weak self] error in
@@ -405,7 +406,9 @@ extension DiaryNotesViewController: UITableViewDataSource {
                 return cell
             }
         } else {
-            assertionFailure("Unhandled Diary Note Item type: \(diaryNote.self)")
+            // Forward-compat: backend may return diary_type values this app version
+            // does not recognize (FailableEnumStringDecodable returns nil). Skip
+            // rendering rather than crashing — items are also pre-filtered in loadItems.
             return UITableViewCell()
         }
     }
