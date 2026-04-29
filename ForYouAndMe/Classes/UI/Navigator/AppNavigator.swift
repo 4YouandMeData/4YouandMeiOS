@@ -786,6 +786,34 @@ class AppNavigator {
         self.hotFlashCoordinator = coordinator
     }
 
+    public func openMenstrualEntryViewController(presenter: UIViewController,
+                                                 variant: FlowVariant = .standalone,
+                                                 alert: Alert? = nil) {
+        // Prevent overlapping flows
+        assert(self.currentActivityCoordinator == nil, "Another activity is already in progress")
+
+        let completion: NotificationCallback = { [weak self, weak presenter] in
+            presenter?.dismiss(animated: true, completion: nil)
+            self?.currentActivityCoordinator = nil
+        }
+
+        let coordinator = MenstrualEntryCoordinator(
+            repository: self.repository,
+            navigator: self,
+            taskIdentifier: "menstrualEntry",
+            variant: variant,
+            completion: completion
+        )
+        coordinator.alert = alert
+
+        let startVC = coordinator.getStartingPage()
+        startVC.modalPresentationStyle = .fullScreen
+
+        presenter.present(startVC, animated: true, completion: nil)
+
+        self.currentActivityCoordinator = coordinator
+    }
+
     public func openMyDosesViewController(presenter: UIViewController) {
         // Prevent overlapping flows
         assert(self.currentActivityCoordinator == nil, "Another activity is already in progress")
