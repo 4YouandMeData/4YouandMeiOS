@@ -17,6 +17,47 @@ enum DiaryNoteMenstrualStub {
     /// Toggle to enable/disable stub injection at runtime without rebuilding.
     static var isEnabled: Bool = true
 
+    /// Synthetic emoji catalog returned to the menstrual emoji picker when the
+    /// backend has not yet delivered `feedback_list.menstrual_cycle`. Mirrors
+    /// the shape that would otherwise come from globalConfig.
+    static func emojiCatalog() -> [EmojiItem] {
+        let items: [(id: String, tag: String, label: String)] = [
+            ("stub_emoji_calm",   "😌", "calm"),
+            ("stub_emoji_happy",  "😊", "happy"),
+            ("stub_emoji_neutral", "😐", "neutral"),
+            ("stub_emoji_pain",   "😣", "in_pain"),
+            ("stub_emoji_tired",  "😴", "tired"),
+            ("stub_emoji_scared", "😱", "scared"),
+            ("stub_emoji_sad",    "😢", "sad"),
+            ("stub_emoji_angry",  "😠", "angry")
+        ]
+        return items.compactMap { decodeEmoji(id: $0.id, tag: $0.tag, label: $0.label) }
+    }
+
+    /// Augment a feedback list with the menstrual emoji catalog when the
+    /// category is empty. Idempotent: a real backend value would always win.
+    static func augmentedFeedbackList(_ existing: [String: [EmojiItem]]) -> [String: [EmojiItem]] {
+        guard isEnabled else { return existing }
+        let key = EmojiTagCategory.menstrualCycle.rawValue
+        if let items = existing[key], !items.isEmpty {
+            return existing
+        }
+        var result = existing
+        result[key] = emojiCatalog()
+        return result
+    }
+
+    private static func decodeEmoji(id: String, tag: String, label: String) -> EmojiItem? {
+        let json: [String: Any] = [
+            "id": id,
+            "type": "feedback_tag",
+            "tag": tag,
+            "label": label
+        ]
+        guard let data = try? JSONSerialization.data(withJSONObject: json) else { return nil }
+        return try? JSONDecoder().decode(EmojiItem.self, from: data)
+    }
+
     /// Build the synthetic menstrual entries used to verify FUAM-2933.
     /// Layout exercises every grouping branch:
     ///  - 3-day yes-run starting 5 days ago (collapses into one Compass Log row)
