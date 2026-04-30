@@ -16,6 +16,10 @@ protocol MenstrualPeriodDetailViewControllerDelegate: AnyObject {
     /// Called when the user requests adding a new bleeding date.
     func menstrualPeriodDetailViewControllerDidRequestAdd(_ vc: MenstrualPeriodDetailViewController)
 
+    /// Called when the user taps a row to inspect a single entry.
+    func menstrualPeriodDetailViewController(_ vc: MenstrualPeriodDetailViewController,
+                                              didSelect entry: DiaryNoteItem)
+
     /// Called when the user closes the screen.
     func menstrualPeriodDetailViewControllerDidClose(_ vc: MenstrualPeriodDetailViewController)
 }
@@ -28,6 +32,11 @@ final class MenstrualPeriodDetailViewController: BaseViewController {
     /// the period (typically consecutive bleeding dates).
     private(set) var entries: [DiaryNoteItem]
 
+    /// Two sections: section 0 is the add row, section 1 is the entries.
+    /// Both scroll together — the add row sits in the table, not the header.
+    private static let addSectionIndex = 0
+    private static let entriesSectionIndex = 1
+
     private lazy var tableView: UITableView = {
         let tableView = UITableView(frame: .zero, style: .plain)
         tableView.backgroundColor = .clear
@@ -38,40 +47,8 @@ final class MenstrualPeriodDetailViewController: BaseViewController {
         tableView.dataSource = self
         tableView.delegate = self
         tableView.registerCellsWithClass(MenstrualPeriodEntryCell.self)
+        tableView.registerCellsWithClass(MenstrualPeriodAddCell.self)
         return tableView
-    }()
-
-    private lazy var addRow: UIView = {
-        let container = UIView()
-
-        let plusImageView = UIImageView()
-        plusImageView.image = ImagePalette.templateImage(withName: .plusIcon)
-        plusImageView.contentMode = .scaleAspectFit
-        plusImageView.tintColor = ColorPalette.color(withType: .primary)
-        plusImageView.autoSetDimensions(to: CGSize(width: 24, height: 24))
-
-        let label = UILabel()
-        label.text = StringsProvider.string(forKey: .menstrualDetailAddButton)
-        label.font = UIFont.systemFont(ofSize: 16, weight: .medium)
-        label.textColor = ColorPalette.color(withType: .primary)
-
-        let row = UIStackView()
-        row.axis = .horizontal
-        row.alignment = .center
-        row.spacing = 12
-        row.addArrangedSubview(plusImageView)
-        row.addArrangedSubview(label)
-
-        container.addSubview(row)
-        row.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets(top: 16,
-                                                            left: Constants.Style.DefaultHorizontalMargins,
-                                                            bottom: 16,
-                                                            right: Constants.Style.DefaultHorizontalMargins))
-
-        let tap = UITapGestureRecognizer(target: self, action: #selector(addTapped))
-        container.addGestureRecognizer(tap)
-        container.isUserInteractionEnabled = true
-        return container
     }()
 
     private lazy var footerView: GenericButtonView = {
@@ -131,12 +108,11 @@ final class MenstrualPeriodDetailViewController: BaseViewController {
         header.isLayoutMarginsRelativeArrangement = true
         header.layoutMargins = UIEdgeInsets(top: 32,
                                             left: Constants.Style.DefaultHorizontalMargins,
-                                            bottom: 0,
+                                            bottom: 24,
                                             right: Constants.Style.DefaultHorizontalMargins)
         header.addArrangedSubview(titleLabel)
         header.addArrangedSubview(titleSeparator)
         header.addArrangedSubview(subtitleLabel)
-        header.addArrangedSubview(addRow)
 
         view.addSubview(header)
         header.autoPinEdgesToSuperviewSafeArea(with: .zero, excludingEdge: .bottom)
@@ -145,7 +121,7 @@ final class MenstrualPeriodDetailViewController: BaseViewController {
         footerView.autoPinEdgesToSuperviewEdges(with: .zero, excludingEdge: .top)
 
         view.addSubview(tableView)
-        tableView.autoPinEdge(.top, to: .bottom, of: header, withOffset: 8)
+        tableView.autoPinEdge(.top, to: .bottom, of: header)
         tableView.autoPinEdge(toSuperviewEdge: .leading)
         tableView.autoPinEdge(toSuperviewEdge: .trailing)
         tableView.autoPinEdge(.bottom, to: .top, of: footerView)
@@ -208,11 +184,21 @@ final class MenstrualPeriodDetailViewController: BaseViewController {
 
 extension MenstrualPeriodDetailViewController: UITableViewDataSource, UITableViewDelegate {
 
+    func numberOfSections(in tableView: UITableView) -> Int { 2 }
+
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        entries.count
+        section == Self.addSectionIndex ? 1 : entries.count
     }
 
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        if indexPath.section == Self.addSectionIndex {
+            guard let cell = tableView.dequeueReusableCellOfType(type: MenstrualPeriodAddCell.self,
+                                                                  forIndexPath: indexPath) else {
+                assertionFailure("MenstrualPeriodAddCell not registered")
+                return UITableViewCell()
+            }
+            return cell
+        }
         guard let cell = tableView.dequeueReusableCellOfType(type: MenstrualPeriodEntryCell.self,
                                                               forIndexPath: indexPath) else {
             assertionFailure("MenstrualPeriodEntryCell not registered")
@@ -222,11 +208,27 @@ extension MenstrualPeriodDetailViewController: UITableViewDataSource, UITableVie
         return cell
     }
 
+    func tableView(_ tableView: UITableView, canEditRowAt indexPath: IndexPath) -> Bool {
+        // Only entry rows are swipe-deletable; the add row is action-only.
+        indexPath.section == Self.entriesSectionIndex
+    }
+
     func tableView(_ tableView: UITableView,
                    commit editingStyle: UITableViewCell.EditingStyle,
                    forRowAt indexPath: IndexPath) {
+        guard indexPath.section == Self.entriesSectionIndex else { return }
         if editingStyle == .delete {
             confirmDelete(at: indexPath)
         }
+    }
+
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        tableView.deselectRow(at: indexPath, animated: true)
+        if indexPath.section == Self.addSectionIndex {
+            addTapped()
+            return
+        }
+        guard indexPath.row < entries.count else { return }
+        delegate?.menstrualPeriodDetailViewController(self, didSelect: entries[indexPath.row])
     }
 }

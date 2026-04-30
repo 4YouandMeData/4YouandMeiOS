@@ -918,6 +918,24 @@ class AppNavigator {
                                                 animated: true)
     }
 
+    public func openMenstrualEntryFormViewController(presenter: UIViewController,
+                                                     menstrualItem: DiaryNoteItem) {
+        let vc = MenstrualEntryFormViewController()
+        vc.configure(with: menstrualItem)
+
+        if let navigationController = presenter.navigationController {
+            navigationController.pushViewController(vc,
+                                                    hidesBottomBarWhenPushed: true,
+                                                    animated: true)
+        } else {
+            // The period detail is presented as a fullScreen modal without
+            // its own nav controller — wrap the form so push semantics apply.
+            let nav = UINavigationController(rootViewController: vc)
+            nav.modalPresentationStyle = .fullScreen
+            presenter.present(nav, animated: true, completion: nil)
+        }
+    }
+
     // MARK: About You
     
     public func showAboutYouPage(presenter: UIViewController) {
@@ -1512,6 +1530,11 @@ extension AppNavigator: MenstrualPeriodDetailViewControllerDelegate {
     public func menstrualPeriodDetailViewControllerDidRequestAdd(_ vc: MenstrualPeriodDetailViewController) {
         // Re-open the wizard on top of the detail navigation stack.
         self.openMenstrualEntryViewController(presenter: vc, variant: .standalone, alert: nil)
+    }
+
+    public func menstrualPeriodDetailViewController(_ vc: MenstrualPeriodDetailViewController,
+                                                     didSelect entry: DiaryNoteItem) {
+        self.openMenstrualEntryFormViewController(presenter: vc, menstrualItem: entry)
     }
 
     public func menstrualPeriodDetailViewControllerDidClose(_ vc: MenstrualPeriodDetailViewController) {
