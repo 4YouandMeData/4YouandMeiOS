@@ -190,6 +190,7 @@ extension DefaultService {
         case .sendDiaryNoteEaten: return "Send Diary Note Eaten"
         case .sendDiaryNoteDoses: return "Send Diary Note Doses"
         case .sendCombinedDiaryNote: return "Send We Have Noticed Diary Note"
+        case .sendDiaryNoteHotFlash: return "Send Diary Note Hot Flash"
         case .deleteDiaryNote: return "Delete Diary Note"
         case .updateDiaryNoteText: return "Update Diary Note Text"
         // Survey

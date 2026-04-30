@@ -14,6 +14,7 @@ enum FabAction {
     case insulin
     case noticed
     case eaten
+    case hotFlash
 }
 
 class WebViewViewController: BaseViewController {

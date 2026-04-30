@@ -335,11 +335,11 @@ class WeHaveNoticedEntryFormViewController: UIViewController {
             return .iHaveEaten
         case .weNoticed:
             return .weHaveNoticed
-        case .text, .audio, .video:
+        case .text, .audio, .video, .hotFlash:
             return nil
         }
     }
-    
+
     @objc private func emojiButtonTapped() {
         if let category = self.categoryForEmoji(diaryNote: self.diaryNote) {
             

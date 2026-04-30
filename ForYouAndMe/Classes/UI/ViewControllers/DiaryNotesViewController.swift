@@ -88,6 +88,7 @@ class DiaryNotesViewController: BaseViewController {
         tableView.registerCellsWithClass(DiaryNoteItemEatenTableViewCell.self)
         tableView.registerCellsWithClass(DiaryNoteItemDosesTableViewCell.self)
         tableView.registerCellsWithClass(DiaryNoteItemWeNoticedTableViewCell.self)
+        tableView.registerCellsWithClass(DiaryNoteItemHotFlashTableViewCell.self)
         tableView.contentInsetAdjustmentBehavior = .never
         tableView.backgroundView = self.diaryNoteEmptyView
         tableView.backgroundColor = .clear
@@ -244,8 +245,9 @@ class DiaryNotesViewController: BaseViewController {
                         .addProgress()
                         .subscribe(onSuccess: { [weak self] diaryNote in
                             guard let self = self else { return }
-                            self.diaryNoteItems = diaryNote
-                            self.sections = createDiaryNoteSections(from: diaryNote)
+                            let supported = diaryNote.filter { $0.diaryNoteType != nil }
+                            self.diaryNoteItems = supported
+                            self.sections = createDiaryNoteSections(from: supported)
                             self.updateUI()
 
                         }, onFailure: { [weak self] error in
@@ -388,11 +390,25 @@ extension DiaryNotesViewController: UITableViewDataSource {
                     guard let self = self else { return }
                     self.navigator.openNoticedFormViewController(presenter: self, noticedItem: diaryNote)
                 })
-                
+
+                return cell
+            case .hotFlash:
+                guard let cell = tableView.dequeueReusableCellOfType(type: DiaryNoteItemHotFlashTableViewCell.self,
+                                                                     forIndexPath: indexPath) else {
+                    assertionFailure("DiaryNoteItemHotFlashTableViewCell not registered")
+                    return UITableViewCell()
+                }
+                cell.display(data: diaryNote, onTap: { [weak self] in
+                    guard let self = self else { return }
+                    self.navigator.openHotFlashFormViewController(presenter: self, hotFlashItem: diaryNote)
+                })
+
                 return cell
             }
         } else {
-            assertionFailure("Unhandled Diary Note Item type: \(diaryNote.self)")
+            // Forward-compat: backend may return diary_type values this app version
+            // does not recognize (FailableEnumStringDecodable returns nil). Skip
+            // rendering rather than crashing — items are also pre-filtered in loadItems.
             return UITableViewCell()
         }
     }
@@ -429,7 +445,7 @@ extension DiaryNotesViewController: UITableViewDelegate {
             switch diaryNote.diaryNoteType {
             case .text:
                 return 80 // Variable Height for text note
-            case .audio, .video, .eaten, .doses, .weNoticed:
+            case .audio, .video, .eaten, .doses, .weNoticed, .hotFlash:
                 return 100 // Fixed Height for audio and video note
             case .none:
                 return UITableView.automaticDimension

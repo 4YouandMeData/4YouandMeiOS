@@ -407,7 +407,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             return "v1/diary_notes/\(diaryNoteId)"
         case .sendDiaryNoteText:
             return "v1/diary_notes"
-        case .sendDiaryNoteEaten, .sendDiaryNoteDoses, .sendCombinedDiaryNote:
+        case .sendDiaryNoteEaten, .sendDiaryNoteDoses, .sendCombinedDiaryNote, .sendDiaryNoteHotFlash:
             return "v1/diary_notes"
         case .deleteDiaryNote(let diaryNoteId):
             return "v1/diary_notes/\(diaryNoteId)"
@@ -469,7 +469,8 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
                 .sendDiaryNoteVideo,
                 .sendDiaryNoteEaten,
                 .sendDiaryNoteDoses,
-                .sendCombinedDiaryNote:
+                .sendCombinedDiaryNote,
+                .sendDiaryNoteHotFlash:
             return .post
         case .verifyEmail,
                 .resendConfirmationEmail,
@@ -583,6 +584,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         case .sendDiaryNoteEaten: return "{}".utf8Encoded
         case .sendDiaryNoteDoses: return "{}".utf8Encoded
         case .sendCombinedDiaryNote: return "{}".utf8Encoded
+        case .sendDiaryNoteHotFlash: return "{}".utf8Encoded
         case .getDiaryNoteText: return "{}".utf8Encoded
         case .getDiaryNoteAudio: return "{}".utf8Encoded
         case .deleteDiaryNote: return "{}".utf8Encoded
@@ -908,6 +910,23 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             }
             
             return .requestParameters(parameters: ["diary_note": dataParams], encoding: JSONEncoding.default)
+
+        case .sendDiaryNoteHotFlash(let data):
+            var dataParams: [String: Any] = [
+                "datetime_ref": data.date.string(withFormat: dateTimeFormat),
+                "diary_type": DiaryNoteItemType.hotFlash.rawValue
+            ]
+
+            if data.fromChart, let note = data.diaryNote {
+                dataParams["diary_noteable_type"] = note.diaryNoteable?.type
+                dataParams["diary_noteable_id"]   = note.diaryNoteable?.id
+                if let interval = note.interval, !interval.isEmpty {
+                    dataParams["interval"] = interval
+                }
+            }
+
+            return .requestParameters(parameters: ["diary_note": dataParams], encoding: JSONEncoding.default)
+
         case .sendCombinedDiaryNote(let diaryNote):
             
             var data: [String: Any] = [
@@ -1071,6 +1090,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
                 .sendDiaryNoteEaten,
                 .sendDiaryNoteDoses,
                 .sendCombinedDiaryNote,
+                .sendDiaryNoteHotFlash,
                 .deleteDiaryNote,
                 .getInfoMessages,
                 .updateDiaryNoteText:

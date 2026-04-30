@@ -1,0 +1,232 @@
+//
+//  HotFlashDateTimeViewController.swift
+//  ForYouAndMe
+//
+//  Created by Giuseppe Lapenta on 23/04/26.
+//
+
+import UIKit
+import PureLayout
+
+protocol HotFlashDateTimeViewControllerDelegate: AnyObject {
+    func hotFlashDateTimeViewController(_ vc: HotFlashDateTimeViewController, didSelect date: Date)
+    func hotFlashDateTimeViewControllerDidCancel(_ vc: HotFlashDateTimeViewController)
+}
+
+class HotFlashDateTimeViewController: UIViewController {
+
+    var alert: Alert?
+
+    private let storage: CacheService
+    private let navigator: AppNavigator
+    private let variant: FlowVariant
+
+    weak var delegate: HotFlashDateTimeViewControllerDelegate?
+
+    private let scrollStackView = ScrollStackView(
+        axis: .vertical,
+        horizontalInset: Constants.Style.DefaultHorizontalMargins
+    )
+
+    private let subtitleLabel: UILabel = {
+        let lbl = UILabel()
+        lbl.numberOfLines = 0
+        return lbl
+    }()
+
+    private let sectionHeader: UILabel = {
+        let lbl = UILabel()
+        lbl.font = FontPalette.fontStyleData(forStyle: .paragraph).font
+        lbl.textColor = ColorPalette.color(withType: .primary)
+        return lbl
+    }()
+
+    private let dateRow: UIControl = {
+        let ctrl = UIControl()
+        ctrl.backgroundColor = .clear
+        ctrl.tintColor = ColorPalette.color(withType: .primary)
+        return ctrl
+    }()
+    private let dateValueLabel: UILabel = {
+        let lbl = UILabel()
+        lbl.font = .preferredFont(forTextStyle: .body)
+        lbl.textColor = ColorPalette.color(withType: .primaryText)
+        return lbl
+    }()
+    private let dateIcon: UIImageView = {
+        let img = ImagePalette.templateImage(withName: .clockIcon)
+        let iv = UIImageView(image: img)
+        iv.tintColor = ColorPalette.color(withType: .primary)
+        return iv
+    }()
+    private let underline: UIView = {
+        let view = UIView()
+        view.backgroundColor = ColorPalette.color(withType: .primary)
+        return view
+    }()
+
+    private let datePicker: UIDatePicker = {
+        let dp = UIDatePicker()
+        dp.datePickerMode = .dateAndTime
+        dp.preferredDatePickerStyle = .inline
+        dp.tintColor = ColorPalette.color(withType: .primary)
+        dp.maximumDate = Date()
+        return dp
+    }()
+
+    private lazy var footerView: GenericButtonView = {
+        let buttonView = GenericButtonView(withTextStyleCategory: .secondaryBackground(shadow: false))
+        buttonView.setButtonText(StringsProvider.string(forKey: .diaryNoteHotFlashConfirmButton))
+        buttonView.setButtonEnabled(enabled: false)
+        buttonView.addTarget(target: self, action: #selector(self.nextTapped))
+        return buttonView
+    }()
+
+    private var chosenDate: Date? {
+        didSet {
+            footerView.setButtonEnabled(enabled: chosenDate != nil)
+            if let date = chosenDate {
+                let fmt = DateFormatter()
+                fmt.dateStyle = .short
+                fmt.timeStyle = .short
+                dateValueLabel.text = fmt.string(from: date)
+            }
+        }
+    }
+
+    private lazy var messages: [MessageInfo] = {
+        let location: MessageInfoParameter = .pageHotFlash
+        let messages = self.storage.infoMessages?.messages(withLocation: location)
+        return messages ?? []
+    }()
+
+    init(variant: FlowVariant) {
+        self.navigator = Services.shared.navigator
+        self.storage = Services.shared.storageServices
+        self.variant = variant
+        super.init(nibName: nil, bundle: nil)
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        view.backgroundColor = ColorPalette.color(withType: .secondary)
+        setupLayout()
+        setupActions()
+    }
+
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        self.navigationController?.navigationBar.apply(style: NavigationBarStyleCategory.secondary(hidden: false).style)
+        self.addCustomBackButton()
+    }
+
+    private func setupLayout() {
+        let infoItem = UIBarButtonItem(
+            image: ImagePalette.templateImage(withName: .infoMessage),
+            style: .plain,
+            target: self,
+            action: #selector(infoButtonPressed)
+        )
+        infoItem.tintColor = ColorPalette.color(withType: .primary)
+        self.navigationItem.rightBarButtonItem = (self.messages.count < 1) ? nil : infoItem
+
+        view.addSubview(scrollStackView)
+        scrollStackView.autoPinEdgesToSuperviewSafeArea(with: .zero, excludingEdge: .bottom)
+
+        let paragraphStyle = NSMutableParagraphStyle()
+        paragraphStyle.alignment = .center
+
+        let titleKey = StringsProvider.string(forKey: .diaryNoteHotFlashStepTwoTitle)
+        let boldAttrsTitle: [NSAttributedString.Key: Any] = [
+            .font: UIFont.boldSystemFont(ofSize: FontPalette.fontStyleData(forStyle: .header2).font.pointSize),
+            .foregroundColor: ColorPalette.color(withType: .primaryText),
+            .paragraphStyle: paragraphStyle
+        ]
+        let titleAttr = NSAttributedString(string: titleKey, attributes: boldAttrsTitle)
+        scrollStackView.stackView.addLabel(attributedString: titleAttr, numberOfLines: 0)
+
+        scrollStackView.stackView.addBlankSpace(space: 36)
+
+        if let alert = alert?.body {
+            scrollStackView.stackView.addLabel(
+                withText: alert,
+                fontStyle: .paragraph,
+                color: ColorPalette.color(withType: .primaryText)
+            )
+            scrollStackView.stackView.addBlankSpace(space: 40)
+        }
+
+        let messageText = StringsProvider.string(forKey: .diaryNoteHotFlashStepTwoMessage)
+        let messageAttrs: [NSAttributedString.Key: Any] = [
+            .font: UIFont.systemFont(ofSize: 17),
+            .foregroundColor: ColorPalette.color(withType: .primaryText),
+            .paragraphStyle: paragraphStyle
+        ]
+        subtitleLabel.attributedText = NSAttributedString(string: messageText, attributes: messageAttrs)
+        scrollStackView.stackView.addArrangedSubview(subtitleLabel)
+
+        scrollStackView.stackView.addBlankSpace(space: 70)
+
+        sectionHeader.text = StringsProvider.string(forKey: .diaryNoteHotFlashStepTwoTime)
+        scrollStackView.stackView.addArrangedSubview(sectionHeader)
+        scrollStackView.stackView.addBlankSpace(space: 8)
+
+        scrollStackView.stackView.addArrangedSubview(dateRow)
+        dateRow.autoSetDimension(.height, toSize: 44)
+        dateRow.addSubview(dateValueLabel)
+        dateRow.addSubview(dateIcon)
+        dateRow.addSubview(underline)
+
+        if let note = variant.chartDiaryNote {
+            chosenDate = note.diaryNoteId
+        }
+
+        dateValueLabel.autoAlignAxis(toSuperviewAxis: .horizontal)
+        dateValueLabel.autoPinEdge(.leading, to: .leading, of: dateRow)
+
+        dateIcon.autoAlignAxis(.horizontal, toSameAxisOf: dateValueLabel)
+        dateIcon.autoPinEdge(.trailing, to: .trailing, of: dateRow)
+        dateIcon.autoSetDimensions(to: CGSize(width: 15, height: 15))
+
+        underline.autoPinEdge(.bottom, to: .bottom, of: dateRow)
+        underline.autoPinEdgesToSuperviewEdges(with: .zero, excludingEdge: .top)
+        underline.autoSetDimension(.height, toSize: 1)
+
+        scrollStackView.stackView.addArrangedSubview(datePicker)
+        datePicker.isHidden = true
+
+        self.view.addSubview(self.footerView)
+        footerView.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets.zero, excludingEdge: .top)
+        scrollStackView.scrollView.autoPinEdge(.bottom, to: .top, of: footerView)
+    }
+
+    private func setupActions() {
+        dateRow.addTarget(self, action: #selector(rowTapped), for: .touchUpInside)
+        datePicker.addTarget(self, action: #selector(pickerChanged(_:)), for: .valueChanged)
+    }
+
+    @objc private func rowTapped() {
+        datePicker.isHidden.toggle()
+        if !datePicker.isHidden {
+            pickerChanged(datePicker)
+        }
+    }
+
+    @objc private func pickerChanged(_ dp: UIDatePicker) {
+        chosenDate = dp.date
+    }
+
+    @objc private func nextTapped() {
+        guard let date = chosenDate else { return }
+        delegate?.hotFlashDateTimeViewController(self, didSelect: date)
+    }
+
+    @objc private func infoButtonPressed() {
+        let location: MessageInfoParameter = .pageHotFlash
+        self.navigator.openMessagePage(withLocation: location, presenter: self)
+    }
+}
