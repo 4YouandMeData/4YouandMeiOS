@@ -3,7 +3,7 @@
 //  ForYouAndMe_Tests
 //
 //  FUAM-2935: verifies the DiaryNoteItem decoder routes payloads with
-//  diary_type=menstrual_period_diary into DiaryNotePayload.menstrual.
+//  diary_type=menstrual_period into DiaryNotePayload.menstrual.
 //
 
 import Quick
@@ -12,7 +12,7 @@ import Nimble
 
 class MenstrualPayloadDecodingSpec: QuickSpec {
     override class func spec() {
-        describe("DiaryNoteItem decoding for menstrual_period_diary") {
+        describe("DiaryNoteItem decoding for menstrual_period") {
 
             it("decodes all menstrual fields into DiaryNotePayload.menstrual") {
                 let json = """
@@ -20,7 +20,7 @@ class MenstrualPayloadDecodingSpec: QuickSpec {
                     "id": "1",
                     "type": "diary_note",
                     "datetime_ref": "2026-04-29T08:30:00.000Z",
-                    "diary_type": "menstrual_period_diary",
+                    "diary_type": "menstrual_period",
                     "data": {
                         "date": "2026-04-29T08:30:00.000Z",
                         "flow_amount": "moderate",
@@ -52,7 +52,7 @@ class MenstrualPayloadDecodingSpec: QuickSpec {
                     "id": "2",
                     "type": "diary_note",
                     "datetime_ref": "2026-04-28T12:00:00.000Z",
-                    "diary_type": "menstrual_period_diary",
+                    "diary_type": "menstrual_period",
                     "data": {
                         "date": "2026-04-28T12:00:00.000Z",
                         "flow_amount": "spotting",

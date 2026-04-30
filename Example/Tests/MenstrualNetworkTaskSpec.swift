@@ -18,7 +18,7 @@ class MenstrualNetworkTaskSpec: QuickSpec {
 
             let date = Date(timeIntervalSince1970: 1_750_000_000)
 
-            it("emits diary_type=menstrual_period_diary with all data fields") {
+            it("emits diary_type=menstrual_period with all data fields") {
                 let data = DiaryNoteMenstrualData(
                     date: date,
                     flowAmount: .moderate,
@@ -35,7 +35,7 @@ class MenstrualNetworkTaskSpec: QuickSpec {
                     fail("Missing diary_note wrapper in body: \(String(describing: params))")
                     return
                 }
-                expect(diaryNote["diary_type"] as? String).to(equal("menstrual_period_diary"))
+                expect(diaryNote["diary_type"] as? String).to(equal("menstrual_period"))
                 expect(diaryNote["datetime_ref"] as? String).toNot(beNil())
 
                 guard let payload = diaryNote["data"] as? [String: Any] else {

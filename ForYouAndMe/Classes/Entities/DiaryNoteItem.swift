@@ -117,7 +117,7 @@ enum DiaryNoteItemType: String, Codable {
     case doses = "insulin_diary"
     case weNoticed = "we_have_noticed"
     case hotFlash = "hot_flash_diary"
-    case menstrualPeriod = "menstrual_period_diary"
+    case menstrualPeriod = "menstrual_period"
 }
 
 enum DiaryNoteableType: String, Codable {
