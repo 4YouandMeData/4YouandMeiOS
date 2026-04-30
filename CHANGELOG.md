@@ -1,3 +1,9 @@
+## Release 0.99.0
+
+- Added "Hot Flash" diary entry: new FAB action ("hot_flash" in `FAB_ELEMENTS`), 2-step creation flow (Last Hour / Earlier → date picker), success page with optional emoji feedback, diary feed cell rendering, and detail view (FUAM-2752). Requires 17 new study string keys (`FAB_HOT_FLASH`, `DIARY_NOTE_TAG_HOT_FLASH`, `DIARY_NOTE_HOT_FLASH_CELL`, `HOT_FLASH_STEP_ONE_*`, `HOT_FLASH_STEP_TWO_*`, `HOT_FLASH_NEXT_BUTTON`, `HOT_FLASH_CONFIRM_BUTTON`, `DIARY_NOTE_HOT_FLASH_STEP_EMOJI_*`, `DIARY_NOTE_HOT_FLASH_DETAIL_CLOSE_BUTTON`) and a new diary type `hot_flash_diary` accepted by the backend.
+- Added "Linked Task Prompt" after Quick Activity submit: when the response of `PATCH /v1/tasks/{taskId}/result` includes a non-empty `task_ids` array, the app shows a prompt offering to start the linked task immediately (typically a follow-up Survey). On confirm, fetches the task via `getTask(taskId:)` and dispatches through the standard feed flow (FUAM-3037). Requires 4 new study string keys (`QUICK_ACTIVITY_LINKED_TASK_PROMPT_TITLE/BODY/CONFIRM_BUTTON/CANCEL_BUTTON`).
+- **Breaking (internal-only):** `Repository.sendQuickActivityResult(...)` now returns `Single<QuickActivityResultResponse>` instead of `Single<()>`. The new response struct exposes `taskIds: [String]`. Host apps are not impacted in practice — the only call site is internal to the pod (`FeedListManager`); host apps that did not call `Repository.sendQuickActivityResult` directly require no code changes, only `pod update ForYouAndMe`.
+
 ## Release 0.98.20
 
 - Fixed crash when tapping Next on a quick activity card without picking an option. The Next button is now disabled until an option is selected, matching the intended behaviour (FUAM-2990).

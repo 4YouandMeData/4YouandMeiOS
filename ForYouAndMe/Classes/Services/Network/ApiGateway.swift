@@ -68,6 +68,7 @@ enum DefaultService {
     case sendDiaryNoteEaten(data: DiaryNoteEatenData)
     case sendDiaryNoteDoses(doseType: String, date: Date, amount: Double, fromChart: Bool, diaryNote: DiaryNoteItem?)
     case sendCombinedDiaryNote(diaryNote: DiaryNoteWeHaveNoticedItem)
+    case sendDiaryNoteHotFlash(data: DiaryNoteHotFlashData)
     case deleteDiaryNote(noteId: String)
     case sendSpyroResults(results: [String: Any])
     // User

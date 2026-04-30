@@ -42,6 +42,7 @@ class AppNavigator {
     private var pushPermissionCompleted: Bool = false
     private var currentCoordinator: Coordinator?
     private weak var currentActivityCoordinator: ActivitySectionCoordinator?
+    private var hotFlashCoordinator: HotFlashCoordinator?
     
     private var isTaskInProgress: Bool {
         return nil != self.currentActivityCoordinator
@@ -484,7 +485,43 @@ class AppNavigator {
             assertionFailure("Unhandle Type")
         }
     }
-    
+
+    // MARK: Linked Task Prompt (FUAM-3037)
+
+    public func presentLinkedTaskPrompt(taskId: String,
+                                        presenter: UIViewController,
+                                        onDismiss: (() -> Void)? = nil) {
+        let data = LinkedTaskPromptViewController.Data(
+            title: StringsProvider.string(forKey: .quickActivityLinkedTaskPromptTitle),
+            body: StringsProvider.string(forKey: .quickActivityLinkedTaskPromptBody),
+            confirmButtonText: StringsProvider.string(forKey: .quickActivityLinkedTaskPromptConfirmButton),
+            cancelButtonText: StringsProvider.string(forKey: .quickActivityLinkedTaskPromptCancelButton)
+        )
+        let promptVC = LinkedTaskPromptViewController(
+            data: data,
+            onConfirm: { [weak self] in
+                self?.launchLinkedTask(taskId: taskId, presenter: presenter, onDismiss: onDismiss)
+            },
+            onCancel: { onDismiss?() }
+        )
+        presenter.present(promptVC, animated: true)
+    }
+
+    private func launchLinkedTask(taskId: String,
+                                  presenter: UIViewController,
+                                  onDismiss: (() -> Void)?) {
+        self.repository.getTask(taskId: taskId)
+            .addProgress()
+            .subscribe(onSuccess: { [weak self] feed in
+                guard let self = self else { return }
+                self.startFeedFlow(withFeed: feed, presenter: presenter)
+            }, onFailure: { [weak self] error in
+                guard let self = self else { return }
+                self.handleError(error: error, presenter: presenter)
+                onDismiss?()
+            }).disposed(by: self.disposeBag)
+    }
+
     public func startTaskSection(withTask task: Feed,
                                  activity: Activity,
                                  taskOptions: TaskOptions?, presenter: UIViewController) {
@@ -726,6 +763,29 @@ class AppNavigator {
         self.currentActivityCoordinator = coordinator
     }
     
+    public func openHotFlashViewController(presenter: UIViewController) {
+        assert(self.hotFlashCoordinator == nil, "Another hot flash flow is already in progress")
+
+        let completion: NotificationCallback = { [weak self, weak presenter] in
+            presenter?.dismiss(animated: true, completion: nil)
+            self?.hotFlashCoordinator = nil
+        }
+
+        let coordinator = HotFlashCoordinator(
+            repository: self.repository,
+            navigator: self,
+            variant: .standalone,
+            completion: completion
+        )
+
+        let startVC = coordinator.getStartingPage()
+        startVC.modalPresentationStyle = .fullScreen
+
+        presenter.present(startVC, animated: true, completion: nil)
+
+        self.hotFlashCoordinator = coordinator
+    }
+
     public func openMyDosesViewController(presenter: UIViewController) {
         // Prevent overlapping flows
         assert(self.currentActivityCoordinator == nil, "Another activity is already in progress")
@@ -795,7 +855,7 @@ class AppNavigator {
         // Get the first view controller of the flow
         vc.modalPresentationStyle = .fullScreen
         vc.configure(with: noticedItem)
-        
+
         guard let navigationController = presenter.navigationController else {
             assertionFailure("Missing UINavigationController")
             return
@@ -804,7 +864,22 @@ class AppNavigator {
                                                 hidesBottomBarWhenPushed: true,
                                                 animated: true)
     }
-    
+
+    public func openHotFlashFormViewController(presenter: UIViewController, hotFlashItem: DiaryNoteItem) {
+
+        let vc = HotFlashEntryFormViewController()
+        vc.modalPresentationStyle = .fullScreen
+        vc.configure(with: hotFlashItem)
+
+        guard let navigationController = presenter.navigationController else {
+            assertionFailure("Missing UINavigationController")
+            return
+        }
+        navigationController.pushViewController(vc,
+                                                hidesBottomBarWhenPushed: true,
+                                                animated: true)
+    }
+
     // MARK: About You
     
     public func showAboutYouPage(presenter: UIViewController) {
@@ -944,6 +1019,9 @@ class AppNavigator {
                 self.openNoticedViewController(presenter: presenter)
             case .eaten:
                 self.openEatenViewController(presenter: presenter)
+            case .hotFlash:
+                // TODO(FUAM-2xxx): wire openHotFlashViewController
+                break
             }
         }
         presenter.present(navigationViewController, animated: true)
@@ -1285,8 +1363,28 @@ extension AppNavigator {
         self.currentActivityCoordinator = coordinator
     }
 
+    func openHotFlashViewController(presenter: UIViewController, diaryNote: DiaryNoteItem) {
+
+        let completion: NotificationCallback = { [weak self, weak presenter] in
+            presenter?.dismiss(animated: true, completion: nil)
+            self?.hotFlashCoordinator = nil
+        }
+
+        let coordinator = HotFlashCoordinator(
+            repository: self.repository,
+            navigator: self,
+            variant: .fromChart(diaryNote: diaryNote),
+            completion: completion
+        )
+
+        let startVC = coordinator.getStartingPage()
+        startVC.modalPresentationStyle = .fullScreen
+        presenter.present(startVC, animated: true)
+        self.hotFlashCoordinator = coordinator
+    }
+
     func openMyDosesViewController(presenter: UIViewController, diaryNote: DiaryNoteItem) {
-        
+
         let completion: NotificationCallback = { [weak self, weak presenter] in
             presenter?.dismiss(animated: true, completion: nil)
             self?.currentActivityCoordinator = nil

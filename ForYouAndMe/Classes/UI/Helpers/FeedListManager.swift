@@ -379,10 +379,19 @@ class FeedListManager: NSObject {
                                                 quickActivityOption: option,
                                                 optionalFlag: optionalFlag)
             .addProgress()
-            .subscribe(onSuccess: { [weak self] in
+            .subscribe(onSuccess: { [weak self] response in
                 guard let self = self else { return }
                 self.analytics.track(event: .quickActivity(taskId, option: option.id))
-                self.reloadItems()
+                switch QuickActivityNextStep(response: response) {
+                case .continueFlow:
+                    self.reloadItems()
+                case .launchLinkedTask(let linkedTaskId):
+                    self.navigator.presentLinkedTaskPrompt(
+                        taskId: linkedTaskId,
+                        presenter: delegate.presenter,
+                        onDismiss: { [weak self] in self?.reloadItems() }
+                    )
+                }
             }, onFailure: { [weak self] error in
                 guard let self = self else { return }
                 self.navigator.handleError(error: error, presenter: delegate.presenter)

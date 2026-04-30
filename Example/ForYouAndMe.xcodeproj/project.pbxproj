@@ -15,9 +15,15 @@
 		607FACDD1AFB9204008FA782 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 607FACDC1AFB9204008FA782 /* Images.xcassets */; };
 		607FACE01AFB9204008FA782 /* LaunchScreen.xib in Resources */ = {isa = PBXBuildFile; fileRef = 607FACDE1AFB9204008FA782 /* LaunchScreen.xib */; };
 		607FACEC1AFB9204008FA782 /* Tests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 607FACEB1AFB9204008FA782 /* Tests.swift */; };
+		6736A9A6F90FD76C5D860804 /* DiaryNoteItemHotFlashSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FB4FE2622BA26C4D740851D /* DiaryNoteItemHotFlashSpec.swift */; };
+		825E98DCF4144B27CAD832B9 /* DiaryNoteItemHotFlashCellSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDEC3D590EF34F2247235AC7 /* DiaryNoteItemHotFlashCellSpec.swift */; };
 		894A3B022566DC82005460AC /* OnboardingSectionProviderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 894A3B012566DC82005460AC /* OnboardingSectionProviderTests.swift */; };
 		8974CF8B267B848D003A6E61 /* HealthKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8974CF8A267B848D003A6E61 /* HealthKit.framework */; };
 		89F730582514F09C00DF9503 /* StudyVideo.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = 89F730572514F09C00DF9503 /* StudyVideo.mp4 */; };
+		D49139CBE6C91709303100F3 /* MockRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5495EE5799F86F4CFC72D79C /* MockRepository.swift */; };
+		EE11B2B115B9C8FF3BDADD8A /* HotFlashFlowSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D15300B2C812D2C4F61D24D /* HotFlashFlowSpec.swift */; };
+		3037A0010001F37A0001AAAA /* QuickActivityResultResponseSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3037A0020001F37A0001AAAA /* QuickActivityResultResponseSpec.swift */; };
+		3037A0030001F37A0001AAAA /* LinkedTaskPromptViewControllerSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3037A0040001F37A0001AAAA /* LinkedTaskPromptViewControllerSpec.swift */; };
 		FD1803EF27DB53B8C9F42A0A /* Pods_ForYouAndMe_Example.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4A19BBC48234E68C2CA29E93 /* Pods_ForYouAndMe_Example.framework */; };
 /* End PBXBuildFile section */
 
@@ -53,6 +59,7 @@
 		4A19BBC48234E68C2CA29E93 /* Pods_ForYouAndMe_Example.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_ForYouAndMe_Example.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		4BCA341441201CB8A7DED062 /* ForYouAndMe.podspec */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; name = ForYouAndMe.podspec; path = ../ForYouAndMe.podspec; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.ruby; };
 		52AD2FE27C4AEF1395FB8943 /* README.md */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = net.daringfireball.markdown; name = README.md; path = ../README.md; sourceTree = "<group>"; };
+		5495EE5799F86F4CFC72D79C /* MockRepository.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MockRepository.swift; sourceTree = "<group>"; };
 		607FACD01AFB9204008FA782 /* ForYouAndMe_Example.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ForYouAndMe_Example.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		607FACD41AFB9204008FA782 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		607FACD51AFB9204008FA782 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -61,7 +68,11 @@
 		607FACE51AFB9204008FA782 /* ForYouAndMe_Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ForYouAndMe_Tests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		607FACEA1AFB9204008FA782 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		607FACEB1AFB9204008FA782 /* Tests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests.swift; sourceTree = "<group>"; };
+		6FB4FE2622BA26C4D740851D /* DiaryNoteItemHotFlashSpec.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DiaryNoteItemHotFlashSpec.swift; sourceTree = "<group>"; };
 		740172F89A311B9AA2C13AD2 /* Pods-ForYouAndMe_Example.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ForYouAndMe_Example.debug.xcconfig"; path = "Target Support Files/Pods-ForYouAndMe_Example/Pods-ForYouAndMe_Example.debug.xcconfig"; sourceTree = "<group>"; };
+		7D15300B2C812D2C4F61D24D /* HotFlashFlowSpec.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = HotFlashFlowSpec.swift; sourceTree = "<group>"; };
+		3037A0020001F37A0001AAAA /* QuickActivityResultResponseSpec.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = QuickActivityResultResponseSpec.swift; sourceTree = "<group>"; };
+		3037A0040001F37A0001AAAA /* LinkedTaskPromptViewControllerSpec.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LinkedTaskPromptViewControllerSpec.swift; sourceTree = "<group>"; };
 		894A3B012566DC82005460AC /* OnboardingSectionProviderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingSectionProviderTests.swift; sourceTree = "<group>"; };
 		894BEE6B24AE52DD00254DC6 /* ForYouAndMe_Example.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ForYouAndMe_Example.entitlements; sourceTree = "<group>"; };
 		8974CF8A267B848D003A6E61 /* HealthKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = HealthKit.framework; path = System/Library/Frameworks/HealthKit.framework; sourceTree = SDKROOT; };
@@ -69,6 +80,7 @@
 		9327D4FE4ABC13FA000D3B87 /* Pods_ForYouAndMe_Tests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_ForYouAndMe_Tests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		B8F914A25E66C848A42A6C7F /* Pods-ForYouAndMe_Tests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ForYouAndMe_Tests.release.xcconfig"; path = "Target Support Files/Pods-ForYouAndMe_Tests/Pods-ForYouAndMe_Tests.release.xcconfig"; sourceTree = "<group>"; };
 		C78B83BB55B9736425BB1E11 /* Pods-ForYouAndMe_Example.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ForYouAndMe_Example.release.xcconfig"; path = "Target Support Files/Pods-ForYouAndMe_Example/Pods-ForYouAndMe_Example.release.xcconfig"; sourceTree = "<group>"; };
+		FDEC3D590EF34F2247235AC7 /* DiaryNoteItemHotFlashCellSpec.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DiaryNoteItemHotFlashCellSpec.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -166,6 +178,12 @@
 				607FACEB1AFB9204008FA782 /* Tests.swift */,
 				894A3B012566DC82005460AC /* OnboardingSectionProviderTests.swift */,
 				607FACE91AFB9204008FA782 /* Supporting Files */,
+				5495EE5799F86F4CFC72D79C /* MockRepository.swift */,
+				7D15300B2C812D2C4F61D24D /* HotFlashFlowSpec.swift */,
+				6FB4FE2622BA26C4D740851D /* DiaryNoteItemHotFlashSpec.swift */,
+				FDEC3D590EF34F2247235AC7 /* DiaryNoteItemHotFlashCellSpec.swift */,
+				3037A0020001F37A0001AAAA /* QuickActivityResultResponseSpec.swift */,
+				3037A0040001F37A0001AAAA /* LinkedTaskPromptViewControllerSpec.swift */,
 			);
 			path = Tests;
 			sourceTree = "<group>";
@@ -445,6 +463,12 @@
 			files = (
 				607FACEC1AFB9204008FA782 /* Tests.swift in Sources */,
 				894A3B022566DC82005460AC /* OnboardingSectionProviderTests.swift in Sources */,
+				D49139CBE6C91709303100F3 /* MockRepository.swift in Sources */,
+				EE11B2B115B9C8FF3BDADD8A /* HotFlashFlowSpec.swift in Sources */,
+				6736A9A6F90FD76C5D860804 /* DiaryNoteItemHotFlashSpec.swift in Sources */,
+				825E98DCF4144B27CAD832B9 /* DiaryNoteItemHotFlashCellSpec.swift in Sources */,
+				3037A0010001F37A0001AAAA /* QuickActivityResultResponseSpec.swift in Sources */,
+				3037A0030001F37A0001AAAA /* LinkedTaskPromptViewControllerSpec.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -654,7 +678,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 01B80A7FA4DC249DA6AEE917 /* Pods-ForYouAndMe_Tests.debug.xcconfig */;
 			buildSettings = {
-				DEVELOPMENT_TEAM = G6RAKRKZPR;
+				DEVELOPMENT_TEAM = 25S45RFPZF;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(PLATFORM_DIR)/Developer/Library/Frameworks",
 					"$(inherited)",
@@ -666,108 +690,13 @@
 					"$(inherited)",
 				);
 				INFOPLIST_FILE = Tests/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				OTHER_LDFLAGS = (
-					"$(inherited)",
-					"-ObjC",
-					"-l\"c++\"",
-					"-l\"sqlite3\"",
-					"-l\"z\"",
-					"-framework",
-					"\"Alamofire\"",
-					"-framework",
-					"\"CFNetwork\"",
-					"-framework",
-					"\"Charts\"",
-					"-framework",
-					"\"CoreGraphics\"",
-					"-framework",
-					"\"CoreTelephony\"",
-					"-framework",
-					"\"CountryPickerView\"",
-					"-framework",
-					"\"FBLPromises\"",
-					"-framework",
-					"\"FIRAnalyticsConnector\"",
-					"-framework",
-					"\"FirebaseAnalytics\"",
-					"-framework",
-					"\"FirebaseCore\"",
-					"-framework",
-					"\"FirebaseCoreDiagnostics\"",
-					"-framework",
-					"\"FirebaseCrashlytics\"",
-					"-framework",
-					"\"FirebaseInstallations\"",
-					"-framework",
-					"\"FirebaseInstanceID\"",
-					"-framework",
-					"\"FirebaseMessaging\"",
-					"-framework",
-					"\"ForYouAndMe\"",
-					"-framework",
-					"\"Foundation\"",
-					"-framework",
-					"\"GoogleAppMeasurement\"",
-					"-framework",
-					"\"GoogleDataTransport\"",
-					"-framework",
-					"\"GoogleUtilities\"",
-					"-framework",
-					"\"Japx\"",
-					"-framework",
-					"\"Mapper\"",
-					"-framework",
-					"\"Moya\"",
-					"-framework",
-					"\"Moya_ModelMapper\"",
-					"-framework",
-					"\"OAuthSwift\"",
-					"-framework",
-					"\"PhoneNumberKit\"",
-					"-framework",
-					"\"PureLayout\"",
-					"-framework",
-					"\"QuartzCore\"",
-					"-framework",
-					"\"Reachability\"",
-					"-framework",
-					"\"ResearchKit\"",
-					"-framework",
-					"\"RxCocoa\"",
-					"-framework",
-					"\"RxRelay\"",
-					"-framework",
-					"\"RxSwift\"",
-					"-framework",
-					"\"RxSwiftExt\"",
-					"-framework",
-					"\"SVProgressHUD\"",
-					"-framework",
-					"\"Security\"",
-					"-framework",
-					"\"StoreKit\"",
-					"-framework",
-					"\"SystemConfiguration\"",
-					"-framework",
-					"\"TPKeyboardAvoiding\"",
-					"-framework",
-					"\"UIKit\"",
-					"-framework",
-					"\"UberSignature\"",
-					"-framework",
-					"\"Validator\"",
-					"-framework",
-					"\"nanopb\"",
-					"-weak_framework",
-					"\"UserNotifications\"",
-					"-weak_framework",
-					"\"XCTest\"",
-				);
+				OTHER_LDFLAGS = "$(inherited)";
 				PRODUCT_BUNDLE_IDENTIFIER = "org.cocoapods.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_SWIFT3_OBJC_INFERENCE = Default;
@@ -780,7 +709,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = B8F914A25E66C848A42A6C7F /* Pods-ForYouAndMe_Tests.release.xcconfig */;
 			buildSettings = {
-				DEVELOPMENT_TEAM = G6RAKRKZPR;
+				DEVELOPMENT_TEAM = 25S45RFPZF;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(PLATFORM_DIR)/Developer/Library/Frameworks",
 					"$(inherited)",
@@ -788,108 +717,13 @@
 					"$(PROJECT_DIR)",
 				);
 				INFOPLIST_FILE = Tests/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				OTHER_LDFLAGS = (
-					"$(inherited)",
-					"-ObjC",
-					"-l\"c++\"",
-					"-l\"sqlite3\"",
-					"-l\"z\"",
-					"-framework",
-					"\"Alamofire\"",
-					"-framework",
-					"\"CFNetwork\"",
-					"-framework",
-					"\"Charts\"",
-					"-framework",
-					"\"CoreGraphics\"",
-					"-framework",
-					"\"CoreTelephony\"",
-					"-framework",
-					"\"CountryPickerView\"",
-					"-framework",
-					"\"FBLPromises\"",
-					"-framework",
-					"\"FIRAnalyticsConnector\"",
-					"-framework",
-					"\"FirebaseAnalytics\"",
-					"-framework",
-					"\"FirebaseCore\"",
-					"-framework",
-					"\"FirebaseCoreDiagnostics\"",
-					"-framework",
-					"\"FirebaseCrashlytics\"",
-					"-framework",
-					"\"FirebaseInstallations\"",
-					"-framework",
-					"\"FirebaseInstanceID\"",
-					"-framework",
-					"\"FirebaseMessaging\"",
-					"-framework",
-					"\"ForYouAndMe\"",
-					"-framework",
-					"\"Foundation\"",
-					"-framework",
-					"\"GoogleAppMeasurement\"",
-					"-framework",
-					"\"GoogleDataTransport\"",
-					"-framework",
-					"\"GoogleUtilities\"",
-					"-framework",
-					"\"Japx\"",
-					"-framework",
-					"\"Mapper\"",
-					"-framework",
-					"\"Moya\"",
-					"-framework",
-					"\"Moya_ModelMapper\"",
-					"-framework",
-					"\"OAuthSwift\"",
-					"-framework",
-					"\"PhoneNumberKit\"",
-					"-framework",
-					"\"PureLayout\"",
-					"-framework",
-					"\"QuartzCore\"",
-					"-framework",
-					"\"Reachability\"",
-					"-framework",
-					"\"ResearchKit\"",
-					"-framework",
-					"\"RxCocoa\"",
-					"-framework",
-					"\"RxRelay\"",
-					"-framework",
-					"\"RxSwift\"",
-					"-framework",
-					"\"RxSwiftExt\"",
-					"-framework",
-					"\"SVProgressHUD\"",
-					"-framework",
-					"\"Security\"",
-					"-framework",
-					"\"StoreKit\"",
-					"-framework",
-					"\"SystemConfiguration\"",
-					"-framework",
-					"\"TPKeyboardAvoiding\"",
-					"-framework",
-					"\"UIKit\"",
-					"-framework",
-					"\"UberSignature\"",
-					"-framework",
-					"\"Validator\"",
-					"-framework",
-					"\"nanopb\"",
-					"-weak_framework",
-					"\"UserNotifications\"",
-					"-weak_framework",
-					"\"XCTest\"",
-				);
+				OTHER_LDFLAGS = "$(inherited)";
 				PRODUCT_BUNDLE_IDENTIFIER = "org.cocoapods.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_SWIFT3_OBJC_INFERENCE = Default;

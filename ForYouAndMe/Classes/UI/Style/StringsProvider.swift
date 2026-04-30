@@ -266,7 +266,32 @@ enum StringKey: String, CaseIterable, CodingKey {
     case diaryNoteDosesEmojiSubtitle = "DIARY_NOTE_DOSES_STEP_EMOJI_SUBTITLE"
     case diaryNoteDosesEmojiClickMessage = "DIARY_NOTE_DOSES_STEP_EMOJI_CLICK_MESSAGE"
     case diaryNoteDosesEmojiCloseButton = "DIARY_NOTE_DOSES_STEP_EMOJI_CLOSE_BUTTON"
-    
+
+    // Hot Flash
+    case diaryNoteFabHotFlash = "FAB_HOT_FLASH"
+    case diaryNoteTagHotFlash = "DIARY_NOTE_TAG_HOT_FLASH"
+    case diaryNoteHotFlashCell = "DIARY_NOTE_HOT_FLASH_CELL"
+    case diaryNoteHotFlashStepOneTitle = "HOT_FLASH_STEP_ONE_TITLE"
+    case diaryNoteHotFlashStepOneMessage = "HOT_FLASH_STEP_ONE_MESSAGE"
+    case diaryNoteHotFlashStepOneFirstButton = "HOT_FLASH_STEP_ONE_FIRST_BUTTON"
+    case diaryNoteHotFlashStepOneSecondButton = "HOT_FLASH_STEP_ONE_SECOND_BUTTON"
+    case diaryNoteHotFlashStepTwoTitle = "HOT_FLASH_STEP_TWO_TITLE"
+    case diaryNoteHotFlashStepTwoMessage = "HOT_FLASH_STEP_TWO_MESSAGE"
+    case diaryNoteHotFlashStepTwoTime = "HOT_FLASH_STEP_TWO_TIME"
+    case diaryNoteHotFlashNextButton = "HOT_FLASH_NEXT_BUTTON"
+    case diaryNoteHotFlashConfirmButton = "HOT_FLASH_CONFIRM_BUTTON"
+    case diaryNoteHotFlashEmojiTitle = "DIARY_NOTE_HOT_FLASH_STEP_EMOJI_TITLE"
+    case diaryNoteHotFlashEmojiSubtitle = "DIARY_NOTE_HOT_FLASH_STEP_EMOJI_SUBTITLE"
+    case diaryNoteHotFlashEmojiClickMessage = "DIARY_NOTE_HOT_FLASH_STEP_EMOJI_CLICK_MESSAGE"
+    case diaryNoteHotFlashEmojiCloseButton = "DIARY_NOTE_HOT_FLASH_STEP_EMOJI_CLOSE_BUTTON"
+    case diaryNoteHotFlashDetailCloseButton = "DIARY_NOTE_HOT_FLASH_DETAIL_CLOSE_BUTTON"
+
+    // Quick Activity linked task prompt (FUAM-3037)
+    case quickActivityLinkedTaskPromptTitle = "QUICK_ACTIVITY_LINKED_TASK_PROMPT_TITLE"
+    case quickActivityLinkedTaskPromptBody = "QUICK_ACTIVITY_LINKED_TASK_PROMPT_BODY"
+    case quickActivityLinkedTaskPromptConfirmButton = "QUICK_ACTIVITY_LINKED_TASK_PROMPT_CONFIRM_BUTTON"
+    case quickActivityLinkedTaskPromptCancelButton = "QUICK_ACTIVITY_LINKED_TASK_PROMPT_CANCEL_BUTTON"
+
     // Video Diary
     case videoDiaryRecorderInfoFilter = "VIDEO_DIARY_RECORDER_INFO_FILTER"
     case videoDiaryRecorderTitle = "VIDEO_DIARY_RECORDER_TITLE"
