@@ -113,6 +113,9 @@ class DiaryNotesViewController: BaseViewController {
     private var diaryNote: DiaryNoteItem?
     private var diaryNoteItems: [DiaryNoteItem]
     private var sections: [DiaryNoteSection] = []
+    /// Lookup of the menstrual sequence backing each representative entry id.
+    /// Built in `loadItems` from the raw diary notes returned by the API.
+    private var menstrualSequencesByRepresentativeId: [String: MenstrualSequence] = [:]
     private let isFromChart: Bool
     
     init(withDataPoint dataPoint: DiaryNoteItem?, isFromChart: Bool) {
@@ -124,6 +127,7 @@ class DiaryNotesViewController: BaseViewController {
         super.init()
         
         self.tableView.registerHeaderFooterViewWithClass(DiarySectionHeader.self)
+        self.tableView.registerCellsWithClass(DiaryNoteItemMenstrualTableViewCell.self)
     }
     
     required init?(coder: NSCoder) {
@@ -218,18 +222,30 @@ class DiaryNotesViewController: BaseViewController {
     
     func createDiaryNoteSections(from diaryNotes: [DiaryNoteItem]) -> [DiaryNoteSection] {
         let calendar = Calendar.current
-        
-        let groupedDictionary = Dictionary(grouping: diaryNotes) { (item) -> Date in
+
+        // FUAM-2933: collapse menstrual entries into sequences and surface the
+        // representative entry on the day where the bleeding sequence starts.
+        let nonMenstrual = diaryNotes.filter { $0.diaryNoteType != .menstrualPeriod }
+        let menstrualSequences = MenstrualSequence.group(from: diaryNotes)
+
+        self.menstrualSequencesByRepresentativeId = Dictionary(
+            uniqueKeysWithValues: menstrualSequences.map { ($0.representative.id, $0) }
+        )
+
+        let menstrualRepresentatives = menstrualSequences.map { $0.representative }
+        let displayItems = nonMenstrual + menstrualRepresentatives
+
+        let groupedDictionary = Dictionary(grouping: displayItems) { (item) -> Date in
             return calendar.startOfDay(for: item.diaryNoteId)
         }
-        
+
         let sortedDates = groupedDictionary.keys.sorted(by: { $1 < $0 })
-        
+
         let sections: [DiaryNoteSection] = sortedDates.map { date in
             let items = groupedDictionary[date]?.sorted(by: { $1.diaryNoteId < $0.diaryNoteId }) ?? []
             return DiaryNoteSection(date: date, items: items)
         }
-        
+
         return sections
     }
     
@@ -405,9 +421,20 @@ extension DiaryNotesViewController: UITableViewDataSource {
 
                 return cell
             case .menstrualPeriod:
-                // FUAM-2933 will introduce the dedicated menstrual cycle cell.
-                assertionFailure("Menstrual cycle cell not yet implemented (FUAM-2933)")
-                return UITableViewCell()
+                guard let cell = tableView.dequeueReusableCellOfType(type: DiaryNoteItemMenstrualTableViewCell.self,
+                                                                     forIndexPath: indexPath) else {
+                    assertionFailure("DiaryNoteItemMenstrualTableViewCell not registered")
+                    return UITableViewCell()
+                }
+                guard let sequence = self.menstrualSequencesByRepresentativeId[diaryNote.id] else {
+                    assertionFailure("Missing MenstrualSequence for representative entry \(diaryNote.id)")
+                    return UITableViewCell()
+                }
+                cell.display(sequence: sequence, onTap: { [weak self] in
+                    guard let self = self else { return }
+                    self.navigator.openMenstrualPeriodDetail(presenter: self, entries: sequence.entries)
+                })
+                return cell
             }
         } else {
             // Forward-compat: backend may return diary_type values this app version
@@ -417,6 +444,14 @@ extension DiaryNotesViewController: UITableViewDataSource {
         }
     }
     
+    func tableView(_ tableView: UITableView, canEditRowAt indexPath: IndexPath) -> Bool {
+        // Menstrual rows aggregate multiple entries — delete is handled by the
+        // dedicated detail screen (FUAM-2934), not here.
+        guard indexPath.section < sections.count,
+              indexPath.row < sections[indexPath.section].items.count else { return true }
+        return sections[indexPath.section].items[indexPath.row].diaryNoteType != .menstrualPeriod
+    }
+
     func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
         if editingStyle == .delete {
             let diaryNote = diaryNoteItems[indexPath.row]

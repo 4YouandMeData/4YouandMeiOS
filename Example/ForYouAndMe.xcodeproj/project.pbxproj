@@ -23,6 +23,7 @@
 		2935A0050001F37A0001AAAA /* MenstrualPayloadDecodingSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2935A0060001F37A0001AAAA /* MenstrualPayloadDecodingSpec.swift */; };
 		2935A0070001F37A0001AAAA /* MenstrualNetworkTaskSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2935A0080001F37A0001AAAA /* MenstrualNetworkTaskSpec.swift */; };
 		2934A0010001F37A0001AAAA /* MenstrualPeriodEntryCellSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2934A0020001F37A0001AAAA /* MenstrualPeriodEntryCellSpec.swift */; };
+		2933A0010001F37A0001AAAA /* MenstrualSequenceGroupingSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2933A0020001F37A0001AAAA /* MenstrualSequenceGroupingSpec.swift */; };
 		2932A0010001F37A0001AAAA /* AlertDecodingSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2932A0020001F37A0001AAAA /* AlertDecodingSpec.swift */; };
 		2932A0030001F37A0001AAAA /* FeedContentPinnedSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2932A0040001F37A0001AAAA /* FeedContentPinnedSpec.swift */; };
 		8974CF8B267B848D003A6E61 /* HealthKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8974CF8A267B848D003A6E61 /* HealthKit.framework */; };
@@ -86,6 +87,7 @@
 		2935A0060001F37A0001AAAA /* MenstrualPayloadDecodingSpec.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MenstrualPayloadDecodingSpec.swift; sourceTree = "<group>"; };
 		2935A0080001F37A0001AAAA /* MenstrualNetworkTaskSpec.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MenstrualNetworkTaskSpec.swift; sourceTree = "<group>"; };
 		2934A0020001F37A0001AAAA /* MenstrualPeriodEntryCellSpec.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MenstrualPeriodEntryCellSpec.swift; sourceTree = "<group>"; };
+		2933A0020001F37A0001AAAA /* MenstrualSequenceGroupingSpec.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MenstrualSequenceGroupingSpec.swift; sourceTree = "<group>"; };
 		2932A0020001F37A0001AAAA /* AlertDecodingSpec.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AlertDecodingSpec.swift; sourceTree = "<group>"; };
 		2932A0040001F37A0001AAAA /* FeedContentPinnedSpec.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = FeedContentPinnedSpec.swift; sourceTree = "<group>"; };
 		894BEE6B24AE52DD00254DC6 /* ForYouAndMe_Example.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ForYouAndMe_Example.entitlements; sourceTree = "<group>"; };
@@ -196,6 +198,7 @@
 				2935A0060001F37A0001AAAA /* MenstrualPayloadDecodingSpec.swift */,
 				2935A0080001F37A0001AAAA /* MenstrualNetworkTaskSpec.swift */,
 				2934A0020001F37A0001AAAA /* MenstrualPeriodEntryCellSpec.swift */,
+				2933A0020001F37A0001AAAA /* MenstrualSequenceGroupingSpec.swift */,
 				2932A0020001F37A0001AAAA /* AlertDecodingSpec.swift */,
 				2932A0040001F37A0001AAAA /* FeedContentPinnedSpec.swift */,
 				607FACE91AFB9204008FA782 /* Supporting Files */,
@@ -495,6 +498,7 @@
 				2935A0050001F37A0001AAAA /* MenstrualPayloadDecodingSpec.swift in Sources */,
 				2935A0070001F37A0001AAAA /* MenstrualNetworkTaskSpec.swift in Sources */,
 				2934A0010001F37A0001AAAA /* MenstrualPeriodEntryCellSpec.swift in Sources */,
+				2933A0010001F37A0001AAAA /* MenstrualSequenceGroupingSpec.swift in Sources */,
 				2932A0010001F37A0001AAAA /* AlertDecodingSpec.swift in Sources */,
 				2932A0030001F37A0001AAAA /* FeedContentPinnedSpec.swift in Sources */,
 			);

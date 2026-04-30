@@ -51,6 +51,8 @@ struct Constants {
         static let WeNoticedColorText = "#8E2E2C"
         static let HotFlashColorBackground = "#F2B3D4"
         static let HotFlashColorText = "#8D3462"
+        static let MenstrualColorBackground = "#D9E8E2"
+        static let MenstrualColorText = "#1F4D44"
         static let FormBackgroundColor = "#EEEEEE"
     }
     struct Resources {
