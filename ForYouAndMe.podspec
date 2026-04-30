@@ -23,7 +23,7 @@ Pod::Spec.new do |s|
 
   s.ios.deployment_target = '15.6'
 
-  s.swift_version = '5.2'
+  s.swift_version = '5.9'
 
   s.static_framework = true
 
