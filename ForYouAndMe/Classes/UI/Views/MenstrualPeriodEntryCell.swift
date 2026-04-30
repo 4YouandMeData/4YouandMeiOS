@@ -45,6 +45,15 @@ final class MenstrualPeriodEntryCell: UITableViewCell {
         return lbl
     }()
 
+    private let emojiLabel: UILabel = {
+        let label = UILabel()
+        label.font = UIFont.systemFont(ofSize: 22)
+        label.textAlignment = .center
+        label.setContentHuggingPriority(.required, for: .horizontal)
+        label.isHidden = true
+        return label
+    }()
+
     private let chevronView: UIImageView = {
         let iv = UIImageView()
         iv.image = ImagePalette.templateImage(withName: .arrowRight)
@@ -78,6 +87,7 @@ final class MenstrualPeriodEntryCell: UITableViewCell {
         row.spacing = 16
         row.addArrangedSubview(iconView)
         row.addArrangedSubview(textStack)
+        row.addArrangedSubview(emojiLabel)
         row.addArrangedSubview(chevronView)
 
         contentView.addSubview(row)
@@ -104,6 +114,8 @@ final class MenstrualPeriodEntryCell: UITableViewCell {
             iconView.image = ImagePalette.templateImage(withName: .menstrualCycleIcon)
             applyNote(entry.body)
         }
+
+        applyEmoji(from: entry.feedbackTags)
     }
 
     /// Legacy entry point kept for the existing FUAM-2934 spec until it is
@@ -121,6 +133,16 @@ final class MenstrualPeriodEntryCell: UITableViewCell {
         } else {
             noteLabel.text = nil
             noteLabel.isHidden = true
+        }
+    }
+
+    private func applyEmoji(from tags: [EmojiItem]?) {
+        if let emoji = tags?.last, emoji.label != "none" {
+            emojiLabel.text = emoji.tag
+            emojiLabel.isHidden = false
+        } else {
+            emojiLabel.text = nil
+            emojiLabel.isHidden = true
         }
     }
 }
