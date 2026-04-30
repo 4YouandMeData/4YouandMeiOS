@@ -3,85 +3,55 @@
 //  Pods
 //
 //  FUAM-2933 — Compass Log cell for menstrual cycle entries. Displays a
-//  single-date or aggregated date range produced by MenstrualSequence
-//  grouping (consecutive bleeding=yes entries collapse into one row).
+//  drop icon, the title "Menstrual Flow Tracking" and a "From: <date> -
+//  To: <date>" subtitle (range collapses to "..." when the bleeding
+//  sequence has not yet been closed by a `no` entry).
 //
 
 import UIKit
 import PureLayout
 
-/// Cell for displaying menstrual cycle diary entries (single or aggregated).
 class DiaryNoteItemMenstrualTableViewCell: UITableViewCell {
 
     private static let dayMonthFormatter: DateFormatter = {
         let formatter = DateFormatter()
-        formatter.dateFormat = "d MMM"
+        formatter.dateFormat = "MM/dd/yyyy"
         return formatter
     }()
 
-    private lazy var emojiLabel: UILabel = {
-        let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 12)
-        label.textAlignment = .center
-        label.setContentHuggingPriority(.required, for: .horizontal)
-        return label
-    }()
-
-    private lazy var noteTagContainer: UIStackView = {
-        let container = UIStackView()
-        container.axis = .horizontal
-        container.alignment = .center
-        container.spacing = 4.0
-        container.distribution = .fill
-        container.addArrangedSubview(tagIconImageView)
-        container.addArrangedSubview(tagLabel)
-        container.backgroundColor = UIColor.init(hexString: Constants.Style.MenstrualColorBackground)
-        container.layer.cornerRadius = 6
-        container.layoutMargins = UIEdgeInsets(top: 4, left: 8, bottom: 4, right: 8)
-        container.isLayoutMarginsRelativeArrangement = true
-        return container
-    }()
-
-    private lazy var tagIconImageView: UIImageView = {
-        let imageView = UIImageView()
-        imageView.contentMode = .scaleAspectFit
-        imageView.image = ImagePalette.templateImage(withName: .menstrualCycleIcon)
-        imageView.tintColor = UIColor.init(hexString: Constants.Style.MenstrualColorText)
-        imageView.autoSetDimensions(to: CGSize(width: 10, height: 10))
-        return imageView
-    }()
-
-    private lazy var tagLabel: UILabel = {
-        let label = UILabel()
-        label.text = StringsProvider.string(forKey: .diaryNoteTagMenstrual)
-        label.font = UIFont.systemFont(ofSize: 8, weight: .medium)
-        label.textColor = UIColor.init(hexString: Constants.Style.MenstrualColorText)
-        label.numberOfLines = 1
-        return label
-    }()
-
-    private lazy var noteImageView: UIImageView = {
+    private lazy var iconImageView: UIImageView = {
         let iv = UIImageView()
         iv.contentMode = .scaleAspectFit
         iv.image = ImagePalette.templateImage(withName: .menstrualCycleIcon)
-        iv.tintColor = UIColor.init(hexString: Constants.Style.MenstrualColorText)
+        iv.tintColor = ColorPalette.color(withType: .primaryText)
         iv.autoSetDimensions(to: CGSize(width: 24, height: 24))
         return iv
     }()
 
-    private lazy var noteTitleLabel: UILabel = {
-        let lbl = UILabel()
-        lbl.numberOfLines = 1
-        return lbl
+    private lazy var titleLabel: UILabel = {
+        let label = UILabel()
+        label.numberOfLines = 1
+        label.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
+        label.textColor = ColorPalette.color(withType: .primaryText)
+        return label
+    }()
+
+    private lazy var subtitleLabel: UILabel = {
+        let label = UILabel()
+        label.numberOfLines = 1
+        label.lineBreakMode = .byTruncatingTail
+        label.font = UIFont.systemFont(ofSize: 13)
+        label.textColor = ColorPalette.color(withType: .fourthText)
+        return label
     }()
 
     private lazy var arrowImageView: UIImageView = {
-        let imageView = UIImageView()
-        imageView.image = ImagePalette.templateImage(withName: .arrowRight)
-        imageView.tintColor = ColorPalette.color(withType: .gradientPrimaryEnd)
-        imageView.contentMode = .scaleAspectFit
-        imageView.autoSetDimensions(to: CGSize(width: 24, height: 24))
-        return imageView
+        let iv = UIImageView()
+        iv.image = ImagePalette.templateImage(withName: .arrowRight)
+        iv.tintColor = ColorPalette.color(withType: .primary)
+        iv.contentMode = .scaleAspectFit
+        iv.autoSetDimensions(to: CGSize(width: 18, height: 18))
+        return iv
     }()
 
     private var buttonPressedCallback: (() -> Void)?
@@ -99,81 +69,55 @@ class DiaryNoteItemMenstrualTableViewCell: UITableViewCell {
         selectionStyle = .none
         backgroundColor = .clear
 
-        let backgroundView = UIStackView.create(withAxis: .vertical, spacing: 8.0)
-
-        let containerView = UIStackView.create(withAxis: .horizontal, spacing: 10.0)
-        containerView.distribution = .fill
-        containerView.alignment = .center
-
-        backgroundView.addArrangedSubview(containerView)
-        containerView.autoPinEdgesToSuperviewEdges()
-
-        containerView.addArrangedSubview(self.noteImageView, horizontalInset: 8.0)
-
         let textStack = UIStackView()
         textStack.axis = .vertical
         textStack.alignment = .leading
-        textStack.spacing = 8.0
+        textStack.spacing = 2
+        textStack.addArrangedSubview(titleLabel)
+        textStack.addArrangedSubview(subtitleLabel)
 
-        let tagRow = UIStackView()
-        tagRow.axis = .horizontal
-        tagRow.spacing = 4.0
-        tagRow.alignment = .center
-        tagRow.addArrangedSubview(self.noteTagContainer)
-        tagRow.addArrangedSubview(self.emojiLabel)
+        let row = UIStackView()
+        row.axis = .horizontal
+        row.alignment = .center
+        row.spacing = 12
+        row.addArrangedSubview(iconImageView)
+        row.addArrangedSubview(textStack)
+        row.addArrangedSubview(arrowImageView)
 
-        textStack.addArrangedSubview(tagRow)
-        textStack.addArrangedSubview(noteTitleLabel)
+        contentView.addSubview(row)
+        row.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets(top: 12,
+                                                            left: Constants.Style.DefaultHorizontalMargins,
+                                                            bottom: 12,
+                                                            right: Constants.Style.DefaultHorizontalMargins))
 
-        containerView.addArrangedSubview(textStack)
-        containerView.addArrangedSubview(self.arrowImageView)
-
-        self.contentView.addSubview(backgroundView)
-        backgroundView.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets(top: 0,
-                                                                       left: Constants.Style.DefaultHorizontalMargins,
-                                                                       bottom: 0.0,
-                                                                       right: Constants.Style.DefaultHorizontalMargins))
-
-        self.contentView.isUserInteractionEnabled = true
-
+        contentView.isUserInteractionEnabled = true
         let tapGR = UITapGestureRecognizer(target: self, action: #selector(cellTapped))
         contentView.addGestureRecognizer(tapGR)
     }
 
-    /// Configure cell for a menstrual sequence (single or aggregated).
-    /// Date-range string is built locally — strings file holds plain labels.
-    public func display(sequence: MenstrualSequence, onTap: @escaping () -> Void) {
+    /// Configure cell from a MenstrualSequence: title fixed, subtitle is the
+    /// "From: <start> - To: <end>" range. End date is replaced with "..."
+    /// for sequences that have not been closed by a `no` entry yet.
+    public func display(sequence: MenstrualSequence,
+                        isOpenEnded: Bool = false,
+                        onTap: @escaping () -> Void) {
         self.buttonPressedCallback = onTap
 
-        let title: String
-        if sequence.isAggregated {
-            let start = Self.dayMonthFormatter.string(from: sequence.startDate)
-            let end = Self.dayMonthFormatter.string(from: sequence.endDate)
-            title = "\(start) – \(end)"
-        } else {
-            title = Self.dayMonthFormatter.string(from: sequence.startDate)
-        }
-        self.updateNoteTitle(title)
+        titleLabel.text = StringsProvider.string(forKey: .diaryNoteMenstrualCellTitle)
 
-        if let emoji = sequence.representative.feedbackTags?.last {
-            emojiLabel.text = emoji.tag
-            emojiLabel.isHidden = false
+        let fromPrefix = StringsProvider.string(forKey: .diaryNoteMenstrualCellFrom)
+        let toPrefix = StringsProvider.string(forKey: .diaryNoteMenstrualCellTo)
+        let startString = Self.dayMonthFormatter.string(from: sequence.startDate)
+        let endString: String
+        if isOpenEnded {
+            endString = "..."
         } else {
-            emojiLabel.text = nil
-            emojiLabel.isHidden = true
+            endString = Self.dayMonthFormatter.string(from: sequence.endDate)
         }
+        subtitleLabel.text = "\(fromPrefix) \(startString) - \(toPrefix) \(endString)"
     }
 
     @objc private func cellTapped() {
         buttonPressedCallback?()
-    }
-
-    private func updateNoteTitle(_ title: String) {
-        let attributedString = NSAttributedString.create(withText: title,
-                                                         fontStyle: .paragraph,
-                                                         colorType: .primaryText,
-                                                         textAlignment: .left,
-                                                         underlined: false)
-        self.noteTitleLabel.attributedText = attributedString
     }
 }

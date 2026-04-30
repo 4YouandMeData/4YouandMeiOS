@@ -788,11 +788,12 @@ class AppNavigator {
 
     public func openMenstrualPeriodDetail(presenter: UIViewController,
                                           entries: [DiaryNoteItem]) {
+        // Full-page modal — closeButton in the footer is the only dismiss
+        // affordance, no navigation chrome required.
         let detailVC = MenstrualPeriodDetailViewController(entries: entries)
         detailVC.delegate = self
-        let nav = UINavigationController(rootViewController: detailVC)
-        nav.modalPresentationStyle = .fullScreen
-        presenter.present(nav, animated: true, completion: nil)
+        detailVC.modalPresentationStyle = .fullScreen
+        presenter.present(detailVC, animated: true, completion: nil)
     }
 
     public func openMenstrualEntryViewController(presenter: UIViewController,

@@ -41,20 +41,45 @@ final class MenstrualPeriodDetailViewController: BaseViewController {
         return tableView
     }()
 
-    private lazy var addButton: GenericButtonView = {
-        let view = GenericButtonView(withTextStyleCategory: .secondaryBackground(shadow: false))
-        view.setButtonText(StringsProvider.string(forKey: .menstrualDetailAddButton))
-        view.setButtonEnabled(enabled: true)
-        view.addTarget(target: self, action: #selector(addTapped))
-        return view
+    private lazy var addRow: UIView = {
+        let container = UIView()
+
+        let plusImageView = UIImageView()
+        plusImageView.image = ImagePalette.templateImage(withName: .plusIcon)
+        plusImageView.contentMode = .scaleAspectFit
+        plusImageView.tintColor = ColorPalette.color(withType: .primary)
+        plusImageView.autoSetDimensions(to: CGSize(width: 24, height: 24))
+
+        let label = UILabel()
+        label.text = StringsProvider.string(forKey: .menstrualDetailAddButton)
+        label.font = UIFont.systemFont(ofSize: 16, weight: .medium)
+        label.textColor = ColorPalette.color(withType: .primary)
+
+        let row = UIStackView()
+        row.axis = .horizontal
+        row.alignment = .center
+        row.spacing = 12
+        row.addArrangedSubview(plusImageView)
+        row.addArrangedSubview(label)
+
+        container.addSubview(row)
+        row.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets(top: 16,
+                                                            left: Constants.Style.DefaultHorizontalMargins,
+                                                            bottom: 16,
+                                                            right: Constants.Style.DefaultHorizontalMargins))
+
+        let tap = UITapGestureRecognizer(target: self, action: #selector(addTapped))
+        container.addGestureRecognizer(tap)
+        container.isUserInteractionEnabled = true
+        return container
     }()
 
-    private lazy var closeButton: GenericButtonView = {
-        let view = GenericButtonView(withTextStyleCategory: .secondaryBackground(shadow: false))
-        view.setButtonText(StringsProvider.string(forKey: .menstrualDetailCloseButton))
-        view.setButtonEnabled(enabled: true)
-        view.addTarget(target: self, action: #selector(closeTapped))
-        return view
+    private lazy var footerView: GenericButtonView = {
+        let buttonView = GenericButtonView(withTextStyleCategory: .secondaryBackground(shadow: false))
+        buttonView.setButtonText(StringsProvider.string(forKey: .menstrualDetailCloseButton))
+        buttonView.setButtonEnabled(enabled: true)
+        buttonView.addTarget(target: self, action: #selector(closeTapped))
+        return buttonView
     }()
 
     init(entries: [DiaryNoteItem]) {
@@ -67,13 +92,10 @@ final class MenstrualPeriodDetailViewController: BaseViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = ColorPalette.color(withType: .secondary)
+        // Detail screen has its own "Add another bleeding date" button — the
+        // generic FAB would be redundant and overlap the close button.
+        setFabHidden(true)
         setupLayout()
-    }
-
-    override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
-        navigationController?.navigationBar.apply(style: NavigationBarStyleCategory.secondary(hidden: false).style)
-        addCustomBackButton()
     }
 
     func update(entries: [DiaryNoteItem]) {
@@ -82,47 +104,51 @@ final class MenstrualPeriodDetailViewController: BaseViewController {
     }
 
     private func setupLayout() {
-        let header = UIStackView()
-        header.axis = .vertical
-        header.alignment = .leading
-        header.spacing = 8
-
+        // Header: title (24 above) → 16 → separator → 24 → subtitle (24 below)
+        // → 24 spacer → "+ Add another bleeding date" row → list → footer.
         let titleLabel = UILabel()
         titleLabel.numberOfLines = 0
-        titleLabel.font = UIFont.boldSystemFont(ofSize: FontPalette.fontStyleData(forStyle: .header2).font.pointSize)
+        titleLabel.textAlignment = .center
+        titleLabel.font = UIFont.boldSystemFont(ofSize: 22)
         titleLabel.textColor = ColorPalette.color(withType: .primaryText)
         titleLabel.text = StringsProvider.string(forKey: .menstrualDetailTitle)
 
+        let titleSeparator = UIView()
+        titleSeparator.backgroundColor = ColorPalette.color(withType: .secondaryMenu)
+        titleSeparator.autoSetDimension(.height, toSize: 1)
+
         let subtitleLabel = UILabel()
         subtitleLabel.numberOfLines = 0
+        subtitleLabel.textAlignment = .center
         subtitleLabel.font = .preferredFont(forTextStyle: .body)
         subtitleLabel.textColor = ColorPalette.color(withType: .primaryText)
         subtitleLabel.text = StringsProvider.string(forKey: .menstrualDetailMessage)
 
-        header.addArrangedSubview(titleLabel)
-        header.addArrangedSubview(subtitleLabel)
+        let header = UIStackView()
+        header.axis = .vertical
+        header.alignment = .fill
+        header.spacing = 24
         header.isLayoutMarginsRelativeArrangement = true
-        header.layoutMargins = UIEdgeInsets(top: 16,
+        header.layoutMargins = UIEdgeInsets(top: 32,
                                             left: Constants.Style.DefaultHorizontalMargins,
-                                            bottom: 16,
+                                            bottom: 0,
                                             right: Constants.Style.DefaultHorizontalMargins)
+        header.addArrangedSubview(titleLabel)
+        header.addArrangedSubview(titleSeparator)
+        header.addArrangedSubview(subtitleLabel)
+        header.addArrangedSubview(addRow)
 
-        let outer = UIStackView()
-        outer.axis = .vertical
-        outer.alignment = .fill
-        outer.distribution = .fill
-        outer.addArrangedSubview(header)
-        outer.addArrangedSubview(addButton)
-        outer.addArrangedSubview(tableView)
+        view.addSubview(header)
+        header.autoPinEdgesToSuperviewSafeArea(with: .zero, excludingEdge: .bottom)
 
-        view.addSubview(outer)
-        outer.autoPinEdgesToSuperviewSafeArea(with: .zero, excludingEdge: .bottom)
+        view.addSubview(footerView)
+        footerView.autoPinEdgesToSuperviewEdges(with: .zero, excludingEdge: .top)
 
-        view.addSubview(closeButton)
-        closeButton.autoPinEdgesToSuperviewSafeArea(with: .zero, excludingEdge: .top)
-        outer.autoPinEdge(.bottom, to: .top, of: closeButton)
-
-        addButton.autoSetDimension(.height, toSize: 64)
+        view.addSubview(tableView)
+        tableView.autoPinEdge(.top, to: .bottom, of: header, withOffset: 8)
+        tableView.autoPinEdge(toSuperviewEdge: .leading)
+        tableView.autoPinEdge(toSuperviewEdge: .trailing)
+        tableView.autoPinEdge(.bottom, to: .top, of: footerView)
     }
 
     @objc func addTapped() {
@@ -192,14 +218,7 @@ extension MenstrualPeriodDetailViewController: UITableViewDataSource, UITableVie
             assertionFailure("MenstrualPeriodEntryCell not registered")
             return UITableViewCell()
         }
-        let entry = entries[indexPath.row]
-        let note: String?
-        if case let .menstrual(_, _, _, _, payloadNote) = entry.payload {
-            note = payloadNote
-        } else {
-            note = entry.body
-        }
-        cell.display(date: entry.diaryNoteId, note: note)
+        cell.display(entry: entries[indexPath.row])
         return cell
     }
 

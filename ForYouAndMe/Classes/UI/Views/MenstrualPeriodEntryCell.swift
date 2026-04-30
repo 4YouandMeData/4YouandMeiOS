@@ -3,7 +3,9 @@
 //  ForYouAndMe
 //
 //  FUAM-2934 — Row in the menstrual period detail screen.
-//  Shows the bleeding date and an optional note preview.
+//  Shows the bleeding date with a flow-specific droplet icon, an optional
+//  note preview, and a chevron suggesting the row will eventually become
+//  tappable. Editing individual entries is out of scope for this release.
 //
 
 import UIKit
@@ -13,17 +15,16 @@ final class MenstrualPeriodEntryCell: UITableViewCell {
 
     private static let dateFormatter: DateFormatter = {
         let formatter = DateFormatter()
-        formatter.dateStyle = .medium
-        formatter.timeStyle = .none
+        // Per Figma: "MM / dd / yyyy" with single spaces around slashes.
+        formatter.dateFormat = "MM / dd / yyyy"
         return formatter
     }()
 
     private let iconView: UIImageView = {
         let iv = UIImageView()
         iv.contentMode = .scaleAspectFit
-        iv.image = ImagePalette.templateImage(withName: .menstrualCycleIcon)
-        iv.tintColor = ColorPalette.color(withType: .primary)
-        iv.autoSetDimensions(to: CGSize(width: 24, height: 24))
+        iv.tintColor = ColorPalette.color(withType: .primaryText)
+        iv.autoSetDimensions(to: CGSize(width: 28, height: 28))
         return iv
     }()
 
@@ -38,9 +39,19 @@ final class MenstrualPeriodEntryCell: UITableViewCell {
     private let noteLabel: UILabel = {
         let lbl = UILabel()
         lbl.numberOfLines = 1
+        lbl.lineBreakMode = .byTruncatingTail
         lbl.font = .preferredFont(forTextStyle: .footnote)
         lbl.textColor = ColorPalette.color(withType: .fourthText)
         return lbl
+    }()
+
+    private let chevronView: UIImageView = {
+        let iv = UIImageView()
+        iv.image = ImagePalette.templateImage(withName: .arrowRight)
+        iv.tintColor = ColorPalette.color(withType: .primary)
+        iv.contentMode = .scaleAspectFit
+        iv.autoSetDimensions(to: CGSize(width: 18, height: 18))
+        return iv
     }()
 
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
@@ -64,19 +75,46 @@ final class MenstrualPeriodEntryCell: UITableViewCell {
         let row = UIStackView()
         row.axis = .horizontal
         row.alignment = .center
-        row.spacing = 12
+        row.spacing = 16
         row.addArrangedSubview(iconView)
         row.addArrangedSubview(textStack)
+        row.addArrangedSubview(chevronView)
 
         contentView.addSubview(row)
-        row.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets(top: 12,
+        row.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets(top: 14,
                                                             left: Constants.Style.DefaultHorizontalMargins,
-                                                            bottom: 12,
+                                                            bottom: 14,
                                                             right: Constants.Style.DefaultHorizontalMargins))
     }
 
+    /// Configure the cell from an entry. The icon picks the matching flow
+    /// asset; the menstrual cycle icon is used as a fallback when the
+    /// payload cannot be parsed.
+    func display(entry: DiaryNoteItem) {
+        dateLabel.text = Self.dateFormatter.string(from: entry.diaryNoteId)
+
+        if case let .menstrual(_, flowAmount, _, _, payloadNote) = entry.payload {
+            if let amount = MenstrualFlowAmount(rawValue: flowAmount) {
+                iconView.image = ImagePalette.templateImage(withName: amount.iconName)
+            } else {
+                iconView.image = ImagePalette.templateImage(withName: .menstrualCycleIcon)
+            }
+            applyNote(payloadNote)
+        } else {
+            iconView.image = ImagePalette.templateImage(withName: .menstrualCycleIcon)
+            applyNote(entry.body)
+        }
+    }
+
+    /// Legacy entry point kept for the existing FUAM-2934 spec until it is
+    /// migrated to the new signature.
     func display(date: Date, note: String?) {
         dateLabel.text = Self.dateFormatter.string(from: date)
+        iconView.image = ImagePalette.templateImage(withName: .menstrualCycleIcon)
+        applyNote(note)
+    }
+
+    private func applyNote(_ note: String?) {
         if let note = note, note.isEmpty == false {
             noteLabel.text = note
             noteLabel.isHidden = false
