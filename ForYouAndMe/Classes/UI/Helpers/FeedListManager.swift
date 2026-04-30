@@ -617,15 +617,16 @@ class FeedListManager: NSObject {
 
     // MARK: - Pinned Alert Handlers (FUAM-2932)
 
-    // NOTE: Real flows wired in subsequent stories:
-    // FUAM-2935 wizard for primary, FUAM-2937 onboarding gating, etc.
     private func handlePinnedAlertPrimary(feed: Feed, alert: Alert) {
-        print("FeedListManager - pinned alert PRIMARY tapped (taskId: \(feed.id))")
-        self.reloadItems()
+        guard let presenter = self.delegate?.presenter else { return }
+        self.navigator.openMenstrualEntryViewController(presenter: presenter,
+                                                        variant: .standalone,
+                                                        alert: alert)
     }
 
     private func handlePinnedAlertSecondary(feed: Feed, alert: Alert) {
-        print("FeedListManager - pinned alert SECONDARY tapped (taskId: \(feed.id))")
+        // "No, not now" — dismiss without entry. BE-side acknowledgment will land
+        // when FUAM-2937 wires the alert acknowledgement endpoint.
         self.reloadItems()
     }
 
