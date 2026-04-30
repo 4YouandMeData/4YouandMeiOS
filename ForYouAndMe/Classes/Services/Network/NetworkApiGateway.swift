@@ -404,17 +404,17 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         case .getDiaryNoteAudio(let diaryNoteId):
             return "v1/diary_notes/\(diaryNoteId)"
         case .sendDiaryNoteText:
-            return "v1/diary_notes"
+            return "v2/diary_notes"
         case .sendDiaryNoteEaten, .sendDiaryNoteDoses, .sendCombinedDiaryNote, .sendDiaryNoteHotFlash, .sendDiaryNoteMenstrual:
-            return "v1/diary_notes"
+            return "v2/diary_notes"
         case .deleteDiaryNote(let diaryNoteId):
             return "v1/diary_notes/\(diaryNoteId)"
         case .sendDiaryNoteAudio(_, _, _):
-            return "v1/diary_notes"
+            return "v2/diary_notes"
         case .sendDiaryNoteVideo(_, _):
-            return "v1/diary_notes"
+            return "v2/diary_notes"
         case .updateDiaryNoteText(let diaryNoteId):
-            return "v1/diary_notes/\(diaryNoteId.id)"
+            return "v2/diary_notes/\(diaryNoteId.id)"
         case .getInfoMessages:
             return "v1/studies/\(studyId)/app_info_messages"
         }
