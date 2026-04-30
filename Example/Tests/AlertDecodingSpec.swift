@@ -12,7 +12,7 @@ import Nimble
 @testable import ForYouAndMe
 
 class AlertDecodingSpec: QuickSpec {
-    override func spec() {
+    override class func spec() {
         describe("Alert decoding") {
 
             context("with new pinned/secondary fields") {

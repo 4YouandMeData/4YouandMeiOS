@@ -12,7 +12,7 @@ import Nimble
 @testable import ForYouAndMe
 
 class FeedContentPinnedSpec: QuickSpec {
-    override func spec() {
+    override class func spec() {
         describe("FeedContent pinned alerts") {
 
             context("when the feed contains a pinned alert and a regular alert") {

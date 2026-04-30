@@ -106,6 +106,7 @@ final class MockRepository: Repository {
     func sendDiaryNoteAudio(diaryNoteRef: DiaryNoteItem, file: DiaryNoteFile, fromChart: Bool) -> Single<DiaryNoteItem> { .never() }
     func sendDiaryNoteVideo(diaryNoteRef: DiaryNoteItem, file: DiaryNoteFile) -> Single<DiaryNoteItem> { .never() }
     func sendDiaryNoteEaten(data: DiaryNoteEatenData) -> Single<DiaryNoteItem> { .never() }
+    func sendDiaryNoteMenstrual(data: DiaryNoteMenstrualData) -> Single<DiaryNoteItem> { .never() }
     func sendDiaryNoteDoses(doseType: String, date: Date, amount: Double, fromChart: Bool, diaryNote: DiaryNoteItem?) -> Single<DiaryNoteItem> { .never() }
     func sendCombinedDiaryNote(diaryNote: DiaryNoteWeHaveNoticedItem) -> Single<DiaryNoteItem> { .never() }
     func deleteDiaryNote(noteID: String) -> Single<()> { .never() }

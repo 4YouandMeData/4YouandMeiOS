@@ -18,7 +18,7 @@ import Foundation
 @testable import ForYouAndMe
 
 class QuickActivityResultResponseSpec: QuickSpec {
-    override func spec() {
+    override class func spec() {
 
         describe("QuickActivityResultResponse decoding") {
 

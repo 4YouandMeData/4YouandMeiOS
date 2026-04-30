@@ -890,16 +890,27 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             return .requestParameters(parameters: ["diary_note": dataParams], encoding: JSONEncoding.default)
 
         case .sendDiaryNoteMenstrual(let data):
+            // FUAM-2925 schema: bleeding/flow/period_related/note only.
+            // `datetime_ref` rides on the outer envelope; BE auto-derives date.
             var payloadData: [String: Any] = [:]
-            payloadData["date"] = data.date.string(withFormat: dateTimeFormat)
-            payloadData["flow_amount"] = data.flowAmount.rawValue
-            payloadData["period_related"] = data.periodRelated.rawValue
             payloadData["bleeding"] = data.bleeding.rawValue
-            if let explanation = data.periodRelatedExplanation, !explanation.isEmpty {
-                payloadData["period_related_note"] = explanation
-            }
-            if let note = data.note, !note.isEmpty {
-                payloadData["note"] = note
+            payloadData["flow"] = data.flowAmount.intValue
+            payloadData["period_related"] = data.periodRelated.backendValue
+            // Fold the wizard's "Let me explain" explanation in front of the
+            // user note when both are present, then truncate to BE max (2500).
+            let explanation = data.periodRelatedExplanation?.trimmingCharacters(in: .whitespacesAndNewlines)
+            let userNote = data.note?.trimmingCharacters(in: .whitespacesAndNewlines)
+            let combinedNote: String? = {
+                switch (explanation?.isEmpty == false ? explanation : nil,
+                        userNote?.isEmpty == false ? userNote : nil) {
+                case let (exp?, note?): return "\(exp)\n\n\(note)"
+                case let (exp?, nil):   return exp
+                case let (nil, note?):  return note
+                default: return nil
+                }
+            }()
+            if let combinedNote = combinedNote {
+                payloadData["note"] = String(combinedNote.prefix(2500))
             }
 
             var dataParams: [String: Any] = [:]

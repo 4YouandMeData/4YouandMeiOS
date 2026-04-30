@@ -19,7 +19,7 @@ import Foundation
 @testable import ForYouAndMe
 
 class DiaryNoteItemHotFlashSpec: QuickSpec {
-    override func spec() {
+    override class func spec() {
 
         describe("DiaryNoteItemType.hotFlash") {
             it("maps to the server diary_type 'hot_flash_diary'") {

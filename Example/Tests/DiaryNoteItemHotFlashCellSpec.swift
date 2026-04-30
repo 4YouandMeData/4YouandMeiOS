@@ -11,7 +11,7 @@ import Foundation
 @testable import ForYouAndMe
 
 class DiaryNoteItemHotFlashCellSpec: QuickSpec {
-    override func spec() {
+    override class func spec() {
 
         describe("DiaryNoteItemHotFlashTableViewCell") {
 

@@ -29,7 +29,7 @@ import RxSwift
 @testable import ForYouAndMe
 
 class HotFlashFlowSpec: QuickSpec {
-    override func spec() {
+    override class func spec() {
 
         describe("MockRepository") {
             it("starts with zero recorded calls") {

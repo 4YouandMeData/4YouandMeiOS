@@ -179,6 +179,17 @@ enum MenstrualFlowAmount: String, CaseIterable {
         case .veryHeavy: return .menstrualFlowVeryHeavy
         }
     }
+
+    /// Backend `flow` value (FUAM-2925 schema: integer 0–4).
+    var intValue: Int {
+        switch self {
+        case .spotting:  return 0
+        case .light:     return 1
+        case .moderate:  return 2
+        case .heavy:     return 3
+        case .veryHeavy: return 4
+        }
+    }
 }
 
 enum MenstrualPeriodRelated: String, CaseIterable {
@@ -192,6 +203,17 @@ enum MenstrualPeriodRelated: String, CaseIterable {
         case .yes: return .yes
         case .no: return .no
         case .notSure, .letMeExplain: return .other
+        }
+    }
+
+    /// Backend `period_related` value (FUAM-2925 schema: yes/no/not_sure/other).
+    /// `letMeExplain` collapses to `other` — the explanation rides in `note`.
+    var backendValue: String {
+        switch self {
+        case .yes: return "yes"
+        case .no: return "no"
+        case .notSure: return "not_sure"
+        case .letMeExplain: return "other"
         }
     }
 }

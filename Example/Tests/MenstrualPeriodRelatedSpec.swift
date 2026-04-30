@@ -45,5 +45,21 @@ class MenstrualPeriodRelatedSpec: QuickSpec {
                 expect(MenstrualFlowAmount.veryHeavy.rawValue).to(equal("very_heavy"))
             }
         }
+
+        describe("FUAM-2925 backend value mappings") {
+            it("encodes flow as integer 0..4") {
+                expect(MenstrualFlowAmount.spotting.intValue).to(equal(0))
+                expect(MenstrualFlowAmount.light.intValue).to(equal(1))
+                expect(MenstrualFlowAmount.moderate.intValue).to(equal(2))
+                expect(MenstrualFlowAmount.heavy.intValue).to(equal(3))
+                expect(MenstrualFlowAmount.veryHeavy.intValue).to(equal(4))
+            }
+            it("collapses period_related letMeExplain to other") {
+                expect(MenstrualPeriodRelated.yes.backendValue).to(equal("yes"))
+                expect(MenstrualPeriodRelated.no.backendValue).to(equal("no"))
+                expect(MenstrualPeriodRelated.notSure.backendValue).to(equal("not_sure"))
+                expect(MenstrualPeriodRelated.letMeExplain.backendValue).to(equal("other"))
+            }
+        }
     }
 }

@@ -14,7 +14,7 @@ import UIKit
 @testable import ForYouAndMe
 
 class LinkedTaskPromptViewControllerSpec: QuickSpec {
-    override func spec() {
+    override class func spec() {
 
         let sampleData = LinkedTaskPromptViewController.Data(
             title: "Hot Flashes",
