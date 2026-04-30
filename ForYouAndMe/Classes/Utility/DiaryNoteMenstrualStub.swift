@@ -35,7 +35,8 @@ enum DiaryNoteMenstrualStub {
                                 bleeding: String,
                                 periodRelated: String,
                                 flowAmount: String,
-                                note: String?) -> DiaryNoteItem {
+                                note: String?,
+                                emoji: EmojiItem? = nil) -> DiaryNoteItem {
             var item = DiaryNoteItem(
                 id: id,
                 type: "diary_note",
@@ -52,12 +53,38 @@ enum DiaryNoteMenstrualStub {
                 bleeding: bleeding,
                 note: note
             )
+            if let emoji = emoji {
+                item.feedbackTags = [emoji]
+            }
             return item
         }
+
+        func emoji(id: String, tag: String, label: String) -> EmojiItem {
+            // EmojiItem JSON-codes from a `{id, type, tag, label}` dict; the
+            // synchronous decoder accepts a small inline JSON blob so we don't
+            // need a custom in-app initializer.
+            let json: [String: Any] = [
+                "id": id,
+                "type": "feedback_tag",
+                "tag": tag,
+                "label": label
+            ]
+            guard let data = try? JSONSerialization.data(withJSONObject: json),
+                  let item = try? JSONDecoder().decode(EmojiItem.self, from: data) else {
+                fatalError("Failed to build stub EmojiItem")
+            }
+            return item
+        }
+
+        // Reusable emoji samples covering the typical menstrual reactions.
+        let scaredEmoji = emoji(id: "stub_emoji_scared", tag: "😱", label: "scared")
+        let painEmoji = emoji(id: "stub_emoji_pain", tag: "😣", label: "in_pain")
+        let calmEmoji = emoji(id: "stub_emoji_calm", tag: "😌", label: "calm")
 
         var stubs: [DiaryNoteItem] = []
 
         // 3-day yes-run (5 → 3 days ago) — should collapse into a single row.
+        let yesRunEmojis: [EmojiItem?] = [calmEmoji, painEmoji, nil]
         for (index, daysOffset) in [5, 4, 3].enumerated() {
             let date = daysAgo(daysOffset)
             stubs.append(makeMenstrualEntry(
@@ -66,7 +93,8 @@ enum DiaryNoteMenstrualStub {
                 bleeding: "yes",
                 periodRelated: "yes",
                 flowAmount: index == 0 ? "light" : (index == 1 ? "moderate" : "heavy"),
-                note: index == 1 ? "Cramps in the afternoon" : nil
+                note: index == 1 ? "Cramps in the afternoon" : nil,
+                emoji: yesRunEmojis[index]
             ))
         }
 
@@ -77,7 +105,8 @@ enum DiaryNoteMenstrualStub {
             bleeding: "no",
             periodRelated: "no",
             flowAmount: "spotting",
-            note: "Spotting after a long run"
+            note: "Spotting after a long run",
+            emoji: nil
         ))
 
         // Isolated `other` (today) — singleton row, does NOT split runs.
@@ -87,7 +116,8 @@ enum DiaryNoteMenstrualStub {
             bleeding: "other",
             periodRelated: "let_me_explain",
             flowAmount: "light",
-            note: "After IUD insertion"
+            note: "After IUD insertion",
+            emoji: scaredEmoji
         ))
 
         return stubs
