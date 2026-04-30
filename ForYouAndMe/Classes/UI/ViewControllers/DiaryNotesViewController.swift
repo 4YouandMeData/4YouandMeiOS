@@ -262,8 +262,13 @@ class DiaryNotesViewController: BaseViewController {
                         .subscribe(onSuccess: { [weak self] diaryNote in
                             guard let self = self else { return }
                             let supported = diaryNote.filter { $0.diaryNoteType != nil }
-                            self.diaryNoteItems = supported
-                            self.sections = createDiaryNoteSections(from: supported)
+                            #if DEBUG
+                            let displayItems = DiaryNoteMenstrualStub.inject(into: supported)
+                            #else
+                            let displayItems = supported
+                            #endif
+                            self.diaryNoteItems = displayItems
+                            self.sections = createDiaryNoteSections(from: displayItems)
                             self.updateUI()
 
                         }, onFailure: { [weak self] error in
