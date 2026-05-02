@@ -94,6 +94,9 @@
         ],
         "JJFloatingActionButton": [
           "~> 3.0.1"
+        ],
+        "JamLog": [
+          "~> 1.1"
         ]
       }
     },
