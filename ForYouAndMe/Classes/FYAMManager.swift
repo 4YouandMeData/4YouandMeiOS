@@ -37,6 +37,13 @@ public class FYAMManager {
         let window = UIWindow(frame: UIScreen.main.bounds)
         window.makeKeyAndVisible()
 
+        // Smoke-test emit-point for JamLog (FUAM-3074). Lands AFTER
+        // makeKeyAndVisible so JamLog's `Logger.shared` registers its
+        // sceneCaptureState observer against a valid keyWindow.
+        let podVersion = PodUtils.getPodResourceBundle(withName: "ForYouAndMe")?
+            .infoDictionary?["CFBundleShortVersionString"] as? String ?? "unknown"
+        FYAMLog.info("ForYouAndMe v\(podVersion) started")
+
         // Firebase Setup
         FirebaseApp.configure()
         FirebaseConfiguration.shared.setLoggerLevel(.min)
