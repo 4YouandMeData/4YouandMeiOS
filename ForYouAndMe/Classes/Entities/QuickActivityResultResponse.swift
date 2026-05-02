@@ -34,14 +34,15 @@ struct QuickActivityResultResponse: Decodable, Equatable {
         let attrs = try? data?.nestedContainer(keyedBy: AttributeKeys.self, forKey: .attributes)
 
         let firstId: String? = {
+            guard let attrs = attrs else { return nil }
             // Primary contract: array of Integers under data.attributes.triggers_task_ids.
-            if let ints = try? attrs?.decodeIfPresent([Int].self, forKey: .triggersTaskIds),
-               let first = ints?.first {
+            if let ints = try? attrs.decodeIfPresent([Int].self, forKey: .triggersTaskIds),
+               let first = ints.first {
                 return String(first)
             }
             // Tolerate string-encoded ids in case the contract shifts.
-            if let strings = try? attrs?.decodeIfPresent([String].self, forKey: .triggersTaskIds),
-               let first = strings?.first(where: { !$0.isEmpty }) {
+            if let strings = try? attrs.decodeIfPresent([String].self, forKey: .triggersTaskIds),
+               let first = strings.first(where: { !$0.isEmpty }) {
                 return first
             }
             return nil
