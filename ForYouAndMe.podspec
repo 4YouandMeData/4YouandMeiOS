@@ -102,6 +102,7 @@ Pod::Spec.new do |s|
     core.dependency 'StepSlider', '~> 1.8.0'
     core.dependency 'BalzoGPUImage2', '~> 0.2.1'
     core.dependency 'JJFloatingActionButton', '~> 3.0.1'
+    core.dependency 'JamLog', '~> 1.1'
   end
 
   s.subspec 'Terra' do |terra|
