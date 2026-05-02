@@ -1,3 +1,7 @@
+## Release 0.99.1
+
+- Fixed missing "Take it now" popup after Quick Activity submit. The decoder now reads the linked-task ids from `data.attributes.triggers_task_ids` (the actual JSON:API envelope shape returned by the backend) instead of the legacy top-level `task_ids` key shipped in 0.99.0 (FUAM-3069). The 0.99.0 wiring otherwise stands: when the array is non-empty, the app shows the linked-task prompt; when empty/absent, the existing `reloadItems()` flow runs unchanged.
+
 ## Release 0.99.0
 
 - Added "Hot Flash" diary entry: new FAB action ("hot_flash" in `FAB_ELEMENTS`), 2-step creation flow (Last Hour / Earlier → date picker), success page with optional emoji feedback, diary feed cell rendering, and detail view (FUAM-2752). Requires 17 new study string keys (`FAB_HOT_FLASH`, `DIARY_NOTE_TAG_HOT_FLASH`, `DIARY_NOTE_HOT_FLASH_CELL`, `HOT_FLASH_STEP_ONE_*`, `HOT_FLASH_STEP_TWO_*`, `HOT_FLASH_NEXT_BUTTON`, `HOT_FLASH_CONFIRM_BUTTON`, `DIARY_NOTE_HOT_FLASH_STEP_EMOJI_*`, `DIARY_NOTE_HOT_FLASH_DETAIL_CLOSE_BUTTON`) and a new diary type `hot_flash_diary` accepted by the backend.

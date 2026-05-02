@@ -390,7 +390,7 @@ extension RepositoryImpl: Repository {
                 // Tolerate empty / non-JSON success bodies (legacy backend behavior pre-FUAM-3037).
                 // Only swallow decoding failures; surface real network/server errors.
                 if case ApiError.cannotParseData = error {
-                    return .just(QuickActivityResultResponse(taskIds: []))
+                    return .just(QuickActivityResultResponse(taskId: nil))
                 }
                 return .error(error)
             }

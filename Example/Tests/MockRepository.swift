@@ -31,7 +31,7 @@ final class MockRepository: Repository {
     // MARK: - Stubbed responses
     var hotFlashResult: Single<DiaryNoteItem> = .never()
     var updateDiaryNoteTextResult: Single<()> = .just(())
-    var quickActivityResultResponse: Single<QuickActivityResultResponse> = .just(QuickActivityResultResponse(taskIds: []))
+    var quickActivityResultResponse: Single<QuickActivityResultResponse> = .just(QuickActivityResultResponse(taskId: nil))
     var getTaskResult: Single<Feed> = .never()
 
     // MARK: - Hot Flash methods (under test)
