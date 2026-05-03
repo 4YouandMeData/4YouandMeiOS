@@ -2,6 +2,8 @@
 
 - Bumped declared Swift version from 5.2 to 5.9 in the podspec (FUAM-3056). No source changes; aligns the pod with the Swift 5.9 features already in use across the codebase and unblocks dependencies that require 5.9 (notably JamLog).
 - Integrated [JamLog](https://github.com/jamdotdev/jam-ios-log) (`JamLog ~> 1.1`) for zero-configuration log capture into Jam recordings (FUAM-3053). Logs are forwarded automatically while a Jam recording is active on the device and dropped silently otherwise — no per-host-app changes required, just `pod update ForYouAndMe`.
+- Added a JamLog smoke-test emit-point at `FYAMManager.startup` so any host app can confirm its Jam recording is wired up correctly without writing extra code (FUAM-3074).
+- Added a unified Telemetry layer that funnels network, navigation, and error events through structured sinks (FUAM-3075). Highlights: replaces Moya's `NetworkLoggerPlugin` with a `TelemetryPlugin` that captures requests/responses with redaction; navigation hooks in `BaseViewController` emit screen-level events; `AppNavigator.handleError` is now the single chokepoint for error telemetry. Network-payload caps were tuned (FUAM-3081 — higher overall body cap, separate per-method response cap) and bodies are parsed in full before redacted truncation to avoid mid-token cuts. Known limitation documented separately for the iOS marker API gap (FUAM-3082).
 
 ## Release 0.99.1
 
