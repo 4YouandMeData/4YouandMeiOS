@@ -160,3 +160,7 @@ Sinks are independent — no event routing rules at the facade. Each sink decide
 - **No measurable runtime cost when no Jam recording is active**: `JamLog.Logger` short-circuits on `.unreachable`. Verified via FUAM-3074.
 - **`mirrorPrintToJam` flag (FUAM-3053)**: kept for now as an escape hatch. Once full Telemetry coverage exists across the framework, mark it deprecated and remove in a future major.
 - **Crash logs**: `didCrashDuringPreviousExecution` mirroring into JamLog on next launch is a **stretch goal** filed as a follow-up under FUAM-3073.
+
+## Known limitations / upstream gaps
+
+- **No timeline event markers on iOS** (FUAM-3082). The Jam Chrome extension renders distinct visual markers on the timeline for HTTP requests and JS errors. The iOS `JamLog` SDK only exposes `debug`/`info`/`warn`/`error` log levels — there is no native marker / span / network-event API. Telemetry events therefore surface as console-style log lines in iOS Jam recordings, not as timeline markers. Revisit if `jamdotdev/jam-ios-log` adds a marker API upstream.
