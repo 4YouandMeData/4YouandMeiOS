@@ -74,12 +74,32 @@ class BaseViewController: UIViewController {
          // Ensure FAB is always on top of any other subview
          view.bringSubviewToFront(floatingButton)
      }
-    
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        // Telemetry hook: emit a `nav:appear` event for every screen.
+        // Coalescer: skip same-class re-appears within 500 ms (covers
+        // push/pop returns and modal-dismiss bounces).
+        let className = String(describing: type(of: self))
+        let now = Date()
+        if let last = Self.lastAppearance,
+           last.className == className,
+           now.timeIntervalSince(last.time) < 0.5 {
+            return
+        }
+        Self.lastAppearance = (className, now)
+        Telemetry.nav.appear(screen: title ?? className, className: className)
+    }
+
     override func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)
         // Force-close the FAB menu when this controller disappears (e.g. on tab switch)
         floatingButton.close(animated: false)
+        Telemetry.nav.disappear(screen: title ?? String(describing: type(of: self)),
+                                className: String(describing: type(of: self)))
     }
+
+    private static var lastAppearance: (className: String, time: Date)?
     
     // MARK: – Private Methods
     
