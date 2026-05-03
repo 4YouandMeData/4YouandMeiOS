@@ -24,12 +24,12 @@ class TestNetworkApiGateway: NetworkApiGateway {
     private func setupImmediateStub() {
         defaultProvider = MoyaProvider(endpointClosure: self.endpointMapping,
                                        stubClosure: MoyaProvider.immediatelyStub,
-                                       plugins: [self.loggerPlugin, self.accessTokenPlugin])
+                                       plugins: [self.telemetryPlugin, self.accessTokenPlugin])
     }
     
     private func setupDelayedStub(delay: TimeInterval) {
         defaultProvider = MoyaProvider(endpointClosure: self.endpointMapping,
                                        stubClosure: MoyaProvider.delayedStub(delay),
-                                       plugins: [self.loggerPlugin, self.accessTokenPlugin])
+                                       plugins: [self.telemetryPlugin, self.accessTokenPlugin])
     }
 }
