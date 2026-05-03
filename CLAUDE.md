@@ -117,8 +117,9 @@ Releases follow a strict sequence:
 4. **Merge to master** — `git checkout master && git merge develop`
 5. **Tag from master** — `git tag X.Y.Z` (lightweight tag on the version-bump commit)
 6. **Push master + tag** — to both remotes: `git push origin master --tags && git push github master --tags`
+7. **Publish to CocoaPods trunk** — from the repo root: `pod trunk push ForYouAndMe.podspec --allow-warnings`. Required so the new version is resolvable from cocoapods.org. Runs under the maintainer's personal `pod trunk` session, so Claude must remind rather than run it.
 
-**Important:** Tags MUST be created from `master`, not `develop`. The podspec `s.source` references `github` as the pod source repo, so the tag must exist there for `pod install` to work in consuming apps.
+**Important:** Tags MUST be created from `master`, not `develop`. The podspec `s.source` references `github` as the pod source repo, so the tag must exist there for `pod install` to work in consuming apps. Trunk publish (step 7) requires `--allow-warnings` because of legacy dependency deprecation notices.
 
 **Consuming apps** add the pod in their Podfile like:
 ```ruby

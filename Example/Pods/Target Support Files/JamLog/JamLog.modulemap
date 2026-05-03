@@ -1,0 +1,6 @@
+framework module JamLog {
+  umbrella header "JamLog-umbrella.h"
+
+  export *
+  module * { export * }
+}

@@ -23,22 +23,20 @@ class NetworkApiGateway: ApiGateway {
     
     var defaultProvider: MoyaProvider<DefaultService>!
     
-    lazy var loggerPlugin: PluginType = {
-        let formatter = NetworkLoggerPlugin.Configuration.Formatter(requestData: Data.JSONRequestDataFormatter,
-                                                                    responseData: Data.JSONRequestDataFormatter)
-        let logOptions: NetworkLoggerPlugin.Configuration.LogOptions = Constants.Test.NetworkLogVerbose
-            ? .verbose
-            : .default
-        let config = NetworkLoggerPlugin.Configuration(formatter: formatter, logOptions: logOptions)
-        return NetworkLoggerPlugin(configuration: config)
+    /// Replaced by `telemetryPlugin` (FUAM-3075). The unified telemetry
+    /// layer routes structured request/response events through JamLog
+    /// (which fans to `os.Logger` — visible in Xcode / Console.app), so
+    /// the stock NetworkLoggerPlugin's stdout role is fully subsumed.
+    lazy var telemetryPlugin: PluginType = {
+        return TelemetryPlugin(bodyCaptureMode: TelemetryConfig.networkBodyCaptureMode)
     }()
-    
+
     lazy var accessTokenPlugin: PluginType = {
         let tokenClosure: (TargetType) -> String = { _ in
             return self.storage.accessToken ?? ""
         }
         let accessTokenPlugin = AccessTokenPlugin(tokenClosure: tokenClosure)
-        
+
         return accessTokenPlugin
     }()
     
@@ -57,7 +55,7 @@ class NetworkApiGateway: ApiGateway {
     }
     
     func setupDefaultProvider() {
-        self.defaultProvider = MoyaProvider(endpointClosure: self.endpointMapping, plugins: [self.loggerPlugin, self.accessTokenPlugin])
+        self.defaultProvider = MoyaProvider(endpointClosure: self.endpointMapping, plugins: [self.telemetryPlugin, self.accessTokenPlugin])
     }
     
     func endpointMapping(forTarget target: DefaultService) -> Endpoint {

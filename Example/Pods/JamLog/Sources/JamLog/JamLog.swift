@@ -1,0 +1,46 @@
+import Foundation
+
+public enum JamLog {
+  public static func debug(
+    _ message: String,
+    file: String = #fileID,
+    function: String = #function,
+    line: UInt = #line
+  ) {
+    log(message, level: .debug, file: file, function: function, line: line)
+  }
+
+  public static func info(_ message: String, file: String = #fileID, function: String = #function, line: UInt = #line) {
+    log(message, level: .info, file: file, function: function, line: line)
+  }
+
+  public static func warn(_ message: String, file: String = #fileID, function: String = #function, line: UInt = #line) {
+    log(message, level: .warn, file: file, function: function, line: line)
+  }
+
+  public static func error(
+    _ message: String,
+    file: String = #fileID,
+    function: String = #function,
+    line: UInt = #line
+  ) {
+    log(message, level: .error, file: file, function: function, line: line)
+  }
+
+  public static func log(
+    _ message: String,
+    level: LogMessage.Level,
+    includesTrace: Bool = true,
+    file: String = #fileID,
+    function: String = #function,
+    line: UInt = #line
+  ) {
+    Task.detached {
+      let trace: LogMessage.Trace? = includesTrace ? .init(file: file, function: function, line: line) : nil
+
+      let logMessage = LogMessage(level: level, message: message, trace: trace)
+
+      await Logger.shared.log(logMessage)
+    }
+  }
+}

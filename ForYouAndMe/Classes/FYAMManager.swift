@@ -13,16 +13,35 @@ public class FYAMManager {
     
     public static var orientationLock: UIInterfaceOrientationMask { OrientationManager.currentOrientationLock }
     
+    /// Boots the framework and returns a configured window for the host app.
+    ///
+    /// - Parameter mirrorPrintToJam: When `true`, every `print(...)` /
+    ///   `debugPrint(...)` from the host app and the framework is captured
+    ///   into Jam recordings (via stdout/stderr piping), while still
+    ///   appearing in Xcode's debug console. **Note**: log lines may
+    ///   contain user data, so a host app team must opt in knowingly —
+    ///   anything they print during a Jam recording is included in the
+    ///   recording. Default `false`.
     public static func startup(withFontStyleMap fontStyleMap: FontStyleMap,
                                showDefaultUserInfo: Bool,
                                appleWatchAlternativeIntegrations: [Integration],
                                checkResourcesAvailability: Bool = false,
                                enableLocationServices: Bool = true,
                                healthReadDataTypes: [HealthDataType] = [],
-                               defaultDoseType: DoseType? = nil) -> UIWindow {
+                               defaultDoseType: DoseType? = nil,
+                               mirrorPrintToJam: Bool = false,
+                               networkBodyCaptureMode: NetworkBodyCaptureMode = .truncated) -> UIWindow {
+        if mirrorPrintToJam {
+            StdoutMirror.install()
+        }
+
+        // Stash the network capture mode for NetworkApiGateway to read
+        // when it builds its plugin chain in `Services.shared.setup(...)`.
+        TelemetryConfig.networkBodyCaptureMode = networkBodyCaptureMode
+
         let window = UIWindow(frame: UIScreen.main.bounds)
         window.makeKeyAndVisible()
-        
+
         // Firebase Setup
         FirebaseApp.configure()
         FirebaseConfiguration.shared.setLoggerLevel(.min)

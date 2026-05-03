@@ -8,7 +8,7 @@
 
 Pod::Spec.new do |s|
   s.name             = 'ForYouAndMe'
-  s.version          = '0.99.1'
+  s.version          = '0.99.2'
   s.summary          = 'Framework for research studies apps'
   s.description      = <<-DESC
                        ForYouAndMe is a framework aimed to easily develop an app for research study
@@ -23,7 +23,7 @@ Pod::Spec.new do |s|
 
   s.ios.deployment_target = '15.6'
 
-  s.swift_version = '5.2'
+  s.swift_version = '5.9'
 
   s.static_framework = true
 
@@ -102,6 +102,7 @@ Pod::Spec.new do |s|
     core.dependency 'StepSlider', '~> 1.8.0'
     core.dependency 'BalzoGPUImage2', '~> 0.2.1'
     core.dependency 'JJFloatingActionButton', '~> 3.0.1'
+    core.dependency 'JamLog', '~> 1.1'
   end
 
   s.subspec 'Terra' do |terra|

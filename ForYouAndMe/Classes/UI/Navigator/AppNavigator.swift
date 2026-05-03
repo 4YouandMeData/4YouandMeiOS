@@ -1033,6 +1033,13 @@ class AppNavigator {
                             onRetry: NotificationCallback? = nil,
                             dismissStyle: UIAlertAction.Style = .cancel) {
         SVProgressHUD.dismiss() // Safety dismiss
+
+        // Telemetry chokepoint — every `handleError` call site (~20 of
+        // them) flows through here, so a single emit-point covers them
+        // all. Domain string includes the presenter class for traceback.
+        let domain = "navigator.handleError@\(String(describing: type(of: presenter)))"
+        Telemetry.errors.handled(domain: domain, underlying: error)
+
         guard let error = error else {
             presenter.showAlert(forError: nil, onDismiss: onDismiss, onRetry: onRetry, dismissStyle: dismissStyle)
             return
@@ -1042,7 +1049,7 @@ class AppNavigator {
             presenter.showAlert(forError: nil, onDismiss: onDismiss, onRetry: onRetry, dismissStyle: dismissStyle)
             return
         }
-        
+
         if false == self.handleUserNotLoggedError(error: error) {
             presenter.showAlert(forError: alertError, onDismiss: onDismiss, onRetry: onRetry, dismissStyle: dismissStyle)
         }
