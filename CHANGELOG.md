@@ -1,3 +1,8 @@
+## Release 0.99.2
+
+- Bumped declared Swift version from 5.2 to 5.9 in the podspec (FUAM-3056). No source changes; aligns the pod with the Swift 5.9 features already in use across the codebase and unblocks dependencies that require 5.9 (notably JamLog).
+- Integrated [JamLog](https://github.com/jamdotdev/jam-ios-log) (`JamLog ~> 1.1`) for zero-configuration log capture into Jam recordings (FUAM-3053). Logs are forwarded automatically while a Jam recording is active on the device and dropped silently otherwise — no per-host-app changes required, just `pod update ForYouAndMe`.
+
 ## Release 0.99.1
 
 - Fixed missing "Take it now" popup after Quick Activity submit. The decoder now reads the linked-task ids from `data.attributes.triggers_task_ids` (the actual JSON:API envelope shape returned by the backend) instead of the legacy top-level `task_ids` key shipped in 0.99.0 (FUAM-3069). The 0.99.0 wiring otherwise stands: when the array is non-empty, the app shows the linked-task prompt; when empty/absent, the existing `reloadItems()` flow runs unchanged.
