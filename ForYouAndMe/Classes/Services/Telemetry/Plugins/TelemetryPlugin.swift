@@ -194,12 +194,27 @@ final class TelemetryPlugin: PluginType {
         }
     }
 
+    /// Hard ceiling on body size we'll attempt to parse. Walking and
+    /// redacting JSON has measurable cost; bodies larger than this are
+    /// reported as a placeholder. Picked to comfortably cover normal
+    /// REST traffic (study config, feeds, tasks) while bounding pathological
+    /// cases (image uploads / very large uploads).
+    private let parseInputCeilingBytes = 256 * 1024
+
+    /// Redact the FULL body first, then truncate the resulting redacted
+    /// string. This is critical: truncating raw bytes before parsing
+    /// breaks JSON mid-stream and falls through to the "non-JSON body"
+    /// placeholder — losing the redacted JSON exactly when the response
+    /// is most diagnostic.
     private func preview(data: Data?, contentType: String?, maxBytes: Int) -> String? {
         guard let data = data, !data.isEmpty else { return nil }
-        let truncated: Data = (data.count > maxBytes) ? data.prefix(maxBytes) : data
-        var redacted = Redactor.httpBody(truncated, contentType: contentType)
-        if data.count > maxBytes {
-            redacted += " [...truncated, original=\(data.count) bytes]"
+        guard data.count <= parseInputCeilingBytes else {
+            return "[body too large to parse, size=\(data.count) bytes]"
+        }
+        var redacted = Redactor.httpBody(data, contentType: contentType)
+        if maxBytes != Int.max && redacted.count > maxBytes {
+            let head = String(redacted.prefix(maxBytes))
+            redacted = "\(head) [...truncated, original_body=\(data.count) bytes]"
         }
         return redacted
     }
