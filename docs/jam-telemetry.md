@@ -65,7 +65,13 @@ Payload always includes `method`, `path`, `status` (response only), `duration_ms
 Body capture is configurable per host app via `FYAMManager.startup(..., networkBodyCaptureMode:)`:
 - `.none` — never capture bodies.
 - `.errorsOnly` — non-2xx response bodies only, redacted.
-- `.truncated` (default) — request bodies up to 1 KB, response bodies up to 4 KB on 2xx, full on non-2xx; all redacted.
+- `.truncated` (default) — request bodies and responses redacted, then truncated:
+  - **Request body**: 10 KB cap.
+  - **Response body, idempotent (GET/DELETE/HEAD)** 2xx: 40 KB cap.
+  - **Response body, mutating (POST/PUT/PATCH)** 2xx: 100 KB cap (the response usually carries the freshly-mutated entity in full — diagnostic gold).
+  - **Response body, non-2xx**: uncapped (full, redacted) regardless of method.
+
+Truncation runs on the **redacted JSON string** (post-parse, post-walk), never on the raw bytes — slicing raw bytes pre-parse breaks JSON mid-stream and loses the redacted output. A hard input-size ceiling of 256 KB bounds redactor CPU cost on pathological payloads (image uploads etc.); bodies above that emit a `[body too large to parse, size=… bytes]` placeholder.
 
 Sensitive endpoints (auth/token/OTP) are marked at the `DefaultService` level via `var isSensitive: Bool` and **always suppress bodies**, regardless of mode. Currently sensitive: `.emailLogin`, `.submitPhoneNumber`, `.verifyPhoneNumber`, `.sendPushToken`, `.getTerraToken`.
 

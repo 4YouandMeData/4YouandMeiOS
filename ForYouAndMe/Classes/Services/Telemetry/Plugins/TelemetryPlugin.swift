@@ -35,8 +35,11 @@ public protocol SensitivityAwareTarget {
 final class TelemetryPlugin: PluginType {
 
     private let bodyCaptureMode: NetworkBodyCaptureMode
-    private let requestBodyMaxBytes = 1024
-    private let responseBodyMaxBytes = 4096
+    // Body caps are tuned for typical JSON:API payloads — see
+    // docs/jam-telemetry.md for the rationale and operational notes.
+    private let requestBodyMaxBytes = 10 * 1024              // 10 KB
+    private let responseBodyMaxBytes = 40 * 1024             // 40 KB (idempotent reads)
+    private let responseBodyMutatingMaxBytes = 100 * 1024    // 100 KB (POST/PUT/PATCH 2xx — full mutated entity)
 
     // In-flight pairing so request/response share a correlation_id. Keyed by
     // the URL absoluteString (as a hashable proxy for the URLRequest).
@@ -189,9 +192,23 @@ final class TelemetryPlugin: PluginType {
             // Full but redacted on error.
             return preview(data: response.data, contentType: contentType, maxBytes: Int.max)
         case .truncated:
-            let cap = response.statusCode >= 400 ? Int.max : responseBodyMaxBytes
+            let cap = capForResponse(method: response.request?.httpMethod, status: response.statusCode)
             return preview(data: response.data, contentType: contentType, maxBytes: cap)
         }
+    }
+
+    /// Per-method response cap selection (FUAM-3081). Mutating-method 2xx
+    /// responses get a 100 KB cap because the response often carries the
+    /// freshly-mutated entity in full and that's exactly what we want to
+    /// see in a Jam recording. Idempotent reads stay at the smaller default.
+    /// Non-2xx is uncapped (full but redacted) regardless of method.
+    private func capForResponse(method: String?, status: Int) -> Int {
+        if status >= 400 { return Int.max }
+        let mutatingMethods: Set<String> = ["POST", "PUT", "PATCH"]
+        if let method = method?.uppercased(), mutatingMethods.contains(method) {
+            return responseBodyMutatingMaxBytes
+        }
+        return responseBodyMaxBytes
     }
 
     /// Hard ceiling on body size we'll attempt to parse. Walking and
