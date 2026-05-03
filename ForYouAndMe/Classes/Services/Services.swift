@@ -84,6 +84,23 @@ class Services {
         
         let analytics = AnalyticsManager(api: networkApiGateway)
         self.services.append(analytics)
+
+        // Register Telemetry sinks. JamLog (always), AnalyticsService bridge
+        // (mirrors a small set of events to Firebase Analytics), Crashlytics
+        // (mirrors `error:*` events as non-fatal records). Host apps can
+        // append their own sinks afterwards via `Telemetry.register(...)`.
+        Telemetry.setSinks([
+            JamLogSink(),
+            AnalyticsServiceSink(analytics: analytics),
+            CrashlyticsSink()
+        ])
+
+        // Lifecycle event — replaces the FUAM-3074 smoke-test FYAMLog.info
+        // line with a structured Telemetry event now that sinks are wired up.
+        let podVersion = PodUtils.getPodResourceBundle(withName: "ForYouAndMe")?
+            .infoDictionary?["CFBundleShortVersionString"] as? String ?? "unknown"
+        let hostBundleId = Bundle.main.bundleIdentifier
+        Telemetry.lifecycle.frameworkStart(podVersion: podVersion, hostBundleId: hostBundleId)
         
         #if HEALTHKIT
         let healthService = HealthManager(withReadDataTypes: servicesSetupData.healthReadDataTypes,
