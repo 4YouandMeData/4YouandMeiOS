@@ -8,7 +8,7 @@
 
 import UIKit
 import RxSwift
-#if HEALTHKIT
+#if SENSORKIT
 import SensorKit
 #endif
 
@@ -39,12 +39,11 @@ class Services {
     private(set) var mirSpirometryService: MirSpirometryService!
     private(set) var deeplinkService: DeeplinkService!
     private(set) var deviceService: DeviceService!
-#if HEALTHKIT
+#if TERRA
     private(set) var terraService: TerraService!
-    private(set) var sensorKitService: SensorKitService?
 #endif
 #if SENSORKIT
-    
+    private(set) var sensorKitService: SensorKitService?
 #endif
     private(set) var defaultDoseType: DoseType?
     private var window: UIWindow?
@@ -107,10 +106,17 @@ class Services {
                                           analyticsService: analytics,
                                           storage: storage,
                                           reachability: reachabilityService)
-        
+        #else
+        let healthService = DummyHealthManager()
+        #endif
+        services.append(healthService)
+
+        #if TERRA
         let terraService = TerraManager()
         self.services.append(terraService)
-        
+        #endif
+
+        #if SENSORKIT
         var sensorKitService: SensorKitManager?
         if NSClassFromString("SRSensorReader") != nil {
             var skMappers: [SRSensor: SensorSampleMapper] = [:]
@@ -159,13 +165,6 @@ class Services {
             self.services.append(skManager)
             sensorKitService = skManager
         }
-        #else
-        let healthService = DummyHealthManager()
-        #endif
-        services.append(healthService)
-        
-        #if SENSORKIT
-        
         #endif
         
         let repository = RepositoryImpl(api: networkApiGateway,
@@ -191,14 +190,18 @@ class Services {
         #if HEALTHKIT
         healthService.networkDelegate = repository
         healthService.clearanceDelegate = repository
+        #endif
+
+        #if TERRA
         self.terraService = terraService
-        
+        #endif
+
+        #if SENSORKIT
         if let sensorKitService = sensorKitService {
             sensorKitService.networkDelegate = repository
             sensorKitService.clearanceDelegate = repository
             self.sensorKitService = sensorKitService
         }
-        
         #endif
         
         // Assign concreate services

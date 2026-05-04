@@ -7,7 +7,7 @@
 
 import Foundation
 import RxSwift
-#if HEALTHKIT
+#if TERRA
 import TerraiOS
 #endif
 
@@ -47,7 +47,7 @@ class IntegrationSectionCoordinator {
     
     // MARK: - Coordinator
     var hidesBottomBarWhenPushed: Bool = false
-#if HEALTHKIT
+#if TERRA
     var terra: TerraManager?
 #endif
     
@@ -151,7 +151,7 @@ extension IntegrationSectionCoordinator: IntegrationPageCoordinator {
                 assertionFailure("Missing app for open behaviour")
                 return
             }
-            #if HEALTHKIT
+            #if TERRA
             Services.shared.terraService
                 .initialize()
                 .flatMap {

@@ -443,6 +443,59 @@ post_install do |installer_representation|
 end
 ```
 
+### SensorKit (Optional)
+
+ForYouAndMe supports collecting SensorKit data (accelerometer, visits, usage reports, media events on iOS 16.4+, keyboard metrics, etc.) independently of HealthKit. Enabling SensorKit is gated by its own `SENSORKIT` Swift compilation condition — set it alongside `HEALTHKIT` (or on its own) in your Podfile's `post_install` block.
+
+1.  Add Apple's SensorKit framework entitlement request to your provisioning profile (see [Apple's SensorKit documentation](https://developer.apple.com/documentation/sensorkit)).
+
+2.  In your Podfile, turn on the `SENSORKIT` compilation condition:
+
+```ruby
+post_install do |installer_representation|
+  installer_representation.pods_project.targets.each do |target|
+    if ['ForYouAndMe'].include? target.name
+      target.build_configurations.each do |config|
+        config.build_settings['SWIFT_ACTIVE_COMPILATION_CONDITIONS'] = '$(inherited) SENSORKIT'
+      end
+    end
+  end
+end
+```
+
+If you want both subsystems, set both:
+
+```ruby
+config.build_settings['SWIFT_ACTIVE_COMPILATION_CONDITIONS'] = '$(inherited) HEALTHKIT SENSORKIT'
+```
+
+3.  The set of SensorKit sensors collected by the pod is defined in `Constants.SensorKit.RequestedSensors`, intersected with the mappers wired up in `Services.setup(...)`. Update those if you need a different sensor list.
+
+### Terra (Optional)
+
+ForYouAndMe optionally integrates [Terra](https://tryterra.co) for third-party wearables. Terra lives in the `ForYouAndMe/Terra` subspec, gated by the `TERRA` Swift compilation condition.
+
+Unlike `HEALTHKIT` and `SENSORKIT`, you do **not** set `TERRA` manually in `post_install`. The subspec auto-defines it via `pod_target_xcconfig`, so simply adding the subspec to your Podfile is enough:
+
+```ruby
+target 'YourApp' do
+  pod 'ForYouAndMe',       :git => 'https://github.com/4YouandMeData/4YouandMeiOS.git', :tag => 'X.Y.Z'
+  pod 'ForYouAndMe/Terra', :git => 'https://github.com/4YouandMeData/4YouandMeiOS.git', :tag => 'X.Y.Z'
+end
+```
+
+Hosts that don't include the `Terra` subspec get a build that omits `import TerraiOS`, `TerraManager`, `TerraService`, and the `getTerraToken()` Repository call entirely — even when `HEALTHKIT` is on.
+
+### Compilation flags summary
+
+| Flag | Subsystems gated | Source of truth | Strip when unset |
+|---|---|---|---|
+| `HEALTHKIT` | HealthKit data collection (HealthManager, HealthDataType, …) | Set manually in Podfile `post_install` | `HealthManager` replaced by `DummyHealthManager` |
+| `SENSORKIT` | SensorKit sensor collection + permission UI | Set manually in Podfile `post_install` | `SensorKitManager` and SensorKit permission rows omitted |
+| `TERRA` | TerraiOS third-party wearables integration | Auto-defined by `ForYouAndMe/Terra` subspec | `TerraManager`, `TerraService`, `getTerraToken()`, and Terra integration call sites omitted |
+
+The three flags are fully independent — setting one does not imply the others. Previous versions of this pod coupled SensorKit and Terra behind a single `HEALTHKIT` flag; they were decoupled in `0.98.x` so host apps can enable any combination without being forced to ship the rest.
+
 Author
 ------
 

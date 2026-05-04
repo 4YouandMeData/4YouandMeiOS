@@ -119,7 +119,7 @@ extension RepositoryImpl: Repository {
     func logOut() {
         self.storage.user = nil
         self.api.logOut()
-        #if HEALTHKIT
+        #if SENSORKIT
         (Services.shared.sensorKitService as? SensorKitManager)?.refreshRecordingBasedOnClearance()
         #endif
     }
@@ -133,7 +133,7 @@ extension RepositoryImpl: Repository {
             .handleError()
             .do(onError: { error in print("Repository - error updateFirebaseToken: \(error.localizedDescription)") })
     }
-#if HEALTHKIT
+#if TERRA
     func getTerraToken() -> Single<TerraTokenResponse> {
         self.api.send(request: ApiRequest(serviceRequest: .getTerraToken))
             .handleError()

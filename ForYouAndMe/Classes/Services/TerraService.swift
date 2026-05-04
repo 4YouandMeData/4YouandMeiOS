@@ -5,7 +5,7 @@
 //  Created by Giuseppe Lapenta on 20/06/25.
 //
 
-#if HEALTHKIT
+#if TERRA
 import Foundation
 import TerraiOS
 import RxSwift

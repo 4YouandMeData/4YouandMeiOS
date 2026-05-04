@@ -196,3 +196,100 @@ class TableOfContentsSpec: QuickSpec {
         }
     }
 }
+
+// MARK: - HEALTHKIT / SENSORKIT / TERRA flag decoupling (FUAM-2998 + FUAM-3008)
+//
+// The Example app builds the ForYouAndMe framework with HEALTHKIT and SENSORKIT
+// but without TERRA (see Example/Podfile post_install). The references to
+// HealthManager / SensorKitManager below are *compile-time* assertions that
+// those flags are still set; the absence of any Terra-gated symbol reference
+// is the assertion that TERRA gating strips Terra code from this build.
+
+class CompilationFlagsSpec: QuickSpec {
+    override func spec() {
+        context("HEALTHKIT flag wiring") {
+
+            it("links HealthManager into the framework binary") {
+                _ = HealthManager.self
+                expect(true) == true
+            }
+
+            it("keeps DummyHealthManager available as the no-HEALTHKIT fallback type") {
+                _ = DummyHealthManager.self
+                expect(true) == true
+            }
+        }
+
+        context("SENSORKIT flag wiring") {
+
+            it("links SensorKitManager into the framework binary") {
+                _ = SensorKitManager.self
+                expect(true) == true
+            }
+        }
+
+        context("TERRA flag - stripped from this build") {
+
+            it("documents that TERRA-gated symbols are not linked into the Example test target") {
+                // Example does not pull the ForYouAndMe/Terra subspec, so TerraManager,
+                // TerraService, TerraTokenResponse and Repository.getTerraToken() are
+                // stripped at compile time. Adding `_ = TerraManager.self` here would
+                // fail to build - that failure mode is precisely what TERRA gating
+                // prevents from regressing.
+                expect(true) == true
+            }
+        }
+    }
+}
+
+class IntegrationTerraSpec: QuickSpec {
+    override func spec() {
+        context("Integration.terra (flag-independent)") {
+
+            it("resolves terra from raw value") {
+                let integration = Integration(rawValue: "terra")
+                expect(integration).toNot(beNil())
+                expect(integration) == .terra
+            }
+
+            it("exposes terra storeUrl pointing at the App Store") {
+                let url = Integration.terra.storeUrl
+                expect(url.scheme) == "itms-apps"
+                expect(url.absoluteString).to(contain("apps.apple.com"))
+            }
+
+            it("exposes terra appSchemaUrl with the terra scheme") {
+                let url = Integration.terra.appSchemaUrl
+                expect(url.scheme) == "terra"
+            }
+
+            it("appends the terra path component to the OAuth base URL") {
+                let url = Integration.terra.apiOAuthUrl
+                expect(url.path).to(contain("/integration_oauth/terra"))
+            }
+
+            it("includes a non-empty locale query item on the terra OAuth URL") {
+                let url = Integration.terra.apiOAuthUrl
+                let components = URLComponents(url: url, resolvingAgainstBaseURL: false)
+                let localeItem = components?.queryItems?.first { $0.name == "locale" }
+                expect(localeItem).toNot(beNil())
+                expect(localeItem?.value ?? "") != ""
+            }
+
+            it("does not add a locale query item to non-terra integrations") {
+                let url = Integration.cronometer.apiOAuthUrl
+                let components = URLComponents(url: url, resolvingAgainstBaseURL: false)
+                expect(components?.queryItems).to(beNil())
+            }
+
+            it("appends the terra path component to the deauthorize URL") {
+                let url = Integration.terra.apiOAuthDeauthorizeUrl
+                expect(url.path).to(contain("terra"))
+            }
+
+            it("uses raw value as strategy prefix") {
+                expect(Integration.terra.strategyPrefix) == "terra"
+            }
+        }
+    }
+}

@@ -8,7 +8,7 @@
 
 Pod::Spec.new do |s|
   s.name             = 'ForYouAndMe'
-  s.version          = '0.99.2'
+  s.version          = '0.100.0'
   s.summary          = 'Framework for research studies apps'
   s.description      = <<-DESC
                        ForYouAndMe is a framework aimed to easily develop an app for research study
@@ -107,5 +107,8 @@ Pod::Spec.new do |s|
 
   s.subspec 'Terra' do |terra|
     terra.dependency 'TerraiOS', '~> 1.6.26'
+    terra.pod_target_xcconfig = {
+      'SWIFT_ACTIVE_COMPILATION_CONDITIONS' => '$(inherited) TERRA'
+    }
   end
 end
