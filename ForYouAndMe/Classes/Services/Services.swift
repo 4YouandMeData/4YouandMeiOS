@@ -99,7 +99,7 @@ class Services {
         let podVersion = PodUtils.getPodResourceBundle(withName: "ForYouAndMe")?
             .infoDictionary?["CFBundleShortVersionString"] as? String ?? "unknown"
         let hostBundleId = Bundle.main.bundleIdentifier
-        Telemetry.lifecycle.frameworkStart(podVersion: podVersion, hostBundleId: hostBundleId)
+        Telemetry.Lifecycle.frameworkStart(podVersion: podVersion, hostBundleId: hostBundleId)
         
         #if HEALTHKIT
         let healthService = HealthManager(withReadDataTypes: servicesSetupData.healthReadDataTypes,

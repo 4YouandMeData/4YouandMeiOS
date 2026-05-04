@@ -1149,7 +1149,7 @@ class AppNavigator {
         // them) flows through here, so a single emit-point covers them
         // all. Domain string includes the presenter class for traceback.
         let domain = "navigator.handleError@\(String(describing: type(of: presenter)))"
-        Telemetry.errors.handled(domain: domain, underlying: error)
+        Telemetry.Errors.handled(domain: domain, underlying: error)
 
         guard let error = error else {
             presenter.showAlert(forError: nil, onDismiss: onDismiss, onRetry: onRetry, dismissStyle: dismissStyle)

@@ -6,7 +6,7 @@
 import Foundation
 
 extension Telemetry {
-    public enum nav {
+    public enum Nav {
 
         public static func appear(screen: String,
                                   className: String,
