@@ -141,20 +141,26 @@ struct ExcludeInvalid<Element: Decodable>: Decodable {
         }
 
         while !container.isAtEnd {
-            // FUAM-3037 DEBUG: capture the actual decode error per element
-            // instead of relying on FailableDecodable's silent try?.
+            // FUAM-3037 captures the actual decode error per element. FUAM-3109:
+            // a throwing `decode(_:)` does NOT advance `currentIndex` (per Apple's
+            // UnkeyedDecodingContainer contract), so a previous version of this
+            // loop spun forever on the first invalid element. We force forward
+            // progress by decoding through `FailableDecodable` on the catch path
+            // — its init never throws, so the parent container's currentIndex
+            // always advances regardless of the inner element's validity.
             do {
                 let element = try container.decode(Element.self)
                 elements.append(element)
             } catch {
                 print("[ExcludeInvalid<\(Element.self)>] Item excluded — decode error: \(error)")
+                _ = try? container.decode(FailableDecodable<Element>.self)
             }
         }
 
         self.wrappedValue = elements
     }
 }
-    
+
 @propertyWrapper
 struct ExcludeInvalidCodable<Element: Codable>: Codable {
     

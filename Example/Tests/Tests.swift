@@ -293,3 +293,99 @@ class IntegrationTerraSpec: QuickSpec {
         }
     }
 }
+
+// MARK: - FUAM-3109 — ExcludeInvalid must not infinite-loop on the first invalid element.
+//
+// Regression introduced in pod 0.99.0 (commit be497053, FUAM-3037): the
+// container.decode(Element.self) inside ExcludeInvalid does NOT advance the
+// UnkeyedDecodingContainer's currentIndex on a throwing decode, so a single
+// invalid array element pinned the main thread in a tight log-and-retry loop.
+// These specs lock in the fix and would hang indefinitely on a future
+// regression — Quick's `waitUntil` timeout is the safety valve.
+
+private struct ExcludeInvalidSystemPermissionsContainer: Decodable {
+    @ExcludeInvalid var permissions: [SystemPermission]
+}
+
+class ExcludeInvalidRegressionSpec: QuickSpec {
+    override func spec() {
+        context("ExcludeInvalid<SystemPermission> with mixed valid/invalid array") {
+
+            it("skips invalid entries and returns valid ones without hanging") {
+                let json = """
+                {"permissions": ["health", "microphone", "notification"]}
+                """.data(using: .utf8)!
+
+                var decoded: [SystemPermission] = []
+                waitUntil(timeout: .seconds(2)) { done in
+                    DispatchQueue.global(qos: .userInitiated).async {
+                        do {
+                            let container = try JSONDecoder().decode(
+                                ExcludeInvalidSystemPermissionsContainer.self,
+                                from: json)
+                            decoded = container.permissions
+                        } catch {
+                            fail("Decode threw unexpectedly: \(error)")
+                        }
+                        done()
+                    }
+                }
+                expect(decoded) == [.health, .notification]
+            }
+
+            it("skips a single invalid leading entry") {
+                let json = """
+                {"permissions": ["microphone"]}
+                """.data(using: .utf8)!
+
+                var decoded: [SystemPermission] = []
+                waitUntil(timeout: .seconds(2)) { done in
+                    DispatchQueue.global(qos: .userInitiated).async {
+                        let container = try? JSONDecoder().decode(
+                            ExcludeInvalidSystemPermissionsContainer.self,
+                            from: json)
+                        decoded = container?.permissions ?? []
+                        done()
+                    }
+                }
+                expect(decoded).to(beEmpty())
+            }
+
+            it("skips multiple consecutive invalid entries") {
+                let json = """
+                {"permissions": ["microphone", "camera", "bluetooth", "health"]}
+                """.data(using: .utf8)!
+
+                var decoded: [SystemPermission] = []
+                waitUntil(timeout: .seconds(2)) { done in
+                    DispatchQueue.global(qos: .userInitiated).async {
+                        let container = try? JSONDecoder().decode(
+                            ExcludeInvalidSystemPermissionsContainer.self,
+                            from: json)
+                        decoded = container?.permissions ?? []
+                        done()
+                    }
+                }
+                expect(decoded) == [.health]
+            }
+
+            it("returns empty for an empty array (no spurious advance)") {
+                let json = """
+                {"permissions": []}
+                """.data(using: .utf8)!
+
+                var decoded: [SystemPermission] = [.health] // sentinel
+                waitUntil(timeout: .seconds(2)) { done in
+                    DispatchQueue.global(qos: .userInitiated).async {
+                        let container = try? JSONDecoder().decode(
+                            ExcludeInvalidSystemPermissionsContainer.self,
+                            from: json)
+                        decoded = container?.permissions ?? [.health]
+                        done()
+                    }
+                }
+                expect(decoded).to(beEmpty())
+            }
+        }
+    }
+}
