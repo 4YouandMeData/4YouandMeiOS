@@ -597,3 +597,185 @@ class PermissionWatchdogSpec: QuickSpec {
         }
     }
 }
+
+// MARK: - FUAM-3021 — Watchdog telemetry surface
+
+/// Capture-everything sink for telemetry-emit assertions.
+final class CapturingTelemetrySink: TelemetrySink {
+    private(set) var events: [TelemetryEvent] = []
+    func receive(_ event: TelemetryEvent) {
+        events.append(event)
+    }
+    func reset() { events.removeAll() }
+}
+
+/// Mock AnalyticsService used to verify the AnalyticsServiceSink bridge.
+final class CapturingAnalyticsService: AnalyticsService {
+    private(set) var trackedEvents: [AnalyticsEvent] = []
+    func track(event: AnalyticsEvent) {
+        trackedEvents.append(event)
+    }
+    func reset() { trackedEvents.removeAll() }
+}
+
+class WatchdogTelemetrySpec: QuickSpec {
+    override func spec() {
+
+        context("Telemetry.errors.permissionWatchdogTripped") {
+            it("emits one error:permission.watchdog.tripped event with the spec'd payload") {
+                let sink = CapturingTelemetrySink()
+                Telemetry.setSinks([sink])
+                defer { Telemetry.setSinks([]) }
+
+                Telemetry.errors.permissionWatchdogTripped(
+                    branch: "health",
+                    previousBranch: nil,
+                    elapsedMs: 8000,
+                    attempt: 1)
+
+                expect(sink.events).to(haveCount(1))
+                let event = sink.events[0]
+                expect(event.fullName) == "error:permission.watchdog.tripped"
+                expect(event.level) == .warn
+                expect(event.payload["branch"] as? String) == "health"
+                expect(event.payload["elapsed_ms"] as? Int) == 8000
+                expect(event.payload["attempt"] as? Int) == 1
+                expect(event.payload["host_app"]).toNot(beNil())
+                expect(event.payload["os_version"]).toNot(beNil())
+                expect(event.payload["previous_branch"]).to(beNil())
+            }
+
+            it("includes previous_branch when supplied") {
+                let sink = CapturingTelemetrySink()
+                Telemetry.setSinks([sink])
+                defer { Telemetry.setSinks([]) }
+
+                Telemetry.errors.permissionWatchdogTripped(
+                    branch: "sensorkit",
+                    previousBranch: "health",
+                    elapsedMs: 8123,
+                    attempt: 2)
+
+                expect(sink.events).to(haveCount(1))
+                expect(sink.events[0].payload["previous_branch"] as? String) == "health"
+            }
+        }
+
+        context("Telemetry.action.permissionWatchdog{Retry|Skip|OpenSettings}") {
+            it("emits the corresponding action events with the spec'd payload") {
+                let sink = CapturingTelemetrySink()
+                Telemetry.setSinks([sink])
+                defer { Telemetry.setSinks([]) }
+
+                Telemetry.action.permissionWatchdogRetry(branch: "notification", attempt: 2)
+                Telemetry.action.permissionWatchdogSkip(branch: "location", wasFirstAttempt: true)
+                Telemetry.action.permissionWatchdogOpenSettings(branch: "health", attempt: 3)
+
+                expect(sink.events).to(haveCount(3))
+                expect(sink.events[0].fullName) == "action:permission.watchdog.retry"
+                expect(sink.events[0].payload["branch"] as? String) == "notification"
+                expect(sink.events[0].payload["attempt"] as? Int) == 2
+
+                expect(sink.events[1].fullName) == "action:permission.watchdog.skip"
+                expect(sink.events[1].payload["branch"] as? String) == "location"
+                expect(sink.events[1].payload["was_first_attempt"] as? Bool) == true
+
+                expect(sink.events[2].fullName) == "action:permission.watchdog.open_settings"
+                expect(sink.events[2].payload["branch"] as? String) == "health"
+                expect(sink.events[2].payload["attempt"] as? Int) == 3
+            }
+        }
+
+        context("AnalyticsServiceSink bridge") {
+            it("forwards error:permission.watchdog.tripped to AnalyticsEvent.permissionWatchdogTimeout") {
+                let analytics = CapturingAnalyticsService()
+                let bridge = AnalyticsServiceSink(analytics: analytics)
+
+                let event = TelemetryEvent(
+                    category: .error,
+                    name: "permission.watchdog.tripped",
+                    level: .warn,
+                    payload: [
+                        "branch": "health",
+                        "previous_branch": "location",
+                        "elapsed_ms": 7500,
+                        "attempt": 1,
+                        "host_app": "com.example.test",
+                        "os_version": "26.0"
+                    ])
+                bridge.receive(event)
+
+                expect(analytics.trackedEvents).to(haveCount(1))
+                if case let .permissionWatchdogTimeout(branch, previousBranch, elapsedMs, attempt) = analytics.trackedEvents[0] {
+                    expect(branch) == "health"
+                    expect(previousBranch) == "location"
+                    expect(elapsedMs) == 7500
+                    expect(attempt) == 1
+                } else {
+                    fail("Expected permissionWatchdogTimeout, got \(analytics.trackedEvents[0])")
+                }
+            }
+
+            it("forwards action:permission.watchdog.skip to AnalyticsEvent.permissionWatchdogSkipped") {
+                let analytics = CapturingAnalyticsService()
+                let bridge = AnalyticsServiceSink(analytics: analytics)
+
+                bridge.receive(TelemetryEvent(
+                    category: .action,
+                    name: "permission.watchdog.skip",
+                    level: .info,
+                    payload: ["branch": "notification", "was_first_attempt": false]))
+
+                expect(analytics.trackedEvents).to(haveCount(1))
+                if case let .permissionWatchdogSkipped(branch, wasFirstAttempt) = analytics.trackedEvents[0] {
+                    expect(branch) == "notification"
+                    expect(wasFirstAttempt) == false
+                } else {
+                    fail("Expected permissionWatchdogSkipped, got \(analytics.trackedEvents[0])")
+                }
+            }
+
+            it("does NOT forward retry or open_settings (those stay diagnostic-only)") {
+                let analytics = CapturingAnalyticsService()
+                let bridge = AnalyticsServiceSink(analytics: analytics)
+
+                bridge.receive(TelemetryEvent(
+                    category: .action,
+                    name: "permission.watchdog.retry",
+                    level: .info,
+                    payload: ["branch": "health", "attempt": 2]))
+                bridge.receive(TelemetryEvent(
+                    category: .action,
+                    name: "permission.watchdog.open_settings",
+                    level: .info,
+                    payload: ["branch": "health", "attempt": 3]))
+
+                expect(analytics.trackedEvents).to(beEmpty())
+            }
+        }
+
+        context("Redactor.scrub does not clobber watchdog payload keys") {
+            it("preserves branch, attempt, elapsed_ms, host_app, previous_branch unchanged") {
+                let sink = CapturingTelemetrySink()
+                Telemetry.setSinks([sink])
+                defer { Telemetry.setSinks([]) }
+
+                Telemetry.errors.permissionWatchdogTripped(
+                    branch: "health",
+                    previousBranch: "notification",
+                    elapsedMs: 1234,
+                    attempt: 1)
+
+                expect(sink.events).to(haveCount(1))
+                let p = sink.events[0].payload
+                // Sanity check: redaction did not stringify, drop, or replace
+                // any of these with "[redacted]".
+                expect(p["branch"] as? String) == "health"
+                expect(p["previous_branch"] as? String) == "notification"
+                expect(p["attempt"] as? Int) == 1
+                expect(p["elapsed_ms"] as? Int) == 1234
+                expect((p["host_app"] as? String) != "[redacted]") == true
+            }
+        }
+    }
+}

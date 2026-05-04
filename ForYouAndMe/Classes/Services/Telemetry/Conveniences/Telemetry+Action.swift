@@ -78,5 +78,52 @@ extension Telemetry {
                 trace: TelemetryTrace(file: file, function: function, line: line)
             ))
         }
+
+        // FUAM-3021. Opt-in permission-chain watchdog user actions — emitted
+        // when the user taps Retry / Skip / Open Settings on the watchdog
+        // alert. The trip itself is `error:permission.watchdog.tripped`
+        // (Telemetry+Error).
+
+        public static func permissionWatchdogRetry(branch: String,
+                                                   attempt: Int,
+                                                   file: String = #fileID,
+                                                   function: String = #function,
+                                                   line: UInt = #line) {
+            track(TelemetryEvent(
+                category: .action,
+                name: "permission.watchdog.retry",
+                level: .info,
+                payload: ["branch": branch, "attempt": attempt],
+                trace: TelemetryTrace(file: file, function: function, line: line)
+            ))
+        }
+
+        public static func permissionWatchdogSkip(branch: String,
+                                                  wasFirstAttempt: Bool,
+                                                  file: String = #fileID,
+                                                  function: String = #function,
+                                                  line: UInt = #line) {
+            track(TelemetryEvent(
+                category: .action,
+                name: "permission.watchdog.skip",
+                level: .info,
+                payload: ["branch": branch, "was_first_attempt": wasFirstAttempt],
+                trace: TelemetryTrace(file: file, function: function, line: line)
+            ))
+        }
+
+        public static func permissionWatchdogOpenSettings(branch: String,
+                                                          attempt: Int,
+                                                          file: String = #fileID,
+                                                          function: String = #function,
+                                                          line: UInt = #line) {
+            track(TelemetryEvent(
+                category: .action,
+                name: "permission.watchdog.open_settings",
+                level: .info,
+                payload: ["branch": branch, "attempt": attempt],
+                trace: TelemetryTrace(file: file, function: function, line: line)
+            ))
+        }
     }
 }
