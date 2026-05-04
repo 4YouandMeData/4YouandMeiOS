@@ -18,6 +18,16 @@ final class MockRepository: Repository {
     private(set) var sendDiaryNoteHotFlashCallCount = 0
     private(set) var lastSentHotFlashData: DiaryNoteHotFlashData?
 
+    // FUAM-2937/2936: capture menstrual baseline saves so coordinator tests
+    // can assert what was PATCHed.
+    private(set) var sendMenstrualUserSettingsCallCount = 0
+    private(set) var lastSentMenstrualHadPeriod3Mo: MenstrualHadPeriod3Mo?
+    private(set) var lastSentMenstrualLastPeriodDate: Date?
+    var sendMenstrualUserSettingsResult: Single<()> = .just(())
+
+    private(set) var getUserSettingsCallCount = 0
+    var getUserSettingsResult: Single<UserSettings> = .never()
+
     private(set) var updateDiaryNoteTextCallCount = 0
     private(set) var lastUpdatedDiaryNote: DiaryNoteItem?
 
@@ -115,8 +125,18 @@ final class MockRepository: Repository {
     func refreshUser() -> Single<User> { .never() }
     func sendUserInfoParameters(userParameterRequests: [UserInfoParameterRequest]) -> Single<User> { .never() }
     func getUserData() -> Single<UserData> { .never() }
-    func getUserSettings() -> Single<UserSettings> { .never() }
+    func getUserSettings() -> Single<UserSettings> {
+        getUserSettingsCallCount += 1
+        return getUserSettingsResult
+    }
     func sendUserSettings(seconds: Int?, notificationTime: Int?) -> Single<()> { .never() }
+    func sendMenstrualUserSettings(hadPeriod3Mo: MenstrualHadPeriod3Mo?,
+                                   lastPeriodDate: Date?) -> Single<()> {
+        sendMenstrualUserSettingsCallCount += 1
+        lastSentMenstrualHadPeriod3Mo = hadPeriod3Mo
+        lastSentMenstrualLastPeriodDate = lastPeriodDate
+        return sendMenstrualUserSettingsResult
+    }
 
     func getSurvey(surveyId: String) -> Single<SurveyGroup> { .never() }
     func sendSurveyTaskResult(surveyTaskId: String, results: [SurveyResult]) -> Single<()> { .never() }

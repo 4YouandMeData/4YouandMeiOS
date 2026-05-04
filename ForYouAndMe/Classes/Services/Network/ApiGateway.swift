@@ -83,6 +83,11 @@ enum DefaultService {
     case getUserData
     case getUserSettings
     case sendUserSettings(settings: Int?, notificationTime: Int?)
+    /// FUAM-2937 / FUAM-2936: PATCH the menstrual baseline fields without
+    /// disturbing notification_time/daily_survey_time. Independent from
+    /// `sendUserSettings` because the latter clobbers `notification_time`
+    /// to NULL when its argument is nil.
+    case sendMenstrualUserSettings(hadPeriod3Mo: MenstrualHadPeriod3Mo?, lastPeriodDate: Date?)
     // Survey
     case getSurvey(surveyId: String)
     case sendSurveyTaskResultData(surveyTaskId: String, results: [SurveyResult])

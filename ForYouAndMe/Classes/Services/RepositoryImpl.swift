@@ -582,7 +582,14 @@ extension RepositoryImpl: Repository {
                                                                                    notificationTime: notificationTime)))
             .handleError()
     }
-    
+
+    func sendMenstrualUserSettings(hadPeriod3Mo: MenstrualHadPeriod3Mo?,
+                                   lastPeriodDate: Date?) -> Single<()> {
+        return self.api.send(request: ApiRequest(serviceRequest:
+            .sendMenstrualUserSettings(hadPeriod3Mo: hadPeriod3Mo, lastPeriodDate: lastPeriodDate)))
+            .handleError()
+    }
+
     // MARK: - Survey
     
     func getSurvey(surveyId: String) -> Single<SurveyGroup> {

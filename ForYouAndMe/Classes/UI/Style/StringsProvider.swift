@@ -305,6 +305,17 @@ enum StringKey: String, CaseIterable, CodingKey {
     case menstrualDetailDeleteConfirm = "MENSTRUAL_DETAIL_DELETE_CONFIRM"
     case menstrualDetailDeleteCancel = "MENSTRUAL_DETAIL_DELETE_CANCEL"
 
+    // Menstrual Cycle Information — inline onboarding (FUAM-2937) + Settings panel (FUAM-2936)
+    case menstrualOnboardingPeriod3MoTitle = "MENSTRUAL_ONBOARDING_PERIOD_3MO_TITLE"
+    case menstrualOnboardingPeriod3MoYes = "MENSTRUAL_ONBOARDING_PERIOD_3MO_YES"
+    case menstrualOnboardingPeriod3MoNo = "MENSTRUAL_ONBOARDING_PERIOD_3MO_NO"
+    case menstrualOnboardingPeriod3MoUnsure = "MENSTRUAL_ONBOARDING_PERIOD_3MO_UNSURE"
+    case menstrualOnboardingLastPeriodTitle = "MENSTRUAL_ONBOARDING_LAST_PERIOD_TITLE"
+    case menstrualOnboardingLastPeriodFieldLabel = "MENSTRUAL_ONBOARDING_LAST_PERIOD_FIELD_LABEL"
+    case menstrualSettingsMenuItem = "MENSTRUAL_SETTINGS_MENU_ITEM"
+    case menstrualSettingsTitle = "MENSTRUAL_SETTINGS_TITLE"
+    case menstrualSettingsSelectPlaceholder = "MENSTRUAL_SETTINGS_SELECT_PLACEHOLDER"
+
     // My Doses
     case diaryNoteFabDoses = "FAB_MY_DOSES"
     case doseNextButton = "DOSE_NEXT_BUTTON"

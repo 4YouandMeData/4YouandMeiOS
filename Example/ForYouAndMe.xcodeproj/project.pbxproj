@@ -22,6 +22,9 @@
 		2935A0030001F37A0001AAAA /* DiaryNoteMenstrualDataSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2935A0040001F37A0001AAAA /* DiaryNoteMenstrualDataSpec.swift */; };
 		2935A0050001F37A0001AAAA /* MenstrualPayloadDecodingSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2935A0060001F37A0001AAAA /* MenstrualPayloadDecodingSpec.swift */; };
 		2935A0070001F37A0001AAAA /* MenstrualNetworkTaskSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2935A0080001F37A0001AAAA /* MenstrualNetworkTaskSpec.swift */; };
+		2937A0010001F37A0001AAAA /* MenstrualUserSettingsTaskSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2937A0020001F37A0001AAAA /* MenstrualUserSettingsTaskSpec.swift */; };
+		2937A0030001F37A0001AAAA /* UserSettingsDecodingSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2937A0040001F37A0001AAAA /* UserSettingsDecodingSpec.swift */; };
+		2937A0050001F37A0001AAAA /* MenstrualOnboardingFlowSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2937A0060001F37A0001AAAA /* MenstrualOnboardingFlowSpec.swift */; };
 		2934A0010001F37A0001AAAA /* MenstrualPeriodEntryCellSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2934A0020001F37A0001AAAA /* MenstrualPeriodEntryCellSpec.swift */; };
 		2933A0010001F37A0001AAAA /* MenstrualSequenceGroupingSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2933A0020001F37A0001AAAA /* MenstrualSequenceGroupingSpec.swift */; };
 		2925A0010001F37A0001AAAA /* DiaryNotesEndpointPathSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2925A0020001F37A0001AAAA /* DiaryNotesEndpointPathSpec.swift */; };
@@ -87,6 +90,9 @@
 		2935A0040001F37A0001AAAA /* DiaryNoteMenstrualDataSpec.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DiaryNoteMenstrualDataSpec.swift; sourceTree = "<group>"; };
 		2935A0060001F37A0001AAAA /* MenstrualPayloadDecodingSpec.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MenstrualPayloadDecodingSpec.swift; sourceTree = "<group>"; };
 		2935A0080001F37A0001AAAA /* MenstrualNetworkTaskSpec.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MenstrualNetworkTaskSpec.swift; sourceTree = "<group>"; };
+		2937A0020001F37A0001AAAA /* MenstrualUserSettingsTaskSpec.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MenstrualUserSettingsTaskSpec.swift; sourceTree = "<group>"; };
+		2937A0040001F37A0001AAAA /* UserSettingsDecodingSpec.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = UserSettingsDecodingSpec.swift; sourceTree = "<group>"; };
+		2937A0060001F37A0001AAAA /* MenstrualOnboardingFlowSpec.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MenstrualOnboardingFlowSpec.swift; sourceTree = "<group>"; };
 		2934A0020001F37A0001AAAA /* MenstrualPeriodEntryCellSpec.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MenstrualPeriodEntryCellSpec.swift; sourceTree = "<group>"; };
 		2933A0020001F37A0001AAAA /* MenstrualSequenceGroupingSpec.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MenstrualSequenceGroupingSpec.swift; sourceTree = "<group>"; };
 		2925A0020001F37A0001AAAA /* DiaryNotesEndpointPathSpec.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DiaryNotesEndpointPathSpec.swift; sourceTree = "<group>"; };
@@ -199,6 +205,9 @@
 				2935A0040001F37A0001AAAA /* DiaryNoteMenstrualDataSpec.swift */,
 				2935A0060001F37A0001AAAA /* MenstrualPayloadDecodingSpec.swift */,
 				2935A0080001F37A0001AAAA /* MenstrualNetworkTaskSpec.swift */,
+				2937A0020001F37A0001AAAA /* MenstrualUserSettingsTaskSpec.swift */,
+				2937A0040001F37A0001AAAA /* UserSettingsDecodingSpec.swift */,
+				2937A0060001F37A0001AAAA /* MenstrualOnboardingFlowSpec.swift */,
 				2934A0020001F37A0001AAAA /* MenstrualPeriodEntryCellSpec.swift */,
 				2933A0020001F37A0001AAAA /* MenstrualSequenceGroupingSpec.swift */,
 				2925A0020001F37A0001AAAA /* DiaryNotesEndpointPathSpec.swift */,
@@ -500,6 +509,9 @@
 				2935A0030001F37A0001AAAA /* DiaryNoteMenstrualDataSpec.swift in Sources */,
 				2935A0050001F37A0001AAAA /* MenstrualPayloadDecodingSpec.swift in Sources */,
 				2935A0070001F37A0001AAAA /* MenstrualNetworkTaskSpec.swift in Sources */,
+				2937A0010001F37A0001AAAA /* MenstrualUserSettingsTaskSpec.swift in Sources */,
+				2937A0030001F37A0001AAAA /* UserSettingsDecodingSpec.swift in Sources */,
+				2937A0050001F37A0001AAAA /* MenstrualOnboardingFlowSpec.swift in Sources */,
 				2934A0010001F37A0001AAAA /* MenstrualPeriodEntryCellSpec.swift in Sources */,
 				2933A0010001F37A0001AAAA /* MenstrualSequenceGroupingSpec.swift in Sources */,
 				2925A0010001F37A0001AAAA /* DiaryNotesEndpointPathSpec.swift in Sources */,

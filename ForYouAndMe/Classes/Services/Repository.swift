@@ -117,7 +117,10 @@ protocol Repository: AnyObject {
     func getUserData() -> Single<UserData>
     func getUserSettings() -> Single<UserSettings>
     func sendUserSettings(seconds: Int?, notificationTime: Int?) -> Single<()>
-    
+    /// FUAM-2937 / FUAM-2936: PATCH only the menstrual baseline fields.
+    func sendMenstrualUserSettings(hadPeriod3Mo: MenstrualHadPeriod3Mo?,
+                                   lastPeriodDate: Date?) -> Single<()>
+
     // Survey
     func getSurvey(surveyId: String) -> Single<SurveyGroup>
     func sendSurveyTaskResult(surveyTaskId: String, results: [SurveyResult]) -> Single<()>

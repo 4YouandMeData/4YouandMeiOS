@@ -43,6 +43,10 @@ class AppNavigator {
     private var currentCoordinator: Coordinator?
     private weak var currentActivityCoordinator: ActivitySectionCoordinator?
     private var hotFlashCoordinator: HotFlashCoordinator?
+    /// FUAM-2937: kept alive while the inline menstrual onboarding modal is
+    /// presented. Without this strong reference the coordinator is deallocated
+    /// before the user taps back/Next, and the delegate callbacks no-op.
+    private var menstrualOnboardingCoordinator: MenstrualOnboardingCoordinator?
     
     private var isTaskInProgress: Bool {
         return nil != self.currentActivityCoordinator
@@ -799,6 +803,57 @@ class AppNavigator {
     public func openMenstrualEntryViewController(presenter: UIViewController,
                                                  variant: FlowVariant = .standalone,
                                                  alert: Alert? = nil) {
+        // FUAM-2937: gate the wizard with the inline onboarding when the
+        // menstrual baseline is unset, OR when it is "no" (had-no-period in
+        // the past 3 months) — the act of creating a menstrual diary entry
+        // contradicts that answer, so we re-collect the baseline.
+        self.repository.getUserSettings()
+            .addProgress()
+            .subscribe(onSuccess: { [weak self, weak presenter] settings in
+                guard let self = self, let presenter = presenter else { return }
+                if settings.needsMenstrualOnboarding {
+                    self.openMenstrualOnboarding(presenter: presenter) { [weak self, weak presenter] cancelled in
+                        guard let self = self, let presenter = presenter, !cancelled else { return }
+                        self.presentMenstrualWizard(presenter: presenter, variant: variant, alert: alert)
+                    }
+                } else {
+                    self.presentMenstrualWizard(presenter: presenter, variant: variant, alert: alert)
+                }
+            }, onFailure: { [weak self, weak presenter] error in
+                guard let self = self, let presenter = presenter else { return }
+                self.handleError(error: error, presenter: presenter)
+            }).disposed(by: self.disposeBag)
+    }
+
+    /// FUAM-2937: presents the 2-step inline onboarding modally and reports
+    /// completion via `onComplete(cancelled:)`. Use this when the user must
+    /// configure the menstrual baseline before another action proceeds.
+    public func openMenstrualOnboarding(presenter: UIViewController,
+                                        onComplete: @escaping (Bool) -> Void) {
+        let coordinator = MenstrualOnboardingCoordinator(
+            repository: self.repository,
+            navigator: self,
+            completion: { [weak self] cancelled in
+                onComplete(cancelled)
+                self?.menstrualOnboardingCoordinator = nil
+            }
+        )
+        // Strong reference so the coordinator survives until completion.
+        self.menstrualOnboardingCoordinator = coordinator
+        coordinator.start(from: presenter)
+    }
+
+    /// Push the Settings menstrual baseline panel onto the given navigation
+    /// stack (FUAM-2936). Reuses the standard "Menstrual Cycle Information"
+    /// title; the panel reads/writes UserSetting on appear/change.
+    public func showMenstrualCycleInformation(navigationController: UINavigationController) {
+        let vc = MenstrualCycleInformationViewController()
+        navigationController.pushViewController(vc, animated: true)
+    }
+
+    private func presentMenstrualWizard(presenter: UIViewController,
+                                        variant: FlowVariant,
+                                        alert: Alert?) {
         // Prevent overlapping flows
         assert(self.currentActivityCoordinator == nil, "Another activity is already in progress")
 

@@ -194,6 +194,7 @@ extension DefaultService {
         case .getUserData: return "Get Your Data"
         case .getUserSettings: return "Get User Settings"
         case .sendUserSettings: return "Send User Settings"
+        case .sendMenstrualUserSettings: return "Send Menstrual User Settings"
         case .getDiaryNotes: return "Get Diary Notes"
         case .getDiaryNoteText: return "Get Diary Note Text"
         case .getDiaryNoteAudio: return "Get Diary Note Audio"

@@ -381,6 +381,8 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             return "/v1/user_setting"
         case .sendUserSettings:
             return "/v1/user_setting"
+        case .sendMenstrualUserSettings:
+            return "/v1/user_setting"
         // Survey
         case .getSurvey(let surveyId):
             return "v1/surveys/\(surveyId)"
@@ -480,6 +482,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
                 .sendUserInfoParameters,
                 .sendUserTimeZone,
                 .sendUserSettings,
+                .sendMenstrualUserSettings,
                 .sendPushToken,
                 .sendWalthroughDone,
                 .sendSurveyTaskResultData,
@@ -563,6 +566,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         // User Data
         case .getUserData: return Bundle.getTestData(from: "TestGetUserData")
         case .sendUserSettings: return "{}".utf8Encoded
+        case .sendMenstrualUserSettings: return "{}".utf8Encoded
         case .getUserSettings: return "{}".utf8Encoded
         // Survey
         case .getSurvey: return Bundle.getTestData(from: "TestGetSurvey")
@@ -707,6 +711,22 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
                 params["notification_time"] = time
             } else {
                 params["notification_time"] = NSNull()
+            }
+            return .requestParameters(parameters: ["user_setting": params], encoding: JSONEncoding.default)
+        case .sendMenstrualUserSettings(let hadPeriod3Mo, let lastPeriodDate):
+            // FUAM-2929 schema: both fields nullable. Use NSNull() to clear
+            // a previously-set value (e.g. when the user switches to "no",
+            // we drop the date for data hygiene per FUAM-2937 / FUAM-2936).
+            var params: [String: Any] = [:]
+            if let value = hadPeriod3Mo {
+                params["menstrual_had_period_3mo"] = value.rawValue
+            } else {
+                params["menstrual_had_period_3mo"] = NSNull()
+            }
+            if let date = lastPeriodDate {
+                params["menstrual_last_period_date"] = UserSettings.dateOnlyFormatter.string(from: date)
+            } else {
+                params["menstrual_last_period_date"] = NSNull()
             }
             return .requestParameters(parameters: ["user_setting": params], encoding: JSONEncoding.default)
         case .sendPushToken(let token):
@@ -1108,6 +1128,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
                 .sendUserInfoParameters,
                 .getUserSettings,
                 .sendUserSettings,
+                .sendMenstrualUserSettings,
                 .getUserData,
                 .getSurvey,
                 .sendSurveyTaskResultData,
