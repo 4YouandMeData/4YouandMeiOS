@@ -77,23 +77,39 @@ class OptInSectionCoordinator {
     // MARK: - Private Methods
 
     private func showSuccess() {
-        // Defensive guard #3: never call completionCallback twice.
-        guard self.didFireCompletion == false else {
-            print("[FUAM-3021-trace] showSuccess() blocked: didFireCompletion already true")
-            return
-        }
         // FUAM-3021. The opt-in section completed end-to-end; clear any
         // per-section watchdog skips so a future re-entry to the flow gets
-        // a clean slate.
+        // a clean slate. NOTE: `didFireCompletion` is NOT set here — only
+        // when the completion callback actually fires (either the no-success
+        // -page branch below, or `performCustomPrimaryButtonNavigation` when
+        // the user taps the success-page primary button).
         self.cacheService.clearSkippedOptInPermissions()
         self.watchdogStrikes.removeAll()
-        self.didFireCompletion = true
 
         if let successPage = self.sectionData.successPage {
+            // Push the success page; the user's primary-button tap on that
+            // page is what fires `completionCallback` — see
+            // `performCustomPrimaryButtonNavigation` below.
             self.showResultPage(successPage)
         } else {
-            self.completionCallback(self.navigationController)
+            self.fireCompletionOnce()
         }
+    }
+
+    /// Single chokepoint for invoking `completionCallback`. Idempotent.
+    /// FUAM-3021: replaces an earlier (buggy) version that set
+    /// `didFireCompletion = true` inside `showSuccess()` even when a success
+    /// page was being pushed — that broke the success-page primary button
+    /// path because by the time the user tapped it,
+    /// `performCustomPrimaryButtonNavigation` saw `didFireCompletion == true`
+    /// and returned without firing the callback (FUAM-3116 dead-end).
+    private func fireCompletionOnce() {
+        guard self.didFireCompletion == false else {
+            print("[FUAM-3021-trace] completionCallback blocked: already fired")
+            return
+        }
+        self.didFireCompletion = true
+        self.completionCallback(self.navigationController)
     }
 
     private func showOptInPermission(_ optInPermission: OptInPermission) {
@@ -123,13 +139,7 @@ extension OptInSectionCoordinator: PagedSectionCoordinator {
 
     func performCustomPrimaryButtonNavigation(page: Page) -> Bool {
         if self.sectionData.successPage?.id == page.id {
-            // Defensive guard #3 redux for the success-page primary path.
-            guard self.didFireCompletion == false else {
-                print("[FUAM-3021-trace] performCustomPrimaryButtonNavigation completion blocked: already fired")
-                return true
-            }
-            self.didFireCompletion = true
-            self.completionCallback(self.navigationController)
+            self.fireCompletionOnce()
             return true
         }
         return false
@@ -140,9 +150,7 @@ extension OptInSectionCoordinator: PagedSectionCoordinator {
             self.showOptInPermission(firstOptInPermission)
         } else {
             // No permissions to walk — section is effectively complete.
-            guard self.didFireCompletion == false else { return }
-            self.didFireCompletion = true
-            self.completionCallback(self.navigationController)
+            self.fireCompletionOnce()
         }
     }
 }
