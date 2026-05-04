@@ -779,3 +779,57 @@ class WatchdogTelemetrySpec: QuickSpec {
         }
     }
 }
+
+// MARK: - FUAM-3021 — CacheManager skipped-permission persistence
+
+class CacheManagerSkippedPermissionsSpec: QuickSpec {
+    override func spec() {
+        // CacheManager persists into UserDefaults.standard. Each test cleans
+        // up after itself via clearSkippedOptInPermissions() to avoid bleed
+        // across specs and between local runs.
+
+        context("skippedOptInPermissions accessors") {
+            it("starts empty and round-trips a Set<String>") {
+                let cache = CacheManager()
+                cache.clearSkippedOptInPermissions()
+
+                expect(cache.skippedOptInPermissions).to(beEmpty())
+
+                cache.skippedOptInPermissions = ["health", "sensorkit"]
+                expect(cache.skippedOptInPermissions) == ["health", "sensorkit"]
+
+                cache.clearSkippedOptInPermissions()
+                expect(cache.skippedOptInPermissions).to(beEmpty())
+            }
+
+            it("survives a fresh CacheManager instance (UserDefaults-backed)") {
+                let writer = CacheManager()
+                writer.clearSkippedOptInPermissions()
+                writer.skippedOptInPermissions = ["location"]
+
+                let reader = CacheManager()
+                expect(reader.skippedOptInPermissions) == ["location"]
+
+                reader.clearSkippedOptInPermissions()
+                let afterClear = CacheManager()
+                expect(afterClear.skippedOptInPermissions).to(beEmpty())
+            }
+
+            it("supports incremental insertion (mutate-and-set pattern)") {
+                let cache = CacheManager()
+                cache.clearSkippedOptInPermissions()
+
+                var skipped = cache.skippedOptInPermissions
+                skipped.insert("health")
+                cache.skippedOptInPermissions = skipped
+
+                skipped = cache.skippedOptInPermissions
+                skipped.insert("sensorkit")
+                cache.skippedOptInPermissions = skipped
+
+                expect(cache.skippedOptInPermissions) == ["health", "sensorkit"]
+                cache.clearSkippedOptInPermissions()
+            }
+        }
+    }
+}
