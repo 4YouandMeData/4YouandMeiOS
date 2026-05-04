@@ -21,7 +21,10 @@ class OptInSectionCoordinator {
 
     private let repository: Repository
     private let navigator: AppNavigator
-    private let cacheService: CacheService
+    // FUAM-3021. `var` because we mutate `skippedOptInPermissions` through
+    // the protocol's setter; CacheService is not class-bound so a `let`
+    // reference would be immutable through-the-protocol.
+    private var cacheService: CacheService
 
     private let sectionData: OptInSection
     private let completionCallback: NavigationControllerCallback
