@@ -116,7 +116,26 @@ struct Constants {
         static let MaxValidLocationAge: TimeInterval = 15.0
         static let PinCodeSuffix: String = ProjectInfo.PinCodeSuffix
     }
-    
+
+    // FUAM-3021. Per-branch timeout budgets for the opt-in permission-chain
+    // watchdog (Approach B from FUAM-3020). Values are pause-aware: the
+    // watchdog only consumes budget while UIApplication.applicationState is
+    // .active, so they cover (request → prompt presentation → callback) and
+    // do NOT need to absorb user-think time on the iOS system alert.
+    struct OnboardingPermissionTimeouts {
+        static let healthKit: TimeInterval     = 8
+        static let sensorKit: TimeInterval     = 8
+        static let location: TimeInterval      = 6
+        static let notification: TimeInterval  = 6
+        static let bluetooth: TimeInterval     = 5
+        static let `default`: TimeInterval     = 8
+        // Three consecutive watchdog trips on the same branch escalate the
+        // alert: "Retry" becomes "Open Settings" and the branch is implicitly
+        // skipped so the chain advances even if the user does nothing in
+        // Settings. See FUAM-3021 plan for rationale.
+        static let strikeEscalationThreshold: Int = 3
+    }
+
     struct Url {
         static var BaseUrl: String { ProjectInfo.OauthBaseUrl }
         static let ApiOAuthIntegrationBaseUrl: URL = URL(string: "\(BaseUrl)/users/integration_oauth")!

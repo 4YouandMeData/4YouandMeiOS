@@ -389,3 +389,211 @@ class ExcludeInvalidRegressionSpec: QuickSpec {
         }
     }
 }
+
+// MARK: - FUAM-3021 — Opt-in permission-chain watchdog
+
+import RxSwift
+
+/// Synthetic ApplicationStateProvider for tests. Lets specs drive
+/// active/inactive transitions deterministically without UIKit coupling.
+final class TestApplicationStateProvider: ApplicationStateProvider {
+    private let activeSubject = BehaviorSubject<Bool>(value: true)
+    private let didBecomeActiveSubject = PublishSubject<Void>()
+    private let willResignActiveSubject = PublishSubject<Void>()
+
+    var isActive: Bool { (try? activeSubject.value()) ?? false }
+    var didBecomeActive: Observable<Void> { didBecomeActiveSubject.asObservable() }
+    var willResignActive: Observable<Void> { willResignActiveSubject.asObservable() }
+
+    func setActive(_ active: Bool) {
+        activeSubject.onNext(active)
+        if active {
+            didBecomeActiveSubject.onNext(())
+        } else {
+            willResignActiveSubject.onNext(())
+        }
+    }
+}
+
+class PermissionWatchdogSpec: QuickSpec {
+    override func spec() {
+        // Real-time tests: keep budgets small and run on MainScheduler so
+        // they finish fast and don't need RxTest as a new dependency.
+
+        context("source emits within budget") {
+            it("forwards success without tripping") {
+                let provider = TestApplicationStateProvider()
+                provider.setActive(true)
+
+                var receivedTimeout: Bool = false
+                var receivedSuccess: Bool = false
+
+                let source: Single<()> = Single.just(())
+                    .delay(.milliseconds(50), scheduler: MainScheduler.instance)
+
+                waitUntil(timeout: .seconds(2)) { done in
+                    _ = source
+                        .withPermissionWatchdog(branch: .health,
+                                                attempt: 1,
+                                                timeout: 0.3,
+                                                applicationStateProvider: provider)
+                        .subscribe(
+                            onSuccess: { receivedSuccess = true; done() },
+                            onFailure: { err in
+                                if case WatchdogError.tripped = err { receivedTimeout = true }
+                                done()
+                            })
+                }
+                expect(receivedSuccess) == true
+                expect(receivedTimeout) == false
+            }
+        }
+
+        context("source never emits while app stays active") {
+            it("trips with WatchdogError.tripped after budget elapses") {
+                let provider = TestApplicationStateProvider()
+                provider.setActive(true)
+
+                var trippedBranch: SystemPermission?
+                var trippedAttempt: Int?
+
+                let source: Single<()> = Single<()>.create { _ in Disposables.create() }
+
+                let started = Date()
+                waitUntil(timeout: .seconds(2)) { done in
+                    _ = source
+                        .withPermissionWatchdog(branch: .sensorKit,
+                                                attempt: 2,
+                                                timeout: 0.3,
+                                                applicationStateProvider: provider)
+                        .subscribe(
+                            onSuccess: { done() },
+                            onFailure: { err in
+                                if case let WatchdogError.tripped(branch, attempt) = err {
+                                    trippedBranch = branch
+                                    trippedAttempt = attempt
+                                }
+                                done()
+                            })
+                }
+                let elapsed = Date().timeIntervalSince(started)
+                expect(trippedBranch) == .sensorKit
+                expect(trippedAttempt) == 2
+                expect(elapsed) >= 0.3
+                expect(elapsed) < 1.5
+            }
+        }
+
+        context("source never emits while app is inactive throughout") {
+            it("does not trip until we return to active") {
+                let provider = TestApplicationStateProvider()
+                provider.setActive(false)
+
+                var didTripWhileInactive: Bool = false
+
+                let source: Single<()> = Single<()>.create { _ in Disposables.create() }
+
+                let watchdogDisposable = source
+                    .withPermissionWatchdog(branch: .location,
+                                            attempt: 1,
+                                            timeout: 0.3,
+                                            applicationStateProvider: provider)
+                    .subscribe(
+                        onSuccess: { _ in },
+                        onFailure: { err in
+                            if case WatchdogError.tripped = err { didTripWhileInactive = true }
+                        })
+
+                // Wait longer than the budget while inactive.
+                waitUntil(timeout: .seconds(1)) { done in
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { done() }
+                }
+                expect(didTripWhileInactive) == false
+                watchdogDisposable.dispose()
+            }
+        }
+
+        context("source never emits and the app cycles inactive then active") {
+            it("preserves remaining budget across the inactive window") {
+                let provider = TestApplicationStateProvider()
+                provider.setActive(true)
+
+                var trippedAt: Date?
+                let source: Single<()> = Single<()>.create { _ in Disposables.create() }
+
+                let started = Date()
+
+                let disposable = source
+                    .withPermissionWatchdog(branch: .health,
+                                            attempt: 1,
+                                            timeout: 0.4,
+                                            applicationStateProvider: provider)
+                    .subscribe(
+                        onSuccess: { _ in },
+                        onFailure: { err in
+                            if case WatchdogError.tripped = err { trippedAt = Date() }
+                        })
+
+                // After ~0.15s consumed, go inactive for 0.4s, then return.
+                // Remaining at re-activation should be ~0.25s, so total wall
+                // time to trip is ~0.15 + 0.4 + 0.25 = ~0.8s.
+                waitUntil(timeout: .seconds(2)) { done in
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                        provider.setActive(false)
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+                            provider.setActive(true)
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { done() }
+                        }
+                    }
+                }
+                expect(trippedAt).toNot(beNil())
+                if let trippedAt = trippedAt {
+                    let total = trippedAt.timeIntervalSince(started)
+                    // Sanity bounds: must be longer than the naive 0.4s budget
+                    // (proves pause worked) and shorter than 1.5s.
+                    expect(total) > 0.55
+                    expect(total) < 1.5
+                }
+                disposable.dispose()
+            }
+        }
+
+        context("disposing before timeout") {
+            it("cancels the timer and does not emit anything") {
+                let provider = TestApplicationStateProvider()
+                provider.setActive(true)
+
+                var emitted: Bool = false
+                let source: Single<()> = Single<()>.create { _ in Disposables.create() }
+
+                let disposable = source
+                    .withPermissionWatchdog(branch: .notification,
+                                            attempt: 1,
+                                            timeout: 0.2,
+                                            applicationStateProvider: provider)
+                    .subscribe(
+                        onSuccess: { _ in emitted = true },
+                        onFailure: { _ in emitted = true })
+
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                    disposable.dispose()
+                }
+
+                waitUntil(timeout: .seconds(1)) { done in
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { done() }
+                }
+                expect(emitted) == false
+            }
+        }
+
+        context("WatchdogError equality") {
+            it("compares by branch and attempt") {
+                let a = WatchdogError.tripped(branch: .health, attempt: 1)
+                let b = WatchdogError.tripped(branch: .health, attempt: 1)
+                let c = WatchdogError.tripped(branch: .health, attempt: 2)
+                expect(a) == b
+                expect(a) != c
+            }
+        }
+    }
+}
