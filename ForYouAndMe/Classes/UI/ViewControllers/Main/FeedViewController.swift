@@ -13,7 +13,7 @@ class FeedViewController: BaseViewController {
     private var isSaba: Bool {
         return ProjectInfo.StudyId.lowercased() == "saba"
     }
-    
+
     private var forceSabaForTesting: Bool {
         #if DEBUG
         return false
@@ -21,22 +21,18 @@ class FeedViewController: BaseViewController {
         return false
         #endif
     }
-    
+
     private var effectiveIsSaba: Bool {
         return isSaba || forceSabaForTesting
     }
-    
-    private var feedPageSize: Int? {
-        return effectiveIsSaba ? Constants.Misc.SabaPageSize : Constants.Misc.FeedPageSize
-    }
 
     private lazy var listManager: FeedListManager = {
-        
+
         return FeedListManager(repository: self.repository,
                                navigator: self.navigator,
                                tableView: self.tableView,
                                delegate: self,
-                               pageSize: self.feedPageSize,
+                               pageSize: Constants.Misc.FeedPageSize,
                                pullToRefresh: true,
                                isInfiniteScrollEnabled: true,
                                forceSabaFooterForTesting: self.forceSabaForTesting)

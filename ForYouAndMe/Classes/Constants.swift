@@ -93,8 +93,7 @@ struct Constants {
         static let EnableGlobalConfigCache = false
         static let PhoneValidationCodeDigitCount: Int = 6
         static let EmailValidationCodeDigitCount: Int = 6
-        static let FeedPageSize: Int? = 10
-        static let SabaPageSize: Int? = 50
+        static let FeedPageSize: Int? = 50
         static let TaskPageSize: Int? = 10
         static let VideoDiaryMaxDurationSeconds: TimeInterval = 120.0
         static let VideoDiaryNoteMaxDurationSeconds: TimeInterval = 600.0
