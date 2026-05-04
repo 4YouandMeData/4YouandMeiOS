@@ -81,11 +81,9 @@ class OptInSectionCoordinator {
         self.sectionData = sectionData
         self.navigationController = navigationController
         self.completionCallback = completionCallback
-        print("[FUAM-3021-trace] OptInSectionCoordinator.init optInPermissions.count=\(sectionData.optInPermissions.count)")
     }
 
     deinit {
-        print("[FUAM-3021-trace] OptInSectionCoordinator.deinit")
         self.currentChainDisposable?.dispose()
     }
 
@@ -119,10 +117,7 @@ class OptInSectionCoordinator {
     /// `performCustomPrimaryButtonNavigation` saw `didFireCompletion == true`
     /// and returned without firing the callback (FUAM-3116 dead-end).
     private func fireCompletionOnce() {
-        guard self.didFireCompletion == false else {
-            print("[FUAM-3021-trace] completionCallback blocked: already fired")
-            return
-        }
+        guard self.didFireCompletion == false else { return }
         self.didFireCompletion = true
         self.completionCallback(self.navigationController)
     }
@@ -175,8 +170,6 @@ extension OptInSectionCoordinator: PagedSectionCoordinator {
 
 extension OptInSectionCoordinator: OptInPermissionCoordinator {
     func onOptInPermissionSet(optInPermission: OptInPermission, granted: Bool) {
-        print("[FUAM-3021-trace] onOptInPermissionSet permission.id=\(optInPermission.id) granted=\(granted) systemPermissions=\(optInPermission.systemPermissions.map { $0.rawValue })")
-
         guard granted || false == optInPermission.isMandatory else {
             let message = optInPermission.mandatoryText ?? StringsProvider.string(forKey: .onboardingOptInMandatoryDefault)
             self.navigationController.showAlert(withTitle: StringsProvider.string(forKey: .onboardingOptInMandatoryTitle),
@@ -211,15 +204,11 @@ extension OptInSectionCoordinator: OptInPermissionCoordinator {
         // chain is already in flight. Internal callers (Skip) pass
         // `forceRestart: true` because they're explicitly replacing the
         // current chain.
-        if self.isChainInFlight && !forceRestart {
-            print("[FUAM-3021-trace] runOptInChain re-entry blocked (chain already in flight)")
-            return
-        }
+        if self.isChainInFlight && !forceRestart { return }
 
         // If a previous chain is still subscribed, dispose it before
         // subscribing a new one so we never have two chains racing.
         if let existing = self.currentChainDisposable {
-            print("[FUAM-3021-trace] runOptInChain disposing previous chain before restart")
             existing.dispose()
             self.currentChainDisposable = nil
         }
@@ -311,7 +300,6 @@ extension OptInSectionCoordinator: OptInPermissionCoordinator {
                                       granted: Bool,
                                       optInPermission: OptInPermission) -> Single<()> {
         if self.cacheService.skippedOptInPermissions.contains(branch.rawValue) {
-            print("[FUAM-3021-trace] wrappedBranchRequest short-circuit for previously-skipped branch=\(branch.rawValue)")
             return Single.just(())
         }
 
@@ -433,14 +421,8 @@ extension OptInSectionCoordinator: OptInPermissionCoordinator {
         // - applicationState != .active → OS-process alert (Notification,
         //   Location) is on top.
         // Either case: do not present. Wait for next tick.
-        if self.navigationController.presentedViewController != nil {
-            print("[FUAM-3021-trace] watchdog popup muted (modal on top) branch=\(branch.rawValue) attempt=\(attempt)")
-            return
-        }
-        if UIApplication.shared.applicationState != .active {
-            print("[FUAM-3021-trace] watchdog popup muted (app not active) branch=\(branch.rawValue) attempt=\(attempt)")
-            return
-        }
+        if self.navigationController.presentedViewController != nil { return }
+        if UIApplication.shared.applicationState != .active { return }
 
         // Telemetry fires only when the popup is actually presented to the
         // user (D4). Silent ticks and muted ticks are unremarkable.

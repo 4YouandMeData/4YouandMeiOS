@@ -71,19 +71,12 @@ class LoadingViewController<T>: UIViewController, LoadingPage {
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
 
-        // FUAM-3021. Diagnostic trace — surfaces re-appears that re-fire
-        // the underlying request (potential cause of the "spinner forever"
-        // pattern observed during OurTransitions testing of v1). Cleanup
-        // pass C5 removes this once OurTransitions test confirms no
-        // regression.
-        print("[FUAM-3021-trace] LoadingViewController.viewDidAppear -> startLoading")
         self.startLoading()
     }
 
     // MARK: - Private Methods
 
     private func startLoading() {
-        print("[FUAM-3021-trace] LoadingViewController.startLoading mode=\(self.loadingMode)")
         self.errorView.hideView()
         
         switch self.loadingMode {

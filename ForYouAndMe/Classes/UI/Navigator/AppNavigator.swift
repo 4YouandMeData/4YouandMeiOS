@@ -259,10 +259,6 @@ class AppNavigator {
                                         navigationController: UINavigationController,
                                         hidesBottomBarWhenPushed: Bool,
                                         addAbortOnboardingButton: Bool) {
-        // FUAM-3021. Diagnostic trace — surfaces if the onboarding section
-        // driver re-enters the same section in a loop. Cleanup pass C5
-        // removes this once OurTransitions test confirms no regression.
-        print("[FUAM-3021-trace] startOnboardingSection section=\(section)")
         let completionCallback: NavigationControllerCallback = { [weak self] navigationController in
             guard let self = self else { return }
             if let nextSection = sectionDriver.getNextOnboardingSection(forOnboardingSection: section) {
