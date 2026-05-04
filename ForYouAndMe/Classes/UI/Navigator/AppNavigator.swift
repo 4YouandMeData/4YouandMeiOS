@@ -11,7 +11,7 @@ import SVProgressHUD
 import RxSwift
 import SafariServices
 import WebKit
-#if HEALTHKIT
+#if SENSORKIT
 import SensorKit
 #endif
 
@@ -1112,7 +1112,7 @@ class AppNavigator {
                             actions: [cancelAction, settingsAction])
     }
     
-#if HEALTHKIT
+#if SENSORKIT
     public func showSensorKitPermissionSettingsAlert(presenter: UIViewController,
                                                      missingSensors: Set<SRSensor>) {
             let cancelAction = UIAlertAction(title: StringsProvider.string(forKey: .permissionCancel),
