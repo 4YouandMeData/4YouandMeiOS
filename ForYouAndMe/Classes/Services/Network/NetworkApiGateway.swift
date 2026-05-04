@@ -55,7 +55,18 @@ class NetworkApiGateway: ApiGateway {
     }
     
     func setupDefaultProvider() {
-        self.defaultProvider = MoyaProvider(endpointClosure: self.endpointMapping, plugins: [self.telemetryPlugin, self.accessTokenPlugin])
+        var plugins: [PluginType] = [self.telemetryPlugin, self.accessTokenPlugin]
+        #if DEBUG
+        // Local-only verbose dump (headers + body). Telemetry never logs the
+        // Authorization header by design — this plugin restores the stock
+        // Moya output so the bearer is visible while debugging on device.
+        // Stripped from Release builds.
+        let verboseConfig = NetworkLoggerPlugin.Configuration(
+            logOptions: [.requestHeaders, .requestBody, .successResponseBody, .errorResponseBody]
+        )
+        plugins.append(NetworkLoggerPlugin(configuration: verboseConfig))
+        #endif
+        self.defaultProvider = MoyaProvider(endpointClosure: self.endpointMapping, plugins: plugins)
     }
     
     func endpointMapping(forTarget target: DefaultService) -> Endpoint {
