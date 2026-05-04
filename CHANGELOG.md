@@ -1,3 +1,8 @@
+## Release 0.100.1
+
+- **P0 onboarding hang fix.** `ExcludeInvalid<Element>` no longer infinite-loops on the first invalid array element (FUAM-3109). Regression introduced in 0.99.0 (FUAM-3037): the refactored loop used `container.decode(Element.self)` directly, but per Apple's `UnkeyedDecodingContainer` contract a throwing `decode(_:)` does **not** advance `currentIndex`. A single invalid entry pinned the main thread in a tight log-and-retry loop. Symptoms in production: opt-in onboarding spinner forever (no iOS prompt, no nav), Xcode console flooded with thousands of identical `[ExcludeInvalid<…>] Item excluded — decode error: …` lines per second. Confirmed broken on OurTransitions and BetaTrack 0.100.0 with backend payloads containing values outside the `SystemPermission` enum (e.g. `"microphone"`). The fix re-introduces a `FailableDecodable<Element>` decode on the catch path to force the parent container forward; the descriptive log message from FUAM-3037 is preserved (now fired exactly once per failing element). Adds `ExcludeInvalidRegressionSpec` (4 specs) running under hard 2s `waitUntil` caps so any future regression of this loop fails the test in 2s instead of hanging CI.
+- **Recommended action for all hosts on 0.99.x or 0.100.0:** `pod update ForYouAndMe` to 0.100.1.
+
 ## Release 0.100.0
 
 - **Decoupled SensorKit from the `HEALTHKIT` Swift compilation flag** (FUAM-2998). SensorKit setup, permission UI, and call sites now compile under a dedicated `SENSORKIT` condition. Host apps that want SensorKit must add `SENSORKIT` to `SWIFT_ACTIVE_COMPILATION_CONDITIONS` in their Podfile `post_install` (alongside `HEALTHKIT` if they want both); host apps that want HealthKit-only no longer ship SensorKit code paths.
