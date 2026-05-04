@@ -28,7 +28,6 @@ private enum FirebaseEventCustomName: String {
     case permissionWatchdogTimeout = "onboarding_permission_watchdog_tripped"
     case permissionWatchdogRetry = "onboarding_permission_retry"
     case permissionWatchdogSkipped = "onboarding_permission_skipped"
-    case permissionWatchdogOpenSettings = "onboarding_permission_open_settings"
 }
 
 private enum FirebaseErrorDomain {
@@ -101,8 +100,6 @@ class FirebaseAnalyticsPlatform: AnalyticsPlatform {
             self.permissionWatchdogRetry(branch: branch, attempt: attempt)
         case .permissionWatchdogSkipped(let branch, let wasFirstAttempt):
             self.permissionWatchdogSkipped(branch: branch, wasFirstAttempt: wasFirstAttempt)
-        case .permissionWatchdogOpenSettings(let branch, let attempt):
-            self.permissionWatchdogOpenSettings(branch: branch, attempt: attempt)
         default:
             break
         }
@@ -142,14 +139,6 @@ class FirebaseAnalyticsPlatform: AnalyticsPlatform {
                        ])
     }
 
-    private func permissionWatchdogOpenSettings(branch: String, attempt: Int) {
-        self.sendEvent(withEventName: FirebaseEventCustomName.permissionWatchdogOpenSettings.rawValue,
-                       parameters: [
-                           AnalyticsParameter.branch.rawValue: branch,
-                           AnalyticsParameter.attempt.rawValue: attempt
-                       ])
-    }
-    
     // MARK: - Private Methods
     
     // MARK: User

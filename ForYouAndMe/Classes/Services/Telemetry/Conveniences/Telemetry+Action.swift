@@ -112,18 +112,5 @@ extension Telemetry {
             ))
         }
 
-        public static func permissionWatchdogOpenSettings(branch: String,
-                                                          attempt: Int,
-                                                          file: String = #fileID,
-                                                          function: String = #function,
-                                                          line: UInt = #line) {
-            track(TelemetryEvent(
-                category: .action,
-                name: "permission.watchdog.open_settings",
-                level: .info,
-                payload: ["branch": branch, "attempt": attempt],
-                trace: TelemetryTrace(file: file, function: function, line: line)
-            ))
-        }
     }
 }

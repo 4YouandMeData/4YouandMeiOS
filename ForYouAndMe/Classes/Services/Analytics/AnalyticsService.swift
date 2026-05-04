@@ -128,7 +128,6 @@ enum AnalyticsEvent {
     case permissionWatchdogTimeout(branch: String, previousBranch: String?, elapsedMs: Int, attempt: Int)
     case permissionWatchdogRetry(branch: String, attempt: Int)
     case permissionWatchdogSkipped(branch: String, wasFirstAttempt: Bool)
-    case permissionWatchdogOpenSettings(branch: String, attempt: Int)
 
     // Errors
     case serverError(apiError: ApiError)

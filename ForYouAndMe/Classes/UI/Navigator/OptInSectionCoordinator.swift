@@ -39,12 +39,17 @@ class OptInSectionCoordinator {
 
     var answers: [Question: PossibleAnswer] = [:]
 
-    // FUAM-3021. Watchdog state.
-    private var watchdogStrikes: [SystemPermission: Int] = [:]
+    // FUAM-3021 v3 (FUAM-3118). Watchdog state — perpetual silent-retry model.
+    /// Tick count per branch. Each tick of the watchdog ticker (every
+    /// `Constants.OnboardingPermissionWatchdog.tickInterval` seconds while a
+    /// branch's `Single<()>` is pending) increments this counter. Reset to 0
+    /// when the user taps Retry on the watchdog popup. Cleared from the dict
+    /// when the chain advances past the branch (success or skip).
+    private var watchdogTickCounts: [SystemPermission: Int] = [:]
     private var currentChainDisposable: Disposable?
     /// Defensive guard #1: prevents `runOptInChain` re-entry from a UI
     /// double-tap or rebinding while a chain is already in flight. The
-    /// internal Retry/Skip handlers bypass this via `forceRestart: true`.
+    /// internal Skip handler bypasses this via `forceRestart: true`.
     /// Belt-and-suspenders to the disabled-Submit-button defense in
     /// `OptInPermissionViewController.setProcessing(_:)` (FUAM-3116).
     private var isChainInFlight: Bool = false
@@ -53,10 +58,13 @@ class OptInSectionCoordinator {
     /// PagedSectionCoordinator's `performCustomPrimaryButtonNavigation`.
     private var didFireCompletion: Bool = false
     /// FUAM-3116. Weak ref to the currently-presented opt-in permission VC
-    /// so the coordinator can drive its in-progress overlay around the
-    /// chain. Set in `showOptInPermission(_:)`; cleared automatically when
-    /// the VC pops or is replaced.
+    /// so the coordinator can drive its in-progress overlay during the chain.
     private weak var currentPermissionVC: OptInPermissionViewController?
+    /// FUAM-3021 v3 (D5). Weak ref to the currently-presented watchdog
+    /// popup so we can dismiss it if the source emits success while it is
+    /// on screen (avoids orphaned modals when the user grants HK after
+    /// our popup already appeared in front of a hidden HK sheet).
+    private weak var currentWatchdogAlert: UIAlertController?
 
     init(withSectionData sectionData: OptInSection,
          navigationController: UINavigationController,
@@ -91,7 +99,7 @@ class OptInSectionCoordinator {
         // -page branch below, or `performCustomPrimaryButtonNavigation` when
         // the user taps the success-page primary button).
         self.cacheService.clearSkippedOptInPermissions()
-        self.watchdogStrikes.removeAll()
+        self.watchdogTickCounts.removeAll()
 
         if let successPage = self.sectionData.successPage {
             // Push the success page; the user's primary-button tap on that
@@ -180,35 +188,36 @@ extension OptInSectionCoordinator: OptInPermissionCoordinator {
         self.runOptInChain(for: optInPermission, granted: granted, startingAt: nil, forceRestart: false)
     }
 
-    // MARK: - FUAM-3021 chain runner + watchdog handlers
+    // MARK: - FUAM-3021 v3 — perpetual silent-retry chain runner
 
-    /// Builds and subscribes to the per-branch permission chain for the given
-    /// opt-in permission, optionally starting at a specific branch (used by
-    /// Retry / Skip resumption). Disposes any in-flight chain subscription
+    /// Builds and subscribes to the per-branch permission chain for the
+    /// given opt-in permission, optionally starting at a specific branch
+    /// (used by Skip resumption). Disposes any in-flight chain subscription
     /// first so we never have two chains racing.
+    ///
+    /// In v3, the watchdog never disposes the chain — only Skip or success
+    /// does. On each tick of a pending branch, the coordinator may decide
+    /// to surface a Retry/Skip popup, but the underlying source `Single<()>`
+    /// stays alive throughout.
     ///
     /// Defensive guards baked in:
     /// - `isChainInFlight` prevents re-entry from a UI double-tap. Internal
-    ///   Retry/Skip handlers bypass via `forceRestart: true`.
-    /// - Explicit `popProgressHUD()` if the prior chain didn't have a chance
-    ///   to fire its onDispose before we re-subscribe.
+    ///   Skip handler bypasses via `forceRestart: true`.
     private func runOptInChain(for optInPermission: OptInPermission,
                                granted: Bool,
                                startingAt resumeBranch: SystemPermission?,
                                forceRestart: Bool) {
         // Defensive guard #1: refuse re-entry from external callers while a
-        // chain is already in flight. Internal callers (Retry / Skip) pass
+        // chain is already in flight. Internal callers (Skip) pass
         // `forceRestart: true` because they're explicitly replacing the
-        // current chain. With FUAM-3116's disabled-Submit defense at the UI
-        // layer this is now belt-and-suspenders, but worth keeping.
+        // current chain.
         if self.isChainInFlight && !forceRestart {
             print("[FUAM-3021-trace] runOptInChain re-entry blocked (chain already in flight)")
             return
         }
 
-        // Defensive guard #2: if a previous chain is still subscribed,
-        // dispose it before subscribing a new one so we never have two
-        // chains racing against each other.
+        // If a previous chain is still subscribed, dispose it before
+        // subscribing a new one so we never have two chains racing.
         if let existing = self.currentChainDisposable {
             print("[FUAM-3021-trace] runOptInChain disposing previous chain before restart")
             existing.dispose()
@@ -218,7 +227,8 @@ extension OptInSectionCoordinator: OptInPermissionCoordinator {
         // FUAM-3116. Show the in-progress overlay on the current opt-in card
         // immediately so the user gets visual feedback that the chain has
         // started — Submit is disabled, the card is dimmed, and a spinner +
-        // localized "Setting up permissions…" label is centered.
+        // localized "Setting up permissions…" label is centered. The overlay
+        // stays visible throughout the perpetual silent-retry cycle.
         self.currentPermissionVC?.setProcessing(true)
 
         // FUAM-3014: system permission prompts (HealthKit, SensorKit, …) dismiss
@@ -243,20 +253,15 @@ extension OptInSectionCoordinator: OptInPermissionCoordinator {
         }()
         let branches = Array(allBranches[startIndex...])
 
-        var previousForLogging: SystemPermission? = startIndex > 0 ? allBranches[startIndex - 1] : nil
         var chain: Single<()> = Single.just(())
 
         for branch in branches {
-            let attempt = (self.watchdogStrikes[branch] ?? 0) + 1
-            let previousBranch = previousForLogging
             chain = chain.flatMap { [weak self] _ -> Single<()> in
                 guard let self = self else { return .just(()) }
                 return self.wrappedBranchRequest(branch,
                                                  granted: granted,
-                                                 attempt: attempt,
-                                                 previousBranch: previousBranch)
+                                                 optInPermission: optInPermission)
             }.flatMap { interStepDelay }
-            previousForLogging = branch
         }
 
         self.isChainInFlight = true
@@ -278,65 +283,60 @@ extension OptInSectionCoordinator: OptInPermissionCoordinator {
             })
             .subscribe(onSuccess: { [weak self] () in
                 guard let self = self else { return }
+                // D5: dismiss any presented watchdog popup before advancing
+                // — the source emitted success while the popup was on
+                // screen (e.g., HK granted while user was reading the
+                // popup), and we don't want orphaned modals.
+                self.dismissWatchdogAlertIfPresented()
                 // Clear processing BEFORE advancing — the old card is
                 // about to be popped or covered, but we don't want a
                 // stale spinner if the user navigates back.
                 self.currentPermissionVC?.setProcessing(false)
                 self.advanceAfterPermissionSet(optInPermission)
             }, onFailure: { [weak self] error in
+                // Non-watchdog errors only — the v3 watchdog never errors
+                // the chain. Permission-denied was already swallowed in
+                // `wrappedBranchRequest`'s `.catchAndReturn(())`.
                 guard let self = self else { return }
-                if case let WatchdogError.tripped(branch, attempt) = error {
-                    // Keep the processing overlay visible behind the
-                    // watchdog alert. Retry/Skip resume the chain (overlay
-                    // stays); a non-watchdog error path clears it.
-                    self.handleWatchdogTimeout(branch: branch,
-                                               attempt: attempt,
-                                               optInPermission: optInPermission,
-                                               granted: granted)
-                } else {
-                    self.currentPermissionVC?.setProcessing(false)
-                    self.navigator.handleError(error: error, presenter: self.navigationController)
-                }
+                self.dismissWatchdogAlertIfPresented()
+                self.currentPermissionVC?.setProcessing(false)
+                self.navigator.handleError(error: error, presenter: self.navigationController)
             })
     }
 
-    /// Wraps the per-branch request with the watchdog and the
-    /// permission-denied-is-OK swallow. Branches the user explicitly skipped
-    /// short-circuit to a no-op. Telemetry fires on watchdog trip.
+    /// Wraps the per-branch request with the v3 perpetual-tick watchdog
+    /// and the permission-denied-is-OK swallow. Branches the user
+    /// explicitly skipped short-circuit to a no-op.
     private func wrappedBranchRequest(_ branch: SystemPermission,
                                       granted: Bool,
-                                      attempt: Int,
-                                      previousBranch: SystemPermission?) -> Single<()> {
+                                      optInPermission: OptInPermission) -> Single<()> {
         if self.cacheService.skippedOptInPermissions.contains(branch.rawValue) {
             print("[FUAM-3021-trace] wrappedBranchRequest short-circuit for previously-skipped branch=\(branch.rawValue)")
             return Single.just(())
         }
 
         let source = self.buildBranchRequest(branch, granted: granted)
-        let timeout = self.timeoutForBranch(branch)
-        let started = Date()
+        // Reset the tick count for this branch at the start of its wait —
+        // we only count ticks while we're actively waiting for this
+        // specific source to emit.
+        self.watchdogTickCounts[branch] = 0
 
         return source
-            .withPermissionWatchdog(branch: branch, attempt: attempt, timeout: timeout)
-            .do(onSuccess: { [weak self] _ in
-                // Branch succeeded — reset its strike count.
-                self?.watchdogStrikes[branch] = 0
-            })
-            .catch { error -> Single<()> in
-                if case WatchdogError.tripped = error {
-                    let elapsedMs = Int(Date().timeIntervalSince(started) * 1000)
-                    Telemetry.errors.permissionWatchdogTripped(
-                        branch: branch.rawValue,
-                        previousBranch: previousBranch?.rawValue,
-                        elapsedMs: elapsedMs,
-                        attempt: attempt)
-                    return Single.error(error)
+            .withPermissionWatchdogTicks(
+                tickInterval: Constants.OnboardingPermissionWatchdog.tickInterval,
+                tickHandler: { [weak self] tick in
+                    guard let self = self else { return }
+                    self.handleWatchdogTick(branch: branch,
+                                            tick: tick,
+                                            optInPermission: optInPermission,
+                                            granted: granted)
                 }
-                // Permission-denied paths (and any other non-watchdog error)
-                // continue to be swallowed so the chain advances. This
-                // mirrors the original `.catchAndReturn(())` behaviour.
-                return Single.just(())
-            }
+            )
+            .do(onSuccess: { [weak self] _ in
+                // Branch resolved — clear its tick counter.
+                self?.watchdogTickCounts[branch] = nil
+            })
+            .catchAndReturn(())  // permission denied = OK, advance chain
     }
 
     private func buildBranchRequest(_ branch: SystemPermission, granted: Bool) -> Single<()> {
@@ -375,15 +375,6 @@ extension OptInSectionCoordinator: OptInPermissionCoordinator {
         }
     }
 
-    private func timeoutForBranch(_ branch: SystemPermission) -> TimeInterval {
-        switch branch {
-        case .health:        return Constants.OnboardingPermissionTimeouts.healthKit
-        case .sensorKit:     return Constants.OnboardingPermissionTimeouts.sensorKit
-        case .location:      return Constants.OnboardingPermissionTimeouts.location
-        case .notification:  return Constants.OnboardingPermissionTimeouts.notification
-        }
-    }
-
     private func advanceAfterPermissionSet(_ optInPermission: OptInPermission) {
         guard let permissionIndex = self.sectionData.optInPermissions
                 .firstIndex(where: { $0.id == optInPermission.id }) else {
@@ -392,9 +383,9 @@ extension OptInSectionCoordinator: OptInPermissionCoordinator {
         }
 
         // Branch succeeded all the way through to the backend submission;
-        // safe to clear strikes for branches the user just walked through.
+        // safe to clear tick counts for branches the user just walked through.
         for branch in optInPermission.systemPermissions {
-            self.watchdogStrikes[branch] = 0
+            self.watchdogTickCounts[branch] = nil
         }
 
         let nextPermissionIndex = permissionIndex + 1
@@ -405,66 +396,105 @@ extension OptInSectionCoordinator: OptInPermissionCoordinator {
         }
     }
 
-    // MARK: - Watchdog alert handlers
+    // MARK: - Watchdog tick + popup handlers (v3)
 
-    private func handleWatchdogTimeout(branch: SystemPermission,
-                                       attempt: Int,
-                                       optInPermission: OptInPermission,
-                                       granted: Bool) {
-        self.watchdogStrikes[branch, default: 0] += 1
-        let strikes = self.watchdogStrikes[branch] ?? 1
-        let escalated = strikes >= Constants.OnboardingPermissionTimeouts.strikeEscalationThreshold
+    /// Called by the watchdog operator on every tick (every
+    /// `tickInterval` seconds) while a branch's `Single<()>` is pending.
+    /// Increments the per-branch counter and, on every Nth tick (where
+    /// N == `silentTicksPerCycle`), tries to surface the Retry/Skip popup.
+    /// First (`silentTicksPerCycle - 1`) ticks are silent — no UI, no
+    /// telemetry.
+    private func handleWatchdogTick(branch: SystemPermission,
+                                    tick: Int,
+                                    optInPermission: OptInPermission,
+                                    granted: Bool) {
+        self.watchdogTickCounts[branch] = tick
+        let silentTicksPerCycle = Constants.OnboardingPermissionWatchdog.silentTicksPerCycle
+        guard tick > 0, tick % silentTicksPerCycle == 0 else { return }
+        let attempt = tick / silentTicksPerCycle
+        self.presentWatchdogPopupIfPossible(branch: branch,
+                                            attempt: attempt,
+                                            optInPermission: optInPermission,
+                                            granted: granted)
+    }
+
+    /// Attempts to present the watchdog popup. Bails (silently — no
+    /// telemetry, no state change) if anything modally covers our card or
+    /// if the app is not foreground-active. The next tick (3 s later)
+    /// re-checks; the popup will land naturally as soon as the modal
+    /// dismisses or the app becomes active again.
+    private func presentWatchdogPopupIfPossible(branch: SystemPermission,
+                                                attempt: Int,
+                                                optInPermission: OptInPermission,
+                                                granted: Bool) {
+        // D2 + D6 muting:
+        // - presentedViewController != nil → in-process modal (HK/SK sheet,
+        //   our own popup from a previous tick, any other modal) is on top.
+        // - applicationState != .active → OS-process alert (Notification,
+        //   Location) is on top.
+        // Either case: do not present. Wait for next tick.
+        if self.navigationController.presentedViewController != nil {
+            print("[FUAM-3021-trace] watchdog popup muted (modal on top) branch=\(branch.rawValue) attempt=\(attempt)")
+            return
+        }
+        if UIApplication.shared.applicationState != .active {
+            print("[FUAM-3021-trace] watchdog popup muted (app not active) branch=\(branch.rawValue) attempt=\(attempt)")
+            return
+        }
+
+        // Telemetry fires only when the popup is actually presented to the
+        // user (D4). Silent ticks and muted ticks are unremarkable.
+        let elapsedMs = Int(Constants.OnboardingPermissionWatchdog.tickInterval
+                            * Double(attempt * Constants.OnboardingPermissionWatchdog.silentTicksPerCycle)
+                            * 1000)
+        Telemetry.errors.permissionWatchdogTripped(
+            branch: branch.rawValue,
+            previousBranch: nil,
+            elapsedMs: elapsedMs,
+            attempt: attempt)
 
         let title = StringsProvider.string(forKey: .onboardingOptInWatchdogTitle)
-        let message = escalated
-            ? StringsProvider.string(forKey: .onboardingOptInWatchdogUnavailableMessage)
-            : StringsProvider.string(forKey: .onboardingOptInWatchdogMessage)
-        let primaryActionTitle = escalated
-            ? StringsProvider.string(forKey: .onboardingOptInWatchdogOpenSettings)
-            : StringsProvider.string(forKey: .onboardingOptInWatchdogRetry)
+        let message = StringsProvider.string(forKey: .onboardingOptInWatchdogMessage)
 
-        let primaryAction = UIAlertAction(title: primaryActionTitle, style: .default) { [weak self] _ in
-            guard let self = self else { return }
-            if escalated {
-                // Per FUAM-3021 plan §C4: after 3 strikes, open Settings AND
-                // implicitly skip the branch so the chain advances even if
-                // the user does nothing in Settings.
-                Telemetry.action.permissionWatchdogOpenSettings(branch: branch.rawValue, attempt: strikes)
-                self.openAppSettings()
-                self.skipBranch(branch: branch,
-                                optInPermission: optInPermission,
-                                granted: granted,
-                                wasFirstAttempt: false)
-            } else {
-                self.retryBranch(branch: branch,
-                                 optInPermission: optInPermission,
-                                 granted: granted,
-                                 attempt: strikes + 1)
+        let alert = UIAlertController(title: title,
+                                      message: message,
+                                      preferredStyle: .alert)
+        alert.view.tintColor = ColorPalette.color(withType: .primary)
+
+        let retryAction = UIAlertAction(
+            title: StringsProvider.string(forKey: .onboardingOptInWatchdogRetry),
+            style: .default) { [weak self] _ in
+                guard let self = self else { return }
+                self.currentWatchdogAlert = nil
+                self.retryBranch(branch: branch, attempt: attempt)
             }
-        }
 
         let skipAction = UIAlertAction(
             title: StringsProvider.string(forKey: .onboardingOptInWatchdogSkip),
             style: .cancel) { [weak self] _ in
-            guard let self = self else { return }
-            self.skipBranch(branch: branch,
-                            optInPermission: optInPermission,
-                            granted: granted,
-                            wasFirstAttempt: strikes == 1)
-        }
+                guard let self = self else { return }
+                self.currentWatchdogAlert = nil
+                self.skipBranch(branch: branch,
+                                optInPermission: optInPermission,
+                                granted: granted,
+                                wasFirstAttempt: attempt == 1)
+            }
 
-        self.navigationController.showAlert(withTitle: title,
-                                            message: message,
-                                            actions: [primaryAction, skipAction],
-                                            tintColor: ColorPalette.color(withType: .primary))
+        alert.addAction(retryAction)
+        alert.addAction(skipAction)
+
+        self.currentWatchdogAlert = alert
+        self.navigationController.present(alert, animated: true, completion: nil)
     }
 
-    private func retryBranch(branch: SystemPermission,
-                             optInPermission: OptInPermission,
-                             granted: Bool,
-                             attempt: Int) {
+    /// "Retry" in the popup: from the user's POV, "try again". Internally,
+    /// nothing is retried — the source `Single<()>` was never disposed,
+    /// it's still waiting. We just dismiss the popup, reset the tick
+    /// counter so another `silentTicksPerCycle` ticks can pass before
+    /// the next popup, and emit telemetry.
+    private func retryBranch(branch: SystemPermission, attempt: Int) {
         Telemetry.action.permissionWatchdogRetry(branch: branch.rawValue, attempt: attempt)
-        self.runOptInChain(for: optInPermission, granted: granted, startingAt: branch, forceRestart: true)
+        self.watchdogTickCounts[branch] = 0
     }
 
     private func skipBranch(branch: SystemPermission,
@@ -475,11 +505,13 @@ extension OptInSectionCoordinator: OptInPermissionCoordinator {
         var skipped = self.cacheService.skippedOptInPermissions
         skipped.insert(branch.rawValue)
         self.cacheService.skippedOptInPermissions = skipped
-        self.watchdogStrikes[branch] = 0
+        self.watchdogTickCounts[branch] = nil
 
         let allBranches = optInPermission.systemPermissions
         if let index = allBranches.firstIndex(of: branch), index + 1 < allBranches.count {
-            // Resume the chain at the branch after the skipped one.
+            // Resume the chain at the branch after the skipped one. The
+            // current chain is disposed and a fresh one is constructed via
+            // runOptInChain(forceRestart: true).
             self.runOptInChain(for: optInPermission,
                                granted: granted,
                                startingAt: allBranches[index + 1],
@@ -488,8 +520,7 @@ extension OptInSectionCoordinator: OptInPermissionCoordinator {
             // The skipped branch was the last in this opt-in permission's
             // chain. Submit to the backend and advance to the next opt-in.
             // Keep the processing overlay visible across the brief backend
-            // POST so the user has continuous feedback that the action is
-            // being processed.
+            // POST so the user has continuous feedback.
             self.currentChainDisposable?.dispose()
             self.isChainInFlight = true
             self.currentPermissionVC?.setProcessing(true)
@@ -508,8 +539,13 @@ extension OptInSectionCoordinator: OptInPermissionCoordinator {
         }
     }
 
-    private func openAppSettings() {
-        guard let url = URL(string: UIApplication.openSettingsURLString) else { return }
-        UIApplication.shared.open(url, options: [:], completionHandler: nil)
+    /// D5 — if a watchdog popup is currently presented and the source
+    /// emits success in the meantime, dismiss the popup before advancing
+    /// the chain. Avoids orphaned modals when the user (e.g.) finally
+    /// grants HK with our popup on top of the HK sheet.
+    private func dismissWatchdogAlertIfPresented() {
+        guard let alert = self.currentWatchdogAlert else { return }
+        self.currentWatchdogAlert = nil
+        alert.dismiss(animated: true, completion: nil)
     }
 }

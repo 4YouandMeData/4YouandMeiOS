@@ -62,8 +62,6 @@ enum StringKey: String, CaseIterable, CodingKey {
     case onboardingOptInWatchdogMessage = "ONBOARDING_OPT_IN_WATCHDOG_MESSAGE"
     case onboardingOptInWatchdogRetry = "ONBOARDING_OPT_IN_WATCHDOG_RETRY"
     case onboardingOptInWatchdogSkip = "ONBOARDING_OPT_IN_WATCHDOG_SKIP"
-    case onboardingOptInWatchdogOpenSettings = "ONBOARDING_OPT_IN_WATCHDOG_OPEN_SETTINGS"
-    case onboardingOptInWatchdogUnavailableMessage = "ONBOARDING_OPT_IN_WATCHDOG_UNAVAILABLE_MESSAGE"
     // FUAM-3021 / FUAM-3116. In-progress overlay shown over the opt-in
     // permission card while the chain is running (system prompts dismissing,
     // inter-step delays, backend submit). Replaces the previous design where
@@ -541,11 +539,8 @@ enum StringKey: String, CaseIterable, CodingKey {
         case .onboardingOptInWatchdogTitle: return "Permission unavailable"
         case .onboardingOptInWatchdogMessage:
             return "We couldn't open the next permission. You can retry now or skip this step and continue."
-        case .onboardingOptInWatchdogUnavailableMessage:
-            return "This permission is currently unavailable on your device. You can continue without it."
         case .onboardingOptInWatchdogRetry: return "Retry"
         case .onboardingOptInWatchdogSkip: return "Skip"
-        case .onboardingOptInWatchdogOpenSettings: return "Open Settings"
         case .onboardingOptInProcessing: return "Setting up permissions…"
         default: return ""
         }
