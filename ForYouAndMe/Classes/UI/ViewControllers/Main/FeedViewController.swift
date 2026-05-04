@@ -10,12 +10,20 @@ import RxSwift
 import JJFloatingActionButton
 
 class FeedViewController: BaseViewController {
+    private var isSaba: Bool {
+        return ProjectInfo.StudyId.lowercased() == "saba"
+    }
+
     private var forceSabaForTesting: Bool {
         #if DEBUG
         return false
         #else
         return false
         #endif
+    }
+
+    private var effectiveIsSaba: Bool {
+        return isSaba || forceSabaForTesting
     }
 
     private lazy var listManager: FeedListManager = {
