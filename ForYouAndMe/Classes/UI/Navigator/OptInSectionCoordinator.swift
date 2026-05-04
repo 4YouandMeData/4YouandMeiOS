@@ -45,11 +45,18 @@ class OptInSectionCoordinator {
     /// Defensive guard #1: prevents `runOptInChain` re-entry from a UI
     /// double-tap or rebinding while a chain is already in flight. The
     /// internal Retry/Skip handlers bypass this via `forceRestart: true`.
+    /// Belt-and-suspenders to the disabled-Submit-button defense in
+    /// `OptInPermissionViewController.setProcessing(_:)` (FUAM-3116).
     private var isChainInFlight: Bool = false
     /// Defensive guard #3: ensure `completionCallback` fires at most once
     /// per coordinator lifetime. Mirrors the once-only semantics of the
     /// PagedSectionCoordinator's `performCustomPrimaryButtonNavigation`.
     private var didFireCompletion: Bool = false
+    /// FUAM-3116. Weak ref to the currently-presented opt-in permission VC
+    /// so the coordinator can drive its in-progress overlay around the
+    /// chain. Set in `showOptInPermission(_:)`; cleared automatically when
+    /// the VC pops or is replaced.
+    private weak var currentPermissionVC: OptInPermissionViewController?
 
     init(withSectionData sectionData: OptInSection,
          navigationController: UINavigationController,
@@ -114,6 +121,9 @@ class OptInSectionCoordinator {
 
     private func showOptInPermission(_ optInPermission: OptInPermission) {
         let viewController = OptInPermissionViewController(withOptInPermission: optInPermission, coordinator: self)
+        // FUAM-3116. Track the active VC so we can drive its processing
+        // overlay during the permission chain.
+        self.currentPermissionVC = viewController
         self.navigationController.pushViewController(viewController,
                                                      hidesBottomBarWhenPushed: self.hidesBottomBarWhenPushed,
                                                      animated: true)
@@ -189,21 +199,27 @@ extension OptInSectionCoordinator: OptInPermissionCoordinator {
         // Defensive guard #1: refuse re-entry from external callers while a
         // chain is already in flight. Internal callers (Retry / Skip) pass
         // `forceRestart: true` because they're explicitly replacing the
-        // current chain.
+        // current chain. With FUAM-3116's disabled-Submit defense at the UI
+        // layer this is now belt-and-suspenders, but worth keeping.
         if self.isChainInFlight && !forceRestart {
             print("[FUAM-3021-trace] runOptInChain re-entry blocked (chain already in flight)")
             return
         }
 
-        // Defensive guard #2: if a previous chain is still subscribed, dispose
-        // it AND explicitly pop its progress HUD so the spinner can never get
-        // stuck above 0 from a push/pop race during chain restart.
+        // Defensive guard #2: if a previous chain is still subscribed,
+        // dispose it before subscribing a new one so we never have two
+        // chains racing against each other.
         if let existing = self.currentChainDisposable {
             print("[FUAM-3021-trace] runOptInChain disposing previous chain before restart")
             existing.dispose()
             self.currentChainDisposable = nil
-            AppNavigator.popProgressHUD()
         }
+
+        // FUAM-3116. Show the in-progress overlay on the current opt-in card
+        // immediately so the user gets visual feedback that the chain has
+        // started — Submit is disabled, the card is dimmed, and a spinner +
+        // localized "Setting up permissions…" label is centered.
+        self.currentPermissionVC?.setProcessing(true)
 
         // FUAM-3014: system permission prompts (HealthKit, SensorKit, …) dismiss
         // asynchronously. Their completion handlers can fire while the presenting
@@ -246,24 +262,39 @@ extension OptInSectionCoordinator: OptInPermissionCoordinator {
         self.isChainInFlight = true
         self.currentChainDisposable = chain
             .flatMap { [weak self] _ -> Single<()> in
+                // FUAM-3116. SVProgressHUD is now scoped to the (brief)
+                // backend submit only. The visible feedback during the
+                // permission chain itself is the on-card processing
+                // overlay (`OptInPermissionViewController.setProcessing`)
+                // which stays visible the whole time, including across
+                // OS prompts going inactive.
                 guard let self = self else { return .just(()) }
-                return self.repository.sendOptInPermission(permission: optInPermission, granted: granted)
+                return self.repository
+                    .sendOptInPermission(permission: optInPermission, granted: granted)
+                    .addProgress()
             }
-            .addProgress()
             .do(onDispose: { [weak self] in
                 self?.isChainInFlight = false
             })
             .subscribe(onSuccess: { [weak self] () in
                 guard let self = self else { return }
+                // Clear processing BEFORE advancing — the old card is
+                // about to be popped or covered, but we don't want a
+                // stale spinner if the user navigates back.
+                self.currentPermissionVC?.setProcessing(false)
                 self.advanceAfterPermissionSet(optInPermission)
             }, onFailure: { [weak self] error in
                 guard let self = self else { return }
                 if case let WatchdogError.tripped(branch, attempt) = error {
+                    // Keep the processing overlay visible behind the
+                    // watchdog alert. Retry/Skip resume the chain (overlay
+                    // stays); a non-watchdog error path clears it.
                     self.handleWatchdogTimeout(branch: branch,
                                                attempt: attempt,
                                                optInPermission: optInPermission,
                                                granted: granted)
                 } else {
+                    self.currentPermissionVC?.setProcessing(false)
                     self.navigator.handleError(error: error, presenter: self.navigationController)
                 }
             })
@@ -456,16 +487,22 @@ extension OptInSectionCoordinator: OptInPermissionCoordinator {
         } else {
             // The skipped branch was the last in this opt-in permission's
             // chain. Submit to the backend and advance to the next opt-in.
+            // Keep the processing overlay visible across the brief backend
+            // POST so the user has continuous feedback that the action is
+            // being processed.
             self.currentChainDisposable?.dispose()
             self.isChainInFlight = true
+            self.currentPermissionVC?.setProcessing(true)
             self.currentChainDisposable = self.repository
                 .sendOptInPermission(permission: optInPermission, granted: granted)
                 .addProgress()
                 .do(onDispose: { [weak self] in self?.isChainInFlight = false })
                 .subscribe(onSuccess: { [weak self] () in
+                    self?.currentPermissionVC?.setProcessing(false)
                     self?.advanceAfterPermissionSet(optInPermission)
                 }, onFailure: { [weak self] error in
                     guard let self = self else { return }
+                    self.currentPermissionVC?.setProcessing(false)
                     self.navigator.handleError(error: error, presenter: self.navigationController)
                 })
         }

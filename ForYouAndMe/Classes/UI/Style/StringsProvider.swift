@@ -64,6 +64,11 @@ enum StringKey: String, CaseIterable, CodingKey {
     case onboardingOptInWatchdogSkip = "ONBOARDING_OPT_IN_WATCHDOG_SKIP"
     case onboardingOptInWatchdogOpenSettings = "ONBOARDING_OPT_IN_WATCHDOG_OPEN_SETTINGS"
     case onboardingOptInWatchdogUnavailableMessage = "ONBOARDING_OPT_IN_WATCHDOG_UNAVAILABLE_MESSAGE"
+    // FUAM-3021 / FUAM-3116. In-progress overlay shown over the opt-in
+    // permission card while the chain is running (system prompts dismissing,
+    // inter-step delays, backend submit). Replaces the previous design where
+    // the card looked idle during these gaps and users tapped Submit twice.
+    case onboardingOptInProcessing = "ONBOARDING_OPT_IN_PROCESSING"
     case onboardingUserNameTitle = "ONBOARDING_USER_NAME_TITLE"
     case onboardingUserNameMinorTitle = "ONBOARDING_USER_NAME_MINOR_TITLE"
     case onboardingUserNameGuardianTitle = "ONBOARDING_USER_NAME_GUARDIAN_TITLE"
@@ -541,6 +546,7 @@ enum StringKey: String, CaseIterable, CodingKey {
         case .onboardingOptInWatchdogRetry: return "Retry"
         case .onboardingOptInWatchdogSkip: return "Skip"
         case .onboardingOptInWatchdogOpenSettings: return "Open Settings"
+        case .onboardingOptInProcessing: return "Setting up permissions…"
         default: return ""
         }
     }
