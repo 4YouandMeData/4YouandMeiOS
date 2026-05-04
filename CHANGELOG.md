@@ -1,3 +1,10 @@
+## Release 0.100.0
+
+- **Decoupled SensorKit from the `HEALTHKIT` Swift compilation flag** (FUAM-2998). SensorKit setup, permission UI, and call sites now compile under a dedicated `SENSORKIT` condition. Host apps that want SensorKit must add `SENSORKIT` to `SWIFT_ACTIVE_COMPILATION_CONDITIONS` in their Podfile `post_install` (alongside `HEALTHKIT` if they want both); host apps that want HealthKit-only no longer ship SensorKit code paths.
+- **Decoupled TerraiOS from the `HEALTHKIT` Swift compilation flag** (FUAM-3008). TerraiOS imports and Terra-only code paths (`TerraManager`, `TerraService`, `Repository.getTerraToken()`, `IntegrationSectionCoordinator`'s Terra branch, `FeedViewController.checkForHealthPermission`) now compile under a dedicated `TERRA` condition. Unlike `HEALTHKIT` and `SENSORKIT`, the `TERRA` flag is **auto-defined** by the `ForYouAndMe/Terra` subspec via `pod_target_xcconfig` — host apps simply add `pod 'ForYouAndMe/Terra'` to enable Terra; do **not** list `TERRA` manually in `post_install`. Host apps that don't pull the Terra subspec no longer hit `No such module 'TerraiOS'` when enabling `HEALTHKIT`.
+- **Breaking (host Podfile):** Host apps relying on `HEALTHKIT` to implicitly enable SensorKit must now opt in explicitly via `SENSORKIT`. Host apps that flipped a local `include_terra: true` workaround to make HealthKit builds compile can revert it. README "Compilation flags summary" documents the three flags and the subspec ↔ flag mapping.
+- Adds Quick/Nimble specs covering the flag wiring (compile-time symbol assertions for `HealthManager` and `SensorKitManager`, plus an absence sentinel for `TERRA`) and `Integration.terra` logic (locale query item, URL/scheme behaviour).
+
 ## Release 0.99.2
 
 - Bumped declared Swift version from 5.2 to 5.9 in the podspec (FUAM-3056). No source changes; aligns the pod with the Swift 5.9 features already in use across the codebase and unblocks dependencies that require 5.9 (notably JamLog).
