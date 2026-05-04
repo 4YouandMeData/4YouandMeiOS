@@ -190,6 +190,17 @@ enum MenstrualFlowAmount: String, CaseIterable {
         case .veryHeavy: return 4
         }
     }
+
+    init?(intValue: Int) {
+        switch intValue {
+        case 0: self = .spotting
+        case 1: self = .light
+        case 2: self = .moderate
+        case 3: self = .heavy
+        case 4: self = .veryHeavy
+        default: return nil
+        }
+    }
 }
 
 enum MenstrualPeriodRelated: String, CaseIterable {
@@ -214,6 +225,20 @@ enum MenstrualPeriodRelated: String, CaseIterable {
         case .no: return "no"
         case .notSure: return "not_sure"
         case .letMeExplain: return "other"
+        }
+    }
+
+    /// Decode the BE `period_related` value back into the wizard enum.
+    /// Inverse of `backendValue`: maps `"other"` to `.letMeExplain` since
+    /// that's the only branch that produces "other" on send.
+    init?(backendValue: String) {
+        switch backendValue {
+        case "yes":            self = .yes
+        case "no":             self = .no
+        case "not_sure":       self = .notSure
+        case "other",
+             "let_me_explain": self = .letMeExplain
+        default: return nil
         }
     }
 }
@@ -447,7 +472,11 @@ feedback_tags
             case .menstrualPeriod:
                 let dateStr = raw["date"]?.value as? String
                 let date: Date = dateStr.flatMap { isoFmt.date(from: $0) } ?? self.diaryNoteId
-                let flow = raw["flow_amount"]?.value as? String ?? ""
+                // FUAM-2925: BE stores flow as integer 0..4. Map it back to the
+                // MenstrualFlowAmount.rawValue string the UI consumers expect.
+                let flowInt: Int? = (raw["flow"]?.value as? Int)
+                    ?? (raw["flow"]?.value as? Double).flatMap { Int($0) }
+                let flow = flowInt.flatMap { MenstrualFlowAmount(intValue: $0)?.rawValue } ?? ""
                 let related = raw["period_related"]?.value as? String ?? ""
                 let bleeding = raw["bleeding"]?.value as? String ?? ""
                 let note = raw["note"]?.value as? String

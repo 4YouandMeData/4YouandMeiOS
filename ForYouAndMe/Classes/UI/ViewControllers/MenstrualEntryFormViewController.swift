@@ -39,25 +39,37 @@ final class MenstrualEntryFormViewController: UIViewController {
         return button
     }()
 
+    // Section labels mirror the wizard step questions (the Title strings) so
+    // the detail screen reads as "question → answer" pairs (per Figma 729-85728).
     private let dateLabel = MenstrualEntryFormViewController.makeBoldLabel(
-        text: StringsProvider.string(forKey: .menstrualStepDateMessage)
+        text: StringsProvider.string(forKey: .menstrualStepDateTitle)
     )
     private let dateRow = MenstrualEntryFormViewController.makeSingleLineValueRow()
 
     private let flowLabel = MenstrualEntryFormViewController.makeBoldLabel(
-        text: StringsProvider.string(forKey: .menstrualStepFlowMessage)
+        text: StringsProvider.string(forKey: .menstrualStepFlowTitle)
     )
     private let flowRow = MenstrualEntryFormViewController.makeSingleLineValueRow()
 
     private let periodRelatedLabel = MenstrualEntryFormViewController.makeBoldLabel(
-        text: StringsProvider.string(forKey: .menstrualStepPeriodMessage)
+        text: StringsProvider.string(forKey: .menstrualStepPeriodTitle)
     )
     private let periodRelatedRow = MenstrualEntryFormViewController.makeMultiLineValueRow()
 
     private let noteLabel = MenstrualEntryFormViewController.makeBoldLabel(
-        text: StringsProvider.string(forKey: .menstrualStepNoteMessage)
+        text: StringsProvider.string(forKey: .menstrualStepNoteTitle)
     )
     private let noteRow = MenstrualEntryFormViewController.makeMultiLineValueRow()
+    private let noteSection: UIStackView = {
+        let stack = UIStackView()
+        stack.axis = .vertical
+        stack.alignment = .fill
+        stack.distribution = .fill
+        stack.spacing = 0
+        // Default: hidden until populateFields confirms a non-empty note.
+        stack.isHidden = true
+        return stack
+    }()
 
     private lazy var footerView: GenericButtonView = {
         let buttonView = GenericButtonView(withTextStyleCategory: .secondaryBackground(shadow: false))
@@ -72,6 +84,10 @@ final class MenstrualEntryFormViewController: UIViewController {
         super.viewDidLoad()
         view.backgroundColor = ColorPalette.color(withType: .secondary)
         setupLayout()
+        // configure(with:) runs before viewDidLoad (called by AppNavigator
+        // before pushViewController), so populate the value rows here, after
+        // the view hierarchy exists and noteSection has its default state.
+        populateFields()
     }
 
     override func viewWillAppear(_ animated: Bool) {
@@ -89,9 +105,13 @@ final class MenstrualEntryFormViewController: UIViewController {
         }
         self.entryDate = date
         self.flowAmount = MenstrualFlowAmount(rawValue: flow)
-        self.periodRelated = MenstrualPeriodRelated(rawValue: related)
+        // BE returns "other" for `letMeExplain` — `init(backendValue:)` reverses
+        // the mapping so the form can branch on letMeExplain to surface the
+        // user-typed explanation as the field value.
+        self.periodRelated = MenstrualPeriodRelated(backendValue: related)
         self.note = payloadNote
-        populateFields()
+        // populateFields runs from viewDidLoad — values get applied after the
+        // layout is in place. Calling it here would race with setupLayout.
     }
 
     private func populateFields() {
@@ -105,19 +125,63 @@ final class MenstrualEntryFormViewController: UIViewController {
         if let flow = flowAmount, let label = flowRow.subviews.compactMap({ $0 as? UILabel }).first {
             label.text = StringsProvider.string(forKey: flow.localizedKey)
         }
-        if let related = periodRelated,
-           let label = periodRelatedRow.subviews.compactMap({ $0 as? UILabel }).first {
-            label.text = StringsProvider.string(forKey: related.localizedKey)
+
+        // The encoder concatenates `<explanation>\n\n<finalNote>` when the user
+        // picked "Let me explain" and typed both pieces. Split them back so the
+        // explanation appears as the period-related answer (per Figma 729-85728)
+        // and only the final note rides in the note section.
+        let payloadNote = note?.trimmingCharacters(in: .whitespacesAndNewlines)
+        let (relatedAnswer, displayNote) = decomposeNote(payloadNote, related: periodRelated)
+
+        if let label = periodRelatedRow.subviews.compactMap({ $0 as? UILabel }).first {
+            label.text = relatedAnswer
         }
-        if let userNote = note,
-           userNote.isEmpty == false,
-           let label = noteRow.subviews.compactMap({ $0 as? UILabel }).first {
-            label.text = userNote
+
+        if let displayNote = displayNote, displayNote.isEmpty == false {
+            if let label = noteRow.subviews.compactMap({ $0 as? UILabel }).first {
+                label.text = displayNote
+            }
+            noteSection.isHidden = false
+        } else {
+            noteSection.isHidden = true
         }
 
         if let emoji = diaryNote?.feedbackTags?.last {
             selectedEmoji = emoji
             applyEmojiToButton(emoji)
+        }
+    }
+
+    /// Returns the text to render for the period-related answer and the
+    /// remaining final-note text, depending on which branch the wizard took.
+    /// - For yes/no/notSure: the answer is the localized option label and the
+    ///   whole note is treated as the final note.
+    /// - For letMeExplain: the explanation rides in front of the final note
+    ///   separated by a blank line; if the separator is absent, the entire
+    ///   stored text is treated as the explanation (final note is empty).
+    private func decomposeNote(_ rawNote: String?,
+                               related: MenstrualPeriodRelated?) -> (answer: String?, finalNote: String?) {
+        guard let related = related else {
+            return (nil, rawNote?.isEmpty == false ? rawNote : nil)
+        }
+        switch related {
+        case .yes, .no, .notSure:
+            let answer = StringsProvider.string(forKey: related.localizedKey)
+            let finalNote = (rawNote?.isEmpty == false) ? rawNote : nil
+            return (answer, finalNote)
+        case .letMeExplain:
+            guard let rawNote = rawNote, rawNote.isEmpty == false else {
+                return (StringsProvider.string(forKey: related.localizedKey), nil)
+            }
+            if let separatorRange = rawNote.range(of: "\n\n") {
+                let explanation = String(rawNote[..<separatorRange.lowerBound])
+                    .trimmingCharacters(in: .whitespacesAndNewlines)
+                let finalNote = String(rawNote[separatorRange.upperBound...])
+                    .trimmingCharacters(in: .whitespacesAndNewlines)
+                return (explanation.isEmpty ? nil : explanation,
+                        finalNote.isEmpty ? nil : finalNote)
+            }
+            return (rawNote, nil)
         }
     }
 
@@ -178,10 +242,15 @@ final class MenstrualEntryFormViewController: UIViewController {
         scrollStackView.stackView.addArrangedSubview(periodRelatedRow)
         scrollStackView.stackView.addBlankSpace(space: 24)
 
-        scrollStackView.stackView.addArrangedSubview(noteLabel)
-        scrollStackView.stackView.addBlankSpace(space: 8)
-        scrollStackView.stackView.addArrangedSubview(noteRow)
-        scrollStackView.stackView.addBlankSpace(space: 24)
+        // Note section is hidden when the entry has no optional note (FUAM-2934).
+        // Wrapping label + spacer + row + trailing margin in a single stack lets
+        // us collapse the whole block via `isHidden` without leaving a gap.
+        // Visibility is toggled in populateFields based on the payload note.
+        noteSection.addArrangedSubview(noteLabel)
+        noteSection.addBlankSpace(space: 8)
+        noteSection.addArrangedSubview(noteRow)
+        noteSection.addBlankSpace(space: 24)
+        scrollStackView.stackView.addArrangedSubview(noteSection)
 
         view.addSubview(footerView)
         footerView.autoPinEdgesToSuperviewEdges(with: .zero, excludingEdge: .top)

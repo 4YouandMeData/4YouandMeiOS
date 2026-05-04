@@ -61,5 +61,52 @@ class MenstrualPeriodRelatedSpec: QuickSpec {
                 expect(MenstrualPeriodRelated.letMeExplain.backendValue).to(equal("other"))
             }
         }
+
+        describe("MenstrualFlowAmount(intValue:) — BE response decoding") {
+            it("maps every BE integer 0..4 to the matching enum case") {
+                expect(MenstrualFlowAmount(intValue: 0)).to(equal(.spotting))
+                expect(MenstrualFlowAmount(intValue: 1)).to(equal(.light))
+                expect(MenstrualFlowAmount(intValue: 2)).to(equal(.moderate))
+                expect(MenstrualFlowAmount(intValue: 3)).to(equal(.heavy))
+                expect(MenstrualFlowAmount(intValue: 4)).to(equal(.veryHeavy))
+            }
+            it("returns nil for out-of-range integers") {
+                expect(MenstrualFlowAmount(intValue: -1)).to(beNil())
+                expect(MenstrualFlowAmount(intValue: 5)).to(beNil())
+                expect(MenstrualFlowAmount(intValue: 42)).to(beNil())
+            }
+            it("is round-trip safe with intValue") {
+                for amount in MenstrualFlowAmount.allCases {
+                    expect(MenstrualFlowAmount(intValue: amount.intValue)).to(equal(amount))
+                }
+            }
+        }
+
+        describe("MenstrualPeriodRelated(backendValue:) — BE response decoding") {
+            it("maps yes/no/not_sure/let_me_explain to themselves") {
+                expect(MenstrualPeriodRelated(backendValue: "yes")).to(equal(.yes))
+                expect(MenstrualPeriodRelated(backendValue: "no")).to(equal(.no))
+                expect(MenstrualPeriodRelated(backendValue: "not_sure")).to(equal(.notSure))
+                expect(MenstrualPeriodRelated(backendValue: "let_me_explain")).to(equal(.letMeExplain))
+            }
+            it("maps BE other → letMeExplain (inverse of backendValue collapse)") {
+                expect(MenstrualPeriodRelated(backendValue: "other")).to(equal(.letMeExplain))
+            }
+            it("returns nil for unknown values") {
+                expect(MenstrualPeriodRelated(backendValue: "")).to(beNil())
+                expect(MenstrualPeriodRelated(backendValue: "maybe")).to(beNil())
+                expect(MenstrualPeriodRelated(backendValue: "YES")).to(beNil())
+            }
+            it("round-trips through backendValue for non-letMeExplain cases") {
+                let cases: [MenstrualPeriodRelated] = [.yes, .no, .notSure]
+                for value in cases {
+                    expect(MenstrualPeriodRelated(backendValue: value.backendValue)).to(equal(value))
+                }
+                // letMeExplain is intentionally lossy on send (collapses to "other"),
+                // and the inverse decoder restores it.
+                expect(MenstrualPeriodRelated(backendValue: MenstrualPeriodRelated.letMeExplain.backendValue))
+                    .to(equal(.letMeExplain))
+            }
+        }
     }
 }
