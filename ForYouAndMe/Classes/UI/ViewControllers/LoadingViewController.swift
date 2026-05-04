@@ -70,12 +70,12 @@ class LoadingViewController<T>: UIViewController, LoadingPage {
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        
+
         self.startLoading()
     }
-    
+
     // MARK: - Private Methods
-    
+
     private func startLoading() {
         self.errorView.hideView()
         

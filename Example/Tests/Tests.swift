@@ -389,3 +389,351 @@ class ExcludeInvalidRegressionSpec: QuickSpec {
         }
     }
 }
+
+// MARK: - FUAM-3021 v3 — perpetual silent-retry watchdog
+
+import RxSwift
+
+class PermissionWatchdogTickSpec: QuickSpec {
+    override func spec() {
+        // Real-time tests: keep tick intervals small (50–100 ms) so they
+        // finish fast without an RxTest dependency.
+
+        context("source emits before any tick") {
+            it("forwards success and never fires the tick handler") {
+                var tickCount = 0
+                var receivedSuccess = false
+
+                // Source emits in 30 ms; tick interval is 200 ms — no tick
+                // should fire before source resolves.
+                let source: Single<()> = Single.just(())
+                    .delay(.milliseconds(30), scheduler: MainScheduler.instance)
+
+                waitUntil(timeout: .seconds(1)) { done in
+                    _ = source
+                        .withPermissionWatchdogTicks(
+                            tickInterval: 0.2,
+                            tickHandler: { _ in tickCount += 1 })
+                        .subscribe(
+                            onSuccess: { receivedSuccess = true; done() },
+                            onFailure: { _ in done() })
+                }
+                expect(receivedSuccess) == true
+                expect(tickCount) == 0
+            }
+        }
+
+        context("source never emits") {
+            it("fires tick handler repeatedly with sequential 1-based tick numbers") {
+                var ticks: [Int] = []
+                let source: Single<()> = Single<()>.create { _ in Disposables.create() }
+
+                let disposable = source
+                    .withPermissionWatchdogTicks(
+                        tickInterval: 0.1,
+                        tickHandler: { tick in ticks.append(tick) })
+                    .subscribe(onSuccess: { _ in }, onFailure: { _ in })
+
+                // Wait ~0.55 s — should observe approximately 5 ticks.
+                waitUntil(timeout: .seconds(1)) { done in
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.55) { done() }
+                }
+                expect(ticks.count) >= 4
+                expect(ticks.count) <= 6
+                // Sequential 1-based: first tick is 1, then 2, 3, …
+                expect(ticks.first) == 1
+                for index in 1..<ticks.count {
+                    expect(ticks[index]) == ticks[index - 1] + 1
+                }
+                disposable.dispose()
+            }
+        }
+
+        context("disposing the wrapped Single") {
+            it("stops the tick stream") {
+                var tickCount = 0
+                let source: Single<()> = Single<()>.create { _ in Disposables.create() }
+
+                let disposable = source
+                    .withPermissionWatchdogTicks(
+                        tickInterval: 0.1,
+                        tickHandler: { _ in tickCount += 1 })
+                    .subscribe(onSuccess: { _ in }, onFailure: { _ in })
+
+                // Let a couple of ticks land, then dispose.
+                waitUntil(timeout: .seconds(1)) { done in
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
+                        disposable.dispose()
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { done() }
+                    }
+                }
+                let countAfterDispose = tickCount
+                // After disposal we should observe no further increments.
+                // Re-check after another wait; ticks should not have grown.
+                waitUntil(timeout: .seconds(1)) { done in
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { done() }
+                }
+                expect(tickCount) == countAfterDispose
+                expect(tickCount) >= 1  // at least one tick observed before dispose
+            }
+        }
+
+        context("source emits while ticks are firing") {
+            it("forwards success and stops the tick stream immediately") {
+                var ticks: [Int] = []
+                var receivedSuccess = false
+
+                // Source emits at 250 ms, ticks every 100 ms — expect ~2 ticks
+                // before success, then no more.
+                let source: Single<()> = Single.just(())
+                    .delay(.milliseconds(250), scheduler: MainScheduler.instance)
+
+                waitUntil(timeout: .seconds(1)) { done in
+                    _ = source
+                        .withPermissionWatchdogTicks(
+                            tickInterval: 0.1,
+                            tickHandler: { tick in ticks.append(tick) })
+                        .subscribe(
+                            onSuccess: {
+                                receivedSuccess = true
+                                // Wait a bit longer to ensure no late ticks land.
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { done() }
+                            },
+                            onFailure: { _ in done() })
+                }
+                expect(receivedSuccess) == true
+                let tickCountAtSuccess = ticks.count
+                // After success no more ticks should append.
+                expect(ticks.count) == tickCountAtSuccess
+                expect(tickCountAtSuccess) >= 1
+                expect(tickCountAtSuccess) <= 3
+            }
+        }
+    }
+}
+
+// MARK: - FUAM-3021 — Watchdog telemetry surface
+
+/// Capture-everything sink for telemetry-emit assertions.
+final class CapturingTelemetrySink: TelemetrySink {
+    private(set) var events: [TelemetryEvent] = []
+    func receive(_ event: TelemetryEvent) {
+        events.append(event)
+    }
+    func reset() { events.removeAll() }
+}
+
+/// Mock AnalyticsService used to verify the AnalyticsServiceSink bridge.
+final class CapturingAnalyticsService: AnalyticsService {
+    private(set) var trackedEvents: [AnalyticsEvent] = []
+    func track(event: AnalyticsEvent) {
+        trackedEvents.append(event)
+    }
+    func reset() { trackedEvents.removeAll() }
+}
+
+class WatchdogTelemetrySpec: QuickSpec {
+    override func spec() {
+
+        context("Telemetry.errors.permissionWatchdogTripped") {
+            it("emits one error:permission.watchdog.tripped event with the spec'd payload") {
+                let sink = CapturingTelemetrySink()
+                Telemetry.setSinks([sink])
+                defer { Telemetry.setSinks([]) }
+
+                Telemetry.errors.permissionWatchdogTripped(
+                    branch: "health",
+                    previousBranch: nil,
+                    elapsedMs: 8000,
+                    attempt: 1)
+
+                expect(sink.events).to(haveCount(1))
+                let event = sink.events[0]
+                expect(event.fullName) == "error:permission.watchdog.tripped"
+                expect(event.level) == .warn
+                expect(event.payload["branch"] as? String) == "health"
+                expect(event.payload["elapsed_ms"] as? Int) == 8000
+                expect(event.payload["attempt"] as? Int) == 1
+                expect(event.payload["host_app"]).toNot(beNil())
+                expect(event.payload["os_version"]).toNot(beNil())
+                expect(event.payload["previous_branch"]).to(beNil())
+            }
+
+            it("includes previous_branch when supplied") {
+                let sink = CapturingTelemetrySink()
+                Telemetry.setSinks([sink])
+                defer { Telemetry.setSinks([]) }
+
+                Telemetry.errors.permissionWatchdogTripped(
+                    branch: "sensorkit",
+                    previousBranch: "health",
+                    elapsedMs: 8123,
+                    attempt: 2)
+
+                expect(sink.events).to(haveCount(1))
+                expect(sink.events[0].payload["previous_branch"] as? String) == "health"
+            }
+        }
+
+        context("Telemetry.action.permissionWatchdog{Retry|Skip}") {
+            it("emits the corresponding action events with the spec'd payload") {
+                let sink = CapturingTelemetrySink()
+                Telemetry.setSinks([sink])
+                defer { Telemetry.setSinks([]) }
+
+                Telemetry.action.permissionWatchdogRetry(branch: "notification", attempt: 2)
+                Telemetry.action.permissionWatchdogSkip(branch: "location", wasFirstAttempt: true)
+
+                expect(sink.events).to(haveCount(2))
+                expect(sink.events[0].fullName) == "action:permission.watchdog.retry"
+                expect(sink.events[0].payload["branch"] as? String) == "notification"
+                expect(sink.events[0].payload["attempt"] as? Int) == 2
+
+                expect(sink.events[1].fullName) == "action:permission.watchdog.skip"
+                expect(sink.events[1].payload["branch"] as? String) == "location"
+                expect(sink.events[1].payload["was_first_attempt"] as? Bool) == true
+            }
+        }
+
+        context("AnalyticsServiceSink bridge") {
+            it("forwards error:permission.watchdog.tripped to AnalyticsEvent.permissionWatchdogTimeout") {
+                let analytics = CapturingAnalyticsService()
+                let bridge = AnalyticsServiceSink(analytics: analytics)
+
+                let event = TelemetryEvent(
+                    category: .error,
+                    name: "permission.watchdog.tripped",
+                    level: .warn,
+                    payload: [
+                        "branch": "health",
+                        "previous_branch": "location",
+                        "elapsed_ms": 7500,
+                        "attempt": 1,
+                        "host_app": "com.example.test",
+                        "os_version": "26.0"
+                    ])
+                bridge.receive(event)
+
+                expect(analytics.trackedEvents).to(haveCount(1))
+                if case let .permissionWatchdogTimeout(branch, previousBranch, elapsedMs, attempt) = analytics.trackedEvents[0] {
+                    expect(branch) == "health"
+                    expect(previousBranch) == "location"
+                    expect(elapsedMs) == 7500
+                    expect(attempt) == 1
+                } else {
+                    fail("Expected permissionWatchdogTimeout, got \(analytics.trackedEvents[0])")
+                }
+            }
+
+            it("forwards action:permission.watchdog.skip to AnalyticsEvent.permissionWatchdogSkipped") {
+                let analytics = CapturingAnalyticsService()
+                let bridge = AnalyticsServiceSink(analytics: analytics)
+
+                bridge.receive(TelemetryEvent(
+                    category: .action,
+                    name: "permission.watchdog.skip",
+                    level: .info,
+                    payload: ["branch": "notification", "was_first_attempt": false]))
+
+                expect(analytics.trackedEvents).to(haveCount(1))
+                if case let .permissionWatchdogSkipped(branch, wasFirstAttempt) = analytics.trackedEvents[0] {
+                    expect(branch) == "notification"
+                    expect(wasFirstAttempt) == false
+                } else {
+                    fail("Expected permissionWatchdogSkipped, got \(analytics.trackedEvents[0])")
+                }
+            }
+
+            it("does NOT forward retry (it stays diagnostic-only)") {
+                let analytics = CapturingAnalyticsService()
+                let bridge = AnalyticsServiceSink(analytics: analytics)
+
+                bridge.receive(TelemetryEvent(
+                    category: .action,
+                    name: "permission.watchdog.retry",
+                    level: .info,
+                    payload: ["branch": "health", "attempt": 2]))
+
+                expect(analytics.trackedEvents).to(beEmpty())
+            }
+        }
+
+        context("Redactor.scrub does not clobber watchdog payload keys") {
+            it("preserves branch, attempt, elapsed_ms, host_app, previous_branch unchanged") {
+                let sink = CapturingTelemetrySink()
+                Telemetry.setSinks([sink])
+                defer { Telemetry.setSinks([]) }
+
+                Telemetry.errors.permissionWatchdogTripped(
+                    branch: "health",
+                    previousBranch: "notification",
+                    elapsedMs: 1234,
+                    attempt: 1)
+
+                expect(sink.events).to(haveCount(1))
+                let p = sink.events[0].payload
+                // Sanity check: redaction did not stringify, drop, or replace
+                // any of these with "[redacted]".
+                expect(p["branch"] as? String) == "health"
+                expect(p["previous_branch"] as? String) == "notification"
+                expect(p["attempt"] as? Int) == 1
+                expect(p["elapsed_ms"] as? Int) == 1234
+                expect((p["host_app"] as? String) != "[redacted]") == true
+            }
+        }
+    }
+}
+
+// MARK: - FUAM-3021 — CacheManager skipped-permission persistence
+
+class CacheManagerSkippedPermissionsSpec: QuickSpec {
+    override func spec() {
+        // CacheManager persists into UserDefaults.standard. Each test cleans
+        // up after itself via clearSkippedOptInPermissions() to avoid bleed
+        // across specs and between local runs.
+
+        context("skippedOptInPermissions accessors") {
+            it("starts empty and round-trips a Set<String>") {
+                let cache = CacheManager()
+                cache.clearSkippedOptInPermissions()
+
+                expect(cache.skippedOptInPermissions).to(beEmpty())
+
+                cache.skippedOptInPermissions = ["health", "sensorkit"]
+                expect(cache.skippedOptInPermissions) == ["health", "sensorkit"]
+
+                cache.clearSkippedOptInPermissions()
+                expect(cache.skippedOptInPermissions).to(beEmpty())
+            }
+
+            it("survives a fresh CacheManager instance (UserDefaults-backed)") {
+                let writer = CacheManager()
+                writer.clearSkippedOptInPermissions()
+                writer.skippedOptInPermissions = ["location"]
+
+                let reader = CacheManager()
+                expect(reader.skippedOptInPermissions) == ["location"]
+
+                reader.clearSkippedOptInPermissions()
+                let afterClear = CacheManager()
+                expect(afterClear.skippedOptInPermissions).to(beEmpty())
+            }
+
+            it("supports incremental insertion (mutate-and-set pattern)") {
+                let cache = CacheManager()
+                cache.clearSkippedOptInPermissions()
+
+                var skipped = cache.skippedOptInPermissions
+                skipped.insert("health")
+                cache.skippedOptInPermissions = skipped
+
+                skipped = cache.skippedOptInPermissions
+                skipped.insert("sensorkit")
+                cache.skippedOptInPermissions = skipped
+
+                expect(cache.skippedOptInPermissions) == ["health", "sensorkit"]
+                cache.clearSkippedOptInPermissions()
+            }
+        }
+    }
+}

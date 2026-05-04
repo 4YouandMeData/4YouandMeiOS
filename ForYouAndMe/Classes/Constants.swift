@@ -116,7 +116,32 @@ struct Constants {
         static let MaxValidLocationAge: TimeInterval = 15.0
         static let PinCodeSuffix: String = ProjectInfo.PinCodeSuffix
     }
-    
+
+    // FUAM-3021 v3 (FUAM-3118). Perpetual silent-retry watchdog for the
+    // opt-in permission chain. The watchdog ticks every `tickInterval`
+    // seconds while waiting for a permission `Single<()>` to emit. The
+    // first `silentTicksPerCycle` ticks are SILENT — no UI is shown. After
+    // that cycle's worth of ticks elapses, the coordinator attempts to
+    // surface a Retry/Skip popup; if the popup cannot be presented (an
+    // OS or in-process modal sheet is on top, or the app is inactive), it
+    // is muted and the next tick re-checks. The cycle is perpetual: each
+    // user "Retry" tap resets the tick counter to 0 and starts another
+    // silent window. Skip exits.
+    //
+    // Why perpetual silent retries instead of v2's one-shot timeout:
+    // iOS 17+ presents HKHealthStore.requestAuthorization and SRSensorReader
+    // .requestAuthorization as in-process sheets that do NOT trigger
+    // `UIApplication.willResignActiveNotification`. v2's pause-aware timer
+    // therefore consumed budget during user-think time and tripped
+    // spuriously after exactly 8 s — the user perceived the flow as broken.
+    // The v3 model decouples "internal waiting" from "user-visible alert":
+    // we keep retrying internally forever and only ever bother the user
+    // when we can do so without overlapping an OS sheet.
+    struct OnboardingPermissionWatchdog {
+        static let tickInterval: TimeInterval = 3
+        static let silentTicksPerCycle: Int = 10
+    }
+
     struct Url {
         static var BaseUrl: String { ProjectInfo.OauthBaseUrl }
         static let ApiOAuthIntegrationBaseUrl: URL = URL(string: "\(BaseUrl)/users/integration_oauth")!

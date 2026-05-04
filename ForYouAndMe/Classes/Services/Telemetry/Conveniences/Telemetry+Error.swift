@@ -4,6 +4,7 @@
 //
 
 import Foundation
+import UIKit
 
 extension Telemetry {
     public enum errors {
@@ -67,6 +68,36 @@ extension Telemetry {
             track(TelemetryEvent(
                 category: .error,
                 name: "permission.denied",
+                level: .warn,
+                payload: payload,
+                trace: TelemetryTrace(file: file, function: function, line: line)
+            ))
+        }
+
+        // FUAM-3021. Opt-in permission-chain watchdog tripped — the per-branch
+        // `Single<()>` did not emit within the active-time budget. The chain
+        // cannot make progress; the coordinator dismisses the spinner and
+        // surfaces a Retry/Skip alert.
+        public static func permissionWatchdogTripped(branch: String,
+                                                     previousBranch: String?,
+                                                     elapsedMs: Int,
+                                                     attempt: Int,
+                                                     file: String = #fileID,
+                                                     function: String = #function,
+                                                     line: UInt = #line) {
+            var payload: [String: AnyHashable] = [
+                "branch": branch,
+                "elapsed_ms": elapsedMs,
+                "attempt": attempt,
+                "host_app": Bundle.main.bundleIdentifier ?? "",
+                "os_version": UIDevice.current.systemVersion
+            ]
+            if let previousBranch = previousBranch {
+                payload["previous_branch"] = previousBranch
+            }
+            track(TelemetryEvent(
+                category: .error,
+                name: "permission.watchdog.tripped",
                 level: .warn,
                 payload: payload,
                 trace: TelemetryTrace(file: file, function: function, line: line)

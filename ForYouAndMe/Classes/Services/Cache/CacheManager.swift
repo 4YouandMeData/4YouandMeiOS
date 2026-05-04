@@ -30,6 +30,10 @@ class CacheManager: CacheService {
         case lastUploadSequenceCompletionDate
         case lastUploadSequenceStartingDate
         case firstSuccessfulSampleUploadDate
+        // FUAM-3021. Opt-in permission branches the user skipped after a
+        // watchdog timeout. Stored as [String] of SystemPermission rawValues
+        // (UserDefaults can't natively persist Set<String>).
+        case skippedOptInPermissions
     }
     
     private let mainUserDefaults = UserDefaults.standard
@@ -69,7 +73,22 @@ class CacheManager: CacheService {
         get {return self.load(forKey: CacheManagerKey.excludedUserDataAggregationIdsKey.rawValue)}
         set {self.save(encodable: newValue, forKey: CacheManagerKey.excludedUserDataAggregationIdsKey.rawValue)}
     }
-        
+
+    // FUAM-3021. See CacheService for semantics.
+    var skippedOptInPermissions: Set<String> {
+        get {
+            let stored: [String] = self.load(forKey: CacheManagerKey.skippedOptInPermissions.rawValue) ?? []
+            return Set(stored)
+        }
+        set {
+            self.save(encodable: Array(newValue), forKey: CacheManagerKey.skippedOptInPermissions.rawValue)
+        }
+    }
+
+    func clearSkippedOptInPermissions() {
+        self.reset(forKey: CacheManagerKey.skippedOptInPermissions.rawValue)
+    }
+
     // MARK: - Private methods
     
     private func save<T>(encodable: T?, forKey key: String) where T: Encodable {
