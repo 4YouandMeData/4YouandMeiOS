@@ -55,6 +55,15 @@ enum StringKey: String, CaseIterable, CodingKey {
     case onboardingOptInMandatoryTitle = "ONBOARDING_OPT_IN_MANDATORY_TITLE"
     case onboardingOptInMandatoryDefault = "ONBOARDING_OPT_IN_MANDATORY_DEFAULT"
     case onboardingOptInSubmitButton = "ONBOARDING_OPT_IN_SUBMIT_BUTTON"
+    // FUAM-3021. Opt-in permission-chain watchdog alert (Approach B from FUAM-3020).
+    // Ship with English defaults so the alert is always renderable even on
+    // hosts whose study config has not been updated yet.
+    case onboardingOptInWatchdogTitle = "ONBOARDING_OPT_IN_WATCHDOG_TITLE"
+    case onboardingOptInWatchdogMessage = "ONBOARDING_OPT_IN_WATCHDOG_MESSAGE"
+    case onboardingOptInWatchdogRetry = "ONBOARDING_OPT_IN_WATCHDOG_RETRY"
+    case onboardingOptInWatchdogSkip = "ONBOARDING_OPT_IN_WATCHDOG_SKIP"
+    case onboardingOptInWatchdogOpenSettings = "ONBOARDING_OPT_IN_WATCHDOG_OPEN_SETTINGS"
+    case onboardingOptInWatchdogUnavailableMessage = "ONBOARDING_OPT_IN_WATCHDOG_UNAVAILABLE_MESSAGE"
     case onboardingUserNameTitle = "ONBOARDING_USER_NAME_TITLE"
     case onboardingUserNameMinorTitle = "ONBOARDING_USER_NAME_MINOR_TITLE"
     case onboardingUserNameGuardianTitle = "ONBOARDING_USER_NAME_GUARDIAN_TITLE"
@@ -523,6 +532,15 @@ enum StringKey: String, CaseIterable, CodingKey {
         case .errorMessageDefault: return "Something went wrong,\nplease try again"
         case .errorMessageRemoteServer: return "Something went wrong,\nplease try again"
         case .errorMessageConnectivity: return "You seem to be offline.\nPlease check your internet connection and try again."
+        // FUAM-3021. Watchdog alert defaults (English fallback).
+        case .onboardingOptInWatchdogTitle: return "Permission unavailable"
+        case .onboardingOptInWatchdogMessage:
+            return "We couldn't open the next permission. You can retry now or skip this step and continue."
+        case .onboardingOptInWatchdogUnavailableMessage:
+            return "This permission is currently unavailable on your device. You can continue without it."
+        case .onboardingOptInWatchdogRetry: return "Retry"
+        case .onboardingOptInWatchdogSkip: return "Skip"
+        case .onboardingOptInWatchdogOpenSettings: return "Open Settings"
         default: return ""
         }
     }

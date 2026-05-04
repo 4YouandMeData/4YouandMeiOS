@@ -48,6 +48,12 @@ enum AnalyticsParameter: String {
     case status
     case allow
     case revoke
+    // FUAM-3021. Opt-in permission-chain watchdog attributes.
+    case branch
+    case previousBranch = "previous_branch"
+    case elapsedMs = "elapsed_ms"
+    case attempt
+    case wasFirstAttempt = "was_first_attempt"
 }
 
 enum AnalyticsScreens: String {
@@ -115,7 +121,15 @@ enum AnalyticsEvent {
     // Permission
     case locationPermissionChanged(_ status: String)
     case notificationPermissionChanged(_ status: String)
-    
+
+    // FUAM-3021. Opt-in permission-chain watchdog (Approach B from FUAM-3020).
+    // These cases are emitted via AnalyticsServiceSink (which bridges from
+    // Telemetry events) — not called directly from application code.
+    case permissionWatchdogTimeout(branch: String, previousBranch: String?, elapsedMs: Int, attempt: Int)
+    case permissionWatchdogRetry(branch: String, attempt: Int)
+    case permissionWatchdogSkipped(branch: String, wasFirstAttempt: Bool)
+    case permissionWatchdogOpenSettings(branch: String, attempt: Int)
+
     // Errors
     case serverError(apiError: ApiError)
     case healthError(healthError: HealthError)

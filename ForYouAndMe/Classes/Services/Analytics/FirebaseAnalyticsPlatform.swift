@@ -24,6 +24,11 @@ private enum FirebaseEventCustomName: String {
     case yourDataSelectDataPeriod = "your_data_period_selection"
     case locationPermissionChanged = "location_permission_changed"
     case pushNotificationsPermissionChanged = "pushnotifications_permission_changed"
+    // FUAM-3021. Opt-in permission-chain watchdog (Approach B from FUAM-3020).
+    case permissionWatchdogTimeout = "onboarding_permission_watchdog_tripped"
+    case permissionWatchdogRetry = "onboarding_permission_retry"
+    case permissionWatchdogSkipped = "onboarding_permission_skipped"
+    case permissionWatchdogOpenSettings = "onboarding_permission_open_settings"
 }
 
 private enum FirebaseErrorDomain {
@@ -87,9 +92,62 @@ class FirebaseAnalyticsPlatform: AnalyticsPlatform {
             self.serverError(withApiError: apiError)
         case .healthError(let healthError):
             self.healthError(withHealthError: healthError)
+        case .permissionWatchdogTimeout(let branch, let previousBranch, let elapsedMs, let attempt):
+            self.permissionWatchdogTimeout(branch: branch,
+                                           previousBranch: previousBranch,
+                                           elapsedMs: elapsedMs,
+                                           attempt: attempt)
+        case .permissionWatchdogRetry(let branch, let attempt):
+            self.permissionWatchdogRetry(branch: branch, attempt: attempt)
+        case .permissionWatchdogSkipped(let branch, let wasFirstAttempt):
+            self.permissionWatchdogSkipped(branch: branch, wasFirstAttempt: wasFirstAttempt)
+        case .permissionWatchdogOpenSettings(let branch, let attempt):
+            self.permissionWatchdogOpenSettings(branch: branch, attempt: attempt)
         default:
             break
         }
+    }
+
+    // MARK: - FUAM-3021 watchdog event helpers
+
+    private func permissionWatchdogTimeout(branch: String,
+                                           previousBranch: String?,
+                                           elapsedMs: Int,
+                                           attempt: Int) {
+        var parameters: [String: Any] = [
+            AnalyticsParameter.branch.rawValue: branch,
+            AnalyticsParameter.elapsedMs.rawValue: elapsedMs,
+            AnalyticsParameter.attempt.rawValue: attempt
+        ]
+        if let previousBranch = previousBranch {
+            parameters[AnalyticsParameter.previousBranch.rawValue] = previousBranch
+        }
+        self.sendEvent(withEventName: FirebaseEventCustomName.permissionWatchdogTimeout.rawValue,
+                       parameters: parameters)
+    }
+
+    private func permissionWatchdogRetry(branch: String, attempt: Int) {
+        self.sendEvent(withEventName: FirebaseEventCustomName.permissionWatchdogRetry.rawValue,
+                       parameters: [
+                           AnalyticsParameter.branch.rawValue: branch,
+                           AnalyticsParameter.attempt.rawValue: attempt
+                       ])
+    }
+
+    private func permissionWatchdogSkipped(branch: String, wasFirstAttempt: Bool) {
+        self.sendEvent(withEventName: FirebaseEventCustomName.permissionWatchdogSkipped.rawValue,
+                       parameters: [
+                           AnalyticsParameter.branch.rawValue: branch,
+                           AnalyticsParameter.wasFirstAttempt.rawValue: wasFirstAttempt
+                       ])
+    }
+
+    private func permissionWatchdogOpenSettings(branch: String, attempt: Int) {
+        self.sendEvent(withEventName: FirebaseEventCustomName.permissionWatchdogOpenSettings.rawValue,
+                       parameters: [
+                           AnalyticsParameter.branch.rawValue: branch,
+                           AnalyticsParameter.attempt.rawValue: attempt
+                       ])
     }
     
     // MARK: - Private Methods
