@@ -1,6 +1,6 @@
 {
   "name": "ForYouAndMe",
-  "version": "0.100.1",
+  "version": "0.99.0",
   "summary": "Framework for research studies apps",
   "description": "ForYouAndMe is a framework aimed to easily develop an app for research study",
   "homepage": "https://github.com/4YouandMeData/4YouandMeiOS",
@@ -13,13 +13,13 @@
   },
   "source": {
     "git": "https://github.com/4YouandMeData/4YouandMeiOS.git",
-    "tag": "0.100.1"
+    "tag": "0.99.0"
   },
   "cocoapods_version": ">= 1.6.0",
   "platforms": {
     "ios": "15.6"
   },
-  "swift_versions": "5.9",
+  "swift_versions": "5.2",
   "static_framework": true,
   "frameworks": "UIKit",
   "weak_frameworks": "SensorKit",
@@ -94,9 +94,6 @@
         ],
         "JJFloatingActionButton": [
           "~> 3.0.1"
-        ],
-        "JamLog": [
-          "~> 1.1"
         ]
       }
     },
@@ -106,11 +103,8 @@
         "TerraiOS": [
           "~> 1.6.26"
         ]
-      },
-      "pod_target_xcconfig": {
-        "SWIFT_ACTIVE_COMPILATION_CONDITIONS": "$(inherited) TERRA"
       }
     }
   ],
-  "swift_version": "5.9"
+  "swift_version": "5.2"
 }
