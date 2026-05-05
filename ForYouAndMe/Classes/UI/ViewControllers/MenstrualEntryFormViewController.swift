@@ -22,6 +22,10 @@ final class MenstrualEntryFormViewController: UIViewController {
     private var note: String?
     private var selectedEmoji: EmojiItem?
 
+    /// Invoked after the entry is successfully persisted, so the presenter
+    /// (e.g. the period detail screen) can refresh its row without polling.
+    var onEntryUpdated: ((DiaryNoteItem) -> Void)?
+
     private let repository: Repository = Services.shared.repository
     private let navigator: AppNavigator = Services.shared.navigator
     private let cache: CacheService = Services.shared.storageServices
@@ -259,7 +263,7 @@ final class MenstrualEntryFormViewController: UIViewController {
 
     // MARK: - Emoji
     private func emojiItems() -> [EmojiItem] {
-        return cache.feedbackList[EmojiTagCategory.menstrualCycle.rawValue] ?? []
+        return cache.feedbackList[EmojiTagCategory.menstrualPeriod.rawValue] ?? []
     }
 
     private func applyEmojiToButton(_ emoji: EmojiItem) {
@@ -290,7 +294,9 @@ final class MenstrualEntryFormViewController: UIViewController {
 
             self.repository.updateDiaryNoteText(diaryNote: note)
                 .addProgress()
-                .subscribe(onSuccess: { },
+                .subscribe(onSuccess: { [weak self] in
+                    self?.onEntryUpdated?(note)
+                },
                            onFailure: { [weak self] error in
                     guard let self = self else { return }
                     self.navigator.handleError(error: error, presenter: self)

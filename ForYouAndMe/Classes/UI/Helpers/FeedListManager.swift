@@ -625,9 +625,12 @@ class FeedListManager: NSObject {
     }
 
     private func handlePinnedAlertSecondary(feed: Feed, alert: Alert) {
-        // "No, not now" — dismiss without entry. BE-side acknowledgment will land
-        // when FUAM-2937 wires the alert acknowledgement endpoint.
-        self.reloadItems()
+        // FUAM-2932: "No" creates a menstrual diary entry with bleeding="no",
+        // running the inline onboarding first when the baseline is unset.
+        guard let presenter = self.delegate?.presenter else { return }
+        self.navigator.recordMenstrualBleedingNo(presenter: presenter) { [weak self] in
+            self?.reloadItems()
+        }
     }
 
     // MARK: - Actions

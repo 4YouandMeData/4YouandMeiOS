@@ -851,6 +851,69 @@ class AppNavigator {
         navigationController.pushViewController(vc, animated: true)
     }
 
+    /// FUAM-2932: handles the "No" action on the pinned menstrual feed card.
+    /// Records a diary note with bleeding="no" for today, gating on the
+    /// inline onboarding (FUAM-2937) when the baseline is not yet configured.
+    /// `onComplete` runs whether the chain succeeds, fails, or is cancelled —
+    /// callers use it to refresh the feed regardless of outcome.
+    public func recordMenstrualBleedingNo(presenter: UIViewController,
+                                          onComplete: @escaping () -> Void) {
+        self.repository.getUserSettings()
+            .addProgress()
+            .subscribe(onSuccess: { [weak self, weak presenter] settings in
+                guard let self = self, let presenter = presenter else {
+                    onComplete()
+                    return
+                }
+                if settings.needsMenstrualOnboarding {
+                    self.openMenstrualOnboarding(presenter: presenter) { [weak self, weak presenter] cancelled in
+                        guard let self = self, let presenter = presenter, !cancelled else {
+                            onComplete()
+                            return
+                        }
+                        self.submitMenstrualBleedingNo(presenter: presenter, onComplete: onComplete)
+                    }
+                } else {
+                    self.submitMenstrualBleedingNo(presenter: presenter, onComplete: onComplete)
+                }
+            }, onFailure: { [weak self, weak presenter] error in
+                guard let self = self, let presenter = presenter else {
+                    onComplete()
+                    return
+                }
+                self.handleError(error: error, presenter: presenter)
+                onComplete()
+            }).disposed(by: self.disposeBag)
+    }
+
+    private func submitMenstrualBleedingNo(presenter: UIViewController,
+                                           onComplete: @escaping () -> Void) {
+        // FUAM-2925 schema requires a `flow` value; for bleeding="no" entries
+        // we default to spotting (lowest bucket), matching the convention used
+        // for synthetic menstrual entries elsewhere in the codebase.
+        let data = DiaryNoteMenstrualData(
+            date: Date(),
+            flowAmount: .spotting,
+            periodRelated: .no,
+            periodRelatedExplanation: nil,
+            note: nil,
+            fromChart: false,
+            diaryNote: nil
+        )
+        self.repository.sendDiaryNoteMenstrual(data: data)
+            .addProgress()
+            .subscribe(onSuccess: { _ in
+                onComplete()
+            }, onFailure: { [weak self, weak presenter] error in
+                guard let self = self, let presenter = presenter else {
+                    onComplete()
+                    return
+                }
+                self.handleError(error: error, presenter: presenter)
+                onComplete()
+            }).disposed(by: self.disposeBag)
+    }
+
     private func presentMenstrualWizard(presenter: UIViewController,
                                         variant: FlowVariant,
                                         alert: Alert?) {
@@ -974,9 +1037,11 @@ class AppNavigator {
     }
 
     public func openMenstrualEntryFormViewController(presenter: UIViewController,
-                                                     menstrualItem: DiaryNoteItem) {
+                                                     menstrualItem: DiaryNoteItem,
+                                                     onEntryUpdated: ((DiaryNoteItem) -> Void)? = nil) {
         let vc = MenstrualEntryFormViewController()
         vc.configure(with: menstrualItem)
+        vc.onEntryUpdated = onEntryUpdated
 
         if let navigationController = presenter.navigationController {
             navigationController.pushViewController(vc,
@@ -1589,7 +1654,15 @@ extension AppNavigator: MenstrualPeriodDetailViewControllerDelegate {
 
     public func menstrualPeriodDetailViewController(_ vc: MenstrualPeriodDetailViewController,
                                                      didSelect entry: DiaryNoteItem) {
-        self.openMenstrualEntryFormViewController(presenter: vc, menstrualItem: entry)
+        self.openMenstrualEntryFormViewController(
+            presenter: vc,
+            menstrualItem: entry,
+            onEntryUpdated: { [weak vc] updated in
+                guard let vc = vc else { return }
+                let refreshed = vc.entries.map { $0.id == updated.id ? updated : $0 }
+                vc.update(entries: refreshed)
+            }
+        )
     }
 
     public func menstrualPeriodDetailViewControllerDidClose(_ vc: MenstrualPeriodDetailViewController) {

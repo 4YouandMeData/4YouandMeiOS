@@ -135,6 +135,6 @@ final class MenstrualEntrySuccessViewController: UIViewController {
     }
 
     private func getEmojis() -> [EmojiItem] {
-        return Services.shared.storageServices.feedbackList[EmojiTagCategory.menstrualCycle.rawValue] ?? []
+        return Services.shared.storageServices.feedbackList[EmojiTagCategory.menstrualPeriod.rawValue] ?? []
     }
 }

@@ -19,7 +19,7 @@ enum EmojiTagCategory: String, CaseIterable {
     case iHaveNoticed = "i_have_noticed"
     case weHaveNoticed = "we_have_noticed"
     case hotFlash = "hot_flash"
-    case menstrualCycle = "menstrual_cycle"
+    case menstrualPeriod = "menstrual_period"
     case none
 }
 

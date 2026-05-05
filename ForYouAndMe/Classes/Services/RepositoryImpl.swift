@@ -66,11 +66,7 @@ class RepositoryImpl {
                 CountryCodeProvider.initialize(withcountryCodes: globalConfig.countryCodes)
                 IntegrationProvider.initialize(withIntegrationDatas: globalConfig.integrationDatas)
                 OnboardingSectionProvider.initialize(withOnboardingSectionGroups: globalConfig.onboardingSectionGroups)
-                var feedbackList = globalConfig.feedbackList ?? [:]
-                #if DEBUG
-                feedbackList = DiaryNoteMenstrualStub.augmentedFeedbackList(feedbackList)
-                #endif
-                self.storage.feedbackList = feedbackList
+                self.storage.feedbackList = globalConfig.feedbackList ?? [:]
             })
             .toVoid()
     }
