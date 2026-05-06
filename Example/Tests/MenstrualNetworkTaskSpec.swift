@@ -112,7 +112,10 @@ class MenstrualNetworkTaskSpec: QuickSpec {
                 let payload = diaryNote?["data"] as? [String: Any]
 
                 expect(payload?["note"]).to(beNil())
-                expect(payload?["bleeding"] as? String).to(equal("no"))
+                // Wizard semantics: periodRelated=no maps bleeding to "other";
+                // only the FUAM-2932 feed-alert path emits bleeding="no".
+                expect(payload?["bleeding"] as? String).to(equal("other"))
+                expect(payload?["period_related"] as? String).to(equal("no"))
             }
 
             it("maps letMeExplain to period_related=other (BE schema)") {

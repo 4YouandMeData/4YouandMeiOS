@@ -619,16 +619,21 @@ class FeedListManager: NSObject {
 
     private func handlePinnedAlertPrimary(feed: Feed, alert: Alert) {
         guard let presenter = self.delegate?.presenter else { return }
+        // FUAM-2932: pass feed.id so the wizard ack's the task once the
+        // diary note is saved, otherwise the BE keeps re-emitting the card.
         self.navigator.openMenstrualEntryViewController(presenter: presenter,
                                                         variant: .standalone,
-                                                        alert: alert)
+                                                        alert: alert,
+                                                        feedTaskId: feed.id)
     }
 
     private func handlePinnedAlertSecondary(feed: Feed, alert: Alert) {
         // FUAM-2932: "No" creates a menstrual diary entry with bleeding="no",
-        // running the inline onboarding first when the baseline is unset.
+        // running the inline onboarding first when the baseline is unset, and
+        // ack's the feed task so the BE removes the card.
         guard let presenter = self.delegate?.presenter else { return }
-        self.navigator.recordMenstrualBleedingNo(presenter: presenter) { [weak self] in
+        self.navigator.recordMenstrualBleedingNo(presenter: presenter,
+                                                 feedTaskId: feed.id) { [weak self] in
             self?.reloadItems()
         }
     }

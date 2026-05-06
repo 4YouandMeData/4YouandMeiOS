@@ -42,6 +42,13 @@ final class MenstrualEntryCoordinator: PagedActivitySectionCoordinator {
 
     // MARK: - Collected user data
     private let variant: FlowVariant
+    /// Feed task id when the wizard is launched from the pinned menstrual
+    /// feed alert (FUAM-2932). When set, the coordinator acknowledges the
+    /// task via `sendTaskResult` after the diary note is persisted, so the
+    /// BE removes the card from the next feed refresh. `nil` for FAB,
+    /// settings, and "add another date" entry points where there is no
+    /// underlying feed task to close.
+    private let feedTaskId: String?
     private var selectedDate: Date?
     private var flowAmount: MenstrualFlowAmount?
     private var periodRelated: MenstrualPeriodRelated?
@@ -53,11 +60,13 @@ final class MenstrualEntryCoordinator: PagedActivitySectionCoordinator {
          navigator: AppNavigator,
          taskIdentifier: String,
          variant: FlowVariant,
+         feedTaskId: String? = nil,
          completion: @escaping NotificationCallback) {
         self.repository = repository
         self.navigator = navigator
         self.taskIdentifier = taskIdentifier
         self.variant = variant
+        self.feedTaskId = feedTaskId
         self.completionCallback = completion
 
         let sequence: [Page] = [
@@ -106,6 +115,22 @@ final class MenstrualEntryCoordinator: PagedActivitySectionCoordinator {
         )
 
         self.repository.sendDiaryNoteMenstrual(data: data)
+            .flatMap { [weak self] diaryNote -> Single<DiaryNoteItem> in
+                // FUAM-2932: when launched from the pinned feed alert, ack the
+                // task so the BE drops the card. Errors here are logged but do
+                // not roll back the diary note; the next feed refresh recovers.
+                guard let self = self, let feedTaskId = self.feedTaskId else {
+                    return .just(diaryNote)
+                }
+                let resultData = TaskNetworkResult(
+                    data: ["diary_note_id": diaryNote.id],
+                    attachedFile: nil
+                )
+                return self.repository
+                    .sendTaskResult(taskId: feedTaskId, taskResult: resultData)
+                    .map { diaryNote }
+                    .catchAndReturn(diaryNote)
+            }
             .addProgress()
             .subscribe(onSuccess: { [weak self] diaryNote in
                 guard let self = self else { return }

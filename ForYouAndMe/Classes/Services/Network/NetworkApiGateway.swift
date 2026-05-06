@@ -921,12 +921,18 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             return .requestParameters(parameters: ["diary_note": dataParams], encoding: JSONEncoding.default)
 
         case .sendDiaryNoteMenstrual(let data):
-            // FUAM-2925 schema: bleeding/flow/period_related/note only.
-            // `datetime_ref` rides on the outer envelope; BE auto-derives date.
+            // FUAM-2925 schema: bleeding/flow/period_related/note. Only
+            // `bleeding` is mandatory (FUAM-2932 feed-alert "No" path); the
+            // wizard contributes the optional fields. `datetime_ref` rides on
+            // the outer envelope; BE auto-derives date.
             var payloadData: [String: Any] = [:]
             payloadData["bleeding"] = data.bleeding.rawValue
-            payloadData["flow"] = data.flowAmount.intValue
-            payloadData["period_related"] = data.periodRelated.backendValue
+            if let flow = data.flowAmount {
+                payloadData["flow"] = flow.intValue
+            }
+            if let related = data.periodRelated {
+                payloadData["period_related"] = related.backendValue
+            }
             // Fold the wizard's "Let me explain" explanation in front of the
             // user note when both are present, then truncate to BE max (2500).
             let explanation = data.periodRelatedExplanation?.trimmingCharacters(in: .whitespacesAndNewlines)

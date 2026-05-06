@@ -216,9 +216,6 @@ extension FeedViewController: FeedListManagerDelegate {
             .catchAndReturn(nil)
         return Single.zip(feedsSingle, settingsSingle).map { feeds, settings in
             var processed = feeds
-            #if DEBUG
-            processed = FeedAlertStub.inject(into: processed)
-            #endif
             if settings?.menstrualHadPeriod3Mo == .no {
                 processed = processed.filter { feed in
                     guard case .alert(let alert) = feed.notifiable else { return true }

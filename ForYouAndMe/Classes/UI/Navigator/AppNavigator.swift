@@ -802,11 +802,14 @@ class AppNavigator {
 
     public func openMenstrualEntryViewController(presenter: UIViewController,
                                                  variant: FlowVariant = .standalone,
-                                                 alert: Alert? = nil) {
+                                                 alert: Alert? = nil,
+                                                 feedTaskId: String? = nil) {
         // FUAM-2937: gate the wizard with the inline onboarding when the
         // menstrual baseline is unset, OR when it is "no" (had-no-period in
         // the past 3 months) — the act of creating a menstrual diary entry
         // contradicts that answer, so we re-collect the baseline.
+        // `feedTaskId` is forwarded to the coordinator so the wizard can
+        // acknowledge the pinned feed task after persisting the diary note.
         self.repository.getUserSettings()
             .addProgress()
             .subscribe(onSuccess: { [weak self, weak presenter] settings in
@@ -814,10 +817,16 @@ class AppNavigator {
                 if settings.needsMenstrualOnboarding {
                     self.openMenstrualOnboarding(presenter: presenter) { [weak self, weak presenter] cancelled in
                         guard let self = self, let presenter = presenter, !cancelled else { return }
-                        self.presentMenstrualWizard(presenter: presenter, variant: variant, alert: alert)
+                        self.presentMenstrualWizard(presenter: presenter,
+                                                    variant: variant,
+                                                    alert: alert,
+                                                    feedTaskId: feedTaskId)
                     }
                 } else {
-                    self.presentMenstrualWizard(presenter: presenter, variant: variant, alert: alert)
+                    self.presentMenstrualWizard(presenter: presenter,
+                                                variant: variant,
+                                                alert: alert,
+                                                feedTaskId: feedTaskId)
                 }
             }, onFailure: { [weak self, weak presenter] error in
                 guard let self = self, let presenter = presenter else { return }
@@ -854,9 +863,12 @@ class AppNavigator {
     /// FUAM-2932: handles the "No" action on the pinned menstrual feed card.
     /// Records a diary note with bleeding="no" for today, gating on the
     /// inline onboarding (FUAM-2937) when the baseline is not yet configured.
+    /// When `feedTaskId` is supplied, the underlying feed task is acknowledged
+    /// so the BE drops the card on the next refresh.
     /// `onComplete` runs whether the chain succeeds, fails, or is cancelled —
     /// callers use it to refresh the feed regardless of outcome.
     public func recordMenstrualBleedingNo(presenter: UIViewController,
+                                          feedTaskId: String? = nil,
                                           onComplete: @escaping () -> Void) {
         self.repository.getUserSettings()
             .addProgress()
@@ -871,10 +883,14 @@ class AppNavigator {
                             onComplete()
                             return
                         }
-                        self.submitMenstrualBleedingNo(presenter: presenter, onComplete: onComplete)
+                        self.submitMenstrualBleedingNo(presenter: presenter,
+                                                       feedTaskId: feedTaskId,
+                                                       onComplete: onComplete)
                     }
                 } else {
-                    self.submitMenstrualBleedingNo(presenter: presenter, onComplete: onComplete)
+                    self.submitMenstrualBleedingNo(presenter: presenter,
+                                                   feedTaskId: feedTaskId,
+                                                   onComplete: onComplete)
                 }
             }, onFailure: { [weak self, weak presenter] error in
                 guard let self = self, let presenter = presenter else {
@@ -887,20 +903,33 @@ class AppNavigator {
     }
 
     private func submitMenstrualBleedingNo(presenter: UIViewController,
+                                           feedTaskId: String?,
                                            onComplete: @escaping () -> Void) {
-        // FUAM-2925 schema requires a `flow` value; for bleeding="no" entries
-        // we default to spotting (lowest bucket), matching the convention used
-        // for synthetic menstrual entries elsewhere in the codebase.
+        // FUAM-2932: bleeding-only payload — flow, period_related, and note
+        // are deliberately omitted when the user taps "No" on the feed card.
         let data = DiaryNoteMenstrualData(
             date: Date(),
-            flowAmount: .spotting,
-            periodRelated: .no,
-            periodRelatedExplanation: nil,
-            note: nil,
+            bleeding: .no,
             fromChart: false,
             diaryNote: nil
         )
         self.repository.sendDiaryNoteMenstrual(data: data)
+            .flatMap { [weak self] diaryNote -> Single<DiaryNoteItem> in
+                // Acknowledge the feed task when the action originated from
+                // the pinned card. Errors here are swallowed: the diary note
+                // is already persisted and the feed refresh will reconcile.
+                guard let self = self, let feedTaskId = feedTaskId else {
+                    return .just(diaryNote)
+                }
+                let resultData = TaskNetworkResult(
+                    data: ["diary_note_id": diaryNote.id],
+                    attachedFile: nil
+                )
+                return self.repository
+                    .sendTaskResult(taskId: feedTaskId, taskResult: resultData)
+                    .map { diaryNote }
+                    .catchAndReturn(diaryNote)
+            }
             .addProgress()
             .subscribe(onSuccess: { _ in
                 onComplete()
@@ -916,7 +945,8 @@ class AppNavigator {
 
     private func presentMenstrualWizard(presenter: UIViewController,
                                         variant: FlowVariant,
-                                        alert: Alert?) {
+                                        alert: Alert?,
+                                        feedTaskId: String? = nil) {
         // Prevent overlapping flows
         assert(self.currentActivityCoordinator == nil, "Another activity is already in progress")
 
@@ -930,6 +960,7 @@ class AppNavigator {
             navigator: self,
             taskIdentifier: "menstrualEntry",
             variant: variant,
+            feedTaskId: feedTaskId,
             completion: completion
         )
         coordinator.alert = alert

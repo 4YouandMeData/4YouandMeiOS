@@ -16,8 +16,11 @@ class MenstrualPeriodRelatedSpec: QuickSpec {
             it("maps yes → bleeding.yes") {
                 expect(MenstrualPeriodRelated.yes.bleeding).to(equal(MenstrualBleeding.yes))
             }
-            it("maps no → bleeding.no") {
-                expect(MenstrualPeriodRelated.no.bleeding).to(equal(MenstrualBleeding.no))
+            it("maps no → bleeding.other (wizard collapses non-yes answers)") {
+                // Wizard semantics: only periodRelated=.yes reports actual
+                // bleeding. The bleeding="no" value is reserved for the
+                // FUAM-2932 feed-alert "No" shortcut, not the wizard step.
+                expect(MenstrualPeriodRelated.no.bleeding).to(equal(MenstrualBleeding.other))
             }
             it("maps notSure → bleeding.other") {
                 expect(MenstrualPeriodRelated.notSure.bleeding).to(equal(MenstrualBleeding.other))

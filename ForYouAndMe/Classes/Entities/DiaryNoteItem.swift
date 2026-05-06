@@ -210,10 +210,14 @@ enum MenstrualPeriodRelated: String, CaseIterable {
     case letMeExplain = "let_me_explain"
 
     var bleeding: MenstrualBleeding {
+        // Wizard semantics: only the "yes" answer reports actual bleeding.
+        // "no", "not sure", and "let me explain" all collapse to bleeding=other
+        // — the user's specific choice survives via `period_related`. The
+        // bleeding="no" value is reserved for the FUAM-2932 feed-alert "No"
+        // shortcut, which bypasses the wizard entirely.
         switch self {
         case .yes: return .yes
-        case .no: return .no
-        case .notSure, .letMeExplain: return .other
+        case .no, .notSure, .letMeExplain: return .other
         }
     }
 
@@ -245,8 +249,9 @@ enum MenstrualPeriodRelated: String, CaseIterable {
 
 struct DiaryNoteMenstrualData {
     let date: Date
-    let flowAmount: MenstrualFlowAmount
-    let periodRelated: MenstrualPeriodRelated
+    let bleeding: MenstrualBleeding
+    let flowAmount: MenstrualFlowAmount?
+    let periodRelated: MenstrualPeriodRelated?
     /// Free-form text shown when the user taps "Let me explain" on step 4.
     /// Captured before the final note step so the two inputs stay separate.
     let periodRelatedExplanation: String?
@@ -254,7 +259,39 @@ struct DiaryNoteMenstrualData {
     let fromChart: Bool
     let diaryNote: DiaryNoteItem?
 
-    var bleeding: MenstrualBleeding { periodRelated.bleeding }
+    /// Wizard path (FUAM-2935): bleeding is derived from `periodRelated`.
+    init(date: Date,
+         flowAmount: MenstrualFlowAmount,
+         periodRelated: MenstrualPeriodRelated,
+         periodRelatedExplanation: String?,
+         note: String?,
+         fromChart: Bool,
+         diaryNote: DiaryNoteItem?) {
+        self.date = date
+        self.bleeding = periodRelated.bleeding
+        self.flowAmount = flowAmount
+        self.periodRelated = periodRelated
+        self.periodRelatedExplanation = periodRelatedExplanation
+        self.note = note
+        self.fromChart = fromChart
+        self.diaryNote = diaryNote
+    }
+
+    /// FUAM-2932 feed-alert "No" path: bleeding-only entry. Skips flow,
+    /// period_related, and note so the BE only persists `bleeding`.
+    init(date: Date,
+         bleeding: MenstrualBleeding,
+         fromChart: Bool,
+         diaryNote: DiaryNoteItem?) {
+        self.date = date
+        self.bleeding = bleeding
+        self.flowAmount = nil
+        self.periodRelated = nil
+        self.periodRelatedExplanation = nil
+        self.note = nil
+        self.fromChart = fromChart
+        self.diaryNote = diaryNote
+    }
 }
 
 struct DiaryNoteWeHaveNoticedItem: Codable {

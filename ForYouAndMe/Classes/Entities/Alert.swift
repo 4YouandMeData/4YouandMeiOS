@@ -7,6 +7,14 @@
 
 import Foundation
 
+/// Layout variant for pinned feed alerts (FUAM-2932). The BE picks the
+/// presentation: `compact` collapses image and vertical padding to a
+/// shorter card, `standard` keeps the full hero-style layout.
+enum AlertLayout: String, Decodable {
+    case compact
+    case standard
+}
+
 struct Alert {
     let id: String
     let type: String
@@ -32,6 +40,7 @@ struct Alert {
     var cardColor: UIColor?
 
     var pinned: Bool?
+    var layout: AlertLayout?
 }
 
 extension Alert: JSONAPIMappable {
@@ -48,9 +57,12 @@ extension Alert: JSONAPIMappable {
         case endColor = "end_color"
         case cardColor = "card_color"
         case pinned
+        case layout
     }
 }
 
 extension Alert {
     var isPinned: Bool { pinned ?? false }
+    /// Resolved layout — defaults to `.standard` when the BE omits the field.
+    var resolvedLayout: AlertLayout { layout ?? .standard }
 }

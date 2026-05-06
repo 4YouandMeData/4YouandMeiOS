@@ -27,7 +27,7 @@ class DiaryNoteMenstrualDataSpec: QuickSpec {
                 expect(data.bleeding).to(equal(.yes))
             }
 
-            it("derives bleeding from periodRelated.no") {
+            it("derives bleeding=other from periodRelated.no (wizard path)") {
                 let data = DiaryNoteMenstrualData(
                     date: Date(),
                     flowAmount: .moderate,
@@ -37,7 +37,8 @@ class DiaryNoteMenstrualDataSpec: QuickSpec {
                     fromChart: false,
                     diaryNote: nil
                 )
-                expect(data.bleeding).to(equal(.no))
+                expect(data.bleeding).to(equal(.other))
+                expect(data.periodRelated).to(equal(.no))
                 expect(data.note).to(equal("spotting after exercise"))
             }
 
