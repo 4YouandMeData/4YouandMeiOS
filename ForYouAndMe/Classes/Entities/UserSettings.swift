@@ -73,10 +73,12 @@ extension UserSettings: JSONAPIMappable {
 extension UserSettings {
     /// FUAM-2937 gate: returns `true` when opening the menstrual diary
     /// wizard should be intercepted by the inline baseline onboarding.
-    /// Triggers when the baseline has never been configured (`nil`), AND
-    /// also when it is `.no` — creating a menstrual diary entry contradicts
-    /// "no period in the past 3 months", so the baseline is re-collected.
+    /// Triggers only when the baseline has never been configured (`nil`).
+    /// Once the user has answered (yes/no/unsure) the baseline is considered
+    /// captured and the wizard proceeds without re-collecting it — for `.no`
+    /// the BE-side trigger and the client-side filter already suppress the
+    /// pinned feed card, so re-prompting on FAB / settings entry is noise.
     var needsMenstrualOnboarding: Bool {
-        return menstrualHadPeriod3Mo == nil || menstrualHadPeriod3Mo == .no
+        return menstrualHadPeriod3Mo == nil
     }
 }

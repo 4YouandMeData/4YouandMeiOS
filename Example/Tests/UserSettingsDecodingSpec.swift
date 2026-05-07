@@ -115,8 +115,10 @@ class UserSettingsDecodingSpec: QuickSpec {
             it("triggers when the baseline has never been configured") {
                 expect(settings(hadPeriod3Mo: nil)?.needsMenstrualOnboarding).to(beTrue())
             }
-            it("triggers when the user previously answered 'no' (contradicts adding a menstrual diary)") {
-                expect(settings(hadPeriod3Mo: "no")?.needsMenstrualOnboarding).to(beTrue())
+            it("does NOT trigger when the user answered 'no' (baseline already captured)") {
+                // Pinned card is suppressed for .no by the FUAM-2937 filter, so
+                // the wizard should not re-prompt when reached from FAB/settings.
+                expect(settings(hadPeriod3Mo: "no")?.needsMenstrualOnboarding).to(beFalse())
             }
             it("does NOT trigger when the user answered 'yes'") {
                 expect(settings(hadPeriod3Mo: "yes")?.needsMenstrualOnboarding).to(beFalse())
