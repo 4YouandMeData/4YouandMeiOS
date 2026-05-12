@@ -804,30 +804,21 @@ class AppNavigator {
                                                  variant: FlowVariant = .standalone,
                                                  alert: Alert? = nil,
                                                  feedTaskId: String? = nil) {
-        // FUAM-2937: gate the wizard with the inline onboarding when the
-        // menstrual baseline is unset, OR when it is "no" (had-no-period in
-        // the past 3 months) — the act of creating a menstrual diary entry
-        // contradicts that answer, so we re-collect the baseline.
+        // FUAM-3243: when the menstrual baseline has never been configured the
+        // wizard opens with the 2 baseline questions in-line (handled by
+        // MenstrualEntryCoordinator), so there is no separate modal to dismiss
+        // and re-present — the user flows straight into the diary steps.
         // `feedTaskId` is forwarded to the coordinator so the wizard can
         // acknowledge the pinned feed task after persisting the diary note.
         self.repository.getUserSettings()
             .addProgress()
             .subscribe(onSuccess: { [weak self, weak presenter] settings in
                 guard let self = self, let presenter = presenter else { return }
-                if settings.needsMenstrualOnboarding {
-                    self.openMenstrualOnboarding(presenter: presenter) { [weak self, weak presenter] cancelled in
-                        guard let self = self, let presenter = presenter, !cancelled else { return }
-                        self.presentMenstrualWizard(presenter: presenter,
-                                                    variant: variant,
-                                                    alert: alert,
-                                                    feedTaskId: feedTaskId)
-                    }
-                } else {
-                    self.presentMenstrualWizard(presenter: presenter,
-                                                variant: variant,
-                                                alert: alert,
-                                                feedTaskId: feedTaskId)
-                }
+                self.presentMenstrualWizard(presenter: presenter,
+                                            variant: variant,
+                                            alert: alert,
+                                            feedTaskId: feedTaskId,
+                                            requiresBaselineOnboarding: settings.needsMenstrualOnboarding)
             }, onFailure: { [weak self, weak presenter] error in
                 guard let self = self, let presenter = presenter else { return }
                 self.handleError(error: error, presenter: presenter)
@@ -946,7 +937,8 @@ class AppNavigator {
     private func presentMenstrualWizard(presenter: UIViewController,
                                         variant: FlowVariant,
                                         alert: Alert?,
-                                        feedTaskId: String? = nil) {
+                                        feedTaskId: String? = nil,
+                                        requiresBaselineOnboarding: Bool = false) {
         // Prevent overlapping flows
         assert(self.currentActivityCoordinator == nil, "Another activity is already in progress")
 
@@ -961,6 +953,7 @@ class AppNavigator {
             taskIdentifier: "menstrualEntry",
             variant: variant,
             feedTaskId: feedTaskId,
+            requiresBaselineOnboarding: requiresBaselineOnboarding,
             completion: completion
         )
         coordinator.alert = alert

@@ -3,6 +3,11 @@
 //  ForYouAndMe
 //
 //  FUAM-2935 — Drives the 5-step menstrual cycle diary wizard.
+//  FUAM-3243 — When the menstrual baseline (UserSetting) has never been
+//  configured, the wizard is prefixed in-line by the 2 baseline questions
+//  ("had a period in the past 3 months?" + "date of last period"), so the
+//  user flows straight through into the diary steps instead of the baseline
+//  being a separate modal that has to dismiss and re-present the wizard.
 //
 
 import UIKit
@@ -49,6 +54,11 @@ final class MenstrualEntryCoordinator: PagedActivitySectionCoordinator {
     /// settings, and "add another date" entry points where there is no
     /// underlying feed task to close.
     private let feedTaskId: String?
+    /// FUAM-3243: when `true` the flow opens with the 2 baseline questions
+    /// before the diary steps, and persists the answers via PATCH /v1/user_setting
+    /// before continuing.
+    private let requiresBaselineOnboarding: Bool
+    private var baselineHadPeriod3Mo: MenstrualHadPeriod3Mo?
     private var selectedDate: Date?
     private var flowAmount: MenstrualFlowAmount?
     private var periodRelated: MenstrualPeriodRelated?
@@ -61,12 +71,14 @@ final class MenstrualEntryCoordinator: PagedActivitySectionCoordinator {
          taskIdentifier: String,
          variant: FlowVariant,
          feedTaskId: String? = nil,
+         requiresBaselineOnboarding: Bool = false,
          completion: @escaping NotificationCallback) {
         self.repository = repository
         self.navigator = navigator
         self.taskIdentifier = taskIdentifier
         self.variant = variant
         self.feedTaskId = feedTaskId
+        self.requiresBaselineOnboarding = requiresBaselineOnboarding
         self.completionCallback = completion
 
         let sequence: [Page] = [
@@ -85,14 +97,50 @@ final class MenstrualEntryCoordinator: PagedActivitySectionCoordinator {
 
     // MARK: - Flow start
     func getStartingPage() -> UIViewController {
+        // FUAM-3243: open with the baseline question when the user has never
+        // configured it; otherwise jump straight into the diary wizard.
+        let startingViewController: UIViewController
+        if requiresBaselineOnboarding {
+            let onboardingVC = MenstrualOnboardingPeriod3MoViewController()
+            onboardingVC.delegate = self
+            startingViewController = onboardingVC
+        } else {
+            startingViewController = makeWhenViewController()
+        }
+
+        let activityVC = ActivitySectionViewController(coordinator: self,
+                                                       startingViewController: startingViewController)
+        self.activitySectionViewController = activityVC
+        return activityVC
+    }
+
+    private func makeWhenViewController() -> MenstrualWhenViewController {
         let whenVC = MenstrualWhenViewController(variant: variant)
         whenVC.delegate = self
         whenVC.alert = self.alert
+        return whenVC
+    }
 
-        let activityVC = ActivitySectionViewController(coordinator: self,
-                                                       startingViewController: whenVC)
-        self.activitySectionViewController = activityVC
-        return activityVC
+    // MARK: - Baseline onboarding → wizard hand-off (FUAM-3243)
+
+    /// Advance straight into the diary wizard and persist the baseline answers
+    /// in the background — the screen transition is the feedback, no blocking
+    /// HUD. Replacing the stack (vs. pushing) makes the wizard's close button
+    /// cancel the whole flow with nothing stale left underneath.
+    private func saveBaselineThenStartWizard(lastPeriodDate: Date?) {
+        guard let hadPeriod3Mo = self.baselineHadPeriod3Mo else {
+            // Defensive: step 1 always sets this before we get here.
+            completionCallback()
+            return
+        }
+        self.navigationController.setViewControllers([self.makeWhenViewController()], animated: true)
+        self.repository
+            .sendMenstrualUserSettings(hadPeriod3Mo: hadPeriod3Mo,
+                                       lastPeriodDate: lastPeriodDate)
+            .subscribe(onSuccess: { }, onFailure: { [weak self] error in
+                guard let self = self, let presenter = self.activityPresenter else { return }
+                self.navigator.handleError(error: error, presenter: presenter)
+            }).disposed(by: self.disposeBag)
     }
 
     // MARK: - Save & finish
@@ -172,6 +220,35 @@ extension MenstrualEntryCoordinator: MenstrualWhenViewControllerDelegate {
 
     func menstrualWhenViewControllerDidCancel(_ vc: MenstrualWhenViewController) {
         completionCallback()
+    }
+}
+
+// MARK: - Baseline onboarding step 1 delegate (FUAM-3243)
+extension MenstrualEntryCoordinator: MenstrualOnboardingPeriod3MoViewControllerDelegate {
+    func menstrualOnboardingPeriod3MoViewController(_ vc: MenstrualOnboardingPeriod3MoViewController,
+                                                    didSelect value: MenstrualHadPeriod3Mo) {
+        self.baselineHadPeriod3Mo = value
+        switch value {
+        case .no:
+            // No period in the past 3 months → skip the date question.
+            saveBaselineThenStartWizard(lastPeriodDate: nil)
+        case .yes, .unsure:
+            let lastPeriodVC = MenstrualOnboardingLastPeriodViewController()
+            lastPeriodVC.delegate = self
+            navigationController.pushViewController(lastPeriodVC, animated: true)
+        }
+    }
+
+    func menstrualOnboardingPeriod3MoViewControllerDidCancel(_ vc: MenstrualOnboardingPeriod3MoViewController) {
+        completionCallback()
+    }
+}
+
+// MARK: - Baseline onboarding step 2 delegate (FUAM-3243)
+extension MenstrualEntryCoordinator: MenstrualOnboardingLastPeriodViewControllerDelegate {
+    func menstrualOnboardingLastPeriodViewController(_ vc: MenstrualOnboardingLastPeriodViewController,
+                                                     didSelect date: Date) {
+        saveBaselineThenStartWizard(lastPeriodDate: date)
     }
 }
 
