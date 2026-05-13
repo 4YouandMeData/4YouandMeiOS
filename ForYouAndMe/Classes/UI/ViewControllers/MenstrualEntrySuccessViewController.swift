@@ -119,6 +119,12 @@ final class MenstrualEntrySuccessViewController: UIViewController {
         emojiButton.setTitle(tag, for: .normal)
         emojiButton.titleLabel?.font = UIFont.systemFont(ofSize: 32)
         emojiButton.setTitleColor(ColorPalette.color(withType: .primaryText), for: .normal)
+        // Newly-created entries come back from the wizard with feedbackTags = nil;
+        // append via optional chaining would silently no-op and the PATCH would
+        // skip the feedback_tags_attributes block entirely (FUAM-2934).
+        if diaryNote.feedbackTags == nil {
+            diaryNote.feedbackTags = []
+        }
         diaryNote.feedbackTags?.append(emoji)
         repository.updateDiaryNoteText(diaryNote: diaryNote)
             .addProgress()
