@@ -155,6 +155,29 @@ struct DiaryNoteHotFlashData {
     let date: Date
     let fromChart: Bool
     let diaryNote: DiaryNoteItem?
+    /// FUAM-3247: optional additional-step answers, surfaced by the Heat Up
+    /// FAB flow when the study configures the extended screens. `nil` means
+    /// the legacy flow ran and the BE should not see these keys at all.
+    var severity: [String]?
+    var duration: String?
+    var symptoms: [String]?
+    var sleepOnset: String?
+
+    init(date: Date,
+         fromChart: Bool,
+         diaryNote: DiaryNoteItem?,
+         severity: [String]? = nil,
+         duration: String? = nil,
+         symptoms: [String]? = nil,
+         sleepOnset: String? = nil) {
+        self.date = date
+        self.fromChart = fromChart
+        self.diaryNote = diaryNote
+        self.severity = severity
+        self.duration = duration
+        self.symptoms = symptoms
+        self.sleepOnset = sleepOnset
+    }
 }
 
 enum MenstrualBleeding: String {
