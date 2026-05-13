@@ -96,13 +96,29 @@ final class MenstrualPeriodDetailViewController: BaseViewController {
     /// Fetch the series members from the show endpoint. A flat response
     /// (`seriesEntries` empty) means the anchor no longer fronts a series —
     /// bail back to the Compass Log, which will re-derive the rows.
+    ///
+    /// BE limitation (FUAM-2934): `/v1/diary_notes/<anchor>` sideloads the
+    /// `series_entries` but **not** their nested `feedback_tags` — the
+    /// relationship ids are present in the payload, the records are not,
+    /// so after Japx each child arrives with `feedbackTags = nil`. Without
+    /// it, neither the cell's emoji nor the edit form's pre-selection can
+    /// render. We refetch each child individually (its own GET does
+    /// sideload feedback_tags) in parallel and use those as the entries
+    /// list. Drop this round-trip when the BE includes nested feedback_tags.
     private func reloadEntries() {
         self.repository.getMenstrualDiaryNote(noteID: self.seriesAnchorId)
+            .flatMap { [weak self] anchor -> Single<[DiaryNoteItem]> in
+                guard let self = self else { return .just([]) }
+                let entryIDs = (anchor.seriesEntries ?? []).map { $0.id }
+                guard !entryIDs.isEmpty else { return .just([]) }
+                let fetches = entryIDs.map { self.repository.getMenstrualDiaryNote(noteID: $0) }
+                return Single.zip(fetches)
+            }
             .addProgress()
-            .subscribe(onSuccess: { [weak self] note in
+            .subscribe(onSuccess: { [weak self] entries in
                 guard let self = self else { return }
-                self.entries = note.seriesEntries ?? []
-                if self.entries.isEmpty {
+                self.entries = entries
+                if entries.isEmpty {
                     self.delegate?.menstrualPeriodDetailViewControllerDidClose(self)
                 } else {
                     self.tableView.reloadData()

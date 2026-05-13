@@ -1683,29 +1683,14 @@ extension AppNavigator: MenstrualPeriodDetailViewControllerDelegate {
 
     public func menstrualPeriodDetailViewController(_ vc: MenstrualPeriodDetailViewController,
                                                      didSelect entry: DiaryNoteItem) {
-        // BE bug (FUAM-2934): the anchor's GET /v1/diary_notes/:id sideloads
-        // `series_entries` but does NOT sideload their `feedback_tags` — the
-        // relationship references are present but the records are missing
-        // from `included`, so after Japx each series entry arrives with
-        // `feedbackTags = nil`. Re-fetch the single entry directly (its
-        // individual GET does include feedback_tags) so the form can show
-        // the existing emoji and PATCH the correct destroy/create pair.
-        // The detail screen re-fetches its members in `viewWillAppear`, so
-        // the updated entry is picked up when this form is dismissed.
-        self.repository.getMenstrualDiaryNote(noteID: entry.id)
-            .addProgress()
-            .subscribe(onSuccess: { [weak self, weak vc] fresh in
-                guard let self = self, let vc = vc else { return }
-                self.openMenstrualEntryFormViewController(
-                    presenter: vc,
-                    menstrualItem: fresh,
-                    onEntryUpdated: { _ in }
-                )
-            }, onFailure: { [weak self, weak vc] error in
-                guard let self = self, let vc = vc else { return }
-                self.handleError(error: error, presenter: vc)
-            })
-            .disposed(by: self.disposeBag)
+        // The detail screen already refetches each child individually in
+        // `reloadEntries` (FUAM-2934 BE workaround), so `entry` arrives here
+        // with its feedbackTags populated — no extra round-trip needed.
+        self.openMenstrualEntryFormViewController(
+            presenter: vc,
+            menstrualItem: entry,
+            onEntryUpdated: { _ in }
+        )
     }
 
     public func menstrualPeriodDetailViewControllerDidClose(_ vc: MenstrualPeriodDetailViewController) {
