@@ -43,12 +43,8 @@ class DiaryNoteItemMenstrualTableViewCell: UITableViewCell {
 
     private lazy var subtitleLabel: UILabel = {
         let label = UILabel()
-        // The "From: …" and "To: …" halves are joined with a newline (see
-        // `display(diaryNote:)`) so the full range is always laid out on two
-        // lines, regardless of screen width — no truncation, no dependency on
-        // the label's `preferredMaxLayoutWidth` inside the horizontal stack.
-        label.numberOfLines = 2
-        label.lineBreakMode = .byWordWrapping
+        label.numberOfLines = 1
+        label.lineBreakMode = .byTruncatingTail
         label.font = UIFont.systemFont(ofSize: 13)
         label.textColor = ColorPalette.color(withType: .fourthText)
         return label
@@ -126,9 +122,7 @@ class DiaryNoteItemMenstrualTableViewCell: UITableViewCell {
             endString = Self.dayMonthFormatter.string(from: diaryNote.diaryNoteId)
         }
         let startString = Self.dayMonthFormatter.string(from: startDate)
-        // Two-line layout: "From: …" on line 1, "To: …" on line 2. Guarantees
-        // both dates are visible on every screen width (FUAM-2934).
-        subtitleLabel.text = "\(fromPrefix) \(startString)\n\(toPrefix) \(endString)"
+        subtitleLabel.text = "\(fromPrefix) \(startString) - \(toPrefix) \(endString)"
     }
 
     @objc private func cellTapped() {
