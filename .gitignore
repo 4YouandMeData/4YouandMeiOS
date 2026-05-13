@@ -101,3 +101,6 @@ ProjectInfo.plist
 
 # Claude Code
 .claude/*.local.json
+
+# Claude Code worktrees (hub-driven parallel work)
+.claude/worktrees/
