@@ -155,6 +155,12 @@ class DiaryNotesEndpointPathSpec: QuickSpec {
                 expect(path).to(equal("v1/diary_notes/xyz"))
             }
 
+            it("keeps v1 for getMenstrualDiaryNote (series show)") {
+                let path = DefaultService.getMenstrualDiaryNote(noteId: "xyz")
+                    .getPath(forStudyId: studyId)
+                expect(path).to(equal("v1/diary_notes/xyz"))
+            }
+
             it("keeps v1 for deleteDiaryNote") {
                 let path = DefaultService.deleteDiaryNote(noteId: "xyz")
                     .getPath(forStudyId: studyId)

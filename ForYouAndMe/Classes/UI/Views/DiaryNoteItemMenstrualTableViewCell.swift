@@ -2,10 +2,12 @@
 //  DiaryNoteItemMenstrualTableViewCell.swift
 //  Pods
 //
-//  FUAM-2933 — Compass Log cell for menstrual cycle entries. Displays a
-//  drop icon, the title "Menstrual Flow Tracking" and a "From: <date> -
-//  To: <date>" subtitle (range collapses to "..." when the bleeding
-//  sequence has not yet been closed by a `no` entry).
+//  FUAM-2933 / FUAM-2934 — Compass Log cell for menstrual cycle entries.
+//  Displays a drop icon, the title "Menstrual Flow Tracking" and a
+//  "From: <date> - To: <date>" subtitle. The range comes from the BE
+//  `series_meta` (v0.12.5) on the compressed row; `to` collapses to "..."
+//  while the series is ongoing. Non-anchor menstrual rows (a closing `no`,
+//  an orphan `other`) carry no `series_meta` and render as a single day.
 //
 
 import UIKit
@@ -13,9 +15,12 @@ import PureLayout
 
 class DiaryNoteItemMenstrualTableViewCell: UITableViewCell {
 
+    /// Series bounds are date-only values anchored at UTC midnight — format in
+    /// UTC so the displayed day matches the BE date regardless of device zone.
     private static let dayMonthFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateFormat = "MM/dd/yyyy"
+        formatter.timeZone = TimeZone(identifier: "UTC")
         return formatter
     }()
 
@@ -95,11 +100,10 @@ class DiaryNoteItemMenstrualTableViewCell: UITableViewCell {
         contentView.addGestureRecognizer(tapGR)
     }
 
-    /// Configure cell from a MenstrualSequence: title fixed, subtitle is the
-    /// "From: <start> - To: <end>" range. End date is replaced with "..."
-    /// for sequences that have not been closed by a `no` entry yet.
-    public func display(sequence: MenstrualSequence,
-                        isOpenEnded: Bool = false,
+    /// Configure from a Compass Log diary note. Title is fixed; the subtitle
+    /// is the "From: <start> - To: <end>" range read from `seriesMeta`
+    /// ("..." while ongoing). Rows without `seriesMeta` render as a single day.
+    public func display(diaryNote: DiaryNoteItem,
                         onTap: @escaping () -> Void) {
         self.buttonPressedCallback = onTap
 
@@ -107,13 +111,17 @@ class DiaryNoteItemMenstrualTableViewCell: UITableViewCell {
 
         let fromPrefix = StringsProvider.string(forKey: .diaryNoteMenstrualCellFrom)
         let toPrefix = StringsProvider.string(forKey: .diaryNoteMenstrualCellTo)
-        let startString = Self.dayMonthFormatter.string(from: sequence.startDate)
+
+        let startDate: Date
         let endString: String
-        if isOpenEnded {
-            endString = "..."
+        if let meta = diaryNote.seriesMeta {
+            startDate = meta.from
+            endString = meta.ongoing ? "..." : Self.dayMonthFormatter.string(from: meta.to ?? meta.from)
         } else {
-            endString = Self.dayMonthFormatter.string(from: sequence.endDate)
+            startDate = diaryNote.diaryNoteId
+            endString = Self.dayMonthFormatter.string(from: diaryNote.diaryNoteId)
         }
+        let startString = Self.dayMonthFormatter.string(from: startDate)
         subtitleLabel.text = "\(fromPrefix) \(startString) - \(toPrefix) \(endString)"
     }
 

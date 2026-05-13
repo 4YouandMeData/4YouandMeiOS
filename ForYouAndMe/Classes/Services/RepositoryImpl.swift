@@ -433,6 +433,11 @@ extension RepositoryImpl: Repository {
         return self.api.send(request: ApiRequest(serviceRequest: .getDiaryNoteAudio(noteId: noteID)))
             .handleError()
     }
+
+    func getMenstrualDiaryNote(noteID: String) -> Single<DiaryNoteItem> {
+        return self.api.send(request: ApiRequest(serviceRequest: .getMenstrualDiaryNote(noteId: noteID)))
+            .handleError()
+    }
     
     func sendDiaryNoteText(diaryNote: DiaryNoteItem, fromChart: Bool) -> Single<DiaryNoteItem> {
         return self.api.send(request: ApiRequest(serviceRequest: .sendDiaryNoteText(diaryItem: diaryNote, fromChart: fromChart)))

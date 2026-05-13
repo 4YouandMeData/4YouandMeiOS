@@ -416,6 +416,8 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             return "v1/diary_notes/\(diaryNoteId)"
         case .getDiaryNoteAudio(let diaryNoteId):
             return "v1/diary_notes/\(diaryNoteId)"
+        case .getMenstrualDiaryNote(let diaryNoteId):
+            return "v1/diary_notes/\(diaryNoteId)"
         case .sendDiaryNoteText:
             return "v2/diary_notes"
         case .sendDiaryNoteEaten, .sendDiaryNoteDoses, .sendCombinedDiaryNote, .sendDiaryNoteHotFlash, .sendDiaryNoteMenstrual:
@@ -458,6 +460,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
                 .getUserSettings,
                 .getDiaryNotes,
                 .getDiaryNoteText,
+                .getMenstrualDiaryNote,
                 .getInfoMessages,
                 .getDiaryNoteAudio:
             return .get
@@ -602,6 +605,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         case .sendDiaryNoteHotFlash: return "{}".utf8Encoded
         case .getDiaryNoteText: return "{}".utf8Encoded
         case .getDiaryNoteAudio: return "{}".utf8Encoded
+        case .getMenstrualDiaryNote: return "{}".utf8Encoded
         case .deleteDiaryNote: return "{}".utf8Encoded
         case .updateDiaryNoteText: return "{}".utf8Encoded
         }
@@ -629,6 +633,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
                 .delayTask,
                 .getDiaryNoteText,
                 .getDiaryNoteAudio,
+                .getMenstrualDiaryNote,
                 .getInfoMessages,
                 .deleteDiaryNote:
             return .requestPlain
@@ -923,9 +928,12 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         case .sendDiaryNoteMenstrual(let data):
             // FUAM-2925 schema: bleeding/flow/period_related/note. Only
             // `bleeding` is mandatory (FUAM-2932 feed-alert "No" path); the
-            // wizard contributes the optional fields. `datetime_ref` rides on
-            // the outer envelope; BE auto-derives date.
+            // wizard contributes the optional fields.
+            // FUAM-2934 / BE v0.12.5: `data.date` (calendar day, YYYY-MM-DD)
+            // is required — the server-side series grouping keys on it. Send
+            // the local calendar day to match `datetime_ref`'s date part.
             var payloadData: [String: Any] = [:]
+            payloadData["date"] = data.date.string(withFormat: dateFormat)
             payloadData["bleeding"] = data.bleeding.rawValue
             if let flow = data.flowAmount {
                 payloadData["flow"] = flow.intValue
@@ -1161,6 +1169,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
                 .getDiaryNotes,
                 .getDiaryNoteText,
                 .getDiaryNoteAudio,
+                .getMenstrualDiaryNote,
                 .sendDiaryNoteText,
                 .sendDiaryNoteAudio,
                 .sendDiaryNoteVideo,

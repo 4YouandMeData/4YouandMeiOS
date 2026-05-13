@@ -163,6 +163,53 @@ enum MenstrualBleeding: String {
     case other
 }
 
+/// FUAM-2934 — Server-side menstrual series grouping (BE v0.12.5). Present on
+/// the compressed `/diary_notes` index row (the last `yes` day of a series)
+/// and on `GET /diary_notes/:id` when the requested id is that last `yes`.
+/// `nil` for every other row (closing `no`, orphan `other`, non-menstrual).
+struct MenstrualSeriesMeta: Codable {
+    /// First `yes` day of the series.
+    let from: Date
+    /// Last `yes` day; `nil` while the series is still ongoing.
+    let to: Date?
+    /// `true` while no closing `no` day exists yet.
+    let ongoing: Bool
+    /// Total members (yes + other); excludes the closing `no`.
+    let count: Int
+
+    enum CodingKeys: String, CodingKey {
+        case from, to, ongoing, count
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        let formatter = MenstrualSeriesMeta.dateFormatter
+        let fromString = try container.decode(String.self, forKey: .from)
+        guard let fromDate = formatter.date(from: fromString) else {
+            throw DecodingError.dataCorruptedError(forKey: .from, in: container,
+                                                   debugDescription: "Invalid date: \(fromString)")
+        }
+        self.from = fromDate
+        if let toString = try container.decodeIfPresent(String.self, forKey: .to) {
+            self.to = formatter.date(from: toString)
+        } else {
+            self.to = nil
+        }
+        self.ongoing = try container.decode(Bool.self, forKey: .ongoing)
+        self.count = try container.decode(Int.self, forKey: .count)
+    }
+
+    /// BE serializes the series bounds as date-only `YYYY-MM-DD` strings.
+    static let dateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.calendar = Calendar(identifier: .gregorian)
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = TimeZone(identifier: "UTC")
+        formatter.dateFormat = "yyyy-MM-dd"
+        return formatter
+    }()
+}
+
 enum MenstrualFlowAmount: String, CaseIterable {
     case spotting
     case light
@@ -343,9 +390,18 @@ struct DiaryNoteItem: Codable {
     var diaryNoteable: DiaryNoteable?
     
     var payload: DiaryNotePayload?
-    
+
     var feedbackTags: [EmojiItem]?
-    
+
+    /// FUAM-2934 — BE v0.12.5 series metadata; non-nil only on the compressed
+    /// menstrual row / on the show response for the last `yes` of a series.
+    var seriesMeta: MenstrualSeriesMeta?
+
+    /// FUAM-2934 — All members of the series (yes + other, chronological,
+    /// excluding the closing `no`), sideloaded by `GET /diary_notes/:id`.
+    /// Empty/nil on the index and on non-anchor rows.
+    var seriesEntries: [DiaryNoteItem]?
+
     init (id: String,
           type: String,
           diaryNoteId: Date,
@@ -380,9 +436,11 @@ extension DiaryNoteItem: JSONAPIMappable {
     
     static var includeList: String? = """
 diary_noteable,\
-feedback_tags
+feedback_tags,\
+series_entries,\
+series_entries.feedback_tags
 """
-    
+
     enum CodingKeys: String, CodingKey {
         case id
         case type
@@ -395,6 +453,8 @@ feedback_tags
         case diaryNoteType = "diary_type"
         case rawData = "data"
         case feedbackTags = "feedback_tags"
+        case seriesMeta = "series_meta"
+        case seriesEntries = "series_entries"
     }
     
     init(from decoder: Decoder) throws {
@@ -410,7 +470,11 @@ feedback_tags
         self.diaryNoteType = try? container.decodeIfPresent(DiaryNoteItemType.self, forKey: .diaryNoteType)
 
         self.feedbackTags = try? container.decodeIfPresent(Array<EmojiItem>.self, forKey: .feedbackTags)
-        
+
+        // FUAM-2934: BE v0.12.5 series grouping — both optional / additive.
+        self.seriesMeta = try? container.decodeIfPresent(MenstrualSeriesMeta.self, forKey: .seriesMeta)
+        self.seriesEntries = try? container.decodeIfPresent(Array<DiaryNoteItem>.self, forKey: .seriesEntries)
+
         if let attachmentContainer = try? container.decodeIfPresent([String: String].self, forKey: .urlString),
            let attachmentURL = attachmentContainer["url"] {
             self.urlString = attachmentURL
@@ -508,7 +572,12 @@ feedback_tags
 
             case .menstrualPeriod:
                 let dateStr = raw["date"]?.value as? String
-                let date: Date = dateStr.flatMap { isoFmt.date(from: $0) } ?? self.diaryNoteId
+                // BE v0.12.5 sends `data.date` as a calendar day (YYYY-MM-DD);
+                // older payloads used a full ISO8601 timestamp. Try both, then
+                // fall back to datetime_ref.
+                let date: Date = dateStr.flatMap {
+                    MenstrualSeriesMeta.dateFormatter.date(from: $0) ?? isoFmt.date(from: $0)
+                } ?? self.diaryNoteId
                 // FUAM-2925: BE stores flow as integer 0..4. Map it back to the
                 // MenstrualFlowAmount.rawValue string the UI consumers expect.
                 let flowInt: Int? = (raw["flow"]?.value as? Int)

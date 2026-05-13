@@ -791,10 +791,11 @@ class AppNavigator {
     }
 
     public func openMenstrualPeriodDetail(presenter: UIViewController,
-                                          entries: [DiaryNoteItem]) {
+                                          diaryNoteId: String) {
         // Full-page modal — closeButton in the footer is the only dismiss
-        // affordance, no navigation chrome required.
-        let detailVC = MenstrualPeriodDetailViewController(entries: entries)
+        // affordance, no navigation chrome required. The screen fetches the
+        // series members from `GET /v1/diary_notes/:id` (FUAM-2934).
+        let detailVC = MenstrualPeriodDetailViewController(diaryNoteId: diaryNoteId)
         detailVC.delegate = self
         detailVC.modalPresentationStyle = .fullScreen
         presenter.present(detailVC, animated: true, completion: nil)
@@ -1678,14 +1679,13 @@ extension AppNavigator: MenstrualPeriodDetailViewControllerDelegate {
 
     public func menstrualPeriodDetailViewController(_ vc: MenstrualPeriodDetailViewController,
                                                      didSelect entry: DiaryNoteItem) {
+        // The detail screen re-fetches its members in `viewWillAppear`, so the
+        // updated entry is picked up when this form is dismissed — no callback
+        // bookkeeping needed here.
         self.openMenstrualEntryFormViewController(
             presenter: vc,
             menstrualItem: entry,
-            onEntryUpdated: { [weak vc] updated in
-                guard let vc = vc else { return }
-                let refreshed = vc.entries.map { $0.id == updated.id ? updated : $0 }
-                vc.update(entries: refreshed)
-            }
+            onEntryUpdated: { _ in }
         )
     }
 

@@ -113,9 +113,6 @@ class DiaryNotesViewController: BaseViewController {
     private var diaryNote: DiaryNoteItem?
     private var diaryNoteItems: [DiaryNoteItem]
     private var sections: [DiaryNoteSection] = []
-    /// Lookup of the menstrual sequence backing each representative entry id.
-    /// Built in `loadItems` from the raw diary notes returned by the API.
-    private var menstrualSequencesByRepresentativeId: [String: MenstrualSequence] = [:]
     private let isFromChart: Bool
     
     init(withDataPoint dataPoint: DiaryNoteItem?, isFromChart: Bool) {
@@ -223,19 +220,10 @@ class DiaryNotesViewController: BaseViewController {
     func createDiaryNoteSections(from diaryNotes: [DiaryNoteItem]) -> [DiaryNoteSection] {
         let calendar = Calendar.current
 
-        // FUAM-2933: collapse menstrual entries into sequences and surface the
-        // representative entry on the day where the bleeding sequence starts.
-        let nonMenstrual = diaryNotes.filter { $0.diaryNoteType != .menstrualPeriod }
-        let menstrualSequences = MenstrualSequence.group(from: diaryNotes)
-
-        self.menstrualSequencesByRepresentativeId = Dictionary(
-            uniqueKeysWithValues: menstrualSequences.map { ($0.representative.id, $0) }
-        )
-
-        let menstrualRepresentatives = menstrualSequences.map { $0.representative }
-        let displayItems = nonMenstrual + menstrualRepresentatives
-
-        let groupedDictionary = Dictionary(grouping: displayItems) { (item) -> Date in
+        // FUAM-2934: the BE (v0.12.5) already compresses each menstrual period
+        // into a single row (the last `yes` day, carrying `series_meta`), so
+        // every diary note maps 1:1 to a Compass Log row — no client grouping.
+        let groupedDictionary = Dictionary(grouping: diaryNotes) { (item) -> Date in
             return calendar.startOfDay(for: item.diaryNoteId)
         }
 
@@ -426,13 +414,9 @@ extension DiaryNotesViewController: UITableViewDataSource {
                     assertionFailure("DiaryNoteItemMenstrualTableViewCell not registered")
                     return UITableViewCell()
                 }
-                guard let sequence = self.menstrualSequencesByRepresentativeId[diaryNote.id] else {
-                    assertionFailure("Missing MenstrualSequence for representative entry \(diaryNote.id)")
-                    return UITableViewCell()
-                }
-                cell.display(sequence: sequence, onTap: { [weak self] in
+                cell.display(diaryNote: diaryNote, onTap: { [weak self] in
                     guard let self = self else { return }
-                    self.navigator.openMenstrualPeriodDetail(presenter: self, entries: sequence.entries)
+                    self.navigator.openMenstrualPeriodDetail(presenter: self, diaryNoteId: diaryNote.id)
                 })
                 return cell
             }

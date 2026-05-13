@@ -2,9 +2,14 @@
 //  MenstrualSequence.swift
 //  ForYouAndMe
 //
-//  FUAM-2933 — Aggregates raw menstrual diary entries into "sequences" for
-//  the Compass Log: consecutive bleeding=yes entries collapse into one row
-//  with a date range; bleeding=no/other entries each become their own row.
+//  FUAM-2933 — Originally aggregated raw menstrual diary entries into
+//  "sequences" for the Compass Log (consecutive bleeding=yes collapse into a
+//  single row; bleeding=no/other become their own rows).
+//
+//  DEPRECATED (FUAM-2934): the backend (v0.12.5) now performs this grouping
+//  server-side and exposes it via `series_meta` / `series_entries`, so the
+//  app no longer calls `MenstrualSequence.group(_:)`. The type is kept only
+//  until a follow-up `chore` removes the file (needs a Pods.xcodeproj regen).
 //
 
 import Foundation

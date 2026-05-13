@@ -112,6 +112,15 @@ final class MockRepository: Repository {
     func getDiaryNotes(diaryNote: DiaryNoteItem?, fromChart: Bool) -> Single<[DiaryNoteItem]> { .never() }
     func getDiaryNoteText(noteID: String) -> Single<DiaryNoteItem> { .never() }
     func getDiaryNoteAudio(noteID: String) -> Single<DiaryNoteItem> { .never() }
+    // FUAM-2934: capture menstrual series show calls.
+    private(set) var getMenstrualDiaryNoteCallCount = 0
+    private(set) var lastRequestedMenstrualNoteId: String?
+    var getMenstrualDiaryNoteResult: Single<DiaryNoteItem> = .never()
+    func getMenstrualDiaryNote(noteID: String) -> Single<DiaryNoteItem> {
+        getMenstrualDiaryNoteCallCount += 1
+        lastRequestedMenstrualNoteId = noteID
+        return getMenstrualDiaryNoteResult
+    }
     func sendDiaryNoteText(diaryNote: DiaryNoteItem, fromChart: Bool) -> Single<DiaryNoteItem> { .never() }
     func sendDiaryNoteAudio(diaryNoteRef: DiaryNoteItem, file: DiaryNoteFile, fromChart: Bool) -> Single<DiaryNoteItem> { .never() }
     func sendDiaryNoteVideo(diaryNoteRef: DiaryNoteItem, file: DiaryNoteFile) -> Single<DiaryNoteItem> { .never() }

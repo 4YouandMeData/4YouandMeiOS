@@ -2,9 +2,11 @@
 //  MenstrualNetworkTaskSpec.swift
 //  ForYouAndMe_Tests
 //
-//  FUAM-2935 / FUAM-2925: verifies DefaultService.sendDiaryNoteMenstrual
-//  builds the body matching the BE JSON Schema (flow integer 0-4,
-//  period_related yes/no/not_sure/other, optional note ≤ 2500 chars).
+//  FUAM-2935 / FUAM-2925 / FUAM-2934: verifies DefaultService.sendDiaryNoteMenstrual
+//  builds the body matching the BE JSON Schema — flow integer 0-4,
+//  period_related yes/no/not_sure/other, optional note ≤ 2500 chars, and
+//  `data.date` as a YYYY-MM-DD calendar day (required by the BE v0.12.5
+//  series grouping).
 //
 
 import Quick
@@ -46,7 +48,8 @@ class MenstrualNetworkTaskSpec: QuickSpec {
                 expect(payload["period_related"] as? String).to(equal("yes"))
                 expect(payload["bleeding"] as? String).to(equal("yes"))
                 expect(payload["note"] as? String).to(equal("Started today"))
-                expect(payload["date"]).to(beNil())
+                // FUAM-2934 / BE v0.12.5: data.date is a YYYY-MM-DD calendar day.
+                expect(payload["date"] as? String).to(equal(date.string(withFormat: "yyyy-MM-dd")))
                 expect(payload["flow_amount"]).to(beNil())
                 expect(payload["period_related_note"]).to(beNil())
             }
@@ -183,6 +186,18 @@ class MenstrualNetworkTaskSpec: QuickSpec {
                 let params = unwrapRequestParameters(service.task)
                 let payload = (params?["diary_note"] as? [String: Any])?["data"] as? [String: Any]
                 expect((payload?["note"] as? String)?.count).to(equal(2500))
+            }
+
+            it("emits data.date (and only bleeding) for the FUAM-2932 feed-alert 'No' path") {
+                let data = DiaryNoteMenstrualData(date: date, bleeding: .no, fromChart: false, diaryNote: nil)
+                let service = DefaultService.sendDiaryNoteMenstrual(data: data)
+                let params = unwrapRequestParameters(service.task)
+                let payload = (params?["diary_note"] as? [String: Any])?["data"] as? [String: Any]
+                expect(payload?["bleeding"] as? String).to(equal("no"))
+                expect(payload?["date"] as? String).to(equal(date.string(withFormat: "yyyy-MM-dd")))
+                expect(payload?["flow"]).to(beNil())
+                expect(payload?["period_related"]).to(beNil())
+                expect(payload?["note"]).to(beNil())
             }
 
             it("omits note when both explanation and user note are nil or empty") {

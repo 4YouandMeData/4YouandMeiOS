@@ -198,6 +198,7 @@ extension DefaultService {
         case .getDiaryNotes: return "Get Diary Notes"
         case .getDiaryNoteText: return "Get Diary Note Text"
         case .getDiaryNoteAudio: return "Get Diary Note Audio"
+        case .getMenstrualDiaryNote: return "Get Menstrual Diary Note"
         case .sendDiaryNoteText: return "Send Diary Note Text"
         case .sendDiaryNoteAudio: return "Send Diary Note Audio"
         case .sendDiaryNoteVideo: return "Send Diary Note Video"

@@ -2,10 +2,12 @@
 //  MenstrualPeriodDetailViewController.swift
 //  ForYouAndMe
 //
-//  FUAM-2934 — Detail screen for a single menstrual period: lists every
-//  bleeding entry, lets the user add another date or swipe-delete an
-//  existing one. Editing individual entries is out of scope for this
-//  release.
+//  FUAM-2934 — Detail screen for a single menstrual period. The screen is
+//  opened with the id of the series anchor (the last `yes` day, i.e. the
+//  compressed row shown on the Compass Log) and fetches the full member list
+//  from `GET /v1/diary_notes/:id` (BE v0.12.5 `series_entries`). The user can
+//  add another bleeding date or swipe-delete an existing one; editing
+//  individual entries is out of scope for this release.
 //
 
 import UIKit
@@ -28,9 +30,12 @@ final class MenstrualPeriodDetailViewController: BaseViewController {
 
     weak var delegate: MenstrualPeriodDetailViewControllerDelegate?
 
-    /// Entries currently displayed. The caller decides which entries form
-    /// the period (typically consecutive bleeding dates).
-    private(set) var entries: [DiaryNoteItem]
+    /// Id of the series anchor (last `yes` day) — the row tapped on the
+    /// Compass Log. The member list is (re)fetched from this id.
+    private let seriesAnchorId: String
+
+    /// Members of the period, chronological — populated from the show response.
+    private var entries: [DiaryNoteItem] = []
 
     /// Two sections: section 0 is the add row, section 1 is the entries.
     /// Both scroll together — the add row sits in the table, not the header.
@@ -59,8 +64,8 @@ final class MenstrualPeriodDetailViewController: BaseViewController {
         return buttonView
     }()
 
-    init(entries: [DiaryNoteItem]) {
-        self.entries = entries
+    init(diaryNoteId: String) {
+        self.seriesAnchorId = diaryNoteId
         super.init()
     }
 
@@ -75,9 +80,38 @@ final class MenstrualPeriodDetailViewController: BaseViewController {
         setupLayout()
     }
 
-    func update(entries: [DiaryNoteItem]) {
-        self.entries = entries
-        tableView.reloadData()
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        // The in-page header doubles as the title — hide the nav chrome so
+        // the title isn't pushed below the bar and the footer close button
+        // stays the sole dismiss affordance. The screen is still wrapped in
+        // a nav controller so child screens can be pushed on top.
+        self.navigationController?.navigationBar
+            .apply(style: NavigationBarStyleCategory.primary(hidden: true).style)
+        // Re-fetch on every appearance so the list reflects adds/edits made in
+        // the wizard / entry form presented on top of this screen.
+        reloadEntries()
+    }
+
+    /// Fetch the series members from the show endpoint. A flat response
+    /// (`seriesEntries` empty) means the anchor no longer fronts a series —
+    /// bail back to the Compass Log, which will re-derive the rows.
+    private func reloadEntries() {
+        self.repository.getMenstrualDiaryNote(noteID: self.seriesAnchorId)
+            .addProgress()
+            .subscribe(onSuccess: { [weak self] note in
+                guard let self = self else { return }
+                self.entries = note.seriesEntries ?? []
+                if self.entries.isEmpty {
+                    self.delegate?.menstrualPeriodDetailViewControllerDidClose(self)
+                } else {
+                    self.tableView.reloadData()
+                }
+            }, onFailure: { [weak self] error in
+                guard let self = self else { return }
+                self.navigator.handleError(error: error, presenter: self)
+            })
+            .disposed(by: self.disposeBag)
     }
 
     private func setupLayout() {
@@ -158,19 +192,17 @@ final class MenstrualPeriodDetailViewController: BaseViewController {
     private func deleteEntry(at indexPath: IndexPath) {
         guard indexPath.row < entries.count else { return }
         let entry = entries[indexPath.row]
+        // Deleting the anchor (last `yes`) collapses or re-fronts the series —
+        // there's no stable id to re-fetch, so hand back to the Compass Log.
+        let deletingAnchor = entry.id == self.seriesAnchorId
         self.repository.deleteDiaryNote(noteID: entry.id)
             .addProgress()
             .subscribe(onSuccess: { [weak self] in
                 guard let self = self else { return }
-                guard indexPath.row < self.entries.count,
-                      self.entries[indexPath.row].id == entry.id else {
-                    self.tableView.reloadData()
-                    return
-                }
-                self.entries.remove(at: indexPath.row)
-                self.tableView.deleteRows(at: [indexPath], with: .automatic)
-                if self.entries.isEmpty {
+                if deletingAnchor {
                     self.delegate?.menstrualPeriodDetailViewControllerDidClose(self)
+                } else {
+                    self.reloadEntries()
                 }
             }, onFailure: { [weak self] error in
                 guard let self = self else { return }

@@ -61,6 +61,9 @@ enum DefaultService {
     case getDiaryNotes(diaryNote: DiaryNoteItem?, fromChart: Bool)
     case getDiaryNoteText(noteId: String)
     case getDiaryNoteAudio(noteId: String)
+    /// FUAM-2934 — GET /v1/diary_notes/{id} for a menstrual series anchor:
+    /// returns `series_meta` + the `series_entries` relationship (sideloaded).
+    case getMenstrualDiaryNote(noteId: String)
     case sendDiaryNoteText(diaryItem: DiaryNoteItem, fromChart: Bool)
     case updateDiaryNoteText(diaryItem: DiaryNoteItem)
     case sendDiaryNoteAudio(noteId: DiaryNoteItem, attachment: DiaryNoteFile, fromChart: Bool)
