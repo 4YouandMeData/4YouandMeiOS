@@ -792,13 +792,17 @@ class AppNavigator {
 
     public func openMenstrualPeriodDetail(presenter: UIViewController,
                                           diaryNoteId: String) {
-        // Full-page modal — closeButton in the footer is the only dismiss
-        // affordance, no navigation chrome required. The screen fetches the
-        // series members from `GET /v1/diary_notes/:id` (FUAM-2934).
+        // Embed in a navigation controller so the entry-edit form (and any
+        // future child screens) can be pushed onto the detail's nav stack.
+        // The nav bar itself is kept hidden in both screens — the in-page
+        // header is the title, the footer close is the dismiss affordance.
+        // The screen fetches its members from `GET /v1/diary_notes/:id`
+        // (FUAM-2934); the delegate's `…DidClose` dismisses the nav stack.
         let detailVC = MenstrualPeriodDetailViewController(diaryNoteId: diaryNoteId)
         detailVC.delegate = self
-        detailVC.modalPresentationStyle = .fullScreen
-        presenter.present(detailVC, animated: true, completion: nil)
+        let navVC = UINavigationController(rootViewController: detailVC)
+        navVC.modalPresentationStyle = .fullScreen
+        presenter.present(navVC, animated: true, completion: nil)
     }
 
     public func openMenstrualEntryViewController(presenter: UIViewController,

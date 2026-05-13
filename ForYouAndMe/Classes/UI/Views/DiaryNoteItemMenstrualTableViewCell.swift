@@ -43,8 +43,10 @@ class DiaryNoteItemMenstrualTableViewCell: UITableViewCell {
 
     private lazy var subtitleLabel: UILabel = {
         let label = UILabel()
-        label.numberOfLines = 1
-        label.lineBreakMode = .byTruncatingTail
+        // Allow wrapping so the "To: <date>" half is never clipped on narrow
+        // screens — the full From/To range must always stay readable (FUAM-2934).
+        label.numberOfLines = 2
+        label.lineBreakMode = .byWordWrapping
         label.font = UIFont.systemFont(ofSize: 13)
         label.textColor = ColorPalette.color(withType: .fourthText)
         return label
