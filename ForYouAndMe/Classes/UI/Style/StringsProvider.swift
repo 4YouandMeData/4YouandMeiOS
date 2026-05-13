@@ -424,6 +424,9 @@ enum StringKey: String, CaseIterable, CodingKey {
     case reflectionVideoTask = "REFLECTION_CREATE_VIDEO"
     case reflectionTaskTitle = "REFLECTION_TASK_TITLE"
     case reflectionTaskBody = "REFLECTION_TASK_BODY"
+    /// FUAM-3230: dedicated body for the "Learn More" sheet, so it can carry
+    /// a longer/different text than the inline body label.
+    case reflectionTaskLearnMoreBody = "REFLECTION_TASK_LEARN_MORE_BODY"
     case reflectionTaskLearnMore = "REFLECTION_TASK_LEARN_MORE"
     case reflectionLearnMoreClose = "REFLECTION_LEARN_MORE_CLOSE"
     case reflectionEmojiTitle = "DIARY_NOTE_REFLECTION_STEP_EMOJI_TITLE"

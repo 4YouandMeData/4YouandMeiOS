@@ -14,6 +14,12 @@ class ReflectionViewController: UIViewController {
     
     private let headerImage: URL?
 
+    /// Text rendered on the "Learn More" sheet — distinct from the inline
+    /// body label since FUAM-3230. Falls back to the inline body when the
+    /// dedicated string is not configured server-side so older study
+    /// configurations keep working unchanged.
+    private var learnMoreBody: String = ""
+
     private lazy var footerView: UIStackView = {
         let buttonsView = UIStackView.create(withAxis: .vertical)
         buttonsView.backgroundColor = .red
@@ -68,8 +74,15 @@ class ReflectionViewController: UIViewController {
                            colorType: .primaryText,
                            textAlignment: .center,
                            numberOfLines: 8)
-        
-        if bodyText.count > 200 {
+
+        // FUAM-3230: dedicated text for the Learn More sheet. When the BE
+        // hasn't published the new string yet `learnMoreBody` is empty, so we
+        // fall back to the inline body and keep the original length-based
+        // gate so the button only shows when there's something extra to read.
+        let learnMoreSource = StringsProvider.string(forKey: .reflectionTaskLearnMoreBody)
+        self.learnMoreBody = learnMoreSource.isEmpty ? bodyText : learnMoreSource
+        let showLearnMore = !learnMoreSource.isEmpty || bodyText.count > 200
+        if showLearnMore {
             stackView.addExternalLinkButton(self,
                                             action: #selector(self.learnMoreDidPressed),
                                             text: StringsProvider.string(forKey: .reflectionTaskLearnMore),
@@ -132,6 +145,6 @@ class ReflectionViewController: UIViewController {
     
     @objc private func learnMoreDidPressed() {
         self.onLearnMorePressed?(StringsProvider.string(forKey: .reflectionTaskTitle),
-                                 StringsProvider.string(forKey: .reflectionTaskBody))
+                                 self.learnMoreBody)
     }
 }
