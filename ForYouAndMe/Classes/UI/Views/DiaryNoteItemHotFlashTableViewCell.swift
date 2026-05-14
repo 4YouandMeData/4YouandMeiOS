@@ -140,7 +140,7 @@ class DiaryNoteItemHotFlashTableViewCell: UITableViewCell {
         self.buttonPressedCallback = onTap
 
         let date: Date
-        if case .hotFlash(let payloadDate)? = data.payload {
+        if case .hotFlash(let payloadDate, _, _, _, _)? = data.payload {
             date = payloadDate
         } else {
             date = data.diaryNoteId

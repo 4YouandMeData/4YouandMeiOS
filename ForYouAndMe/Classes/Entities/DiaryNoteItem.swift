@@ -25,7 +25,15 @@ feedback_tag
 public enum DiaryNotePayload {
     case food(mealType: String, quantity: String, significantNutrition: Bool, canSpecifyCalories: Bool?, caloriesValue: Int?, carbsGrams: Int?)
     case doses(quantity: Int, doseType: String)
-    case hotFlash(date: Date)
+    /// FUAM-3247 — extended Heat Up FAB payload. `severity`/`duration`/
+    /// `symptoms`/`sleepOnset` are surfaced by the BE under `data.*` only on
+    /// entries created through the new 4-step flow; legacy entries (`data:
+    /// null`) decode with every field set to `nil`.
+    case hotFlash(date: Date,
+                  severity: [String]?,
+                  duration: String?,
+                  symptoms: [String]?,
+                  sleepOnset: String?)
     case noticed(
         physicalActivity: String,
         oldValue: Double,
@@ -71,6 +79,11 @@ public struct AnyCodable: Codable {
             value = stringVal
         } else if let dateVal = try? container.decode(Date.self) {
             value = dateVal
+        } else if let arrayVal = try? container.decode([AnyCodable].self) {
+            // FUAM-3247: support array payloads (e.g. hot_flash `severity`,
+            // `symptoms`) so the parent decode doesn't silently fail when an
+            // entry includes a `[String]` field under `data`.
+            value = arrayVal.map { $0.value }
         } else {
             throw DecodingError.dataCorruptedError(in: container,
                 debugDescription: "Unsupported type")
@@ -591,7 +604,21 @@ series_entries.feedback_tags
                        let dx = isoFmt.date(from: sx) { return dx }
                     return self.diaryNoteId
                 }()
-                payload = .hotFlash(date: date)
+                // FUAM-3247: surface the optional additional-step answers so
+                // the detail screen can render them. Arrays come back either
+                // as `[String]` or as `[Any]` (when AnyCodable unwraps each
+                // element via its `value` property) — accept both shapes.
+                let severity: [String]? = (raw["severity"]?.value as? [String])
+                    ?? (raw["severity"]?.value as? [Any])?.compactMap { $0 as? String }
+                let duration: String? = raw["duration"]?.value as? String
+                let symptoms: [String]? = (raw["symptoms"]?.value as? [String])
+                    ?? (raw["symptoms"]?.value as? [Any])?.compactMap { $0 as? String }
+                let sleepOnset: String? = raw["sleep_onset"]?.value as? String
+                payload = .hotFlash(date: date,
+                                    severity: severity,
+                                    duration: duration,
+                                    symptoms: symptoms,
+                                    sleepOnset: sleepOnset)
 
             case .menstrualPeriod:
                 let dateStr = raw["date"]?.value as? String
