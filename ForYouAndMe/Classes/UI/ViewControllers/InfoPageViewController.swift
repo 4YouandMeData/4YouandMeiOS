@@ -189,20 +189,9 @@ public class InfoPageViewController: UIViewController, PageProvider {
         } else {
             self.navigationItem.hidesBackButton = true
         }
-        if self.pageData.addAbortOnboardingButton {
-            if self.coordinator is SurveySectionCoordinator {
-                let buttonItem = UIBarButtonItem(title: StringsProvider.string(forKey: .surveyButtonSkip),
-                                                 style: .plain,
-                                                 target: self,
-                                                 action: #selector(self.skipButtonPressed))
-                buttonItem.setTitleTextAttributes([
-                    .foregroundColor: ColorPalette.color(withType: .primary),
-                    .font: FontPalette.fontStyleData(forStyle: .header3).font
-                    ], for: .normal)
-                self.navigationItem.rightBarButtonItem = buttonItem
-            } else {
-                self.addOnboardingAbortButton(withColor: ColorPalette.color(withType: .gradientPrimaryEnd))
-            }
+        // FUAM-3216: a Page attached to a Survey/SurveyBlock must never render a SKIP button.
+        if self.pageData.addAbortOnboardingButton, !(self.coordinator is SurveySectionCoordinator) {
+            self.addOnboardingAbortButton(withColor: ColorPalette.color(withType: .gradientPrimaryEnd))
         }
     }
     
@@ -235,35 +224,6 @@ public class InfoPageViewController: UIViewController, PageProvider {
         self.coordinator.onLinkedPageButtonPressed(modalPageRef: linkedPageRef)
     }
     
-    @objc private func skipButtonPressed() {
-        let alert = UIAlertController(
-            title: StringsProvider.string(forKey: .surveyAbortTitle),
-            message: StringsProvider.string(forKey: .surveyAbortMessage),
-            preferredStyle: .alert
-        )
-
-        alert.addAction(UIAlertAction(
-            title: StringsProvider.string(forKey: .surveyAbortCancel),
-            style: .cancel,
-            handler: nil
-        ))
-
-        alert.addAction(UIAlertAction(
-            title: StringsProvider.string(forKey: .surveyAbortConfirm),
-            style: .destructive,
-            handler: { [weak self] _ in
-                guard let self = self else { return }
-
-                if let navigationController = self.navigationController {
-                    navigationController.dismiss(animated: true)
-                } else {
-                    self.dismiss(animated: true)
-                }
-            }
-        ))
-
-        self.present(alert, animated: true)
-    }
 }
 
 extension UIStackView {
