@@ -1,3 +1,29 @@
+## Release 0.101.0
+
+- **Menstrual cycle — major end-to-end overhaul** (FUAM-2925, FUAM-2932, FUAM-2933, FUAM-2934, FUAM-2935, FUAM-2936, FUAM-2937, FUAM-2938, FUAM-2939, FUAM-3243). Closes the loop on the menstrual-cycle feature: baseline onboarding, server-driven entry surface, full wizard, Compass Log integration, detail screen, edit form, and feedback-tag persistence.
+  - **BE payload schema alignment** (FUAM-2925, FUAM-2934). `diary_type` switched to `menstrual_period`; `flow` decoded as `Int`; `letMeExplain` split out as a dedicated field. Diary-note create/update endpoints moved to v2.
+  - **Server-driven pinned alert + wizard entry** (FUAM-2932). New pinned `FeedAlert` with a secondary button and a server-driven primary action that opens the 5-step menstrual wizard; task acknowledgement on completion. `FeedAlertStub` available under DEBUG; covered by `Alert` + `FeedContent` specs.
+  - **5-step wizard + coordinator** (FUAM-2935). Diary-note menstrual model + endpoint, wizard data + transport specs, close button instead of back on step 1, Let-me-explain detail step with dismiss-keyboard, icons on the flow step + diary cell, real assets promoted (placeholders dropped), `menstrualPeriod` handled in all existing switches.
+  - **Inline onboarding + Settings panel** (FUAM-2936, FUAM-2937). Baseline re-prompt only fires when settings are `nil`; baseline onboarding folded into the diary flow (FUAM-3243).
+  - **Compass Log integration** (FUAM-2933). Dedicated menstrual cell with grouping; Compass Log testing stub under DEBUG. From/To rendering was iterated (two explicit lines → reverted to single-line for final design).
+  - **Detail screen + entry form** (FUAM-2934). Full-screen detail aligned to Figma, period detail with delete + add, wrapped in a navigation controller; BE-driven series detail fetch + show endpoint wiring. Edit form refetches the series entry before opening; `feedbackTags` initialized before append on the success screen; `feedback_tags` loaded for every series entry in the detail list.
+  - **Server-driven emojis on diary entries** (FUAM-2938). Emoji feedback rendered on menstrual entry rows; menstrual emoji catalog injected into `feedbackList` (DEBUG stub) so the FE can be previewed against unfinished BE data.
+  - **Feedback-tags persistence** (FUAM-2939). `PATCH feedback_tags_attributes` serializer + entry-cell emoji rendering covered by specs.
+
+- **Hot flash diary — 4 additional FAB steps** (FUAM-3247). Adds severity, duration, symptoms, and sleep_onset steps via `HotFlashOptionsStepViewController`; the diary detail view now renders the four new fields. `DiaryNotePayload.hotFlash` decoding is locked down by tests so future schema drift fails loudly.
+
+- **Reflection — Learn More body wired up** (FUAM-3230). The Learn More sheet on the Reflection task now reads from `REFLECTION_TASK_LEARN_MORE_BODY`. Hosts wishing to populate this surface should add the key to their study config.
+
+- **Survey — no SKIP button on Survey / SurveyBlock pages** (FUAM-3216). The SKIP control is suppressed on Survey and SurveyBlock pages regardless of configuration, matching the intended design.
+
+- **Infra / chore.**
+  - Restored Moya `NetworkLoggerPlugin` under DEBUG so request/response headers are visible during development (the Telemetry plugin remains the production path).
+  - Telemetry namespaces renamed to PascalCase; `Tests.swift` migrated to the Quick 7 API.
+  - Quick 7 / Nimble 13 bump (Pods regenerated).
+  - `Example/Pods.xcodeproj` regenerated after the menstrual-cycle and hot-flash source additions.
+  - `.claude/worktrees/` added to `.gitignore` for hub-driven parallel work.
+  - Test target unblocked on iOS 26 SDK.
+
 ## Release 0.100.2
 
 - **Opt-in permission-chain watchdog with on-card processing UX** (FUAM-3021). Adds a defensive watchdog around `OptInSectionCoordinator.onOptInPermissionSet` that catches *any* permission-chain stall (HK→SK race classic, missing entitlement, OS regression, hung permission service). The watchdog is a perpetual silent-retry poller, not a one-shot timeout: the per-branch `Single<()>` is kept alive and the chain advances naturally on grant/deny. Every 3 seconds while waiting, a tick fires; the first 10 ticks per cycle are silent, after which a localized **Retry / Skip** popup is presented — but only if no other modal is on top (covers iOS 17+ in-process HK/SK sheets which don't trigger `willResignActive`) and the app is foreground-active. "Retry" simply restarts the silent window; "Skip" persists a per-section skip and advances. Skip-state is cleared on opt-in section completion. The popup is auto-dismissed if the source emits success (e.g. user finally grants HK with the popup on top of the HK sheet) so no orphaned modals remain. Truly perpetual — no cap on cycles; the user always has Skip as the escape hatch.
