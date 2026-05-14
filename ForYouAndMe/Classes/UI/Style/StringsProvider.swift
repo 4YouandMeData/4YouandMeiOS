@@ -353,6 +353,39 @@ enum StringKey: String, CaseIterable, CodingKey {
     case diaryNoteHotFlashEmojiCloseButton = "DIARY_NOTE_HOT_FLASH_STEP_EMOJI_CLOSE_BUTTON"
     case diaryNoteHotFlashDetailCloseButton = "DIARY_NOTE_HOT_FLASH_DETAIL_CLOSE_BUTTON"
 
+    // FUAM-3247: additional Heat Up FAB steps. The flow is enabled only when
+    // `hotFlashSeverityTitle` resolves to a non-empty string for the study —
+    // empty → legacy 2-step flow runs untouched. Option keys are the codes
+    // sent to the BE (severity[], duration, symptoms[], sleep_onset).
+    case hotFlashSeverityTitle = "HOT_FLASH_SEVERITY_TITLE"
+    case hotFlashSeverityMessage = "HOT_FLASH_SEVERITY_MESSAGE"
+    case hotFlashSeverityOptionWarm = "HOT_FLASH_SEVERITY_OPTION_WARM"
+    case hotFlashSeverityOptionHot = "HOT_FLASH_SEVERITY_OPTION_HOT"
+    case hotFlashSeverityOptionSweating = "HOT_FLASH_SEVERITY_OPTION_SWEATING"
+    case hotFlashSeverityOptionColdChill = "HOT_FLASH_SEVERITY_OPTION_COLD_CHILL"
+    case hotFlashSeverityOptionNotSure = "HOT_FLASH_SEVERITY_OPTION_NOT_SURE"
+    case hotFlashDurationTitle = "HOT_FLASH_DURATION_TITLE"
+    case hotFlashDurationMessage = "HOT_FLASH_DURATION_MESSAGE"
+    case hotFlashDurationOptionLessThanMinute = "HOT_FLASH_DURATION_OPTION_LESS_THAN_MINUTE"
+    case hotFlashDurationOptionOneToTwo = "HOT_FLASH_DURATION_OPTION_1_TO_2_MINUTES"
+    case hotFlashDurationOptionTwoToThree = "HOT_FLASH_DURATION_OPTION_2_TO_3_MINUTES"
+    case hotFlashDurationOptionNearlyFive = "HOT_FLASH_DURATION_OPTION_NEARLY_5_MINUTES"
+    case hotFlashDurationOptionNotSure = "HOT_FLASH_DURATION_OPTION_NOT_SURE"
+    case hotFlashSymptomsTitle = "HOT_FLASH_SYMPTOMS_TITLE"
+    case hotFlashSymptomsMessage = "HOT_FLASH_SYMPTOMS_MESSAGE"
+    case hotFlashSymptomsOptionNone = "HOT_FLASH_SYMPTOMS_OPTION_NONE"
+    case hotFlashSymptomsOptionAnxiety = "HOT_FLASH_SYMPTOMS_OPTION_ANXIETY"
+    case hotFlashSymptomsOptionPanic = "HOT_FLASH_SYMPTOMS_OPTION_PANIC"
+    case hotFlashSymptomsOptionRacingThoughts = "HOT_FLASH_SYMPTOMS_OPTION_RACING_THOUGHTS"
+    case hotFlashSymptomsOptionHeartPalpitations = "HOT_FLASH_SYMPTOMS_OPTION_HEART_PALPITATIONS"
+    case hotFlashSymptomsOptionCognitive = "HOT_FLASH_SYMPTOMS_OPTION_COGNITIVE"
+    case hotFlashSymptomsOptionNotSure = "HOT_FLASH_SYMPTOMS_OPTION_NOT_SURE"
+    case hotFlashSleepOnsetTitle = "HOT_FLASH_SLEEP_ONSET_TITLE"
+    case hotFlashSleepOnsetMessage = "HOT_FLASH_SLEEP_ONSET_MESSAGE"
+    case hotFlashSleepOnsetOptionBeforeWake = "HOT_FLASH_SLEEP_ONSET_OPTION_BEFORE_WAKE"
+    case hotFlashSleepOnsetOptionAfterWake = "HOT_FLASH_SLEEP_ONSET_OPTION_AFTER_WAKE"
+    case hotFlashSleepOnsetOptionNotSure = "HOT_FLASH_SLEEP_ONSET_OPTION_NOT_SURE"
+
     // Quick Activity linked task prompt (FUAM-3037)
     case quickActivityLinkedTaskPromptTitle = "QUICK_ACTIVITY_LINKED_TASK_PROMPT_TITLE"
     case quickActivityLinkedTaskPromptBody = "QUICK_ACTIVITY_LINKED_TASK_PROMPT_BODY"

@@ -81,6 +81,11 @@ final class HotFlashEntryFormViewController: UIViewController {
         super.viewDidLoad()
         view.backgroundColor = ColorPalette.color(withType: .secondary)
         setupLayout()
+        // FUAM-3247: `configure(with:)` is called by the navigator BEFORE
+        // the view loads, so the stack-view children added by
+        // `populateIfNeeded` would land before the date row. Re-run after
+        // `setupLayout` so the additional rows append in the right order.
+        populateIfNeeded()
     }
 
     override func viewWillAppear(_ animated: Bool) {
@@ -92,14 +97,23 @@ final class HotFlashEntryFormViewController: UIViewController {
     // MARK: - Configuration
     func configure(with note: DiaryNoteItem) {
         self.diaryNote = note
-        populateIfNeeded()
+        if isViewLoaded {
+            populateIfNeeded()
+        }
     }
 
     private func populateIfNeeded() {
         guard let note = diaryNote else { return }
 
-        if case .hotFlash(let date)? = note.payload {
+        if case .hotFlash(let date, let severity, let duration, let symptoms, let sleepOnset)? = note.payload {
             selectedDate = date
+            // FUAM-3247: append one row per populated additional-step answer.
+            // `populateIfNeeded` runs after `setupLayout`, so the date row is
+            // already in the stack — these append below it.
+            appendHotFlashDataRows(severity: severity,
+                                   duration: duration,
+                                   symptoms: symptoms,
+                                   sleepOnset: sleepOnset)
         } else {
             selectedDate = note.diaryNoteId
         }
@@ -107,6 +121,111 @@ final class HotFlashEntryFormViewController: UIViewController {
         if let emoji = note.feedbackTags?.last {
             selectedEmoji = emoji
             applyEmojiToButton(emoji)
+        }
+    }
+
+    /// FUAM-3247 — render the per-field rows under the date row. A row is
+    /// skipped when its value is `nil` or empty so legacy entries (`data:
+    /// null`) keep showing just the date.
+    private func appendHotFlashDataRows(severity: [String]?,
+                                        duration: String?,
+                                        symptoms: [String]?,
+                                        sleepOnset: String?) {
+        if let severity = severity, !severity.isEmpty {
+            appendDataRow(promptKey: .hotFlashSeverityMessage,
+                          value: severity.map { Self.severityLabel(forCode: $0) }.joined(separator: ", "))
+        }
+        if let duration = duration, !duration.isEmpty {
+            appendDataRow(promptKey: .hotFlashDurationMessage,
+                          value: Self.durationLabel(forCode: duration))
+        }
+        if let symptoms = symptoms, !symptoms.isEmpty {
+            appendDataRow(promptKey: .hotFlashSymptomsMessage,
+                          value: symptoms.map { Self.symptomsLabel(forCode: $0) }.joined(separator: ", "))
+        }
+        if let sleepOnset = sleepOnset, !sleepOnset.isEmpty {
+            appendDataRow(promptKey: .hotFlashSleepOnsetMessage,
+                          value: Self.sleepOnsetLabel(forCode: sleepOnset))
+        }
+    }
+
+    private func appendDataRow(promptKey: StringKey, value: String) {
+        scrollStackView.stackView.addBlankSpace(space: 16)
+
+        let prompt = UILabel()
+        prompt.text = StringsProvider.string(forKey: promptKey)
+        prompt.font = FontPalette.fontStyleData(forStyle: .paragraphBold).font
+        prompt.textColor = ColorPalette.color(withType: .primaryText)
+        prompt.numberOfLines = 0
+        scrollStackView.stackView.addArrangedSubview(prompt)
+
+        scrollStackView.stackView.addBlankSpace(space: 8)
+
+        let row = UIView()
+        row.backgroundColor = UIColor(hexString: Constants.Style.FormBackgroundColor)
+        row.layer.cornerRadius = 8
+        row.autoSetDimension(.height, toSize: 44, relation: .greaterThanOrEqual)
+
+        let valueLabel = UILabel()
+        valueLabel.font = .preferredFont(forTextStyle: .body)
+        valueLabel.textColor = .secondaryLabel
+        valueLabel.numberOfLines = 0
+        valueLabel.text = value
+
+        row.addSubview(valueLabel)
+        valueLabel.autoPinEdgesToSuperviewEdges(
+            with: UIEdgeInsets(top: 8, left: 8, bottom: 8, right: 8)
+        )
+
+        scrollStackView.stackView.addArrangedSubview(row)
+    }
+
+    // MARK: - FUAM-3247 code -> label mapping
+    // Keep in sync with HotFlashCoordinator.push*Step() — single source of
+    // truth on the wire is the BE code; the localized label here mirrors the
+    // option list shown by the wizard.
+
+    private static func severityLabel(forCode code: String) -> String {
+        switch code {
+        case "warm":       return StringsProvider.string(forKey: .hotFlashSeverityOptionWarm)
+        case "hot":        return StringsProvider.string(forKey: .hotFlashSeverityOptionHot)
+        case "sweating":   return StringsProvider.string(forKey: .hotFlashSeverityOptionSweating)
+        case "cold_chill": return StringsProvider.string(forKey: .hotFlashSeverityOptionColdChill)
+        case "not_sure":   return StringsProvider.string(forKey: .hotFlashSeverityOptionNotSure)
+        default:           return code
+        }
+    }
+
+    private static func durationLabel(forCode code: String) -> String {
+        switch code {
+        case "less_than_minute": return StringsProvider.string(forKey: .hotFlashDurationOptionLessThanMinute)
+        case "1_to_2_minutes":   return StringsProvider.string(forKey: .hotFlashDurationOptionOneToTwo)
+        case "2_to_3_minutes":   return StringsProvider.string(forKey: .hotFlashDurationOptionTwoToThree)
+        case "nearly_5_minutes": return StringsProvider.string(forKey: .hotFlashDurationOptionNearlyFive)
+        case "not_sure":         return StringsProvider.string(forKey: .hotFlashDurationOptionNotSure)
+        default:                 return code
+        }
+    }
+
+    private static func symptomsLabel(forCode code: String) -> String {
+        switch code {
+        case "none":               return StringsProvider.string(forKey: .hotFlashSymptomsOptionNone)
+        case "anxiety":            return StringsProvider.string(forKey: .hotFlashSymptomsOptionAnxiety)
+        case "panic":              return StringsProvider.string(forKey: .hotFlashSymptomsOptionPanic)
+        case "racing_thoughts":    return StringsProvider.string(forKey: .hotFlashSymptomsOptionRacingThoughts)
+        case "heart_palpitations": return StringsProvider.string(forKey: .hotFlashSymptomsOptionHeartPalpitations)
+        case "cognitive_symptoms": return StringsProvider.string(forKey: .hotFlashSymptomsOptionCognitive)
+        case "not_sure":           return StringsProvider.string(forKey: .hotFlashSymptomsOptionNotSure)
+        default:                   return code
+        }
+    }
+
+    private static func sleepOnsetLabel(forCode code: String) -> String {
+        switch code {
+        case "before_wake": return StringsProvider.string(forKey: .hotFlashSleepOnsetOptionBeforeWake)
+        case "after_wake":  return StringsProvider.string(forKey: .hotFlashSleepOnsetOptionAfterWake)
+        case "not_sure":    return StringsProvider.string(forKey: .hotFlashSleepOnsetOptionNotSure)
+        default:            return code
         }
     }
 

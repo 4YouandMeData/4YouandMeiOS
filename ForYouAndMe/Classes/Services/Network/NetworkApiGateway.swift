@@ -1009,6 +1009,26 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
                 }
             }
 
+            // FUAM-3247: nest the additional-step answers under `data` only when
+            // the extended flow actually ran. Legacy entries (no extra steps)
+            // ship without `data` so the BE keeps its old shape.
+            var payload: [String: Any] = [:]
+            if let severity = data.severity, !severity.isEmpty {
+                payload["severity"] = severity
+            }
+            if let duration = data.duration, !duration.isEmpty {
+                payload["duration"] = duration
+            }
+            if let symptoms = data.symptoms, !symptoms.isEmpty {
+                payload["symptoms"] = symptoms
+            }
+            if let sleepOnset = data.sleepOnset, !sleepOnset.isEmpty {
+                payload["sleep_onset"] = sleepOnset
+            }
+            if !payload.isEmpty {
+                dataParams["data"] = payload
+            }
+
             return .requestParameters(parameters: ["diary_note": dataParams], encoding: JSONEncoding.default)
 
         case .sendCombinedDiaryNote(let diaryNote):
