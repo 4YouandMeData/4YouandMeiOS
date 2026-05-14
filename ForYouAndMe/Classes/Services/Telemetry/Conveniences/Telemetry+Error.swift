@@ -7,7 +7,7 @@ import Foundation
 import UIKit
 
 extension Telemetry {
-    public enum errors {
+    public enum Errors {
 
         public static func handled(domain: String,
                                    underlying: Error?,

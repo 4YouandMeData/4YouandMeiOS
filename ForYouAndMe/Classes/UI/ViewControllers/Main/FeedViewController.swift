@@ -206,7 +206,24 @@ extension FeedViewController: FeedListManagerDelegate {
     }
     
     func getDataProviderSingle(repository: Repository, fetchMode: FetchMode) -> Single<FeedContent> {
-        return self.repository.getFeeds(fetchMode: fetchMode).map { FeedContent(withFeeds: $0) }
+        // FUAM-2937: when the user's menstrual baseline is "no", suppress the
+        // pinned menstrual feed card client-side. The BE trigger should already
+        // skip it, but we guard here against any drift between settings and
+        // the server's evaluation window.
+        let feedsSingle = self.repository.getFeeds(fetchMode: fetchMode)
+        let settingsSingle: Single<UserSettings?> = self.repository.getUserSettings()
+            .map { Optional($0) }
+            .catchAndReturn(nil)
+        return Single.zip(feedsSingle, settingsSingle).map { feeds, settings in
+            var processed = feeds
+            if settings?.menstrualHadPeriod3Mo == .no {
+                processed = processed.filter { feed in
+                    guard case .alert(let alert) = feed.notifiable else { return true }
+                    return !alert.isPinned
+                }
+            }
+            return FeedContent(withFeeds: processed)
+        }
     }
     
     func onListRefresh() {

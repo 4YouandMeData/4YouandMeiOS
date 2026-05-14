@@ -238,6 +238,8 @@ class DosesEntryFormViewController: UIViewController {
             return .iHaveEaten
         case .weNoticed:
             return .weHaveNoticed
+        case .menstrualPeriod:
+            return .menstrualPeriod
         case .text, .audio, .video, .hotFlash:
             return nil
         }

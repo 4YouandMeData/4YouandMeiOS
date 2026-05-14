@@ -2,7 +2,7 @@
 //  TelemetryPlugin.swift
 //  ForYouAndMe
 //
-//  Moya PluginType that emits structured `Telemetry.net.*` events for
+//  Moya PluginType that emits structured `Telemetry.Net.*` events for
 //  every request and response. Replaces stock `NetworkLoggerPlugin`
 //  in `NetworkApiGateway.setupDefaultProvider()` — the JamLog sink
 //  takes care of the Console.app / Xcode debug-console mirroring.
@@ -72,7 +72,7 @@ final class TelemetryPlugin: PluginType {
         let path = Redactor.scrubQueryString(urlRequest.url)
         let bodyPreview = capturedRequestBody(urlRequest: urlRequest, isSensitive: isSensitive)
 
-        Telemetry.net.request(
+        Telemetry.Net.request(
             method: method,
             path: path,
             correlationId: correlationId,
@@ -118,7 +118,7 @@ final class TelemetryPlugin: PluginType {
         let bodyPreview = capturedResponseBody(response: response, isSensitive: isSensitive)
         let errorCategory: String? = (response.statusCode >= 400) ? "http_\(response.statusCode)" : nil
 
-        Telemetry.net.response(
+        Telemetry.Net.response(.init(
             method: method,
             path: path,
             correlationId: correlationId,
@@ -128,7 +128,7 @@ final class TelemetryPlugin: PluginType {
             bodyPreview: bodyPreview,
             errorCategory: errorCategory,
             isSensitive: isSensitive
-        )
+        ))
     }
 
     private func handle(error: MoyaError, target: TargetType) {
@@ -144,7 +144,7 @@ final class TelemetryPlugin: PluginType {
         // If we have an HTTP response, treat it like a normal response.
         if let response = error.response {
             let bodyPreview = capturedResponseBody(response: response, isSensitive: isSensitive)
-            Telemetry.net.response(
+            Telemetry.Net.response(.init(
                 method: method,
                 path: path,
                 correlationId: correlationId,
@@ -154,9 +154,9 @@ final class TelemetryPlugin: PluginType {
                 bodyPreview: bodyPreview,
                 errorCategory: "moya_\(error.errorCode)",
                 isSensitive: isSensitive
-            )
+            ))
         } else {
-            Telemetry.net.transportError(
+            Telemetry.Net.transportError(
                 method: method,
                 path: path,
                 correlationId: correlationId,

@@ -25,7 +25,15 @@ feedback_tag
 public enum DiaryNotePayload {
     case food(mealType: String, quantity: String, significantNutrition: Bool, canSpecifyCalories: Bool?, caloriesValue: Int?, carbsGrams: Int?)
     case doses(quantity: Int, doseType: String)
-    case hotFlash(date: Date)
+    /// FUAM-3247 — extended Heat Up FAB payload. `severity`/`duration`/
+    /// `symptoms`/`sleepOnset` are surfaced by the BE under `data.*` only on
+    /// entries created through the new 4-step flow; legacy entries (`data:
+    /// null`) decode with every field set to `nil`.
+    case hotFlash(date: Date,
+                  severity: [String]?,
+                  duration: String?,
+                  symptoms: [String]?,
+                  sleepOnset: String?)
     case noticed(
         physicalActivity: String,
         oldValue: Double,
@@ -42,6 +50,13 @@ public enum DiaryNotePayload {
         ateDate: Date?,
         ateQuantity: String?,
         ateFat: Bool?
+    )
+    case menstrual(
+        date: Date,
+        flowAmount: String,
+        periodRelated: String,
+        bleeding: String,
+        note: String?
     )
 }
 
@@ -64,6 +79,11 @@ public struct AnyCodable: Codable {
             value = stringVal
         } else if let dateVal = try? container.decode(Date.self) {
             value = dateVal
+        } else if let arrayVal = try? container.decode([AnyCodable].self) {
+            // FUAM-3247: support array payloads (e.g. hot_flash `severity`,
+            // `symptoms`) so the parent decode doesn't silently fail when an
+            // entry includes a `[String]` field under `data`.
+            value = arrayVal.map { $0.value }
         } else {
             throw DecodingError.dataCorruptedError(in: container,
                 debugDescription: "Unsupported type")
@@ -110,6 +130,7 @@ enum DiaryNoteItemType: String, Codable {
     case doses = "insulin_diary"
     case weNoticed = "we_have_noticed"
     case hotFlash = "hot_flash_diary"
+    case menstrualPeriod = "menstrual_period"
 }
 
 enum DiaryNoteableType: String, Codable {
@@ -147,6 +168,213 @@ struct DiaryNoteHotFlashData {
     let date: Date
     let fromChart: Bool
     let diaryNote: DiaryNoteItem?
+    /// FUAM-3247: optional additional-step answers, surfaced by the Heat Up
+    /// FAB flow when the study configures the extended screens. `nil` means
+    /// the legacy flow ran and the BE should not see these keys at all.
+    var severity: [String]?
+    var duration: String?
+    var symptoms: [String]?
+    var sleepOnset: String?
+
+    init(date: Date,
+         fromChart: Bool,
+         diaryNote: DiaryNoteItem?,
+         severity: [String]? = nil,
+         duration: String? = nil,
+         symptoms: [String]? = nil,
+         sleepOnset: String? = nil) {
+        self.date = date
+        self.fromChart = fromChart
+        self.diaryNote = diaryNote
+        self.severity = severity
+        self.duration = duration
+        self.symptoms = symptoms
+        self.sleepOnset = sleepOnset
+    }
+}
+
+enum MenstrualBleeding: String {
+    case yes
+    case no
+    case other
+}
+
+/// FUAM-2934 — Server-side menstrual series grouping (BE v0.12.5). Present on
+/// the compressed `/diary_notes` index row (the last `yes` day of a series)
+/// and on `GET /diary_notes/:id` when the requested id is that last `yes`.
+/// `nil` for every other row (closing `no`, orphan `other`, non-menstrual).
+struct MenstrualSeriesMeta: Codable {
+    /// First `yes` day of the series.
+    let from: Date
+    /// Last `yes` day; `nil` while the series is still ongoing.
+    let to: Date?
+    /// `true` while no closing `no` day exists yet.
+    let ongoing: Bool
+    /// Total members (yes + other); excludes the closing `no`.
+    let count: Int
+
+    enum CodingKeys: String, CodingKey {
+        case from, to, ongoing, count
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        let formatter = MenstrualSeriesMeta.dateFormatter
+        let fromString = try container.decode(String.self, forKey: .from)
+        guard let fromDate = formatter.date(from: fromString) else {
+            throw DecodingError.dataCorruptedError(forKey: .from, in: container,
+                                                   debugDescription: "Invalid date: \(fromString)")
+        }
+        self.from = fromDate
+        if let toString = try container.decodeIfPresent(String.self, forKey: .to) {
+            self.to = formatter.date(from: toString)
+        } else {
+            self.to = nil
+        }
+        self.ongoing = try container.decode(Bool.self, forKey: .ongoing)
+        self.count = try container.decode(Int.self, forKey: .count)
+    }
+
+    /// BE serializes the series bounds as date-only `YYYY-MM-DD` strings.
+    static let dateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.calendar = Calendar(identifier: .gregorian)
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = TimeZone(identifier: "UTC")
+        formatter.dateFormat = "yyyy-MM-dd"
+        return formatter
+    }()
+}
+
+enum MenstrualFlowAmount: String, CaseIterable {
+    case spotting
+    case light
+    case moderate
+    case heavy
+    case veryHeavy = "very_heavy"
+
+    var iconName: TemplateImageName {
+        switch self {
+        case .spotting:  return .menstrualFlowSpotting
+        case .light:     return .menstrualFlowLight
+        case .moderate:  return .menstrualFlowModerate
+        case .heavy:     return .menstrualFlowHeavy
+        case .veryHeavy: return .menstrualFlowVeryHeavy
+        }
+    }
+
+    /// Backend `flow` value (FUAM-2925 schema: integer 0–4).
+    var intValue: Int {
+        switch self {
+        case .spotting:  return 0
+        case .light:     return 1
+        case .moderate:  return 2
+        case .heavy:     return 3
+        case .veryHeavy: return 4
+        }
+    }
+
+    init?(intValue: Int) {
+        switch intValue {
+        case 0: self = .spotting
+        case 1: self = .light
+        case 2: self = .moderate
+        case 3: self = .heavy
+        case 4: self = .veryHeavy
+        default: return nil
+        }
+    }
+}
+
+enum MenstrualPeriodRelated: String, CaseIterable {
+    case yes
+    case no
+    case notSure = "not_sure"
+    case letMeExplain = "let_me_explain"
+
+    var bleeding: MenstrualBleeding {
+        // Wizard semantics: only the "yes" answer reports actual bleeding.
+        // "no", "not sure", and "let me explain" all collapse to bleeding=other
+        // — the user's specific choice survives via `period_related`. The
+        // bleeding="no" value is reserved for the FUAM-2932 feed-alert "No"
+        // shortcut, which bypasses the wizard entirely.
+        switch self {
+        case .yes: return .yes
+        case .no, .notSure, .letMeExplain: return .other
+        }
+    }
+
+    /// Backend `period_related` value (FUAM-2925 schema: yes/no/not_sure/other).
+    /// `letMeExplain` collapses to `other` — the explanation rides in `note`.
+    var backendValue: String {
+        switch self {
+        case .yes: return "yes"
+        case .no: return "no"
+        case .notSure: return "not_sure"
+        case .letMeExplain: return "other"
+        }
+    }
+
+    /// Decode the BE `period_related` value back into the wizard enum.
+    /// Inverse of `backendValue`: maps `"other"` to `.letMeExplain` since
+    /// that's the only branch that produces "other" on send.
+    init?(backendValue: String) {
+        switch backendValue {
+        case "yes":            self = .yes
+        case "no":             self = .no
+        case "not_sure":       self = .notSure
+        case "other",
+             "let_me_explain": self = .letMeExplain
+        default: return nil
+        }
+    }
+}
+
+struct DiaryNoteMenstrualData {
+    let date: Date
+    let bleeding: MenstrualBleeding
+    let flowAmount: MenstrualFlowAmount?
+    let periodRelated: MenstrualPeriodRelated?
+    /// Free-form text shown when the user taps "Let me explain" on step 4.
+    /// Captured before the final note step so the two inputs stay separate.
+    let periodRelatedExplanation: String?
+    let note: String?
+    let fromChart: Bool
+    let diaryNote: DiaryNoteItem?
+
+    /// Wizard path (FUAM-2935): bleeding is derived from `periodRelated`.
+    init(date: Date,
+         flowAmount: MenstrualFlowAmount,
+         periodRelated: MenstrualPeriodRelated,
+         periodRelatedExplanation: String?,
+         note: String?,
+         fromChart: Bool,
+         diaryNote: DiaryNoteItem?) {
+        self.date = date
+        self.bleeding = periodRelated.bleeding
+        self.flowAmount = flowAmount
+        self.periodRelated = periodRelated
+        self.periodRelatedExplanation = periodRelatedExplanation
+        self.note = note
+        self.fromChart = fromChart
+        self.diaryNote = diaryNote
+    }
+
+    /// FUAM-2932 feed-alert "No" path: bleeding-only entry. Skips flow,
+    /// period_related, and note so the BE only persists `bleeding`.
+    init(date: Date,
+         bleeding: MenstrualBleeding,
+         fromChart: Bool,
+         diaryNote: DiaryNoteItem?) {
+        self.date = date
+        self.bleeding = bleeding
+        self.flowAmount = nil
+        self.periodRelated = nil
+        self.periodRelatedExplanation = nil
+        self.note = nil
+        self.fromChart = fromChart
+        self.diaryNote = diaryNote
+    }
 }
 
 struct DiaryNoteWeHaveNoticedItem: Codable {
@@ -198,9 +426,18 @@ struct DiaryNoteItem: Codable {
     var diaryNoteable: DiaryNoteable?
     
     var payload: DiaryNotePayload?
-    
+
     var feedbackTags: [EmojiItem]?
-    
+
+    /// FUAM-2934 — BE v0.12.5 series metadata; non-nil only on the compressed
+    /// menstrual row / on the show response for the last `yes` of a series.
+    var seriesMeta: MenstrualSeriesMeta?
+
+    /// FUAM-2934 — All members of the series (yes + other, chronological,
+    /// excluding the closing `no`), sideloaded by `GET /diary_notes/:id`.
+    /// Empty/nil on the index and on non-anchor rows.
+    var seriesEntries: [DiaryNoteItem]?
+
     init (id: String,
           type: String,
           diaryNoteId: Date,
@@ -235,9 +472,11 @@ extension DiaryNoteItem: JSONAPIMappable {
     
     static var includeList: String? = """
 diary_noteable,\
-feedback_tags
+feedback_tags,\
+series_entries,\
+series_entries.feedback_tags
 """
-    
+
     enum CodingKeys: String, CodingKey {
         case id
         case type
@@ -250,6 +489,8 @@ feedback_tags
         case diaryNoteType = "diary_type"
         case rawData = "data"
         case feedbackTags = "feedback_tags"
+        case seriesMeta = "series_meta"
+        case seriesEntries = "series_entries"
     }
     
     init(from decoder: Decoder) throws {
@@ -265,7 +506,11 @@ feedback_tags
         self.diaryNoteType = try? container.decodeIfPresent(DiaryNoteItemType.self, forKey: .diaryNoteType)
 
         self.feedbackTags = try? container.decodeIfPresent(Array<EmojiItem>.self, forKey: .feedbackTags)
-        
+
+        // FUAM-2934: BE v0.12.5 series grouping — both optional / additive.
+        self.seriesMeta = try? container.decodeIfPresent(MenstrualSeriesMeta.self, forKey: .seriesMeta)
+        self.seriesEntries = try? container.decodeIfPresent(Array<DiaryNoteItem>.self, forKey: .seriesEntries)
+
         if let attachmentContainer = try? container.decodeIfPresent([String: String].self, forKey: .urlString),
            let attachmentURL = attachmentContainer["url"] {
             self.urlString = attachmentURL
@@ -359,7 +604,45 @@ feedback_tags
                        let dx = isoFmt.date(from: sx) { return dx }
                     return self.diaryNoteId
                 }()
-                payload = .hotFlash(date: date)
+                // FUAM-3247: surface the optional additional-step answers so
+                // the detail screen can render them. Arrays come back either
+                // as `[String]` or as `[Any]` (when AnyCodable unwraps each
+                // element via its `value` property) — accept both shapes.
+                let severity: [String]? = (raw["severity"]?.value as? [String])
+                    ?? (raw["severity"]?.value as? [Any])?.compactMap { $0 as? String }
+                let duration: String? = raw["duration"]?.value as? String
+                let symptoms: [String]? = (raw["symptoms"]?.value as? [String])
+                    ?? (raw["symptoms"]?.value as? [Any])?.compactMap { $0 as? String }
+                let sleepOnset: String? = raw["sleep_onset"]?.value as? String
+                payload = .hotFlash(date: date,
+                                    severity: severity,
+                                    duration: duration,
+                                    symptoms: symptoms,
+                                    sleepOnset: sleepOnset)
+
+            case .menstrualPeriod:
+                let dateStr = raw["date"]?.value as? String
+                // BE v0.12.5 sends `data.date` as a calendar day (YYYY-MM-DD);
+                // older payloads used a full ISO8601 timestamp. Try both, then
+                // fall back to datetime_ref.
+                let date: Date = dateStr.flatMap {
+                    MenstrualSeriesMeta.dateFormatter.date(from: $0) ?? isoFmt.date(from: $0)
+                } ?? self.diaryNoteId
+                // FUAM-2925: BE stores flow as integer 0..4. Map it back to the
+                // MenstrualFlowAmount.rawValue string the UI consumers expect.
+                let flowInt: Int? = (raw["flow"]?.value as? Int)
+                    ?? (raw["flow"]?.value as? Double).flatMap { Int($0) }
+                let flow = flowInt.flatMap { MenstrualFlowAmount(intValue: $0)?.rawValue } ?? ""
+                let related = raw["period_related"]?.value as? String ?? ""
+                let bleeding = raw["bleeding"]?.value as? String ?? ""
+                let note = raw["note"]?.value as? String
+                payload = .menstrual(
+                    date: date,
+                    flowAmount: flow,
+                    periodRelated: related,
+                    bleeding: bleeding,
+                    note: note
+                )
 
             default:
                 break

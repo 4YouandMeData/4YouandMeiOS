@@ -429,7 +429,7 @@ extension OptInSectionCoordinator: OptInPermissionCoordinator {
         let elapsedMs = Int(Constants.OnboardingPermissionWatchdog.tickInterval
                             * Double(attempt * Constants.OnboardingPermissionWatchdog.silentTicksPerCycle)
                             * 1000)
-        Telemetry.errors.permissionWatchdogTripped(
+        Telemetry.Errors.permissionWatchdogTripped(
             branch: branch.rawValue,
             previousBranch: nil,
             elapsedMs: elapsedMs,
@@ -475,7 +475,7 @@ extension OptInSectionCoordinator: OptInPermissionCoordinator {
     /// counter so another `silentTicksPerCycle` ticks can pass before
     /// the next popup, and emit telemetry.
     private func retryBranch(branch: SystemPermission, attempt: Int) {
-        Telemetry.action.permissionWatchdogRetry(branch: branch.rawValue, attempt: attempt)
+        Telemetry.Action.permissionWatchdogRetry(branch: branch.rawValue, attempt: attempt)
         self.watchdogTickCounts[branch] = 0
     }
 
@@ -483,7 +483,7 @@ extension OptInSectionCoordinator: OptInPermissionCoordinator {
                             optInPermission: OptInPermission,
                             granted: Bool,
                             wasFirstAttempt: Bool) {
-        Telemetry.action.permissionWatchdogSkip(branch: branch.rawValue, wasFirstAttempt: wasFirstAttempt)
+        Telemetry.Action.permissionWatchdogSkip(branch: branch.rawValue, wasFirstAttempt: wasFirstAttempt)
         var skipped = self.cacheService.skippedOptInPermissions
         skipped.insert(branch.rawValue)
         self.cacheService.skippedOptInPermissions = skipped

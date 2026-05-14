@@ -43,6 +43,10 @@ class AppNavigator {
     private var currentCoordinator: Coordinator?
     private weak var currentActivityCoordinator: ActivitySectionCoordinator?
     private var hotFlashCoordinator: HotFlashCoordinator?
+    /// FUAM-2937: kept alive while the inline menstrual onboarding modal is
+    /// presented. Without this strong reference the coordinator is deallocated
+    /// before the user taps back/Next, and the delegate callbacks no-op.
+    private var menstrualOnboardingCoordinator: MenstrualOnboardingCoordinator?
     
     private var isTaskInProgress: Bool {
         return nil != self.currentActivityCoordinator
@@ -786,6 +790,187 @@ class AppNavigator {
         self.hotFlashCoordinator = coordinator
     }
 
+    public func openMenstrualPeriodDetail(presenter: UIViewController,
+                                          diaryNoteId: String) {
+        // Embed in a navigation controller so the entry-edit form (and any
+        // future child screens) can be pushed onto the detail's nav stack.
+        // The nav bar itself is kept hidden in both screens — the in-page
+        // header is the title, the footer close is the dismiss affordance.
+        // The screen fetches its members from `GET /v1/diary_notes/:id`
+        // (FUAM-2934); the delegate's `…DidClose` dismisses the nav stack.
+        let detailVC = MenstrualPeriodDetailViewController(diaryNoteId: diaryNoteId)
+        detailVC.delegate = self
+        let navVC = UINavigationController(rootViewController: detailVC)
+        navVC.modalPresentationStyle = .fullScreen
+        presenter.present(navVC, animated: true, completion: nil)
+    }
+
+    public func openMenstrualEntryViewController(presenter: UIViewController,
+                                                 variant: FlowVariant = .standalone,
+                                                 alert: Alert? = nil,
+                                                 feedTaskId: String? = nil) {
+        // FUAM-3243: when the menstrual baseline has never been configured the
+        // wizard opens with the 2 baseline questions in-line (handled by
+        // MenstrualEntryCoordinator), so there is no separate modal to dismiss
+        // and re-present — the user flows straight into the diary steps.
+        // `feedTaskId` is forwarded to the coordinator so the wizard can
+        // acknowledge the pinned feed task after persisting the diary note.
+        self.repository.getUserSettings()
+            .addProgress()
+            .subscribe(onSuccess: { [weak self, weak presenter] settings in
+                guard let self = self, let presenter = presenter else { return }
+                self.presentMenstrualWizard(presenter: presenter,
+                                            variant: variant,
+                                            alert: alert,
+                                            feedTaskId: feedTaskId,
+                                            requiresBaselineOnboarding: settings.needsMenstrualOnboarding)
+            }, onFailure: { [weak self, weak presenter] error in
+                guard let self = self, let presenter = presenter else { return }
+                self.handleError(error: error, presenter: presenter)
+            }).disposed(by: self.disposeBag)
+    }
+
+    /// FUAM-2937: presents the 2-step inline onboarding modally and reports
+    /// completion via `onComplete(cancelled:)`. Use this when the user must
+    /// configure the menstrual baseline before another action proceeds.
+    public func openMenstrualOnboarding(presenter: UIViewController,
+                                        onComplete: @escaping (Bool) -> Void) {
+        let coordinator = MenstrualOnboardingCoordinator(
+            repository: self.repository,
+            navigator: self,
+            completion: { [weak self] cancelled in
+                onComplete(cancelled)
+                self?.menstrualOnboardingCoordinator = nil
+            }
+        )
+        // Strong reference so the coordinator survives until completion.
+        self.menstrualOnboardingCoordinator = coordinator
+        coordinator.start(from: presenter)
+    }
+
+    /// Push the Settings menstrual baseline panel onto the given navigation
+    /// stack (FUAM-2936). Reuses the standard "Menstrual Cycle Information"
+    /// title; the panel reads/writes UserSetting on appear/change.
+    public func showMenstrualCycleInformation(navigationController: UINavigationController) {
+        let vc = MenstrualCycleInformationViewController()
+        navigationController.pushViewController(vc, animated: true)
+    }
+
+    /// FUAM-2932: handles the "No" action on the pinned menstrual feed card.
+    /// Records a diary note with bleeding="no" for today, gating on the
+    /// inline onboarding (FUAM-2937) when the baseline is not yet configured.
+    /// When `feedTaskId` is supplied, the underlying feed task is acknowledged
+    /// so the BE drops the card on the next refresh.
+    /// `onComplete` runs whether the chain succeeds, fails, or is cancelled —
+    /// callers use it to refresh the feed regardless of outcome.
+    public func recordMenstrualBleedingNo(presenter: UIViewController,
+                                          feedTaskId: String? = nil,
+                                          onComplete: @escaping () -> Void) {
+        self.repository.getUserSettings()
+            .addProgress()
+            .subscribe(onSuccess: { [weak self, weak presenter] settings in
+                guard let self = self, let presenter = presenter else {
+                    onComplete()
+                    return
+                }
+                if settings.needsMenstrualOnboarding {
+                    self.openMenstrualOnboarding(presenter: presenter) { [weak self, weak presenter] cancelled in
+                        guard let self = self, let presenter = presenter, !cancelled else {
+                            onComplete()
+                            return
+                        }
+                        self.submitMenstrualBleedingNo(presenter: presenter,
+                                                       feedTaskId: feedTaskId,
+                                                       onComplete: onComplete)
+                    }
+                } else {
+                    self.submitMenstrualBleedingNo(presenter: presenter,
+                                                   feedTaskId: feedTaskId,
+                                                   onComplete: onComplete)
+                }
+            }, onFailure: { [weak self, weak presenter] error in
+                guard let self = self, let presenter = presenter else {
+                    onComplete()
+                    return
+                }
+                self.handleError(error: error, presenter: presenter)
+                onComplete()
+            }).disposed(by: self.disposeBag)
+    }
+
+    private func submitMenstrualBleedingNo(presenter: UIViewController,
+                                           feedTaskId: String?,
+                                           onComplete: @escaping () -> Void) {
+        // FUAM-2932: bleeding-only payload — flow, period_related, and note
+        // are deliberately omitted when the user taps "No" on the feed card.
+        let data = DiaryNoteMenstrualData(
+            date: Date(),
+            bleeding: .no,
+            fromChart: false,
+            diaryNote: nil
+        )
+        self.repository.sendDiaryNoteMenstrual(data: data)
+            .flatMap { [weak self] diaryNote -> Single<DiaryNoteItem> in
+                // Acknowledge the feed task when the action originated from
+                // the pinned card. Errors here are swallowed: the diary note
+                // is already persisted and the feed refresh will reconcile.
+                guard let self = self, let feedTaskId = feedTaskId else {
+                    return .just(diaryNote)
+                }
+                let resultData = TaskNetworkResult(
+                    data: ["diary_note_id": diaryNote.id],
+                    attachedFile: nil
+                )
+                return self.repository
+                    .sendTaskResult(taskId: feedTaskId, taskResult: resultData)
+                    .map { diaryNote }
+                    .catchAndReturn(diaryNote)
+            }
+            .addProgress()
+            .subscribe(onSuccess: { _ in
+                onComplete()
+            }, onFailure: { [weak self, weak presenter] error in
+                guard let self = self, let presenter = presenter else {
+                    onComplete()
+                    return
+                }
+                self.handleError(error: error, presenter: presenter)
+                onComplete()
+            }).disposed(by: self.disposeBag)
+    }
+
+    private func presentMenstrualWizard(presenter: UIViewController,
+                                        variant: FlowVariant,
+                                        alert: Alert?,
+                                        feedTaskId: String? = nil,
+                                        requiresBaselineOnboarding: Bool = false) {
+        // Prevent overlapping flows
+        assert(self.currentActivityCoordinator == nil, "Another activity is already in progress")
+
+        let completion: NotificationCallback = { [weak self, weak presenter] in
+            presenter?.dismiss(animated: true, completion: nil)
+            self?.currentActivityCoordinator = nil
+        }
+
+        let coordinator = MenstrualEntryCoordinator(
+            repository: self.repository,
+            navigator: self,
+            taskIdentifier: "menstrualEntry",
+            variant: variant,
+            feedTaskId: feedTaskId,
+            requiresBaselineOnboarding: requiresBaselineOnboarding,
+            completion: completion
+        )
+        coordinator.alert = alert
+
+        let startVC = coordinator.getStartingPage()
+        startVC.modalPresentationStyle = .fullScreen
+
+        presenter.present(startVC, animated: true, completion: nil)
+
+        self.currentActivityCoordinator = coordinator
+    }
+
     public func openMyDosesViewController(presenter: UIViewController) {
         // Prevent overlapping flows
         assert(self.currentActivityCoordinator == nil, "Another activity is already in progress")
@@ -878,6 +1063,26 @@ class AppNavigator {
         navigationController.pushViewController(vc,
                                                 hidesBottomBarWhenPushed: true,
                                                 animated: true)
+    }
+
+    public func openMenstrualEntryFormViewController(presenter: UIViewController,
+                                                     menstrualItem: DiaryNoteItem,
+                                                     onEntryUpdated: ((DiaryNoteItem) -> Void)? = nil) {
+        let vc = MenstrualEntryFormViewController()
+        vc.configure(with: menstrualItem)
+        vc.onEntryUpdated = onEntryUpdated
+
+        if let navigationController = presenter.navigationController {
+            navigationController.pushViewController(vc,
+                                                    hidesBottomBarWhenPushed: true,
+                                                    animated: true)
+        } else {
+            // The period detail is presented as a fullScreen modal without
+            // its own nav controller — wrap the form so push semantics apply.
+            let nav = UINavigationController(rootViewController: vc)
+            nav.modalPresentationStyle = .fullScreen
+            presenter.present(nav, animated: true, completion: nil)
+        }
     }
 
     // MARK: About You
@@ -1038,7 +1243,7 @@ class AppNavigator {
         // them) flows through here, so a single emit-point covers them
         // all. Domain string includes the presenter class for traceback.
         let domain = "navigator.handleError@\(String(describing: type(of: presenter)))"
-        Telemetry.errors.handled(domain: domain, underlying: error)
+        Telemetry.Errors.handled(domain: domain, underlying: error)
 
         guard let error = error else {
             presenter.showAlert(forError: nil, onDismiss: onDismiss, onRetry: onRetry, dismissStyle: dismissStyle)
@@ -1464,6 +1669,35 @@ extension MainTab {
             self = .studyInfo
         default:
             return nil
+        }
+    }
+}
+
+// MARK: - MenstrualPeriodDetailViewControllerDelegate (FUAM-2934)
+
+extension AppNavigator: MenstrualPeriodDetailViewControllerDelegate {
+    public func menstrualPeriodDetailViewControllerDidRequestAdd(_ vc: MenstrualPeriodDetailViewController) {
+        // Re-open the wizard on top of the detail navigation stack.
+        self.openMenstrualEntryViewController(presenter: vc, variant: .standalone, alert: nil)
+    }
+
+    public func menstrualPeriodDetailViewController(_ vc: MenstrualPeriodDetailViewController,
+                                                     didSelect entry: DiaryNoteItem) {
+        // The detail screen already refetches each child individually in
+        // `reloadEntries` (FUAM-2934 BE workaround), so `entry` arrives here
+        // with its feedbackTags populated — no extra round-trip needed.
+        self.openMenstrualEntryFormViewController(
+            presenter: vc,
+            menstrualItem: entry,
+            onEntryUpdated: { _ in }
+        )
+    }
+
+    public func menstrualPeriodDetailViewControllerDidClose(_ vc: MenstrualPeriodDetailViewController) {
+        if let presenter = vc.presentingViewController {
+            presenter.dismiss(animated: true, completion: nil)
+        } else {
+            vc.navigationController?.popViewController(animated: true)
         }
     }
 }

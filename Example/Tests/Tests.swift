@@ -5,7 +5,7 @@ import Nimble
 @testable import ForYouAndMe
 
 class TableOfContentsSpec: QuickSpec {
-    override func spec() {
+    override class func spec() {
         context("these will pass") {
 
             it("can do maths") {
@@ -206,7 +206,7 @@ class TableOfContentsSpec: QuickSpec {
 // is the assertion that TERRA gating strips Terra code from this build.
 
 class CompilationFlagsSpec: QuickSpec {
-    override func spec() {
+    override class func spec() {
         context("HEALTHKIT flag wiring") {
 
             it("links HealthManager into the framework binary") {
@@ -243,7 +243,7 @@ class CompilationFlagsSpec: QuickSpec {
 }
 
 class IntegrationTerraSpec: QuickSpec {
-    override func spec() {
+    override class func spec() {
         context("Integration.terra (flag-independent)") {
 
             it("resolves terra from raw value") {
@@ -308,7 +308,7 @@ private struct ExcludeInvalidSystemPermissionsContainer: Decodable {
 }
 
 class ExcludeInvalidRegressionSpec: QuickSpec {
-    override func spec() {
+    override class func spec() {
         context("ExcludeInvalid<SystemPermission> with mixed valid/invalid array") {
 
             it("skips invalid entries and returns valid ones without hanging") {
@@ -395,7 +395,7 @@ class ExcludeInvalidRegressionSpec: QuickSpec {
 import RxSwift
 
 class PermissionWatchdogTickSpec: QuickSpec {
-    override func spec() {
+    override class func spec() {
         // Real-time tests: keep tick intervals small (50–100 ms) so they
         // finish fast without an RxTest dependency.
 
@@ -533,15 +533,15 @@ final class CapturingAnalyticsService: AnalyticsService {
 }
 
 class WatchdogTelemetrySpec: QuickSpec {
-    override func spec() {
+    override class func spec() {
 
-        context("Telemetry.errors.permissionWatchdogTripped") {
+        context("Telemetry.Errors.permissionWatchdogTripped") {
             it("emits one error:permission.watchdog.tripped event with the spec'd payload") {
                 let sink = CapturingTelemetrySink()
                 Telemetry.setSinks([sink])
                 defer { Telemetry.setSinks([]) }
 
-                Telemetry.errors.permissionWatchdogTripped(
+                Telemetry.Errors.permissionWatchdogTripped(
                     branch: "health",
                     previousBranch: nil,
                     elapsedMs: 8000,
@@ -564,7 +564,7 @@ class WatchdogTelemetrySpec: QuickSpec {
                 Telemetry.setSinks([sink])
                 defer { Telemetry.setSinks([]) }
 
-                Telemetry.errors.permissionWatchdogTripped(
+                Telemetry.Errors.permissionWatchdogTripped(
                     branch: "sensorkit",
                     previousBranch: "health",
                     elapsedMs: 8123,
@@ -575,14 +575,14 @@ class WatchdogTelemetrySpec: QuickSpec {
             }
         }
 
-        context("Telemetry.action.permissionWatchdog{Retry|Skip}") {
+        context("Telemetry.Action.permissionWatchdog{Retry|Skip}") {
             it("emits the corresponding action events with the spec'd payload") {
                 let sink = CapturingTelemetrySink()
                 Telemetry.setSinks([sink])
                 defer { Telemetry.setSinks([]) }
 
-                Telemetry.action.permissionWatchdogRetry(branch: "notification", attempt: 2)
-                Telemetry.action.permissionWatchdogSkip(branch: "location", wasFirstAttempt: true)
+                Telemetry.Action.permissionWatchdogRetry(branch: "notification", attempt: 2)
+                Telemetry.Action.permissionWatchdogSkip(branch: "location", wasFirstAttempt: true)
 
                 expect(sink.events).to(haveCount(2))
                 expect(sink.events[0].fullName) == "action:permission.watchdog.retry"
@@ -664,7 +664,7 @@ class WatchdogTelemetrySpec: QuickSpec {
                 Telemetry.setSinks([sink])
                 defer { Telemetry.setSinks([]) }
 
-                Telemetry.errors.permissionWatchdogTripped(
+                Telemetry.Errors.permissionWatchdogTripped(
                     branch: "health",
                     previousBranch: "notification",
                     elapsedMs: 1234,
@@ -687,7 +687,7 @@ class WatchdogTelemetrySpec: QuickSpec {
 // MARK: - FUAM-3021 — CacheManager skipped-permission persistence
 
 class CacheManagerSkippedPermissionsSpec: QuickSpec {
-    override func spec() {
+    override class func spec() {
         // CacheManager persists into UserDefaults.standard. Each test cleans
         // up after itself via clearSkippedOptInPermissions() to avoid bleed
         // across specs and between local runs.

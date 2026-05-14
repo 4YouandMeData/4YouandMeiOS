@@ -124,6 +124,7 @@ class DiaryNotesViewController: BaseViewController {
         super.init()
         
         self.tableView.registerHeaderFooterViewWithClass(DiarySectionHeader.self)
+        self.tableView.registerCellsWithClass(DiaryNoteItemMenstrualTableViewCell.self)
     }
     
     required init?(coder: NSCoder) {
@@ -218,18 +219,21 @@ class DiaryNotesViewController: BaseViewController {
     
     func createDiaryNoteSections(from diaryNotes: [DiaryNoteItem]) -> [DiaryNoteSection] {
         let calendar = Calendar.current
-        
+
+        // FUAM-2934: the BE (v0.12.5) already compresses each menstrual period
+        // into a single row (the last `yes` day, carrying `series_meta`), so
+        // every diary note maps 1:1 to a Compass Log row — no client grouping.
         let groupedDictionary = Dictionary(grouping: diaryNotes) { (item) -> Date in
             return calendar.startOfDay(for: item.diaryNoteId)
         }
-        
+
         let sortedDates = groupedDictionary.keys.sorted(by: { $1 < $0 })
-        
+
         let sections: [DiaryNoteSection] = sortedDates.map { date in
             let items = groupedDictionary[date]?.sorted(by: { $1.diaryNoteId < $0.diaryNoteId }) ?? []
             return DiaryNoteSection(date: date, items: items)
         }
-        
+
         return sections
     }
     
@@ -404,6 +408,17 @@ extension DiaryNotesViewController: UITableViewDataSource {
                 })
 
                 return cell
+            case .menstrualPeriod:
+                guard let cell = tableView.dequeueReusableCellOfType(type: DiaryNoteItemMenstrualTableViewCell.self,
+                                                                     forIndexPath: indexPath) else {
+                    assertionFailure("DiaryNoteItemMenstrualTableViewCell not registered")
+                    return UITableViewCell()
+                }
+                cell.display(diaryNote: diaryNote, onTap: { [weak self] in
+                    guard let self = self else { return }
+                    self.navigator.openMenstrualPeriodDetail(presenter: self, diaryNoteId: diaryNote.id)
+                })
+                return cell
             }
         } else {
             // Forward-compat: backend may return diary_type values this app version
@@ -413,6 +428,14 @@ extension DiaryNotesViewController: UITableViewDataSource {
         }
     }
     
+    func tableView(_ tableView: UITableView, canEditRowAt indexPath: IndexPath) -> Bool {
+        // Menstrual rows aggregate multiple entries — delete is handled by the
+        // dedicated detail screen (FUAM-2934), not here.
+        guard indexPath.section < sections.count,
+              indexPath.row < sections[indexPath.section].items.count else { return true }
+        return sections[indexPath.section].items[indexPath.row].diaryNoteType != .menstrualPeriod
+    }
+
     func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
         if editingStyle == .delete {
             let diaryNote = diaryNoteItems[indexPath.row]
@@ -445,7 +468,7 @@ extension DiaryNotesViewController: UITableViewDelegate {
             switch diaryNote.diaryNoteType {
             case .text:
                 return 80 // Variable Height for text note
-            case .audio, .video, .eaten, .doses, .weNoticed, .hotFlash:
+            case .audio, .video, .eaten, .doses, .weNoticed, .hotFlash, .menstrualPeriod:
                 return 100 // Fixed Height for audio and video note
             case .none:
                 return UITableView.automaticDimension

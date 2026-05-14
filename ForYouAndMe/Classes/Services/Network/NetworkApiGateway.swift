@@ -55,7 +55,18 @@ class NetworkApiGateway: ApiGateway {
     }
     
     func setupDefaultProvider() {
-        self.defaultProvider = MoyaProvider(endpointClosure: self.endpointMapping, plugins: [self.telemetryPlugin, self.accessTokenPlugin])
+        var plugins: [PluginType] = [self.telemetryPlugin, self.accessTokenPlugin]
+        #if DEBUG
+        // Local-only verbose dump (headers + body). Telemetry never logs the
+        // Authorization header by design — this plugin restores the stock
+        // Moya output so the bearer is visible while debugging on device.
+        // Stripped from Release builds.
+        let verboseConfig = NetworkLoggerPlugin.Configuration(
+            logOptions: [.requestHeaders, .requestBody, .successResponseBody, .errorResponseBody]
+        )
+        plugins.append(NetworkLoggerPlugin(configuration: verboseConfig))
+        #endif
+        self.defaultProvider = MoyaProvider(endpointClosure: self.endpointMapping, plugins: plugins)
     }
     
     func endpointMapping(forTarget target: DefaultService) -> Endpoint {
@@ -381,6 +392,8 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             return "/v1/user_setting"
         case .sendUserSettings:
             return "/v1/user_setting"
+        case .sendMenstrualUserSettings:
+            return "/v1/user_setting"
         // Survey
         case .getSurvey(let surveyId):
             return "v1/surveys/\(surveyId)"
@@ -403,18 +416,20 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             return "v1/diary_notes/\(diaryNoteId)"
         case .getDiaryNoteAudio(let diaryNoteId):
             return "v1/diary_notes/\(diaryNoteId)"
+        case .getMenstrualDiaryNote(let diaryNoteId):
+            return "v1/diary_notes/\(diaryNoteId)"
         case .sendDiaryNoteText:
-            return "v1/diary_notes"
-        case .sendDiaryNoteEaten, .sendDiaryNoteDoses, .sendCombinedDiaryNote, .sendDiaryNoteHotFlash:
-            return "v1/diary_notes"
+            return "v2/diary_notes"
+        case .sendDiaryNoteEaten, .sendDiaryNoteDoses, .sendCombinedDiaryNote, .sendDiaryNoteHotFlash, .sendDiaryNoteMenstrual:
+            return "v2/diary_notes"
         case .deleteDiaryNote(let diaryNoteId):
             return "v1/diary_notes/\(diaryNoteId)"
         case .sendDiaryNoteAudio(_, _, _):
-            return "v1/diary_notes"
+            return "v2/diary_notes"
         case .sendDiaryNoteVideo(_, _):
-            return "v1/diary_notes"
+            return "v2/diary_notes"
         case .updateDiaryNoteText(let diaryNoteId):
-            return "v1/diary_notes/\(diaryNoteId.id)"
+            return "v2/diary_notes/\(diaryNoteId.id)"
         case .getInfoMessages:
             return "v1/studies/\(studyId)/app_info_messages"
         }
@@ -445,6 +460,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
                 .getUserSettings,
                 .getDiaryNotes,
                 .getDiaryNoteText,
+                .getMenstrualDiaryNote,
                 .getInfoMessages,
                 .getDiaryNoteAudio:
             return .get
@@ -466,6 +482,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
                 .sendDiaryNoteAudio,
                 .sendDiaryNoteVideo,
                 .sendDiaryNoteEaten,
+                .sendDiaryNoteMenstrual,
                 .sendDiaryNoteDoses,
                 .sendCombinedDiaryNote,
                 .sendDiaryNoteHotFlash:
@@ -479,6 +496,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
                 .sendUserInfoParameters,
                 .sendUserTimeZone,
                 .sendUserSettings,
+                .sendMenstrualUserSettings,
                 .sendPushToken,
                 .sendWalthroughDone,
                 .sendSurveyTaskResultData,
@@ -562,6 +580,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         // User Data
         case .getUserData: return Bundle.getTestData(from: "TestGetUserData")
         case .sendUserSettings: return "{}".utf8Encoded
+        case .sendMenstrualUserSettings: return "{}".utf8Encoded
         case .getUserSettings: return "{}".utf8Encoded
         // Survey
         case .getSurvey: return Bundle.getTestData(from: "TestGetSurvey")
@@ -580,11 +599,13 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         case .sendDiaryNoteAudio: return "{}".utf8Encoded
         case .sendDiaryNoteVideo: return "{}".utf8Encoded
         case .sendDiaryNoteEaten: return "{}".utf8Encoded
+        case .sendDiaryNoteMenstrual: return "{}".utf8Encoded
         case .sendDiaryNoteDoses: return "{}".utf8Encoded
         case .sendCombinedDiaryNote: return "{}".utf8Encoded
         case .sendDiaryNoteHotFlash: return "{}".utf8Encoded
         case .getDiaryNoteText: return "{}".utf8Encoded
         case .getDiaryNoteAudio: return "{}".utf8Encoded
+        case .getMenstrualDiaryNote: return "{}".utf8Encoded
         case .deleteDiaryNote: return "{}".utf8Encoded
         case .updateDiaryNoteText: return "{}".utf8Encoded
         }
@@ -612,6 +633,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
                 .delayTask,
                 .getDiaryNoteText,
                 .getDiaryNoteAudio,
+                .getMenstrualDiaryNote,
                 .getInfoMessages,
                 .deleteDiaryNote:
             return .requestPlain
@@ -705,6 +727,22 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
                 params["notification_time"] = time
             } else {
                 params["notification_time"] = NSNull()
+            }
+            return .requestParameters(parameters: ["user_setting": params], encoding: JSONEncoding.default)
+        case .sendMenstrualUserSettings(let hadPeriod3Mo, let lastPeriodDate):
+            // FUAM-2929 schema: both fields nullable. Use NSNull() to clear
+            // a previously-set value (e.g. when the user switches to "no",
+            // we drop the date for data hygiene per FUAM-2937 / FUAM-2936).
+            var params: [String: Any] = [:]
+            if let value = hadPeriod3Mo {
+                params["menstrual_had_period_3mo"] = value.rawValue
+            } else {
+                params["menstrual_had_period_3mo"] = NSNull()
+            }
+            if let date = lastPeriodDate {
+                params["menstrual_last_period_date"] = UserSettings.dateOnlyFormatter.string(from: date)
+            } else {
+                params["menstrual_last_period_date"] = NSNull()
             }
             return .requestParameters(parameters: ["user_setting": params], encoding: JSONEncoding.default)
         case .sendPushToken(let token):
@@ -886,7 +924,55 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             }
             
             return .requestParameters(parameters: ["diary_note": dataParams], encoding: JSONEncoding.default)
-            
+
+        case .sendDiaryNoteMenstrual(let data):
+            // FUAM-2925 schema: bleeding/flow/period_related/note. Only
+            // `bleeding` is mandatory (FUAM-2932 feed-alert "No" path); the
+            // wizard contributes the optional fields.
+            // FUAM-2934 / BE v0.12.5: `data.date` (calendar day, YYYY-MM-DD)
+            // is required — the server-side series grouping keys on it. Send
+            // the local calendar day to match `datetime_ref`'s date part.
+            var payloadData: [String: Any] = [:]
+            payloadData["date"] = data.date.string(withFormat: dateFormat)
+            payloadData["bleeding"] = data.bleeding.rawValue
+            if let flow = data.flowAmount {
+                payloadData["flow"] = flow.intValue
+            }
+            if let related = data.periodRelated {
+                payloadData["period_related"] = related.backendValue
+            }
+            // Fold the wizard's "Let me explain" explanation in front of the
+            // user note when both are present, then truncate to BE max (2500).
+            let explanation = data.periodRelatedExplanation?.trimmingCharacters(in: .whitespacesAndNewlines)
+            let userNote = data.note?.trimmingCharacters(in: .whitespacesAndNewlines)
+            let combinedNote: String? = {
+                switch (explanation?.isEmpty == false ? explanation : nil,
+                        userNote?.isEmpty == false ? userNote : nil) {
+                case let (exp?, note?): return "\(exp)\n\n\(note)"
+                case let (exp?, nil):   return exp
+                case let (nil, note?):  return note
+                default: return nil
+                }
+            }()
+            if let combinedNote = combinedNote {
+                payloadData["note"] = String(combinedNote.prefix(2500))
+            }
+
+            var dataParams: [String: Any] = [:]
+            dataParams["data"] = payloadData
+            dataParams["datetime_ref"] = data.date.string(withFormat: dateTimeFormat)
+            dataParams["diary_type"] = DiaryNoteItemType.menstrualPeriod.rawValue
+
+            if data.fromChart, let note = data.diaryNote {
+                dataParams["diary_noteable_type"] = note.diaryNoteable?.type
+                dataParams["diary_noteable_id"]   = note.diaryNoteable?.id
+                if let interval = note.interval, !interval.isEmpty {
+                    dataParams["interval"] = interval
+                }
+            }
+
+            return .requestParameters(parameters: ["diary_note": dataParams], encoding: JSONEncoding.default)
+
         case .sendDiaryNoteDoses(let doseType, let date, let amount, let fromChart, let diaryNote):
             var data: [String: Any] = [:]
             data["dose_type"] = doseType
@@ -921,6 +1007,26 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
                 if let interval = note.interval, !interval.isEmpty {
                     dataParams["interval"] = interval
                 }
+            }
+
+            // FUAM-3247: nest the additional-step answers under `data` only when
+            // the extended flow actually ran. Legacy entries (no extra steps)
+            // ship without `data` so the BE keeps its old shape.
+            var payload: [String: Any] = [:]
+            if let severity = data.severity, !severity.isEmpty {
+                payload["severity"] = severity
+            }
+            if let duration = data.duration, !duration.isEmpty {
+                payload["duration"] = duration
+            }
+            if let symptoms = data.symptoms, !symptoms.isEmpty {
+                payload["symptoms"] = symptoms
+            }
+            if let sleepOnset = data.sleepOnset, !sleepOnset.isEmpty {
+                payload["sleep_onset"] = sleepOnset
+            }
+            if !payload.isEmpty {
+                dataParams["data"] = payload
             }
 
             return .requestParameters(parameters: ["diary_note": dataParams], encoding: JSONEncoding.default)
@@ -1067,6 +1173,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
                 .sendUserInfoParameters,
                 .getUserSettings,
                 .sendUserSettings,
+                .sendMenstrualUserSettings,
                 .getUserData,
                 .getSurvey,
                 .sendSurveyTaskResultData,
@@ -1082,10 +1189,12 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
                 .getDiaryNotes,
                 .getDiaryNoteText,
                 .getDiaryNoteAudio,
+                .getMenstrualDiaryNote,
                 .sendDiaryNoteText,
                 .sendDiaryNoteAudio,
                 .sendDiaryNoteVideo,
                 .sendDiaryNoteEaten,
+                .sendDiaryNoteMenstrual,
                 .sendDiaryNoteDoses,
                 .sendCombinedDiaryNote,
                 .sendDiaryNoteHotFlash,

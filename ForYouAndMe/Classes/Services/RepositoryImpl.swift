@@ -433,6 +433,11 @@ extension RepositoryImpl: Repository {
         return self.api.send(request: ApiRequest(serviceRequest: .getDiaryNoteAudio(noteId: noteID)))
             .handleError()
     }
+
+    func getMenstrualDiaryNote(noteID: String) -> Single<DiaryNoteItem> {
+        return self.api.send(request: ApiRequest(serviceRequest: .getMenstrualDiaryNote(noteId: noteID)))
+            .handleError()
+    }
     
     func sendDiaryNoteText(diaryNote: DiaryNoteItem, fromChart: Bool) -> Single<DiaryNoteItem> {
         return self.api.send(request: ApiRequest(serviceRequest: .sendDiaryNoteText(diaryItem: diaryNote, fromChart: fromChart)))
@@ -457,6 +462,12 @@ extension RepositoryImpl: Repository {
     func sendDiaryNoteEaten(data: DiaryNoteEatenData) -> Single<DiaryNoteItem> {
         return self.api.send(request: ApiRequest(serviceRequest:
                 .sendDiaryNoteEaten(data: data)))
+            .handleError()
+    }
+
+    func sendDiaryNoteMenstrual(data: DiaryNoteMenstrualData) -> Single<DiaryNoteItem> {
+        return self.api.send(request: ApiRequest(serviceRequest:
+                .sendDiaryNoteMenstrual(data: data)))
             .handleError()
     }
     
@@ -572,7 +583,14 @@ extension RepositoryImpl: Repository {
                                                                                    notificationTime: notificationTime)))
             .handleError()
     }
-    
+
+    func sendMenstrualUserSettings(hadPeriod3Mo: MenstrualHadPeriod3Mo?,
+                                   lastPeriodDate: Date?) -> Single<()> {
+        return self.api.send(request: ApiRequest(serviceRequest:
+            .sendMenstrualUserSettings(hadPeriod3Mo: hadPeriod3Mo, lastPeriodDate: lastPeriodDate)))
+            .handleError()
+    }
+
     // MARK: - Survey
     
     func getSurvey(surveyId: String) -> Single<SurveyGroup> {

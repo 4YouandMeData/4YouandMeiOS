@@ -61,11 +61,15 @@ enum DefaultService {
     case getDiaryNotes(diaryNote: DiaryNoteItem?, fromChart: Bool)
     case getDiaryNoteText(noteId: String)
     case getDiaryNoteAudio(noteId: String)
+    /// FUAM-2934 — GET /v1/diary_notes/{id} for a menstrual series anchor:
+    /// returns `series_meta` + the `series_entries` relationship (sideloaded).
+    case getMenstrualDiaryNote(noteId: String)
     case sendDiaryNoteText(diaryItem: DiaryNoteItem, fromChart: Bool)
     case updateDiaryNoteText(diaryItem: DiaryNoteItem)
     case sendDiaryNoteAudio(noteId: DiaryNoteItem, attachment: DiaryNoteFile, fromChart: Bool)
     case sendDiaryNoteVideo(noteId: DiaryNoteItem, attachment: DiaryNoteFile)
     case sendDiaryNoteEaten(data: DiaryNoteEatenData)
+    case sendDiaryNoteMenstrual(data: DiaryNoteMenstrualData)
     case sendDiaryNoteDoses(doseType: String, date: Date, amount: Double, fromChart: Bool, diaryNote: DiaryNoteItem?)
     case sendCombinedDiaryNote(diaryNote: DiaryNoteWeHaveNoticedItem)
     case sendDiaryNoteHotFlash(data: DiaryNoteHotFlashData)
@@ -82,6 +86,11 @@ enum DefaultService {
     case getUserData
     case getUserSettings
     case sendUserSettings(settings: Int?, notificationTime: Int?)
+    /// FUAM-2937 / FUAM-2936: PATCH the menstrual baseline fields without
+    /// disturbing notification_time/daily_survey_time. Independent from
+    /// `sendUserSettings` because the latter clobbers `notification_time`
+    /// to NULL when its argument is nil.
+    case sendMenstrualUserSettings(hadPeriod3Mo: MenstrualHadPeriod3Mo?, lastPeriodDate: Date?)
     // Survey
     case getSurvey(surveyId: String)
     case sendSurveyTaskResultData(surveyTaskId: String, results: [SurveyResult])

@@ -124,6 +124,15 @@ enum TemplateImageName: String, CaseIterable {
     case stressIconVeryStressed = "stress_icon_very_stressed"
     case questionIcon = "question_icon"
     case weNoticedIcon = "we_noticed_icon"
+    // Menstrual cycle flow icons (FUAM-2935)
+    case menstrualFlowSpotting = "menstrual_flow_spotting"
+    case menstrualFlowLight = "menstrual_flow_light"
+    case menstrualFlowModerate = "menstrual_flow_moderate"
+    case menstrualFlowHeavy = "menstrual_flow_heavy"
+    case menstrualFlowVeryHeavy = "menstrual_flow_very_heavy"
+    // Menstrual cycle entry icon (FUAM-2933 / FUAM-2934) — used as a tinted
+    // icon in the diary list / detail cells.
+    case menstrualCycleIcon = "menstrual_cycle_icon"
 }
 
 public class ImagePalette {

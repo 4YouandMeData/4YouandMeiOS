@@ -6,7 +6,7 @@
 import Foundation
 
 extension Telemetry {
-    public enum lifecycle {
+    public enum Lifecycle {
 
         public static func frameworkStart(podVersion: String,
                                           hostBundleId: String?,

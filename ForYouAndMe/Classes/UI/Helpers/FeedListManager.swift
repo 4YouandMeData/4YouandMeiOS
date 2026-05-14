@@ -15,19 +15,34 @@ fileprivate extension Schedulable {
         default: return false
         }
     }
-    
+
     var isSurvey: Bool {
         if case .survey = self { return true }
         return false
     }
 }
 
+fileprivate extension Feed {
+    var pinnedAlert: Alert? {
+        if case .alert(let alert) = self.notifiable, alert.isPinned {
+            return alert
+        }
+        return nil
+    }
+}
+
 struct FeedContent {
+    let pinnedAlerts: [Feed]
     let quickActivities: [Feed]
     let feedItems: [Feed]
-    
+
     lazy var sections: [FeedListSection] = {
-        var quickActivitySections: [QuickActivitySection] = []
+        var result: [FeedListSection] = []
+
+        if self.pinnedAlerts.count > 0 {
+            result.append(PinnedAlertSection(feeds: self.pinnedAlerts))
+        }
+
         if self.quickActivities.count > 0 {
             let items: [QuickActivityItem] = self.quickActivities.compactMap { feed in
                 switch feed.schedulable {
@@ -35,8 +50,9 @@ struct FeedContent {
                 default: return nil
                 }
             }
-            quickActivitySections.append(QuickActivitySection(quickActivies: items))
+            result.append(QuickActivitySection(quickActivies: items))
         }
+
         let feedSections: [FeedSection] = self.feedItems
             // This sorts the items within the section
             .sorted { $0.fromDate > $1.fromDate }
@@ -56,21 +72,33 @@ struct FeedContent {
                 }
                 return dateA > dateB
             }
-        return quickActivitySections + feedSections
+        result.append(contentsOf: feedSections)
+        return result
     }()
-    
-    init(withQuickActivities quickActivities: [Feed], feedItems: [Feed]) {
+
+    init(withPinnedAlerts pinnedAlerts: [Feed],
+         quickActivities: [Feed],
+         feedItems: [Feed]) {
+        self.pinnedAlerts = pinnedAlerts
         self.quickActivities = quickActivities
         self.feedItems = feedItems
     }
-    
-    init(withFeeds feeds: [Feed]) {
-        self.quickActivities = feeds.filter { $0.schedulable?.isQuickActivity ?? false}
-        self.feedItems = feeds.filter { false == $0.schedulable?.isQuickActivity ?? false}
+
+    init(withQuickActivities quickActivities: [Feed], feedItems: [Feed]) {
+        self.pinnedAlerts = []
+        self.quickActivities = quickActivities
+        self.feedItems = feedItems
     }
-    
+
+    init(withFeeds feeds: [Feed]) {
+        self.pinnedAlerts = feeds.filter { $0.pinnedAlert != nil }
+        let nonPinned = feeds.filter { $0.pinnedAlert == nil }
+        self.quickActivities = nonPinned.filter { $0.schedulable?.isQuickActivity ?? false }
+        self.feedItems = nonPinned.filter { false == $0.schedulable?.isQuickActivity ?? false }
+    }
+
     var itemCount: Int {
-        return self.quickActivities.count + self.feedItems.count + 1
+        return self.pinnedAlerts.count + self.quickActivities.count + self.feedItems.count + 1
     }
 }
 
@@ -106,8 +134,15 @@ private struct FeedSection: FeedListSection {
 
 private struct QuickActivitySection: FeedListSection {
     let quickActivies: [QuickActivityItem]
-    
+
     var numberOfRows: Int { 1 }
+    var sectionText: String? { nil }
+}
+
+fileprivate struct PinnedAlertSection: FeedListSection {
+    let feeds: [Feed]
+
+    var numberOfRows: Int { feeds.count }
     var sectionText: String? { nil }
 }
 
@@ -495,7 +530,8 @@ class FeedListManager: NSObject {
         let sorted = content.feedItems.sorted { $0.fromDate > $1.fromDate }
         let clamped = min(limit, sorted.count)
         let limitedItems = Array(sorted.prefix(clamped))
-        self.visibleContent = FeedContent(withQuickActivities: content.quickActivities,
+        self.visibleContent = FeedContent(withPinnedAlerts: content.pinnedAlerts,
+                                          quickActivities: content.quickActivities,
                                           feedItems: limitedItems)
     }
 
@@ -570,7 +606,8 @@ class FeedListManager: NSObject {
                 }
                 return true
             }
-            return FeedContent(withQuickActivities: content.quickActivities,
+            return FeedContent(withPinnedAlerts: content.pinnedAlerts,
+                               quickActivities: content.quickActivities,
                                feedItems: filteredFeedItems)
         } else {
             // No blocking surveys -> rewards can be shown
@@ -578,8 +615,31 @@ class FeedListManager: NSObject {
         }
     }
 
+    // MARK: - Pinned Alert Handlers (FUAM-2932)
+
+    private func handlePinnedAlertPrimary(feed: Feed, alert: Alert) {
+        guard let presenter = self.delegate?.presenter else { return }
+        // FUAM-2932: pass feed.id so the wizard ack's the task once the
+        // diary note is saved, otherwise the BE keeps re-emitting the card.
+        self.navigator.openMenstrualEntryViewController(presenter: presenter,
+                                                        variant: .standalone,
+                                                        alert: alert,
+                                                        feedTaskId: feed.id)
+    }
+
+    private func handlePinnedAlertSecondary(feed: Feed, alert: Alert) {
+        // FUAM-2932: "No" creates a menstrual diary entry with bleeding="no",
+        // running the inline onboarding first when the baseline is unset, and
+        // ack's the feed task so the BE removes the card.
+        guard let presenter = self.delegate?.presenter else { return }
+        self.navigator.recordMenstrualBleedingNo(presenter: presenter,
+                                                 feedTaskId: feed.id) { [weak self] in
+            self?.reloadItems()
+        }
+    }
+
     // MARK: - Actions
-    
+
     @objc private func refreshControlPulled() {
         self.reloadItems()
     }
@@ -612,7 +672,36 @@ extension FeedListManager: UITableViewDataSource {
         }
         
         let section = self.sections[indexPath.section]
-        if let quickActivitySection = section as? QuickActivitySection {
+        if let pinnedSection = section as? PinnedAlertSection {
+
+            guard indexPath.row < pinnedSection.feeds.count else {
+                return getLoadingCell()
+            }
+
+            let feed = pinnedSection.feeds[indexPath.row]
+            guard case .alert(let alert) = feed.notifiable else {
+                assertionFailure("Pinned section feed is not an alert")
+                return UITableViewCell()
+            }
+            guard let cell = tableView.dequeueReusableCellOfType(type: FeedTableViewCell.self, forIndexPath: indexPath) else {
+                assertionFailure("FeedTableViewCell not registered")
+                return UITableViewCell()
+            }
+
+            let hasSecondary = alert.secondaryButtonText != nil
+            cell.display(
+                pinnedAlert: alert,
+                onPrimary: { [weak self] in
+                    self?.handlePinnedAlertPrimary(feed: feed, alert: alert)
+                },
+                onSecondary: hasSecondary
+                    ? { [weak self] in
+                        self?.handlePinnedAlertSecondary(feed: feed, alert: alert)
+                    }
+                    : nil
+            )
+            return cell
+        } else if let quickActivitySection = section as? QuickActivitySection {
             
             guard indexPath.row < 1 else {
                 return getLoadingCell()
@@ -788,7 +877,10 @@ fileprivate extension Optional where Wrapped == FeedContent {
         guard let self = self else {
             return content
         }
-        return FeedContent(withQuickActivities: self.quickActivities + content.quickActivities,
+        // NOTE: Pinned alerts are taken from the latest fetch only — they should reflect
+        // the current trigger state, not accumulate across appended pages.
+        return FeedContent(withPinnedAlerts: content.pinnedAlerts,
+                           quickActivities: self.quickActivities + content.quickActivities,
                            feedItems: self.feedItems + content.feedItems)
     }
 }

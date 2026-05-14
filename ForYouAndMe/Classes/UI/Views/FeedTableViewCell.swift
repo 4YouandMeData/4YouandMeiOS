@@ -8,9 +8,13 @@
 import UIKit
 
 class FeedTableViewCell: UITableViewCell {
-    
+
     private static let imageHeight: CGFloat = 56.0
-    
+    // FUAM-2932 compact pinned layout: hide the hero image (and its trailing
+    // spacer) to shrink the card. UITableView.automaticDimension picks up the
+    // change because the surrounding stack lays out vertically.
+    private var imageBottomSpacer: UIView?
+
     private let gradientView: GradientView = {
         return GradientView(colors: [UIColor.white, UIColor.white],
                             locations: [0.0, 1.0],
@@ -103,7 +107,13 @@ class FeedTableViewCell: UITableViewCell {
         
         // Content
         stackView.addArrangedSubview(self.feedImageView)
-        stackView.addBlankSpace(space: 18.0)
+        // Track the image-to-title spacer so compact pinned alerts can hide it
+        // alongside the image (FUAM-2932).
+        let imageSpacer = UIView()
+        imageSpacer.backgroundColor = .clear
+        imageSpacer.autoSetDimension(.height, toSize: 18.0)
+        stackView.addArrangedSubview(imageSpacer)
+        self.imageBottomSpacer = imageSpacer
         stackView.addArrangedSubview(self.feedTitleLabel)
         stackView.addBlankSpace(space: 12.0)
         stackView.addArrangedSubview(self.feedDescriptionLabel)
@@ -120,6 +130,13 @@ class FeedTableViewCell: UITableViewCell {
     
     required init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        // Compact-pinned reuse safety: restore the hero image's spacer so a
+        // recycled cell rendered as compact does not bleed into the next row.
+        self.imageBottomSpacer?.isHidden = false
     }
     
     // MARK: - Public Methods
@@ -233,12 +250,12 @@ class FeedTableViewCell: UITableViewCell {
     
     public func display(data: Alert, wehaveNoticed: Bool, buttonPressedCallback: @escaping NotificationCallback) {
         self.buttonPressedCallback = buttonPressedCallback
-        
+
         self.updateGradientView(startColor: data.startColor, endColor: data.endColor, singleColor: data.cardColor)
         self.setFeedImage(imageUrl: data.image)
         self.setFeedTitle(text: data.title)
         self.setFeedDescription(text: data.body)
-        
+
         if nil != data.urlString || wehaveNoticed {
             let buttonText = data.buttonText ?? StringsProvider.string(forKey: .alertButtonDefault)
             self.buttonView.isHidden = false
@@ -247,6 +264,54 @@ class FeedTableViewCell: UITableViewCell {
             assert(data.buttonText == nil, "Existing button text for notifiable without urlString")
             self.buttonView.removeFromSuperview()
         }
+    }
+
+    /// Display variant for pinned alerts (e.g. menstrual tracking feed card).
+    /// Renders title/body, primary action ("Yes"), and an optional secondary action ("No")
+    /// when `data.secondaryButtonText` is present. The BE-driven `layout` field
+    /// switches between the standard hero card and the compact (image-less)
+    /// variant — see FUAM-2932 / `AlertLayout`.
+    public func display(pinnedAlert data: Alert,
+                        onPrimary: @escaping NotificationCallback,
+                        onSecondary: NotificationCallback?) {
+        self.buttonPressedCallback = onPrimary
+        self.skipButtonPressedCallback = onSecondary
+
+        self.updateGradientView(startColor: data.startColor, endColor: data.endColor, singleColor: data.cardColor)
+        let isCompact = data.resolvedLayout == .compact
+        if isCompact {
+            // Compact card: skip the hero image and its 18pt spacer so the
+            // card collapses to title + body + buttons height.
+            self.feedImageView.isHidden = true
+            self.imageBottomSpacer?.isHidden = true
+        } else {
+            self.setFeedImage(imageUrl: data.image)
+            self.imageBottomSpacer?.isHidden = false
+        }
+        self.setFeedTitle(text: data.title)
+        self.setFeedDescription(text: data.body)
+
+        let primaryText = data.buttonText ?? StringsProvider.string(forKey: .alertButtonDefault)
+        self.buttonView.isHidden = false
+        self.buttonView.setButtonText(primaryText)
+
+        if let secondaryText = data.secondaryButtonText, onSecondary != nil {
+            if self.horizontalStackView.arrangedSubviews.contains(self.skipButtonView) == false {
+                self.horizontalStackView.addArrangedSubview(self.skipButtonView)
+            }
+            self.skipButtonView.isHidden = false
+            self.skipButtonView.setButtonText(secondaryText)
+            self.horizontalStackView.distribution = .fillEqually
+        } else {
+            if self.horizontalStackView.arrangedSubviews.contains(self.skipButtonView) {
+                self.horizontalStackView.removeArrangedSubview(self.skipButtonView)
+                self.skipButtonView.removeFromSuperview()
+            }
+            self.skipButtonView.isHidden = true
+            self.horizontalStackView.distribution = .fill
+        }
+
+        self.horizontalStackView.isHidden = false
     }
     
     public func display(data: Reward, buttonPressedCallback: @escaping NotificationCallback) {

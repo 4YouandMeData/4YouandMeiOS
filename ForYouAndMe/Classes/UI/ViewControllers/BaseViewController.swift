@@ -88,14 +88,14 @@ class BaseViewController: UIViewController {
             return
         }
         Self.lastAppearance = (className, now)
-        Telemetry.nav.appear(screen: title ?? className, className: className)
+        Telemetry.Nav.appear(screen: title ?? className, className: className)
     }
 
     override func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)
         // Force-close the FAB menu when this controller disappears (e.g. on tab switch)
         floatingButton.close(animated: false)
-        Telemetry.nav.disappear(screen: title ?? String(describing: type(of: self)),
+        Telemetry.Nav.disappear(screen: title ?? String(describing: type(of: self)),
                                 className: String(describing: type(of: self)))
     }
 

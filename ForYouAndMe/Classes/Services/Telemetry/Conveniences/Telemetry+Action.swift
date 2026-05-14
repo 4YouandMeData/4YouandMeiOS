@@ -10,7 +10,7 @@
 import Foundation
 
 extension Telemetry {
-    public enum action {
+    public enum Action {
 
         /// Generic save-action emit. Use the stronger `save<Kind>(...)`
         /// helpers below where they exist.

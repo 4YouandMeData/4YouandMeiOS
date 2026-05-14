@@ -43,8 +43,8 @@ public enum Telemetry {
 
     // MARK: - Emit
 
-    /// Primary emit-API. Use the convenience namespaces (Telemetry.nav,
-    /// Telemetry.net, etc.) instead of constructing TelemetryEvent
+    /// Primary emit-API. Use the convenience namespaces (Telemetry.Nav,
+    /// Telemetry.Net, etc.) instead of constructing TelemetryEvent
     /// directly when possible — they enforce redaction by construction.
     public static func track(_ event: TelemetryEvent) {
         let scrubbed = TelemetryEvent(
