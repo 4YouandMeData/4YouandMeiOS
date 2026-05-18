@@ -1,3 +1,7 @@
+## Release 0.101.1
+
+- Maintenance release. No functional changes since 0.101.0; version bump only to re-publish to the CocoaPods trunk.
+
 ## Release 0.101.0
 
 - **Menstrual cycle — major end-to-end overhaul** (FUAM-2925, FUAM-2932, FUAM-2933, FUAM-2934, FUAM-2935, FUAM-2936, FUAM-2937, FUAM-2938, FUAM-2939, FUAM-3243). Closes the loop on the menstrual-cycle feature: baseline onboarding, server-driven entry surface, full wizard, Compass Log integration, detail screen, edit form, and feedback-tag persistence.
