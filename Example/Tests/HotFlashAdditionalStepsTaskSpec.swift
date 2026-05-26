@@ -34,17 +34,17 @@ class HotFlashAdditionalStepsTaskSpec: QuickSpec {
                     fromChart: false,
                     diaryNote: nil,
                     severity: ["warm", "hot"],
-                    duration: "1_to_2_minutes",
+                    duration: "one_to_two_minutes",
                     symptoms: ["anxiety", "panic"],
-                    sleepOnset: "before_wake"
+                    sleepOnset: "awake_with_sensation"
                 )
                 let body = unwrapDiaryNote(.sendDiaryNoteHotFlash(data: data))
                 let payload = body?["data"] as? [String: Any]
 
                 expect(payload?["severity"] as? [String]).to(equal(["warm", "hot"]))
-                expect(payload?["duration"] as? String).to(equal("1_to_2_minutes"))
+                expect(payload?["duration"] as? String).to(equal("one_to_two_minutes"))
                 expect(payload?["symptoms"] as? [String]).to(equal(["anxiety", "panic"]))
-                expect(payload?["sleep_onset"] as? String).to(equal("before_wake"))
+                expect(payload?["sleep_onset"] as? String).to(equal("awake_with_sensation"))
             }
 
             it("skips empty arrays so an unselected multi-step doesn't reach the BE") {
@@ -53,7 +53,7 @@ class HotFlashAdditionalStepsTaskSpec: QuickSpec {
                     fromChart: false,
                     diaryNote: nil,
                     severity: [],            // empty → omit
-                    duration: "less_than_minute",
+                    duration: "less_than_a_minute",
                     symptoms: nil,           // nil → omit
                     sleepOnset: nil
                 )
@@ -63,7 +63,7 @@ class HotFlashAdditionalStepsTaskSpec: QuickSpec {
                 expect(payload?["severity"]).to(beNil())
                 expect(payload?["symptoms"]).to(beNil())
                 expect(payload?["sleep_onset"]).to(beNil())
-                expect(payload?["duration"] as? String).to(equal("less_than_minute"))
+                expect(payload?["duration"] as? String).to(equal("less_than_a_minute"))
             }
 
             it("skips empty string for the single-select fields") {

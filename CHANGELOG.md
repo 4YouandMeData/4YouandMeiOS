@@ -1,3 +1,9 @@
+## [Unreleased]
+
+## Release 0.101.2
+
+- docs: document required `ITSAppUsesNonExemptEncryption` host-app Info.plist key and set it in the Example app to bypass App Store Connect's encryption-documentation modal (FUAM-3115).
+
 ## Release 0.101.1
 
 - Maintenance release. No functional changes since 0.101.0; version bump only to re-publish to the CocoaPods trunk.

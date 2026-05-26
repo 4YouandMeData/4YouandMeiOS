@@ -496,6 +496,30 @@ Hosts that don't include the `Terra` subspec get a build that omits `import Terr
 
 The three flags are fully independent — setting one does not imply the others. Previous versions of this pod coupled SensorKit and Terra behind a single `HEALTHKIT` flag; they were decoupled in `0.98.x` so host apps can enable any combination without being forced to ship the rest.
 
+App Store Connect — Encryption Export Compliance
+------------------------------------------------
+
+Every time a build is uploaded to App Store Connect, Apple asks whether the app uses non‑exempt encryption. To bypass the "App Encryption Documentation" modal on each upload (and on each TestFlight submission), the **host app** must declare `ITSAppUsesNonExemptEncryption` in its own `Info.plist`. App Store Connect reads this key **only from the host app bundle** — values declared inside embedded frameworks (including `ForYouAndMe`) are ignored.
+
+`ForYouAndMe` and the current crop of study apps use only Apple‑exempt cryptography: HTTPS / TLS via `URLSession` + ATS, the iOS Keychain and `CryptoKit` defaults, and authentication‑only encryption. Under [Apple's "Complying with Encryption Export Regulations"](https://developer.apple.com/documentation/security/complying_with_encryption_export_regulations) the correct value is `false`.
+
+Add the key to your host app's `Info.plist`:
+
+```xml
+<key>ITSAppUsesNonExemptEncryption</key>
+<false/>
+```
+
+If your project uses Xcode‑managed Info.plist build settings instead of a file, set this on the app target instead:
+
+```
+INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO
+```
+
+The Example app in this repo (`Example/ForYouAndMe/Info.plist`) ships with this key set as a reference.
+
+> **Warning — revisit if you add non‑exempt crypto.** If a future feature ships *custom* or *non‑exempt* cryptography — for example end‑to‑end encryption of patient data, custom payload encryption, or any non‑Apple crypto primitive used for confidentiality rather than authentication — the host app **must** flip `ITSAppUsesNonExemptEncryption` to `true` and additionally provide an `ITSEncryptionExportComplianceCode` with a valid CCATS code obtained from the U.S. Bureau of Industry and Security. Falsely declaring `false` is an export‑control violation.
+
 Author
 ------
 
