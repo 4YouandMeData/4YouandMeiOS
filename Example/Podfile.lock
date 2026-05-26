@@ -85,10 +85,10 @@ PODS:
     - GoogleUtilities/UserDefaults (~> 8.0)
     - nanopb (~> 3.30910.0)
     - PromisesSwift (~> 2.1)
-  - ForYouAndMe (0.100.2):
-    - ForYouAndMe/Core (= 0.100.2)
-    - ForYouAndMe/Terra (= 0.100.2)
-  - ForYouAndMe/Core (0.100.2):
+  - ForYouAndMe (0.101.1):
+    - ForYouAndMe/Core (= 0.101.1)
+    - ForYouAndMe/Terra (= 0.101.1)
+  - ForYouAndMe/Core (0.101.1):
     - AlamofireImage (~> 4.3.0)
     - BalzoGPUImage2 (~> 0.2.1)
     - CountryPickerView (~> 3.1.2)
@@ -110,7 +110,7 @@ PODS:
     - SVProgressHUD (~> 2.3.1)
     - TPKeyboardAvoiding (~> 1.3.3)
     - UberSignature (~> 1.0.3)
-  - ForYouAndMe/Terra (0.100.2):
+  - ForYouAndMe/Terra (0.101.1):
     - TerraiOS (~> 1.6.26)
   - FYAMResearchKit (3.0.0)
   - GoogleAppMeasurement (11.7.0):
@@ -298,7 +298,7 @@ SPEC CHECKSUMS:
   FirebaseMessaging: 00ece041b71ddb52a2862ffdee73fb6e9824bd0c
   FirebaseRemoteConfigInterop: 98897a64aa372eac3c5b3fe2816594ccfaac55ef
   FirebaseSessions: 32ed7a9387ae71efe3a35a7f20f3a7292950957b
-  ForYouAndMe: 2528d7efa8daaeca7781d57904ab04924fc43841
+  ForYouAndMe: b84bae862e05e32ea135899987f1d10264d89aa8
   FYAMResearchKit: c79d2de80d301ac02ba9b303d97d35b083d4676b
   GoogleAppMeasurement: 0471a5b5bff51f3a91b1e76df22c952d04c63967
   GoogleDataTransport: aae35b7ea0c09004c3797d53c8c41f66f219d6a7
@@ -309,7 +309,7 @@ SPEC CHECKSUMS:
   nanopb: fad817b59e0457d11a5dfbde799381cd727c1275
   Nimble: 84982ec98b5dfc0ffe9ae2ed4c0b2fc57807c2d5
   OAuthSwift: b95e3a54955d762aecf996e5088f69092623819b
-  PhoneNumberKit: ff153d5e299f6da566cb73c6aa71e354933b2932
+  PhoneNumberKit: 9226ad3b3425b06b2295aa4de6e5e1b7d49ab601
   PromisesObjC: f5707f49cb48b9636751c5b2e7d227e43fba9f47
   PromisesSwift: 9d77319bbe72ebf6d872900551f7eeba9bce2851
   PureLayout: 5fb5e5429519627d60d079ccb1eaa7265ce7cf88

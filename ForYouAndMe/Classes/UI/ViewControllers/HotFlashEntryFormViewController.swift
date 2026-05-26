@@ -187,22 +187,22 @@ final class HotFlashEntryFormViewController: UIViewController {
 
     private static func severityLabel(forCode code: String) -> String {
         switch code {
-        case "warm":       return StringsProvider.string(forKey: .hotFlashSeverityOptionWarm)
-        case "hot":        return StringsProvider.string(forKey: .hotFlashSeverityOptionHot)
-        case "sweating":   return StringsProvider.string(forKey: .hotFlashSeverityOptionSweating)
-        case "cold_chill": return StringsProvider.string(forKey: .hotFlashSeverityOptionColdChill)
-        case "not_sure":   return StringsProvider.string(forKey: .hotFlashSeverityOptionNotSure)
+        case "warm":             return StringsProvider.string(forKey: .hotFlashSeverityOptionWarm)
+        case "hot":              return StringsProvider.string(forKey: .hotFlashSeverityOptionHot)
+        case "sweating":         return StringsProvider.string(forKey: .hotFlashSeverityOptionSweating)
+        case "cold_chill_after": return StringsProvider.string(forKey: .hotFlashSeverityOptionColdChill)
+        case "not_sure":         return StringsProvider.string(forKey: .hotFlashSeverityOptionNotSure)
         default:           return code
         }
     }
 
     private static func durationLabel(forCode code: String) -> String {
         switch code {
-        case "less_than_minute": return StringsProvider.string(forKey: .hotFlashDurationOptionLessThanMinute)
-        case "1_to_2_minutes":   return StringsProvider.string(forKey: .hotFlashDurationOptionOneToTwo)
-        case "2_to_3_minutes":   return StringsProvider.string(forKey: .hotFlashDurationOptionTwoToThree)
-        case "nearly_5_minutes": return StringsProvider.string(forKey: .hotFlashDurationOptionNearlyFive)
-        case "not_sure":         return StringsProvider.string(forKey: .hotFlashDurationOptionNotSure)
+        case "less_than_a_minute":   return StringsProvider.string(forKey: .hotFlashDurationOptionLessThanMinute)
+        case "one_to_two_minutes":   return StringsProvider.string(forKey: .hotFlashDurationOptionOneToTwo)
+        case "two_to_three_minutes": return StringsProvider.string(forKey: .hotFlashDurationOptionTwoToThree)
+        case "nearly_five_minutes":  return StringsProvider.string(forKey: .hotFlashDurationOptionNearlyFive)
+        case "not_sure":             return StringsProvider.string(forKey: .hotFlashDurationOptionNotSure)
         default:                 return code
         }
     }
@@ -222,9 +222,9 @@ final class HotFlashEntryFormViewController: UIViewController {
 
     private static func sleepOnsetLabel(forCode code: String) -> String {
         switch code {
-        case "before_wake": return StringsProvider.string(forKey: .hotFlashSleepOnsetOptionBeforeWake)
-        case "after_wake":  return StringsProvider.string(forKey: .hotFlashSleepOnsetOptionAfterWake)
-        case "not_sure":    return StringsProvider.string(forKey: .hotFlashSleepOnsetOptionNotSure)
+        case "awake_with_sensation": return StringsProvider.string(forKey: .hotFlashSleepOnsetOptionBeforeWake)
+        case "awake_then_sensation": return StringsProvider.string(forKey: .hotFlashSleepOnsetOptionAfterWake)
+        case "not_sure":             return StringsProvider.string(forKey: .hotFlashSleepOnsetOptionNotSure)
         default:            return code
         }
     }
