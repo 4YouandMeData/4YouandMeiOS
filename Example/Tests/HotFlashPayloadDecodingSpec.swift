@@ -25,10 +25,10 @@ class HotFlashPayloadDecodingSpec: QuickSpec {
                     "datetime_ref": "2026-05-14T03:15:51.000Z",
                     "diary_type": "hot_flash_diary",
                     "data": {
-                        "duration": "1_to_2_minutes",
+                        "duration": "one_to_two_minutes",
                         "severity": ["hot"],
                         "symptoms": ["anxiety"],
-                        "sleep_onset": "after_wake"
+                        "sleep_onset": "awake_then_sensation"
                     }
                 }
                 """.data(using: .utf8)!
@@ -42,9 +42,9 @@ class HotFlashPayloadDecodingSpec: QuickSpec {
                     return
                 }
                 expect(severity).to(equal(["hot"]))
-                expect(duration).to(equal("1_to_2_minutes"))
+                expect(duration).to(equal("one_to_two_minutes"))
                 expect(symptoms).to(equal(["anxiety"]))
-                expect(sleepOnset).to(equal("after_wake"))
+                expect(sleepOnset).to(equal("awake_then_sensation"))
             }
 
             it("supports multi-element arrays for severity and symptoms") {
@@ -55,10 +55,10 @@ class HotFlashPayloadDecodingSpec: QuickSpec {
                     "datetime_ref": "2026-05-14T03:15:51.000Z",
                     "diary_type": "hot_flash_diary",
                     "data": {
-                        "duration": "nearly_5_minutes",
+                        "duration": "nearly_five_minutes",
                         "severity": ["warm", "hot", "sweating"],
                         "symptoms": ["anxiety", "panic", "racing_thoughts"],
-                        "sleep_onset": "before_wake"
+                        "sleep_onset": "awake_with_sensation"
                     }
                 }
                 """.data(using: .utf8)!

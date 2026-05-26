@@ -100,11 +100,11 @@ final class HotFlashCoordinator {
             title: StringsProvider.string(forKey: .hotFlashSeverityTitle),
             message: optionalText(.hotFlashSeverityMessage),
             options: [
-                .init(code: "warm",       label: StringsProvider.string(forKey: .hotFlashSeverityOptionWarm)),
-                .init(code: "hot",        label: StringsProvider.string(forKey: .hotFlashSeverityOptionHot)),
-                .init(code: "sweating",   label: StringsProvider.string(forKey: .hotFlashSeverityOptionSweating)),
-                .init(code: "cold_chill", label: StringsProvider.string(forKey: .hotFlashSeverityOptionColdChill)),
-                .init(code: "not_sure",   label: StringsProvider.string(forKey: .hotFlashSeverityOptionNotSure))
+                .init(code: "warm",             label: StringsProvider.string(forKey: .hotFlashSeverityOptionWarm)),
+                .init(code: "hot",              label: StringsProvider.string(forKey: .hotFlashSeverityOptionHot)),
+                .init(code: "sweating",         label: StringsProvider.string(forKey: .hotFlashSeverityOptionSweating)),
+                .init(code: "cold_chill_after", label: StringsProvider.string(forKey: .hotFlashSeverityOptionColdChill)),
+                .init(code: "not_sure",         label: StringsProvider.string(forKey: .hotFlashSeverityOptionNotSure))
             ],
             mode: .multi,
             nextButtonText: StringsProvider.string(forKey: .diaryNoteHotFlashNextButton)
@@ -117,11 +117,11 @@ final class HotFlashCoordinator {
             title: StringsProvider.string(forKey: .hotFlashDurationTitle),
             message: optionalText(.hotFlashDurationMessage),
             options: [
-                .init(code: "less_than_minute", label: StringsProvider.string(forKey: .hotFlashDurationOptionLessThanMinute)),
-                .init(code: "1_to_2_minutes",   label: StringsProvider.string(forKey: .hotFlashDurationOptionOneToTwo)),
-                .init(code: "2_to_3_minutes",   label: StringsProvider.string(forKey: .hotFlashDurationOptionTwoToThree)),
-                .init(code: "nearly_5_minutes", label: StringsProvider.string(forKey: .hotFlashDurationOptionNearlyFive)),
-                .init(code: "not_sure",         label: StringsProvider.string(forKey: .hotFlashDurationOptionNotSure))
+                .init(code: "less_than_a_minute",    label: StringsProvider.string(forKey: .hotFlashDurationOptionLessThanMinute)),
+                .init(code: "one_to_two_minutes",    label: StringsProvider.string(forKey: .hotFlashDurationOptionOneToTwo)),
+                .init(code: "two_to_three_minutes",  label: StringsProvider.string(forKey: .hotFlashDurationOptionTwoToThree)),
+                .init(code: "nearly_five_minutes",   label: StringsProvider.string(forKey: .hotFlashDurationOptionNearlyFive)),
+                .init(code: "not_sure",              label: StringsProvider.string(forKey: .hotFlashDurationOptionNotSure))
             ],
             mode: .single,
             nextButtonText: StringsProvider.string(forKey: .diaryNoteHotFlashNextButton)
@@ -153,9 +153,9 @@ final class HotFlashCoordinator {
             title: StringsProvider.string(forKey: .hotFlashSleepOnsetTitle),
             message: optionalText(.hotFlashSleepOnsetMessage),
             options: [
-                .init(code: "before_wake", label: StringsProvider.string(forKey: .hotFlashSleepOnsetOptionBeforeWake)),
-                .init(code: "after_wake",  label: StringsProvider.string(forKey: .hotFlashSleepOnsetOptionAfterWake)),
-                .init(code: "not_sure",    label: StringsProvider.string(forKey: .hotFlashSleepOnsetOptionNotSure))
+                .init(code: "awake_with_sensation", label: StringsProvider.string(forKey: .hotFlashSleepOnsetOptionBeforeWake)),
+                .init(code: "awake_then_sensation", label: StringsProvider.string(forKey: .hotFlashSleepOnsetOptionAfterWake)),
+                .init(code: "not_sure",             label: StringsProvider.string(forKey: .hotFlashSleepOnsetOptionNotSure))
             ],
             mode: .single,
             nextButtonText: StringsProvider.string(forKey: .diaryNoteHotFlashNextButton)
