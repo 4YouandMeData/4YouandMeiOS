@@ -570,6 +570,8 @@ enum StringKey: String, CaseIterable, CodingKey {
     case permissionMessage = "PERMISSION_MESSAGE"
     case permissionHealthSettingsTitle = "PERMISSION_HEALTH_SETTINGS_TITLE"
     case permissionHealthSettingsMessage = "PERMISSION_HEALTH_SETTINGS_MESSAGE"
+    case permissionSensorKitSettingsTitle = "PERMISSION_SENSORKIT_SETTINGS_TITLE"
+    case permissionSensorKitSettingsMessage = "PERMISSION_SENSORKIT_SETTINGS_MESSAGE"
     case allowMessage = "PERMISSIONS_ALLOW"
     case allowedMessage = "PERMISSIONS_ALLOWED"
     case connectMessage = "YOUR_APPS_AND_DEVICES_CONNECT"

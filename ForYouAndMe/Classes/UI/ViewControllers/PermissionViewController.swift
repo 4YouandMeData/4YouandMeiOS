@@ -226,16 +226,21 @@ public class PermissionViewController: UIViewController {
                         .disposed(by: self.disposeBag)
 
                 } else {
-                    // Either authorized or denied. If denied → show settings alert, else just start+sync.
+                    // SensorKit cannot re-trigger the system prompt once the user has
+                    // responded, and iOS exposes no per-app SensorKit deep-link, so the
+                    // only thing we can offer is the app's general Settings page.
+                    // Always show the alert so the row is never a silent no-op (FUAM-3370).
                     let gaps = manager.authorizationGaps() // (undetermined, denied)
-                    if gaps.denied.isEmpty == false {
-                        // Your dedicated SensorKit settings alert (come per Health)
-                        self.navigator.showSensorKitPermissionSettingsAlert(
-                            presenter: self,
-                            missingSensors: gaps.denied
-                        )
-                    } else {
-                        // Already authorized → ensure recording + sync
+                    let sensorsToList = gaps.denied.isEmpty
+                        ? manager.configuredSensors
+                        : gaps.denied
+                    self.navigator.showSensorKitPermissionSettingsAlert(
+                        presenter: self,
+                        missingSensors: sensorsToList
+                    )
+                    // Keep the prior behaviour for the all-authorized case: nudge the
+                    // recording pipeline and refresh the status badge in the background.
+                    if gaps.denied.isEmpty {
                         manager.ensureRecordingStarted()
                         manager.triggerSync(reason: "permissions_view_already")
                         self.refreshStatus()

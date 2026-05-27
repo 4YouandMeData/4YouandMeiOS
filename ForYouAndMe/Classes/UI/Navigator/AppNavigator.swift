@@ -1346,8 +1346,9 @@ class AppNavigator {
                 .sorted()
                 .joined(separator: ", ")
 
-            let title   = "Abilita Sensor Kit"
-            let message = String(format: "Alcuni sensori risultano disattivati: \(sensorsList). Puoi abilitarli in Impostazioni.")
+            let title = StringsProvider.string(forKey: .permissionSensorKitSettingsTitle)
+            let messageFormat = StringsProvider.string(forKey: .permissionSensorKitSettingsMessage)
+            let message = String(format: messageFormat, sensorsList)
 
             presenter.showAlert(withTitle: title,
                                 message: message,

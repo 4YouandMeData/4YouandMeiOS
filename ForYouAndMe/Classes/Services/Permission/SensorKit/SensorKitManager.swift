@@ -334,6 +334,13 @@ extension SensorKitManager {
 }
 
 extension SensorKitManager {
+    /// The full set of sensors this manager is configured to collect.
+    /// Exposed so callers (e.g. the Permissions screen) can describe what the SDK
+    /// cares about when the SensorKit settings alert is shown without any denied sensors.
+    var configuredSensors: Set<SRSensor> {
+        return Set(self.readSensors)
+    }
+
     /// Return which sensors are still undetermined or denied.
     /// Call on main thread.
     func authorizationGaps() -> (undetermined: Set<SRSensor>, denied: Set<SRSensor>) {
