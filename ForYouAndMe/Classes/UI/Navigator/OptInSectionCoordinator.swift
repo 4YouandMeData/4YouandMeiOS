@@ -57,9 +57,12 @@ class OptInSectionCoordinator {
     /// per coordinator lifetime. Mirrors the once-only semantics of the
     /// PagedSectionCoordinator's `performCustomPrimaryButtonNavigation`.
     private var didFireCompletion: Bool = false
-    /// FUAM-3116. Weak ref to the currently-presented opt-in permission VC
-    /// so the coordinator can drive its in-progress overlay during the chain.
-    private weak var currentPermissionVC: OptInPermissionViewController?
+    /// FUAM-3116 / FUAM-3364. Weak ref to the currently-presented opt-in
+    /// permission VC so the coordinator can drive its in-progress overlay
+    /// during the chain. Typed as the shared
+    /// `OptInPermissionProcessingDriving` protocol so the regular and the
+    /// info-only variants can be driven uniformly.
+    private weak var currentPermissionVC: OptInPermissionProcessingDriving?
     /// FUAM-3021 v3 (D5). Weak ref to the currently-presented watchdog
     /// popup so we can dismiss it if the source emits success while it is
     /// on screen (avoids orphaned modals when the user grants HK after
@@ -123,13 +126,33 @@ class OptInSectionCoordinator {
     }
 
     private func showOptInPermission(_ optInPermission: OptInPermission) {
-        let viewController = OptInPermissionViewController(withOptInPermission: optInPermission, coordinator: self)
+        // FUAM-3364. Route info-only permissions (BE
+        // `agreement_display == "disabled"`) to the dedicated view
+        // controller with no agree/disagree controls; the regular VC
+        // continues to handle the agree/disagree flow.
+        let viewController: UIViewController & OptInPermissionProcessingDriving
+        if optInPermission.isInfoOnly {
+            viewController = OptInPermissionInfoViewController(withOptInPermission: optInPermission, coordinator: self)
+        } else {
+            viewController = OptInPermissionViewController(withOptInPermission: optInPermission, coordinator: self)
+        }
         // FUAM-3116. Track the active VC so we can drive its processing
         // overlay during the permission chain.
         self.currentPermissionVC = viewController
         self.navigationController.pushViewController(viewController,
                                                      hidesBottomBarWhenPushed: self.hidesBottomBarWhenPushed,
                                                      animated: true)
+    }
+
+    // MARK: - FUAM-3364
+
+    /// Opt-in permissions filtered to those that should render on iOS,
+    /// preserving the BE-declared order. A permission whose `platforms`
+    /// is non-empty and does not contain `"ios"` is dropped from the
+    /// section's step list entirely — it is never rendered, never
+    /// blocks the flow, and is never submitted.
+    private var visiblePermissions: [OptInPermission] {
+        self.sectionData.optInPermissions.filter { $0.isAvailableOnIOS }
     }
 }
 
@@ -159,7 +182,9 @@ extension OptInSectionCoordinator: PagedSectionCoordinator {
     }
 
     func onUnhandledPrimaryButtonNavigation(page: Page) {
-        if let firstOptInPermission = self.sectionData.optInPermissions.first {
+        // FUAM-3364. Use the iOS-filtered list so any permission
+        // gated to other platforms is skipped from the very first step.
+        if let firstOptInPermission = self.visiblePermissions.first {
             self.showOptInPermission(firstOptInPermission)
         } else {
             // No permissions to walk — section is effectively complete.
@@ -364,7 +389,11 @@ extension OptInSectionCoordinator: OptInPermissionCoordinator {
     }
 
     private func advanceAfterPermissionSet(_ optInPermission: OptInPermission) {
-        guard let permissionIndex = self.sectionData.optInPermissions
+        // FUAM-3364. Advance through the iOS-filtered list so that
+        // permissions gated to other platforms cannot accidentally be
+        // selected as the "next" step.
+        let permissions = self.visiblePermissions
+        guard let permissionIndex = permissions
                 .firstIndex(where: { $0.id == optInPermission.id }) else {
             assertionFailure("Missing Permission with given ID")
             return
@@ -377,8 +406,8 @@ extension OptInSectionCoordinator: OptInPermissionCoordinator {
         }
 
         let nextPermissionIndex = permissionIndex + 1
-        if nextPermissionIndex < self.sectionData.optInPermissions.count {
-            self.showOptInPermission(self.sectionData.optInPermissions[nextPermissionIndex])
+        if nextPermissionIndex < permissions.count {
+            self.showOptInPermission(permissions[nextPermissionIndex])
         } else {
             self.showSuccess()
         }
