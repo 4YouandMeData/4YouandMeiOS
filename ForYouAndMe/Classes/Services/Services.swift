@@ -123,7 +123,7 @@ class Services {
             if #available(iOS 16.4, *) {
                 skMappers = [
                     .accelerometer: AccelerometerMapper(),
-                    .mediaEvents: MediaEventsMapper(),
+                    //            .mediaEvents: MediaEventsMapper(),
                     //            .rotationRate: RotationRateMapper(),
                     //            .ambientLightSensor: AmbientLightMapper(),
                     //            .ambientPressure: AmbientPressureMapper(),

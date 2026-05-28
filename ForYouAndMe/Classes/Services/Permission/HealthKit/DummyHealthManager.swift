@@ -21,4 +21,9 @@ class DummyHealthManager: HealthService {
         assertionFailure("Unexpected get authorization status. The HEALTHKIT compilation condition has not been defined")
         return Single.error(HealthError.healthKitNotAvailable)
     }
+
+    func isStillShouldRequest() -> Single<Bool> {
+        assertionFailure("Unexpected get authorization status. The HEALTHKIT compilation condition has not been defined")
+        return Single.error(HealthError.healthKitNotAvailable)
+    }
 }
