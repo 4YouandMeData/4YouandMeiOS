@@ -263,8 +263,7 @@ extension Constants {
                     .phoneUsageReport,
                     .deviceUsageReport,
                     .messagesUsageReport,
-                    .keyboardMetrics,
-                    .mediaEvents]
+                    .keyboardMetrics]
             } else {
                 // Fallback on earlier versions
                 return [.accelerometer,
@@ -339,6 +338,13 @@ extension SensorKitManager {
     /// cares about when the SensorKit settings alert is shown without any denied sensors.
     var configuredSensors: Set<SRSensor> {
         return Set(self.readSensors)
+    }
+
+    /// Returns true if at least one configured sensor is currently `.authorized`.
+    /// Synchronous and cheap — used by the Permissions row to decide between the
+    /// "Setup" and "Manage" trailing label.
+    func hasAnyAuthorized() -> Bool {
+        return self.readSensors.contains { SRSensorReader(sensor: $0).authorizationStatus == .authorized }
     }
 
     /// Return which sensors are still undetermined or denied.

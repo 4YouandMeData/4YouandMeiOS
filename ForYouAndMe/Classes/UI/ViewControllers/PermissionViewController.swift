@@ -76,7 +76,32 @@ public class PermissionViewController: UIViewController {
     }
     
     private func refreshStatus() {
-        
+        // Query async row-state inputs up front (HealthKit shouldRequest; the SK
+        // hasAnyAuthorized check is synchronous and is invoked inline below).
+        // Once both are resolved we rebuild the stack on the main thread.
+        let healthSetupSingle: Single<Bool> = {
+            if self.healthService.serviceAvailable,
+               self.repository.currentUser?.getHasAgreedTo(systemPermission: .health) ?? false {
+                // True → no read type has ever been requested → "Setup".
+                return self.healthService.isStillShouldRequest().catchAndReturn(false)
+            }
+            return .just(false)
+        }()
+
+        healthSetupSingle
+            .observe(on: MainScheduler.instance)
+            .subscribe(onSuccess: { [weak self] healthShouldSetup in
+                guard let self = self else { return }
+                self.rebuildPermissionRows(healthShouldSetup: healthShouldSetup)
+            }, onFailure: { [weak self] _ in
+                // Best-effort: fall back to the "Manage" label if the check fails.
+                self?.rebuildPermissionRows(healthShouldSetup: false)
+            })
+            .disposed(by: self.disposeBag)
+    }
+
+    private func rebuildPermissionRows(healthShouldSetup: Bool) {
+
         self.scrollStackView.stackView.arrangedSubviews.forEach({ $0.removeFromSuperview() })
 
         if self.deviceService.locationServicesAvailable, self.repository.currentUser?.getHasAgreedTo(systemPermission: .location) ?? false {
@@ -90,7 +115,7 @@ public class PermissionViewController: UIViewController {
                                                   })
             self.scrollStackView.stackView.addArrangedSubview(locationItem)
         }
-        
+
         let notificationPermission: Permission = .notification
         let notificationTitle = StringsProvider.string(forKey: .permissionPushNotificationDescription)
         let pushItem = PermissionItemView(withTitle: notificationTitle,
@@ -101,33 +126,45 @@ public class PermissionViewController: UIViewController {
             self.handlePushNotificationPermission(permission: notificationPermission)
         })
         pushItem.autoSetDimension(.height, toSize: 72, relation: .greaterThanOrEqual)
-        
+
         self.scrollStackView.stackView.addArrangedSubview(pushItem)
-        
+
         if self.healthService.serviceAvailable, self.repository.currentUser?.getHasAgreedTo(systemPermission: .health) ?? false {
             let healthItemTitle = StringsProvider.string(forKey: .permissionHealthDescription)
+            // "Setup" iff getRequestStatusForAuthorization == .shouldRequest, else "Manage".
+            let healthTrailingKey: StringKey = healthShouldSetup
+                ? .permissionHealthSetupLabel
+                : .permissionHealthManageLabel
             let healthItem = PermissionItemView(withTitle: healthItemTitle,
                                                 isAuthorized: nil,
                                                 iconName: .healthIcon,
-                                                trailingActionText: StringsProvider.string(forKey: .permissionHealthManageLabel),
+                                                trailingActionText: StringsProvider.string(forKey: healthTrailingKey),
                                                 gestureCallback: { [weak self] in
                                                     self?.handleHealthPermission()
                                                 })
             healthItem.autoSetDimension(.height, toSize: 72, relation: .greaterThanOrEqual)
             self.scrollStackView.stackView.addArrangedSubview(healthItem)
         }
-        
+
         // --- SensorKit ---
 #if SENSORKIT
         if self.sensorKitService?.serviceAvailable == true,
            self.repository.currentUser?.getHasAgreedTo(systemPermission: .sensorKit) ?? false {
+
+            // "Setup" iff no sensor is .authorized (all are .notDetermined and/or
+            // .denied); "Manage" otherwise. The tap handler in
+            // handleSensorKitPermission already does the right thing in both cases.
+            let skHasAnyAuthorized = (self.sensorKitService as? SensorKitManager)?.hasAnyAuthorized() ?? false
+            let skTrailingKey: StringKey = skHasAnyAuthorized
+                ? .permissionSensorKitManageLabel
+                : .permissionSensorKitSetupLabel
 
             let skTitle = StringsProvider.string(forKey: .permissionSensorKitDescription)
             let skItem = PermissionItemView(
                 withTitle: skTitle,
                 isAuthorized: nil,
                 iconName: .healthIcon,
-                trailingActionText: StringsProvider.string(forKey: .permissionSensorKitManageLabel),
+                trailingActionText: StringsProvider.string(forKey: skTrailingKey),
                 gestureCallback: { [weak self] in
                     self?.handleSensorKitPermission()
                 }
@@ -136,7 +173,7 @@ public class PermissionViewController: UIViewController {
             self.scrollStackView.stackView.addArrangedSubview(skItem)
         }
 #endif
-            
+
         self.scrollStackView.stackView.addBlankSpace(space: 40.0)
     }
     
@@ -241,12 +278,16 @@ public class PermissionViewController: UIViewController {
                             // In that case the sensors stay .notDetermined or move
                             // to .denied with no UI shown — surface the settings
                             // alert so the row is never a silent no-op (FUAM-3370).
+                            // The gap-presence check stays as the *guard* (no alert
+                            // when the system properly prompted and everything is
+                            // authorized), but the alert content always lists the
+                            // full configured-sensor set.
                             let gaps = manager.authorizationGaps()
                             let problematic = gaps.denied.union(gaps.undetermined)
                             if !problematic.isEmpty {
                                 self.navigator.showSensorKitPermissionSettingsAlert(
                                     presenter: self,
-                                    missingSensors: problematic
+                                    missingSensors: manager.configuredSensors
                                 )
                             }
                         }, onFailure: { [weak self] error in
@@ -260,13 +301,12 @@ public class PermissionViewController: UIViewController {
                     // responded, and iOS exposes no per-app SensorKit deep-link, so the
                     // only thing we can offer is the app's general Settings page.
                     // Always show the alert so the row is never a silent no-op (FUAM-3370).
+                    // The alert content always lists the full configured-sensor set
+                    // regardless of per-sensor authorization state.
                     let gaps = manager.authorizationGaps() // (undetermined, denied)
-                    let sensorsToList = gaps.denied.isEmpty
-                        ? manager.configuredSensors
-                        : gaps.denied
                     self.navigator.showSensorKitPermissionSettingsAlert(
                         presenter: self,
-                        missingSensors: sensorsToList
+                        missingSensors: manager.configuredSensors
                     )
                     // Keep the prior behaviour for the all-authorized case: nudge the
                     // recording pipeline and refresh the status badge in the background.
