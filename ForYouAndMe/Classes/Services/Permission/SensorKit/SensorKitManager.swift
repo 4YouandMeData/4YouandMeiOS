@@ -121,11 +121,36 @@ final class SensorKitManager: SensorKitService {
     /// Availability gate (entitlements + Info.plist already configured on your build).
     var serviceAvailable: Bool { true }
 
+    /// Canonical order in which we present the per-sensor system prompts. iOS displays
+    /// them one at a time in the sequence we call `requestAuthorization(sensors:)`, so
+    /// this array controls the user-visible order (FUAM-3370). Any sensor in
+    /// `readSensors` that is not listed here is appended at the end, preserving its
+    /// position relative to the others.
+    private static let canonicalRequestOrder: [SRSensor] = [
+        .messagesUsageReport,
+        .deviceUsageReport,
+        .keyboardMetrics,
+        .phoneUsageReport,
+        .accelerometer,
+        .visits
+    ]
+
+    /// Returns the `.notDetermined` subset of `readSensors`, sorted by
+    /// `canonicalRequestOrder` (sensors not in the canonical list keep their input order
+    /// and go at the end).
+    private func orderedNotDeterminedSensors() -> [SRSensor] {
+        let undetermined = readSensors.filter { SRSensorReader(sensor: $0).authorizationStatus == .notDetermined }
+        let undeterminedSet = Set(undetermined)
+        let canonical = Self.canonicalRequestOrder.filter { undeterminedSet.contains($0) }
+        let extras = undetermined.filter { !Self.canonicalRequestOrder.contains($0) }
+        return canonical + extras
+    }
+
     /// Requests SensorKit authorization for all not-determined sensors in `readSensors`.
     /// Requests each sensor individually so one unapproved sensor does not crash the whole batch.
+    /// Prompts appear in the order defined by `canonicalRequestOrder`.
     func requestPermissions() -> Single<()> {
-        // Build the set of sensors still undetermined
-        let toAsk = readSensors.filter { SRSensorReader(sensor: $0).authorizationStatus == .notDetermined }
+        let toAsk = orderedNotDeterminedSensors()
         guard !toAsk.isEmpty else { return .just(()) }
 
         return Single.create { observer in
@@ -365,8 +390,9 @@ extension SensorKitManager {
 
     /// Ask only for sensors that are .notDetermined. No-op if none.
     /// Requests each sensor individually so one unapproved sensor does not crash the whole batch.
+    /// Prompts appear in the order defined by `canonicalRequestOrder`.
     func requestPermissionsIfNeeded() -> Single<()> {
-        let toAsk = self.readSensors.filter { SRSensorReader(sensor: $0).authorizationStatus == .notDetermined }
+        let toAsk = orderedNotDeterminedSensors()
         guard !toAsk.isEmpty else { return .just(()) }
 
         return Single.create { observer in
