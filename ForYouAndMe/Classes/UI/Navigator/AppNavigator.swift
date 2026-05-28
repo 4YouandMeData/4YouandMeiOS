@@ -1328,31 +1328,45 @@ class AppNavigator {
                                                handler: { [weak self] _ in self?.openSettings() })
 
             let sensorsList = missingSensors
-                .map { s -> String in
-                    switch s {
-                    case .accelerometer:       return "Accelerometer"
-                    case .rotationRate:        return "Rotation"
-                    case .ambientLightSensor:  return "Ambient light"
-                    case .ambientPressure:     return "Pressure"
-                    case .visits:              return "Visits"
-                    case .pedometerData:       return "Pedometer"
-                    case .deviceUsageReport:   return "Device Usage"
-                    case .phoneUsageReport:    return "Phone Usage"
-                    case .messagesUsageReport: return "Message Usage"
-                    case .keyboardMetrics:     return "Keyboard Metrics"
-                    default:                   return s.rawValue
-                    }
-                }
+                .map { self.displayName(for: $0) }
                 .sorted()
                 .joined(separator: ", ")
 
-            let title   = "Abilita Sensor Kit"
-            let message = String(format: "Alcuni sensori risultano disattivati: \(sensorsList). Puoi abilitarli in Impostazioni.")
+            let appName = (Bundle.main.infoDictionary?["CFBundleDisplayName"] as? String)
+                ?? (Bundle.main.infoDictionary?["CFBundleName"] as? String)
+                ?? ""
+
+            let title = StringsProvider.string(forKey: .permissionSensorKitSettingsTitle)
+            let messageFormat = StringsProvider.string(forKey: .permissionSensorKitSettingsMessage)
+            // Positional placeholders: %1$@ = app name, %2$@ = comma-joined sensor list.
+            let message = String(format: messageFormat, appName, sensorsList)
 
             presenter.showAlert(withTitle: title,
                                 message: message,
                                 actions: [cancelAction, settingsAction])
         }
+
+    /// Resolve a user-facing display name for a SensorKit sensor by looking up the
+    /// matching study string. Falls back to the sensor's `rawValue` when the study
+    /// key is missing or empty (e.g. before the BE seed lands).
+    private func displayName(for sensor: SRSensor) -> String {
+        let key: StringKey? = {
+            switch sensor {
+            case .accelerometer:       return .permissionSensorKitNameAccelerometer
+            case .visits:              return .permissionSensorKitNameVisits
+            case .deviceUsageReport:   return .permissionSensorKitNameDeviceUsage
+            case .phoneUsageReport:    return .permissionSensorKitNamePhoneUsage
+            case .messagesUsageReport: return .permissionSensorKitNameMessagesUsage
+            case .keyboardMetrics:     return .permissionSensorKitNameKeyboardMetrics
+            default: return nil
+            }
+        }()
+        if let key = key {
+            let resolved = StringsProvider.string(forKey: key)
+            if !resolved.isEmpty { return resolved }
+        }
+        return sensor.rawValue
+    }
 #endif
 
     // Helper function to get the top-most view controller

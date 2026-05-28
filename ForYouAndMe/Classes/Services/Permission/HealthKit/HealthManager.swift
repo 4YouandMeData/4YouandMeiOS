@@ -121,6 +121,29 @@ class HealthManager: HealthService {
                 }
             }
     }
+
+    func isStillShouldRequest() -> Single<Bool> {
+        return self.checkHealthKitAvailability()
+            .flatMap {
+                return Single.create { observer -> Disposable in
+                    let readDataObjectTypeSet = self.readDataTypes.objectTypeSet
+                    self.healthStore
+                        .getRequestStatusForAuthorization(toShare: Set(), read: readDataObjectTypeSet, completion: { (status, error) in
+                            DispatchQueue.main.async {
+                                if let error = error {
+                                    assertionFailure("Get Request Authorization Status error. Error \(error.localizedDescription)")
+                                    let healthError = HealthError.getPermissionRequestStatusError(underlyingError: error)
+                                    self.analyticsService.track(event: .healthError(healthError: healthError))
+                                    observer(.failure(healthError))
+                                } else {
+                                    observer(.success(status == .shouldRequest))
+                                }
+                            }
+                        })
+                    return Disposables.create()
+                }
+            }
+    }
     
     // MARK: - Private Methods
     

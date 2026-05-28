@@ -13,7 +13,15 @@ protocol OptInPermissionCoordinator {
     func onOptInPermissionSet(optInPermission: OptInPermission, granted: Bool)
 }
 
-class OptInPermissionViewController: UIViewController {
+/// FUAM-3364. Common surface for the two opt-in permission view controllers
+/// (`OptInPermissionViewController` and `OptInPermissionInfoViewController`)
+/// so that `OptInSectionCoordinator` can drive the in-progress overlay
+/// uniformly regardless of which variant is currently on screen.
+protocol OptInPermissionProcessingDriving: AnyObject {
+    func setProcessing(_ isProcessing: Bool)
+}
+
+class OptInPermissionViewController: UIViewController, OptInPermissionProcessingDriving {
 
     let optInPermission: OptInPermission
 

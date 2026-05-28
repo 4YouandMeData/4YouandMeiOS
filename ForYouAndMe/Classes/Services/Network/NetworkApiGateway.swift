@@ -619,7 +619,6 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
                 .getScreeningSection,
                 .getInformedConsentSection,
                 .getConsentSection,
-                .getOptInSection,
                 .getStudyInfoSection,
                 .getUserConsentSection,
                 .resendConfirmationEmail,
@@ -637,6 +636,9 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
                 .getInfoMessages,
                 .deleteDiaryNote:
             return .requestPlain
+        case .getOptInSection:
+            let encoding = URLEncoding(destination: .queryString, arrayEncoding: .noBrackets, boolEncoding: .literal)
+            return .requestParameters(parameters: ["platform": "ios"], encoding: encoding)
         case .submitPhoneNumber(let phoneNumber):
             var params: [String: Any] = [:]
             params["phone_number"] = phoneNumber
