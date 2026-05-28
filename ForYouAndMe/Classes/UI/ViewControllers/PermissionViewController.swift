@@ -109,6 +109,7 @@ public class PermissionViewController: UIViewController {
             let healthItem = PermissionItemView(withTitle: healthItemTitle,
                                                 isAuthorized: nil,
                                                 iconName: .healthIcon,
+                                                trailingActionText: StringsProvider.string(forKey: .permissionHealthManageLabel),
                                                 gestureCallback: { [weak self] in
                                                     self?.handleHealthPermission()
                                                 })
@@ -121,11 +122,12 @@ public class PermissionViewController: UIViewController {
         if self.sensorKitService?.serviceAvailable == true,
            self.repository.currentUser?.getHasAgreedTo(systemPermission: .sensorKit) ?? false {
 
-            let skTitle = "Sensor Kit"
+            let skTitle = StringsProvider.string(forKey: .permissionSensorKitDescription)
             let skItem = PermissionItemView(
                 withTitle: skTitle,
                 isAuthorized: nil,
                 iconName: .healthIcon,
+                trailingActionText: StringsProvider.string(forKey: .permissionSensorKitManageLabel),
                 gestureCallback: { [weak self] in
                     self?.handleSensorKitPermission()
                 }
@@ -186,6 +188,22 @@ public class PermissionViewController: UIViewController {
 //                            AnalyticsParameter.allow.rawValue :
 //                            AnalyticsParameter.revoke.rawValue
 //                        self.analytics.track(event: .healthPermissionChanged(permissionStatus))
+                        // After a successful requestAuthorization the status should be
+                        // .unnecessary. If it is still .shouldRequest, the system silently
+                        // refused to display the prompt — same family of bug as the SK
+                        // SRErrorPromptDeclined path. Surface the settings alert so the row
+                        // is never a silent no-op (FUAM-3370). The "previously denied read
+                        // types alongside new not-determined ones" case remains undetectable
+                        // on Apple's side (no per-type read-authorization API by design).
+                        self.healthService.isStillShouldRequest()
+                            .subscribe(onSuccess: { [weak self] stillShouldRequest in
+                                guard let self = self else { return }
+                                if stillShouldRequest {
+                                    self.navigator.showHealthPermissionSettingsAlert(presenter: self)
+                                }
+                            }, onFailure: { _ in
+                                // Silently ignore: the request itself succeeded, this is best-effort.
+                            }).disposed(by: self.disposeBag)
                     }, onFailure: { [weak self] error in
                         guard let self = self else { return }
                         self.navigator.handleError(error: error, presenter: self)
@@ -217,8 +235,20 @@ public class PermissionViewController: UIViewController {
                             manager.ensureRecordingStarted()
                             manager.triggerSync(reason: "permissions_view")
                             self.refreshStatus()
-                            // Optional analytics:
-                            // self.analytics.track(event: .sensorKitPermissionChanged("allow"))
+                            // The system may have refused to display the prompt
+                            // (SRErrorPromptDeclined, code 4) when the user has
+                            // previously declined the SensorKit-wide authorization.
+                            // In that case the sensors stay .notDetermined or move
+                            // to .denied with no UI shown — surface the settings
+                            // alert so the row is never a silent no-op (FUAM-3370).
+                            let gaps = manager.authorizationGaps()
+                            let problematic = gaps.denied.union(gaps.undetermined)
+                            if !problematic.isEmpty {
+                                self.navigator.showSensorKitPermissionSettingsAlert(
+                                    presenter: self,
+                                    missingSensors: problematic
+                                )
+                            }
                         }, onFailure: { [weak self] error in
                             guard let self = self else { return }
                             self.navigator.handleError(error: error, presenter: self)

@@ -14,8 +14,9 @@ class PermissionItemView: UIView {
     init(withTitle title: String,
          isAuthorized: Bool?,
          iconName: ImageName,
+         trailingActionText: String? = nil,
          gestureCallback: @escaping PermissionItemViewCallback) {
-        
+
         super.init(frame: .zero)
         
         self.gestureCallback = gestureCallback
@@ -50,10 +51,21 @@ class PermissionItemView: UIView {
         label.setContentCompressionResistancePriority(UILayoutPriority(1000), for: .vertical)
         stackView.addArrangedSubview(label, horizontalInset: 0, verticalInset: 14)
         
-        // Allow
-        if let isAuthorized = isAuthorized {
+        // Trailing label: explicit override (e.g. "Manage" for HK/SK rows) wins
+        // over the Allow/Allowed branch driven by isAuthorized. Passing nil for
+        // both preserves the original "no trailing label" behaviour.
+        let trailingText: String?
+        if let trailingActionText = trailingActionText {
+            trailingText = trailingActionText
+        } else if let isAuthorized = isAuthorized {
             let titleKey: StringKey = isAuthorized ? .allowedMessage : .allowMessage
-            attributedString = NSAttributedString.create(withText: StringsProvider.string(forKey: titleKey),
+            trailingText = StringsProvider.string(forKey: titleKey)
+        } else {
+            trailingText = nil
+        }
+
+        if let trailingText = trailingText {
+            attributedString = NSAttributedString.create(withText: trailingText,
                                                          fontStyle: .paragraph,
                                                          colorType: .secondaryText,
                                                          textAlignment: .left,
