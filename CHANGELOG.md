@@ -1,5 +1,15 @@
 ## [Unreleased]
 
+## Release 0.101.3
+
+- **Opt-in — platform gate & info-only permission steps** (FUAM-3364). Opt-in permission cards now support a server-driven platform gate (iOS / Android / both) so steps targeted at the other platform are skipped cleanly, and a new info-only variant (`OptInPermissionInfoViewController`) renders an explanatory card with no system prompt — useful for permissions handled outside the opt-in flow or for purely informational steps. `Example/Pods.xcodeproj` regenerated to include the new view controller.
+- **Permissions / SensorKit hardening** (FUAM-3370).
+  - **Friendly sensor names** in the SensorKit permission UI: drops the leaked `mediaEvents` identifier and exposes plain-English "Setup" / "Manage" labels plus friendly per-sensor names; `{app_name}` placeholder is substituted into the relevant strings so hosts no longer see hard-coded brand text.
+  - **Settings alert on any non-`notDetermined` status**: when SensorKit / About-You permissions are anything other than `notDetermined` (denied, restricted, etc.) the user is taken to a Settings alert instead of silently failing. Also fires when `SRErrorPromptDeclined` leaves sensors in an undetermined state.
+  - **Enforced SensorKit prompt order** — messages → device → keyboard → phone → motion → visits — so the system prompts always appear in a predictable sequence regardless of how the host configured the step list.
+  - **De-Italianised copy via study strings**: all hard-coded Italian strings in the SensorKit / About flows replaced with study-config keys so each host controls its own copy.
+  - **App-Store compliance over UX**: reverted the Settings deep-link to the public `UIApplication.openSettingsURLString` (the private `App-prefs:` URL had been used to land directly inside the app's SensorKit page; the public URL only opens the top-level Settings app but is what App Review accepts).
+
 ## Release 0.101.2
 
 - docs: document required `ITSAppUsesNonExemptEncryption` host-app Info.plist key and set it in the Example app to bypass App Store Connect's encryption-documentation modal (FUAM-3115).
