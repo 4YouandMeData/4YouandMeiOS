@@ -16,6 +16,13 @@
 //    - delegate.answerDidChange(_, answer:) reports the user-visible scale
 //      value (minimum + index), not the raw StepSlider index.
 //
+//  The fixture `FUAM-3396-menqol-survey.json` is the verbatim JSON:API
+//  payload Proxyman captured from a live MENQOL survey response. We treat
+//  it as the canonical reference shape: the post-Japx flat attributes are
+//  what the production decoder actually sees, so deriving the SurveyQuestion
+//  payload from it removes the hand-crafted-JSON drift that produced the
+//  previous SIGTRAP on certain build configurations.
+//
 
 import Quick
 import Nimble
@@ -31,37 +38,65 @@ private final class CapturingSurveyQuestionDelegate: SurveyQuestionProtocol {
     }
 }
 
-private enum SurveyQuestionFactory {
+private enum FixtureError: Error {
+    case fixtureNotFound
+    case noRangeQuestionInFixture
+    case malformedQuestionEntry
+}
 
-    /// Builds a SurveyQuestion via plain JSONDecoder. The struct is
-    /// JapxDecodable (i.e. Decodable), so a flat payload that matches the
-    /// CodingKeys decodes fine without going through Japx — and the test
-    /// target does not link Japx directly.
-    static func rangeQuestion(id: String, minimum: Int, maximum: Int) throws -> SurveyQuestion {
-        let payload = """
-        {
-            "id": "\(id)",
-            "type": "question",
-            "question_type": "SurveyQuestionRange",
-            "text": "Range question \(id)",
-            "min": \(minimum),
-            "max": \(maximum),
-            "skippable": false,
-            "targets": []
+private enum MenqolFixture {
+
+    /// Loads the bundled MENQOL JSON:API payload that Jules captured from
+    /// Proxyman and returns the flat attribute dict for the first
+    /// `SurveyQuestionRange` question (id + type + attributes merged into
+    /// a single dictionary — i.e. the shape the production decoder sees
+    /// after Japx flattens the JSON:API envelope).
+    static func loadFirstRangeQuestionDict() throws -> [String: Any] {
+        let bundle = Bundle(for: SurveyRangePickerSpec.self)
+        guard let url = bundle.url(forResource: "FUAM-3396-menqol-survey",
+                                   withExtension: "json") else {
+            throw FixtureError.fixtureNotFound
         }
-        """.data(using: .utf8)!
-        do {
-            return try JSONDecoder().decode(SurveyQuestion.self, from: payload)
-        } catch {
-            // Surface the underlying DecodingError so a missing-key regression
-            // gives a clearly diagnosable message rather than the generic
-            // "data couldn't be read" wrapper.
-            fatalError("SurveyQuestion JSON decoding failed: \(error)")
+        let data = try Data(contentsOf: url)
+        let json = try JSONSerialization.jsonObject(with: data) as? [String: Any]
+        let included = json?["included"] as? [[String: Any]] ?? []
+        for entry in included {
+            guard let type = entry["type"] as? String, type == "question",
+                  let attributes = entry["attributes"] as? [String: Any],
+                  let qType = attributes["question_type"] as? String,
+                  qType == SurveyQuestionType.range.rawValue else {
+                continue
+            }
+            guard let id = entry["id"] as? String else {
+                throw FixtureError.malformedQuestionEntry
+            }
+            var flat: [String: Any] = attributes
+            flat["id"] = id
+            flat["type"] = type
+            return flat
         }
+        throw FixtureError.noRangeQuestionInFixture
+    }
+
+    /// Builds an in-memory variant of the fixture's flat dict with the
+    /// given `min`/`max` overrides, then encodes+decodes it into a
+    /// `SurveyQuestion`. This keeps the synthetic cases anchored to the
+    /// real server shape — only the numeric range moves.
+    static func decodeRangeQuestion(minimum: Double,
+                                    maximum: Double,
+                                    overridingId: String? = nil) throws -> SurveyQuestion {
+        var dict = try loadFirstRangeQuestionDict()
+        dict["min"] = minimum
+        dict["max"] = maximum
+        if let overridingId = overridingId {
+            dict["id"] = overridingId
+        }
+        let data = try JSONSerialization.data(withJSONObject: dict, options: [])
+        return try JSONDecoder().decode(SurveyQuestion.self, from: data)
     }
 }
 
-// MARK: - Mirror helpers
+// MARK: - Mirror / view-tree helpers
 
 private extension SurveyRangePicker {
     /// Reads the private `slider` via Mirror so the test does not need to
@@ -73,6 +108,22 @@ private extension SurveyRangePicker {
         }
         return nil
     }
+
+    /// All UILabels in the view subtree (depth-first). Used to verify the
+    /// `min_display` / `max_display` strings the picker renders as the
+    /// slider's endpoint legends, since they aren't stored on the picker
+    /// as named ivars.
+    func allLabelTexts() -> [String] {
+        var texts: [String] = []
+        var stack: [UIView] = [self]
+        while let v = stack.popLast() {
+            if let label = v as? UILabel, let text = label.text {
+                texts.append(text)
+            }
+            stack.append(contentsOf: v.subviews)
+        }
+        return texts
+    }
 }
 
 // MARK: - Spec
@@ -82,12 +133,27 @@ class SurveyRangePickerSpec: QuickSpec {
 
         describe("SurveyRangePicker (FUAM-3396 — inclusive 0..N range)") {
 
-            context("with minimum=0, maximum=6 (MENQOL 0..6 case)") {
+            context("with the real MENQOL fixture (min=0, max=6)") {
+
+                it("decodes the fixture into a SurveyQuestion with min=0, max=6") {
+                    let dict = try MenqolFixture.loadFirstRangeQuestionDict()
+                    let data = try JSONSerialization.data(withJSONObject: dict, options: [])
+                    let question = try JSONDecoder().decode(SurveyQuestion.self, from: data)
+
+                    expect(question.questionType) == .range
+                    expect(question.minimum) == 0
+                    expect(question.maximum) == 6
+                    // The fixture's first range question (id 4730) carries
+                    // these endpoint labels — guard against accidental
+                    // CodingKeys rename.
+                    expect(question.minimumDisplay) == "Not at all bothered"
+                    expect(question.maximumDisplay) == "Extremely bothered"
+                }
+
                 it("produces 7 ticks on the slider (was 6 before the fix)") {
-                    let question = try SurveyQuestionFactory.rangeQuestion(
-                        id: "q-menqol-0-6",
-                        minimum: 0,
-                        maximum: 6)
+                    let dict = try MenqolFixture.loadFirstRangeQuestionDict()
+                    let data = try JSONSerialization.data(withJSONObject: dict, options: [])
+                    let question = try JSONDecoder().decode(SurveyQuestion.self, from: data)
                     let delegate = CapturingSurveyQuestionDelegate()
 
                     let picker = SurveyRangePicker(surveyQuestion: question, delegate: delegate)
@@ -98,14 +164,27 @@ class SurveyRangePickerSpec: QuickSpec {
                     }
                     expect(slider.maxCount) == 7
                 }
+
+                it("renders the min_display / max_display endpoint legends") {
+                    let dict = try MenqolFixture.loadFirstRangeQuestionDict()
+                    let data = try JSONSerialization.data(withJSONObject: dict, options: [])
+                    let question = try JSONDecoder().decode(SurveyQuestion.self, from: data)
+                    let delegate = CapturingSurveyQuestionDelegate()
+
+                    let picker = SurveyRangePicker(surveyQuestion: question, delegate: delegate)
+                    let labelTexts = picker.allLabelTexts()
+
+                    expect(labelTexts).to(contain("Not at all bothered"))
+                    expect(labelTexts).to(contain("Extremely bothered"))
+                }
             }
 
-            context("with minimum=1, maximum=10 (1..10 case)") {
+            context("with a synthetic min=1, max=10 variant of the fixture") {
                 it("produces 10 ticks on the slider") {
-                    let question = try SurveyQuestionFactory.rangeQuestion(
-                        id: "q-1-10",
-                        minimum: 1,
-                        maximum: 10)
+                    let question = try MenqolFixture.decodeRangeQuestion(
+                        minimum: 1.0,
+                        maximum: 10.0,
+                        overridingId: "q-synthetic-1-10")
                     let delegate = CapturingSurveyQuestionDelegate()
 
                     let picker = SurveyRangePicker(surveyQuestion: question, delegate: delegate)
@@ -118,12 +197,12 @@ class SurveyRangePickerSpec: QuickSpec {
                 }
             }
 
-            context("delegate answer reporting (minimum != 0)") {
+            context("delegate answer reporting with min != 0 (synthetic 3..8)") {
                 it("reports minimum + sliderIndex (user-visible scale), not the raw slider index") {
-                    let question = try SurveyQuestionFactory.rangeQuestion(
-                        id: "q-3-8",
-                        minimum: 3,
-                        maximum: 8)
+                    let question = try MenqolFixture.decodeRangeQuestion(
+                        minimum: 3.0,
+                        maximum: 8.0,
+                        overridingId: "q-synthetic-3-8")
                     let delegate = CapturingSurveyQuestionDelegate()
 
                     let picker = SurveyRangePicker(surveyQuestion: question, delegate: delegate)
