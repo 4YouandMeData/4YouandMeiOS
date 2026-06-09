@@ -43,7 +43,7 @@ class SurveyRangePicker: UIView {
         stackView.addBlankSpace(space: 40)
         
         self.slider.addTarget(self, action: #selector(self.changeValue(_:)), for: .valueChanged)
-        self.slider.maxCount = UInt(maximum)
+        self.slider.maxCount = UInt(maximum - minimum + 1)
         self.slider.setIndex(UInt(minimum), animated: false)
         
         self.changeValue(self.slider)
@@ -88,6 +88,6 @@ class SurveyRangePicker: UIView {
         
         let answer = (self.surveyQuestion.minimum ?? 0) + Int(sender.index)
         self.currentValue.text = "\(answer)"
-        self.delegate?.answerDidChange(self.surveyQuestion, answer: Int(sender.index))
+        self.delegate?.answerDidChange(self.surveyQuestion, answer: answer)
     }
 }

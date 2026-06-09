@@ -1,5 +1,10 @@
 ## [Unreleased]
 
+## Release 0.101.4
+
+### Fixed
+- SurveyRangePicker: off-by-one in tick count for inclusive ranges — MENQOL and any other survey configured with min=0/max=N now render N+1 stops as intended. Secondary fix: delegate now reports the user-visible scale value (minimum + index) rather than the raw slider index, eliminating a latent bug for any range question with minimum != 0. (FUAM-3396)
+
 ## Release 0.101.3
 
 - **Opt-in — platform gate & info-only permission steps** (FUAM-3364). Opt-in permission cards now support a server-driven platform gate (iOS / Android / both) so steps targeted at the other platform are skipped cleanly, and a new info-only variant (`OptInPermissionInfoViewController`) renders an explanatory card with no system prompt — useful for permissions handled outside the opt-in flow or for purely informational steps. `Example/Pods.xcodeproj` regenerated to include the new view controller.
