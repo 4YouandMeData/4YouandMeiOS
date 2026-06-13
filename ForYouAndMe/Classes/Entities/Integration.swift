@@ -19,6 +19,7 @@ public enum Integration: String {
     case empatica
     case cronometer
     case abbottFreestyleLibre3 = "abbott-freestyle-3"
+    case googleHealth = "google_health"
 
     var storeUrl: URL {
         switch self {
@@ -33,9 +34,10 @@ public enum Integration: String {
         case .empatica: return Constants.Url.EmpaticaStoreUrl
         case .cronometer: return Constants.Url.CronometerStoreUrl
         case .abbottFreestyleLibre3: return Constants.Url.AbbottFreestyleLibre3StoreUrl
+        case .googleHealth: return Constants.Url.GoogleHealthStoreUrl
         }
     }
-    
+
     var appSchemaUrl: URL {
         switch self {
         case .oura: return Constants.Url.OuraAppSchema
@@ -49,6 +51,7 @@ public enum Integration: String {
         case .empatica: return Constants.Url.EmpaticaAppSchema
         case .cronometer: return Constants.Url.CronometerAppSchema
         case .abbottFreestyleLibre3: return Constants.Url.AbbottFreestyleLibre3AppSchema
+        case .googleHealth: return Constants.Url.GoogleHealthAppSchema
         }
     }
     

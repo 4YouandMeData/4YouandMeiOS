@@ -170,6 +170,13 @@ struct Constants {
         static let CronometerAppSchema: URL = URL(string: "cronometer://")!
         static let AbbottFreestyleLibre3StoreUrl: URL = URL(string: "itms-apps://apps.apple.com/us/app/freestyle-libre-3-us/id1524572429")!
         static let AbbottFreestyleLibre3AppSchema: URL = URL(string: "freestylelibre3://")!
+        // FUAM-2889: Google Health on iOS is the rebranded Fitbit app (bundle id 462638897).
+        // The App Store URL points to the it-storefront Google Health / Fitbit listing per
+        // product decision; the deep-link scheme matches Fitbit's because it IS the same
+        // app binary on disk - this keeps `canOpenURL` working when the user already has
+        // the app installed.
+        static let GoogleHealthStoreUrl: URL = URL(string: "itms-apps://apps.apple.com/it/app/google-health-fitbit/id462638897")!
+        static let GoogleHealthAppSchema: URL = URL(string: "fitbit://")!
     }
     
     struct Task {

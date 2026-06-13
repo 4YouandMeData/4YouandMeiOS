@@ -124,6 +124,7 @@ fileprivate extension Integration {
         case .empatica: return .terraIcon
         case .cronometer: return .cronometerIcon
         case .abbottFreestyleLibre3: return .garminIcon // Not OAuth-enabled, won't appear here
+        case .googleHealth: return .googleHealthIcon
         }
     }
     var title: String {
@@ -139,6 +140,7 @@ fileprivate extension Integration {
         case .empatica: return StringsProvider.string(forKey: .empaticaTitle)
         case .cronometer: return StringsProvider.string(forKey: .cronometerOauthTitle)
         case .abbottFreestyleLibre3: return "" // Not OAuth-enabled, won't appear here
+        case .googleHealth: return StringsProvider.string(forKey: .googleHealthOauthTitle)
         }
     }
 }

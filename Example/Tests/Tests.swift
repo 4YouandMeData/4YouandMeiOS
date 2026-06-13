@@ -242,6 +242,75 @@ class CompilationFlagsSpec: QuickSpec {
     }
 }
 
+// MARK: - FUAM-2889 — Google Health integration parity with Oura/Fitbit
+//
+// The iOS Google Health app is the rebranded Fitbit app (bundle id 462638897),
+// so storeUrl points at the App Store listing for "Google Health (Fitbit)" and
+// the deep-link scheme matches Fitbit's. The identifier `google_health` is the
+// authoritative BE identity provider name (FUAM-2883/2884 server-side).
+
+class IntegrationGoogleHealthSpec: QuickSpec {
+    override class func spec() {
+        context("Integration.googleHealth") {
+
+            it("resolves googleHealth from the google_health raw value") {
+                let integration = Integration(rawValue: "google_health")
+                expect(integration).toNot(beNil())
+                expect(integration) == .googleHealth
+            }
+
+            it("has the google_health raw value (BE + Android parity)") {
+                expect(Integration.googleHealth.rawValue) == "google_health"
+            }
+
+            it("exposes a non-empty App Store URL") {
+                let url = Integration.googleHealth.storeUrl
+                expect(url.scheme) == "itms-apps"
+                expect(url.absoluteString).to(contain("apps.apple.com"))
+                expect(url.absoluteString).toNot(beEmpty())
+            }
+
+            it("exposes a non-empty appSchemaUrl") {
+                let url = Integration.googleHealth.appSchemaUrl
+                expect(url.scheme).toNot(beNil())
+                expect(url.absoluteString).toNot(beEmpty())
+            }
+
+            it("appends the google_health path component to the OAuth base URL") {
+                let url = Integration.googleHealth.apiOAuthUrl
+                expect(url.path).to(contain("/integration_oauth/google_health"))
+            }
+
+            it("appends the google_health path component to the deauthorize URL") {
+                let url = Integration.googleHealth.apiOAuthDeauthorizeUrl
+                expect(url.path).to(contain("google_health"))
+            }
+
+            it("does not add a locale query item (only terra does)") {
+                let url = Integration.googleHealth.apiOAuthUrl
+                let components = URLComponents(url: url, resolvingAgainstBaseURL: false)
+                expect(components?.queryItems).to(beNil())
+            }
+
+            it("uses raw value as strategy prefix") {
+                expect(Integration.googleHealth.strategyPrefix) == "google_health"
+            }
+        }
+
+        context("Integration.googleHealth coexists with Integration.fitbit") {
+            it("does not collide with Fitbit on identifier") {
+                expect(Integration.googleHealth.rawValue) != Integration.fitbit.rawValue
+            }
+
+            it("intentionally shares the Fitbit URL scheme (same app binary, id 462638897)") {
+                // Google Health on iOS is the rebranded Fitbit app, so the
+                // deep-link scheme is the same - this is by design.
+                expect(Integration.googleHealth.appSchemaUrl) == Integration.fitbit.appSchemaUrl
+            }
+        }
+    }
+}
+
 class IntegrationTerraSpec: QuickSpec {
     override class func spec() {
         context("Integration.terra (flag-independent)") {
