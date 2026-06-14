@@ -75,9 +75,20 @@ public class DevicesIntegrationViewController: UIViewController {
                 imageName: integration.icon,
                 connected: connected,
                 gestureCallback: { [weak self] in
+                guard let self = self else { return }
+                // FUAM-3418: Google Health's OAuth consent screen rejects
+                // WKWebView (`Error 403: disallowed_useragent`). Route the
+                // connect (but NOT the deauthorize) flow through
+                // SFSafariViewController instead. Disconnect still uses the
+                // standard WKWebView path - the BE deauthorize endpoint isn't
+                // gated by Google's UA check.
+                if integration == .googleHealth && !connected {
+                    self.navigator.showGoogleHealthIntegrationLogin(presenter: self)
+                    return
+                }
                 let loginUrl = (connected) ? integration.apiOAuthDeauthorizeUrl : integration.apiOAuthUrl
-                self?.navigator.showIntegrationLogin(loginUrl: loginUrl,
-                                                      navigationController: navigationController)
+                self.navigator.showIntegrationLogin(loginUrl: loginUrl,
+                                                    navigationController: navigationController)
             })
             self.scrollStackView.stackView.addArrangedSubview(item)
             item.autoSetDimension(.height, toSize: Self.IntegrationItemHeight)
@@ -124,6 +135,7 @@ fileprivate extension Integration {
         case .empatica: return .terraIcon
         case .cronometer: return .cronometerIcon
         case .abbottFreestyleLibre3: return .garminIcon // Not OAuth-enabled, won't appear here
+        case .googleHealth: return .googleHealthIcon
         }
     }
     var title: String {
@@ -139,6 +151,7 @@ fileprivate extension Integration {
         case .empatica: return StringsProvider.string(forKey: .empaticaTitle)
         case .cronometer: return StringsProvider.string(forKey: .cronometerOauthTitle)
         case .abbottFreestyleLibre3: return "" // Not OAuth-enabled, won't appear here
+        case .googleHealth: return StringsProvider.string(forKey: .googleHealthOauthTitle)
         }
     }
 }
