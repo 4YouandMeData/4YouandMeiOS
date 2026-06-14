@@ -65,7 +65,26 @@ public enum Integration: String {
             return Constants.Url.ApiOAuthIntegrationBaseUrl.appendingPathComponent(self.rawValue)
         }
     }
-    
+
+    /// FUAM-3418 — variant used by the SFSafariViewController-based Google Health
+    /// OAuth flow. SFSafariViewController doesn't share the framework's HTTP
+    /// cookie store, so the JWT can't be passed via the `token` cookie the
+    /// WKWebView path injects in `ReactiveAuthWebViewController`. Instead we
+    /// append it as `?token=Bearer <jwt>` — the backend's
+    /// `OmniauthController#authenticate` already reads `params[:token]` as a
+    /// fallback to the cookie (`omniauth_controller.rb:7`).
+    /// The JWT value is URL-encoded by URLComponents.
+    func apiOAuthUrl(withToken jwt: String) -> URL {
+        let base = self.apiOAuthUrl
+        guard var components = URLComponents(url: base, resolvingAgainstBaseURL: false) else {
+            return base
+        }
+        var queryItems = components.queryItems ?? []
+        queryItems.append(URLQueryItem(name: "token", value: "Bearer \(jwt)"))
+        components.queryItems = queryItems
+        return components.url ?? base
+    }
+
     var apiOAuthDeauthorizeUrl: URL {
         return Constants.Url.ApiOAuthDeauthorizationBaseUrl.appendingPathComponent(self.rawValue)
     }

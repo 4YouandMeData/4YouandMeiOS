@@ -75,9 +75,20 @@ public class DevicesIntegrationViewController: UIViewController {
                 imageName: integration.icon,
                 connected: connected,
                 gestureCallback: { [weak self] in
+                guard let self = self else { return }
+                // FUAM-3418: Google Health's OAuth consent screen rejects
+                // WKWebView (`Error 403: disallowed_useragent`). Route the
+                // connect (but NOT the deauthorize) flow through
+                // SFSafariViewController instead. Disconnect still uses the
+                // standard WKWebView path - the BE deauthorize endpoint isn't
+                // gated by Google's UA check.
+                if integration == .googleHealth && !connected {
+                    self.navigator.showGoogleHealthIntegrationLogin(presenter: self)
+                    return
+                }
                 let loginUrl = (connected) ? integration.apiOAuthDeauthorizeUrl : integration.apiOAuthUrl
-                self?.navigator.showIntegrationLogin(loginUrl: loginUrl,
-                                                      navigationController: navigationController)
+                self.navigator.showIntegrationLogin(loginUrl: loginUrl,
+                                                    navigationController: navigationController)
             })
             self.scrollStackView.stackView.addArrangedSubview(item)
             item.autoSetDimension(.height, toSize: Self.IntegrationItemHeight)

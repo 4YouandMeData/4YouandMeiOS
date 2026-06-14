@@ -308,6 +308,63 @@ class IntegrationGoogleHealthSpec: QuickSpec {
                 expect(Integration.googleHealth.appSchemaUrl) == Integration.fitbit.appSchemaUrl
             }
         }
+
+        // FUAM-3418 — SFSafariViewController OAuth flow needs the JWT on the
+        // query string because it doesn't share the framework's HTTP cookie
+        // store. The BE's OmniauthController#authenticate already reads
+        // params[:token] as a fallback to cookies[:token] (server-side check
+        // strips the "Bearer " prefix).
+        context("Integration.apiOAuthUrl(withToken:) — FUAM-3418") {
+
+            it("appends a token query item to the Google Health OAuth URL") {
+                let url = Integration.googleHealth.apiOAuthUrl(withToken: "fake.jwt.value")
+                let components = URLComponents(url: url, resolvingAgainstBaseURL: false)
+                let tokenItem = components?.queryItems?.first { $0.name == "token" }
+                expect(tokenItem).toNot(beNil())
+            }
+
+            it("formats the token value as 'Bearer <jwt>' (BE strips the prefix)") {
+                let url = Integration.googleHealth.apiOAuthUrl(withToken: "fake.jwt.value")
+                let components = URLComponents(url: url, resolvingAgainstBaseURL: false)
+                let tokenItem = components?.queryItems?.first { $0.name == "token" }
+                // URLComponents.queryItems returns the *decoded* value, so we
+                // assert the unencoded "Bearer <jwt>" form.
+                expect(tokenItem?.value) == "Bearer fake.jwt.value"
+            }
+
+            it("URL-encodes the space between 'Bearer' and the JWT in the rendered URL") {
+                let url = Integration.googleHealth.apiOAuthUrl(withToken: "fake.jwt.value")
+                // The space MUST be percent-encoded (as "%20" or "+") in the
+                // final URL string, otherwise the request line is malformed.
+                let asString = url.absoluteString
+                let hasEncodedSpace = asString.contains("Bearer%20fake.jwt.value")
+                    || asString.contains("Bearer+fake.jwt.value")
+                expect(hasEncodedSpace).to(beTrue())
+                // And it MUST NOT contain a literal space.
+                expect(asString.contains("Bearer fake.jwt.value")).to(beFalse())
+            }
+
+            it("preserves the /integration_oauth/google_health path") {
+                let url = Integration.googleHealth.apiOAuthUrl(withToken: "x")
+                expect(url.path).to(contain("/integration_oauth/google_health"))
+            }
+
+            it("does not add a locale query item (only terra does)") {
+                let url = Integration.googleHealth.apiOAuthUrl(withToken: "x")
+                let components = URLComponents(url: url, resolvingAgainstBaseURL: false)
+                let localeItem = components?.queryItems?.first { $0.name == "locale" }
+                expect(localeItem).to(beNil())
+            }
+
+            it("does not mutate the plain apiOAuthUrl getter") {
+                // Sanity check: the cookie-based WKWebView path for other
+                // providers must continue to receive a URL with NO token in
+                // the query string.
+                let plain = Integration.googleHealth.apiOAuthUrl
+                let plainComponents = URLComponents(url: plain, resolvingAgainstBaseURL: false)
+                expect(plainComponents?.queryItems).to(beNil())
+            }
+        }
     }
 }
 
