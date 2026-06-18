@@ -47,6 +47,10 @@ class AppNavigator {
     /// presented. Without this strong reference the coordinator is deallocated
     /// before the user taps back/Next, and the delegate callbacks no-op.
     private var menstrualOnboardingCoordinator: MenstrualOnboardingCoordinator?
+    /// FUAM-3418: kept alive while the SFSafariViewController-backed Google
+    /// Health OAuth flow is on screen. Released after the completion callback
+    /// fires (user dismissed the browser, post-dismissal refresh resolved).
+    private var googleHealthOAuthCoordinator: GoogleHealthOAuthCoordinator?
     
     private var isTaskInProgress: Bool {
         return nil != self.currentActivityCoordinator
@@ -351,6 +355,33 @@ class AppNavigator {
         navigationController.pushViewController(viewController,
                                                 hidesBottomBarWhenPushed: true,
                                                 animated: true)
+    }
+
+    /// FUAM-3418 — Google Health-specific OAuth entry point. Uses
+    /// SFSafariViewController instead of WKWebView because Google's
+    /// secure-browser policy rejects WKWebView with `disallowed_useragent`.
+    /// JWT is passed as a `?token=Bearer <jwt>` query param since
+    /// SFSafariViewController doesn't share the framework's HTTP cookie store.
+    /// Completion is detected post-dismissal via a `refreshUser()` call.
+    public func showGoogleHealthIntegrationLogin(presenter: UIViewController) {
+        guard let accessToken = self.repository.accessToken else {
+            assertionFailure("Cannot retrieve access token for Google Health OAuth")
+            self.handleError(error: RepositoryError.userNotLoggedIn, presenter: presenter)
+            return
+        }
+
+        let url = Integration.googleHealth.apiOAuthUrl(withToken: accessToken)
+
+        let coordinator = GoogleHealthOAuthCoordinator(repository: self.repository) { [weak self] _ in
+            // Release the retain; DevicesIntegrationViewController.viewWillAppear
+            // refreshes the user/device list on its own when the modal goes
+            // away, so we don't need to push state up here.
+            self?.googleHealthOAuthCoordinator = nil
+        }
+        self.googleHealthOAuthCoordinator = coordinator
+
+        let safari = coordinator.makeSafariViewController(url: url)
+        presenter.present(safari, animated: true, completion: nil)
     }
     
     // MARK: Home

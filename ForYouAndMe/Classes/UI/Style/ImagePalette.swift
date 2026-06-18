@@ -41,6 +41,7 @@ enum ImageName: String, CaseIterable {
     case fitbitIcon = "fitbit_icon"
     case rescueTimeIcon = "rescue_time_icon"
     case ouraIcon = "oura_icon"
+    case googleHealthIcon = "google_health_icon"
     case garminIcon = "garmin_icon"
     case twitterIcon = "twitter_icon"
     case instagramIcon = "instagram_icon"

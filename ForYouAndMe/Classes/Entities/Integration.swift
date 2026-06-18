@@ -19,6 +19,7 @@ public enum Integration: String {
     case empatica
     case cronometer
     case abbottFreestyleLibre3 = "abbott-freestyle-3"
+    case googleHealth = "google_health"
 
     var storeUrl: URL {
         switch self {
@@ -33,9 +34,10 @@ public enum Integration: String {
         case .empatica: return Constants.Url.EmpaticaStoreUrl
         case .cronometer: return Constants.Url.CronometerStoreUrl
         case .abbottFreestyleLibre3: return Constants.Url.AbbottFreestyleLibre3StoreUrl
+        case .googleHealth: return Constants.Url.GoogleHealthStoreUrl
         }
     }
-    
+
     var appSchemaUrl: URL {
         switch self {
         case .oura: return Constants.Url.OuraAppSchema
@@ -49,6 +51,7 @@ public enum Integration: String {
         case .empatica: return Constants.Url.EmpaticaAppSchema
         case .cronometer: return Constants.Url.CronometerAppSchema
         case .abbottFreestyleLibre3: return Constants.Url.AbbottFreestyleLibre3AppSchema
+        case .googleHealth: return Constants.Url.GoogleHealthAppSchema
         }
     }
     
@@ -62,7 +65,26 @@ public enum Integration: String {
             return Constants.Url.ApiOAuthIntegrationBaseUrl.appendingPathComponent(self.rawValue)
         }
     }
-    
+
+    /// FUAM-3418 — variant used by the SFSafariViewController-based Google Health
+    /// OAuth flow. SFSafariViewController doesn't share the framework's HTTP
+    /// cookie store, so the JWT can't be passed via the `token` cookie the
+    /// WKWebView path injects in `ReactiveAuthWebViewController`. Instead we
+    /// append it as `?token=Bearer <jwt>` — the backend's
+    /// `OmniauthController#authenticate` already reads `params[:token]` as a
+    /// fallback to the cookie (`omniauth_controller.rb:7`).
+    /// The JWT value is URL-encoded by URLComponents.
+    func apiOAuthUrl(withToken jwt: String) -> URL {
+        let base = self.apiOAuthUrl
+        guard var components = URLComponents(url: base, resolvingAgainstBaseURL: false) else {
+            return base
+        }
+        var queryItems = components.queryItems ?? []
+        queryItems.append(URLQueryItem(name: "token", value: "Bearer \(jwt)"))
+        components.queryItems = queryItems
+        return components.url ?? base
+    }
+
     var apiOAuthDeauthorizeUrl: URL {
         return Constants.Url.ApiOAuthDeauthorizationBaseUrl.appendingPathComponent(self.rawValue)
     }

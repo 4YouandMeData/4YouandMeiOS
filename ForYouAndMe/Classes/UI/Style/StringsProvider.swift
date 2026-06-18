@@ -385,6 +385,7 @@ enum StringKey: String, CaseIterable, CodingKey {
     case hotFlashSleepOnsetOptionBeforeWake = "HOT_FLASH_SLEEP_ONSET_OPTION_BEFORE_WAKE"
     case hotFlashSleepOnsetOptionAfterWake = "HOT_FLASH_SLEEP_ONSET_OPTION_AFTER_WAKE"
     case hotFlashSleepOnsetOptionNotSure = "HOT_FLASH_SLEEP_ONSET_OPTION_NOT_SURE"
+    case hotFlashSleepOnsetOptionNotAtNight = "HOT_FLASH_SLEEP_ONSET_OPTION_NOT_AT_NIGHT"
 
     // Quick Activity linked task prompt (FUAM-3037)
     case quickActivityLinkedTaskPromptTitle = "QUICK_ACTIVITY_LINKED_TASK_PROMPT_TITLE"
@@ -619,6 +620,7 @@ enum StringKey: String, CaseIterable, CodingKey {
     case terraTitle = "OAUTH_TERRA"
     case empaticaTitle = "OAUTH_EMPATICA"
     case cronometerOauthTitle = "OAUTH_CRONOMETER"
+    case googleHealthOauthTitle = "OAUTH_GOOGLE_HEALTH"
 
     // Phase
     case phaseSwitchMessage = "PHASE_SWITCH_PROMPT"
@@ -646,6 +648,9 @@ enum StringKey: String, CaseIterable, CodingKey {
         case .onboardingOptInWatchdogRetry: return "Retry"
         case .onboardingOptInWatchdogSkip: return "Skip"
         case .onboardingOptInProcessing: return "Setting up permissions…"
+        // FUAM-2889: safety net for studies that haven't shipped the OAUTH_GOOGLE_HEALTH
+        // strings dictionary entry yet. Display name only - identifier stays `google_health`.
+        case .googleHealthOauthTitle: return "Google Health"
         default: return ""
         }
     }
