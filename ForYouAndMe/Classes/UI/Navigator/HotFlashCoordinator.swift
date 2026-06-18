@@ -155,7 +155,8 @@ final class HotFlashCoordinator {
             options: [
                 .init(code: "awake_with_sensation", label: StringsProvider.string(forKey: .hotFlashSleepOnsetOptionBeforeWake)),
                 .init(code: "awake_then_sensation", label: StringsProvider.string(forKey: .hotFlashSleepOnsetOptionAfterWake)),
-                .init(code: "not_sure",             label: StringsProvider.string(forKey: .hotFlashSleepOnsetOptionNotSure))
+                .init(code: "not_sure",             label: StringsProvider.string(forKey: .hotFlashSleepOnsetOptionNotSure)),
+                .init(code: "not_at_night",         label: StringsProvider.string(forKey: .hotFlashSleepOnsetOptionNotAtNight))
             ],
             mode: .single,
             nextButtonText: StringsProvider.string(forKey: .diaryNoteHotFlashNextButton)
