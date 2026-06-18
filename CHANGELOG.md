@@ -1,5 +1,10 @@
 ## [Unreleased]
 
+## Release 0.101.5
+
+- **Google Health integration** (FUAM-2889, FUAM-3418). Added Google Health to the `Integration` enum for Oura-parity, bundled the Google Health icon in the SDK resource bundle, and used `SFSafariViewController` for the Google Health OAuth flow. `Example/Pods.xcodeproj` regenerated to include `GoogleHealthOAuthCoordinator`.
+- **Hot Flash — `not_at_night` sleep onset option** (FUAM-3427). Diary Hot Flash flow now exposes a `not_at_night` option in the sleep onset step.
+
 ## Release 0.101.4
 
 ### Fixed
