@@ -385,6 +385,7 @@ enum StringKey: String, CaseIterable, CodingKey {
     case hotFlashSleepOnsetOptionBeforeWake = "HOT_FLASH_SLEEP_ONSET_OPTION_BEFORE_WAKE"
     case hotFlashSleepOnsetOptionAfterWake = "HOT_FLASH_SLEEP_ONSET_OPTION_AFTER_WAKE"
     case hotFlashSleepOnsetOptionNotSure = "HOT_FLASH_SLEEP_ONSET_OPTION_NOT_SURE"
+    case hotFlashSleepOnsetOptionNotAtNight = "HOT_FLASH_SLEEP_ONSET_OPTION_NOT_AT_NIGHT"
 
     // Quick Activity linked task prompt (FUAM-3037)
     case quickActivityLinkedTaskPromptTitle = "QUICK_ACTIVITY_LINKED_TASK_PROMPT_TITLE"
