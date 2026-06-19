@@ -25,4 +25,12 @@ class IntegrationProvider {
     static func oAuthIntegrations() -> [Integration] {
         return self.integrationDatas.filter { $0.oAuthAvailable }.compactMap { Integration(rawValue: $0.name) }
     }
+
+    /// Whether the study's backend declares SensorKit among its supported integrations.
+    /// The raw backend key is exactly "sensor_kit" (matched against `IntegrationData.name`).
+    /// Used to surface the SensorKit permission row even for users who skipped SensorKit in
+    /// onboarding and therefore have no SensorKit identity yet (FUAM-3432).
+    static func isSensorKitSupported() -> Bool {
+        return self.integrationDatas.contains { $0.name == "sensor_kit" }
+    }
 }
