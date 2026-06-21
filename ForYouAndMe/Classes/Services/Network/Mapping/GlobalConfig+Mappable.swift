@@ -92,10 +92,10 @@ extension Mapper {
                 print("GlobalConfig - Missing integration inner data for integration '\(name)'")
                 return nil
             }
-            guard let oAuthAvailable = integrationDataInnerDict["oauth"] as? Bool else {
-                print("GlobalConfig - Missing ouath data as Boolean for integration '\(name)'")
-                return nil
-            }
+            // Non-OAuth integrations (e.g. "sensor_kit") legitimately omit the "oauth" flag.
+            // Default to false rather than dropping the entry, so the study's full set of
+            // supported integrations survives parsing (FUAM-3432).
+            let oAuthAvailable = integrationDataInnerDict["oauth"] as? Bool ?? false
             return IntegrationData(name: name, oAuthAvailable: oAuthAvailable)
         }
     }

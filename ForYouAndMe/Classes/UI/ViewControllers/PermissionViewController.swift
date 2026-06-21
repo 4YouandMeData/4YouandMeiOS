@@ -148,14 +148,16 @@ public class PermissionViewController: UIViewController {
 
         // --- SensorKit ---
 #if SENSORKIT
-        // Show the SensorKit row when the service is available AND either the user already
-        // has a SensorKit identity (agreed during onboarding) OR the study's backend declares
-        // SensorKit as a supported integration. The latter covers users who skipped SensorKit in
-        // onboarding and therefore have no identity yet — the tap handler starts the permission /
-        // identity flow in that case (FUAM-3432).
-        let sensorKitHasIdentity = self.repository.currentUser?.getHasAgreedTo(systemPermission: .sensorKit) ?? false
+        // Show the SensorKit row whenever both hold (FUAM-3432):
+        //  (a) the study's backend declares SensorKit a supported integration, and
+        //  (b) the app is configured with >=1 SensorKit sensor — i.e. sensorKitService is
+        //      non-nil (SensorKitManager is only built with a non-empty readSensors set), which
+        //      is the runtime proxy for "the app has >=1 SensorKit entitlement". serviceAvailable
+        //      is `true` whenever that manager exists.
+        // This is independent of onboarding/identity: a user who skipped SensorKit in onboarding
+        // (no identity) still sees the row, and the tap handler starts the permission/identity flow.
         if self.sensorKitService?.serviceAvailable == true,
-           sensorKitHasIdentity || IntegrationProvider.isSensorKitSupported() {
+           IntegrationProvider.isSensorKitSupported() {
 
             // "Setup" iff no sensor is .authorized (all are .notDetermined and/or
             // .denied); "Manage" otherwise. The tap handler in
