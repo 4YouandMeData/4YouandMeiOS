@@ -186,14 +186,28 @@ final class SensorKitManager: SensorKitService {
         }
     }
 
+    /// Maximum elapsed time of a single `SRSensorReader.requestAuthorization` call for a
+    /// `promptDeclined` error to be interpreted as the system-wide collection switch being
+    /// OFF. When the master "Sensor & Usage Data Collection" switch is OFF the call
+    /// auto-declines essentially instantly (a brief flash, well under this threshold),
+    /// whereas a human reading and tapping Cancel on a real prompt always takes longer.
+    /// Gating on this elapsed time distinguishes the two identical `promptDeclined` errors.
+    /// (FUAM-3432)
+    private static let collectionDisabledMaxElapsed: TimeInterval = 0.8
+
     /// Requests SensorKit authorization for the not-determined sensors only, detecting
     /// the system-wide "Sensor & Usage Data Collection" master switch being OFF.
     ///
     /// When that switch is OFF, `SRSensorReader.requestAuthorization` returns an
     /// `SRError` with code `.promptDeclined` (NSError domain "SRErrorDomain", code 4) and
-    /// the sensors stay `.notDetermined`. The moment that error is observed we stop the
-    /// loop early (short-circuit) and emit `.collectionDisabledSystemWide`. If the loop
-    /// finishes without ever seeing it, we emit `.completed`. (FUAM-3432)
+    /// the sensors stay `.notDetermined`. Crucially, the *same* `promptDeclined` error is
+    /// returned when the user simply taps Cancel on a single sensor's prompt while
+    /// collection is actually ON. We disambiguate the two by the elapsed time of the call:
+    /// the master-off auto-decline returns far faster (< 0.8s) than a human can read and
+    /// cancel a prompt. Only a *fast* promptDeclined short-circuits the loop and emits
+    /// `.collectionDisabledSystemWide`; a slow promptDeclined (a real user cancel) is
+    /// treated as a non-fatal decline and we continue to the next sensor. If the loop
+    /// finishes without a fast auto-decline, we emit `.completed`. (FUAM-3432)
     func requestPermissionsDetectingCollectionDisabled() -> Single<SensorKitSetupOutcome> {
         let toAsk = orderedNotDeterminedSensors()
         guard !toAsk.isEmpty else { return .just(.completed) }
@@ -202,17 +216,21 @@ final class SensorKitManager: SensorKitService {
             if #available(iOS 17.4, *) {
                 Task { @MainActor in
                     for sensor in toAsk {
+                        let start = Date()
                         do {
                             try await SRSensorReader.requestAuthorization(sensors: [sensor])
                         } catch {
+                            let elapsed = Date().timeIntervalSince(start)
                             #if DEBUG
                             print("SensorKitManager – requestAuthorization failed for \(sensor.rawValue): \(error)")
                             #endif
-                            if Self.isPromptDeclined(error) {
-                                // System-wide collection is OFF: stop asking, report it.
+                            if Self.isPromptDeclined(error) && elapsed < Self.collectionDisabledMaxElapsed {
+                                // Fast auto-decline → system-wide collection is OFF: stop asking, report it.
                                 observer(.success(.collectionDisabledSystemWide))
                                 return
                             }
+                            // Slow promptDeclined (real user cancel) or any other error:
+                            // non-fatal, continue with the next sensor.
                         }
                     }
                     observer(.success(.completed))
@@ -303,13 +321,16 @@ final class SensorKitManager: SensorKitService {
                 return
             }
             remaining.removeFirst()
+            let start = Date()
             SRSensorReader.requestAuthorization(sensors: [sensor]) { error in
                 if let error {
+                    let elapsed = Date().timeIntervalSince(start)
                     #if DEBUG
                     print("SensorKitManager – requestAuthorization failed for \(sensor.rawValue): \(error)")
                     #endif
-                    if Self.isPromptDeclined(error) {
-                        // System-wide collection is OFF: stop asking, report it.
+                    if Self.isPromptDeclined(error) && elapsed < Self.collectionDisabledMaxElapsed {
+                        // Fast auto-decline → system-wide collection is OFF: stop asking, report it.
+                        // A slow promptDeclined is a real user cancel: fall through and keep looping.
                         completion(.collectionDisabledSystemWide)
                         return
                     }
