@@ -1377,6 +1377,25 @@ class AppNavigator {
                                 actions: [cancelAction, settingsAction])
         }
 
+    /// Alert shown when the system-wide SensorKit "Sensor & Usage Data Collection" switch
+    /// is OFF, so iOS refuses to prompt for any sensor (FUAM-3432). Static message — no
+    /// missing-sensor list and no `String(format:)` placeholders.
+    public func showSensorKitCollectionDisabledAlert(presenter: UIViewController) {
+            let cancelAction = UIAlertAction(title: StringsProvider.string(forKey: .permissionCancel),
+                                             style: .cancel,
+                                             handler: nil)
+            let settingsAction = UIAlertAction(title: StringsProvider.string(forKey: .permissionSettings),
+                                               style: .default,
+                                               handler: { [weak self] _ in self?.openSettings() })
+
+            let title = StringsProvider.string(forKey: .permissionSensorKitDisabledTitle)
+            let message = StringsProvider.string(forKey: .permissionSensorKitDisabledMessage)
+
+            presenter.showAlert(withTitle: title,
+                                message: message,
+                                actions: [cancelAction, settingsAction])
+        }
+
     /// Resolve a user-facing display name for a SensorKit sensor by looking up the
     /// matching study string. Falls back to the sensor's `rawValue` when the study
     /// key is missing or empty (e.g. before the BE seed lands).

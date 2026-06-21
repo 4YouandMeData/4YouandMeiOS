@@ -282,13 +282,21 @@ public class PermissionViewController: UIViewController {
                     // surface the settings popup here: that popup is the "Manage" action only,
                     // shown after setup is complete (FUAM-3432). (Note: this drops the FUAM-3370
                     // fallback that popped the settings alert when iOS refused to show the prompt.)
-                    manager.requestPermissions()
-                        .subscribe(onSuccess: { [weak self] in
+                    manager.requestPermissionsDetectingCollectionDisabled()
+                        .subscribe(onSuccess: { [weak self] outcome in
                             guard let self = self else { return }
-                            // Start readers and sync now that we (may) have permissions
-                            manager.ensureRecordingStarted()
-                            manager.triggerSync(reason: "permissions_view")
-                            self.refreshStatus()
+                            switch outcome {
+                            case .collectionDisabledSystemWide:
+                                // The system-wide SensorKit master switch is OFF: iOS refuses
+                                // to prompt, so guide the user to re-enable it (FUAM-3432).
+                                // Do NOT nudge the recording/sync pipeline here.
+                                self.navigator.showSensorKitCollectionDisabledAlert(presenter: self)
+                            case .completed:
+                                // Start readers and sync now that we (may) have permissions
+                                manager.ensureRecordingStarted()
+                                manager.triggerSync(reason: "permissions_view")
+                                self.refreshStatus()
+                            }
                         }, onFailure: { [weak self] error in
                             guard let self = self else { return }
                             self.navigator.handleError(error: error, presenter: self)

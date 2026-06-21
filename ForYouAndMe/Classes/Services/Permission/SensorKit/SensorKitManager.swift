@@ -186,6 +186,48 @@ final class SensorKitManager: SensorKitService {
         }
     }
 
+    /// Requests SensorKit authorization for the not-determined sensors only, detecting
+    /// the system-wide "Sensor & Usage Data Collection" master switch being OFF.
+    ///
+    /// When that switch is OFF, `SRSensorReader.requestAuthorization` returns an
+    /// `SRError` with code `.promptDeclined` (NSError domain "SRErrorDomain", code 4) and
+    /// the sensors stay `.notDetermined`. The moment that error is observed we stop the
+    /// loop early (short-circuit) and emit `.collectionDisabledSystemWide`. If the loop
+    /// finishes without ever seeing it, we emit `.completed`. (FUAM-3432)
+    func requestPermissionsDetectingCollectionDisabled() -> Single<SensorKitSetupOutcome> {
+        let toAsk = orderedNotDeterminedSensors()
+        guard !toAsk.isEmpty else { return .just(.completed) }
+
+        return Single.create { observer in
+            if #available(iOS 17.4, *) {
+                Task { @MainActor in
+                    for sensor in toAsk {
+                        do {
+                            try await SRSensorReader.requestAuthorization(sensors: [sensor])
+                        } catch {
+                            #if DEBUG
+                            print("SensorKitManager – requestAuthorization failed for \(sensor.rawValue): \(error)")
+                            #endif
+                            if Self.isPromptDeclined(error) {
+                                // System-wide collection is OFF: stop asking, report it.
+                                observer(.success(.collectionDisabledSystemWide))
+                                return
+                            }
+                        }
+                    }
+                    observer(.success(.completed))
+                }
+            } else {
+                self.requestAuthorizationDetectingCollectionDisabled(sensors: toAsk) { outcome in
+                    DispatchQueue.main.async {
+                        observer(.success(outcome))
+                    }
+                }
+            }
+            return Disposables.create()
+        }
+    }
+
     /// Returns true if at least one of the configured sensors is still undetermined.
     func getIsAuthorizationStatusUndetermined() -> Single<Bool> {
         let anyUndetermined = readSensors.contains { SRSensorReader(sensor: $0).authorizationStatus == .notDetermined }
@@ -246,6 +288,47 @@ final class SensorKitManager: SensorKitService {
             }
         }
         next()
+    }
+
+    /// Requests authorization for each sensor one at a time using the completion-based API,
+    /// short-circuiting as soon as a `promptDeclined` error reveals the system-wide SensorKit
+    /// collection switch is OFF. Used on iOS 16.4–17.3 where the async API is unavailable.
+    private func requestAuthorizationDetectingCollectionDisabled(sensors: [SRSensor],
+                                                                 completion: @escaping (_ outcome: SensorKitSetupOutcome) -> Void) {
+        var remaining = sensors
+
+        func next() {
+            guard let sensor = remaining.first else {
+                completion(.completed)
+                return
+            }
+            remaining.removeFirst()
+            SRSensorReader.requestAuthorization(sensors: [sensor]) { error in
+                if let error {
+                    #if DEBUG
+                    print("SensorKitManager – requestAuthorization failed for \(sensor.rawValue): \(error)")
+                    #endif
+                    if Self.isPromptDeclined(error) {
+                        // System-wide collection is OFF: stop asking, report it.
+                        completion(.collectionDisabledSystemWide)
+                        return
+                    }
+                }
+                next()
+            }
+        }
+        next()
+    }
+
+    /// Detects the `promptDeclined` SensorKit error returned when the system-wide
+    /// "Sensor & Usage Data Collection" switch is OFF. Prefers the typed `SRError.code`,
+    /// with an NSError domain/code fallback for safety. (FUAM-3432)
+    private static func isPromptDeclined(_ error: Error) -> Bool {
+        if (error as? SRError)?.code == .promptDeclined {
+            return true
+        }
+        let nsError = error as NSError
+        return nsError.domain == "SRErrorDomain" && nsError.code == 4
     }
 
     /// Optional: stop recording for all sensors (e.g., on logout).
