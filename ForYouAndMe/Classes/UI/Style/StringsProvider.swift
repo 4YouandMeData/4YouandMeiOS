@@ -573,6 +573,8 @@ enum StringKey: String, CaseIterable, CodingKey {
     case permissionHealthSettingsMessage = "PERMISSION_HEALTH_SETTINGS_MESSAGE"
     case permissionSensorKitSettingsTitle = "PERMISSION_SENSORKIT_SETTINGS_TITLE"
     case permissionSensorKitSettingsMessage = "PERMISSION_SENSORKIT_SETTINGS_MESSAGE"
+    case permissionSensorKitDisabledTitle = "PERMISSION_SENSORKIT_DISABLED_TITLE"
+    case permissionSensorKitDisabledMessage = "PERMISSION_SENSORKIT_DISABLED_MESSAGE"
     case permissionHealthManageLabel = "PERMISSION_HEALTH_MANAGE_LABEL"
     case permissionSensorKitManageLabel = "PERMISSION_SENSORKIT_MANAGE_LABEL"
     case permissionHealthSetupLabel = "PERMISSION_HEALTH_SETUP_LABEL"
@@ -651,6 +653,14 @@ enum StringKey: String, CaseIterable, CodingKey {
         // FUAM-2889: safety net for studies that haven't shipped the OAUTH_GOOGLE_HEALTH
         // strings dictionary entry yet. Display name only - identifier stays `google_health`.
         case .googleHealthOauthTitle: return "Google Health"
+        // FUAM-3432: English fallbacks for the system-wide SensorKit-disabled alert.
+        case .permissionSensorKitDisabledTitle: return "SensorKit data collection is off"
+        case .permissionSensorKitDisabledMessage:
+            return "SensorKit data collection is currently turned off on your iPhone, so the study can't request Sensor"
+                + " permissions. Tap Open Settings, then go to Privacy & Security > Research Sensor & Usage Data and turn"
+                + " on 'Sensor & Usage Data Collection'. Please advise, if you select the ‘Settings’ tab in this window,"
+                + " it will not take you to the right location on your iPhone. Please close the app, and follow the"
+                + " instructions above. Please reach out to your coordinator if you have any questions or concerns."
         default: return ""
         }
     }
