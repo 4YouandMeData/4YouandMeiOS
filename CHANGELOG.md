@@ -1,5 +1,12 @@
 ## [Unreleased]
 
+## Release 0.101.6
+
+- **SensorKit permission row — display, labelling, and disabled-state fixes** (FUAM-3432).
+  - The SensorKit permission row now shows whenever the study supports SensorKit and the app has at least one configured sensor — even when the user has no linked identity.
+  - Corrected the Setup vs. Manage label so it reflects the actual permission state.
+  - The dedicated "SensorKit is disabled system-wide" re-enable popup is now gated on a <800ms auto-decline, so a deliberate user cancel no longer mis-triggers the disabled popup.
+
 ## Release 0.101.5
 
 - **Google Health integration** (FUAM-2889, FUAM-3418). Added Google Health to the `Integration` enum for Oura-parity, bundled the Google Health icon in the SDK resource bundle, and used `SFSafariViewController` for the Google Health OAuth flow. `Example/Pods.xcodeproj` regenerated to include `GoogleHealthOAuthCoordinator`.
