@@ -152,7 +152,7 @@ class DiaryNotesViewController: BaseViewController {
             
             let comingSoonButton = UIButton()
             comingSoonButton.apply(style: ButtonTextStyleCategory.messages.style)
-            comingSoonButton.setTitle(self.messages.first?.title, for: .normal)
+            comingSoonButton.setTitle(self.messages.first?.buttonText ?? self.messages.first?.title, for: .normal)
             comingSoonButton.addTarget(self, action: #selector(self.comingSoonButtonPressed), for: .touchUpInside)
             comingSoonButton.autoSetDimension(.width, toSize: 110)
             comingSoonButton.isHidden = (self.messages.count < 1)
