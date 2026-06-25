@@ -854,7 +854,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
                 
                 // Solo se fromChart è true inserisco i parametri in_chart_interval
                 if fromChart {
-                    if let dateString = diaryNote?.diaryNoteId.string(withFormat: dateTimeFormat) {
+                    if let dateString = diaryNote?.diaryNoteId.utcDateTimeString() {
                         qDict["in_chart_interval"] =  [dateString, diaryNote?.interval]
                     }
                 }
@@ -890,7 +890,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             if fromChart {
                 var dataParams: [String: Any] = [:]
                 dataParams["body"] = diaryNote.body
-                dataParams["datetime_ref"] = diaryNote.diaryNoteId.string(withFormat: dateTimeFormat)
+                dataParams["datetime_ref"] = diaryNote.diaryNoteId.utcDateTimeString()
                 dataParams["diary_noteable_type"] = diaryNote.diaryNoteable?.type
                 dataParams["diary_noteable_id"] = diaryNote.diaryNoteable?.id
                 dataParams["interval"] = diaryNote.interval
@@ -914,7 +914,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             
             var dataParams: [String: Any] = [:]
             dataParams["data"] = payloadData
-            dataParams["datetime_ref"] = data.date.string(withFormat: dateTimeFormat)
+            dataParams["datetime_ref"] = data.date.utcDateTimeString()
             dataParams["diary_type"] = DiaryNoteItemType.eaten.rawValue
             
             if data.fromChart, let note = data.diaryNote {
@@ -962,7 +962,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
 
             var dataParams: [String: Any] = [:]
             dataParams["data"] = payloadData
-            dataParams["datetime_ref"] = data.date.string(withFormat: dateTimeFormat)
+            dataParams["datetime_ref"] = data.date.utcDateTimeString()
             dataParams["diary_type"] = DiaryNoteItemType.menstrualPeriod.rawValue
 
             if data.fromChart, let note = data.diaryNote {
@@ -982,7 +982,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             
             var dataParams: [String: Any] = [
                 "data": data,
-                "datetime_ref": date.string(withFormat: dateTimeFormat),
+                "datetime_ref": date.utcDateTimeString(),
                 "diary_type": DiaryNoteItemType.doses.rawValue
             ]
             
@@ -999,7 +999,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
 
         case .sendDiaryNoteHotFlash(let data):
             var dataParams: [String: Any] = [
-                "datetime_ref": data.date.string(withFormat: dateTimeFormat),
+                "datetime_ref": data.date.utcDateTimeString(),
                 "diary_type": DiaryNoteItemType.hotFlash.rawValue
             ]
 
@@ -1037,9 +1037,9 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             
             var data: [String: Any] = [
                     "old_value": diaryNote.oldValue,
-                    "old_value_retrieved_at": diaryNote.oldValueRetrievedAt.string(withFormat: dateTimeFormat),
+                    "old_value_retrieved_at": diaryNote.oldValueRetrievedAt.utcDateTimeString(),
                     "current_value": diaryNote.currentValue,
-                    "current_value_retrieved_at": diaryNote.currentValueRetrievedAt.string(withFormat: dateTimeFormat),
+                    "current_value_retrieved_at": diaryNote.currentValueRetrievedAt.utcDateTimeString(),
                     "physical_activity": diaryNote.answeredActivity?.rawValue ?? "",
                     "stress_level": diaryNote.answeredStress?.rawValue ?? ""
                 ]
@@ -1065,7 +1065,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             
             var dataParams: [String: Any] = [:]
             dataParams["data"] = data
-            dataParams["datetime_ref"] = diaryNote.diaryDate.string(withFormat: dateTimeFormat)
+            dataParams["datetime_ref"] = diaryNote.diaryDate.utcDateTimeString()
             dataParams["diary_type"] = DiaryNoteItemType.weNoticed.rawValue
             return .requestParameters(parameters: ["diary_note": dataParams], encoding: JSONEncoding.default)
         case .sendDiaryNoteAudio(let diaryNote, _, _):
@@ -1074,7 +1074,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             
             let parameters: [String: String] = [
                 "diary_note[body]": diaryNote.body ?? "",
-                "diary_note[datetime_ref]": diaryNote.diaryNoteId.string(withFormat: dateTimeFormat),
+                "diary_note[datetime_ref]": diaryNote.diaryNoteId.utcDateTimeString(),
                 "diary_note[diary_noteable_type]": diaryNote.diaryNoteable?.type ?? "",
                 "diary_note[diary_noteable_id]": diaryNote.diaryNoteable?.id ?? "",
                 "diary_note[interval]": diaryNote.interval ?? ""
@@ -1093,7 +1093,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             
             let parameters: [String: String] = [
                 "diary_note[body]": diaryNote.body ?? "",
-                "diary_note[datetime_ref]": diaryNote.diaryNoteId.string(withFormat: dateTimeFormat),
+                "diary_note[datetime_ref]": diaryNote.diaryNoteId.utcDateTimeString(),
                 "diary_note[diary_noteable_type]": diaryNote.diaryNoteable?.type ?? "",
                 "diary_note[diary_noteable_id]": diaryNote.diaryNoteable?.id ?? "",
                 "diary_note[interval]": diaryNote.interval ?? ""

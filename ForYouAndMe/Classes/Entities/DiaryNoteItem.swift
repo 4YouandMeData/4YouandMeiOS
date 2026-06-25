@@ -654,7 +654,7 @@ series_entries.feedback_tags
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         
-        let formattedDate = diaryNoteId.string(withFormat: dateTimeFormat)
+        let formattedDate = diaryNoteId.utcDateTimeString()
         try container.encode(formattedDate, forKey: .diaryNoteId)
         
         // Encode optional fields
