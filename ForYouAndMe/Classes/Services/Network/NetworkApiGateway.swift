@@ -39,6 +39,13 @@ class NetworkApiGateway: ApiGateway {
 
         return accessTokenPlugin
     }()
+
+    /// Attaches `X-Client-*` metadata headers to every mutating request
+    /// (POST/PUT/PATCH/DELETE) for backend capture (FUAM-3466 / FUAM-3467).
+    /// GET requests are left untouched.
+    lazy var clientMetadataPlugin: PluginType = {
+        return ClientMetadataPlugin()
+    }()
     
     fileprivate let storage: NetworkStorage
     fileprivate let reachability: ReachabilityService
@@ -55,7 +62,7 @@ class NetworkApiGateway: ApiGateway {
     }
     
     func setupDefaultProvider() {
-        var plugins: [PluginType] = [self.telemetryPlugin, self.accessTokenPlugin]
+        var plugins: [PluginType] = [self.telemetryPlugin, self.accessTokenPlugin, self.clientMetadataPlugin]
         #if DEBUG
         // Local-only verbose dump (headers + body). Telemetry never logs the
         // Authorization header by design — this plugin restores the stock

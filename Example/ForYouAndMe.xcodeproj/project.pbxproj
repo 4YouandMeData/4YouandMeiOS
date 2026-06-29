@@ -32,6 +32,7 @@
 		2934A0010001F37A0001AAAA /* MenstrualPeriodEntryCellSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2934A0020001F37A0001AAAA /* MenstrualPeriodEntryCellSpec.swift */; };
 		2933A0010001F37A0001AAAA /* MenstrualSequenceGroupingSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2933A0020001F37A0001AAAA /* MenstrualSequenceGroupingSpec.swift */; };
 		2925A0010001F37A0001AAAA /* DiaryNotesEndpointPathSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2925A0020001F37A0001AAAA /* DiaryNotesEndpointPathSpec.swift */; };
+		3467A0010001F37A0001AAAA /* ClientMetadataPluginSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3467A0020001F37A0001AAAA /* ClientMetadataPluginSpec.swift */; };
 		2932A0010001F37A0001AAAA /* AlertDecodingSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2932A0020001F37A0001AAAA /* AlertDecodingSpec.swift */; };
 		2932A0030001F37A0001AAAA /* FeedContentPinnedSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2932A0040001F37A0001AAAA /* FeedContentPinnedSpec.swift */; };
 		3396A0010001F37A0001AAAA /* SurveyRangePickerSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3396A0020001F37A0001AAAA /* SurveyRangePickerSpec.swift */; };
@@ -106,6 +107,7 @@
 		2934A0020001F37A0001AAAA /* MenstrualPeriodEntryCellSpec.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MenstrualPeriodEntryCellSpec.swift; sourceTree = "<group>"; };
 		2933A0020001F37A0001AAAA /* MenstrualSequenceGroupingSpec.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MenstrualSequenceGroupingSpec.swift; sourceTree = "<group>"; };
 		2925A0020001F37A0001AAAA /* DiaryNotesEndpointPathSpec.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DiaryNotesEndpointPathSpec.swift; sourceTree = "<group>"; };
+		3467A0020001F37A0001AAAA /* ClientMetadataPluginSpec.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ClientMetadataPluginSpec.swift; sourceTree = "<group>"; };
 		2932A0020001F37A0001AAAA /* AlertDecodingSpec.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AlertDecodingSpec.swift; sourceTree = "<group>"; };
 		2932A0040001F37A0001AAAA /* FeedContentPinnedSpec.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = FeedContentPinnedSpec.swift; sourceTree = "<group>"; };
 		3396A0020001F37A0001AAAA /* SurveyRangePickerSpec.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SurveyRangePickerSpec.swift; sourceTree = "<group>"; };
@@ -227,6 +229,7 @@
 				2934A0020001F37A0001AAAA /* MenstrualPeriodEntryCellSpec.swift */,
 				2933A0020001F37A0001AAAA /* MenstrualSequenceGroupingSpec.swift */,
 				2925A0020001F37A0001AAAA /* DiaryNotesEndpointPathSpec.swift */,
+				3467A0020001F37A0001AAAA /* ClientMetadataPluginSpec.swift */,
 				2932A0020001F37A0001AAAA /* AlertDecodingSpec.swift */,
 				2932A0040001F37A0001AAAA /* FeedContentPinnedSpec.swift */,
 				3396A0020001F37A0001AAAA /* SurveyRangePickerSpec.swift */,
@@ -546,6 +549,7 @@
 				2934A0010001F37A0001AAAA /* MenstrualPeriodEntryCellSpec.swift in Sources */,
 				2933A0010001F37A0001AAAA /* MenstrualSequenceGroupingSpec.swift in Sources */,
 				2925A0010001F37A0001AAAA /* DiaryNotesEndpointPathSpec.swift in Sources */,
+				3467A0010001F37A0001AAAA /* ClientMetadataPluginSpec.swift in Sources */,
 				2932A0010001F37A0001AAAA /* AlertDecodingSpec.swift in Sources */,
 				2932A0030001F37A0001AAAA /* FeedContentPinnedSpec.swift in Sources */,
 				3396A0010001F37A0001AAAA /* SurveyRangePickerSpec.swift in Sources */,
