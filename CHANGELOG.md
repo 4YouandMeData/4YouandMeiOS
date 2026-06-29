@@ -1,5 +1,12 @@
 ## [Unreleased]
 
+## Release 0.101.7
+
+- **Client/agent metadata headers on mutating API calls** (FUAM-3467). A new `ClientMetadataPlugin` (Moya `PluginType`) attaches `X-Client-*` headers — `Platform`, `App-Version`, `OS-Version`, `App-Build`, `App-Id`, and `Timestamp` — to every mutating request (POST / PUT / PATCH / DELETE); GET and other non-mutating requests are left untouched. Values are read from the host app's `Bundle.main` plus `UIDevice`, and `X-Client-Timestamp` is ISO 8601 carrying the device's local UTC offset. The plugin is registered in `NetworkApiGateway` and ships ahead of the backend (FUAM-3466), so the headers are inert until captured. Part of epic FUAM-3465.
+- **Push notification permission — no more repeated denied alert** (FUAM-3485). The notification permission flow is now gated strictly on `.notDetermined` status: when the OS authorization status is already decided (`.denied` or `.authorized`) the SDK early-returns and marks the check complete, rather than re-running `request()` and re-showing the permission-denied alert on every cold launch. The one-time denied nudge now fires only from a live `.notDetermined` prompt.
+- **Quick activities — per-page stable ordering by `metadata.order`** (FUAM-3398). Quick activities are now sorted ascending by the server-driven `metadata.order` field, decoded from a new `TaskMetadata` object on `Feed`. The sort is applied per page (before merge concatenation) so page-scoped order is preserved with no forbidden global cross-page re-sort; the `FeedContent(withFeeds:)` initializer performs the sort while the reconstruction initializer deliberately does not. Items with no order go last, and ties and the null block preserve raw server order via an index-decorated stable comparator.
+- **Diary — all datetimes serialized as true UTC** (FUAM-3446). Diary datetimes were formatted in the device-local timezone but stamped with a literal `Z`, so the `v2/diary_notes` API (which trusts the offset) stored them off by the user's UTC offset (e.g. America/Denver entries appeared ~6h out). A new `Date.utcDateTimeString()` helper forces UTC with the existing `dateTimeFormat`, and all 12 diary serialization sites now route through it: `datetime_ref` for hot-flash / eaten / menstrual / doses / text / audio / video, the we-noticed `datetime_ref` plus `old_`/`current_value_retrieved_at`, and the `in_chart_interval` filter. Calendar-day and display-only usages are unchanged.
+
 ## Release 0.101.6
 
 - **SensorKit permission row — display, labelling, and disabled-state fixes** (FUAM-3432).
