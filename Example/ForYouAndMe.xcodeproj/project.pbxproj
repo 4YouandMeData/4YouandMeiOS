@@ -34,6 +34,7 @@
 		2925A0010001F37A0001AAAA /* DiaryNotesEndpointPathSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2925A0020001F37A0001AAAA /* DiaryNotesEndpointPathSpec.swift */; };
 		2932A0010001F37A0001AAAA /* AlertDecodingSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2932A0020001F37A0001AAAA /* AlertDecodingSpec.swift */; };
 		2932A0030001F37A0001AAAA /* FeedContentPinnedSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2932A0040001F37A0001AAAA /* FeedContentPinnedSpec.swift */; };
+		3398A0030001F37A0001AAAA /* FeedContentQuickActivityOrderSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3398A0040001F37A0001AAAA /* FeedContentQuickActivityOrderSpec.swift */; };
 		3396A0010001F37A0001AAAA /* SurveyRangePickerSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3396A0020001F37A0001AAAA /* SurveyRangePickerSpec.swift */; };
 		3396A0030001F37A0001AAAA /* FUAM-3396-menqol-survey.json in Resources */ = {isa = PBXBuildFile; fileRef = 3396A0040001F37A0001AAAA /* FUAM-3396-menqol-survey.json */; };
 		8974CF8B267B848D003A6E61 /* HealthKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8974CF8A267B848D003A6E61 /* HealthKit.framework */; };
@@ -108,6 +109,7 @@
 		2925A0020001F37A0001AAAA /* DiaryNotesEndpointPathSpec.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DiaryNotesEndpointPathSpec.swift; sourceTree = "<group>"; };
 		2932A0020001F37A0001AAAA /* AlertDecodingSpec.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AlertDecodingSpec.swift; sourceTree = "<group>"; };
 		2932A0040001F37A0001AAAA /* FeedContentPinnedSpec.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = FeedContentPinnedSpec.swift; sourceTree = "<group>"; };
+		3398A0040001F37A0001AAAA /* FeedContentQuickActivityOrderSpec.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = FeedContentQuickActivityOrderSpec.swift; sourceTree = "<group>"; };
 		3396A0020001F37A0001AAAA /* SurveyRangePickerSpec.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SurveyRangePickerSpec.swift; sourceTree = "<group>"; };
 		3396A0040001F37A0001AAAA /* FUAM-3396-menqol-survey.json */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.json; path = "FUAM-3396-menqol-survey.json"; sourceTree = "<group>"; };
 		894BEE6B24AE52DD00254DC6 /* ForYouAndMe_Example.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ForYouAndMe_Example.entitlements; sourceTree = "<group>"; };
@@ -229,6 +231,7 @@
 				2925A0020001F37A0001AAAA /* DiaryNotesEndpointPathSpec.swift */,
 				2932A0020001F37A0001AAAA /* AlertDecodingSpec.swift */,
 				2932A0040001F37A0001AAAA /* FeedContentPinnedSpec.swift */,
+				3398A0040001F37A0001AAAA /* FeedContentQuickActivityOrderSpec.swift */,
 				3396A0020001F37A0001AAAA /* SurveyRangePickerSpec.swift */,
 				3396A0050001F37A0001AAAA /* Fixtures */,
 				607FACE91AFB9204008FA782 /* Supporting Files */,
@@ -548,6 +551,7 @@
 				2925A0010001F37A0001AAAA /* DiaryNotesEndpointPathSpec.swift in Sources */,
 				2932A0010001F37A0001AAAA /* AlertDecodingSpec.swift in Sources */,
 				2932A0030001F37A0001AAAA /* FeedContentPinnedSpec.swift in Sources */,
+				3398A0030001F37A0001AAAA /* FeedContentQuickActivityOrderSpec.swift in Sources */,
 				3396A0010001F37A0001AAAA /* SurveyRangePickerSpec.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

@@ -31,6 +31,30 @@ fileprivate extension Feed {
     }
 }
 
+// FUAM-3398: per-page stable sort of quick activities by `metadata.order` (ascending).
+// Items with no/invalid order go last; ties and the null block preserve raw server order.
+// `Array.sorted(by:)` is NOT guaranteed stable, so we decorate with the original index
+// and use it as the tie-breaker. This MUST run per page (before merge concatenation) so
+// page-scoped order is preserved and we never do a global cross-page re-sort.
+private func sortedByOrder(_ quickActivities: [Feed]) -> [Feed] {
+    return quickActivities
+        .enumerated()
+        .sorted { lhs, rhs in
+            switch (lhs.element.metadata?.order, rhs.element.metadata?.order) {
+            case let (leftOrder?, rightOrder?):
+                if leftOrder != rightOrder { return leftOrder < rightOrder }
+                return lhs.offset < rhs.offset // tie: preserve server order
+            case (.some, .none):
+                return true  // ordered items before the null block
+            case (.none, .some):
+                return false
+            case (.none, .none):
+                return lhs.offset < rhs.offset // null block: preserve server order
+            }
+        }
+        .map { $0.element }
+}
+
 struct FeedContent {
     let pinnedAlerts: [Feed]
     let quickActivities: [Feed]
@@ -76,6 +100,9 @@ struct FeedContent {
         return result
     }()
 
+    // NOTE: This initializer is used to *reconstruct* content from already-built (and
+    // possibly merged, multi-page) arrays — SABA windowing and the reward rule. It must
+    // NOT re-sort quick activities, otherwise we'd do a forbidden global cross-page re-sort.
     init(withPinnedAlerts pinnedAlerts: [Feed],
          quickActivities: [Feed],
          feedItems: [Feed]) {
@@ -93,7 +120,9 @@ struct FeedContent {
     init(withFeeds feeds: [Feed]) {
         self.pinnedAlerts = feeds.filter { $0.pinnedAlert != nil }
         let nonPinned = feeds.filter { $0.pinnedAlert == nil }
-        self.quickActivities = nonPinned.filter { $0.schedulable?.isQuickActivity ?? false }
+        // FUAM-3398: per-page stable sort of quick activities by metadata.order, applied
+        // before merge() concatenation so page-scoped order is preserved.
+        self.quickActivities = sortedByOrder(nonPinned.filter { $0.schedulable?.isQuickActivity ?? false })
         self.feedItems = nonPinned.filter { false == $0.schedulable?.isQuickActivity ?? false }
     }
 

@@ -42,6 +42,16 @@ struct PreviousMirData: Decodable {
     }
 }
 
+// FUAM-3398: raw `metadata` JSON object on the task/feed item (e.g. `{"order": 1}`,
+// empty `{}` when unset). `order` is used to sort quick activities ascending.
+struct TaskMetadata: Decodable {
+    let order: Int?
+
+    enum CodingKeys: String, CodingKey {
+        case order
+    }
+}
+
 struct Feed {
     let id: String
     let type: String
@@ -78,6 +88,9 @@ struct Feed {
 
     @FailableDecodable
     var meta: FeedMeta?
+
+    // FUAM-3398: optional sort order for quick activities, decoded from the flattened `metadata` object.
+    var metadata: TaskMetadata?
 }
 
 enum FeedParsingError: Error {
@@ -110,6 +123,7 @@ schedulable.success_page
         case mirThreshold = "mir_spirometer_threshold"
         case skippable
         case meta
+        case metadata
     }
     
     init(from decoder: Decoder) throws {
@@ -134,6 +148,7 @@ schedulable.success_page
         // Workaround to a backend issue (see code at the bottom of the current file)
         self.meta = try? container.decodeIfPresent(FeedMeta.self, forKey: .meta)
         self.notifiable = notifiable?.convertWithFeedMeta(self.meta)
+        self.metadata = try? container.decodeIfPresent(TaskMetadata.self, forKey: .metadata)
     }
 }
 
