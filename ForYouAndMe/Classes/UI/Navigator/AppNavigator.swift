@@ -1310,12 +1310,18 @@ class AppNavigator {
         guard self.pushPermissionCompleted == false else {
             return
         }
-        
+
         let notificationPermission: Permission = .notification
-        let notificationStatus: Bool = notificationPermission.isNotDetermined
+        // Only prompt when the authorization status is still undetermined. If the user has already
+        // decided (denied or authorized) in iOS Settings, never re-run the flow nor re-show the alert.
+        guard notificationPermission.isNotDetermined else {
+            self.pushPermissionCompleted = true
+            return
+        }
+
         notificationPermission.request().subscribe(onSuccess: { [weak self] _ in
             self?.pushPermissionCompleted = true
-            if notificationPermission.isDenied, notificationStatus == false {
+            if notificationPermission.isDenied {
                 self?.showPermissionDeniedAlert(presenter: presenter)
             }
         }, onFailure: { [weak self] error in
