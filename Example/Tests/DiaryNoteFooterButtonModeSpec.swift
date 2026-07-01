@@ -2,14 +2,15 @@
 //  DiaryNoteFooterButtonModeSpec.swift
 //  ForYouAndMe_Tests
 //
-//  FUAM-3495: the "I've noticed" note footer button swaps its label + action
-//  based on text presence. This spec drives the pure rule
-//  `DiaryNoteTextViewController.footerIsSaveMode(pageState:trimmedText:)`
-//  directly (no view controller instantiation needed).
+//  FUAM-3495: the "I've noticed" note footer button has three states driven by
+//  the pure rule `DiaryNoteTextViewController.footerButtonMode(currentText:savedBody:noteExists:)`.
 //
-//  Contract under test (exact): pageState == .edit && !trimmedText.isEmpty
-//  The rule does NOT trim internally — trimming is the caller's job — so the
-//  spec asserts the real contract and does not claim any internal trimming.
+//  Contract under test (exact):
+//    isSaved = noteExists && currentText == (savedBody ?? "")  -> .close
+//    else trimmed(currentText).isEmpty                          -> .saveDisabled
+//    else                                                       -> .saveEnabled
+//
+//  This spec drives the rule directly (no view controller instantiation needed).
 //
 
 import Quick
@@ -18,53 +19,69 @@ import Nimble
 
 class DiaryNoteFooterButtonModeSpec: QuickSpec {
     override class func spec() {
-        describe("DiaryNoteTextViewController.footerIsSaveMode") {
+        describe("DiaryNoteTextViewController.footerButtonMode") {
 
-            it("returns true (Save mode) in .edit with non-empty text") {
-                let result = DiaryNoteTextViewController.footerIsSaveMode(
-                    pageState: .edit,
-                    trimmedText: "Feeling great today")
-                expect(result).to(beTrue())
+            context("new note (noteExists == false)") {
+
+                it("returns .saveDisabled with empty text") {
+                    let result = DiaryNoteTextViewController.footerButtonMode(
+                        currentText: "",
+                        savedBody: nil,
+                        noteExists: false)
+                    expect(result).to(equal(.saveDisabled))
+                }
+
+                it("returns .saveDisabled with whitespace-only text") {
+                    let result = DiaryNoteTextViewController.footerButtonMode(
+                        currentText: "   ",
+                        savedBody: nil,
+                        noteExists: false)
+                    expect(result).to(equal(.saveDisabled))
+                }
+
+                it("returns .saveEnabled with real text") {
+                    let result = DiaryNoteTextViewController.footerButtonMode(
+                        currentText: "hello",
+                        savedBody: nil,
+                        noteExists: false)
+                    expect(result).to(equal(.saveEnabled))
+                }
             }
 
-            it("returns false (Close mode) in .edit with empty text") {
-                let result = DiaryNoteTextViewController.footerIsSaveMode(
-                    pageState: .edit,
-                    trimmedText: "")
-                expect(result).to(beFalse())
-            }
+            context("saved note (noteExists == true)") {
 
-            it("returns false (Close mode) in .edit when the caller passes trimmed-empty text") {
-                // The caller trims whitespace-only input to "" before calling the rule,
-                // which yields Close mode.
-                let result = DiaryNoteTextViewController.footerIsSaveMode(
-                    pageState: .edit,
-                    trimmedText: "")
-                expect(result).to(beFalse())
-            }
+                it("returns .close when the text equals the saved body") {
+                    let result = DiaryNoteTextViewController.footerButtonMode(
+                        currentText: "hello",
+                        savedBody: "hello",
+                        noteExists: true)
+                    expect(result).to(equal(.close))
+                }
 
-            it("does NOT trim internally: verbatim whitespace is treated as non-empty") {
-                // Documents that the rule itself does not trim — trimming is the
-                // caller's responsibility. Passing untrimmed whitespace verbatim
-                // therefore returns true.
-                let result = DiaryNoteTextViewController.footerIsSaveMode(
-                    pageState: .edit,
-                    trimmedText: "   ")
-                expect(result).to(beTrue())
-            }
+                it("returns .saveEnabled when the text has been edited") {
+                    let result = DiaryNoteTextViewController.footerButtonMode(
+                        currentText: "hello world",
+                        savedBody: "hello",
+                        noteExists: true)
+                    expect(result).to(equal(.saveEnabled))
+                }
 
-            it("returns false (Close mode) in .read even with non-empty text") {
-                let result = DiaryNoteTextViewController.footerIsSaveMode(
-                    pageState: .read,
-                    trimmedText: "An existing note")
-                expect(result).to(beFalse())
-            }
+                it("returns .saveDisabled when the text has been cleared") {
+                    let result = DiaryNoteTextViewController.footerButtonMode(
+                        currentText: "",
+                        savedBody: "hello",
+                        noteExists: true)
+                    expect(result).to(equal(.saveDisabled))
+                }
 
-            it("returns false (Close mode) in .read with empty text") {
-                let result = DiaryNoteTextViewController.footerIsSaveMode(
-                    pageState: .read,
-                    trimmedText: "")
-                expect(result).to(beFalse())
+                it("returns .close for nil savedBody with empty current text (isSaved edge)") {
+                    // isSaved = noteExists && ("" == (nil ?? "")) == true -> .close
+                    let result = DiaryNoteTextViewController.footerButtonMode(
+                        currentText: "",
+                        savedBody: nil,
+                        noteExists: true)
+                    expect(result).to(equal(.close))
+                }
             }
         }
     }

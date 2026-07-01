@@ -22,6 +22,16 @@ class DiaryNoteTextViewController: UIViewController {
     private var originalBody: String?
     private var wasJustCreatedHere: Bool = false
 
+    private lazy var backButton: UIButton = {
+        let button = UIButton()
+        button.setImage(ImagePalette.templateImage(withName: .backButtonNavigation), for: .normal)
+        button.tintColor = ColorPalette.color(withType: .primaryText)
+        button.autoSetDimension(.width, toSize: 32)
+        button.imageView?.contentMode = .scaleAspectFit
+        button.addTarget(self, action: #selector(self.closeButtonPressed), for: .touchUpInside)
+        return button
+    }()
+
     private lazy var titleRow: UIStackView = {
         let stack = UIStackView()
         stack.axis = .horizontal
@@ -98,9 +108,15 @@ class DiaryNoteTextViewController: UIViewController {
         
         let stackView = UIStackView.create(withAxis: .vertical, spacing: 8.0)
 
+        // Back button
+        let backButtonContainerView = UIView()
+        backButtonContainerView.addSubview(self.backButton)
+        self.backButton.autoPinEdgesToSuperviewEdges(with: .zero, excludingEdge: .trailing)
+        stackView.addArrangedSubview(backButtonContainerView)
+
         let emptyView = UIView()
         emptyView.autoSetDimensions(to: CGSize(width: 24, height: 24))
-        
+
         let category = self.categoryForEmoji(diaryNote: self.diaryNote)
         if !self.emojiItems(for: category).isEmpty,
            self.isEditMode {
@@ -316,12 +332,17 @@ class DiaryNoteTextViewController: UIViewController {
     // MARK: - Actions
     
     @objc private func cancelEdit() {
+        // FUAM-3495 — "Continue" erases changes, so revert to the PERSISTED body (the DB
+        // value) rather than `originalBody`, which is re-snapshotted on every focus.
+        // Rendered red (.destructive) because it is the discard action.
         let cancelAction = UIAlertAction(title: StringsProvider.string(forKey: .diaryNoteCancelConfirm),
-                                         style: .default,
+                                         style: .destructive,
                                          handler: { [weak self] _ in
             guard let self = self else { return }
-            self.textView.text = self.originalBody
-            self.placeholderLabel.isHidden = !(self.originalBody?.isEmpty ?? true)
+            let dbBody = self.diaryNote?.body ?? ""
+            self.textView.text = dbBody
+            self.placeholderLabel.isHidden = !dbBody.isEmpty
+            self.limitLabel.text = "\(dbBody.count) / \(self.maxCharacters)"
 
             if self.diaryNote != nil {
                 self.pageState.accept(.read)
@@ -329,8 +350,9 @@ class DiaryNoteTextViewController: UIViewController {
                 self.pageState.accept(.edit)
             }
         })
+        // "No" keeps editing, rendered in the study/tint color (.default).
         let confirmAction = UIAlertAction(title: StringsProvider.string(forKey: .diaryNoteCancelCancel),
-                                          style: .destructive,
+                                          style: .default,
                                           handler: nil)
         self.showAlert(withTitle: StringsProvider.string(forKey: .diaryNoteCancelTitle),
                        message: StringsProvider.string(forKey: .diaryNoteCancelBody),
@@ -361,14 +383,20 @@ class DiaryNoteTextViewController: UIViewController {
         }
     }
     
-    // FUAM-3495 — Single footer button whose label + action switch on text presence.
-    // In edit mode with non-empty text it saves; otherwise it cancels/closes.
+    // FUAM-3495 — Single footer button with three states driven by dirty tracking:
+    // SAVE (disabled) when there is nothing to save, SAVE (enabled) when there is
+    // unsaved text, and CLOSE once the on-screen text matches the persisted body.
     @objc private func footerButtonPressed() {
-        let trimmed = self.textView.text.trimmingCharacters(in: .whitespacesAndNewlines)
-        if Self.footerIsSaveMode(pageState: self.pageState.value, trimmedText: trimmed) {
+        let mode = Self.footerButtonMode(currentText: self.textView.text,
+                                         savedBody: self.diaryNote?.body,
+                                         noteExists: self.diaryNote != nil)
+        switch mode {
+        case .saveEnabled:
             self.doneButtonPressed()
-        } else {
+        case .close:
             self.closeButtonPressed()
+        case .saveDisabled:
+            break
         }
     }
 
@@ -501,18 +529,36 @@ class DiaryNoteTextViewController: UIViewController {
     
     // MARK: - Private Methods
 
-    // FUAM-3495 — Pure rule for the footer button behavior. Kept static/internal so a
-    // Quick spec can exercise it without instantiating the view controller.
-    static func footerIsSaveMode(pageState: PageState, trimmedText: String) -> Bool {
-        return pageState == .edit && !trimmedText.isEmpty
+    // FUAM-3495 — The three footer states. Kept internal so a Quick spec can exercise
+    // the rule without instantiating the view controller.
+    enum FooterButtonMode: Equatable { case saveDisabled, saveEnabled, close }
+
+    // FUAM-3495 — Pure rule for the footer button behavior. `savedBody` is the persisted
+    // body (`diaryNote?.body`); when the on-screen text matches it (and a note exists)
+    // there is nothing to save, so the button becomes CLOSE. Otherwise SAVE, enabled
+    // only when the text is non-empty after trimming.
+    static func footerButtonMode(currentText: String, savedBody: String?, noteExists: Bool) -> FooterButtonMode {
+        let isSaved = noteExists && currentText == (savedBody ?? "")
+        if isSaved { return .close }
+        let trimmed = currentText.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? .saveDisabled : .saveEnabled
     }
 
     private func updateFooterButton() {
-        let trimmed = self.textView.text.trimmingCharacters(in: .whitespacesAndNewlines)
-        let isSaveMode = Self.footerIsSaveMode(pageState: self.pageState.value, trimmedText: trimmed)
-        let key: StringKey = isSaveMode ? .diaryNoteCreateNoticedSave : .diaryNoteNoticedEmojiCloseButton
-        self.footerView.setButtonText(StringsProvider.string(forKey: key))
-        self.footerView.setButtonEnabled(enabled: true)
+        let mode = Self.footerButtonMode(currentText: self.textView.text,
+                                         savedBody: self.diaryNote?.body,
+                                         noteExists: self.diaryNote != nil)
+        switch mode {
+        case .saveDisabled:
+            self.footerView.setButtonText(StringsProvider.string(forKey: .diaryNoteCreateNoticedSave))
+            self.footerView.setButtonEnabled(enabled: false)
+        case .saveEnabled:
+            self.footerView.setButtonText(StringsProvider.string(forKey: .diaryNoteCreateNoticedSave))
+            self.footerView.setButtonEnabled(enabled: true)
+        case .close:
+            self.footerView.setButtonText(StringsProvider.string(forKey: .diaryNoteNoticedEmojiCloseButton))
+            self.footerView.setButtonEnabled(enabled: true)
+        }
     }
 
     private func updateTitleRow() {
@@ -626,6 +672,7 @@ class DiaryNoteTextViewController: UIViewController {
                     self.textView.text = diaryNoteText.body
                     self.limitLabel.text = "\(self.textView.text.count) / \(self.maxCharacters)"
                     self.updateTextFields(pageState: self.pageState.value)
+                    self.updateFooterButton()
                 }, onFailure: { [weak self] error in
                     guard let self = self else { return }
                     self.navigator.handleError(error: error, presenter: self)
