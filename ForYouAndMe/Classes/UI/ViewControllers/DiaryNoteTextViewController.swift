@@ -495,11 +495,15 @@ class DiaryNoteTextViewController: UIViewController {
             repository.updateDiaryNoteText(diaryNote: noteToSave)
                 .addProgress()
                 .subscribe(onSuccess: { [weak self] in
-                    self?.diaryNote = noteToSave
-                    self?.pageState.accept(.read)
-                    self?.originalBody = self?.textView.text
-                    // FUAM-3495 — the just-saved text is now the persisted body.
-                    self?.persistedBody = noteToSave.body
+                    guard let self = self else { return }
+                    self.diaryNote = noteToSave
+                    self.originalBody = self.textView.text
+                    // FUAM-3495 — the just-saved text is now the persisted body. Set it
+                    // BEFORE switching to .read, because that transition triggers
+                    // updateFooterButton, which must see the fresh persisted body to
+                    // flip the button from "Save" to "Close".
+                    self.persistedBody = noteToSave.body
+                    self.pageState.accept(.read)
                 }, onFailure: { [weak self] error in
                     guard let self = self else { return }
                     self.navigator.handleError(error: error, presenter: self)
