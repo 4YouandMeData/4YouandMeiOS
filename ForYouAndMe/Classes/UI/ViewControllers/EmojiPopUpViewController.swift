@@ -29,6 +29,11 @@ final class EmojiPopupViewController: UIViewController {
     private let onSave: (EmojiItem?) -> Void
     private let selected: EmojiItem?
 
+    // FUAM-3495 — optional hook fired after the popup is dismissed, on BOTH save and
+    // cancel (X). Lets a presenter restore its previous state (e.g. keyboard focus).
+    // Set after init so existing callers are unaffected.
+    var onDismiss: (() -> Void)?
+
     private var selectedIndexPath: IndexPath?
     
     private let collectionView: UICollectionView = {
@@ -129,13 +134,16 @@ final class EmojiPopupViewController: UIViewController {
     }
 
     @objc private func closeTapped() {
-        dismiss(animated: true, completion: nil)
+        dismiss(animated: true) {
+            self.onDismiss?()
+        }
     }
 
     @objc private func saveTapped() {
         let selected = selectedIndexPath.map { emojis[$0.item] }
         dismiss(animated: true) {
             self.onSave(selected)
+            self.onDismiss?()
         }
     }
 }

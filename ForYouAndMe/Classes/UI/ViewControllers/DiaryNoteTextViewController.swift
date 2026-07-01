@@ -509,7 +509,14 @@ class DiaryNoteTextViewController: UIViewController {
     }
 
     @objc private func emojiButtonTapped() {
-        
+
+        // FUAM-3495 — Remember whether the user was editing the text and exactly where
+        // the caret was, so we can restore the keyboard + caret after the picker closes.
+        let wasEditingText = self.textView.isFirstResponder
+        let savedSelectedRange = self.textView.selectedRange
+        // Close the keyboard while the emoji picker is up.
+        if wasEditingText { self.textView.resignFirstResponder() }
+
         let category = self.categoryForEmoji(diaryNote: self.diaryNote)
         let emojiItems = self.emojiItems(for: category)
         let emojiVC = EmojiPopupViewController(emojis: emojiItems,
@@ -540,7 +547,16 @@ class DiaryNoteTextViewController: UIViewController {
                     self.navigator.handleError(error: error, presenter: self)
                 }).disposed(by: self.disposeBag)
         }
-        
+
+        // FUAM-3495 — After the picker closes (save OR X-cancel), if we were editing
+        // text, restore the keyboard and the caret to exactly where it was.
+        emojiVC.onDismiss = { [weak self] in
+            guard let self = self, wasEditingText else { return }
+            self.textView.becomeFirstResponder()
+            let clampedLocation = min(savedSelectedRange.location, (self.textView.text as NSString).length)
+            self.textView.selectedRange = NSRange(location: clampedLocation, length: 0)
+        }
+
         emojiVC.modalPresentationStyle = .overCurrentContext
         emojiVC.modalTransitionStyle = .crossDissolve
         self.present(emojiVC, animated: true)
@@ -624,25 +640,17 @@ class DiaryNoteTextViewController: UIViewController {
 
         let category   = self.categoryForEmoji(diaryNote: self.diaryNote)
         let hasEmojis  = !self.emojiItems(for: category).isEmpty
-        let noteExists = (self.diaryNote != nil)
 
-        // Show emoji when the note exists and we're in READ state,
-        //  even if it came from the chart. Keep the reflection exception if needed.
+        // Keep the reflection-creation exception (that flow hides the picker).
         let isCreatingFromReflection =
             !self.isEditMode &&
             self.reflectionCoordinator != nil &&
             self.diaryNote?.diaryNoteable?.type.lowercased() == "task" &&
             (self.diaryNote?.body?.isEmpty ?? true)
-        
-        // FUAM-3495 — Also show the emoji picker BEFORE saving a brand-new note,
-        // so the user can pick the emoji while still editing the text.
-        let shouldShowEmojiButton =
-            hasEmojis &&
-            !isCreatingFromReflection &&
-            (
-                (self.pageState.value == .read && noteExists) ||     // existing note (unchanged)
-                (self.pageState.value == .edit && !noteExists)       // new note, pre-save picker
-            )
+
+        // FUAM-3495 — Keep the emoji picker on screen in ALL states (read/edit, new or
+        // existing, empty or set), so it never disappears while editing the text.
+        let shouldShowEmojiButton = hasEmojis && !isCreatingFromReflection
 
         if shouldShowEmojiButton {
             let spacer = UIView()
