@@ -304,12 +304,8 @@ class DiaryNoteTextViewController: UIViewController {
             })
             .disposed(by: self.disposeBag)
         
-        if let emoji = self.diaryNote?.feedbackTags?.last {
-            self.selectedEmoji = emoji
-            self.emojiButton.setImage(nil, for: .normal)
-            self.emojiButton.setTitle(emoji.tag, for: .normal)
-            self.emojiButton.titleLabel?.font = UIFont.systemFont(ofSize: 22)
-        }
+        self.selectedEmoji = self.diaryNote?.feedbackTags?.last
+        self.refreshEmojiButtonGlyph()
         
         self.loadNote()
         self.updateTitleRow()
@@ -344,10 +340,14 @@ class DiaryNoteTextViewController: UIViewController {
                                          style: .destructive,
                                          handler: { [weak self] _ in
             guard let self = self else { return }
+            // FUAM-3495 — Revert the textarea to the persisted (DB) value FIRST — purely
+            // local, no server call — and dismiss the keyboard in the same run loop so
+            // the restoration is concurrent with the keyboard closing (no lag).
             let dbBody = self.persistedBody ?? ""
             self.textView.text = dbBody
             self.placeholderLabel.isHidden = !dbBody.isEmpty
             self.limitLabel.text = "\(dbBody.count) / \(self.maxCharacters)"
+            self.textView.resignFirstResponder()
 
             if self.diaryNote != nil {
                 self.pageState.accept(.read)
@@ -478,6 +478,12 @@ class DiaryNoteTextViewController: UIViewController {
                 if !feedbackSaved {
                     // Note is saved; only the emoji attach failed.
                     self.showAlert(forError: nil)
+                } else if let picked = self.selectedEmoji, picked.label != "none" {
+                    // FUAM-3495 — the emoji was created by the chained PATCH, but the
+                    // POST response does not include it. Refetch so feedbackTags carry
+                    // the new server record id and a later emoji change swaps (not
+                    // duplicates) it.
+                    self.reloadDiaryNoteFromServer()
                 }
             }, onFailure: { [weak self] error in
                 guard let self = self else { return }
@@ -511,21 +517,24 @@ class DiaryNoteTextViewController: UIViewController {
             guard let self = self, let emoji = selectedEmoji else { return }
 
             self.selectedEmoji = emoji
-
-            let tag = (emoji.label != "none") ? emoji.tag : nil
-            self.emojiButton.setImage(nil, for: .normal)
-            self.emojiButton.setTitle(tag, for: .normal)
-            self.emojiButton.titleLabel?.font = UIFont.systemFont(ofSize: 22)
+            self.refreshEmojiButtonGlyph()
 
             // FUAM-3495 — For a brand-new note (not yet persisted) just hold the pick
             // locally; the PATCH is chained after the POST on Save. For an existing
-            // note keep the current immediate update behavior.
+            // note persist immediately, then refetch so feedbackTags carry the real
+            // server record ids for the next change.
             guard var diaryNote = self.diaryNote else { return }
+            // The just-picked emoji is a new tag (catalog id == ""); the serializer
+            // marks the prior server record(s) for destruction. Ensure the array
+            // exists so the append is not silently dropped when feedbackTags is nil.
+            if diaryNote.feedbackTags == nil { diaryNote.feedbackTags = [] }
             diaryNote.feedbackTags?.append(emoji)
 
             self.repository.updateDiaryNoteText(diaryNote: diaryNote)
                 .addProgress()
-                .subscribe(onSuccess: { },
+                .subscribe(onSuccess: { [weak self] in
+                    self?.reloadDiaryNoteFromServer()
+                },
                            onFailure: { [weak self] error in
                     guard let self = self else { return }
                     self.navigator.handleError(error: error, presenter: self)
@@ -536,7 +545,42 @@ class DiaryNoteTextViewController: UIViewController {
         emojiVC.modalTransitionStyle = .crossDissolve
         self.present(emojiVC, animated: true)
     }
-    
+
+    // FUAM-3495 — Refetch the note so the local feedbackTags reflect the true server
+    // state (real record ids). Without this, a second emoji change re-sends an
+    // already-destroyed or empty-id tag for destruction and the backend errors, and
+    // a text edit would re-send stale feedback_tags. Called after every successful
+    // emoji persistence.
+    private func reloadDiaryNoteFromServer() {
+        guard let noteID = self.diaryNote?.id else { return }
+        self.repository.getDiaryNoteText(noteID: noteID)
+            .subscribe(onSuccess: { [weak self] fetched in
+                guard let self = self else { return }
+                self.diaryNote = fetched
+                self.persistedBody = fetched.body
+                self.selectedEmoji = fetched.feedbackTags?.last
+                self.refreshEmojiButtonGlyph()
+                self.updateFooterButton()
+            }, onFailure: { [weak self] error in
+                guard let self = self else { return }
+                self.navigator.handleError(error: error, presenter: self)
+            })
+            .disposed(by: self.disposeBag)
+    }
+
+    // FUAM-3495 — Render the current selectedEmoji on the emoji button (or restore the
+    // default icon when there is no real emoji).
+    private func refreshEmojiButtonGlyph() {
+        if let emoji = self.selectedEmoji, emoji.label != "none" {
+            self.emojiButton.setImage(nil, for: .normal)
+            self.emojiButton.setTitle(emoji.tag, for: .normal)
+            self.emojiButton.titleLabel?.font = UIFont.systemFont(ofSize: 22)
+        } else {
+            self.emojiButton.setTitle(nil, for: .normal)
+            self.emojiButton.setImage(ImagePalette.image(withName: .emojiICon), for: .normal)
+        }
+    }
+
     // MARK: - Private Methods
 
     // FUAM-3495 — The three footer states. Kept internal so a Quick spec can exercise
