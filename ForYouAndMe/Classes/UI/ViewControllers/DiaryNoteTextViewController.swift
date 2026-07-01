@@ -20,6 +20,10 @@ class DiaryNoteTextViewController: UIViewController {
     private let reflectionCoordinator: ReflectionSectionCoordinator?
     private var selectedEmoji: EmojiItem?
     private var originalBody: String?
+    // FUAM-3495 — The last value persisted to the backend (DB). Updated ONLY on load
+    // and on successful save; never while typing. Source of truth for the cancel/revert
+    // and for the footer button's saved-vs-dirty comparison.
+    private var persistedBody: String?
     private var wasJustCreatedHere: Bool = false
 
     private lazy var backButton: UIButton = {
@@ -220,6 +224,7 @@ class DiaryNoteTextViewController: UIViewController {
         self.cache = Services.shared.storageServices
         self.analytics = Services.shared.analytics
         self.diaryNote = dataPoint
+        self.persistedBody = dataPoint?.body
         self.isEditMode = isEditMode
         self.isFromChart = isFromChart
         self.reflectionCoordinator = reflectionCoordinator
@@ -339,7 +344,7 @@ class DiaryNoteTextViewController: UIViewController {
                                          style: .destructive,
                                          handler: { [weak self] _ in
             guard let self = self else { return }
-            let dbBody = self.diaryNote?.body ?? ""
+            let dbBody = self.persistedBody ?? ""
             self.textView.text = dbBody
             self.placeholderLabel.isHidden = !dbBody.isEmpty
             self.limitLabel.text = "\(dbBody.count) / \(self.maxCharacters)"
@@ -388,7 +393,7 @@ class DiaryNoteTextViewController: UIViewController {
     // unsaved text, and CLOSE once the on-screen text matches the persisted body.
     @objc private func footerButtonPressed() {
         let mode = Self.footerButtonMode(currentText: self.textView.text,
-                                         savedBody: self.diaryNote?.body,
+                                         savedBody: self.persistedBody,
                                          noteExists: self.diaryNote != nil)
         switch mode {
         case .saveEnabled:
@@ -459,6 +464,9 @@ class DiaryNoteTextViewController: UIViewController {
                 self.wasJustCreatedHere = true
                 self.isEditMode = true
                 self.originalBody = saved.body
+                // FUAM-3495 — record the persisted body (fall back to the text we sent,
+                // in case the create response does not echo the body).
+                self.persistedBody = saved.body ?? noteToSave.body
                 if self.isLinked && self.isReflectionLinkedNote {
                     self.reflectionCoordinator?.onReflectionCreated(
                         presenter: self,
@@ -484,6 +492,8 @@ class DiaryNoteTextViewController: UIViewController {
                     self?.diaryNote = noteToSave
                     self?.pageState.accept(.read)
                     self?.originalBody = self?.textView.text
+                    // FUAM-3495 — the just-saved text is now the persisted body.
+                    self?.persistedBody = noteToSave.body
                 }, onFailure: { [weak self] error in
                     guard let self = self else { return }
                     self.navigator.handleError(error: error, presenter: self)
@@ -546,7 +556,7 @@ class DiaryNoteTextViewController: UIViewController {
 
     private func updateFooterButton() {
         let mode = Self.footerButtonMode(currentText: self.textView.text,
-                                         savedBody: self.diaryNote?.body,
+                                         savedBody: self.persistedBody,
                                          noteExists: self.diaryNote != nil)
         switch mode {
         case .saveDisabled:
@@ -669,6 +679,7 @@ class DiaryNoteTextViewController: UIViewController {
                 .subscribe(onSuccess: { [weak self] diaryNoteText in
                     guard let self = self else { return }
                     self.diaryNote = diaryNoteText
+                    self.persistedBody = diaryNoteText.body
                     self.textView.text = diaryNoteText.body
                     self.limitLabel.text = "\(self.textView.text.count) / \(self.maxCharacters)"
                     self.updateTextFields(pageState: self.pageState.value)
@@ -717,7 +728,8 @@ extension DiaryNoteTextViewController: UITextViewDelegate {
         if textView.text.count <= self.maxCharacters {
             textView.layer.borderColor = ColorPalette.color(withType: .inactive).cgColor
             self.limitLabel.textColor = ColorPalette.color(withType: .inactive)
-            self.diaryNote?.body = textView.text
+            // FUAM-3495 — do NOT mutate diaryNote.body while typing; the persisted body
+            // is tracked separately so cancel/revert and the footer dirty-check stay correct.
         } else {
             textView.layer.borderColor = UIColor.red.cgColor
             self.limitLabel.textColor = .red
