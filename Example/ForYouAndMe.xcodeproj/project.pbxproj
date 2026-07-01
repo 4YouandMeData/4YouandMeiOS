@@ -23,6 +23,8 @@
 		2935A0050001F37A0001AAAA /* MenstrualPayloadDecodingSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2935A0060001F37A0001AAAA /* MenstrualPayloadDecodingSpec.swift */; };
 		2935A0070001F37A0001AAAA /* MenstrualNetworkTaskSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2935A0080001F37A0001AAAA /* MenstrualNetworkTaskSpec.swift */; };
 		2939A0010001F37A0001AAAA /* UpdateDiaryNoteFeedbackTagsTaskSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2939A0020001F37A0001AAAA /* UpdateDiaryNoteFeedbackTagsTaskSpec.swift */; };
+		3495A0010001F37A0001AAAA /* FakeApiGateway.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3495A0020001F37A0001AAAA /* FakeApiGateway.swift */; };
+		3495A0030001F37A0001AAAA /* SendDiaryNoteTextWithFeedbackSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3495A0040001F37A0001AAAA /* SendDiaryNoteTextWithFeedbackSpec.swift */; };
 		3247A0010001F37A0001AAAA /* HotFlashAdditionalStepsTaskSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3247A0020001F37A0001AAAA /* HotFlashAdditionalStepsTaskSpec.swift */; };
 		3247A0030001F37A0001AAAA /* HotFlashPayloadDecodingSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3247A0040001F37A0001AAAA /* HotFlashPayloadDecodingSpec.swift */; };
 		2937A0010001F37A0001AAAA /* MenstrualUserSettingsTaskSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2937A0020001F37A0001AAAA /* MenstrualUserSettingsTaskSpec.swift */; };
@@ -99,6 +101,8 @@
 		2935A0060001F37A0001AAAA /* MenstrualPayloadDecodingSpec.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MenstrualPayloadDecodingSpec.swift; sourceTree = "<group>"; };
 		2935A0080001F37A0001AAAA /* MenstrualNetworkTaskSpec.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MenstrualNetworkTaskSpec.swift; sourceTree = "<group>"; };
 		2939A0020001F37A0001AAAA /* UpdateDiaryNoteFeedbackTagsTaskSpec.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = UpdateDiaryNoteFeedbackTagsTaskSpec.swift; sourceTree = "<group>"; };
+		3495A0020001F37A0001AAAA /* FakeApiGateway.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = FakeApiGateway.swift; sourceTree = "<group>"; };
+		3495A0040001F37A0001AAAA /* SendDiaryNoteTextWithFeedbackSpec.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SendDiaryNoteTextWithFeedbackSpec.swift; sourceTree = "<group>"; };
 		3247A0020001F37A0001AAAA /* HotFlashAdditionalStepsTaskSpec.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = HotFlashAdditionalStepsTaskSpec.swift; sourceTree = "<group>"; };
 		3247A0040001F37A0001AAAA /* HotFlashPayloadDecodingSpec.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = HotFlashPayloadDecodingSpec.swift; sourceTree = "<group>"; };
 		2937A0020001F37A0001AAAA /* MenstrualUserSettingsTaskSpec.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MenstrualUserSettingsTaskSpec.swift; sourceTree = "<group>"; };
@@ -222,6 +226,8 @@
 				2935A0060001F37A0001AAAA /* MenstrualPayloadDecodingSpec.swift */,
 				2935A0080001F37A0001AAAA /* MenstrualNetworkTaskSpec.swift */,
 				2939A0020001F37A0001AAAA /* UpdateDiaryNoteFeedbackTagsTaskSpec.swift */,
+				3495A0020001F37A0001AAAA /* FakeApiGateway.swift */,
+				3495A0040001F37A0001AAAA /* SendDiaryNoteTextWithFeedbackSpec.swift */,
 				3247A0020001F37A0001AAAA /* HotFlashAdditionalStepsTaskSpec.swift */,
 				3247A0040001F37A0001AAAA /* HotFlashPayloadDecodingSpec.swift */,
 				2937A0020001F37A0001AAAA /* MenstrualUserSettingsTaskSpec.swift */,
@@ -543,6 +549,8 @@
 				2935A0050001F37A0001AAAA /* MenstrualPayloadDecodingSpec.swift in Sources */,
 				2935A0070001F37A0001AAAA /* MenstrualNetworkTaskSpec.swift in Sources */,
 				2939A0010001F37A0001AAAA /* UpdateDiaryNoteFeedbackTagsTaskSpec.swift in Sources */,
+				3495A0010001F37A0001AAAA /* FakeApiGateway.swift in Sources */,
+				3495A0030001F37A0001AAAA /* SendDiaryNoteTextWithFeedbackSpec.swift in Sources */,
 				3247A0010001F37A0001AAAA /* HotFlashAdditionalStepsTaskSpec.swift in Sources */,
 				3247A0030001F37A0001AAAA /* HotFlashPayloadDecodingSpec.swift in Sources */,
 				2937A0010001F37A0001AAAA /* MenstrualUserSettingsTaskSpec.swift in Sources */,

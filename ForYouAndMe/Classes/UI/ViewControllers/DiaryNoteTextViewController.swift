@@ -400,12 +400,17 @@ class DiaryNoteTextViewController: UIViewController {
 
         if mustSendInsteadOfUpdate {
            
-            repository.sendDiaryNoteText(
+            // FUAM-3495 — Create the note (POST) then chain the best-effort emoji
+            // attach (PATCH, one retry) behind the scenes. The note is always
+            // persisted; on emoji failure the note stays saved and a default error
+            // popup is shown.
+            repository.sendDiaryNoteTextWithFeedback(
                 diaryNote: noteToSave,
+                emoji: self.selectedEmoji,
                 fromChart: isLinked
             )
             .addProgress()
-            .subscribe(onSuccess: { [weak self] saved in
+            .subscribe(onSuccess: { [weak self] (saved, feedbackSaved) in
                 guard let self = self else { return }
                 self.diaryNote = saved
                 self.wasJustCreatedHere = true
@@ -419,6 +424,10 @@ class DiaryNoteTextViewController: UIViewController {
                     )
                 }
                 self.pageState.accept(.read)
+                if !feedbackSaved {
+                    // Note is saved; only the emoji attach failed.
+                    self.showAlert(forError: nil)
+                }
             }, onFailure: { [weak self] error in
                 guard let self = self else { return }
                 self.navigator.handleError(error: error, presenter: self)
@@ -447,16 +456,20 @@ class DiaryNoteTextViewController: UIViewController {
         let emojiVC = EmojiPopupViewController(emojis: emojiItems,
                                                selected: self.selectedEmoji) { [weak self] selectedEmoji in
             guard let self = self, let emoji = selectedEmoji else { return }
-            guard var diaryNote = self.diaryNote else { return }
 
             self.selectedEmoji = emoji
-            diaryNote.feedbackTags?.append(emoji)
-            
+
             let tag = (emoji.label != "none") ? emoji.tag : nil
             self.emojiButton.setImage(nil, for: .normal)
             self.emojiButton.setTitle(tag, for: .normal)
             self.emojiButton.titleLabel?.font = UIFont.systemFont(ofSize: 22)
-            
+
+            // FUAM-3495 — For a brand-new note (not yet persisted) just hold the pick
+            // locally; the PATCH is chained after the POST on Save. For an existing
+            // note keep the current immediate update behavior.
+            guard var diaryNote = self.diaryNote else { return }
+            diaryNote.feedbackTags?.append(emoji)
+
             self.repository.updateDiaryNoteText(diaryNote: diaryNote)
                 .addProgress()
                 .subscribe(onSuccess: { },
@@ -491,11 +504,15 @@ class DiaryNoteTextViewController: UIViewController {
             self.diaryNote?.diaryNoteable?.type.lowercased() == "task" &&
             (self.diaryNote?.body?.isEmpty ?? true)
         
+        // FUAM-3495 — Also show the emoji picker BEFORE saving a brand-new note,
+        // so the user can pick the emoji while still editing the text.
         let shouldShowEmojiButton =
-            noteExists &&
             hasEmojis &&
-            (self.pageState.value == .read) &&
-            !isCreatingFromReflection
+            !isCreatingFromReflection &&
+            (
+                (self.pageState.value == .read && noteExists) ||     // existing note (unchanged)
+                (self.pageState.value == .edit && !noteExists)       // new note, pre-save picker
+            )
 
         if shouldShowEmojiButton {
             let spacer = UIView()
