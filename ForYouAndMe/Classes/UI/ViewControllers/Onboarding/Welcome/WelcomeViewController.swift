@@ -53,8 +53,15 @@ class WelcomeViewController: UIViewController {
                            sizeDimension: 136)
         stackView.addBlankSpace(space: 40)
         self.headerImageView = stackView.addHeaderImage(image: ImagePalette.image(withName: .mainLogo))
-        stackView.addBlankSpace(space: 63)
-        stackView.addHeaderImage(image: ImagePalette.image(withName: .cziLogo))
+        // Presence-based, host-injectable partner logo. Prefer the canonical `partner_logo`
+        // and fall back to the deprecated `czi_logo` for host apps still shipping the legacy key.
+        // Both the artwork and the gap above it live inside this branch, so studies without any
+        // partner asset render nothing (no empty box / dead space).
+        if let partnerLogoImage = ImagePalette.image(withName: .partnerLogo)
+            ?? ImagePalette.image(withName: .cziLogo) {
+            stackView.addBlankSpace(space: 63)
+            stackView.addArrangedSubview(self.makePartnerLogoView(image: partnerLogoImage, width: 195))
+        }
         stackView.addBlankSpace(space: 66)
         stackView.addArrangedSubview(self.continueButton)
         stackView.addBlankSpace(space: 50)
@@ -76,8 +83,34 @@ class WelcomeViewController: UIViewController {
         self.navigator.checkForNotificationPermission(presenter: self)
     }
     
+    // MARK: Helpers
+
+    /// Builds a horizontally-centered partner-logo view sized to a fixed width while preserving
+    /// the source image's aspect ratio, so the wide landscape lockup is never stretched/distorted
+    /// regardless of the host asset's pixel dimensions.
+    private func makePartnerLogoView(image: UIImage, width: CGFloat) -> UIView {
+        let containerView = UIView()
+        containerView.backgroundColor = .clear
+
+        let imageView = UIImageView(image: image)
+        imageView.contentMode = .scaleAspectFit
+        containerView.addSubview(imageView)
+
+        imageView.autoPinEdge(toSuperviewEdge: .top)
+        imageView.autoPinEdge(toSuperviewEdge: .bottom)
+        imageView.autoAlignAxis(toSuperviewAxis: .vertical)
+        imageView.autoPinEdge(toSuperviewEdge: .leading, withInset: 0, relation: .greaterThanOrEqual)
+        imageView.autoPinEdge(toSuperviewEdge: .trailing, withInset: 0, relation: .greaterThanOrEqual)
+        imageView.autoSetDimension(.width, toSize: width)
+        if image.size.width > 0 {
+            let aspectRatio = image.size.height / image.size.width
+            imageView.autoMatch(.height, to: .width, of: imageView, withMultiplier: aspectRatio)
+        }
+        return containerView
+    }
+
     // MARK: Actions
-    
+
     @objc private func showIntro() {
         self.navigator.showIntro(presenter: self)
     }
