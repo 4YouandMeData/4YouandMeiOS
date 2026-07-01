@@ -11,7 +11,7 @@ import RxCocoa
 
 class DiaryNoteTextViewController: UIViewController {
     
-    fileprivate enum PageState { case read, edit }
+    enum PageState { case read, edit }
     
     private let pageState: BehaviorRelay<PageState> = BehaviorRelay<PageState>(value: .read)
     private let navigator: AppNavigator
@@ -182,7 +182,7 @@ class DiaryNoteTextViewController: UIViewController {
     private lazy var footerView: GenericButtonView = {
         
         let buttonView = GenericButtonView(withTextStyleCategory: .secondaryBackground())
-        buttonView.addTarget(target: self, action: #selector(self.closeButtonPressed))
+        buttonView.addTarget(target: self, action: #selector(self.footerButtonPressed))
         buttonView.setButtonText(StringsProvider.string(forKey: .diaryNoteNoticedEmojiCloseButton))
         buttonView.setButtonEnabled(enabled: true)
         
@@ -275,6 +275,7 @@ class DiaryNoteTextViewController: UIViewController {
                 guard let self = self else { return }
                 self.updateTextFields(pageState: newState)
                 self.updateTitleRow()
+                self.updateFooterButton()
                 self.view.endEditing(true)
 
                 let shouldShowEditButton = (self.diaryNote != nil && newState == .read)
@@ -291,6 +292,7 @@ class DiaryNoteTextViewController: UIViewController {
         
         self.loadNote()
         self.updateTitleRow()
+        self.updateFooterButton()
         self.addObservers()
     }
     
@@ -359,6 +361,17 @@ class DiaryNoteTextViewController: UIViewController {
         }
     }
     
+    // FUAM-3495 — Single footer button whose label + action switch on text presence.
+    // In edit mode with non-empty text it saves; otherwise it cancels/closes.
+    @objc private func footerButtonPressed() {
+        let trimmed = self.textView.text.trimmingCharacters(in: .whitespacesAndNewlines)
+        if Self.footerIsSaveMode(pageState: self.pageState.value, trimmedText: trimmed) {
+            self.doneButtonPressed()
+        } else {
+            self.closeButtonPressed()
+        }
+    }
+
     @objc private func closeButtonPressed() {
         if let coordinator = self.reflectionCoordinator {
             coordinator.showSuccessPage()
@@ -381,7 +394,9 @@ class DiaryNoteTextViewController: UIViewController {
         // Validate that text is not empty or only whitespace
         let trimmedText = textView.text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedText.isEmpty else {
-            // Show error feedback - text is empty
+            // FUAM-3495 (req 2) — Defensive empty-save: show the default error popup
+            // and navigate back once it is dismissed.
+            self.showAlert(forError: nil, onDismiss: { [weak self] in self?.closeButtonPressed() })
             return
         }
         
@@ -485,6 +500,21 @@ class DiaryNoteTextViewController: UIViewController {
     }
     
     // MARK: - Private Methods
+
+    // FUAM-3495 — Pure rule for the footer button behavior. Kept static/internal so a
+    // Quick spec can exercise it without instantiating the view controller.
+    static func footerIsSaveMode(pageState: PageState, trimmedText: String) -> Bool {
+        return pageState == .edit && !trimmedText.isEmpty
+    }
+
+    private func updateFooterButton() {
+        let trimmed = self.textView.text.trimmingCharacters(in: .whitespacesAndNewlines)
+        let isSaveMode = Self.footerIsSaveMode(pageState: self.pageState.value, trimmedText: trimmed)
+        let key: StringKey = isSaveMode ? .diaryNoteCreateNoticedSave : .diaryNoteNoticedEmojiCloseButton
+        self.footerView.setButtonText(StringsProvider.string(forKey: key))
+        self.footerView.setButtonEnabled(enabled: true)
+    }
+
     private func updateTitleRow() {
         // Clear previous subviews
         self.titleRow.arrangedSubviews.forEach {
@@ -574,6 +604,9 @@ class DiaryNoteTextViewController: UIViewController {
         if textView.isFirstResponder {
             textView.reloadInputViews()
         }
+
+        // FUAM-3495 — Keep the footer label in sync with the current state/text.
+        self.updateFooterButton()
     }
     
     private func loadNote() {
@@ -622,6 +655,7 @@ extension DiaryNoteTextViewController: UITextViewDelegate {
         // Update save button state when editing begins
         let trimmedText = textView.text.trimmingCharacters(in: .whitespacesAndNewlines)
         self.doneButton.isEnabled = !trimmedText.isEmpty
+        self.updateFooterButton()
     }
     
     func textViewDidChange(_ textView: UITextView) {
@@ -631,7 +665,8 @@ extension DiaryNoteTextViewController: UITextViewDelegate {
         // Enable/disable save button based on whether text is empty or only whitespace
         let trimmedText = textView.text.trimmingCharacters(in: .whitespacesAndNewlines)
         self.doneButton.isEnabled = !trimmedText.isEmpty
-        
+        self.updateFooterButton()
+
         if textView.text.count <= self.maxCharacters {
             textView.layer.borderColor = ColorPalette.color(withType: .inactive).cgColor
             self.limitLabel.textColor = ColorPalette.color(withType: .inactive)
