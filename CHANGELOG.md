@@ -1,5 +1,11 @@
 ## [Unreleased]
 
+## Release 0.101.9
+
+_First trunk publish since 0.101.6. The 0.101.5 and 0.101.8 tags were cut but never pushed to the CocoaPods trunk, so their content ships to cocoapods.org for the first time with this release (see the 0.101.5 and 0.101.8 notes below). The 0.101.7 version bump was folded into 0.101.8 and was never tagged._
+
+- **ResearchKit Spatial Span Memory task** (FUAM-3483, FUAM-3484). Integrates the ResearchKit Spatial Span Memory task as a new activity type `spatial_span_memory_task`. FUAM-3483 wires the task into the task/activity flow (task builder, activity-type mapping, and presentation); FUAM-3484 collects the task result and uploads it through the existing task-result path. Backed by the `FYAMResearchKit` dependency already pinned in the podspec.
+
 ## Release 0.101.8
 
 _Bundles everything merged since 0.101.6. The 0.101.7 version bump was cut on `develop` but never tagged or published, so its notes are folded in here._
