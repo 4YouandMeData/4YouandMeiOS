@@ -14,6 +14,10 @@ enum ImageName: String, CaseIterable {
     case fyamLogoSpecific = "fyam_logo_specific"
     case fyamLogoGeneric = "fyam_logo_generic"
     case mainLogo = "main_logo"
+    // Canonical host-injectable partner logo shown on the welcome screen.
+    case partnerLogo = "partner_logo"
+    // Deprecated: legacy partner-logo key. Prefer `partnerLogo`; kept as a backward-compatible
+    // fallback for host apps still shipping `czi_logo` (MyLongCOVID/MyPancreatitis/MySarcoidosis).
     case cziLogo = "czi_logo"
     case nextButtonPrimary = "next_button_primary"
     case backButtonPrimary = "back_button_primary"
@@ -161,9 +165,14 @@ public class ImagePalette {
     }
     
     static func checkImageAvailability() {
-        ImageName.allCases.forEach { imageName in
-            assert(ImagePalette.image(withName: imageName) != nil, "missing image: \(imageName.rawValue)")
-        }
+        // Optional, host-injectable images that are absent for most studies and must not
+        // trip the availability assertion (the welcome-screen partner logo is presence-based).
+        let optionalImages: Set<ImageName> = [.partnerLogo, .cziLogo]
+        ImageName.allCases
+            .filter { !optionalImages.contains($0) }
+            .forEach { imageName in
+                assert(ImagePalette.image(withName: imageName) != nil, "missing image: \(imageName.rawValue)")
+            }
         TemplateImageName.allCases.forEach { imageName in
             assert(ImagePalette.templateImage(withName: imageName) != nil, "missing template image: \(imageName.rawValue)")
         }

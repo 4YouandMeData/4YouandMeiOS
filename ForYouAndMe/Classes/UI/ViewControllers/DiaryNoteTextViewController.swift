@@ -11,7 +11,7 @@ import RxCocoa
 
 class DiaryNoteTextViewController: UIViewController {
     
-    fileprivate enum PageState { case read, edit }
+    enum PageState { case read, edit }
     
     private let pageState: BehaviorRelay<PageState> = BehaviorRelay<PageState>(value: .read)
     private let navigator: AppNavigator
@@ -20,7 +20,21 @@ class DiaryNoteTextViewController: UIViewController {
     private let reflectionCoordinator: ReflectionSectionCoordinator?
     private var selectedEmoji: EmojiItem?
     private var originalBody: String?
+    // FUAM-3495 — The last value persisted to the backend (DB). Updated ONLY on load
+    // and on successful save; never while typing. Source of truth for the cancel/revert
+    // and for the footer button's saved-vs-dirty comparison.
+    private var persistedBody: String?
     private var wasJustCreatedHere: Bool = false
+
+    private lazy var backButton: UIButton = {
+        let button = UIButton()
+        button.setImage(ImagePalette.templateImage(withName: .backButtonNavigation), for: .normal)
+        button.tintColor = ColorPalette.color(withType: .primaryText)
+        button.autoSetDimension(.width, toSize: 32)
+        button.imageView?.contentMode = .scaleAspectFit
+        button.addTarget(self, action: #selector(self.closeButtonPressed), for: .touchUpInside)
+        return button
+    }()
 
     private lazy var titleRow: UIStackView = {
         let stack = UIStackView()
@@ -98,9 +112,15 @@ class DiaryNoteTextViewController: UIViewController {
         
         let stackView = UIStackView.create(withAxis: .vertical, spacing: 8.0)
 
+        // Back button
+        let backButtonContainerView = UIView()
+        backButtonContainerView.addSubview(self.backButton)
+        self.backButton.autoPinEdgesToSuperviewEdges(with: .zero, excludingEdge: .trailing)
+        stackView.addArrangedSubview(backButtonContainerView)
+
         let emptyView = UIView()
         emptyView.autoSetDimensions(to: CGSize(width: 24, height: 24))
-        
+
         let category = self.categoryForEmoji(diaryNote: self.diaryNote)
         if !self.emojiItems(for: category).isEmpty,
            self.isEditMode {
@@ -182,7 +202,7 @@ class DiaryNoteTextViewController: UIViewController {
     private lazy var footerView: GenericButtonView = {
         
         let buttonView = GenericButtonView(withTextStyleCategory: .secondaryBackground())
-        buttonView.addTarget(target: self, action: #selector(self.closeButtonPressed))
+        buttonView.addTarget(target: self, action: #selector(self.footerButtonPressed))
         buttonView.setButtonText(StringsProvider.string(forKey: .diaryNoteNoticedEmojiCloseButton))
         buttonView.setButtonEnabled(enabled: true)
         
@@ -204,6 +224,7 @@ class DiaryNoteTextViewController: UIViewController {
         self.cache = Services.shared.storageServices
         self.analytics = Services.shared.analytics
         self.diaryNote = dataPoint
+        self.persistedBody = dataPoint?.body
         self.isEditMode = isEditMode
         self.isFromChart = isFromChart
         self.reflectionCoordinator = reflectionCoordinator
@@ -275,6 +296,7 @@ class DiaryNoteTextViewController: UIViewController {
                 guard let self = self else { return }
                 self.updateTextFields(pageState: newState)
                 self.updateTitleRow()
+                self.updateFooterButton()
                 self.view.endEditing(true)
 
                 let shouldShowEditButton = (self.diaryNote != nil && newState == .read)
@@ -282,15 +304,12 @@ class DiaryNoteTextViewController: UIViewController {
             })
             .disposed(by: self.disposeBag)
         
-        if let emoji = self.diaryNote?.feedbackTags?.last {
-            self.selectedEmoji = emoji
-            self.emojiButton.setImage(nil, for: .normal)
-            self.emojiButton.setTitle(emoji.tag, for: .normal)
-            self.emojiButton.titleLabel?.font = UIFont.systemFont(ofSize: 22)
-        }
+        self.selectedEmoji = self.diaryNote?.feedbackTags?.last
+        self.refreshEmojiButtonGlyph()
         
         self.loadNote()
         self.updateTitleRow()
+        self.updateFooterButton()
         self.addObservers()
     }
     
@@ -314,12 +333,21 @@ class DiaryNoteTextViewController: UIViewController {
     // MARK: - Actions
     
     @objc private func cancelEdit() {
+        // FUAM-3495 — "Continue" erases changes, so revert to the PERSISTED body (the DB
+        // value) rather than `originalBody`, which is re-snapshotted on every focus.
+        // Rendered red (.destructive) because it is the discard action.
         let cancelAction = UIAlertAction(title: StringsProvider.string(forKey: .diaryNoteCancelConfirm),
-                                         style: .default,
+                                         style: .destructive,
                                          handler: { [weak self] _ in
             guard let self = self else { return }
-            self.textView.text = self.originalBody
-            self.placeholderLabel.isHidden = !(self.originalBody?.isEmpty ?? true)
+            // FUAM-3495 — Revert the textarea to the persisted (DB) value FIRST — purely
+            // local, no server call — and dismiss the keyboard in the same run loop so
+            // the restoration is concurrent with the keyboard closing (no lag).
+            let dbBody = self.persistedBody ?? ""
+            self.textView.text = dbBody
+            self.placeholderLabel.isHidden = !dbBody.isEmpty
+            self.limitLabel.text = "\(dbBody.count) / \(self.maxCharacters)"
+            self.textView.resignFirstResponder()
 
             if self.diaryNote != nil {
                 self.pageState.accept(.read)
@@ -327,8 +355,9 @@ class DiaryNoteTextViewController: UIViewController {
                 self.pageState.accept(.edit)
             }
         })
+        // "No" keeps editing, rendered in the study/tint color (.default).
         let confirmAction = UIAlertAction(title: StringsProvider.string(forKey: .diaryNoteCancelCancel),
-                                          style: .destructive,
+                                          style: .default,
                                           handler: nil)
         self.showAlert(withTitle: StringsProvider.string(forKey: .diaryNoteCancelTitle),
                        message: StringsProvider.string(forKey: .diaryNoteCancelBody),
@@ -359,6 +388,23 @@ class DiaryNoteTextViewController: UIViewController {
         }
     }
     
+    // FUAM-3495 — Single footer button with three states driven by dirty tracking:
+    // SAVE (disabled) when there is nothing to save, SAVE (enabled) when there is
+    // unsaved text, and CLOSE once the on-screen text matches the persisted body.
+    @objc private func footerButtonPressed() {
+        let mode = Self.footerButtonMode(currentText: self.textView.text,
+                                         savedBody: self.persistedBody,
+                                         noteExists: self.diaryNote != nil)
+        switch mode {
+        case .saveEnabled:
+            self.doneButtonPressed()
+        case .close:
+            self.closeButtonPressed()
+        case .saveDisabled:
+            break
+        }
+    }
+
     @objc private func closeButtonPressed() {
         if let coordinator = self.reflectionCoordinator {
             coordinator.showSuccessPage()
@@ -381,7 +427,9 @@ class DiaryNoteTextViewController: UIViewController {
         // Validate that text is not empty or only whitespace
         let trimmedText = textView.text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedText.isEmpty else {
-            // Show error feedback - text is empty
+            // FUAM-3495 (req 2) — Defensive empty-save: show the default error popup
+            // and navigate back once it is dismissed.
+            self.showAlert(forError: nil, onDismiss: { [weak self] in self?.closeButtonPressed() })
             return
         }
         
@@ -400,17 +448,25 @@ class DiaryNoteTextViewController: UIViewController {
 
         if mustSendInsteadOfUpdate {
            
-            repository.sendDiaryNoteText(
+            // FUAM-3495 — Create the note (POST) then chain the best-effort emoji
+            // attach (PATCH, one retry) behind the scenes. The note is always
+            // persisted; on emoji failure the note stays saved and a default error
+            // popup is shown.
+            repository.sendDiaryNoteTextWithFeedback(
                 diaryNote: noteToSave,
+                emoji: self.selectedEmoji,
                 fromChart: isLinked
             )
             .addProgress()
-            .subscribe(onSuccess: { [weak self] saved in
+            .subscribe(onSuccess: { [weak self] (saved, feedbackSaved) in
                 guard let self = self else { return }
                 self.diaryNote = saved
                 self.wasJustCreatedHere = true
                 self.isEditMode = true
                 self.originalBody = saved.body
+                // FUAM-3495 — record the persisted body (fall back to the text we sent,
+                // in case the create response does not echo the body).
+                self.persistedBody = saved.body ?? noteToSave.body
                 if self.isLinked && self.isReflectionLinkedNote {
                     self.reflectionCoordinator?.onReflectionCreated(
                         presenter: self,
@@ -419,6 +475,16 @@ class DiaryNoteTextViewController: UIViewController {
                     )
                 }
                 self.pageState.accept(.read)
+                if !feedbackSaved {
+                    // Note is saved; only the emoji attach failed.
+                    self.showAlert(forError: nil)
+                } else if let picked = self.selectedEmoji, picked.label != "none" {
+                    // FUAM-3495 — the emoji was created by the chained PATCH, but the
+                    // POST response does not include it. Refetch so feedbackTags carry
+                    // the new server record id and a later emoji change swaps (not
+                    // duplicates) it.
+                    self.reloadDiaryNoteFromServer()
+                }
             }, onFailure: { [weak self] error in
                 guard let self = self else { return }
                 self.navigator.handleError(error: error, presenter: self)
@@ -429,9 +495,15 @@ class DiaryNoteTextViewController: UIViewController {
             repository.updateDiaryNoteText(diaryNote: noteToSave)
                 .addProgress()
                 .subscribe(onSuccess: { [weak self] in
-                    self?.diaryNote = noteToSave
-                    self?.pageState.accept(.read)
-                    self?.originalBody = self?.textView.text
+                    guard let self = self else { return }
+                    self.diaryNote = noteToSave
+                    self.originalBody = self.textView.text
+                    // FUAM-3495 — the just-saved text is now the persisted body. Set it
+                    // BEFORE switching to .read, because that transition triggers
+                    // updateFooterButton, which must see the fresh persisted body to
+                    // flip the button from "Save" to "Close".
+                    self.persistedBody = noteToSave.body
+                    self.pageState.accept(.read)
                 }, onFailure: { [weak self] error in
                     guard let self = self else { return }
                     self.navigator.handleError(error: error, presenter: self)
@@ -441,37 +513,128 @@ class DiaryNoteTextViewController: UIViewController {
     }
 
     @objc private func emojiButtonTapped() {
-        
+
+        // FUAM-3495 — Remember whether the user was editing the text and exactly where
+        // the caret was, so we can restore the keyboard + caret after the picker closes.
+        let wasEditingText = self.textView.isFirstResponder
+        let savedSelectedRange = self.textView.selectedRange
+        // Close the keyboard while the emoji picker is up.
+        if wasEditingText { self.textView.resignFirstResponder() }
+
         let category = self.categoryForEmoji(diaryNote: self.diaryNote)
         let emojiItems = self.emojiItems(for: category)
         let emojiVC = EmojiPopupViewController(emojis: emojiItems,
                                                selected: self.selectedEmoji) { [weak self] selectedEmoji in
             guard let self = self, let emoji = selectedEmoji else { return }
-            guard var diaryNote = self.diaryNote else { return }
 
             self.selectedEmoji = emoji
+            self.refreshEmojiButtonGlyph()
+
+            // FUAM-3495 — For a brand-new note (not yet persisted) just hold the pick
+            // locally; the PATCH is chained after the POST on Save. For an existing
+            // note persist immediately, then refetch so feedbackTags carry the real
+            // server record ids for the next change.
+            guard var diaryNote = self.diaryNote else { return }
+            // The just-picked emoji is a new tag (catalog id == ""); the serializer
+            // marks the prior server record(s) for destruction. Ensure the array
+            // exists so the append is not silently dropped when feedbackTags is nil.
+            if diaryNote.feedbackTags == nil { diaryNote.feedbackTags = [] }
             diaryNote.feedbackTags?.append(emoji)
-            
-            let tag = (emoji.label != "none") ? emoji.tag : nil
-            self.emojiButton.setImage(nil, for: .normal)
-            self.emojiButton.setTitle(tag, for: .normal)
-            self.emojiButton.titleLabel?.font = UIFont.systemFont(ofSize: 22)
-            
+
             self.repository.updateDiaryNoteText(diaryNote: diaryNote)
                 .addProgress()
-                .subscribe(onSuccess: { },
+                .subscribe(onSuccess: { [weak self] in
+                    self?.reloadDiaryNoteFromServer()
+                },
                            onFailure: { [weak self] error in
                     guard let self = self else { return }
                     self.navigator.handleError(error: error, presenter: self)
                 }).disposed(by: self.disposeBag)
         }
-        
+
+        // FUAM-3495 — After the picker closes (save OR X-cancel), if we were editing
+        // text, restore the keyboard and the caret to exactly where it was.
+        emojiVC.onDismiss = { [weak self] in
+            guard let self = self, wasEditingText else { return }
+            self.textView.becomeFirstResponder()
+            let clampedLocation = min(savedSelectedRange.location, (self.textView.text as NSString).length)
+            self.textView.selectedRange = NSRange(location: clampedLocation, length: 0)
+        }
+
         emojiVC.modalPresentationStyle = .overCurrentContext
         emojiVC.modalTransitionStyle = .crossDissolve
         self.present(emojiVC, animated: true)
     }
-    
+
+    // FUAM-3495 — Refetch the note so the local feedbackTags reflect the true server
+    // state (real record ids). Without this, a second emoji change re-sends an
+    // already-destroyed or empty-id tag for destruction and the backend errors, and
+    // a text edit would re-send stale feedback_tags. Called after every successful
+    // emoji persistence.
+    private func reloadDiaryNoteFromServer() {
+        guard let noteID = self.diaryNote?.id else { return }
+        self.repository.getDiaryNoteText(noteID: noteID)
+            .subscribe(onSuccess: { [weak self] fetched in
+                guard let self = self else { return }
+                self.diaryNote = fetched
+                self.persistedBody = fetched.body
+                self.selectedEmoji = fetched.feedbackTags?.last
+                self.refreshEmojiButtonGlyph()
+                self.updateFooterButton()
+            }, onFailure: { [weak self] error in
+                guard let self = self else { return }
+                self.navigator.handleError(error: error, presenter: self)
+            })
+            .disposed(by: self.disposeBag)
+    }
+
+    // FUAM-3495 — Render the current selectedEmoji on the emoji button (or restore the
+    // default icon when there is no real emoji).
+    private func refreshEmojiButtonGlyph() {
+        if let emoji = self.selectedEmoji, emoji.label != "none" {
+            self.emojiButton.setImage(nil, for: .normal)
+            self.emojiButton.setTitle(emoji.tag, for: .normal)
+            self.emojiButton.titleLabel?.font = UIFont.systemFont(ofSize: 22)
+        } else {
+            self.emojiButton.setTitle(nil, for: .normal)
+            self.emojiButton.setImage(ImagePalette.image(withName: .emojiICon), for: .normal)
+        }
+    }
+
     // MARK: - Private Methods
+
+    // FUAM-3495 — The three footer states. Kept internal so a Quick spec can exercise
+    // the rule without instantiating the view controller.
+    enum FooterButtonMode: Equatable { case saveDisabled, saveEnabled, close }
+
+    // FUAM-3495 — Pure rule for the footer button behavior. `savedBody` is the persisted
+    // body (`diaryNote?.body`); when the on-screen text matches it (and a note exists)
+    // there is nothing to save, so the button becomes CLOSE. Otherwise SAVE, enabled
+    // only when the text is non-empty after trimming.
+    static func footerButtonMode(currentText: String, savedBody: String?, noteExists: Bool) -> FooterButtonMode {
+        let isSaved = noteExists && currentText == (savedBody ?? "")
+        if isSaved { return .close }
+        let trimmed = currentText.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? .saveDisabled : .saveEnabled
+    }
+
+    private func updateFooterButton() {
+        let mode = Self.footerButtonMode(currentText: self.textView.text,
+                                         savedBody: self.persistedBody,
+                                         noteExists: self.diaryNote != nil)
+        switch mode {
+        case .saveDisabled:
+            self.footerView.setButtonText(StringsProvider.string(forKey: .diaryNoteCreateNoticedSave))
+            self.footerView.setButtonEnabled(enabled: false)
+        case .saveEnabled:
+            self.footerView.setButtonText(StringsProvider.string(forKey: .diaryNoteCreateNoticedSave))
+            self.footerView.setButtonEnabled(enabled: true)
+        case .close:
+            self.footerView.setButtonText(StringsProvider.string(forKey: .diaryNoteNoticedEmojiCloseButton))
+            self.footerView.setButtonEnabled(enabled: true)
+        }
+    }
+
     private func updateTitleRow() {
         // Clear previous subviews
         self.titleRow.arrangedSubviews.forEach {
@@ -481,21 +644,17 @@ class DiaryNoteTextViewController: UIViewController {
 
         let category   = self.categoryForEmoji(diaryNote: self.diaryNote)
         let hasEmojis  = !self.emojiItems(for: category).isEmpty
-        let noteExists = (self.diaryNote != nil)
 
-        // Show emoji when the note exists and we're in READ state,
-        //  even if it came from the chart. Keep the reflection exception if needed.
+        // Keep the reflection-creation exception (that flow hides the picker).
         let isCreatingFromReflection =
             !self.isEditMode &&
             self.reflectionCoordinator != nil &&
             self.diaryNote?.diaryNoteable?.type.lowercased() == "task" &&
             (self.diaryNote?.body?.isEmpty ?? true)
-        
-        let shouldShowEmojiButton =
-            noteExists &&
-            hasEmojis &&
-            (self.pageState.value == .read) &&
-            !isCreatingFromReflection
+
+        // FUAM-3495 — Keep the emoji picker on screen in ALL states (read/edit, new or
+        // existing, empty or set), so it never disappears while editing the text.
+        let shouldShowEmojiButton = hasEmojis && !isCreatingFromReflection
 
         if shouldShowEmojiButton {
             let spacer = UIView()
@@ -557,6 +716,9 @@ class DiaryNoteTextViewController: UIViewController {
         if textView.isFirstResponder {
             textView.reloadInputViews()
         }
+
+        // FUAM-3495 — Keep the footer label in sync with the current state/text.
+        self.updateFooterButton()
     }
     
     private func loadNote() {
@@ -573,9 +735,11 @@ class DiaryNoteTextViewController: UIViewController {
                 .subscribe(onSuccess: { [weak self] diaryNoteText in
                     guard let self = self else { return }
                     self.diaryNote = diaryNoteText
+                    self.persistedBody = diaryNoteText.body
                     self.textView.text = diaryNoteText.body
                     self.limitLabel.text = "\(self.textView.text.count) / \(self.maxCharacters)"
                     self.updateTextFields(pageState: self.pageState.value)
+                    self.updateFooterButton()
                 }, onFailure: { [weak self] error in
                     guard let self = self else { return }
                     self.navigator.handleError(error: error, presenter: self)
@@ -605,6 +769,7 @@ extension DiaryNoteTextViewController: UITextViewDelegate {
         // Update save button state when editing begins
         let trimmedText = textView.text.trimmingCharacters(in: .whitespacesAndNewlines)
         self.doneButton.isEnabled = !trimmedText.isEmpty
+        self.updateFooterButton()
     }
     
     func textViewDidChange(_ textView: UITextView) {
@@ -614,11 +779,13 @@ extension DiaryNoteTextViewController: UITextViewDelegate {
         // Enable/disable save button based on whether text is empty or only whitespace
         let trimmedText = textView.text.trimmingCharacters(in: .whitespacesAndNewlines)
         self.doneButton.isEnabled = !trimmedText.isEmpty
-        
+        self.updateFooterButton()
+
         if textView.text.count <= self.maxCharacters {
             textView.layer.borderColor = ColorPalette.color(withType: .inactive).cgColor
             self.limitLabel.textColor = ColorPalette.color(withType: .inactive)
-            self.diaryNote?.body = textView.text
+            // FUAM-3495 — do NOT mutate diaryNote.body while typing; the persisted body
+            // is tracked separately so cancel/revert and the footer dirty-check stay correct.
         } else {
             textView.layer.borderColor = UIColor.red.cgColor
             self.limitLabel.textColor = .red

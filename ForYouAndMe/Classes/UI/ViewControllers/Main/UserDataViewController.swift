@@ -48,7 +48,7 @@ class UserDataViewController: BaseViewController, WKNavigationDelegate, WKScript
     private lazy var comingSoonButton: UIButton = {
         let button = UIButton()
         button.apply(style: ButtonTextStyleCategory.messages.style)
-        button.setTitle(self.messages.first?.title, for: .normal)
+        button.setTitle(self.messages.first?.buttonText ?? self.messages.first?.title, for: .normal)
         button.addTarget(self, action: #selector(self.comingSoonButtonPressed), for: .touchUpInside)
         button.autoSetDimension(.width, toSize: 110)
         button.isHidden = (self.messages.count < 1)

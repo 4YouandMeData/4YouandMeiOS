@@ -863,3 +863,71 @@ class CacheManagerSkippedPermissionsSpec: QuickSpec {
         }
     }
 }
+
+// MARK: - FUAM-3446 — Diary datetimes must serialize as TRUE UTC, not local-wall-clock-with-Z
+//
+// Bug: every diary-note datetime was serialized with
+// `date.string(withFormat: dateTimeFormat)`, where dateTimeFormat ends in a
+// literal 'Z' ("yyyy-MM-dd'T'HH:mm:ss'Z'"). DateFormatter defaults to the
+// device's local timezone, so a Rome-local instant was emitted with its local
+// wall-clock time but stamped 'Z' — e.g. 22:03 local → "…T22:03:00Z", which the
+// backend reads as 22:03 UTC (two hours off in summer). The fix routes every
+// site through `Date.utcDateTimeString()`, which forces the UTC timezone.
+//
+// These assertions build the instant from explicit components in a fixed
+// non-UTC zone (Europe/Rome) so the test is deterministic regardless of the
+// machine's local timezone.
+
+class DateUtcDateTimeStringSpec: QuickSpec {
+    override class func spec() {
+
+        // Builds an absolute Date from a wall-clock string ("yyyy-MM-dd HH:mm:ss")
+        // interpreted in the given timezone. The resulting instant is independent
+        // of the machine's local timezone.
+        func makeDate(_ wallClock: String, in timeZoneIdentifier: String) -> Date {
+            // swiftlint:disable:next force_unwrapping
+            let date = wallClock.date(withFormat: "yyyy-MM-dd HH:mm:ss",
+                                      timeZone: TimeZone(identifier: timeZoneIdentifier)!)
+            // swiftlint:disable:next force_unwrapping
+            return date!
+        }
+
+        context("utcDateTimeString()") {
+
+            it("converts a Europe/Rome summer instant (UTC+2) to true UTC") {
+                // 2026-06-23 22:03:00 in Rome (DST, UTC+2) == 20:03:00 UTC.
+                let date = makeDate("2026-06-23 22:03:00", in: "Europe/Rome")
+                expect(date.utcDateTimeString()) == "2026-06-23T20:03:00Z"
+            }
+
+            it("converts a Europe/Rome winter instant (UTC+1) to true UTC") {
+                // 2026-01-15 00:30:00 in Rome (no DST, UTC+1) == 2026-01-14 23:30:00 UTC.
+                let date = makeDate("2026-01-15 00:30:00", in: "Europe/Rome")
+                expect(date.utcDateTimeString()) == "2026-01-14T23:30:00Z"
+            }
+
+            it("is a no-op for an instant already expressed in UTC") {
+                let date = makeDate("2026-06-23 20:03:00", in: "UTC")
+                expect(date.utcDateTimeString()) == "2026-06-23T20:03:00Z"
+            }
+
+            it("matches string(withFormat:timeZone:) forced to UTC") {
+                let date = makeDate("2026-06-23 22:03:00", in: "Europe/Rome")
+                let expected = date.string(withFormat: dateTimeFormat,
+                                           timeZone: TimeZone(identifier: "UTC"))
+                expect(date.utcDateTimeString()) == expected
+            }
+
+            it("would differ from the buggy local-wall-clock serialization in a non-UTC zone") {
+                // Regression guard: in a UTC+2 zone the old timezone-naive call
+                // produced "22:03" with a 'Z', which is the bug. The fixed helper
+                // must produce "20:03".
+                let date = makeDate("2026-06-23 22:03:00", in: "Europe/Rome")
+                let buggy = date.string(withFormat: dateTimeFormat,
+                                        timeZone: TimeZone(identifier: "Europe/Rome"))
+                expect(buggy) == "2026-06-23T22:03:00Z"
+                expect(date.utcDateTimeString()) != buggy
+            }
+        }
+    }
+}

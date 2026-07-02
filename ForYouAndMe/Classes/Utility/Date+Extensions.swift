@@ -31,6 +31,12 @@ public extension Date {
         }
         return dateFormatter.string(from: self)
     }
+
+    /// Serializes the date for API bodies using `dateTimeFormat`, forced to true UTC.
+    /// The format ends in a literal 'Z', so it is only ever correct when emitted in UTC.
+    func utcDateTimeString() -> String {
+        string(withFormat: dateTimeFormat, timeZone: TimeZone(identifier: "UTC"))
+    }
     
     static func currentDateInMilliSeconds() -> Double {
         return round(Date().timeIntervalSince1970 * 1000)
