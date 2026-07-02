@@ -211,6 +211,8 @@ enum StringKey: String, CaseIterable, CodingKey {
     case diaryNoteNoticedEmojiSubtitle = "DIARY_NOTE_NOTICED_STEP_EMOJI_SUBTITLE"
     case diaryNoteNoticedEmojiClickMessage = "DIARY_NOTE_NOTICED_STEP_EMOJI_CLICK_MESSAGE"
     case diaryNoteNoticedEmojiCloseButton = "DIARY_NOTE_NOTICED_STEP_EMOJI_CLOSE_BUTTON"
+    // FUAM-3495 — Footer Save label shown when editing a non-empty new note.
+    case diaryNoteCreateNoticedSave = "DIARYNOTE_CREATE_NOTICED_SAVE"
     case diaryNoteCancelBody = "DIARY_NOTE_CANCEL_BODY"
     case diaryNoteCancelTitle = "DIARY_NOTE_CANCEL_TITLE"
     case diaryNoteCancelCancel = "DIARY_NOTE_CANCEL_CANCEL"
@@ -641,6 +643,7 @@ enum StringKey: String, CaseIterable, CodingKey {
         case .errorButtonRetry: return "Try again"
         case .errorButtonClose: return "Ok"
         case .errorMessageDefault: return "Something went wrong,\nplease try again"
+        case .diaryNoteCreateNoticedSave: return "Save"
         case .errorMessageRemoteServer: return "Something went wrong,\nplease try again"
         case .errorMessageConnectivity: return "You seem to be offline.\nPlease check your internet connection and try again."
         // FUAM-3021. Watchdog alert defaults (English fallback).

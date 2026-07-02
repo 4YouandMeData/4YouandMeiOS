@@ -98,6 +98,12 @@ protocol Repository: AnyObject {
     /// `seriesMeta` and `seriesEntries` (all members of the period).
     func getMenstrualDiaryNote(noteID: String) -> Single<DiaryNoteItem>
     func sendDiaryNoteText(diaryNote: DiaryNoteItem, fromChart: Bool) -> Single<DiaryNoteItem>
+    /// FUAM-3495 — Creates the text note (POST) then best-effort attaches the picked emoji (PATCH, one retry).
+    /// The returned Bool is `feedbackSaved`: `true` when nothing needed saving or the PATCH succeeded,
+    /// `false` when the emoji attach failed (the note is still persisted). Presents no UI.
+    func sendDiaryNoteTextWithFeedback(diaryNote: DiaryNoteItem,
+                                       emoji: EmojiItem?,
+                                       fromChart: Bool) -> Single<(DiaryNoteItem, Bool)>
     func sendDiaryNoteAudio(diaryNoteRef: DiaryNoteItem, file: DiaryNoteFile, fromChart: Bool) -> Single<DiaryNoteItem>
     func sendDiaryNoteVideo(diaryNoteRef: DiaryNoteItem, file: DiaryNoteFile) -> Single<DiaryNoteItem>
     func sendDiaryNoteEaten(data: DiaryNoteEatenData) -> Single<DiaryNoteItem>
