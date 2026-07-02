@@ -24,6 +24,7 @@ enum TaskType: String, CaseIterable {
     case camcogEbt = "camcog_ebt"
     case mirSpyrometer = "mir_spirometer_activity"
     case reflectionActivity = "reflection_activity"
+    case spatialSpanMemory = "spatial_span_memory_task"
 }
 
 extension TaskType {
@@ -52,6 +53,8 @@ extension TaskType {
             return FitnessTask.createTask(withIdentifier: identifier, options: options, orkTaskOptions: orkTaskOptions)
         case .nineHole:
             return NineHoleTask.createTask(withIdentifier: identifier, options: options, orkTaskOptions: orkTaskOptions)
+        case .spatialSpanMemory:
+            return SpatialSpanMemoryTask.createTask(withIdentifier: identifier, options: options, orkTaskOptions: orkTaskOptions)
         case .videoDiary, .camcogPvt, .camcogNbx, .camcogEbt, .mirSpyrometer, .reflectionActivity:
             return nil
         }
@@ -66,6 +69,7 @@ extension TaskType {
         case .tremor: return TremorTask.getNetworkResultData(taskResult: taskResult)
         case .fitness: return FitnessTask.getNetworkResultData(taskResult: taskResult)
         case .nineHole: return NineHoleTask.getNetworkResultData(taskResult: taskResult)
+        case .spatialSpanMemory: return SpatialSpanMemoryTask.getNetworkResultData(taskResult: taskResult)
         case .videoDiary, .camcogEbt, .camcogNbx, .camcogPvt, .mirSpyrometer, .reflectionActivity: return nil
         }
     }
@@ -143,6 +147,18 @@ enum TaskNetworkParameter: String {
     case samples = "samples"
     case time = "time"
     case distance = "distance"
+    // Spatial Span Memory
+    case score
+    case numberOfGames = "number_of_games"
+    case numberOfFailures = "number_of_failures"
+    case gameRecords = "game_records"
+    case sequence
+    case gameSize = "game_size"
+    case gameStatus = "game_status"
+    case touchSamples = "touch_samples"
+    case targetIndex = "target_index"
+    case location
+    case correct
 }
 
 // MARK: - TaskOptions
