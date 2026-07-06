@@ -12,10 +12,15 @@ import UIKit
 import PureLayout
 
 protocol HotFlashOptionsStepViewControllerDelegate: AnyObject {
-    /// Fired when the user taps Next with a valid selection. `selected` is
+    /// Fired when the user taps Next with a valid selection. `step` is the
+    /// authoritative identity of the screen the user is on and `selected` is
     /// the list of option codes (i.e. the BE-bound keys, not the labels).
+    /// FUAM-3511: routing is bound to `step`, never to accumulator state, so
+    /// a Back→Next round-trip re-confirms the same step instead of bleeding
+    /// into the next key.
     func hotFlashOptionsStepViewController(_ vc: HotFlashOptionsStepViewController,
-                                           didConfirm selected: [String])
+                                           didConfirm step: HotFlashStep,
+                                           selected: [String])
     /// Fired when the user dismisses the whole flow from this step.
     func hotFlashOptionsStepViewControllerDidCancel(_ vc: HotFlashOptionsStepViewController)
 }
@@ -38,6 +43,11 @@ class HotFlashOptionsStepViewController: UIViewController {
     }
 
     weak var delegate: HotFlashOptionsStepViewControllerDelegate?
+
+    /// Authoritative identity of the screen this instance represents. The
+    /// coordinator routes `didConfirm` on this, so navigation position is
+    /// independent of which accumulator property is still `nil`.
+    let step: HotFlashStep
 
     private let stepTitle: String
     private let stepMessage: String?
@@ -70,11 +80,13 @@ class HotFlashOptionsStepViewController: UIViewController {
         return buttonView
     }()
 
-    init(title: String,
+    init(step: HotFlashStep,
+         title: String,
          message: String?,
          options: [Option],
          mode: SelectionMode,
          nextButtonText: String) {
+        self.step = step
         self.stepTitle = title
         self.stepMessage = message
         self.options = options
@@ -179,7 +191,7 @@ class HotFlashOptionsStepViewController: UIViewController {
         // Preserve original `options` order in the emitted payload so the
         // BE sees stable orderings irrespective of tap order.
         let ordered = options.map(\.code).filter { selectedCodes.contains($0) }
-        delegate?.hotFlashOptionsStepViewController(self, didConfirm: ordered)
+        delegate?.hotFlashOptionsStepViewController(self, didConfirm: step, selected: ordered)
     }
 
     @objc private func closeButtonPressed() {
