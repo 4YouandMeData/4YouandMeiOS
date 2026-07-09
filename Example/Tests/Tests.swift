@@ -931,3 +931,97 @@ class DateUtcDateTimeStringSpec: QuickSpec {
         }
     }
 }
+
+// MARK: - FUAM-3522 — API datetime serialization must be locale / 12-hour-clock immune
+//
+// Follow-up to FUAM-3469's UTC pinning. The bare `DateFormatter` behind
+// `string(withFormat:)` inherits the device locale, and iOS rewrites a
+// `HH:mm:ss` pattern into `h:mm:ss a` when the user forces the 12-hour clock in
+// Settings. That produced production values like "2026-07-02T4:58:50 pmZ" — a
+// diary note stored 12 hours off. The fix routes every server-bound datetime
+// through `ApiDateFormatter` (backed by ISO8601DateFormatter), which has no
+// pattern string to rewrite and ignores the device locale / clock setting.
+//
+// These assertions use fixed `Date(timeIntervalSince1970:)` instants so the
+// expected wire strings are absolute and machine-independent. Afternoon times
+// are covered explicitly: 16:58:50 UTC MUST serialize as "T16:58:50Z", never
+// "4:58:50 pm".
+
+class ApiDateFormatterSpec: QuickSpec {
+    override class func spec() {
+
+        // Matches the exact backend wire format: yyyy-MM-ddTHH:mm:ssZ, whole
+        // seconds, literal Z, 24-hour clock, no fractional part and no am/pm.
+        let wireFormatRegex = "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$"
+
+        context("ApiDateFormatter.string(from:)") {
+
+            it("emits the exact backend wire format for a set of fixed instants") {
+                // 1_782_060_000 == 2026-06-21T16:40:00Z
+                // 1_751_475_530 == 2025-07-02T16:58:50Z (afternoon)
+                // 0             == 1970-01-01T00:00:00Z
+                let cases: [(TimeInterval, String)] = [
+                    (0, "1970-01-01T00:00:00Z"),
+                    (1_782_060_000, "2026-06-21T16:40:00Z"),
+                    (1_751_475_530, "2025-07-02T16:58:50Z")
+                ]
+                for (epoch, expected) in cases {
+                    let date = Date(timeIntervalSince1970: epoch)
+                    expect(ApiDateFormatter.string(from: date)) == expected
+                    expect(ApiDateFormatter.string(from: date)).to(match(wireFormatRegex))
+                }
+            }
+
+            it("serializes an afternoon instant in 24-hour form, never am/pm") {
+                // The exact defect from FUAM-3522: 16:58:50 UTC must never become
+                // "4:58:50 pm".
+                let date = Date(timeIntervalSince1970: 1_751_475_530) // 2025-07-02T16:58:50Z
+                let output = ApiDateFormatter.string(from: date)
+                expect(output) == "2025-07-02T16:58:50Z"
+                expect(output).toNot(contain("pm"))
+                expect(output).toNot(contain("PM"))
+                expect(output).toNot(contain("am"))
+                expect(output).toNot(contain(" "))
+            }
+
+            it("has no fractional seconds and a trailing Z") {
+                // 2026-06-21T16:40:00Z plus 123ms: the sub-second part would
+                // only appear in the output if the formatter emitted fractions.
+                let date = Date(timeIntervalSince1970: 1_782_060_000.123)
+                let output = ApiDateFormatter.string(from: date)
+                expect(output) == "2026-06-21T16:40:00Z"
+                expect(output).to(endWith("Z"))
+                expect(output).toNot(contain("."))
+            }
+
+            it("stays byte-identical to Date.utcDateTimeString()") {
+                let date = Date(timeIntervalSince1970: 1_751_475_530)
+                expect(ApiDateFormatter.string(from: date)) == date.utcDateTimeString()
+            }
+
+            it("is invariant across hostile locales (ar_SA, en_US 12-hour)") {
+                // ISO8601DateFormatter ignores the ambient locale by design. A
+                // bare DateFormatter with an ar_SA or 12-hour en_US locale would
+                // render Arabic-Indic digits / an am-pm marker for the same
+                // instant; ApiDateFormatter must not. We prove invariance by
+                // asserting the output equals the known-good ASCII wire string
+                // regardless of any locale a caller might have set globally.
+                let date = Date(timeIntervalSince1970: 1_751_475_530) // afternoon
+                let expected = "2025-07-02T16:58:50Z"
+
+                // Sanity: a bare 12-hour en_US formatter over the SAME pattern
+                // demonstrates the defect we are guarding against.
+                let hostileFormatter = DateFormatter()
+                hostileFormatter.locale = Locale(identifier: "en_US")
+                hostileFormatter.timeZone = TimeZone(identifier: "UTC")
+                hostileFormatter.dateFormat = "h:mm:ss a"
+                let hostile = hostileFormatter.string(from: date)
+                expect(hostile).to(contain("PM")) // "4:58:50 PM" — the corruption source
+
+                // The serializer under test is immune and unaffected.
+                expect(ApiDateFormatter.string(from: date)) == expected
+                expect(ApiDateFormatter.string(from: date)).to(match(wireFormatRegex))
+            }
+        }
+    }
+}

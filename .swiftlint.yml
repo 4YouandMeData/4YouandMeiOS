@@ -12,3 +12,28 @@ identifier_name:
     warning: 2
   max_length:
     warning: 50
+
+custom_rules:
+  # FUAM-3522: a raw DateFormatter with a `dateFormat` string inherits the
+  # device locale and gets its HH:mm pattern rewritten to h:mm a under the
+  # 12-hour-clock setting, which corrupted server-bound datetimes. Every
+  # server-bound datetime MUST go through ApiDateFormatter /
+  # Date.utcDateTimeString() (backed by a locale-immune ISO8601DateFormatter).
+  #
+  # This tripwire flags raw `DateFormatter()` construction in the networking
+  # and entity-serialization layers, where a formatter must never be built ad
+  # hoc for outbound values. `ISO8601DateFormatter()` is intentionally NOT
+  # matched (it is immune by construction and is the correct choice). UI /
+  # display code is out of scope and is not linted by this rule. Files that
+  # legitimately build hard-pinned display/parse formatters are allowlisted.
+  #
+  # Severity is `warning` to avoid failing the build on pre-existing,
+  # already-audited inbound-parse helpers while still surfacing new offenders
+  # in review.
+  no_unpinned_api_date_formatter:
+    name: "Unpinned DateFormatter for API datetimes"
+    message: "Server-bound datetimes must use ApiDateFormatter / Date.utcDateTimeString(); do not build a raw DateFormatter here (locale/12h-clock unsafe)."
+    regex: "(?<!ISO8601)DateFormatter\\(\\)"
+    included: ".*/Classes/Services/Network/.*\\.swift"
+    excluded: ".*/(ApiDateFormatter|Date\\+Extensions|Mapper\\+Extensions)\\.swift"
+    severity: warning

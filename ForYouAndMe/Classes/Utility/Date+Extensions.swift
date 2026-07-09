@@ -20,6 +20,15 @@ public let yearShortDate = "MMM yy"
 public let literalDate = "MMMM dd yyyy"
 
 public extension Date {
+    /// Formats the date with an arbitrary `DateFormatter` pattern.
+    ///
+    /// - Warning: DISPLAY ONLY. When no `locale` is passed this inherits the
+    ///   device locale, and iOS rewrites `HH:mm:ss` patterns into `h:mm:ss a`
+    ///   under the 12-hour-clock setting — which corrupted server-bound
+    ///   datetimes (FUAM-3522). NEVER use the output of this method for a value
+    ///   sent to the backend. For any server-bound datetime use
+    ///   `Date.utcDateTimeString()` / `ApiDateFormatter.string(from:)`, which
+    ///   are locale- and 12-hour-clock-immune by construction.
     func string(withFormat format: String, timeZone: TimeZone? = nil, locale: Locale? = nil) -> String {
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = format
@@ -32,10 +41,16 @@ public extension Date {
         return dateFormatter.string(from: self)
     }
 
-    /// Serializes the date for API bodies using `dateTimeFormat`, forced to true UTC.
-    /// The format ends in a literal 'Z', so it is only ever correct when emitted in UTC.
+    /// Serializes the date for API bodies as true-UTC ISO 8601
+    /// (`yyyy-MM-dd'T'HH:mm:ss'Z'`).
+    ///
+    /// This is the sanctioned convenience entry point for server-bound
+    /// datetimes; it delegates to `ApiDateFormatter`, which is backed by
+    /// `ISO8601DateFormatter` and is therefore immune to the device locale and
+    /// the 12-hour-clock setting (FUAM-3522). The output is byte-identical to
+    /// the previous `dateTimeFormat`-based serialization in UTC.
     func utcDateTimeString() -> String {
-        string(withFormat: dateTimeFormat, timeZone: TimeZone(identifier: "UTC"))
+        ApiDateFormatter.string(from: self)
     }
     
     static func currentDateInMilliSeconds() -> Double {
