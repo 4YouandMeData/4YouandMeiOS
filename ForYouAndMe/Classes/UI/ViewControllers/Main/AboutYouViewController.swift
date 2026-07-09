@@ -134,23 +134,27 @@ class AboutYouViewController: UIViewController {
         self.scrollStackView.stackView.addArrangedSubview(permissions)
 
         // FUAM-2936 — Menstrual Cycle Information settings panel.
-        self.scrollStackView.stackView.addLineSeparator(lineColor: ColorPalette.color(withType: .inactive),
-                                                        inset: 21,
-                                                        isVertical: false)
+        // FUAM-3342 — only shown when the study opts in via "Features Configuration"
+        // (features_configuration.menstrual_period.enabled == true). Default = hidden.
+        if FeatureFlagProvider.isFeatureEnabled(.menstrualPeriod) {
+            self.scrollStackView.stackView.addLineSeparator(lineColor: ColorPalette.color(withType: .inactive),
+                                                            inset: 21,
+                                                            isVertical: false)
 
-        let menstrualSettingsTitle = StringsProvider.string(forKey: .menstrualSettingsMenuItem)
-        let menstrualSettings = GenericListItemView(
-            withTitle: menstrualSettingsTitle,
-            image: ImagePalette.templateImage(withName: .menstrualCycleIcon) ?? UIImage(),
-            colorType: .primary,
-            style: .flatStyle,
-            gestureCallback: { [weak self] in
-                guard let navigationController = self?.navigationController else {
-                    fatalError("Navigation Controller is not present")
-                }
-                self?.navigator.showMenstrualCycleInformation(navigationController: navigationController)
-            })
-        self.scrollStackView.stackView.addArrangedSubview(menstrualSettings)
+            let menstrualSettingsTitle = StringsProvider.string(forKey: .menstrualSettingsMenuItem)
+            let menstrualSettings = GenericListItemView(
+                withTitle: menstrualSettingsTitle,
+                image: ImagePalette.templateImage(withName: .menstrualCycleIcon) ?? UIImage(),
+                colorType: .primary,
+                style: .flatStyle,
+                gestureCallback: { [weak self] in
+                    guard let navigationController = self?.navigationController else {
+                        fatalError("Navigation Controller is not present")
+                    }
+                    self?.navigator.showMenstrualCycleInformation(navigationController: navigationController)
+                })
+            self.scrollStackView.stackView.addArrangedSubview(menstrualSettings)
+        }
 
         if Int(StringsProvider.string(forKey: .dailySurveyTimingHidden)) ?? 0 == 0 {
             let surveyScheduleTitle = StringsProvider.string(forKey: .aboutYouDailySurveyTiming)

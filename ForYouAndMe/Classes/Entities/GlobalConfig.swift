@@ -19,6 +19,7 @@ struct GlobalConfig {
     let pinCodeLogin: Bool
     let phaseNames: [String]
     let feedbackList: [String: [EmojiItem]]?
+    let featuresConfiguration: FeaturesConfiguration?
 
 }
 
@@ -34,6 +35,7 @@ extension GlobalConfig: Codable {
         case pincodeLogin
         case phaseNamesArray
         case feedbackList
+        case featuresConfiguration
     }
     
     init(from decoder: Decoder) throws {
@@ -57,6 +59,7 @@ extension GlobalConfig: Codable {
         self.pinCodeLogin = try container.decode(Bool.self, forKey: .pincodeLogin)
         self.phaseNames = try container.decode(Array<String>.self, forKey: .phaseNamesArray)
         self.feedbackList = try container.decode([String: [EmojiItem]].self, forKey: .feedbackList)
+        self.featuresConfiguration = try container.decodeIfPresent(FeaturesConfiguration.self, forKey: .featuresConfiguration)
     }
 
     func encode(to encoder: Encoder) throws {
@@ -74,6 +77,7 @@ extension GlobalConfig: Codable {
         try container.encode(self.pinCodeLogin, forKey: .pincodeLogin)
         try container.encode(self.phaseNames, forKey: .phaseNamesArray)
         try container.encode(self.feedbackList, forKey: .feedbackList)
+        try container.encodeIfPresent(self.featuresConfiguration, forKey: .featuresConfiguration)
     }
     
     func logColorMapDiff(light: ColorMap, dark: ColorMap?) {
