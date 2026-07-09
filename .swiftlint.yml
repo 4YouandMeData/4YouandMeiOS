@@ -21,11 +21,16 @@ custom_rules:
   # Date.utcDateTimeString() (backed by a locale-immune ISO8601DateFormatter).
   #
   # This tripwire flags raw `DateFormatter()` construction in the networking
-  # and entity-serialization layers, where a formatter must never be built ad
+  # layer (Classes/Services/Network), where a formatter must never be built ad
   # hoc for outbound values. `ISO8601DateFormatter()` is intentionally NOT
   # matched (it is immune by construction and is the correct choice). UI /
   # display code is out of scope and is not linted by this rule. Files that
   # legitimately build hard-pinned display/parse formatters are allowlisted.
+  # NOTE: Classes/Entities is deliberately NOT in scope — its DateFormatter
+  # uses are inbound-parse/display (DiaryNoteItem:240, Feed:263/345,
+  # UserSettings:64); outbound entity encoding goes through ISO8601Strategy
+  # (PropertyWrappers), which is immune. Re-evaluate if outbound entity
+  # serialization ever builds its own formatter.
   #
   # Severity is `warning` to avoid failing the build on pre-existing,
   # already-audited inbound-parse helpers while still surfacing new offenders
