@@ -1,8 +1,11 @@
 ## [Unreleased]
 
-## Release 0.101.10
+## Release 0.101.11
 
 - **Diary datetimes — locale- and 12-hour-clock-immune serialization** (FUAM-3522). Follow-up to the FUAM-3469 UTC fix. The bare `DateFormatter` behind `Date.string(withFormat:)` inherited the device locale, so when a user forced the 12-hour clock in Settings iOS rewrote the `HH:mm:ss` pattern to `h:mm:ss a` — producing corrupt payloads such as `2026-07-02T4:58:50 pmZ` (diary note stored 12h off). A new `ApiDateFormatter` (backed by `ISO8601DateFormatter` with `.withInternetDateTime`, pinned to UTC) is now the single locale-immune serializer for every server-bound datetime; `Date.utcDateTimeString()` delegates to it, so all 12 diary serialization sites (`datetime_ref` for text / eaten / menstrual / doses / hot-flash / audio / video / we-noticed, the we-noticed `old_`/`current_value_retrieved_at`, and the `in_chart_interval` filter) route through it unchanged. The wire format is byte-identical to before (`yyyy-MM-dd'T'HH:mm:ss'Z'`). `Date.string(withFormat:)` is documented as display-only, and a SwiftLint `custom_rules` tripwire flags raw `DateFormatter()` construction in the networking layer.
+
+## Release 0.101.10
+
 - **Settings — menstrual-cycle panel gated behind a study feature flag** (FUAM-3342). The menstrual-cycle panel in Settings is now shown only when the study feature flag enables it, so studies that don't opt into the flow no longer surface the panel.
 - **Hot Flash diary — route steps by identity to stop the Back/Next key bleed** (FUAM-3511). Hot Flash diary steps are now routed by identity rather than by string key, fixing the Back/Next navigation bleeding state between steps.
 
