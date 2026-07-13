@@ -28,6 +28,7 @@
 		3495A0050001F37A0001AAAA /* DiaryNoteFooterButtonModeSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3495A0060001F37A0001AAAA /* DiaryNoteFooterButtonModeSpec.swift */; };
 		3247A0010001F37A0001AAAA /* HotFlashAdditionalStepsTaskSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3247A0020001F37A0001AAAA /* HotFlashAdditionalStepsTaskSpec.swift */; };
 		3247A0030001F37A0001AAAA /* HotFlashPayloadDecodingSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3247A0040001F37A0001AAAA /* HotFlashPayloadDecodingSpec.swift */; };
+		B270051CFD8255560AF6E81A /* FeaturesConfigurationDecodingSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF33D00B75069BB391298B5C /* FeaturesConfigurationDecodingSpec.swift */; };
 		2937A0010001F37A0001AAAA /* MenstrualUserSettingsTaskSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2937A0020001F37A0001AAAA /* MenstrualUserSettingsTaskSpec.swift */; };
 		2937A0030001F37A0001AAAA /* UserSettingsDecodingSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2937A0040001F37A0001AAAA /* UserSettingsDecodingSpec.swift */; };
 		55A1A0010001F37A0001AAAA /* SpatialSpanMemoryTaskSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55A1A0020001F37A0001AAAA /* SpatialSpanMemoryTaskSpec.swift */; };
@@ -108,6 +109,7 @@
 		3495A0060001F37A0001AAAA /* DiaryNoteFooterButtonModeSpec.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DiaryNoteFooterButtonModeSpec.swift; sourceTree = "<group>"; };
 		3247A0020001F37A0001AAAA /* HotFlashAdditionalStepsTaskSpec.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = HotFlashAdditionalStepsTaskSpec.swift; sourceTree = "<group>"; };
 		3247A0040001F37A0001AAAA /* HotFlashPayloadDecodingSpec.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = HotFlashPayloadDecodingSpec.swift; sourceTree = "<group>"; };
+		EF33D00B75069BB391298B5C /* FeaturesConfigurationDecodingSpec.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = FeaturesConfigurationDecodingSpec.swift; sourceTree = "<group>"; };
 		2937A0020001F37A0001AAAA /* MenstrualUserSettingsTaskSpec.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MenstrualUserSettingsTaskSpec.swift; sourceTree = "<group>"; };
 		2937A0040001F37A0001AAAA /* UserSettingsDecodingSpec.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = UserSettingsDecodingSpec.swift; sourceTree = "<group>"; };
 		55A1A0020001F37A0001AAAA /* SpatialSpanMemoryTaskSpec.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SpatialSpanMemoryTaskSpec.swift; sourceTree = "<group>"; };
@@ -235,6 +237,7 @@
 				3495A0060001F37A0001AAAA /* DiaryNoteFooterButtonModeSpec.swift */,
 				3247A0020001F37A0001AAAA /* HotFlashAdditionalStepsTaskSpec.swift */,
 				3247A0040001F37A0001AAAA /* HotFlashPayloadDecodingSpec.swift */,
+				EF33D00B75069BB391298B5C /* FeaturesConfigurationDecodingSpec.swift */,
 				2937A0020001F37A0001AAAA /* MenstrualUserSettingsTaskSpec.swift */,
 				2937A0040001F37A0001AAAA /* UserSettingsDecodingSpec.swift */,
 				55A1A0020001F37A0001AAAA /* SpatialSpanMemoryTaskSpec.swift */,
@@ -560,6 +563,7 @@
 				3495A0030001F37A0001AAAA /* SendDiaryNoteTextWithFeedbackSpec.swift in Sources */,
 				3247A0010001F37A0001AAAA /* HotFlashAdditionalStepsTaskSpec.swift in Sources */,
 				3247A0030001F37A0001AAAA /* HotFlashPayloadDecodingSpec.swift in Sources */,
+				B270051CFD8255560AF6E81A /* FeaturesConfigurationDecodingSpec.swift in Sources */,
 				2937A0010001F37A0001AAAA /* MenstrualUserSettingsTaskSpec.swift in Sources */,
 				2937A0030001F37A0001AAAA /* UserSettingsDecodingSpec.swift in Sources */,
 				55A1A0010001F37A0001AAAA /* SpatialSpanMemoryTaskSpec.swift in Sources */,

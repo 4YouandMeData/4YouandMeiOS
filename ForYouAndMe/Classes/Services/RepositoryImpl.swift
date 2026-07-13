@@ -66,6 +66,7 @@ class RepositoryImpl {
                 CountryCodeProvider.initialize(withcountryCodes: globalConfig.countryCodes)
                 IntegrationProvider.initialize(withIntegrationDatas: globalConfig.integrationDatas)
                 OnboardingSectionProvider.initialize(withOnboardingSectionGroups: globalConfig.onboardingSectionGroups)
+                FeatureFlagProvider.initialize(withFeaturesConfiguration: globalConfig.featuresConfiguration)
                 self.storage.feedbackList = globalConfig.feedbackList ?? [:]
             })
             .toVoid()

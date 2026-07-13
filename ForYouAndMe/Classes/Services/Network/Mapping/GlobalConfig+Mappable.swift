@@ -20,6 +20,8 @@ extension GlobalConfig: Mappable {
         try self.pinCodeLogin = map.from("pincode_login")
         self.phaseNames = self.requiredStringMap.extractPhaseNames()
         self.feedbackList = try? map.decodeEmojiItemDictionary("feedback_tagging_lists")
+        // FUAM-3342 — tolerant: missing key -> nil, unknown feature keys ignored, missing order allowed.
+        self.featuresConfiguration = try? map.from("features_configuration", transformation: Mapper.extractFeaturesConfiguration)
     }
 }
 
@@ -100,6 +102,30 @@ extension Mapper {
         }
     }
     
+    /// Parses the `features_configuration` object into a `FeaturesConfiguration`.
+    /// Tolerant by design (FUAM-3342): entries whose value is not a well-formed
+    /// `{ enabled: Bool, order: Int? }` object are skipped rather than aborting
+    /// the whole parse, `order` is optional, and unknown feature keys are kept
+    /// verbatim in the raw map.
+    static func extractFeaturesConfiguration(object: Any?) throws -> FeaturesConfiguration {
+        guard let featuresOuterDict = object as? [String: Any] else {
+            throw MapperError.convertibleError(value: object, type: FeaturesConfiguration.self)
+        }
+
+        var flags: [String: FeatureFlag] = [:]
+        for (key, value) in featuresOuterDict {
+            guard let innerDict = value as? [String: Any],
+                  let enabled = innerDict["enabled"] as? Bool else {
+                print("GlobalConfig - Skipping malformed feature entry for key '\(key)'")
+                continue
+            }
+            let order = innerDict["order"] as? Int
+            flags[key] = FeatureFlag(enabled: enabled, order: order)
+        }
+
+        return FeaturesConfiguration(flags: flags)
+    }
+
     func decodeEmojiItemDictionary(_ field: String) throws -> [String: [EmojiItem]] {
         return try self.from(field) { object in
             guard let rawDict = object as? [String: [[String: Any]]] else {

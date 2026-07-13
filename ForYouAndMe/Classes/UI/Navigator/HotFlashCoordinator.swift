@@ -8,6 +8,46 @@
 import UIKit
 import RxSwift
 
+/// FUAM-3511 — authoritative identity of each of the 4 additional Hot Flash
+/// option screens. Routing is bound to this identity (not to which
+/// accumulator is still `nil`), so a Back→Next round-trip re-confirms the
+/// same step and advances to the correct next screen with no cross-key bleed.
+enum HotFlashStep: Int, CaseIterable {
+    case severity
+    case duration
+    case symptoms
+    case sleepOnset
+
+    /// The step to push after confirming this one, or `nil` when this is the
+    /// terminal step (submit fires instead). Pure, so it is unit-testable
+    /// without any UI.
+    var next: HotFlashStep? {
+        HotFlashStep(rawValue: rawValue + 1)
+    }
+}
+
+/// FUAM-3511 — pure representation of the collected answers, keyed by step.
+/// Assembling the payload here (rather than inline in the coordinator) gives
+/// tests a UI-free seam to drive a sequence of confirms/backs and assert the
+/// resulting keys.
+struct HotFlashAnswers {
+    var severity: [String]?
+    var duration: String?
+    var symptoms: [String]?
+    var sleepOnset: String?
+
+    /// Writes `selected` into the key owned by `step`. Single-select steps
+    /// keep only the first code, matching the BE contract.
+    mutating func record(step: HotFlashStep, selected: [String]) {
+        switch step {
+        case .severity:   self.severity = selected
+        case .duration:   self.duration = selected.first
+        case .symptoms:   self.symptoms = selected
+        case .sleepOnset: self.sleepOnset = selected.first
+        }
+    }
+}
+
 final class HotFlashCoordinator {
 
     private let repository: Repository
@@ -19,13 +59,12 @@ final class HotFlashCoordinator {
     private var eventDate: Date?
     private var rootNavigationController: UINavigationController?
 
-    // FUAM-3247 — accumulated answers across the 4 additional steps. Stay
-    // `nil` when the extended flow is disabled by config so the legacy
+    // FUAM-3247 — accumulated answers across the 4 additional steps. Each key
+    // stays `nil` when the extended flow is disabled by config so the legacy
     // payload shape (no `data`) is preserved on submit.
-    private var severity: [String]?
-    private var duration: String?
-    private var symptoms: [String]?
-    private var sleepOnset: String?
+    // FUAM-3511 — answers are now keyed by the confirming step's identity, so
+    // Back→Next never writes into the wrong key.
+    private var answers = HotFlashAnswers()
 
     init(repository: Repository,
          navigator: AppNavigator,
@@ -54,7 +93,7 @@ final class HotFlashCoordinator {
 
     private func proceedAfterDateChosen() {
         if additionalStepsEnabled {
-            pushSeverityStep()
+            pushStep(.severity)
         } else {
             submit()
         }
@@ -66,10 +105,10 @@ final class HotFlashCoordinator {
             date: date,
             fromChart: variant.isFromChart,
             diaryNote: variant.chartDiaryNote,
-            severity: severity,
-            duration: duration,
-            symptoms: symptoms,
-            sleepOnset: sleepOnset
+            severity: answers.severity,
+            duration: answers.duration,
+            symptoms: answers.symptoms,
+            sleepOnset: answers.sleepOnset
         )
         self.repository.sendDiaryNoteHotFlash(data: data)
             .addProgress()
@@ -90,78 +129,79 @@ final class HotFlashCoordinator {
 
     // MARK: - Additional steps (FUAM-3247)
 
-    private func pushStep(_ vc: HotFlashOptionsStepViewController) {
+    /// FUAM-3511 — pushes the screen for `step`, tagging the VC with the same
+    /// identity so `didConfirm` routes deterministically regardless of nav
+    /// history.
+    private func pushStep(_ step: HotFlashStep) {
+        let vc = makeStepViewController(for: step)
         vc.delegate = self
         self.rootNavigationController?.pushViewController(vc, animated: true)
     }
 
-    private func pushSeverityStep() {
-        let vc = HotFlashOptionsStepViewController(
-            title: StringsProvider.string(forKey: .hotFlashSeverityTitle),
-            message: optionalText(.hotFlashSeverityMessage),
-            options: [
-                .init(code: "warm",             label: StringsProvider.string(forKey: .hotFlashSeverityOptionWarm)),
-                .init(code: "hot",              label: StringsProvider.string(forKey: .hotFlashSeverityOptionHot)),
-                .init(code: "sweating",         label: StringsProvider.string(forKey: .hotFlashSeverityOptionSweating)),
-                .init(code: "cold_chill_after", label: StringsProvider.string(forKey: .hotFlashSeverityOptionColdChill)),
-                .init(code: "not_sure",         label: StringsProvider.string(forKey: .hotFlashSeverityOptionNotSure))
-            ],
-            mode: .multi,
-            nextButtonText: StringsProvider.string(forKey: .diaryNoteHotFlashNextButton)
-        )
-        pushStep(vc)
-    }
-
-    private func pushDurationStep() {
-        let vc = HotFlashOptionsStepViewController(
-            title: StringsProvider.string(forKey: .hotFlashDurationTitle),
-            message: optionalText(.hotFlashDurationMessage),
-            options: [
-                .init(code: "less_than_a_minute",    label: StringsProvider.string(forKey: .hotFlashDurationOptionLessThanMinute)),
-                .init(code: "one_to_two_minutes",    label: StringsProvider.string(forKey: .hotFlashDurationOptionOneToTwo)),
-                .init(code: "two_to_three_minutes",  label: StringsProvider.string(forKey: .hotFlashDurationOptionTwoToThree)),
-                .init(code: "nearly_five_minutes",   label: StringsProvider.string(forKey: .hotFlashDurationOptionNearlyFive)),
-                .init(code: "not_sure",              label: StringsProvider.string(forKey: .hotFlashDurationOptionNotSure))
-            ],
-            mode: .single,
-            nextButtonText: StringsProvider.string(forKey: .diaryNoteHotFlashNextButton)
-        )
-        pushStep(vc)
-    }
-
-    private func pushSymptomsStep() {
-        let vc = HotFlashOptionsStepViewController(
-            title: StringsProvider.string(forKey: .hotFlashSymptomsTitle),
-            message: optionalText(.hotFlashSymptomsMessage),
-            options: [
-                .init(code: "none",                label: StringsProvider.string(forKey: .hotFlashSymptomsOptionNone)),
-                .init(code: "anxiety",             label: StringsProvider.string(forKey: .hotFlashSymptomsOptionAnxiety)),
-                .init(code: "panic",               label: StringsProvider.string(forKey: .hotFlashSymptomsOptionPanic)),
-                .init(code: "racing_thoughts",     label: StringsProvider.string(forKey: .hotFlashSymptomsOptionRacingThoughts)),
-                .init(code: "heart_palpitations", label: StringsProvider.string(forKey: .hotFlashSymptomsOptionHeartPalpitations)),
-                .init(code: "cognitive_symptoms", label: StringsProvider.string(forKey: .hotFlashSymptomsOptionCognitive)),
-                .init(code: "not_sure",            label: StringsProvider.string(forKey: .hotFlashSymptomsOptionNotSure))
-            ],
-            mode: .multi,
-            nextButtonText: StringsProvider.string(forKey: .diaryNoteHotFlashNextButton)
-        )
-        pushStep(vc)
-    }
-
-    private func pushSleepOnsetStep() {
-        let vc = HotFlashOptionsStepViewController(
-            title: StringsProvider.string(forKey: .hotFlashSleepOnsetTitle),
-            message: optionalText(.hotFlashSleepOnsetMessage),
-            options: [
-                .init(code: "awake_with_sensation", label: StringsProvider.string(forKey: .hotFlashSleepOnsetOptionBeforeWake)),
-                .init(code: "awake_then_sensation", label: StringsProvider.string(forKey: .hotFlashSleepOnsetOptionAfterWake)),
-                .init(code: "not_sure",             label: StringsProvider.string(forKey: .hotFlashSleepOnsetOptionNotSure)),
-                .init(code: "not_at_night",         label: StringsProvider.string(forKey: .hotFlashSleepOnsetOptionNotAtNight))
-            ],
-            mode: .single,
-            nextButtonText: StringsProvider.string(forKey: .diaryNoteHotFlashNextButton)
-        )
-        pushStep(vc)
+    private func makeStepViewController(for step: HotFlashStep) -> HotFlashOptionsStepViewController {
+        switch step {
+        case .severity:
+            return HotFlashOptionsStepViewController(
+                step: .severity,
+                title: StringsProvider.string(forKey: .hotFlashSeverityTitle),
+                message: optionalText(.hotFlashSeverityMessage),
+                options: [
+                    .init(code: "warm",             label: StringsProvider.string(forKey: .hotFlashSeverityOptionWarm)),
+                    .init(code: "hot",              label: StringsProvider.string(forKey: .hotFlashSeverityOptionHot)),
+                    .init(code: "sweating",         label: StringsProvider.string(forKey: .hotFlashSeverityOptionSweating)),
+                    .init(code: "cold_chill_after", label: StringsProvider.string(forKey: .hotFlashSeverityOptionColdChill)),
+                    .init(code: "not_sure",         label: StringsProvider.string(forKey: .hotFlashSeverityOptionNotSure))
+                ],
+                mode: .multi,
+                nextButtonText: StringsProvider.string(forKey: .diaryNoteHotFlashNextButton)
+            )
+        case .duration:
+            return HotFlashOptionsStepViewController(
+                step: .duration,
+                title: StringsProvider.string(forKey: .hotFlashDurationTitle),
+                message: optionalText(.hotFlashDurationMessage),
+                options: [
+                    .init(code: "less_than_a_minute",    label: StringsProvider.string(forKey: .hotFlashDurationOptionLessThanMinute)),
+                    .init(code: "one_to_two_minutes",    label: StringsProvider.string(forKey: .hotFlashDurationOptionOneToTwo)),
+                    .init(code: "two_to_three_minutes",  label: StringsProvider.string(forKey: .hotFlashDurationOptionTwoToThree)),
+                    .init(code: "nearly_five_minutes",   label: StringsProvider.string(forKey: .hotFlashDurationOptionNearlyFive)),
+                    .init(code: "not_sure",              label: StringsProvider.string(forKey: .hotFlashDurationOptionNotSure))
+                ],
+                mode: .single,
+                nextButtonText: StringsProvider.string(forKey: .diaryNoteHotFlashNextButton)
+            )
+        case .symptoms:
+            return HotFlashOptionsStepViewController(
+                step: .symptoms,
+                title: StringsProvider.string(forKey: .hotFlashSymptomsTitle),
+                message: optionalText(.hotFlashSymptomsMessage),
+                options: [
+                    .init(code: "none",                label: StringsProvider.string(forKey: .hotFlashSymptomsOptionNone)),
+                    .init(code: "anxiety",             label: StringsProvider.string(forKey: .hotFlashSymptomsOptionAnxiety)),
+                    .init(code: "panic",               label: StringsProvider.string(forKey: .hotFlashSymptomsOptionPanic)),
+                    .init(code: "racing_thoughts",     label: StringsProvider.string(forKey: .hotFlashSymptomsOptionRacingThoughts)),
+                    .init(code: "heart_palpitations", label: StringsProvider.string(forKey: .hotFlashSymptomsOptionHeartPalpitations)),
+                    .init(code: "cognitive_symptoms", label: StringsProvider.string(forKey: .hotFlashSymptomsOptionCognitive)),
+                    .init(code: "not_sure",            label: StringsProvider.string(forKey: .hotFlashSymptomsOptionNotSure))
+                ],
+                mode: .multi,
+                nextButtonText: StringsProvider.string(forKey: .diaryNoteHotFlashNextButton)
+            )
+        case .sleepOnset:
+            return HotFlashOptionsStepViewController(
+                step: .sleepOnset,
+                title: StringsProvider.string(forKey: .hotFlashSleepOnsetTitle),
+                message: optionalText(.hotFlashSleepOnsetMessage),
+                options: [
+                    .init(code: "awake_with_sensation", label: StringsProvider.string(forKey: .hotFlashSleepOnsetOptionBeforeWake)),
+                    .init(code: "awake_then_sensation", label: StringsProvider.string(forKey: .hotFlashSleepOnsetOptionAfterWake)),
+                    .init(code: "not_sure",             label: StringsProvider.string(forKey: .hotFlashSleepOnsetOptionNotSure)),
+                    .init(code: "not_at_night",         label: StringsProvider.string(forKey: .hotFlashSleepOnsetOptionNotAtNight))
+                ],
+                mode: .single,
+                nextButtonText: StringsProvider.string(forKey: .diaryNoteHotFlashNextButton)
+            )
+        }
     }
 
     /// Returns the string for the key only if it's non-empty — used for the
@@ -207,22 +247,19 @@ extension HotFlashCoordinator: HotFlashDateTimeViewControllerDelegate {
 
 extension HotFlashCoordinator: HotFlashOptionsStepViewControllerDelegate {
 
-    /// Sequential step machine driven by which property is still `nil`. The
-    /// expected push order is Severity → Duration → Symptoms → SleepOnset,
-    /// matching FUAM-3245's flow.
+    /// FUAM-3511 — routing is bound to the confirming `step`, never to which
+    /// accumulator is still `nil`. The answer is written into the step's own
+    /// key and we advance to `step.next` (or submit on the terminal step), so
+    /// a Back→Next round-trip re-confirms the same step and reaches the
+    /// correct next screen with no skipped step and no cross-key bleed.
+    /// Push order: Severity → Duration → Symptoms → SleepOnset (FUAM-3245).
     func hotFlashOptionsStepViewController(_ vc: HotFlashOptionsStepViewController,
-                                           didConfirm selected: [String]) {
-        if self.severity == nil {
-            self.severity = selected
-            pushDurationStep()
-        } else if self.duration == nil {
-            self.duration = selected.first
-            pushSymptomsStep()
-        } else if self.symptoms == nil {
-            self.symptoms = selected
-            pushSleepOnsetStep()
-        } else if self.sleepOnset == nil {
-            self.sleepOnset = selected.first
+                                           didConfirm step: HotFlashStep,
+                                           selected: [String]) {
+        self.answers.record(step: step, selected: selected)
+        if let nextStep = step.next {
+            pushStep(nextStep)
+        } else {
             submit()
         }
     }

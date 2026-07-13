@@ -1,5 +1,10 @@
 ## [Unreleased]
 
+## Release 0.101.10
+
+- **Settings — menstrual-cycle panel gated behind a study feature flag** (FUAM-3342). The menstrual-cycle panel in Settings is now shown only when the study feature flag enables it, so studies that don't opt into the flow no longer surface the panel.
+- **Hot Flash diary — route steps by identity to stop the Back/Next key bleed** (FUAM-3511). Hot Flash diary steps are now routed by identity rather than by string key, fixing the Back/Next navigation bleeding state between steps.
+
 ## Release 0.101.9
 
 _First trunk publish since 0.101.6. The 0.101.5 and 0.101.8 tags were cut but never pushed to the CocoaPods trunk, so their content ships to cocoapods.org for the first time with this release (see the 0.101.5 and 0.101.8 notes below). The 0.101.7 version bump was folded into 0.101.8 and was never tagged._
