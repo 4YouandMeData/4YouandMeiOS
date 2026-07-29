@@ -28,7 +28,12 @@ class QuickActivityView: UIView {
     
     private let titleLabel: UILabel = {
         let label = UILabel()
+        // FUAM-3562: the card (and its header) has a fixed size, so long titles or large
+        // Dynamic Type must shrink the font to fit the two available lines instead of clipping.
         label.numberOfLines = 2
+        label.lineBreakMode = .byTruncatingTail
+        label.adjustsFontSizeToFitWidth = true
+        label.minimumScaleFactor = 0.6
         return label
     }()
     
@@ -147,9 +152,12 @@ class QuickActivityView: UIView {
         self.gradientView.updateParameters(colors: [item.startColor ?? ColorPalette.color(withType: .primary),
                                                     item.endColor ?? ColorPalette.color(withType: .gradientPrimaryEnd)])
         
+        // The line break mode override is required for the multiline font auto-shrink
+        // to apply to attributed text (see NSAttributedString.applyingLineBreakMode).
         self.titleLabel.attributedText = NSAttributedString.create(withText: item.title ?? "",
                                                                    fontStyle: .header2,
                                                                    color: ColorPalette.color(withType: .secondaryText).applyAlpha(0.5))
+            .applyingLineBreakMode(.byTruncatingTail)
         
         self.subtitleLabel.attributedText = NSAttributedString.create(withText: item.body ?? "",
                                                                       fontStyle: .paragraph,

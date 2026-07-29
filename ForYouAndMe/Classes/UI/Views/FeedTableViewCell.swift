@@ -149,9 +149,9 @@ class FeedTableViewCell: UITableViewCell {
         self.skipButtonPressedCallback = skipButtonPressedCallback
         self.updateGradientView(startColor: data.startColor, endColor: data.endColor, singleColor: data.cardColor)
         self.setFeedImage(imageUrl: data.image)
-        self.setFeedTitle(text: data.title)
+        self.setFeedTitle(text: data.title, limitedToTwoLines: true)
         self.setFeedDescription(text: data.body)
-        
+
         if nil != data.taskType {
             let buttonText = data.buttonText ?? StringsProvider.string(forKey: .activityButtonDefault)
             self.buttonView.isHidden = false
@@ -197,9 +197,9 @@ class FeedTableViewCell: UITableViewCell {
         
         self.updateGradientView(startColor: data.startColor, endColor: data.endColor, singleColor: data.cardColor)
         self.setFeedImage(imageUrl: data.image)
-        self.setFeedTitle(text: data.title)
+        self.setFeedTitle(text: data.title, limitedToTwoLines: true)
         self.setFeedDescription(text: data.body)
-        
+
         let buttonText = data.buttonText ?? StringsProvider.string(forKey: .surveyButtonDefault)
         self.buttonView.isHidden = false
         self.buttonView.setButtonText(buttonText)
@@ -344,12 +344,30 @@ class FeedTableViewCell: UITableViewCell {
     
     // MARK: - Private Methods
     
-    private func setFeedTitle(text: String?) {
+    /// Sets the card title. When `limitedToTwoLines` is true (activity and survey cards,
+    /// FUAM-3562) the title is capped at two lines and the font auto-shrinks to fit them
+    /// instead of growing the card or clipping — Dynamic Type included. The attributed
+    /// string needs a `.byTruncatingTail` line break mode for the auto-shrink to apply
+    /// (see NSAttributedString.applyingLineBreakMode). Since this cell class is shared
+    /// across all feed card variants, the other branch restores the flexible multiline
+    /// layout on reuse.
+    private func setFeedTitle(text: String?, limitedToTwoLines: Bool = false) {
         if let title = text {
             self.feedTitleLabel.isHidden = false
-            self.feedTitleLabel.attributedText = NSAttributedString.create(withText: title,
-                                                                           fontStyle: .header2,
-                                                                           colorType: .secondaryText)
+            let attributedTitle = NSAttributedString.create(withText: title,
+                                                            fontStyle: .header2,
+                                                            colorType: .secondaryText)
+            if limitedToTwoLines {
+                self.feedTitleLabel.numberOfLines = 2
+                self.feedTitleLabel.lineBreakMode = .byTruncatingTail
+                self.feedTitleLabel.adjustsFontSizeToFitWidth = true
+                self.feedTitleLabel.minimumScaleFactor = 0.6
+                self.feedTitleLabel.attributedText = attributedTitle.applyingLineBreakMode(.byTruncatingTail)
+            } else {
+                self.feedTitleLabel.numberOfLines = 0
+                self.feedTitleLabel.adjustsFontSizeToFitWidth = false
+                self.feedTitleLabel.attributedText = attributedTitle
+            }
         } else {
             self.feedTitleLabel.isHidden = true
         }
