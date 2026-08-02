@@ -192,6 +192,65 @@ final class ColorPalette {
     }
 }
 
+// MARK: - Feed card background (FUAM-3584)
+
+extension ColorPalette {
+
+    /// Share of the feed background composited over a feed card in dark mode.
+    /// Cross-platform contract with Android (FUAM-3585) — do not tune one platform only.
+    static let darkFeedCardBlendRatio: CGFloat = 0.20
+
+    /// Wraps a feed card's base background color so that, **in dark mode only**, it becomes
+    /// `0.20 * feedBackground + 0.80 * cardBaseBackground` (source-over composite flattened to
+    /// one opaque sRGB color). Light mode returns the base color untouched.
+    ///
+    /// Every feed card background color must go through here (see `FeedTableViewCell` and
+    /// `QuickActivityView`). Gradient cards blend each stop: the blend is affine per channel, so
+    /// blending the stops is pixel-identical to compositing the overlay over the whole gradient.
+    static func feedCardBackground(_ baseColor: UIColor) -> UIColor {
+        return UIColor { trait in
+            let base = baseColor.resolvedColor(with: trait)
+            guard trait.userInterfaceStyle == .dark else { return base }
+            let feedBackground = color(withType: .secondaryBackgroungColor).resolvedColor(with: trait)
+            return base.blendedSRGB(with: feedBackground, alpha: darkFeedCardBlendRatio)
+        }
+    }
+}
+
+extension UIColor {
+
+    /// Source-over composite of `overlay` at `alpha` over the receiver, flattened to one opaque color.
+    ///
+    /// Cross-platform contract (FUAM-3584 iOS / FUAM-3585 Android): the blend is done in **sRGB**,
+    /// never in linear space. Both inputs are quantised to 8 bit per channel first, and the result
+    /// of `alpha * overlay + (1 - alpha) * base` is rounded **half-up** on the 0...255 value.
+    func blendedSRGB(with overlay: UIColor, alpha: CGFloat) -> UIColor {
+        let base = self.srgbComponents255
+        let over = overlay.srgbComponents255
+        let ratio = min(max(alpha, 0.0), 1.0)
+        func mix(_ baseChannel: CGFloat, _ overlayChannel: CGFloat) -> CGFloat {
+            // round-half-up on the 0...255 value
+            return (ratio * overlayChannel + (1.0 - ratio) * baseChannel + 0.5).rounded(.down) / 255.0
+        }
+        return UIColor(red: mix(base.red, over.red),
+                       green: mix(base.green, over.green),
+                       blue: mix(base.blue, over.blue),
+                       alpha: 1.0)
+    }
+
+    /// sRGB channels quantised to 0...255 (round-half-up), matching Android's 8-bit color ints.
+    private var srgbComponents255: ColorComponents {
+        var red: CGFloat = 0.0, green: CGFloat = 0.0, blue: CGFloat = 0.0, alpha: CGFloat = 0.0
+        guard self.getRed(&red, green: &green, blue: &blue, alpha: &alpha) else {
+            return ColorComponents(red: 0.0, green: 0.0, blue: 0.0, alpha: 255.0)
+        }
+        func quantise(_ value: CGFloat) -> CGFloat {
+            return (min(max(value, 0.0), 1.0) * 255.0 + 0.5).rounded(.down)
+        }
+        return ColorComponents(red: quantise(red), green: quantise(green), blue: quantise(blue), alpha: quantise(alpha))
+    }
+}
+
 // MARK: - Small utilities
 
 private extension UIColor {

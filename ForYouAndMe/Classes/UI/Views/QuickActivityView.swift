@@ -144,8 +144,11 @@ class QuickActivityView: UIView {
         self.confirmButtonCallback = confirmButtonCallback
         self.selectionCallback = selectionCallback
         
-        self.gradientView.updateParameters(colors: [item.startColor ?? ColorPalette.color(withType: .primary),
-                                                    item.endColor ?? ColorPalette.color(withType: .gradientPrimaryEnd)])
+        // FUAM-3584: softened against the feed background in dark mode, untouched in light mode.
+        self.gradientView.updateParameters(colors: [
+            ColorPalette.feedCardBackground(item.startColor ?? ColorPalette.color(withType: .primary)),
+            ColorPalette.feedCardBackground(item.endColor ?? ColorPalette.color(withType: .gradientPrimaryEnd))
+        ])
         
         self.titleLabel.attributedText = NSAttributedString.create(withText: item.title ?? "",
                                                                    fontStyle: .header2,

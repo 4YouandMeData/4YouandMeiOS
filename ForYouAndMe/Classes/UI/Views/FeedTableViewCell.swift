@@ -377,12 +377,17 @@ class FeedTableViewCell: UITableViewCell {
         }
     }
     
+    /// FUAM-3584: every card background color goes through `ColorPalette.feedCardBackground`,
+    /// which softens it against the feed background in dark mode and is a no-op in light mode.
     private func updateGradientView(startColor: UIColor?, endColor: UIColor?, singleColor: UIColor?) {
         if let startColor = startColor, let endColor = endColor {
-            self.gradientView.updateParameters(colors: [startColor, endColor])
+            self.gradientView.updateParameters(colors: [ColorPalette.feedCardBackground(startColor),
+                                                        ColorPalette.feedCardBackground(endColor)])
         } else {
-            self.gradientView.updateParameters(colors: [singleColor ?? ColorPalette.color(withType: .primary),
-                                                        singleColor ?? ColorPalette.color(withType: .gradientPrimaryEnd)])
+            self.gradientView.updateParameters(colors: [
+                ColorPalette.feedCardBackground(singleColor ?? ColorPalette.color(withType: .primary)),
+                ColorPalette.feedCardBackground(singleColor ?? ColorPalette.color(withType: .gradientPrimaryEnd))
+            ])
         }
     }
 }
