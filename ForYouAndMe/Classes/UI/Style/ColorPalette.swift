@@ -196,12 +196,13 @@ final class ColorPalette {
 
 extension ColorPalette {
 
-    /// Share of the feed background composited over a feed card in dark mode.
-    /// Cross-platform contract with Android (FUAM-3585) — do not tune one platform only.
-    static let darkFeedCardBlendRatio: CGFloat = 0.20
+    /// Percentage of the feed background composited over a feed card in dark mode.
+    /// Design landed on 35% (FUAM-3583, reopened 2026-07-28: 20% was too low and clashed with the
+    /// card icons). Cross-platform contract with Android (FUAM-3585) — do not tune one platform only.
+    static let darkFeedCardBlendPercent: Int = 35
 
     /// Wraps a feed card's base background color so that, **in dark mode only**, it becomes
-    /// `0.20 * feedBackground + 0.80 * cardBaseBackground` (source-over composite flattened to
+    /// `0.35 * feedBackground + 0.65 * cardBaseBackground` (source-over composite flattened to
     /// one opaque sRGB color). Light mode returns the base color untouched.
     ///
     /// Every feed card background color must go through here (see `FeedTableViewCell` and
@@ -212,42 +213,42 @@ extension ColorPalette {
             let base = baseColor.resolvedColor(with: trait)
             guard trait.userInterfaceStyle == .dark else { return base }
             let feedBackground = color(withType: .secondaryBackgroungColor).resolvedColor(with: trait)
-            return base.blendedSRGB(with: feedBackground, alpha: darkFeedCardBlendRatio)
+            return base.blendedSRGB(with: feedBackground, percent: darkFeedCardBlendPercent)
         }
     }
 }
 
 extension UIColor {
 
-    /// Source-over composite of `overlay` at `alpha` over the receiver, flattened to one opaque color.
+    /// Source-over composite of `overlay` at `percent`% over the receiver, flattened to one opaque color.
     ///
     /// Cross-platform contract (FUAM-3584 iOS / FUAM-3585 Android): the blend is done in **sRGB**,
-    /// never in linear space. Both inputs are quantised to 8 bit per channel first, and the result
-    /// of `alpha * overlay + (1 - alpha) * base` is rounded **half-up** on the 0...255 value.
-    func blendedSRGB(with overlay: UIColor, alpha: CGFloat) -> UIColor {
-        let base = self.srgbComponents255
-        let over = overlay.srgbComponents255
-        let ratio = min(max(alpha, 0.0), 1.0)
-        func mix(_ baseChannel: CGFloat, _ overlayChannel: CGFloat) -> CGFloat {
-            // round-half-up on the 0...255 value
-            return (ratio * overlayChannel + (1.0 - ratio) * baseChannel + 0.5).rounded(.down) / 255.0
+    /// never in linear space. Both inputs are quantised to 8 bit per channel, then each channel is
+    /// `(percent * overlay + (100 - percent) * base + 50) / 100` in **integer** arithmetic with a
+    /// truncating division — i.e. round-half-up. 35% does produce exact `.5` results (e.g. base 10
+    /// over feed 0 → 6.5), so float math and a platform-dependent tie-break would break parity.
+    func blendedSRGB(with overlay: UIColor, percent: Int) -> UIColor {
+        let base = self.srgbChannels255
+        let over = overlay.srgbChannels255
+        let ratio = min(max(percent, 0), 100)
+        func mix(_ baseChannel: Int, _ overlayChannel: Int) -> CGFloat {
+            let weighted: Int = ratio * overlayChannel + (100 - ratio) * baseChannel + 50
+            return CGFloat(weighted / 100) / 255.0
         }
-        return UIColor(red: mix(base.red, over.red),
-                       green: mix(base.green, over.green),
-                       blue: mix(base.blue, over.blue),
+        return UIColor(red: mix(base[0], over[0]),
+                       green: mix(base[1], over[1]),
+                       blue: mix(base[2], over[2]),
                        alpha: 1.0)
     }
 
     /// sRGB channels quantised to 0...255 (round-half-up), matching Android's 8-bit color ints.
-    private var srgbComponents255: ColorComponents {
+    private var srgbChannels255: [Int] {
         var red: CGFloat = 0.0, green: CGFloat = 0.0, blue: CGFloat = 0.0, alpha: CGFloat = 0.0
-        guard self.getRed(&red, green: &green, blue: &blue, alpha: &alpha) else {
-            return ColorComponents(red: 0.0, green: 0.0, blue: 0.0, alpha: 255.0)
+        guard self.getRed(&red, green: &green, blue: &blue, alpha: &alpha) else { return [0, 0, 0] }
+        func quantise(_ value: CGFloat) -> Int {
+            return Int((min(max(value, 0.0), 1.0) * 255.0 + 0.5).rounded(.down))
         }
-        func quantise(_ value: CGFloat) -> CGFloat {
-            return (min(max(value, 0.0), 1.0) * 255.0 + 0.5).rounded(.down)
-        }
-        return ColorComponents(red: quantise(red), green: quantise(green), blue: quantise(blue), alpha: quantise(alpha))
+        return [quantise(red), quantise(green), quantise(blue)]
     }
 }
 
