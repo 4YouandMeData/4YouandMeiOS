@@ -196,13 +196,14 @@ final class ColorPalette {
 
 extension ColorPalette {
 
-    /// Percentage of the feed background composited over a feed card in dark mode.
-    /// Design landed on 35% (FUAM-3583, reopened 2026-07-28: 20% was too low and clashed with the
-    /// card icons). Cross-platform contract with Android (FUAM-3585) — do not tune one platform only.
+    /// Percentage of `secondary_color` composited over a feed card (background and icon) in dark mode.
+    /// Design's final ruling (FUAM-3583, 2026-08-03): overlay `secondary_color` at 35% on the card
+    /// background AND the icon — not on text or buttons. Cross-platform contract with Android
+    /// (FUAM-3585) — do not tune one platform only.
     static let darkFeedCardBlendPercent: Int = 35
 
     /// Wraps a feed card's base background color so that, **in dark mode only**, it becomes
-    /// `0.35 * feedBackground + 0.65 * cardBaseBackground` (source-over composite flattened to
+    /// `0.35 * secondaryColor + 0.65 * cardBaseBackground` (source-over composite flattened to
     /// one opaque sRGB color). Light mode returns the base color untouched.
     ///
     /// Every feed card background color must go through here (see `FeedTableViewCell` and
@@ -212,8 +213,20 @@ extension ColorPalette {
         return UIColor { trait in
             let base = baseColor.resolvedColor(with: trait)
             guard trait.userInterfaceStyle == .dark else { return base }
-            let feedBackground = color(withType: .secondaryBackgroungColor).resolvedColor(with: trait)
-            return base.blendedSRGB(with: feedBackground, percent: darkFeedCardBlendPercent)
+            let secondary = color(withType: .secondary).resolvedColor(with: trait)
+            return base.blendedSRGB(with: secondary, percent: darkFeedCardBlendPercent)
+        }
+    }
+
+    /// Template tint for a feed card's icon: **dark mode only**, `secondary_color` at 35% over the
+    /// icon shape; `.clear` in light mode. Applied as the tint of a template-rendered overlay image
+    /// so only opaque icon pixels are tinted (the icon parallel of `feedCardBackground`, FUAM-3584).
+    /// Icons only — never title/subtitle text, never buttons.
+    static var feedCardIconTint: UIColor {
+        return UIColor { trait in
+            guard trait.userInterfaceStyle == .dark else { return .clear }
+            let secondary = color(withType: .secondary).resolvedColor(with: trait)
+            return secondary.withAlphaComponent(CGFloat(darkFeedCardBlendPercent) / 100.0)
         }
     }
 }

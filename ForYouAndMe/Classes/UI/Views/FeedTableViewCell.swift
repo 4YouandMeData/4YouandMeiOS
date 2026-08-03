@@ -28,6 +28,17 @@ class FeedTableViewCell: UITableViewCell {
         imageView.autoSetDimension(.height, toSize: Self.imageHeight)
         return imageView
     }()
+
+    /// FUAM-3584: dark-mode 35% `secondary_color` overlay on the card icon. A template-rendered copy
+    /// of the loaded image, pinned over `feedImageView`, tinted with `feedCardIconTint` (clear in
+    /// light mode) so only the icon's opaque pixels get the treatment. Icons only — not text/buttons.
+    private lazy var feedImageTintOverlay: UIImageView = {
+        let imageView = UIImageView()
+        imageView.contentMode = .scaleAspectFit
+        imageView.tintColor = ColorPalette.feedCardIconTint
+        imageView.isUserInteractionEnabled = false
+        return imageView
+    }()
     
     private lazy var feedTitleLabel: UILabel = {
         let label = UILabel()
@@ -107,6 +118,8 @@ class FeedTableViewCell: UITableViewCell {
         
         // Content
         stackView.addArrangedSubview(self.feedImageView)
+        self.feedImageView.addSubview(self.feedImageTintOverlay)
+        self.feedImageTintOverlay.autoPinEdgesToSuperviewEdges()
         // Track the image-to-title spacer so compact pinned alerts can hide it
         // alongside the image (FUAM-2932).
         let imageSpacer = UIView()
@@ -137,6 +150,8 @@ class FeedTableViewCell: UITableViewCell {
         // Compact-pinned reuse safety: restore the hero image's spacer so a
         // recycled cell rendered as compact does not bleed into the next row.
         self.imageBottomSpacer?.isHidden = false
+        // Drop the stale icon tint so a recycled cell doesn't flash the previous icon (FUAM-3584).
+        self.feedImageTintOverlay.image = nil
     }
     
     // MARK: - Public Methods
@@ -371,9 +386,13 @@ class FeedTableViewCell: UITableViewCell {
             self.feedImageView.isHidden = false
             self.feedImageView.loadAsyncImage(withURL: imageUrl,
                                               placeHolderImage: Constants.Resources.AsyncImagePlaceholder,
-                                              targetSize: CGSize(width: UIScreen.main.bounds.width, height: Self.imageHeight))
+                                              targetSize: CGSize(width: UIScreen.main.bounds.width, height: Self.imageHeight),
+                                              completion: { [weak self] image in
+                self?.feedImageTintOverlay.image = image?.withRenderingMode(.alwaysTemplate)
+            })
         } else {
             self.feedImageView.isHidden = true
+            self.feedImageTintOverlay.image = nil
         }
     }
     
