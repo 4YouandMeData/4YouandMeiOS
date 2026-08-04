@@ -43,6 +43,7 @@
 		3398A0030001F37A0001AAAA /* FeedContentQuickActivityOrderSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3398A0040001F37A0001AAAA /* FeedContentQuickActivityOrderSpec.swift */; };
 		3396A0010001F37A0001AAAA /* SurveyRangePickerSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3396A0020001F37A0001AAAA /* SurveyRangePickerSpec.swift */; };
 		3841A0010001F37A0001AAAA /* EnrollmentBackfillWindowingSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3841A0020001F37A0001AAAA /* EnrollmentBackfillWindowingSpec.swift */; };
+		E695186F64E07A672667D22E /* AttributedStringFittedSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3896B3BB9ADFDA3BD3CAF32F /* AttributedStringFittedSpec.swift */; };
 		3396A0030001F37A0001AAAA /* FUAM-3396-menqol-survey.json in Resources */ = {isa = PBXBuildFile; fileRef = 3396A0040001F37A0001AAAA /* FUAM-3396-menqol-survey.json */; };
 		8974CF8B267B848D003A6E61 /* HealthKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8974CF8A267B848D003A6E61 /* HealthKit.framework */; };
 		89F730582514F09C00DF9503 /* StudyVideo.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = 89F730572514F09C00DF9503 /* StudyVideo.mp4 */; };
@@ -125,6 +126,7 @@
 		3398A0040001F37A0001AAAA /* FeedContentQuickActivityOrderSpec.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = FeedContentQuickActivityOrderSpec.swift; sourceTree = "<group>"; };
 		3396A0020001F37A0001AAAA /* SurveyRangePickerSpec.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SurveyRangePickerSpec.swift; sourceTree = "<group>"; };
 		3841A0020001F37A0001AAAA /* EnrollmentBackfillWindowingSpec.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = EnrollmentBackfillWindowingSpec.swift; sourceTree = "<group>"; };
+		3896B3BB9ADFDA3BD3CAF32F /* AttributedStringFittedSpec.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AttributedStringFittedSpec.swift; sourceTree = "<group>"; };
 		3396A0040001F37A0001AAAA /* FUAM-3396-menqol-survey.json */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.json; path = "FUAM-3396-menqol-survey.json"; sourceTree = "<group>"; };
 		894BEE6B24AE52DD00254DC6 /* ForYouAndMe_Example.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ForYouAndMe_Example.entitlements; sourceTree = "<group>"; };
 		8974CF8A267B848D003A6E61 /* HealthKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = HealthKit.framework; path = System/Library/Frameworks/HealthKit.framework; sourceTree = SDKROOT; };
@@ -254,6 +256,7 @@
 				3398A0040001F37A0001AAAA /* FeedContentQuickActivityOrderSpec.swift */,
 				3396A0020001F37A0001AAAA /* SurveyRangePickerSpec.swift */,
 				3841A0020001F37A0001AAAA /* EnrollmentBackfillWindowingSpec.swift */,
+				3896B3BB9ADFDA3BD3CAF32F /* AttributedStringFittedSpec.swift */,
 				3396A0050001F37A0001AAAA /* Fixtures */,
 				607FACE91AFB9204008FA782 /* Supporting Files */,
 				5495EE5799F86F4CFC72D79C /* MockRepository.swift */,
@@ -581,6 +584,7 @@
 				3398A0030001F37A0001AAAA /* FeedContentQuickActivityOrderSpec.swift in Sources */,
 				3396A0010001F37A0001AAAA /* SurveyRangePickerSpec.swift in Sources */,
 				3841A0010001F37A0001AAAA /* EnrollmentBackfillWindowingSpec.swift in Sources */,
+				E695186F64E07A672667D22E /* AttributedStringFittedSpec.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

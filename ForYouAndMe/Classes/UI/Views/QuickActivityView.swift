@@ -28,14 +28,26 @@ class QuickActivityView: UIView {
     
     private let titleLabel: UILabel = {
         let label = UILabel()
-        // FUAM-3562: the card (and its header) has a fixed size, so long titles or large
+        // FUAM-3637: the card (and its header) has a fixed size, so long titles or large
         // Dynamic Type must shrink the font to fit the two available lines instead of clipping.
+        // The font is shrunk manually in layoutSubviews (adjustsFontSizeToFitWidth is inert on a
+        // line-limited attributed label — it truncates rather than shrinks). `.byTruncatingTail`
+        // is the below-floor fallback.
         label.numberOfLines = 2
         label.lineBreakMode = .byTruncatingTail
-        label.adjustsFontSizeToFitWidth = true
-        label.minimumScaleFactor = 0.6
         return label
     }()
+
+    // FUAM-3637: total horizontal inset around the title — 24pt background margins + 8pt outer
+    // stack + 8pt header stack, both sides. Used to derive the width the title must fit into.
+    private static let titleHorizontalInset: CGFloat = 2 * (Constants.Style.DefaultHorizontalMargins + 8.0 + 8.0)
+
+    // FUAM-3637: the untouched title colour + raw text, plus the (text, width) pair last fitted,
+    // so layoutSubviews re-fits only on a real change and the attributedText setter cannot loop.
+    private var titleColor: UIColor = ColorPalette.color(withType: .secondaryText).applyAlpha(0.5)
+    private var titleRawText: String?
+    private var titleFittedText: String?
+    private var titleFittedWidth: CGFloat = 0.0
     
     private let subtitleLabel: UILabel = {
         let label = UILabel()
@@ -138,7 +150,23 @@ class QuickActivityView: UIView {
     required init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-    
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        // FUAM-3637: fit the title to two lines now that the width is known. The (text, width)
+        // cache guard skips the no-op re-apply so the attributedText setter cannot loop every frame.
+        guard let title = self.titleRawText else { return }
+        let availableWidth = self.bounds.width - Self.titleHorizontalInset
+        guard availableWidth > 0 else { return }
+        guard self.titleFittedText != title || self.titleFittedWidth != availableWidth else { return }
+        self.titleFittedText = title
+        self.titleFittedWidth = availableWidth
+        self.titleLabel.attributedText = NSAttributedString.createFitted(withText: title,
+                                                                         fontStyle: .header2,
+                                                                         color: self.titleColor,
+                                                                         availableWidth: availableWidth)
+    }
+
     // MARK: - Public Methods
     
     public func display(item: QuickActivity,
@@ -152,12 +180,21 @@ class QuickActivityView: UIView {
         self.gradientView.updateParameters(colors: [item.startColor ?? ColorPalette.color(withType: .primary),
                                                     item.endColor ?? ColorPalette.color(withType: .gradientPrimaryEnd)])
         
-        // The line break mode override is required for the multiline font auto-shrink
-        // to apply to attributed text (see NSAttributedString.applyingLineBreakMode).
-        self.titleLabel.attributedText = NSAttributedString.create(withText: item.title ?? "",
+        // FUAM-3637: store the raw title and set an initial (unshrunk) truncating string. The real
+        // two-line fit needs the laid-out width, so it happens in layoutSubviews. The title is fit
+        // to two lines; making the fit honour the remaining 120pt-header budget after the subtitle
+        // would need header-height plumbing and is out of scope for this ticket — with very large AX
+        // Dynamic Type the header stays capped at 120pt.
+        let rawTitle = item.title ?? ""
+        self.titleColor = ColorPalette.color(withType: .secondaryText).applyAlpha(0.5)
+        self.titleRawText = rawTitle
+        self.titleFittedText = nil
+        self.titleFittedWidth = 0.0
+        self.titleLabel.attributedText = NSAttributedString.create(withText: rawTitle,
                                                                    fontStyle: .header2,
-                                                                   color: ColorPalette.color(withType: .secondaryText).applyAlpha(0.5))
+                                                                   color: self.titleColor)
             .applyingLineBreakMode(.byTruncatingTail)
+        self.setNeedsLayout()
         
         self.subtitleLabel.attributedText = NSAttributedString.create(withText: item.body ?? "",
                                                                       fontStyle: .paragraph,
