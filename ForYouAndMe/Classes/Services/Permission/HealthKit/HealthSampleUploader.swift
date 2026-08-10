@@ -47,7 +47,16 @@ class HealthSampleUploader {
         self.sampleDataType = sampleDataType
     }
     
-    public func run(startDate: Date, endDate: Date, source: String, minimumSampleDate: Date? = nil) -> Single<()> {
+    /// `useAnchoredQuery: false` runs a plain `HKSampleQuery` for the chunk instead of the
+    /// anchored query (FUAM-3841 review fix #8): during the historical backfill walk an
+    /// anchored query can skip samples inserted out of order, and its anchor must not be
+    /// advanced past data the incremental head hasn't reached yet. Apple's guidance:
+    /// sample queries for history, anchored queries for incremental sync.
+    public func run(startDate: Date,
+                    endDate: Date,
+                    source: String,
+                    minimumSampleDate: Date? = nil,
+                    useAnchoredQuery: Bool = true) -> Single<()> {
         guard let networkDelegate = self.networkDelegate else {
             assertionFailure("Missing Network Delegate")
             return Single.error(HealthSampleUploaderError.internalError)
@@ -60,19 +69,35 @@ class HealthSampleUploader {
 
         return Single<HealthQueryResult>.create { observer in
             let datePredicate = HKQuery.predicateForSamples(withStart: startDate, end: endDate, options: [])
-            let anchor: HKQueryAnchor? = self.storage.loadLastSampleUploadAnchor(forDataType: self.sampleDataType)
 
-            let query = HKAnchoredObjectQuery(type: sampleType,
+            let query: HKQuery
+            if useAnchoredQuery {
+                let anchor: HKQueryAnchor? = self.storage.loadLastSampleUploadAnchor(forDataType: self.sampleDataType)
+                query = HKAnchoredObjectQuery(type: sampleType,
                                               predicate: datePredicate,
                                               anchor: anchor,
                                               limit: HKObjectQueryNoLimit) { _, samplesOrNil, _, newAnchor, errorOrNil in
-                if let error = errorOrNil {
-                    observer(.failure(HealthSampleUploaderError.fetchDataError(underlyingError: error)))
-                } else {
-                    observer(.success(HealthQueryResult(anchor: newAnchor, samples: samplesOrNil ?? [])))
+                    if let error = errorOrNil {
+                        observer(.failure(HealthSampleUploaderError.fetchDataError(underlyingError: error)))
+                    } else {
+                        observer(.success(HealthQueryResult(anchor: newAnchor, samples: samplesOrNil ?? [])))
+                    }
+                }
+            } else {
+                let sortByStartDate = NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: true)
+                query = HKSampleQuery(sampleType: sampleType,
+                                      predicate: datePredicate,
+                                      limit: HKObjectQueryNoLimit,
+                                      sortDescriptors: [sortByStartDate]) { _, samplesOrNil, errorOrNil in
+                    if let error = errorOrNil {
+                        observer(.failure(HealthSampleUploaderError.fetchDataError(underlyingError: error)))
+                    } else {
+                        // anchor nil: the historical walk never touches the stored anchor.
+                        observer(.success(HealthQueryResult(anchor: nil, samples: samplesOrNil ?? [])))
+                    }
                 }
             }
-            
+
             self.healthStore.execute(query)
             return Disposables.create()
         }

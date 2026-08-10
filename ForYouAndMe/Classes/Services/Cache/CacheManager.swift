@@ -283,14 +283,25 @@ extension CacheManager.CacheManagerKey {
     static func getLastSampleUploadAnchorKey(forHealthDataTypeIdentifier healthDataTypeIdentifier: HealthDataType) -> String {
         return CacheManager.CacheManagerKey.lastSampleUploadAnchor.rawValue + "." + healthDataTypeIdentifier.rawValue
     }
+
+    static func getUploadStartDateKey(forHealthDataType dataType: HealthDataType) -> String {
+        return CacheManager.CacheManagerKey.firstSuccessfulSampleUploadDate.rawValue + "." + dataType.rawValue
+    }
 }
 
 extension CacheManager: HealthSampleUploaderStorage {
-    var uploadStartDate: Date? {
-        get { self.load(forKey: CacheManagerKey.firstSuccessfulSampleUploadDate.rawValue) }
-        set { self.save(encodable: newValue, forKey: CacheManagerKey.firstSuccessfulSampleUploadDate.rawValue) }
+    /// FUAM-3841 review fix #4: per-data-type upload cursor. Falls back to the legacy shared
+    /// key so existing installs resume from where the old shared cursor left off instead of
+    /// re-uploading everything from scratch.
+    func uploadStartDate(forDataType dataType: HealthDataType) -> Date? {
+        return self.load(forKey: CacheManagerKey.getUploadStartDateKey(forHealthDataType: dataType))
+            ?? self.load(forKey: CacheManagerKey.firstSuccessfulSampleUploadDate.rawValue)
     }
-    
+
+    func setUploadStartDate(_ date: Date?, forDataType dataType: HealthDataType) {
+        self.save(encodable: date, forKey: CacheManagerKey.getUploadStartDateKey(forHealthDataType: dataType))
+    }
+
     func saveLastSampleUploadAnchor<T: NSSecureCoding>(_ anchor: T?, forDataType dataType: HealthDataType) {
         self.saveNSSecureCoding(object: anchor, forKey: CacheManagerKey.getLastSampleUploadAnchorKey(forHealthDataTypeIdentifier: dataType))
     }
@@ -332,9 +343,10 @@ extension CacheManager {
         self.pendingUploadDataType = nil
         self.lastUploadSequenceCompletionDate = nil
         self.lastUploadSequenceStartingDate = nil
-        self.uploadStartDate = nil
+        self.reset(forKey: CacheManagerKey.firstSuccessfulSampleUploadDate.rawValue)
         HealthDataType.allCases.forEach { dataType in
             self.reset(forKey: CacheManagerKey.getLastSampleUploadAnchorKey(forHealthDataTypeIdentifier: dataType))
+            self.setUploadStartDate(nil, forDataType: dataType)
         }
         print("HealthSampleUpload cache purged")
     }

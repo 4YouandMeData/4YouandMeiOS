@@ -809,8 +809,19 @@ extension RepositoryImpl: HealthManagerClearanceDelegate {
         if let phaseStart = user.userPhases?.compactMap({ $0.startAt }).min() {
             return phaseStart
         }
-        let calendar = Calendar.current
-        return calendar.date(byAdding: .day, value: -user.daysInStudy, to: calendar.startOfDay(for: Date()))
+        return Self.enrollmentDate(fromDaysInStudy: user.daysInStudy)
+    }
+
+    /// Backend semantics: `days_in_study` is 1 ON the enrollment day
+    /// (`(end_date - onboarding_date).to_i + 1`), so enrollment = startOfDay(today)
+    /// minus (daysInStudy - 1) days. `daysInStudy <= 0` is not a valid enrolled state:
+    /// return `nil` so callers fall back to their legacy windows instead of silently
+    /// producing an empty plan (FUAM-3841 review fixes #1/#6).
+    static func enrollmentDate(fromDaysInStudy daysInStudy: Int,
+                               now: Date = Date(),
+                               calendar: Calendar = .current) -> Date? {
+        guard daysInStudy > 0 else { return nil }
+        return calendar.date(byAdding: .day, value: -(daysInStudy - 1), to: calendar.startOfDay(for: now))
     }
 }
 
