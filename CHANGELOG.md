@@ -1,5 +1,7 @@
 ## [Unreleased]
 
+- **Host-app flag to collect HealthKit/SensorKit without an opt-in consent card** (FUAM-3844). Two boolean keys in the HOST app's `Info.plist` — `FYAMHealthKitIgnoreOptInConsent` and `FYAMSensorKitIgnoreOptInConsent` — tell the SDK to ignore the backend opt-in consent requirement per subsystem and collect whenever the participant is logged in and the OS permits. Absent keys default to `false`, preserving existing behaviour for every host. With the HealthKit flag set, the Settings → Permissions Health row is shown without a recorded opt-in agreement so participants can grant HealthKit from there (Settings-only prompt path — no auto-present during onboarding). Hardening from the FUAM-3835 outage: a new `sensor_data_clearance_mismatch` analytics event fires when SensorKit clearance is false while at least one configured sensor is OS-authorized (a combination that is always a bug), and `SensorSampleUploadManager.purgeAllData` no longer fast-forwards the per-sensor cursor — queued batches are still dropped on clearance loss, but the un-uploaded window can be re-fetched once clearance returns.
+
 ## Release 0.101.12
 
 - **Consent signature — canvas wins the drag against the enclosing scroll view** (FUAM-3624). The signature canvas now claims the drag gesture ahead of the scroll view it sits in, so strokes register reliably instead of scrolling the consent page out from under the user's finger.

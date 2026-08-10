@@ -28,6 +28,8 @@ private enum FirebaseEventCustomName: String {
     case permissionWatchdogTimeout = "onboarding_permission_watchdog_tripped"
     case permissionWatchdogRetry = "onboarding_permission_retry"
     case permissionWatchdogSkipped = "onboarding_permission_skipped"
+    // FUAM-3844. Sensor-data clearance mismatch watchdog.
+    case sensorDataClearanceMismatch = "sensor_data_clearance_mismatch"
 }
 
 private enum FirebaseErrorDomain {
@@ -100,6 +102,8 @@ class FirebaseAnalyticsPlatform: AnalyticsPlatform {
             self.permissionWatchdogRetry(branch: branch, attempt: attempt)
         case .permissionWatchdogSkipped(let branch, let wasFirstAttempt):
             self.permissionWatchdogSkipped(branch: branch, wasFirstAttempt: wasFirstAttempt)
+        case .sensorDataClearanceMismatch(let reason, let authorizedSensors):
+            self.sensorDataClearanceMismatch(reason: reason, authorizedSensors: authorizedSensors)
         default:
             break
         }
@@ -139,8 +143,18 @@ class FirebaseAnalyticsPlatform: AnalyticsPlatform {
                        ])
     }
 
+    // MARK: - FUAM-3844 sensor-data clearance mismatch
+
+    private func sensorDataClearanceMismatch(reason: String, authorizedSensors: String) {
+        self.sendEvent(withEventName: FirebaseEventCustomName.sensorDataClearanceMismatch.rawValue,
+                       parameters: [
+                           AnalyticsParameter.reason.rawValue: reason,
+                           AnalyticsParameter.authorizedSensors.rawValue: authorizedSensors
+                       ])
+    }
+
     // MARK: - Private Methods
-    
+
     // MARK: User
     private func setUserID(_ userID: String) {
         Analytics.setUserID(userID)
