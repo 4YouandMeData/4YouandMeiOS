@@ -10,6 +10,11 @@ import RxSwift
 
 protocol HealthSampleUploadManagerClearanceDelegate: AnyObject {
     var healthManagerCanRun: Bool { get }
+
+    /// FUAM-3841: the participant's enrollment date. Lower bound for the HealthKit backfill
+    /// (HealthKit has no OS retention limit, so the enrollment date is the only bound) and
+    /// hard consent gate for sample measurement timestamps. `nil` when no user is available.
+    var enrollmentDate: Date? { get }
 }
 
 protocol HealthSampleUploadManagerReachability {
@@ -41,22 +46,24 @@ class HealthSampleUploadManager {
     private var uploadSequenceScheduledOrRunning: Bool = false
     
     private let reachability: HealthSampleUploadManagerReachability
+    private let analytics: AnalyticsService
     private let uploaders: [HealthSampleUploader]
     private let disposeBag = DisposeBag()
-    
+
     init(withDataTypes dataTypes: [HealthDataType],
          storage: HealthSampleUploadManagerStorage & HealthSampleUploaderStorage,
-         reachability: HealthSampleUploadManagerReachability) {
+         reachability: HealthSampleUploadManagerReachability,
+         analytics: AnalyticsService) {
         self.storage = storage
         self.reachability = reachability
+        self.analytics = analytics
         let sampleTypes = dataTypes
             .filter { $0.sampleType != nil }
             .filter { $0.isValid }
         self.uploaders = sampleTypes.map { HealthSampleUploader(withSampleDataType: $0, storage: storage) }
         self.logDebugText(text: "Initialized with \(self.uploaders.count) uploaders")
-        if nil == self.storage.uploadStartDate {
-            self.storage.uploadStartDate = Date(timeIntervalSinceNow: -Constants.HealthKit.SamplesStartDateTimeInThePast)
-        }
+        // FUAM-3841: `uploadStartDate` is initialized lazily in `startUploadSequence`, once
+        // clearance (hence the user's enrollment date) is available — not here.
     }
     
     public func setNetworkDelegate(_ networkDelegate: HealthSampleUploaderNetworkDelegate) {
@@ -138,7 +145,26 @@ class HealthSampleUploadManager {
 
     private func runUploadSequence() {
         self.logDebugText(text: "Upload sequence started")
-        
+        guard let clearanceDelegate = self.clearanceDelegate else {
+            assertionFailure("Missing Clearance Delegate")
+            return
+        }
+
+        // FUAM-3841: HealthKit has no OS retention limit, so backfill from the enrollment
+        // date (NOT clamped to the SensorKit retention floor). Only when no enrollment date
+        // is resolvable fall back to the legacy fixed look-back window.
+        if self.storage.uploadStartDate == nil {
+            let backfillStart = clearanceDelegate.enrollmentDate
+                ?? Date(timeIntervalSinceNow: -Constants.HealthKit.SamplesStartDateTimeInThePast)
+            self.storage.uploadStartDate = backfillStart
+            self.logDebugText(text: "Backfill lower bound set to \(backfillStart) "
+                              + "(\(clearanceDelegate.enrollmentDate != nil ? "enrollment" : "legacy fallback"))")
+            self.analytics.track(event: .sensorDataBackfillReach(sensor: "health_kit",
+                                                                 reachedBack: ISO8601DateFormatter().string(from: backfillStart),
+                                                                 boundedBy: clearanceDelegate.enrollmentDate != nil
+                                                                    ? "enrollment" : "legacy_fixed_window"))
+        }
+
         // If too much time has passed from the sequence start and, in that case, restart from the beginning (drop the pending upload)
         if let lastUploadSequenceStartingDate = self.storage.lastUploadSequenceStartingDate,
            lastUploadSequenceStartingDate.addingTimeInterval(Constants.HealthKit.PendingUploadExpireTimeInterval) < Date() {
@@ -172,13 +198,20 @@ class HealthSampleUploadManager {
             return
         }
 
+        // FUAM-3841 hard consent gate: never query (nor transmit) anything measured before
+        // the enrollment date, even if a stale stored start date predates it.
+        let enrollmentDate = self.clearanceDelegate?.enrollmentDate
+        if let enrollmentDate = enrollmentDate, startDate < enrollmentDate {
+            startDate = enrollmentDate
+        }
+
         let endDate = Date()
         let oneHour: TimeInterval = 3600
 
         func processNextChunk() {
             let nextEndDate = min(startDate.addingTimeInterval(oneHour), endDate)
-            
-            uploader.run(startDate: startDate, endDate: nextEndDate, source: "health_kit")
+
+            uploader.run(startDate: startDate, endDate: nextEndDate, source: "health_kit", minimumSampleDate: enrollmentDate)
                 .subscribe(onSuccess: { [weak self] in
                     guard let self = self else { return }
                     self.logDebugText(text: "Upload from \(startDate) to \(nextEndDate) completed")

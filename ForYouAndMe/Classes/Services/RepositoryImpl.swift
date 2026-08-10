@@ -798,6 +798,20 @@ extension RepositoryImpl: HealthManagerClearanceDelegate {
         if HostAppConfig.healthKitIgnoresOptInConsent { return self.isLoggedIn }
         return self.currentUser?.getHasAgreedTo(systemPermission: .health) ?? false
     }
+
+    /// FUAM-3841: lower bound for HealthKit/SensorKit backfill and hard consent gate for
+    /// record timestamps. Satisfies both `HealthSampleUploadManagerClearanceDelegate` and
+    /// `SensorSampleUploadManagerClearanceDelegate`.
+    /// Source: earliest `user_study_phases.start_at` (explicit backend date); when the study
+    /// has no phases, derived from `days_in_study` (day-aligned, conservative).
+    var enrollmentDate: Date? {
+        guard let user = self.currentUser else { return nil }
+        if let phaseStart = user.userPhases?.compactMap({ $0.startAt }).min() {
+            return phaseStart
+        }
+        let calendar = Calendar.current
+        return calendar.date(byAdding: .day, value: -user.daysInStudy, to: calendar.startOfDay(for: Date()))
+    }
 }
 
 // MARK: - Extension(PrimitiveSequence)

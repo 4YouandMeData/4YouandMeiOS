@@ -47,7 +47,7 @@ class HealthSampleUploader {
         self.sampleDataType = sampleDataType
     }
     
-    public func run(startDate: Date, endDate: Date, source: String) -> Single<()> {
+    public func run(startDate: Date, endDate: Date, source: String, minimumSampleDate: Date? = nil) -> Single<()> {
         guard let networkDelegate = self.networkDelegate else {
             assertionFailure("Missing Network Delegate")
             return Single.error(HealthSampleUploaderError.internalError)
@@ -77,13 +77,22 @@ class HealthSampleUploader {
             return Disposables.create()
         }
         .flatMap { result -> Single<HKQueryAnchor?> in
-            self.logDebugText(text: "Uploading \(result.samples.count) samples from \(startDate) to \(endDate)")
-            
-            guard result.samples.count > 0 else {
+            // FUAM-3841 hard consent gate: drop any sample measured before the enrollment
+            // date, regardless of what the anchored query returned. Client-side, does not
+            // depend on the server.
+            let samples: [HKSample]
+            if let minimumSampleDate = minimumSampleDate {
+                samples = result.samples.filter { $0.startDate >= minimumSampleDate }
+            } else {
+                samples = result.samples
+            }
+            self.logDebugText(text: "Uploading \(samples.count) samples from \(startDate) to \(endDate)")
+
+            guard samples.count > 0 else {
                 return Single.just(result.anchor)
             }
 
-            return networkDelegate.uploadHealthNetworkData(result.samples.getNetworkData(forDataType: self.sampleDataType),
+            return networkDelegate.uploadHealthNetworkData(samples.getNetworkData(forDataType: self.sampleDataType),
                                                            source: source)
                 .map { result.anchor }
         }

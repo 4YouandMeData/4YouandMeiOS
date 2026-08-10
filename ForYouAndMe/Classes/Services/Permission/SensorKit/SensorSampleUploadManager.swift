@@ -29,7 +29,23 @@ public final class SensorSampleUploadManager {
     private let retryMaxDelay: TimeInterval = 15 * 60
     
     private let sensorkitEmbargo: TimeInterval = 24 * 60 * 60   // 24h absolute duration
-    private let retentionDays: Int = 7                          // 7 calendar days
+
+    /// How far back the client trusts the OS to still hold SensorKit data.
+    ///
+    /// ⚠️ UNMEASURED ASSUMPTION (FUAM-3841): Apple does not document SensorKit's on-device
+    /// retention period; 7 days is the value this SDK has historically assumed, NOT a
+    /// measured fact. If device QA shows the OS retains more (or less), tune this single
+    /// constant — window building and backfill telemetry all follow from it.
+    /// The backfill lower bound is `max(enrollmentDate, now - retentionFloor)`.
+    private let retentionFloor: TimeInterval = 7 * 24 * 60 * 60
+
+    /// The server rejects requests above 10 MB (HTTP 413 PayloadTooLarge). Keep each queued
+    /// batch's serialized JSON safely below that; the upload envelope adds only a few bytes.
+    private let maxBatchBytes: Int = 5 * 1024 * 1024
+
+    /// Give up on a window after this many consecutive failed fetch attempts and move past it,
+    /// so one poison window doesn't stall the per-sensor chain forever (FUAM-3841).
+    private let maxWindowFetchAttempts: Int = 3
 
     // MARK: - Dependencies
 
@@ -56,6 +72,9 @@ public final class SensorSampleUploadManager {
     private let disposeBag = DisposeBag()
     private var lastSyncDate: Date?
     private var retryWorkItems: [SRSensor: DispatchWorkItem] = [:]
+    // ponytail: in-memory consecutive-failure counter (resets on relaunch); persist it in
+    // storage if poison windows turn out to survive app restarts.
+    private var windowFetchFailures: [SRSensor: (windowStart: Date, attempts: Int)] = [:]
     private let syncLock = NSLock()
     private var hasStarted = false
 
@@ -165,7 +184,7 @@ public final class SensorSampleUploadManager {
 
         // Fetch & enqueue (mappers can be async but we trigger drains below)
         for sensor in sensors {
-            fetchWindow(for: sensor, to: now)
+            fetchPendingWindows(for: sensor, now: now)
         }
 
         // Try to drain queues
@@ -192,43 +211,62 @@ public final class SensorSampleUploadManager {
         .deviceUsageReport, .phoneUsageReport, .messagesUsageReport, .keyboardMetrics
     ]
     
-    /// Build embargo and day-aligned windows for the last week up to 'yesterday'.
-    private func buildWindows(for sensor: SRSensor, now: Date) -> [DateInterval] {
+    /// The windows to fetch for a sensor, plus what determined their lower bound
+    /// ("cursor", "enrollment" or "retention_floor") — used for backfill telemetry.
+    private struct WindowPlan {
+        let windows: [DateInterval]
+        let lowerBoundOrigin: String
+    }
+
+    /// Build embargo-safe fetch windows from the backfill lower bound (FUAM-3841) up to now.
+    private func buildWindowPlan(for sensor: SRSensor, now: Date) -> WindowPlan {
         let cal = Calendar.current
-        let embargo: TimeInterval = 24 * 60 * 60
 
-        // Upper bound you are allowed to read: not beyond yesterday nor within the last 24h.
-        let startOfToday = cal.startOfDay(for: now)
-        let embargoCutoff = now.addingTimeInterval(-embargo)
-        let safeTo = min(startOfToday, embargoCutoff) // "yesterday" end, embargo-safe
+        // Upper bound: honour the 24h SensorKit embargo. Report-type sensors are
+        // day-aggregated, so additionally align to start-of-day to avoid partial-day windows.
+        let embargoCutoff = now.addingTimeInterval(-sensorkitEmbargo)
+        let safeTo = dayAggregatedSensors.contains(sensor)
+            ? min(cal.startOfDay(for: now), embargoCutoff)
+            : embargoCutoff
 
-        // Nothing readable yet
-        guard let weekStartCandidate = cal.date(byAdding: .day, value: -7, to: startOfToday),
-              weekStartCandidate < safeTo else {
-            return []
+        // Lower bound: reach back to the enrollment date, but never beyond what the OS
+        // plausibly still holds (see `retentionFloor` — an unmeasured assumption).
+        let retentionCutoff = now.addingTimeInterval(-retentionFloor)
+        let lowerBound: Date
+        var origin: String
+        if let enrollment = clearanceDelegate?.enrollmentDate, enrollment > retentionCutoff {
+            lowerBound = enrollment
+            origin = "enrollment"
+        } else {
+            lowerBound = retentionCutoff
+            origin = "retention_floor"
         }
 
-        // Start from last cursor if present, otherwise from 7 days ago
-        let cursor = storage.lastCursor(for: sensor) ?? weekStartCandidate
-        var from = min(cursor, weekStartCandidate)
+        // Resume from the cursor when it is ahead of the lower bound. A cursor left behind
+        // by purge + re-consent (FUAM-3844 keeps it in place) reopens from the bound —
+        // never from `now` — so the gap is re-fetched.
+        var from = lowerBound
+        if let cursor = storage.lastCursor(for: sensor), cursor > lowerBound {
+            from = cursor
+            origin = "cursor"
+        }
 
-        // Clamp 'from' to at most safeTo (nothing to do if already beyond)
-        guard from < safeTo else { return [] }
+        guard from < safeTo else { return WindowPlan(windows: [], lowerBoundOrigin: origin) }
 
         var windows: [DateInterval] = []
-
         if dayAggregatedSensors.contains(sensor) {
-            // Day-aligned windows: [startOfDay, nextStartOfDay)
-            // Start from startOfDay(from) to be robust if cursor is mid-day.
+            // Day-aligned windows: [startOfDay, nextStartOfDay). Start from startOfDay(from)
+            // to be robust if the bound is mid-day; pre-enrollment records inside the first
+            // day are dropped by the hard consent gate below.
             var dayStart = cal.startOfDay(for: from)
             while dayStart < safeTo {
                 guard let next = cal.date(byAdding: .day, value: 1, to: dayStart) else { break }
-                let dayEnd = min(next, safeTo)
-                windows.append(DateInterval(start: dayStart, end: dayEnd))
+                windows.append(DateInterval(start: dayStart, end: min(next, safeTo)))
                 dayStart = next
             }
         } else {
-            // Continuous sensors: chunk in 24h absolute windows (you can pick smaller, e.g., 6h)
+            // Continuous sensors: chunk in 24h absolute windows; oversized results are
+            // further split by payload size when enqueued.
             let chunk: TimeInterval = 24 * 60 * 60
             var start = from
             while start < safeTo {
@@ -238,10 +276,10 @@ public final class SensorSampleUploadManager {
             }
         }
 
-        return windows
+        return WindowPlan(windows: windows, lowerBoundOrigin: origin)
     }
-    
-    private func fetchLastWeekUpToYesterday(for sensor: SRSensor, now: Date) {
+
+    private func fetchPendingWindows(for sensor: SRSensor, now: Date) {
         guard isAuthorized(sensor) else {
             #if DEBUG
             print("SensorSampleUploadManager - Skip \(sensor.rawValue): status=\(statusString(sensor))")
@@ -257,16 +295,28 @@ public final class SensorSampleUploadManager {
             return
         }
 
-        // Build windows for last week up to yesterday (embargo-safe)
-        let windows = buildWindows(for: sensor, now: now)
-        guard !windows.isEmpty else {
+        let plan = buildWindowPlan(for: sensor, now: now)
+        guard let firstWindow = plan.windows.first else {
             #if DEBUG
             print("SensorSampleUploadManager - No windows for \(sensor.rawValue) (already up to date or embargo)")
             #endif
             return
         }
 
-        processWindow(at: 0, of: windows, for: sensor, using: mapper)
+        // FUAM-3841 observability: how far back the client actually reached for this sensor.
+        // Emitted only when the plan opens a backfill (not a routine cursor resume), so the
+        // study team can tell "the OS deleted it" from "the client never asked".
+        if plan.lowerBoundOrigin != "cursor" {
+            analytics.track(event: .sensorDataBackfillReach(sensor: sensor.shortSubsource,
+                                                            reachedBack: ISO8601DateFormatter().string(from: firstWindow.start),
+                                                            boundedBy: plan.lowerBoundOrigin))
+        }
+        #if DEBUG
+        print("SensorSampleUploadManager - \(sensor.rawValue): \(plan.windows.count) window(s) "
+              + "from \(firstWindow.start) (bounded by \(plan.lowerBoundOrigin))")
+        #endif
+
+        processWindow(at: 0, of: plan.windows, for: sensor, using: mapper)
     }
 
     /// Sequentially process each window to respect mapper's "no concurrent fetch" precondition.
@@ -276,39 +326,57 @@ public final class SensorSampleUploadManager {
                                using mapper: SensorSampleMapper) {
         guard index < windows.count else { return } // all done
 
-        let w = windows[index]
-        mapper.fetchAndMap(from: w.start, to: w.end) { [weak self] result in
+        let window = windows[index]
+        mapper.fetchAndMap(from: window.start, to: window.end) { [weak self] result in
             guard let self else { return }
             switch result {
             case .failure(let error):
-                // Do not advance cursor; schedule a retry and stop the chain.
                 #if DEBUG
-                print("SensorSampleUploadManager - Fetch failed \(sensor.rawValue) [\(w.start) -> \(w.end)]: \(error)")
+                print("SensorSampleUploadManager - Fetch failed \(sensor.rawValue) [\(window.start) -> \(window.end)]: \(error)")
                 #endif
-                self.scheduleRetry(for: sensor, attempt: 1)
+                // FUAM-3841: one poison window must not stall the per-sensor chain forever.
+                // Retry it on subsequent sync cycles (cursor untouched); after
+                // `maxWindowFetchAttempts` consecutive failures on the same window, skip it
+                // (advance the cursor past it, forfeiting that window) and move on.
+                let previous = self.windowFetchFailures[sensor]
+                let attempts = (previous?.windowStart == window.start ? (previous?.attempts ?? 0) : 0) + 1
+                if attempts >= self.maxWindowFetchAttempts {
+                    self.windowFetchFailures[sensor] = nil
+                    #if DEBUG
+                    print("SensorSampleUploadManager - Giving up window [\(window.start) -> \(window.end)] "
+                          + "for \(sensor.rawValue) after \(attempts) attempts")
+                    #endif
+                    self.storage.setLastCursor(window.end, for: sensor)
+                    self.processWindow(at: index + 1, of: windows, for: sensor, using: mapper)
+                } else {
+                    self.windowFetchFailures[sensor] = (window.start, attempts)
+                    // Stop the chain for this cycle; the next sync retries from the cursor.
+                    self.scheduleRetry(for: sensor, attempt: attempts)
+                }
 
             case .success(let records):
-                if records.isEmpty {
+                self.windowFetchFailures[sensor] = nil
+
+                // FUAM-3841 hard consent gate: drop anything measured before the enrollment
+                // date, regardless of what SensorKit returned for the requested window.
+                let uploadable = self.dropPreEnrollmentRecords(records)
+
+                if uploadable.isEmpty {
                     // Advance cursor even if empty to avoid refetching the same day/chunk again.
-                    self.storage.setLastCursor(w.end, for: sensor)
+                    self.storage.setLastCursor(window.end, for: sensor)
                     // Move to next window
                     self.processWindow(at: index + 1, of: windows, for: sensor, using: mapper)
                     return
                 }
 
-                // Enqueue in small batches
-                var i = 0
-                while i < records.count {
-                    let j = min(i + self.maxBatchSize, records.count)
-                    self.storage.enqueueBatch(Array(records[i..<j]), for: sensor)
-                    i = j
-                }
+                // Enqueue in batches bounded by record count AND serialized payload size.
+                self.enqueueRespectingPayloadLimit(uploadable, for: sensor)
 
                 // === Cursor advancement policy ===
                 // "At-least-once" (simple): advance now; queued batches will be retried until uploaded.
-                self.storage.setLastCursor(w.end, for: sensor)
+                self.storage.setLastCursor(window.end, for: sensor)
 
-                self.drainQueue(for: sensor, baseDate: w.end)
+                self.drainQueue(for: sensor, baseDate: window.end)
 
                 // Next window
                 self.processWindow(at: index + 1, of: windows, for: sensor, using: mapper)
@@ -316,111 +384,74 @@ public final class SensorSampleUploadManager {
         }
     }
 
+    // MARK: - Enrollment gate & payload chunking (FUAM-3841)
 
+    private static let isoFractionalFormatter: ISO8601DateFormatter = {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return formatter
+    }()
+    private static let isoPlainFormatter = ISO8601DateFormatter()
 
-    private func fetchWindow(for sensor: SRSensor, to now: Date) {
-        
-        self.fetchLastWeekUpToYesterday(for: sensor, now: Date())
-        return
-        // Authorization check
-        guard isAuthorized(sensor) else {
-            #if DEBUG
-            print("SensorSampleUploadManager - Skip fetch \(sensor.rawValue): status=\(statusString(sensor))")
-            #endif
-            // Do NOT advance cursor here.
-            return
+    private static func parseISO8601(_ string: String) -> Date? {
+        return isoPlainFormatter.date(from: string) ?? isoFractionalFormatter.date(from: string)
+    }
+
+    /// Best-effort extraction of the measurement timestamp from a mapped record.
+    /// Mappers use heterogeneous keys: "t" (continuous sensors), "start"/"start_ms"
+    /// (reports/pedometer), "recorded_at" (batch record time) as last resort.
+    private func measurementDate(of record: [String: Any]) -> Date? {
+        if let startMs = record["start_ms"] as? Int {
+            return Date(timeIntervalSince1970: TimeInterval(startMs) / 1000)
         }
-
-        // Resolve mapper
-        guard let mapper = mappers[sensor] else {
-            #if DEBUG
-            print("SensorSampleUploadManager - Missing mapper for \(sensor.rawValue)")
-            #endif
-            return
+        for key in ["t", "start", "recorded_at"] {
+            if let string = record[key] as? String, let date = Self.parseISO8601(string) {
+                return date
+            }
         }
+        return nil
+    }
 
-        let cal = Calendar.current
+    /// Hard client-side consent gate: never enqueue (hence never transmit) a record measured
+    /// before the enrollment date, independently of any server-side validation.
+    /// Records without a parseable measurement timestamp are kept: the fetch window itself is
+    /// already bounded by the enrollment date, so they cannot predate it by construction.
+    private func dropPreEnrollmentRecords(_ records: [[String: Any]]) -> [[String: Any]] {
+        guard let enrollment = clearanceDelegate?.enrollmentDate else { return records }
+        return records.filter { record in
+            guard let measuredAt = self.measurementDate(of: record) else { return true }
+            return measuredAt >= enrollment
+        }
+    }
 
-        // Embargo: SensorKit withholds the last 24h (absolute duration).
-        // Do NOT read beyond this point.
-        let embargoCutoff = now.addingTimeInterval(-sensorkitEmbargo)
+    /// Enqueue records in batches that respect both the record-count cap and the server's
+    /// 10 MB request limit (oversized batches are bisected until they serialize below
+    /// `maxBatchBytes`).
+    private func enqueueRespectingPayloadLimit(_ records: [[String: Any]], for sensor: SRSensor) {
+        var index = 0
+        while index < records.count {
+            let end = min(index + self.maxBatchSize, records.count)
+            self.enqueueBisectingIfTooLarge(Array(records[index..<end]), for: sensor)
+            index = end
+        }
+    }
 
-        // Decide the "to" bound:
-        //    - For day-aggregated reports, never go past startOfToday to avoid partial-day windows.
-        //    - Still honor the 24h embargo by taking the minimum.
-        let startOfToday = cal.startOfDay(for: now)
-        let safeTo: Date = dayAggregatedSensors.contains(sensor)
-            ? min(startOfToday, embargoCutoff)   // day-aligned but still ≤ now-24h
-            : embargoCutoff                      // continuous sensors: last 24h absolute
-
-        // Decide the "from" bound:
-        //    - If we have a cursor, continue from there.
-        //    - If no cursor:
-        //        * day-aggregated: start from startOfYesterday (calendar-safe, DST-aware)
-        //        * others: use the last 24h absolute (safeTo - 24h)
-        var from: Date
-        if let cursor = storage.lastCursor(for: sensor) {
-            from = cursor
+    private func enqueueBisectingIfTooLarge(_ batch: [[String: Any]], for sensor: SRSensor) {
+        if batch.count > 1, self.serializedSize(of: batch) > self.maxBatchBytes {
+            let half = batch.count / 2
+            self.enqueueBisectingIfTooLarge(Array(batch[..<half]), for: sensor)
+            self.enqueueBisectingIfTooLarge(Array(batch[half...]), for: sensor)
         } else {
-            if dayAggregatedSensors.contains(sensor) {
-                guard let startOfYesterday = cal.date(byAdding: .day, value: -1, to: startOfToday) else {
-                    // Fallback: if calendar fails, read nothing this round
-                    return
-                }
-                from = startOfYesterday
-            } else {
-                from = safeTo.addingTimeInterval(-sensorkitEmbargo) // exact 24h span
-            }
+            self.storage.enqueueBatch(batch, for: sensor)
         }
+    }
 
-        // Clamp to retention window (~7 calendar days before safeTo).
-        if let oldestAllowed = cal.date(byAdding: .day, value: -retentionDays, to: safeTo), from < oldestAllowed {
-            from = oldestAllowed
-        }
-
-        // Final sanity check
-        guard from < safeTo else {
-            #if DEBUG
-            print("SensorSampleUploadManager - Empty/invalid window for \(sensor.rawValue). from=\(from) to=\(safeTo)")
-            #endif
-            return
-        }
-
-        // Perform fetch on [from, safeTo)
-        mapper.fetchAndMap(from: from, to: safeTo) { [weak self] result in
-            guard let self else { return }
-            switch result {
-            case .failure(let error):
-                // Do not advance cursor; schedule a retry.
-                #if DEBUG
-                print("SensorSampleUploadManager - Fetch failed for \(sensor.rawValue): \(error)")
-                print("SensorSampleUploadManager - Window was from=\(from) to=\(safeTo)")
-                #endif
-                self.scheduleRetry(for: sensor, attempt: 1)
-
-            case .success(let records):
-                if records.isEmpty {
-                    // Even if empty, advance to safeTo to avoid refetching the same embargo-safe range.
-                    self.storage.setLastCursor(safeTo, for: sensor)
-                    return
-                }
-
-                // Enqueue in small batches for resilience
-                var i = 0
-                while i < records.count {
-                    let j = min(i + self.maxBatchSize, records.count)
-                    self.storage.enqueueBatch(Array(records[i..<j]), for: sensor)
-                    i = j
-                }
-
-                // Advance cursor to what we *actually* read.
-                // If you prefer exactly-once semantics post-upload-success, move this into `drainQueue` upon success.
-                self.storage.setLastCursor(safeTo, for: sensor)
-
-                // Try immediate upload
-                self.drainQueue(for: sensor, baseDate: safeTo)
-            }
-        }
+    // ponytail: serializes the batch once per bisection level — fine for ≤500-record
+    // batches; revisit only if profiling shows enqueue cost.
+    private func serializedSize(of batch: [[String: Any]]) -> Int {
+        guard JSONSerialization.isValidJSONObject(batch),
+              let data = try? JSONSerialization.data(withJSONObject: batch) else { return 0 }
+        return data.count
     }
 
     private func drainQueue(for sensor: SRSensor, baseDate: Date, attempt: Int = 1) {
@@ -508,6 +539,7 @@ public final class SensorSampleUploadManager {
         // Stop pending retries
         retryWorkItems.values.forEach { $0.cancel() }
         retryWorkItems.removeAll()
+        windowFetchFailures.removeAll()
 
         // Drop ALL queued batches. The cursor is deliberately NOT fast-forwarded (FUAM-3844):
         // dropping queued batches on clearance loss is correct; forfeiting the ability to
