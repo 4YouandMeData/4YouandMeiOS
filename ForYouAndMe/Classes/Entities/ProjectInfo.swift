@@ -18,7 +18,10 @@ enum HostAppConfig {
     static var sensorKitIgnoresOptInConsent: Bool { flag("FYAMSensorKitIgnoreOptInConsent") }
 
     private static func flag(_ key: String) -> Bool {
-        (Bundle.main.object(forInfoDictionaryKey: key) as? Bool) ?? false
+        guard let value = Bundle.main.object(forInfoDictionaryKey: key) else { return false }
+        if let bool = value as? Bool { return bool }
+        assertionFailure("\(key) must be a Boolean in Info.plist, got \(type(of: value))")
+        return (value as? NSString)?.boolValue ?? false
     }
 }
 

@@ -31,6 +31,12 @@ class HealthSampleUploadManager {
     
     private var storage: HealthSampleUploadManagerStorage
     weak var clearanceDelegate: HealthSampleUploadManagerClearanceDelegate?
+
+    /// FUAM-3844: returns `true` while the HealthKit authorization prompt has not been requested yet
+    /// (`HKAuthorizationRequestStatus.shouldRequest`). Set by `HealthManager` right after init.
+    /// Unauthorized anchored queries succeed with zero samples, so running the sequence before the
+    /// prompt would permanently advance `uploadStartDate` past data the participant grants later.
+    var isStillShouldRequestCheck: () -> Single<Bool> = { Single.just(false) }
     
     private var uploadSequenceScheduledOrRunning: Bool = false
     
@@ -105,13 +111,32 @@ class HealthSampleUploadManager {
             return
         }
         guard clearanceDelegate.healthManagerCanRun else {
-            self.logDebugText(text: "Upload sequence has no clearance")
-            self.storage.lastUploadSequenceCompletionDate = Date()
-            self.uploadSequenceScheduledOrRunning = false
-            self.scheduleUploadSequence()
+            self.deferUploadSequence(reason: "Upload sequence has no clearance")
             return
         }
-        
+
+        // FUAM-3844: never run (nor advance uploadStartDate) before the authorization prompt
+        // has actually been shown, otherwise the pre-grant window is silently skipped.
+        self.isStillShouldRequestCheck()
+            .catchAndReturn(true) // on error, defer rather than risk burning the cursor
+            .subscribe(onSuccess: { [weak self] stillShouldRequest in
+                guard let self = self else { return }
+                if stillShouldRequest {
+                    self.deferUploadSequence(reason: "Upload sequence deferred: HealthKit authorization not requested yet")
+                } else {
+                    self.runUploadSequence()
+                }
+            }).disposed(by: self.disposeBag)
+    }
+
+    private func deferUploadSequence(reason: String) {
+        self.logDebugText(text: reason)
+        self.storage.lastUploadSequenceCompletionDate = Date()
+        self.uploadSequenceScheduledOrRunning = false
+        self.scheduleUploadSequence()
+    }
+
+    private func runUploadSequence() {
         self.logDebugText(text: "Upload sequence started")
         
         // If too much time has passed from the sequence start and, in that case, restart from the beginning (drop the pending upload)
