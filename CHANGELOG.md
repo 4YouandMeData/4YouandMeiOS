@@ -1,5 +1,10 @@
 ## [Unreleased]
 
+## Release 0.101.12
+
+- **Consent signature — canvas wins the drag against the enclosing scroll view** (FUAM-3624). The signature canvas now claims the drag gesture ahead of the scroll view it sits in, so strokes register reliably instead of scrolling the consent page out from under the user's finger.
+- **About You — residual cell selection cleared on return** (FUAM-3382). Returning to the About You list now clears the selection state of the row that was tapped, so a previously visited entry no longer stays highlighted.
+
 ## Release 0.101.11
 
 - **Diary datetimes — locale- and 12-hour-clock-immune serialization** (FUAM-3522). Follow-up to the FUAM-3469 UTC fix. The bare `DateFormatter` behind `Date.string(withFormat:)` inherited the device locale, so when a user forced the 12-hour clock in Settings iOS rewrote the `HH:mm:ss` pattern to `h:mm:ss a` — producing corrupt payloads such as `2026-07-02T4:58:50 pmZ` (diary note stored 12h off). A new `ApiDateFormatter` (backed by `ISO8601DateFormatter` with `.withInternetDateTime`, pinned to UTC) is now the single locale-immune serializer for every server-bound datetime; `Date.utcDateTimeString()` delegates to it, so all 12 diary serialization sites (`datetime_ref` for text / eaten / menstrual / doses / hot-flash / audio / video / we-noticed, the we-noticed `old_`/`current_value_retrieved_at`, and the `in_chart_interval` filter) route through it unchanged. The wire format is byte-identical to before (`yyyy-MM-dd'T'HH:mm:ss'Z'`). `Date.string(withFormat:)` is documented as display-only, and a SwiftLint `custom_rules` tripwire flags raw `DateFormatter()` construction in the networking layer.
