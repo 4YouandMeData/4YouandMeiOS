@@ -232,7 +232,8 @@ public final class SensorSampleUploadManager {
                                     enrollmentDate: clearanceDelegate?.enrollmentDate,
                                     cursor: storage.lastCursor(for: sensor),
                                     retentionFloor: retentionFloor,
-                                    embargo: sensorkitEmbargo)
+                                    embargo: sensorkitEmbargo,
+                                    consentBypassed: HostAppConfig.sensorKitIgnoresOptInConsent)
     }
 
     /// Build embargo-safe fetch windows from the backfill lower bound (FUAM-3841) up to now.
@@ -244,7 +245,8 @@ public final class SensorSampleUploadManager {
                                 cursor: Date?,
                                 retentionFloor: TimeInterval,
                                 embargo: TimeInterval,
-                                calendar: Calendar = .current) -> WindowPlan {
+                                calendar: Calendar = .current,
+                                consentBypassed: Bool = false) -> WindowPlan {
         let cal = calendar
 
         // Upper bound: honour the 24h SensorKit embargo. Report-type sensors are
@@ -262,6 +264,13 @@ public final class SensorSampleUploadManager {
         if let enrollment = enrollmentDate, enrollment > retentionCutoff {
             lowerBound = enrollment
             origin = "enrollment"
+        } else if enrollmentDate == nil && consentBypassed {
+            // FUAM-3841 (final review): when clearance comes from the consent-bypass flag and
+            // no enrollment date is resolvable yet, the retention-floor fallback would upload
+            // data measured BEFORE clearance. Forward-only instead: the plan stays empty until
+            // real time advances past the embargo (or the enrollment date resolves).
+            lowerBound = now
+            origin = "consent_bypass_forward_only"
         } else {
             lowerBound = retentionCutoff
             origin = "retention_floor"

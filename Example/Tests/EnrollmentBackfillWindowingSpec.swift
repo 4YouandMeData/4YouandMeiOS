@@ -66,16 +66,42 @@ class EnrollmentBackfillWindowingSpec: QuickSpec {
             }
         }
 
+        describe("RepositoryImpl.enrollmentCalendar(userTimeZone:)") {
+
+            // Backend computes days_in_study in the USER's timezone (FUAM-3841 final review).
+            let auckland = TimeZone(identifier: "Pacific/Auckland")!
+
+            it("derives the enrollment day boundary in the user's timezone, not the device's") {
+                // `now` is 2026-08-10 12:00 UTC == 2026-08-11 00:00 NZST: the user-local day
+                // boundary IS `now`, while a UTC (device-like) calendar lands 12h earlier —
+                // a day early in user-local terms, the pre-fix bug.
+                let userCalendar = RepositoryImpl.enrollmentCalendar(userTimeZone: auckland)
+                let result = RepositoryImpl.enrollmentDate(fromDaysInStudy: 1, now: now, calendar: userCalendar)
+                var aucklandCalendar = Calendar(identifier: .gregorian)
+                aucklandCalendar.timeZone = auckland
+                expect(result).to(equal(aucklandCalendar.startOfDay(for: now)))
+                expect(result).toNot(equal(calendar.startOfDay(for: now)))
+            }
+
+            it("falls back to the device timezone when the user record carries none") {
+                expect(RepositoryImpl.enrollmentCalendar(userTimeZone: nil).timeZone).to(equal(Calendar.current.timeZone))
+            }
+        }
+
         describe("SensorSampleUploadManager.buildWindowPlan") {
 
-            func plan(dayAggregated: Bool, enrollment: Date?, cursor: Date?) -> SensorSampleUploadManager.WindowPlan {
+            func plan(dayAggregated: Bool,
+                      enrollment: Date?,
+                      cursor: Date?,
+                      consentBypassed: Bool = false) -> SensorSampleUploadManager.WindowPlan {
                 return SensorSampleUploadManager.buildWindowPlan(dayAggregated: dayAggregated,
                                                                  now: now,
                                                                  enrollmentDate: enrollment,
                                                                  cursor: cursor,
                                                                  retentionFloor: retentionFloor,
                                                                  embargo: embargo,
-                                                                 calendar: calendar)
+                                                                 calendar: calendar,
+                                                                 consentBypassed: consentBypassed)
             }
 
             context("continuous sensor") {
@@ -154,6 +180,31 @@ class EnrollmentBackfillWindowingSpec: QuickSpec {
                 it("returns an empty plan when enrolled today (bound >= safeTo)") {
                     let result = plan(dayAggregated: true, enrollment: startOfToday, cursor: nil)
                     expect(result.windows).to(beEmpty())
+                }
+            }
+
+            context("nil enrollment date under the consent-bypass flag (FUAM-3841 final review)") {
+
+                it("is forward-only: lower bound is now and the plan is empty, so nothing pre-clearance is fetched") {
+                    for dayAggregated in [true, false] {
+                        let result = plan(dayAggregated: dayAggregated, enrollment: nil, cursor: nil, consentBypassed: true)
+                        expect(result.lowerBound).to(equal(now))
+                        expect(result.lowerBoundOrigin).to(equal("consent_bypass_forward_only"))
+                        expect(result.windows).to(beEmpty())
+                    }
+                }
+
+                it("preserves the legacy retention window when the flag is off") {
+                    let result = plan(dayAggregated: false, enrollment: nil, cursor: nil, consentBypassed: false)
+                    expect(result.lowerBoundOrigin).to(equal("retention_floor"))
+                    expect(result.windows.first?.start).to(equal(now.addingTimeInterval(-retentionFloor)))
+                }
+
+                it("still backfills from the enrollment date when it is resolvable and the flag is on") {
+                    let enrollment = now.addingTimeInterval(-3 * day)
+                    let result = plan(dayAggregated: false, enrollment: enrollment, cursor: nil, consentBypassed: true)
+                    expect(result.lowerBoundOrigin).to(equal("enrollment"))
+                    expect(result.windows.first?.start).to(equal(enrollment))
                 }
             }
 

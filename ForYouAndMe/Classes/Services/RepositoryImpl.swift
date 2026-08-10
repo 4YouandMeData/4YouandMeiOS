@@ -809,7 +809,20 @@ extension RepositoryImpl: HealthManagerClearanceDelegate {
         if let phaseStart = user.userPhases?.compactMap({ $0.startAt }).min() {
             return phaseStart
         }
-        return Self.enrollmentDate(fromDaysInStudy: user.daysInStudy)
+        return Self.enrollmentDate(fromDaysInStudy: user.daysInStudy,
+                                   calendar: Self.enrollmentCalendar(userTimeZone: user.timeZone))
+    }
+
+    /// FUAM-3841 (final review): the backend computes `days_in_study` in the USER's timezone,
+    /// so the derived day boundary must use it too — `Calendar.current` (device tz) can shift
+    /// the enrollment day by one when they differ. Falls back to the device timezone when the
+    /// user record carries none.
+    static func enrollmentCalendar(userTimeZone: TimeZone?) -> Calendar {
+        var calendar = Calendar.current
+        if let userTimeZone = userTimeZone {
+            calendar.timeZone = userTimeZone
+        }
+        return calendar
     }
 
     /// Backend semantics: `days_in_study` is 1 ON the enrollment day

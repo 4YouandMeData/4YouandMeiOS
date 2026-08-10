@@ -187,8 +187,21 @@ class HealthSampleUploadManager {
         // enrollment date — HealthKit has no OS retention limit — or, when no enrollment
         // date is resolvable (e.g. days_in_study <= 0), from the legacy fixed window.
         var startDate: Date
+        var minimumSampleDate = enrollmentDate
         if let storedStartDate = self.storage.uploadStartDate(forDataType: dataType) {
             startDate = storedStartDate
+        } else if enrollmentDate == nil, HostAppConfig.healthKitIgnoresOptInConsent {
+            // FUAM-3841 (final review): when clearance comes from the consent-bypass flag and
+            // no enrollment date is resolvable, the legacy fixed window would upload data
+            // measured BEFORE clearance. Forward-only: start now and floor the sample dates
+            // at now so nothing pre-clearance leaks.
+            startDate = Date()
+            minimumSampleDate = startDate
+            self.logDebugText(text: "Backfill lower bound for \(dataType.keyName) set to \(startDate) "
+                              + "(consent bypass, forward-only)")
+            self.analytics.track(event: .sensorDataBackfillReach(sensor: "health_kit_" + dataType.keyName,
+                                                                 reachedBack: ISO8601DateFormatter().string(from: startDate),
+                                                                 boundedBy: "consent_bypass_forward_only"))
         } else {
             startDate = enrollmentDate ?? Date(timeIntervalSinceNow: -Constants.HealthKit.SamplesStartDateTimeInThePast)
             self.logDebugText(text: "Backfill lower bound for \(dataType.keyName) set to \(startDate) "
@@ -221,7 +234,7 @@ class HealthSampleUploadManager {
             uploader.run(startDate: startDate,
                          endDate: nextEndDate,
                          source: "health_kit",
-                         minimumSampleDate: enrollmentDate,
+                         minimumSampleDate: minimumSampleDate,
                          useAnchoredQuery: !isHistorical)
                 .subscribe(onSuccess: { [weak self] in
                     guard let self = self else { return }
