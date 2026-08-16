@@ -7,6 +7,24 @@
 
 import Foundation
 
+/// Host-app configuration flags read from the HOST app's `Info.plist` (NOT `ProjectInfo.plist`).
+/// Absent keys default to `false`, which preserves the pre-existing behaviour — a missing key
+/// is a valid, expected state, so no assertion is raised and these keys are deliberately
+/// excluded from `ProjectInfo.validate()`.
+/// `Bundle.main` is read synchronously so these flags are available before any network call
+/// (e.g. `SensorKitManager.initialize()` runs before `RepositoryImpl.initialize()` in `Services.setup`).
+enum HostAppConfig {
+    static var healthKitIgnoresOptInConsent: Bool { flag("FYAMHealthKitIgnoreOptInConsent") }
+    static var sensorKitIgnoresOptInConsent: Bool { flag("FYAMSensorKitIgnoreOptInConsent") }
+
+    private static func flag(_ key: String) -> Bool {
+        guard let value = Bundle.main.object(forInfoDictionaryKey: key) else { return false }
+        if let bool = value as? Bool { return bool }
+        assertionFailure("\(key) must be a Boolean in Info.plist, got \(type(of: value))")
+        return (value as? NSString)?.boolValue ?? false
+    }
+}
+
 class ProjectInfo {
     
     private enum ProjectInfoKey: String, CaseIterable {

@@ -471,6 +471,21 @@ config.build_settings['SWIFT_ACTIVE_COMPILATION_CONDITIONS'] = '$(inherited) HEA
 
 3.  The set of SensorKit sensors collected by the pod is defined in `Constants.SensorKit.RequestedSensors`, intersected with the mappers wired up in `Services.setup(...)`. Update those if you need a different sensor list.
 
+### Collecting HealthKit/SensorKit without an opt-in consent card (Optional)
+
+By default the SDK gates HealthKit and SensorKit collection on the participant having agreed to the corresponding opt-in consent card served by the backend (`health` / `sensorkit` system permissions). If your study deliberately does not serve such a card, you can tell the SDK to ignore the opt-in requirement per subsystem with two boolean keys in your **host app's `Info.plist`** (NOT `ProjectInfo.plist`):
+
+| Key | Type | Default when absent |
+| --- | --- | --- |
+| `FYAMHealthKitIgnoreOptInConsent` | Boolean | `false` |
+| `FYAMSensorKitIgnoreOptInConsent` | Boolean | `false` |
+
+Absent keys preserve today's behaviour exactly. With a flag set, the SDK collects whenever the participant is logged in and the OS permits (HealthKit read authorization / per-sensor SensorKit authorization are still respected — denied types simply yield no samples).
+
+**Invariant:** each flag is a host-app declaration that the study does not gate that subsystem by opt-in consent. A host setting a flag must **not** also serve an opt-in card carrying `health`/`sensorkit`, or a participant's recorded decline would be ignored.
+
+**HealthKit prompt path:** with `FYAMHealthKitIgnoreOptInConsent` set, no onboarding opt-in step triggers the HealthKit authorization prompt. Participants grant HealthKit from **Settings → Permissions → Health → Setup** inside the app (the Health row is shown there regardless of opt-in consent when the flag is set). Instruct your cohort accordingly.
+
 ### Terra (Optional)
 
 ForYouAndMe optionally integrates [Terra](https://tryterra.co) for third-party wearables. Terra lives in the `ForYouAndMe/Terra` subspec, gated by the `TERRA` Swift compilation condition.

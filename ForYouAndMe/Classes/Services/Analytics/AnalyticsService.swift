@@ -54,6 +54,9 @@ enum AnalyticsParameter: String {
     case elapsedMs = "elapsed_ms"
     case attempt
     case wasFirstAttempt = "was_first_attempt"
+    // FUAM-3844. Sensor-data clearance mismatch attributes.
+    case reason
+    case authorizedSensors = "authorized_sensors"
 }
 
 enum AnalyticsScreens: String {
@@ -128,6 +131,10 @@ enum AnalyticsEvent {
     case permissionWatchdogTimeout(branch: String, previousBranch: String?, elapsedMs: Int, attempt: Int)
     case permissionWatchdogRetry(branch: String, attempt: Int)
     case permissionWatchdogSkipped(branch: String, wasFirstAttempt: Bool)
+
+    // FUAM-3844. Emitted when sensor-data clearance is false while at least one configured
+    // SensorKit sensor is OS-authorized — that combination is always a bug (see FUAM-3835).
+    case sensorDataClearanceMismatch(reason: String, authorizedSensors: String)
 
     // Errors
     case serverError(apiError: ApiError)

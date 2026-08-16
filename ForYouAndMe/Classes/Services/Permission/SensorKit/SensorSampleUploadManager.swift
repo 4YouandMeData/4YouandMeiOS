@@ -96,6 +96,7 @@ public final class SensorSampleUploadManager {
         guard clearanceDelegate?.sensorManagerCanRun ?? false else {
             if !hasPurgedForNoUser {
                 hasPurgedForNoUser = true
+                self.trackClearanceMismatchIfNeeded(reason: "no_clearance_at_start")
                 // run purge async to avoid blocking startup
                 workQueue.async { [weak self] in self?.purgeAllData(reason: "no_clearance_at_start") }
             }
@@ -132,6 +133,7 @@ public final class SensorSampleUploadManager {
         guard clearanceDelegate?.sensorManagerCanRun ?? false else {
             if !hasPurgedForNoUser {
                 hasPurgedForNoUser = true
+                self.trackClearanceMismatchIfNeeded(reason: "no_clearance_trigger")
                 workQueue.async { [weak self] in self?.purgeAllData(reason: "no_clearance_trigger") }
             }
             return
@@ -488,6 +490,16 @@ public final class SensorSampleUploadManager {
         DispatchQueue.global(qos: .utility).asyncAfter(deadline: .now() + delay, execute: work)
     }
     
+    /// FUAM-3844 (hardening): clearance false while at least one configured sensor is
+    /// OS-authorized is always a bug — the participant granted the sensor but the SDK
+    /// refuses to collect (this silent combination is why FUAM-3835 ran undetected).
+    private func trackClearanceMismatchIfNeeded(reason: String) {
+        let authorized = sensors.filter { isAuthorized($0) }
+        guard !authorized.isEmpty else { return }
+        let sensorNames = authorized.map { $0.shortSubsource }.joined(separator: ",")
+        analytics.track(event: .sensorDataClearanceMismatch(reason: reason, authorizedSensors: sensorNames))
+    }
+
     private func purgeAllData(reason: String) {
         #if DEBUG
         print("SensorSampleUploadManager - Purging pending data (\(reason))")
@@ -497,13 +509,12 @@ public final class SensorSampleUploadManager {
         retryWorkItems.values.forEach { $0.cancel() }
         retryWorkItems.removeAll()
 
-        let now = Date()
-        // Drop ALL queued batches and move cursor to 'now'
+        // Drop ALL queued batches. The cursor is deliberately NOT fast-forwarded (FUAM-3844):
+        // dropping queued batches on clearance loss is correct; forfeiting the ability to
+        // re-fetch that window is not. FUAM-3841 builds on this.
         for sensor in sensors {
             // Dequeue until the queue is empty
-            while let _ = storage.dequeueNextBatch(for: sensor) { /* drop */ }
-            // Move the cursor to 'now' so we don't refetch pre-login data
-            storage.setLastCursor(now, for: sensor)
+            while storage.dequeueNextBatch(for: sensor) != nil { /* drop */ }
         }
     }
 }

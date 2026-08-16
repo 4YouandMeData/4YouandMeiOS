@@ -792,7 +792,12 @@ extension RepositoryImpl: HealthManagerNetworkDelegate {
 // MARK: - HealthManagerClearanceDelegate
 
 extension RepositoryImpl: HealthManagerClearanceDelegate {
-    var healthManagerCanRun: Bool { self.currentUser?.getHasAgreedTo(systemPermission: .health) ?? false }
+    var healthManagerCanRun: Bool {
+        // FUAM-3844: hosts may declare (via Info.plist) that the study does not gate
+        // HealthKit collection on an opt-in consent card. Collection still requires a session.
+        if HostAppConfig.healthKitIgnoresOptInConsent { return self.isLoggedIn }
+        return self.currentUser?.getHasAgreedTo(systemPermission: .health) ?? false
+    }
 }
 
 // MARK: - Extension(PrimitiveSequence)
@@ -927,7 +932,12 @@ extension RepositoryImpl: SensorKitManagerClearanceDelegate {
     var sensorManagerCanRun: Bool {
         // Must be logged in AND have SensorKit consent
         guard self.isLoggedIn else { return false }
-        
+
+        // FUAM-3844: hosts may declare (via Info.plist) that the study does not gate
+        // SensorKit collection on an opt-in consent card. Per-sensor OS authorization is
+        // still checked downstream (SensorSampleUploadManager skips non-authorized sensors).
+        if HostAppConfig.sensorKitIgnoresOptInConsent { return true }
+
         // Reuse the same consent mechanism, but check `.sensorKit`
         return self.currentUser?.getHasAgreedTo(systemPermission: .sensorKit) ?? false
     }
