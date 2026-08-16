@@ -10,6 +10,11 @@ import RxSwift
 
 protocol HealthSampleUploadManagerClearanceDelegate: AnyObject {
     var healthManagerCanRun: Bool { get }
+
+    /// FUAM-3841: the participant's enrollment date. Lower bound for the HealthKit backfill
+    /// (HealthKit has no OS retention limit, so the enrollment date is the only bound) and
+    /// hard consent gate for sample measurement timestamps. `nil` when no user is available.
+    var enrollmentDate: Date? { get }
 }
 
 protocol HealthSampleUploadManagerReachability {
@@ -18,7 +23,12 @@ protocol HealthSampleUploadManagerReachability {
 }
 
 protocol HealthSampleUploadManagerStorage {
-    var uploadStartDate: Date? { get set }
+    /// Per-data-type upload cursor (review fix #4 — a single shared start date meant only the
+    /// first uploader ever backfilled; every subsequent type got a seconds-wide window).
+    /// Implementations fall back to the legacy shared key when no per-type value exists yet,
+    /// so existing installs resume instead of re-uploading from scratch.
+    func uploadStartDate(forDataType dataType: HealthDataType) -> Date?
+    func setUploadStartDate(_ date: Date?, forDataType dataType: HealthDataType)
     var lastUploadSequenceCompletionDate: Date? { get set }
     var lastUploadSequenceStartingDate: Date? { get set }
     var pendingUploadDataType: HealthDataType? { get set }
@@ -41,22 +51,24 @@ class HealthSampleUploadManager {
     private var uploadSequenceScheduledOrRunning: Bool = false
     
     private let reachability: HealthSampleUploadManagerReachability
+    private let analytics: AnalyticsService
     private let uploaders: [HealthSampleUploader]
     private let disposeBag = DisposeBag()
-    
+
     init(withDataTypes dataTypes: [HealthDataType],
          storage: HealthSampleUploadManagerStorage & HealthSampleUploaderStorage,
-         reachability: HealthSampleUploadManagerReachability) {
+         reachability: HealthSampleUploadManagerReachability,
+         analytics: AnalyticsService) {
         self.storage = storage
         self.reachability = reachability
+        self.analytics = analytics
         let sampleTypes = dataTypes
             .filter { $0.sampleType != nil }
             .filter { $0.isValid }
         self.uploaders = sampleTypes.map { HealthSampleUploader(withSampleDataType: $0, storage: storage) }
         self.logDebugText(text: "Initialized with \(self.uploaders.count) uploaders")
-        if nil == self.storage.uploadStartDate {
-            self.storage.uploadStartDate = Date(timeIntervalSinceNow: -Constants.HealthKit.SamplesStartDateTimeInThePast)
-        }
+        // FUAM-3841: per-data-type upload start dates are initialized lazily in
+        // `startUpload(forUploader:)`, once clearance (hence the enrollment date) is available.
     }
     
     public func setNetworkDelegate(_ networkDelegate: HealthSampleUploaderNetworkDelegate) {
@@ -138,7 +150,7 @@ class HealthSampleUploadManager {
 
     private func runUploadSequence() {
         self.logDebugText(text: "Upload sequence started")
-        
+
         // If too much time has passed from the sequence start and, in that case, restart from the beginning (drop the pending upload)
         if let lastUploadSequenceStartingDate = self.storage.lastUploadSequenceStartingDate,
            lastUploadSequenceStartingDate.addingTimeInterval(Constants.HealthKit.PendingUploadExpireTimeInterval) < Date() {
@@ -167,27 +179,75 @@ class HealthSampleUploadManager {
             return
         }
 
-        guard var startDate = self.storage.uploadStartDate else {
-            assertionFailure("Upload start date has not been initialized")
-            return
+        let enrollmentDate = self.clearanceDelegate?.enrollmentDate
+        let dataType = uploader.sampleDataType
+
+        // FUAM-3841: per-data-type cursor (review fix #4). When no cursor exists yet (fresh
+        // install; legacy shared key covered by the storage fallback) backfill from the
+        // enrollment date — HealthKit has no OS retention limit — or, when no enrollment
+        // date is resolvable (e.g. days_in_study <= 0), from the legacy fixed window.
+        var startDate: Date
+        var minimumSampleDate = enrollmentDate
+        if let storedStartDate = self.storage.uploadStartDate(forDataType: dataType) {
+            startDate = storedStartDate
+        } else if enrollmentDate == nil, HostAppConfig.healthKitIgnoresOptInConsent {
+            // FUAM-3841 (final review): when clearance comes from the consent-bypass flag and
+            // no enrollment date is resolvable, the legacy fixed window would upload data
+            // measured BEFORE clearance. Forward-only: start now and floor the sample dates
+            // at now so nothing pre-clearance leaks.
+            startDate = Date()
+            minimumSampleDate = startDate
+            self.logDebugText(text: "Backfill lower bound for \(dataType.keyName) set to \(startDate) "
+                              + "(consent bypass, forward-only)")
+            self.analytics.track(event: .sensorDataBackfillReach(sensor: "health_kit_" + dataType.keyName,
+                                                                 reachedBack: ISO8601DateFormatter().string(from: startDate),
+                                                                 boundedBy: "consent_bypass_forward_only"))
+        } else {
+            startDate = enrollmentDate ?? Date(timeIntervalSinceNow: -Constants.HealthKit.SamplesStartDateTimeInThePast)
+            self.logDebugText(text: "Backfill lower bound for \(dataType.keyName) set to \(startDate) "
+                              + "(\(enrollmentDate != nil ? "enrollment" : "legacy fallback"))")
+            self.analytics.track(event: .sensorDataBackfillReach(sensor: "health_kit_" + dataType.keyName,
+                                                                 reachedBack: ISO8601DateFormatter().string(from: startDate),
+                                                                 boundedBy: enrollmentDate != nil
+                                                                    ? "enrollment" : "legacy_fixed_window"))
+        }
+
+        // FUAM-3841 hard consent gate: never query (nor transmit) anything measured before
+        // the enrollment date, even if a stale stored start date predates it.
+        if let enrollmentDate = enrollmentDate, startDate < enrollmentDate {
+            startDate = enrollmentDate
         }
 
         let endDate = Date()
         let oneHour: TimeInterval = 3600
+        let oneDay: TimeInterval = 24 * 3600
+        // Review fixes #7/#8: while the cursor is far behind (historical walk) use coarse
+        // 1-day chunks and a plain HKSampleQuery; near the head revert to 1-hour chunks and
+        // the anchored query (Apple's guidance: sample queries for history, anchored for sync).
+        let historicalThreshold: TimeInterval = 7 * oneDay
 
         func processNextChunk() {
-            let nextEndDate = min(startDate.addingTimeInterval(oneHour), endDate)
-            
-            uploader.run(startDate: startDate, endDate: nextEndDate, source: "health_kit")
+            let isHistorical = endDate.timeIntervalSince(startDate) > historicalThreshold
+            let chunkDuration = isHistorical ? oneDay : oneHour
+            let nextEndDate = min(startDate.addingTimeInterval(chunkDuration), endDate)
+
+            uploader.run(startDate: startDate,
+                         endDate: nextEndDate,
+                         source: "health_kit",
+                         minimumSampleDate: minimumSampleDate,
+                         useAnchoredQuery: !isHistorical)
                 .subscribe(onSuccess: { [weak self] in
                     guard let self = self else { return }
                     self.logDebugText(text: "Upload from \(startDate) to \(nextEndDate) completed")
-                    
+
+                    // Review fix #7: persist progress after EACH chunk, so an interrupted
+                    // multi-month walk resumes instead of restarting from enrollment.
+                    self.storage.setUploadStartDate(nextEndDate, forDataType: dataType)
+
                     if nextEndDate < endDate {
                         startDate = nextEndDate
                         processNextChunk()  // Processa il chunk successivo
                     } else {
-                        self.storage.uploadStartDate = endDate  // Aggiorna dopo aver processato tutto
                         self.processNextUploader(forUploader: uploader)
                     }
                 }, onFailure: { [weak self] error in

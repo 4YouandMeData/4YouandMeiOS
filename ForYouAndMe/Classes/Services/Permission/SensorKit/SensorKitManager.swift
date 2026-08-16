@@ -13,6 +13,10 @@ import SensorKit
 public protocol SensorSampleUploadManagerClearanceDelegate: AnyObject {
     /// Return `true` when the manager is allowed to run (e.g. consent active).
     var sensorManagerCanRun: Bool { get }
+
+    /// FUAM-3841: the participant's enrollment date. Lower bound for any data backfill and
+    /// hard consent gate for record measurement timestamps. `nil` when no user is available.
+    var enrollmentDate: Date? { get }
 }
 
 // MARK: - Typealiases mirroring the Health side wiring

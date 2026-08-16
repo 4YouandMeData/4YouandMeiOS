@@ -57,6 +57,10 @@ enum AnalyticsParameter: String {
     // FUAM-3844. Sensor-data clearance mismatch attributes.
     case reason
     case authorizedSensors = "authorized_sensors"
+    // FUAM-3841. Backfill-reach attributes.
+    case sensor
+    case reachedBack = "reached_back"
+    case boundedBy = "bounded_by"
 }
 
 enum AnalyticsScreens: String {
@@ -135,6 +139,11 @@ enum AnalyticsEvent {
     // FUAM-3844. Emitted when sensor-data clearance is false while at least one configured
     // SensorKit sensor is OS-authorized — that combination is always a bug (see FUAM-3835).
     case sensorDataClearanceMismatch(reason: String, authorizedSensors: String)
+
+    // FUAM-3841. Emitted when a backfill opens: how far back the client actually reached
+    // for a sensor (ISO8601) and what bounded it ("enrollment" / "retention_floor" / ...),
+    // so the study team can tell "the OS deleted it" from "the client never asked".
+    case sensorDataBackfillReach(sensor: String, reachedBack: String, boundedBy: String)
 
     // Errors
     case serverError(apiError: ApiError)

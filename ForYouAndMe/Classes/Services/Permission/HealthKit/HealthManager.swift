@@ -62,7 +62,8 @@ class HealthManager: HealthService {
         self.analyticsService = analyticsService
         self.healthSampleUploadManager = HealthSampleUploadManager(withDataTypes: readDataTypes,
                                                                    storage: storage,
-                                                                   reachability: reachability)
+                                                                   reachability: reachability,
+                                                                   analytics: analyticsService)
         // FUAM-3844: gate the upload sequence until the HealthKit prompt has been requested,
         // so the cursor never advances past the pre-grant window (see HealthSampleUploadManager).
         self.healthSampleUploadManager.isStillShouldRequestCheck = { [weak self] in
