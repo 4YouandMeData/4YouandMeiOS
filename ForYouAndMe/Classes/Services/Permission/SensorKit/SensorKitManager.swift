@@ -14,8 +14,11 @@ public protocol SensorSampleUploadManagerClearanceDelegate: AnyObject {
     /// Return `true` when the manager is allowed to run (e.g. consent active).
     var sensorManagerCanRun: Bool { get }
 
-    /// FUAM-3841: the participant's enrollment date. Lower bound for any data backfill and
-    /// hard consent gate for record measurement timestamps. `nil` when no user is available.
+    /// The participant's **study join day** — start of day in the participant's timezone,
+    /// derived from the backend's `days_in_study` (FUAM-3841, FUAM-3945). Feeds
+    /// `BackfillLowerBound`, which bounds every backfill and gates every record's measurement
+    /// timestamp. `nil` when it cannot be established (no user, or `days_in_study <= 0`),
+    /// which means forward-only collection.
     var enrollmentDate: Date? { get }
 }
 

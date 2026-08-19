@@ -30,15 +30,6 @@ public final class SensorSampleUploadManager {
     
     private let sensorkitEmbargo: TimeInterval = 24 * 60 * 60   // 24h absolute duration
 
-    /// How far back the client trusts the OS to still hold SensorKit data.
-    ///
-    /// ⚠️ UNMEASURED ASSUMPTION (FUAM-3841): Apple does not document SensorKit's on-device
-    /// retention period; 7 days is the value this SDK has historically assumed, NOT a
-    /// measured fact. If device QA shows the OS retains more (or less), tune this single
-    /// constant — window building and backfill telemetry all follow from it.
-    /// The backfill lower bound is `max(enrollmentDate, now - retentionFloor)`.
-    private let retentionFloor: TimeInterval = 7 * 24 * 60 * 60
-
     /// The server rejects requests above 10 MB (HTTP 413 PayloadTooLarge). Keep each queued
     /// batch's serialized JSON safely below that; the upload envelope adds only a few bytes.
     private let maxBatchBytes: Int = 5 * 1024 * 1024
@@ -75,9 +66,9 @@ public final class SensorSampleUploadManager {
     // threads and are hopped onto the work queue before touching this state).
     private var retryWorkItems: [SRSensor: DispatchWorkItem] = [:]
     // ponytail: in-memory per-sensor consecutive-failure counter, reset on any success
-    // (review fix #5 — keying on window.start never fired when the bound was
-    // now − retentionFloor, which shifts every cycle). Resets on relaunch; persist it in
-    // storage if poison windows turn out to survive app restarts.
+    // (review fix #5 — keying on window.start never fired when the bound shifted every
+    // cycle). Resets on relaunch; persist it in storage if poison windows turn out to
+    // survive app restarts.
     private var windowFetchFailures: [SRSensor: Int] = [:]
     // Once-per-launch guard so the "empty_plan" telemetry (review fix #6) doesn't fire on
     // every 15-minute sync cycle while a fresh enrollment waits out the 24h embargo.
@@ -219,34 +210,33 @@ public final class SensorSampleUploadManager {
     ]
     
     /// The windows to fetch for a sensor, plus the effective lower bound and what
-    /// determined it ("cursor", "enrollment" or "retention_floor") — used for telemetry.
+    /// determined it (see `BackfillLowerBound.Origin`) — used for telemetry.
     struct WindowPlan {
         let windows: [DateInterval]
         let lowerBound: Date
-        let lowerBoundOrigin: String
+        let lowerBoundOrigin: BackfillLowerBound.Origin
     }
 
     private func buildWindowPlan(for sensor: SRSensor, now: Date) -> WindowPlan {
         return Self.buildWindowPlan(dayAggregated: dayAggregatedSensors.contains(sensor),
                                     now: now,
-                                    enrollmentDate: clearanceDelegate?.enrollmentDate,
+                                    joinDay: clearanceDelegate?.enrollmentDate,
                                     cursor: storage.lastCursor(for: sensor),
-                                    retentionFloor: retentionFloor,
-                                    embargo: sensorkitEmbargo,
-                                    consentBypassed: HostAppConfig.sensorKitIgnoresOptInConsent)
+                                    embargo: sensorkitEmbargo)
     }
 
-    /// Build embargo-safe fetch windows from the backfill lower bound (FUAM-3841) up to now.
+    /// Build embargo-safe fetch windows from the backfill lower bound up to now.
+    /// The lower bound is the shared FUAM-3945 policy (`BackfillLowerBound`): the study join
+    /// day, floored at 365 days, and forward-only when no join day can be established.
+    /// Over-requesting is free — `SRSensorReader.fetch` simply returns nothing for a window
+    /// the OS has already dropped — so this no longer clamps to an assumed OS retention.
     /// Pure (internal for unit tests).
-    // swiftlint:disable:next function_parameter_count
     static func buildWindowPlan(dayAggregated: Bool,
                                 now: Date,
-                                enrollmentDate: Date?,
+                                joinDay: Date?,
                                 cursor: Date?,
-                                retentionFloor: TimeInterval,
                                 embargo: TimeInterval,
-                                calendar: Calendar = .current,
-                                consentBypassed: Bool = false) -> WindowPlan {
+                                calendar: Calendar = .current) -> WindowPlan {
         let cal = calendar
 
         // Upper bound: honour the 24h SensorKit embargo. Report-type sensors are
@@ -256,25 +246,11 @@ public final class SensorSampleUploadManager {
         let embargoCutoff = now.addingTimeInterval(-embargo)
         let safeTo = dayAggregated ? cal.startOfDay(for: embargoCutoff) : embargoCutoff
 
-        // Lower bound: reach back to the enrollment date, but never beyond what the OS
-        // plausibly still holds (see `retentionFloor` — an unmeasured assumption).
-        let retentionCutoff = now.addingTimeInterval(-retentionFloor)
-        let lowerBound: Date
-        var origin: String
-        if let enrollment = enrollmentDate, enrollment > retentionCutoff {
-            lowerBound = enrollment
-            origin = "enrollment"
-        } else if enrollmentDate == nil && consentBypassed {
-            // FUAM-3841 (final review): when clearance comes from the consent-bypass flag and
-            // no enrollment date is resolvable yet, the retention-floor fallback would upload
-            // data measured BEFORE clearance. Forward-only instead: the plan stays empty until
-            // real time advances past the embargo (or the enrollment date resolves).
-            lowerBound = now
-            origin = "consent_bypass_forward_only"
-        } else {
-            lowerBound = retentionCutoff
-            origin = "retention_floor"
-        }
+        // Lower bound: join day, capped at 365 days, forward-only (== now, hence an empty
+        // plan until the join day resolves) when the join day is unknown.
+        let bound = BackfillLowerBound.resolve(joinDay: joinDay, now: now)
+        let lowerBound = bound.date
+        var origin = bound.origin
 
         // Resume from the cursor when it is ahead of the lower bound. A cursor left behind
         // by purge + re-consent (FUAM-3844 keeps it in place) reopens from the bound —
@@ -282,7 +258,7 @@ public final class SensorSampleUploadManager {
         var from = lowerBound
         if let cursor = cursor, cursor > lowerBound {
             from = cursor
-            origin = "cursor"
+            origin = .cursor
         }
 
         guard from < safeTo else { return WindowPlan(windows: [], lowerBound: from, lowerBoundOrigin: origin) }
@@ -290,8 +266,8 @@ public final class SensorSampleUploadManager {
         var windows: [DateInterval] = []
         if dayAggregated {
             // Day-aligned windows: [startOfDay, nextStartOfDay). Day-align `from` but never
-            // rewind below the enrollment/retention bound (review fix #2 — startOfDay(from)
-            // alone opened the first window before enrollment).
+            // rewind below the join-day bound (review fix #2 — startOfDay(from) alone opened
+            // the first window before the join day).
             var dayStart = max(cal.startOfDay(for: from), lowerBound)
             while dayStart < safeTo {
                 guard let next = cal.date(byAdding: .day, value: 1, to: cal.startOfDay(for: dayStart)) else { break }
@@ -331,14 +307,17 @@ public final class SensorSampleUploadManager {
 
         let plan = buildWindowPlan(for: sensor, now: now)
         guard let firstWindow = plan.windows.first else {
-            // Review fix #6: an empty plan on a would-be backfill (e.g. enrolled today, or
-            // days_in_study == 0 upstream) must still leave a telemetry trace — otherwise a
-            // sensor that never opens a window is indistinguishable from one never asked.
-            if plan.lowerBoundOrigin != "cursor", !emptyPlanReported.contains(sensor) {
+            // Review fix #6: an empty plan on a would-be backfill (e.g. enrolled today, or a
+            // forward-only bound because days_in_study <= 0 upstream) must still leave a
+            // telemetry trace — otherwise a sensor that never opens a window is
+            // indistinguishable from one never asked. A forward-only bound is reported as
+            // such, since it is the actionable case (the join day never resolved).
+            if plan.lowerBoundOrigin != .cursor, !emptyPlanReported.contains(sensor) {
                 emptyPlanReported.insert(sensor)
+                let boundedBy: BackfillLowerBound.Origin = plan.lowerBoundOrigin == .forwardOnly ? .forwardOnly : .emptyPlan
                 analytics.track(event: .sensorDataBackfillReach(sensor: sensor.shortSubsource,
                                                                 reachedBack: ISO8601DateFormatter().string(from: plan.lowerBound),
-                                                                boundedBy: "empty_plan"))
+                                                                boundedBy: boundedBy.rawValue))
             }
             #if DEBUG
             print("SensorSampleUploadManager - No windows for \(sensor.rawValue) (already up to date or embargo)")
@@ -346,17 +325,18 @@ public final class SensorSampleUploadManager {
             return
         }
 
-        // FUAM-3841 observability: how far back the client actually reached for this sensor.
-        // Emitted only when the plan opens a backfill (not a routine cursor resume), so the
-        // study team can tell "the OS deleted it" from "the client never asked".
-        if plan.lowerBoundOrigin != "cursor" {
+        // Observability: how far back the client actually reached for this sensor. Emitted
+        // only when the plan opens a backfill (not a routine cursor resume), so the study team
+        // can tell "the OS deleted it" from "the client never asked". With FUAM-3945's floor
+        // removed, the oldest sample that ever arrives IS Apple's real on-device retention.
+        if plan.lowerBoundOrigin != .cursor {
             analytics.track(event: .sensorDataBackfillReach(sensor: sensor.shortSubsource,
                                                             reachedBack: ISO8601DateFormatter().string(from: firstWindow.start),
-                                                            boundedBy: plan.lowerBoundOrigin))
+                                                            boundedBy: plan.lowerBoundOrigin.rawValue))
         }
         #if DEBUG
         print("SensorSampleUploadManager - \(sensor.rawValue): \(plan.windows.count) window(s) "
-              + "from \(firstWindow.start) (bounded by \(plan.lowerBoundOrigin))")
+              + "from \(firstWindow.start) (bounded by \(plan.lowerBoundOrigin.rawValue))")
         #endif
 
         processWindow(at: 0, of: plan.windows, for: sensor, using: mapper)
@@ -410,7 +390,7 @@ public final class SensorSampleUploadManager {
                 // not just a DEBUG print.
                 self.analytics.track(event: .sensorDataBackfillReach(sensor: sensor.shortSubsource,
                                                                      reachedBack: ISO8601DateFormatter().string(from: window.end),
-                                                                     boundedBy: "gave_up"))
+                                                                     boundedBy: BackfillLowerBound.Origin.gaveUp.rawValue))
                 self.storage.setLastCursor(window.end, for: sensor)
                 self.processWindow(at: index + 1, of: windows, for: sensor, using: mapper)
             } else {
@@ -422,11 +402,15 @@ public final class SensorSampleUploadManager {
         case .success(let records):
             self.windowFetchFailures[sensor] = nil
 
-            // FUAM-3841 hard consent gate: drop anything measured before the enrollment
-            // date, regardless of what SensorKit returned for the requested window.
-            let uploadable = Self.dropPreEnrollmentRecords(records,
-                                                           enrollmentDate: self.clearanceDelegate?.enrollmentDate,
-                                                           windowStart: window.start)
+            // Hard consent gate: drop anything measured before the backfill lower bound,
+            // regardless of what SensorKit returned for the requested window. The bound is
+            // re-resolved here rather than carried from the plan: `now` has only moved
+            // forward since, so the re-resolved bound is never earlier than the planned one
+            // (join day is fixed; the 365-day cap only tightens) — it can never leak.
+            let bound = BackfillLowerBound.resolve(joinDay: self.clearanceDelegate?.enrollmentDate)
+            let uploadable = Self.dropPreBoundRecords(records,
+                                                      lowerBound: bound.date,
+                                                      windowStart: window.start)
 
             if uploadable.isEmpty {
                 // Advance cursor even if empty to avoid refetching the same day/chunk again.
@@ -450,7 +434,7 @@ public final class SensorSampleUploadManager {
         }
     }
 
-    // MARK: - Enrollment gate & payload chunking (FUAM-3841)
+    // MARK: - Join-day gate & payload chunking (FUAM-3841, FUAM-3945)
 
     private static let isoFractionalFormatter: ISO8601DateFormatter = {
         let formatter = ISO8601DateFormatter()
@@ -479,19 +463,20 @@ public final class SensorSampleUploadManager {
     }
 
     /// Hard client-side consent gate: never enqueue (hence never transmit) a record measured
-    /// before the enrollment date, independently of any server-side validation.
+    /// before the backfill lower bound (`BackfillLowerBound`), independently of any
+    /// server-side validation. The bound is never optional — an unknown join day resolves to
+    /// `now` (forward-only), under which no historical record can survive this filter.
     /// Records without a parseable measurement timestamp are kept ONLY when the whole fetch
-    /// window is provably ≥ enrollment; when the window opens before enrollment (day-aligned
-    /// report windows can), a day aggregate covering pre-consent hours would otherwise leak
-    /// through its post-enrollment `recorded_at` fallback (review fix #2).
-    static func dropPreEnrollmentRecords(_ records: [[String: Any]],
-                                         enrollmentDate: Date?,
-                                         windowStart: Date) -> [[String: Any]] {
-        guard let enrollment = enrollmentDate else { return records }
-        let windowFullyPostEnrollment = windowStart >= enrollment
+    /// window is provably ≥ the bound; when the window opens below it (day-aligned report
+    /// windows can), a day aggregate covering pre-join hours would otherwise leak through its
+    /// post-join `recorded_at` fallback (review fix #2).
+    static func dropPreBoundRecords(_ records: [[String: Any]],
+                                    lowerBound: Date,
+                                    windowStart: Date) -> [[String: Any]] {
+        let windowFullyInBounds = windowStart >= lowerBound
         return records.filter { record in
-            guard let measuredAt = Self.measurementDate(of: record) else { return windowFullyPostEnrollment }
-            return measuredAt >= enrollment
+            guard let measuredAt = Self.measurementDate(of: record) else { return windowFullyInBounds }
+            return measuredAt >= lowerBound
         }
     }
 

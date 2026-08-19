@@ -800,16 +800,23 @@ extension RepositoryImpl: HealthManagerClearanceDelegate {
         return self.currentUser?.getHasAgreedTo(systemPermission: .health) ?? false
     }
 
-    /// FUAM-3841: lower bound for HealthKit/SensorKit backfill and hard consent gate for
-    /// record timestamps. Satisfies both `HealthSampleUploadManagerClearanceDelegate` and
-    /// `SensorSampleUploadManagerClearanceDelegate`.
-    /// Source: earliest `user_study_phases.start_at` (explicit backend date); when the study
-    /// has no phases, derived from `days_in_study` (day-aligned, conservative).
+    /// The participant's **study join day**: start of day in the participant's timezone,
+    /// derived per the backend's `days_in_study`. Feeds `BackfillLowerBound`, the single lower
+    /// bound for HealthKit/SensorKit backfill and hard consent gate for record timestamps.
+    /// Satisfies both `HealthSampleUploadManagerClearanceDelegate` and
+    /// `SensorSampleUploadManagerClearanceDelegate` (the member name is kept for API stability).
+    ///
+    /// `days_in_study` is the only source (FUAM-3945): it mirrors the backend's own arithmetic
+    /// at the same day granularity as its `retrieved_at >= on_boarding_completed_at.beginning_of_day`
+    /// read filter. `user_study_phases.start_at` was the primary source in FUAM-3841 and is
+    /// deliberately no longer consulted — a phase can start before the consent moment, which
+    /// would move the bound earlier and leak pre-consent data.
+    ///
+    /// Staleness fail-safe: a cached `days_in_study` going stale while the calendar advances
+    /// (or a past `end_of_study_at`, which freezes it) makes the derived join day drift *later*,
+    /// so the failure mode is under-fetching, never a pre-consent leak.
     var enrollmentDate: Date? {
         guard let user = self.currentUser else { return nil }
-        if let phaseStart = user.userPhases?.compactMap({ $0.startAt }).min() {
-            return phaseStart
-        }
         return Self.enrollmentDate(fromDaysInStudy: user.daysInStudy,
                                    calendar: Self.enrollmentCalendar(userTimeZone: user.timeZone))
     }
@@ -826,11 +833,11 @@ extension RepositoryImpl: HealthManagerClearanceDelegate {
         return calendar
     }
 
-    /// Backend semantics: `days_in_study` is 1 ON the enrollment day
-    /// (`(end_date - onboarding_date).to_i + 1`), so enrollment = startOfDay(today)
-    /// minus (daysInStudy - 1) days. `daysInStudy <= 0` is not a valid enrolled state:
-    /// return `nil` so callers fall back to their legacy windows instead of silently
-    /// producing an empty plan (FUAM-3841 review fixes #1/#6).
+    /// Backend semantics: `days_in_study` is 1 ON the join day
+    /// (`(end_date - onboarding_date).to_i + 1`), so the join day = startOfDay(today)
+    /// minus (daysInStudy - 1) days. `daysInStudy <= 0` is not a valid enrolled state (the
+    /// backend returns 0 when there is no usable consent): return `nil`, which makes every
+    /// caller forward-only — never a legacy history window (FUAM-3945).
     static func enrollmentDate(fromDaysInStudy daysInStudy: Int,
                                now: Date = Date(),
                                calendar: Calendar = .current) -> Date? {

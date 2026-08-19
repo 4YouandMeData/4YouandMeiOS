@@ -102,9 +102,9 @@ class HealthSampleUploader {
             return Disposables.create()
         }
         .flatMap { result -> Single<HKQueryAnchor?> in
-            // FUAM-3841 hard consent gate: drop any sample measured before the enrollment
-            // date, regardless of what the anchored query returned. Client-side, does not
-            // depend on the server.
+            // Hard consent gate: drop any sample measured before the backfill lower bound
+            // (the study join day / 365-day cap — see `BackfillLowerBound`), regardless of
+            // what the query returned. Client-side, does not depend on the server.
             let samples: [HKSample]
             if let minimumSampleDate = minimumSampleDate {
                 samples = result.samples.filter { $0.startDate >= minimumSampleDate }

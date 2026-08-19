@@ -11,9 +11,11 @@ import RxSwift
 protocol HealthSampleUploadManagerClearanceDelegate: AnyObject {
     var healthManagerCanRun: Bool { get }
 
-    /// FUAM-3841: the participant's enrollment date. Lower bound for the HealthKit backfill
-    /// (HealthKit has no OS retention limit, so the enrollment date is the only bound) and
-    /// hard consent gate for sample measurement timestamps. `nil` when no user is available.
+    /// The participant's **study join day** — start of day in the participant's timezone,
+    /// derived from the backend's `days_in_study` (FUAM-3841, FUAM-3945). Feeds
+    /// `BackfillLowerBound`, which is the lower bound of the HealthKit backfill and the hard
+    /// consent gate for sample measurement timestamps. `nil` when it cannot be established
+    /// (no user, or `days_in_study <= 0`), which means forward-only collection.
     var enrollmentDate: Date? { get }
 }
 
@@ -49,7 +51,10 @@ class HealthSampleUploadManager {
     var isStillShouldRequestCheck: () -> Single<Bool> = { Single.just(false) }
     
     private var uploadSequenceScheduledOrRunning: Bool = false
-    
+
+    /// Data types already reported as forward-only this launch (telemetry noise guard).
+    private var forwardOnlyReported: Set<HealthDataType> = []
+
     private let reachability: HealthSampleUploadManagerReachability
     private let analytics: AnalyticsService
     private let uploaders: [HealthSampleUploader]
@@ -179,43 +184,37 @@ class HealthSampleUploadManager {
             return
         }
 
-        let enrollmentDate = self.clearanceDelegate?.enrollmentDate
         let dataType = uploader.sampleDataType
 
-        // FUAM-3841: per-data-type cursor (review fix #4). When no cursor exists yet (fresh
-        // install; legacy shared key covered by the storage fallback) backfill from the
-        // enrollment date — HealthKit has no OS retention limit — or, when no enrollment
-        // date is resolvable (e.g. days_in_study <= 0), from the legacy fixed window.
-        var startDate: Date
-        var minimumSampleDate = enrollmentDate
-        if let storedStartDate = self.storage.uploadStartDate(forDataType: dataType) {
-            startDate = storedStartDate
-        } else if enrollmentDate == nil, HostAppConfig.healthKitIgnoresOptInConsent {
-            // FUAM-3841 (final review): when clearance comes from the consent-bypass flag and
-            // no enrollment date is resolvable, the legacy fixed window would upload data
-            // measured BEFORE clearance. Forward-only: start now and floor the sample dates
-            // at now so nothing pre-clearance leaks.
-            startDate = Date()
-            minimumSampleDate = startDate
-            self.logDebugText(text: "Backfill lower bound for \(dataType.keyName) set to \(startDate) "
-                              + "(consent bypass, forward-only)")
-            self.analytics.track(event: .sensorDataBackfillReach(sensor: "health_kit_" + dataType.keyName,
-                                                                 reachedBack: ISO8601DateFormatter().string(from: startDate),
-                                                                 boundedBy: "consent_bypass_forward_only"))
-        } else {
-            startDate = enrollmentDate ?? Date(timeIntervalSinceNow: -Constants.HealthKit.SamplesStartDateTimeInThePast)
-            self.logDebugText(text: "Backfill lower bound for \(dataType.keyName) set to \(startDate) "
-                              + "(\(enrollmentDate != nil ? "enrollment" : "legacy fallback"))")
-            self.analytics.track(event: .sensorDataBackfillReach(sensor: "health_kit_" + dataType.keyName,
-                                                                 reachedBack: ISO8601DateFormatter().string(from: startDate),
-                                                                 boundedBy: enrollmentDate != nil
-                                                                    ? "enrollment" : "legacy_fixed_window"))
+        // FUAM-3945: the shared backfill bound — the study join day, floored at 365 days, and
+        // forward-only when the join day cannot be established. Identical policy to SensorKit.
+        let bound = BackfillLowerBound.resolve(joinDay: self.clearanceDelegate?.enrollmentDate)
+
+        guard !bound.isForwardOnly else {
+            // No join day ⇒ no history may be collected, for any host, with or without the
+            // consent-bypass flags. The cursor is deliberately left untouched (unlike the
+            // FUAM-3841 bypass path, which burned it to `now`): once the join day resolves,
+            // the real backfill still runs. Nothing is uploaded for this data type meanwhile.
+            self.reportForwardOnlyOnce(forDataType: dataType, bound: bound)
+            self.processNextUploader(forUploader: uploader)
+            return
         }
 
-        // FUAM-3841 hard consent gate: never query (nor transmit) anything measured before
-        // the enrollment date, even if a stale stored start date predates it.
-        if let enrollmentDate = enrollmentDate, startDate < enrollmentDate {
-            startDate = enrollmentDate
+        // FUAM-3841: per-data-type cursor (review fix #4). When no cursor exists yet (fresh
+        // install; legacy shared key covered by the storage fallback) backfill from the bound —
+        // HealthKit has no OS retention limit, so the bound is the only limit.
+        let storedStartDate = self.storage.uploadStartDate(forDataType: dataType)
+        let minimumSampleDate = bound.date
+        // Hard consent gate: never query (nor transmit) anything measured before the bound,
+        // even if a stale stored cursor predates it.
+        var startDate = max(storedStartDate ?? bound.date, bound.date)
+
+        if storedStartDate == nil {
+            self.logDebugText(text: "Backfill lower bound for \(dataType.keyName) set to \(startDate) "
+                              + "(\(bound.origin.rawValue))")
+            self.analytics.track(event: .sensorDataBackfillReach(sensor: "health_kit_" + dataType.keyName,
+                                                                 reachedBack: ISO8601DateFormatter().string(from: startDate),
+                                                                 boundedBy: bound.origin.rawValue))
         }
 
         let endDate = Date()
@@ -271,6 +270,17 @@ class HealthSampleUploadManager {
         }
 
         processNextChunk()  // Avvia il primo chunk
+    }
+
+    /// Forward-only means "we could not establish the join day", which is actionable but
+    /// permanent until the user record loads — report it at most once per data type per launch
+    /// instead of on every hourly sequence.
+    private func reportForwardOnlyOnce(forDataType dataType: HealthDataType, bound: BackfillLowerBound) {
+        self.logDebugText(text: "Skipping \(dataType.keyName): no study join day, collection is forward-only")
+        guard self.forwardOnlyReported.insert(dataType).inserted else { return }
+        self.analytics.track(event: .sensorDataBackfillReach(sensor: "health_kit_" + dataType.keyName,
+                                                             reachedBack: ISO8601DateFormatter().string(from: bound.date),
+                                                             boundedBy: bound.origin.rawValue))
     }
 
     private func processNextUploader(forUploader uploader: HealthSampleUploader) {

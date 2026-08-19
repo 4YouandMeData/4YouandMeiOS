@@ -471,9 +471,25 @@ config.build_settings['SWIFT_ACTIVE_COMPILATION_CONDITIONS'] = '$(inherited) HEA
 
 3.  The set of SensorKit sensors collected by the pod is defined in `Constants.SensorKit.RequestedSensors`, intersected with the mappers wired up in `Services.setup(...)`. Update those if you need a different sensor list.
 
-#### Backfill window & retention floor
+#### Backfill window: study join day + 365-day hard cap
 
-The SDK backfills each sensor from `max(enrollmentDate, now - retentionFloor)` up to the 24h SensorKit embargo, and never transmits a record measured before the participant's enrollment date (HealthKit backfills from the enrollment date directly — it has no OS retention limit). `retentionFloor` (`SensorSampleUploadManager.retentionFloor`, currently 7 days) is an **unmeasured assumption**: Apple does not document how long SensorKit retains data on-device. If device testing shows a different real retention period, tune that single constant.
+Both subsystems share one lower-bound policy (`BackfillLowerBound`, `Classes/Services/Permission/BackfillLowerBound.swift`):
+
+```
+joinDay    = start of the participant's study-entry day, in the participant's timezone
+             (derived from the backend's days_in_study), or nil if it cannot be established
+lowerBound = joinDay == nil ? now                              // forward-only
+                            : max(joinDay, now - 365 days)
+```
+
+SensorKit backfills from that bound up to the 24h SensorKit embargo (day-aligned windows for report-type sensors); HealthKit backfills from the same bound up to now. Two rules are absolute, enforced both as the window bound and as a per-record filter on measurement timestamps:
+
+1. **Nothing older than 365 days** is ever transmitted.
+2. **Nothing measured before the participant joined the study in this app** is ever transmitted. The HealthKit and SensorKit stores are device-wide and survive reinstalls, so the same OS store can hold data belonging to a different participant or to an earlier enrolment.
+
+When the join day cannot be established (no user record, or `days_in_study <= 0`, which is the backend's "no usable consent"), collection is **forward-only**: no history is uploaded at all, and the local upload cursor is left untouched so the real backfill still happens once the join day resolves. There is no legacy-window fallback, and the `FYAMHealthKitIgnoreOptInConsent` / `FYAMSensorKitIgnoreOptInConsent` host flags cannot widen this bound.
+
+There is deliberately **no assumed SensorKit retention floor** any more (FUAM-3945 removed FUAM-3841's 7-day `retentionFloor`, which capped every already-enrolled participant's reach at 7 days). Over-requesting is free: `SRSensorReader.fetch` simply returns nothing for a window the OS has already dropped. Apple's real on-device retention is therefore measured, not assumed: the `sensor_data_backfill_reach` analytics event reports how far back the client asked (`bounded_by` ∈ `join_date`, `hard_cap_365d`, `forward_only`, `cursor`, `empty_plan`, `gave_up`), and the oldest sample that actually arrives is the OS limit.
 
 ### Collecting HealthKit/SensorKit without an opt-in consent card (Optional)
 

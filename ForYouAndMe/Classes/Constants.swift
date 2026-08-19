@@ -78,12 +78,10 @@ struct Constants {
         #if DEBUG
         // Test Values
         static let UploadSequenceTimeInterval: TimeInterval = 60// 1 min
-        static let SamplesStartDateTimeInThePast: TimeInterval = 7 * 24 * 60 * 60 // 1 week
         static let PendingUploadExpireTimeInterval: TimeInterval = 30// 30 seconds
         #else
         // Production Values
         static let UploadSequenceTimeInterval: TimeInterval = 60 * 60 // 1 hour
-        static let SamplesStartDateTimeInThePast: TimeInterval = 7 * 24 * 60 * 60 // 1 week
         static let PendingUploadExpireTimeInterval: TimeInterval = 10 * 60// 10 min
         #endif
         static let EnableDebugLog: Bool = false

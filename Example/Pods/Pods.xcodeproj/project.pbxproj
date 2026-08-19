@@ -2990,6 +2990,7 @@
 		E6DDA81751807F5B67AC4D4A807D4EF0 /* FIRCLSUserDefaults_private.h in Headers */ = {isa = PBXBuildFile; fileRef = 5CDBDEDDF0486600D9FDF14ABC06A72E /* FIRCLSUserDefaults_private.h */; settings = {ATTRIBUTES = (Project, ); }; };
 		E6FFA5EA3492BD2120B50051B2B56A98 /* FIRCLSUtility.h in Headers */ = {isa = PBXBuildFile; fileRef = 7C1BB944C5D5E38C9D00B2B629633D68 /* FIRCLSUtility.h */; settings = {ATTRIBUTES = (Project, ); }; };
 		E704202D43A065EA64D4770BACEA3E2C /* ORKTableStep.m in Sources */ = {isa = PBXBuildFile; fileRef = 630533349D66FF692DC25C73920D794A /* ORKTableStep.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
+		BF3945A10000000000000B02 /* BackfillLowerBound.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF3945A10000000000000B01 /* BackfillLowerBound.swift */; };
 		E70B71BEE7DE6CEB61DA9C101418928C /* BluetoothPermission.swift in Sources */ = {isa = PBXBuildFile; fileRef = A33AF4AD66479F4C8202C32245AC1F2B /* BluetoothPermission.swift */; };
 		E73E072821D649B57BC2361FE1E2B7D6 /* ORKOrderedTask+ORKPredefinedActiveTask.m in Sources */ = {isa = PBXBuildFile; fileRef = A115557EA550DDB94AE0F9F0FF66ED19 /* ORKOrderedTask+ORKPredefinedActiveTask.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
 		E77288BF3D0A14B0C29C9476240D652E /* ORKTouchAbilityRotationTrial.m in Sources */ = {isa = PBXBuildFile; fileRef = 54E25C781603EB16FA37DB7C851CD481 /* ORKTouchAbilityRotationTrial.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
@@ -6541,6 +6542,7 @@
 		A2D5C6CD110E28B26C70E3326C4F3617 /* ORKTouchAbilityPinchTrial.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = ORKTouchAbilityPinchTrial.h; path = ResearchKit/ActiveTasks/ORKTouchAbilityPinchTrial.h; sourceTree = "<group>"; };
 		A2EC49142356181F9110CB31678AEDAE /* Survey+Extensions.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = "Survey+Extensions.swift"; sourceTree = "<group>"; };
 		A322FA4B4C0F58BADD408C0A4D367FE9 /* MirSpirometryService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MirSpirometryService.swift; sourceTree = "<group>"; };
+		BF3945A10000000000000B01 /* BackfillLowerBound.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BackfillLowerBound.swift; sourceTree = "<group>"; };
 		A33AF4AD66479F4C8202C32245AC1F2B /* BluetoothPermission.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BluetoothPermission.swift; sourceTree = "<group>"; };
 		A3422680F983A1528D2D79D36DC8E4F8 /* Pods-ForYouAndMe_Tests-acknowledgements.markdown */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; path = "Pods-ForYouAndMe_Tests-acknowledgements.markdown"; sourceTree = "<group>"; };
 		A350C0D9A5557FC58B9DA63C6B651DED /* SpyrometerResultsViewController.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SpyrometerResultsViewController.swift; sourceTree = "<group>"; };
@@ -10180,6 +10182,7 @@
 		7303BE8C3EC40A974289C472ADB858F9 /* Permission */ = {
 			isa = PBXGroup;
 			children = (
+				BF3945A10000000000000B01 /* BackfillLowerBound.swift */,
 				A33AF4AD66479F4C8202C32245AC1F2B /* BluetoothPermission.swift */,
 				8ADF409A69ADB89CF0684F60CA99BE60 /* CalendarPermission.swift */,
 				3DFB4D98E7A2FABCF715102CF6803BED /* CameraPermission.swift */,
@@ -17132,6 +17135,7 @@
 				FA1DAB9757F79B7D31BBBCA630318CE5 /* BatchEventUploader.swift in Sources */,
 				046AA1953CE65805588626B89D1C9E48 /* BluetoothNoDevices.swift in Sources */,
 				9F1371715AD417CF0BFE7CA058253C2A /* BluetoothOffView.swift in Sources */,
+				BF3945A10000000000000B02 /* BackfillLowerBound.swift in Sources */,
 				E70B71BEE7DE6CEB61DA9C101418928C /* BluetoothPermission.swift in Sources */,
 				9C8AB199248FE9B456D7E42CEB52F170 /* BooleanQuestionsViewController.swift in Sources */,
 				5DC003C2F8B94FD62DEF2F4A441A15F4 /* Bundle+Extensions.swift in Sources */,
