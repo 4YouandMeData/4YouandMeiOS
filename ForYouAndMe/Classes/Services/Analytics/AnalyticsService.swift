@@ -140,9 +140,13 @@ enum AnalyticsEvent {
     // SensorKit sensor is OS-authorized — that combination is always a bug (see FUAM-3835).
     case sensorDataClearanceMismatch(reason: String, authorizedSensors: String)
 
-    // FUAM-3841. Emitted when a backfill opens: how far back the client actually reached
-    // for a sensor (ISO8601) and what bounded it ("enrollment" / "retention_floor" / ...),
-    // so the study team can tell "the OS deleted it" from "the client never asked".
+    // FUAM-3841 / FUAM-3945. Emitted when a backfill opens: how far back the client actually
+    // reached for a sensor (ISO8601) and what bounded it, so the study team can tell "the OS
+    // deleted it" from "the client never asked". `boundedBy` is a
+    // `BackfillLowerBound.Origin.rawValue`: "join_date", "hard_cap_365d", "forward_only",
+    // "empty_plan" or "gave_up". ("enrollment" and "retention_floor" are superseded.) The
+    // `cursor` origin is carried in the plan but deliberately never emitted: a routine cursor
+    // resume is not a backfill and would drown the actionable events.
     case sensorDataBackfillReach(sensor: String, reachedBack: String, boundedBy: String)
 
     // Errors

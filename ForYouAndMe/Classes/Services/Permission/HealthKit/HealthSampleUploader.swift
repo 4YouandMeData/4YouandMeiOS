@@ -52,10 +52,14 @@ class HealthSampleUploader {
     /// anchored query can skip samples inserted out of order, and its anchor must not be
     /// advanced past data the incremental head hasn't reached yet. Apple's guidance:
     /// sample queries for history, anchored queries for incremental sync.
+    ///
+    /// `minimumSampleDate` is the hard consent gate (`BackfillLowerBound`) and is deliberately
+    /// NOT optional and NOT defaulted (FUAM-3945 review fix #6): a consent gate must never be
+    /// opt-in, and the previous `nil` default meant "skip filtering entirely".
     public func run(startDate: Date,
                     endDate: Date,
                     source: String,
-                    minimumSampleDate: Date? = nil,
+                    minimumSampleDate: Date,
                     useAnchoredQuery: Bool = true) -> Single<()> {
         guard let networkDelegate = self.networkDelegate else {
             assertionFailure("Missing Network Delegate")
@@ -105,12 +109,7 @@ class HealthSampleUploader {
             // Hard consent gate: drop any sample measured before the backfill lower bound
             // (the study join day / 365-day cap — see `BackfillLowerBound`), regardless of
             // what the query returned. Client-side, does not depend on the server.
-            let samples: [HKSample]
-            if let minimumSampleDate = minimumSampleDate {
-                samples = result.samples.filter { $0.startDate >= minimumSampleDate }
-            } else {
-                samples = result.samples
-            }
+            let samples = result.samples.filter { $0.startDate >= minimumSampleDate }
             self.logDebugText(text: "Uploading \(samples.count) samples from \(startDate) to \(endDate)")
 
             guard samples.count > 0 else {

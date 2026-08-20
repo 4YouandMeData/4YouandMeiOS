@@ -815,9 +815,14 @@ extension RepositoryImpl: HealthManagerClearanceDelegate {
     /// Staleness fail-safe: a cached `days_in_study` going stale while the calendar advances
     /// (or a past `end_of_study_at`, which freezes it) makes the derived join day drift *later*,
     /// so the failure mode is under-fetching, never a pre-consent leak.
+    /// Clock-rollback fail-safe: the join day is derived from `BackfillClock.monotonicNow()`, not
+    /// from a raw `Date()`, so winding the device clock back cannot walk the bound into the past
+    /// (review fix #3). Only the join-day derivation uses it; the embargo and the 365-day cap keep
+    /// the real `Date()`, so a clock behind the high-water mark just produces an empty plan.
     var enrollmentDate: Date? {
         guard let user = self.currentUser else { return nil }
         return Self.enrollmentDate(fromDaysInStudy: user.daysInStudy,
+                                   now: BackfillClock.monotonicNow(),
                                    calendar: Self.enrollmentCalendar(userTimeZone: user.timeZone))
     }
 

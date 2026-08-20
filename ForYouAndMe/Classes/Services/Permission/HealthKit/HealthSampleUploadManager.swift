@@ -190,7 +190,13 @@ class HealthSampleUploadManager {
         // forward-only when the join day cannot be established. Identical policy to SensorKit.
         let bound = BackfillLowerBound.resolve(joinDay: self.clearanceDelegate?.enrollmentDate)
 
-        guard !bound.isForwardOnly else {
+        // FUAM-3841: per-data-type cursor (review fix #4). When no cursor exists yet (fresh
+        // install; legacy shared key covered by the storage fallback) backfill from the bound —
+        // HealthKit has no OS retention limit, so the bound is the only limit. `healthQuery`
+        // also applies the hard consent gate: the walk never starts below the bound, even if a
+        // stale stored cursor predates it.
+        let storedStartDate = self.storage.uploadStartDate(forDataType: dataType)
+        guard let query = bound.healthQuery(storedCursor: storedStartDate) else {
             // No join day ⇒ no history may be collected, for any host, with or without the
             // consent-bypass flags. The cursor is deliberately left untouched (unlike the
             // FUAM-3841 bypass path, which burned it to `now`): once the join day resolves,
@@ -200,14 +206,8 @@ class HealthSampleUploadManager {
             return
         }
 
-        // FUAM-3841: per-data-type cursor (review fix #4). When no cursor exists yet (fresh
-        // install; legacy shared key covered by the storage fallback) backfill from the bound —
-        // HealthKit has no OS retention limit, so the bound is the only limit.
-        let storedStartDate = self.storage.uploadStartDate(forDataType: dataType)
-        let minimumSampleDate = bound.date
-        // Hard consent gate: never query (nor transmit) anything measured before the bound,
-        // even if a stale stored cursor predates it.
-        var startDate = max(storedStartDate ?? bound.date, bound.date)
+        let minimumSampleDate = query.minimumSampleDate
+        var startDate = query.startDate
 
         if storedStartDate == nil {
             self.logDebugText(text: "Backfill lower bound for \(dataType.keyName) set to \(startDate) "

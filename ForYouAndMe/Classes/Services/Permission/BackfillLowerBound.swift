@@ -68,3 +68,59 @@ struct BackfillLowerBound {
             : BackfillLowerBound(date: hardCapDate, origin: .hardCap365d)
     }
 }
+
+// MARK: - HealthKit query bounds
+
+/// The HealthKit query bounds for one data type, derived from the shared lower bound and that
+/// type's stored cursor (FUAM-3945 review fix #6). Pure, so the three enforcement points are
+/// unit-testable without a HealthKit runtime.
+struct HealthBackfillQuery: Equatable {
+    /// Where the chunked walk starts: the stored cursor, never allowed below the bound.
+    let startDate: Date
+    /// The per-sample consent gate handed to `HealthSampleUploader.run`. Always the bound
+    /// itself — never the cursor, never `nil`: filtering must not be opt-in.
+    let minimumSampleDate: Date
+}
+
+extension BackfillLowerBound {
+
+    /// The query bounds for a HealthKit data type, or `nil` when the type must be SKIPPED —
+    /// forward-only, i.e. the join day could not be established. The caller must then leave the
+    /// stored cursor untouched, so the real backfill still runs once the join day resolves.
+    func healthQuery(storedCursor: Date?) -> HealthBackfillQuery? {
+        guard !self.isForwardOnly else { return nil }
+        return HealthBackfillQuery(startDate: Swift.max(storedCursor ?? self.date, self.date),
+                                   minimumSampleDate: self.date)
+    }
+}
+
+// MARK: - Monotonic wall clock
+
+/// Monotonic high-water mark of observed wall-clock time (FUAM-3945 review fix #3).
+///
+/// The backfill bound is entirely `Date()`-relative, so moving the device clock back N days
+/// moved the derived join day back N days too — and, since the plan and the per-record filter
+/// both used the same wrong `now`, they agreed and up to a year of pre-consent HealthKit data
+/// became reachable. Deriving the join day from `max(Date(), maxObservedNow)` pins it where it
+/// was, at no under-fetch risk: the embargo / upper bound keeps the REAL `Date()`, so a clock
+/// behind the high-water mark simply yields an empty plan.
+///
+/// The derived join day itself is deliberately NOT persisted: a first resolution against a stale
+/// `days_in_study` would pin the bound too late forever and silently forfeit the backfill.
+///
+/// ponytail: the mark never decreases, so a clock set far into the FUTURE and then corrected
+/// leaves the join day too late (under-fetch) until real time catches up — the safe direction,
+/// and the same failure mode a stale `days_in_study` already has.
+enum BackfillClock {
+
+    static let storageKey = "backfill.maxObservedNow"
+
+    /// `max(current, high-water mark)`, advancing the mark when the clock has moved forward.
+    static func monotonicNow(current: Date = Date(), defaults: UserDefaults = .standard) -> Date {
+        if let observed = defaults.object(forKey: Self.storageKey) as? Date, observed > current {
+            return observed
+        }
+        defaults.set(current, forKey: Self.storageKey)
+        return current
+    }
+}

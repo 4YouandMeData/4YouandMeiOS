@@ -18,9 +18,15 @@
 //  - SensorSampleUploadManager.buildWindowPlan(...)
 //      first window never opens before the bound; upper bound honours the 24h embargo
 //      (day-aligned for report sensors); empty plan when the bound has reached it.
-//  - SensorSampleUploadManager.dropPreBoundRecords(_:lowerBound:windowStart:)
-//      hard consent gate across the heterogeneous timestamp keys; records without a
-//      parseable timestamp are kept only when the whole window is >= the bound.
+//  - SensorSampleUploadManager.dropPreBoundRecords(_:lowerBound:windowStart:dayAggregated:)
+//      hard consent gate across the heterogeneous timestamp keys; on day-aggregated report
+//      sensors `recorded_at` is the write time, not the period, so the period start is derived
+//      from `duration_s` and an underivable record survives only a window strictly above bound.
+//  - BackfillLowerBound.healthQuery(storedCursor:)
+//      the three HealthKit enforcement points: forward-only skip, cursor clamped to the bound,
+//      and the non-optional minimumSampleDate handed to the uploader.
+//  - BackfillClock.monotonicNow(current:defaults:)
+//      clock-rollback fail-safe for the join-day derivation.
 //  - SensorSampleUploadManager.splitRespectingPayloadLimit(_:maxBatchSize:maxBatchBytes:)
 //      bisection terminates on a single oversized record and preserves order.
 //
@@ -262,10 +268,10 @@ class EnrollmentBackfillWindowingSpec: QuickSpec {
 
                 // The host consent-bypass flags (FYAMHealthKitIgnoreOptInConsent /
                 // FYAMSensorKitIgnoreOptInConsent) are deliberately NOT inputs to this policy
-                // any more, so forward-only holds with them on or off: there is no code path
-                // left that can widen the bound. The specs below cover both subsystems' shared
-                // policy (`BackfillLowerBound`) and the SensorKit plan built on top of it.
-                it("is forward-only: the bound is now and the plan is empty, whatever the host flags say") {
+                // any more — there is no code path left that could widen the bound, hence
+                // nothing about them to inject here. What IS varied below is the sensor kind:
+                // both the continuous and the day-aggregated plan must come out empty.
+                it("is forward-only for continuous and day-aggregated sensors alike: bound is now, plan is empty") {
                     for dayAggregated in [true, false] {
                         let result = plan(dayAggregated: dayAggregated, joinDay: nil, cursor: nil)
                         expect(result.lowerBound).to(equal(now))
@@ -289,10 +295,13 @@ class EnrollmentBackfillWindowingSpec: QuickSpec {
                                                     ["start_ms": Int(now.addingTimeInterval(-day).timeIntervalSince1970 * 1000)],
                                                     ["recorded_at": iso(now.addingTimeInterval(-hour))],
                                                     ["payload": "opaque"]]
-                    let result = SensorSampleUploadManager.dropPreBoundRecords(records,
-                                                                              lowerBound: bound.date,
-                                                                              windowStart: now.addingTimeInterval(-day))
-                    expect(result).to(beEmpty())
+                    for dayAggregated in [true, false] {
+                        let result = SensorSampleUploadManager.dropPreBoundRecords(records,
+                                                                                   lowerBound: bound.date,
+                                                                                   windowStart: now.addingTimeInterval(-day),
+                                                                                   dayAggregated: dayAggregated)
+                        expect(result).to(beEmpty())
+                    }
                 }
             }
 
@@ -315,10 +324,13 @@ class EnrollmentBackfillWindowingSpec: QuickSpec {
             let inBoundsWindowStart = lowerBound
             let outOfBoundsWindowStart = calendar.startOfDay(for: lowerBound)
 
-            func drop(_ records: [[String: Any]], windowStart: Date) -> [[String: Any]] {
+            func drop(_ records: [[String: Any]],
+                      windowStart: Date,
+                      dayAggregated: Bool = false) -> [[String: Any]] {
                 return SensorSampleUploadManager.dropPreBoundRecords(records,
                                                                      lowerBound: lowerBound,
-                                                                     windowStart: windowStart)
+                                                                     windowStart: windowStart,
+                                                                     dayAggregated: dayAggregated)
             }
 
             it("drops a pre-bound record keyed by 't'") {
@@ -356,6 +368,164 @@ class EnrollmentBackfillWindowingSpec: QuickSpec {
             it("keeps a record measured exactly at the bound") {
                 let result = drop([["t": iso(lowerBound)]], windowStart: inBoundsWindowStart)
                 expect(result.count).to(equal(1))
+            }
+
+            // Review fix #1. The four day-aggregated report sensors (device / phone / messages
+            // usage, keyboard metrics) carry `recorded_at` = SRFetchResult.timestamp — WHEN
+            // SensorKit wrote the report, not the period it describes — plus `duration_s`.
+            context("day-aggregated report sensors") {
+
+                // The first window of a backfill opens exactly AT the join day; a report
+                // written during it describes the previous, pre-consent day.
+                let firstWindowStart = lowerBound
+                let laterWindowStart = lowerBound.addingTimeInterval(day)
+
+                it("drops a report written after the bound that describes the pre-join day") {
+                    let record: [String: Any] = ["recorded_at": iso(lowerBound.addingTimeInterval(2 * hour)),
+                                                 "duration_s": day]
+                    expect(drop([record], windowStart: firstWindowStart, dayAggregated: true)).to(beEmpty())
+                    // Same payload on a continuous sensor: `recorded_at` IS the measurement
+                    // time there, so it legitimately survives — the flag is what separates them.
+                    expect(drop([record], windowStart: firstWindowStart, dayAggregated: false).count).to(equal(1))
+                }
+
+                it("keeps a report whose derived period start is at or after the bound") {
+                    let record: [String: Any] = ["recorded_at": iso(lowerBound.addingTimeInterval(26 * hour)),
+                                                 "duration_s": day]
+                    expect(drop([record], windowStart: laterWindowStart, dayAggregated: true).count).to(equal(1))
+                }
+
+                it("keeps a report whose period starts exactly at the bound") {
+                    let record: [String: Any] = ["recorded_at": iso(lowerBound.addingTimeInterval(day)),
+                                                 "duration_s": day]
+                    expect(drop([record], windowStart: laterWindowStart, dayAggregated: true).count).to(equal(1))
+                }
+
+                it("prefers an explicit period start over the recorded_at/duration derivation") {
+                    let preBound: [String: Any] = ["start": iso(before),
+                                                   "recorded_at": iso(after),
+                                                   "duration_s": 0]
+                    expect(drop([preBound], windowStart: laterWindowStart, dayAggregated: true)).to(beEmpty())
+                    let inBound: [String: Any] = ["start": iso(after),
+                                                  "recorded_at": iso(after.addingTimeInterval(day)),
+                                                  "duration_s": 10 * day]
+                    expect(drop([inBound], windowStart: laterWindowStart, dayAggregated: true).count).to(equal(1))
+                }
+
+                it("drops a report with no derivable period start unless the window is strictly above the bound") {
+                    let record: [String: Any] = ["recorded_at": iso(after)]
+                    // Window opening AT the bound: undecidable ⇒ drop.
+                    expect(drop([record], windowStart: firstWindowStart, dayAggregated: true)).to(beEmpty())
+                    // Window entirely above the bound: nothing it can contain predates consent.
+                    expect(drop([record], windowStart: laterWindowStart, dayAggregated: true).count).to(equal(1))
+                }
+
+                it("drops an unparseable report unless the window is strictly above the bound") {
+                    expect(drop([["payload": "opaque"]], windowStart: firstWindowStart, dayAggregated: true)).to(beEmpty())
+                    expect(drop([["payload": "opaque"]], windowStart: laterWindowStart, dayAggregated: true).count).to(equal(1))
+                }
+            }
+
+            // Review fix #2: the persisted batch queue is re-filtered at drain time, where the
+            // originating window is no longer known — `.distantPast` stands in for it, so any
+            // record whose period start cannot be established is dropped rather than shipped.
+            context("re-filtering a persisted batch at drain time (no known window)") {
+
+                it("keeps only records provably measured at or after the bound") {
+                    let records: [[String: Any]] = [["t": iso(before)],
+                                                    ["t": iso(after)],
+                                                    ["payload": "opaque"]]
+                    for dayAggregated in [true, false] {
+                        let result = drop(records, windowStart: .distantPast, dayAggregated: dayAggregated)
+                        expect(result.count).to(equal(1))
+                        expect(result.first?["t"] as? String).to(equal(iso(after)))
+                    }
+                }
+
+                it("drops a queued day aggregate that describes the pre-join day") {
+                    let record: [String: Any] = ["recorded_at": iso(lowerBound.addingTimeInterval(2 * hour)),
+                                                 "duration_s": day]
+                    expect(drop([record], windowStart: .distantPast, dayAggregated: true)).to(beEmpty())
+                }
+            }
+        }
+
+        describe("BackfillLowerBound.healthQuery (HealthKit enforcement points)") {
+
+            let joinDay = now.addingTimeInterval(-100 * day)
+            let bound = BackfillLowerBound.resolve(joinDay: joinDay, now: now)
+
+            it("skips the data type entirely when the join day is unknown (forward-only)") {
+                // nil means SKIP, and the caller must leave the stored cursor untouched, so the
+                // real backfill still runs once the join day resolves.
+                let forwardOnly = BackfillLowerBound.resolve(joinDay: nil, now: now)
+                expect(forwardOnly.healthQuery(storedCursor: nil)).to(beNil())
+                expect(forwardOnly.healthQuery(storedCursor: now.addingTimeInterval(-30 * day))).to(beNil())
+            }
+
+            it("starts the walk at the bound when no cursor exists yet") {
+                expect(bound.healthQuery(storedCursor: nil)?.startDate).to(equal(joinDay))
+            }
+
+            it("clamps a stored cursor that predates the bound up to the bound") {
+                let staleCursor = joinDay.addingTimeInterval(-50 * day)
+                expect(bound.healthQuery(storedCursor: staleCursor)?.startDate).to(equal(joinDay))
+            }
+
+            it("resumes from a stored cursor ahead of the bound") {
+                let cursor = joinDay.addingTimeInterval(10 * day)
+                expect(bound.healthQuery(storedCursor: cursor)?.startDate).to(equal(cursor))
+            }
+
+            it("always hands the uploader the bound itself as minimumSampleDate, never the cursor") {
+                let cursor = joinDay.addingTimeInterval(10 * day)
+                expect(bound.healthQuery(storedCursor: cursor)?.minimumSampleDate).to(equal(bound.date))
+                expect(bound.healthQuery(storedCursor: nil)?.minimumSampleDate).to(equal(bound.date))
+            }
+
+            it("caps minimumSampleDate at the 365-day hard cap for an ancient join day") {
+                let old = BackfillLowerBound.resolve(joinDay: now.addingTimeInterval(-500 * day), now: now)
+                let query = old.healthQuery(storedCursor: now.addingTimeInterval(-400 * day))
+                expect(query?.minimumSampleDate).to(equal(now.addingTimeInterval(-hardCap)))
+                expect(query?.startDate).to(equal(now.addingTimeInterval(-hardCap)))
+            }
+        }
+
+        describe("BackfillClock.monotonicNow (clock-rollback fail-safe)") {
+
+            var defaults: UserDefaults!
+
+            beforeEach {
+                defaults = UserDefaults(suiteName: "BackfillClockSpec.\(UUID().uuidString)")
+            }
+
+            it("returns the current date and records it when the clock moves forward") {
+                expect(BackfillClock.monotonicNow(current: now, defaults: defaults)).to(equal(now))
+                let later = now.addingTimeInterval(day)
+                expect(BackfillClock.monotonicNow(current: later, defaults: defaults)).to(equal(later))
+                expect(defaults.object(forKey: BackfillClock.storageKey) as? Date).to(equal(later))
+            }
+
+            it("keeps the high-water mark when the device clock is wound back") {
+                _ = BackfillClock.monotonicNow(current: now, defaults: defaults)
+                let rolledBack = now.addingTimeInterval(-30 * day)
+                expect(BackfillClock.monotonicNow(current: rolledBack, defaults: defaults)).to(equal(now))
+                expect(defaults.object(forKey: BackfillClock.storageKey) as? Date).to(equal(now))
+            }
+
+            it("keeps the join day where it was after a 30-day rollback") {
+                // The leak this defends: a 30-day rollback used to move the derived join day
+                // 30 days earlier, and the plan and the per-record filter agreed on it.
+                _ = BackfillClock.monotonicNow(current: now, defaults: defaults)
+                let rolledBack = now.addingTimeInterval(-30 * day)
+                let honest = RepositoryImpl.enrollmentDate(fromDaysInStudy: 10, now: now, calendar: calendar)
+                let naive = RepositoryImpl.enrollmentDate(fromDaysInStudy: 10, now: rolledBack, calendar: calendar)
+                let defended = RepositoryImpl.enrollmentDate(fromDaysInStudy: 10,
+                                                             now: BackfillClock.monotonicNow(current: rolledBack,
+                                                                                             defaults: defaults),
+                                                             calendar: calendar)
+                expect(naive).to(beLessThan(honest))
+                expect(defended).to(equal(honest))
             }
         }
 

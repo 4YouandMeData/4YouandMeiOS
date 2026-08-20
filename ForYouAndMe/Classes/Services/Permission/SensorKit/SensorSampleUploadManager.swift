@@ -215,6 +215,16 @@ public final class SensorSampleUploadManager {
         let windows: [DateInterval]
         let lowerBound: Date
         let lowerBoundOrigin: BackfillLowerBound.Origin
+        /// The consent bound (`BackfillLowerBound.date`) as resolved when the plan was built,
+        /// carried through to the per-record gate (review fix #5). Unlike `lowerBound` it is
+        /// never moved forward by the cursor, so a day-aligned window that legitimately opens
+        /// before a mid-day cursor is still filtered against the join day and not the cursor.
+        let consentBound: Date
+    }
+
+    /// The consent bound as it stands right now, resolved from the live user record.
+    private var currentBound: BackfillLowerBound {
+        return BackfillLowerBound.resolve(joinDay: self.clearanceDelegate?.enrollmentDate)
     }
 
     private func buildWindowPlan(for sensor: SRSensor, now: Date) -> WindowPlan {
@@ -261,7 +271,9 @@ public final class SensorSampleUploadManager {
             origin = .cursor
         }
 
-        guard from < safeTo else { return WindowPlan(windows: [], lowerBound: from, lowerBoundOrigin: origin) }
+        guard from < safeTo else {
+            return WindowPlan(windows: [], lowerBound: from, lowerBoundOrigin: origin, consentBound: lowerBound)
+        }
 
         var windows: [DateInterval] = []
         if dayAggregated {
@@ -286,7 +298,7 @@ public final class SensorSampleUploadManager {
             }
         }
 
-        return WindowPlan(windows: windows, lowerBound: from, lowerBoundOrigin: origin)
+        return WindowPlan(windows: windows, lowerBound: from, lowerBoundOrigin: origin, consentBound: lowerBound)
     }
 
     private func fetchPendingWindows(for sensor: SRSensor, now: Date) {
@@ -339,14 +351,15 @@ public final class SensorSampleUploadManager {
               + "from \(firstWindow.start) (bounded by \(plan.lowerBoundOrigin.rawValue))")
         #endif
 
-        processWindow(at: 0, of: plan.windows, for: sensor, using: mapper)
+        processWindow(at: 0, of: plan.windows, for: sensor, using: mapper, plannedBound: plan.consentBound)
     }
 
     /// Sequentially process each window to respect mapper's "no concurrent fetch" precondition.
     private func processWindow(at index: Int,
                                of windows: [DateInterval],
                                for sensor: SRSensor,
-                               using mapper: SensorSampleMapper) {
+                               using mapper: SensorSampleMapper,
+                               plannedBound: Date) {
         guard index < windows.count else { return } // all done
 
         let window = windows[index]
@@ -356,7 +369,13 @@ public final class SensorSampleUploadManager {
             guard let self else { return }
             self.workQueue.async { [weak self] in
                 guard let self else { return }
-                self.handleWindowResult(result, window: window, at: index, of: windows, for: sensor, using: mapper)
+                self.handleWindowResult(result,
+                                        window: window,
+                                        at: index,
+                                        of: windows,
+                                        for: sensor,
+                                        using: mapper,
+                                        plannedBound: plannedBound)
             }
         }
     }
@@ -368,7 +387,24 @@ public final class SensorSampleUploadManager {
                                     at index: Int,
                                     of windows: [DateInterval],
                                     for sensor: SRSensor,
-                                    using mapper: SensorSampleMapper) {
+                                    using mapper: SensorSampleMapper,
+                                    plannedBound: Date) {
+        // Review fix #4: the user can disappear between plan build and this callback (logout,
+        // session expiry, failed token refresh). The re-resolved bound is then forward-only and
+        // every record would be dropped — but advancing the cursor over the rest of the plan
+        // would permanently forfeit those windows and bypass FUAM-3844's "purge never
+        // fast-forwards the cursor" guarantee. Bail out of the chain, cursor untouched.
+        let resolvedBound = self.currentBound
+        guard !resolvedBound.isForwardOnly else {
+            #if DEBUG
+            print("SensorSampleUploadManager - Aborting chain for \(sensor.rawValue): no join day (cursor left in place)")
+            #endif
+            return
+        }
+        // Review fix #5: the join day is NOT immutable (a mid-flight user refresh can move it),
+        // so take the stricter of the planned and the current bound rather than trusting either.
+        let boundDate = max(plannedBound, resolvedBound.date)
+
         switch result {
         case .failure(let error):
             #if DEBUG
@@ -392,7 +428,7 @@ public final class SensorSampleUploadManager {
                                                                      reachedBack: ISO8601DateFormatter().string(from: window.end),
                                                                      boundedBy: BackfillLowerBound.Origin.gaveUp.rawValue))
                 self.storage.setLastCursor(window.end, for: sensor)
-                self.processWindow(at: index + 1, of: windows, for: sensor, using: mapper)
+                self.processWindow(at: index + 1, of: windows, for: sensor, using: mapper, plannedBound: plannedBound)
             } else {
                 self.windowFetchFailures[sensor] = attempts
                 // Stop the chain for this cycle; the next sync retries from the cursor.
@@ -403,20 +439,17 @@ public final class SensorSampleUploadManager {
             self.windowFetchFailures[sensor] = nil
 
             // Hard consent gate: drop anything measured before the backfill lower bound,
-            // regardless of what SensorKit returned for the requested window. The bound is
-            // re-resolved here rather than carried from the plan: `now` has only moved
-            // forward since, so the re-resolved bound is never earlier than the planned one
-            // (join day is fixed; the 365-day cap only tightens) — it can never leak.
-            let bound = BackfillLowerBound.resolve(joinDay: self.clearanceDelegate?.enrollmentDate)
+            // regardless of what SensorKit returned for the requested window.
             let uploadable = Self.dropPreBoundRecords(records,
-                                                      lowerBound: bound.date,
-                                                      windowStart: window.start)
+                                                      lowerBound: boundDate,
+                                                      windowStart: window.start,
+                                                      dayAggregated: self.dayAggregatedSensors.contains(sensor))
 
             if uploadable.isEmpty {
                 // Advance cursor even if empty to avoid refetching the same day/chunk again.
                 self.storage.setLastCursor(window.end, for: sensor)
                 // Move to next window
-                self.processWindow(at: index + 1, of: windows, for: sensor, using: mapper)
+                self.processWindow(at: index + 1, of: windows, for: sensor, using: mapper, plannedBound: plannedBound)
                 return
             }
 
@@ -430,7 +463,7 @@ public final class SensorSampleUploadManager {
             self.drainQueue(for: sensor)
 
             // Next window
-            self.processWindow(at: index + 1, of: windows, for: sensor, using: mapper)
+            self.processWindow(at: index + 1, of: windows, for: sensor, using: mapper, plannedBound: plannedBound)
         }
     }
 
@@ -447,36 +480,57 @@ public final class SensorSampleUploadManager {
         return isoPlainFormatter.date(from: string) ?? isoFractionalFormatter.date(from: string)
     }
 
-    /// Best-effort extraction of the measurement timestamp from a mapped record.
-    /// Mappers use heterogeneous keys: "t" (continuous sensors), "start"/"start_ms"
-    /// (reports/pedometer), "recorded_at" (batch record time) as last resort.
-    static func measurementDate(of record: [String: Any]) -> Date? {
+    /// Best-effort extraction of the START of the period a mapped record describes.
+    /// Mappers use heterogeneous keys: "t" (continuous sensors, one instant), "start"/"start_ms"
+    /// (explicit period start — pedometer, and reports if a future OS exposes `startDate`).
+    ///
+    /// `recorded_at` is `SRFetchResult.timestamp`, i.e. WHEN SENSORKIT WROTE the record, which
+    /// for the day-aggregated report sensors is typically the day after the period it describes
+    /// (review fix #1). It is therefore only accepted as a period start for non-aggregated
+    /// sensors; for a day aggregate the period start is derived as `recorded_at − duration_s`
+    /// (all four report mappers emit `duration_s` from the report's documented `duration`), and
+    /// when no duration is present the period start is unknown — `nil`, i.e. undecidable.
+    static func periodStart(of record: [String: Any], dayAggregated: Bool) -> Date? {
         if let startMs = record["start_ms"] as? Int {
             return Date(timeIntervalSince1970: TimeInterval(startMs) / 1000)
         }
-        for key in ["t", "start", "recorded_at"] {
+        for key in ["t", "start"] {
             if let string = record[key] as? String, let date = Self.parseISO8601(string) {
                 return date
             }
         }
-        return nil
+        guard let recordedAtString = record["recorded_at"] as? String,
+              let recordedAt = Self.parseISO8601(recordedAtString) else { return nil }
+        guard dayAggregated else { return recordedAt }
+        guard let duration = (record["duration_s"] as? NSNumber)?.doubleValue else { return nil }
+        return recordedAt.addingTimeInterval(-duration)
     }
 
-    /// Hard client-side consent gate: never enqueue (hence never transmit) a record measured
-    /// before the backfill lower bound (`BackfillLowerBound`), independently of any
-    /// server-side validation. The bound is never optional — an unknown join day resolves to
-    /// `now` (forward-only), under which no historical record can survive this filter.
-    /// Records without a parseable measurement timestamp are kept ONLY when the whole fetch
-    /// window is provably ≥ the bound; when the window opens below it (day-aligned report
-    /// windows can), a day aggregate covering pre-join hours would otherwise leak through its
-    /// post-join `recorded_at` fallback (review fix #2).
+    /// Hard client-side consent gate: never enqueue (hence never transmit) a record whose
+    /// period starts before the backfill lower bound (`BackfillLowerBound`), independently of
+    /// any server-side validation. The bound is never optional — an unknown join day resolves
+    /// to `now` (forward-only), under which no historical record can survive this filter.
+    ///
+    /// Records whose period start cannot be established are kept ONLY when the whole fetch
+    /// window is provably in bounds. For day-aggregated sensors that test is STRICT: the first
+    /// window opens exactly AT the join day, and a report written during it describes the
+    /// previous, pre-join day — so a full pre-consent day of device/phone/messages/keyboard
+    /// usage would otherwise leak through its post-join `recorded_at` (review fix #1).
+    ///
+    /// ponytail: `recorded_at − duration_s` is an upper estimate of the period start (the
+    /// report is written at or after the period end), so a report written more than one period
+    /// late and straddling the bound can still pass. Tighten by subtracting a lag allowance if
+    /// field data shows late reports.
     static func dropPreBoundRecords(_ records: [[String: Any]],
                                     lowerBound: Date,
-                                    windowStart: Date) -> [[String: Any]] {
-        let windowFullyInBounds = windowStart >= lowerBound
+                                    windowStart: Date,
+                                    dayAggregated: Bool) -> [[String: Any]] {
+        let windowFullyInBounds = dayAggregated ? windowStart > lowerBound : windowStart >= lowerBound
         return records.filter { record in
-            guard let measuredAt = Self.measurementDate(of: record) else { return windowFullyInBounds }
-            return measuredAt >= lowerBound
+            guard let periodStart = Self.periodStart(of: record, dayAggregated: dayAggregated) else {
+                return windowFullyInBounds
+            }
+            return periodStart >= lowerBound
         }
     }
 
@@ -530,6 +584,17 @@ public final class SensorSampleUploadManager {
         // If there is nothing to upload, do not require a delegate
         if storage.pendingBatchCount(for: sensor) == 0 { return }
 
+        // Review fix #2: with no join day nothing may be transmitted, but the queue is left
+        // untouched — a temporarily unavailable user record must not destroy legitimate
+        // queued data. The next drain, once the join day resolves, filters and ships it.
+        let bound = self.currentBound
+        guard !bound.isForwardOnly else {
+            #if DEBUG
+            print("SensorSampleUploadManager - Holding \(sensor.rawValue) queue: no join day")
+            #endif
+            return
+        }
+
         guard let net = networkDelegate else {
             #if DEBUG
             print("SensorSampleUploadManager - Network delegate not set; postponing upload")
@@ -547,7 +612,24 @@ public final class SensorSampleUploadManager {
                     return // queue drained
                 }
 
-                net.uploadSensorBatch(sensor: sensor, payload: batch)
+                // Review fix #2: the persisted queue outlives the policy that filled it (an
+                // offline queue built by an older build, or before the join day resolved), so
+                // the consent gate runs again immediately before the bytes leave the device.
+                // Nothing here knows the fetch window any more, hence `.distantPast`: a record
+                // whose period start cannot be established is dropped rather than shipped.
+                let uploadable = Self.dropPreBoundRecords(batch,
+                                                          lowerBound: bound.date,
+                                                          windowStart: .distantPast,
+                                                          dayAggregated: self.dayAggregatedSensors.contains(sensor))
+                guard !uploadable.isEmpty else {
+                    #if DEBUG
+                    print("SensorSampleUploadManager - Dropped a fully out-of-bounds queued batch for \(sensor.rawValue)")
+                    #endif
+                    uploadNextBatch()
+                    return
+                }
+
+                net.uploadSensorBatch(sensor: sensor, payload: uploadable)
                     .subscribe(
                         onSuccess: { [weak self] in
                             guard let self = self else { return }
@@ -558,8 +640,9 @@ public final class SensorSampleUploadManager {
                         },
                         onFailure: { [weak self] error in
                             guard let self = self else { return }
-                            // Re-enqueue and schedule retry with backoff
-                            self.storage.enqueueBatch(batch, for: sensor)
+                            // Re-enqueue the FILTERED batch (dropped records must not come back)
+                            // and schedule a retry with backoff.
+                            self.storage.enqueueBatch(uploadable, for: sensor)
                             #if DEBUG
                             print("SensorSampleUploadManager - Upload failed for \(sensor.rawValue): \(error)")
                             #endif
