@@ -822,7 +822,7 @@ extension RepositoryImpl: HealthManagerClearanceDelegate {
     var enrollmentDate: Date? {
         guard let user = self.currentUser else { return nil }
         return Self.enrollmentDate(fromDaysInStudy: user.daysInStudy,
-                                   now: BackfillClock.monotonicNow(),
+                                   now: BackfillClock.monotonicNow(analytics: self.analyticsService),
                                    calendar: Self.enrollmentCalendar(userTimeZone: user.timeZone))
     }
 

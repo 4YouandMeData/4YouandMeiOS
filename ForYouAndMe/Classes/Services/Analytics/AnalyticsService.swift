@@ -61,6 +61,9 @@ enum AnalyticsParameter: String {
     case sensor
     case reachedBack = "reached_back"
     case boundedBy = "bounded_by"
+    // FUAM-3945. Forward clock-jump diagnostic attributes.
+    case clockMark = "clock_mark"
+    case deviceNow = "device_now"
 }
 
 enum AnalyticsScreens: String {
@@ -144,10 +147,16 @@ enum AnalyticsEvent {
     // reached for a sensor (ISO8601) and what bounded it, so the study team can tell "the OS
     // deleted it" from "the client never asked". `boundedBy` is a
     // `BackfillLowerBound.Origin.rawValue`: "join_date", "hard_cap_365d", "forward_only",
-    // "empty_plan" or "gave_up". ("enrollment" and "retention_floor" are superseded.) The
+    // "empty_plan", "gave_up" or "drain_filtered". ("enrollment" and "retention_floor" are superseded.) The
     // `cursor` origin is carried in the plan but deliberately never emitted: a routine cursor
     // resume is not a backfill and would drown the actionable events.
     case sensorDataBackfillReach(sensor: String, reachedBack: String, boundedBy: String)
+
+    // FUAM-3945. Emitted once per launch when `BackfillClock`'s high-water mark is more than a
+    // day ahead of the device clock: the clock jumped forward, so the backfill lower bound is
+    // pinned in the future and collection is suspended until real time catches up. `mark` and
+    // `deviceNow` are ISO8601, so the remaining outage is (mark - deviceNow).
+    case sensorDataClockAhead(mark: String, deviceNow: String)
 
     // Errors
     case serverError(apiError: ApiError)

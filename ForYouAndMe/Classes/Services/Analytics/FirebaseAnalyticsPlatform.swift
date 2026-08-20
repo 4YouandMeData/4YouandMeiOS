@@ -32,6 +32,8 @@ private enum FirebaseEventCustomName: String {
     case sensorDataClearanceMismatch = "sensor_data_clearance_mismatch"
     // FUAM-3841. Backfill reach per sensor.
     case sensorDataBackfillReach = "sensor_data_backfill_reach"
+    // FUAM-3945. Device clock ahead of the backfill high-water mark.
+    case sensorDataClockAhead = "sensor_data_clock_ahead"
 }
 
 private enum FirebaseErrorDomain {
@@ -108,6 +110,8 @@ class FirebaseAnalyticsPlatform: AnalyticsPlatform {
             self.sensorDataClearanceMismatch(reason: reason, authorizedSensors: authorizedSensors)
         case .sensorDataBackfillReach(let sensor, let reachedBack, let boundedBy):
             self.sensorDataBackfillReach(sensor: sensor, reachedBack: reachedBack, boundedBy: boundedBy)
+        case .sensorDataClockAhead(let mark, let deviceNow):
+            self.sensorDataClockAhead(mark: mark, deviceNow: deviceNow)
         default:
             break
         }
@@ -165,6 +169,16 @@ class FirebaseAnalyticsPlatform: AnalyticsPlatform {
                            AnalyticsParameter.sensor.rawValue: sensor,
                            AnalyticsParameter.reachedBack.rawValue: reachedBack,
                            AnalyticsParameter.boundedBy.rawValue: boundedBy
+                       ])
+    }
+
+    // MARK: - FUAM-3945 forward clock jump
+
+    private func sensorDataClockAhead(mark: String, deviceNow: String) {
+        self.sendEvent(withEventName: FirebaseEventCustomName.sensorDataClockAhead.rawValue,
+                       parameters: [
+                           AnalyticsParameter.clockMark.rawValue: mark,
+                           AnalyticsParameter.deviceNow.rawValue: deviceNow
                        ])
     }
 

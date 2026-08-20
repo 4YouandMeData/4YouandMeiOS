@@ -18,21 +18,35 @@
 //  - SensorSampleUploadManager.buildWindowPlan(...)
 //      first window never opens before the bound; upper bound honours the 24h embargo
 //      (day-aligned for report sensors); empty plan when the bound has reached it.
-//  - SensorSampleUploadManager.dropPreBoundRecords(_:lowerBound:windowStart:dayAggregated:)
-//      hard consent gate across the heterogeneous timestamp keys; on day-aggregated report
-//      sensors `recorded_at` is the write time, not the period, so the period start is derived
-//      from `duration_s` and an underivable record survives only a window strictly above bound.
+//  - SensorSampleUploadManager.dropPreBoundRecords(_:lowerBound:windowStart:sensor:)
+//      hard consent gate across the heterogeneous timestamp keys. `recorded_at` is a WRITE time
+//      for every sensor and is never read as a measurement time; each sensor's real measurement
+//      time is read where its mapper actually puts it (nested `arrival.start` for visits,
+//      `recorded_at - duration_s` only for the three usage reports whose `duration` IS a span),
+//      and a record with no readable measurement time survives only when its window vouches.
+//  - SensorSampleUploadManager.handleWindowResult / .drainQueue
+//      the same gate through its real call paths: the forward-only cursor guard, the
+//      max(planned, re-resolved) bound, and the drain-time re-filter against the batch's own
+//      window (SensorUploadConsentCallPathSpec, below).
 //  - BackfillLowerBound.healthQuery(storedCursor:)
 //      the three HealthKit enforcement points: forward-only skip, cursor clamped to the bound,
 //      and the non-optional minimumSampleDate handed to the uploader.
-//  - BackfillClock.monotonicNow(current:defaults:)
-//      clock-rollback fail-safe for the join-day derivation.
+//  - BackfillClock.monotonicNow(current:defaults:analytics:)
+//      clock-rollback fail-safe for the join-day derivation, the throttled persistence of the
+//      high-water mark, and the `sensor_data_clock_ahead` diagnostic for the opposite (forward)
+//      jump, which suspends collection until real time catches up.
+//  - HealthSampleUploadManager.startUpload(forUploader:)
+//      the chunk walk skips a data type whose start date has reached the end of the window
+//      WITHOUT persisting a cursor, so a bound stuck in the future costs nothing permanently
+//      (HealthBackfillChunkWalkSpec, below).
 //  - SensorSampleUploadManager.splitRespectingPayloadLimit(_:maxBatchSize:maxBatchBytes:)
 //      bisection terminates on a single oversized record and preserves order.
 //
 
 import Quick
 import Nimble
+import RxSwift
+import SensorKit
 @testable import ForYouAndMe
 
 class EnrollmentBackfillWindowingSpec: QuickSpec {
@@ -159,6 +173,7 @@ class EnrollmentBackfillWindowingSpec: QuickSpec {
                 expect(BackfillLowerBound.Origin.cursor.rawValue).to(equal("cursor"))
                 expect(BackfillLowerBound.Origin.emptyPlan.rawValue).to(equal("empty_plan"))
                 expect(BackfillLowerBound.Origin.gaveUp.rawValue).to(equal("gave_up"))
+                expect(BackfillLowerBound.Origin.drainFiltered.rawValue).to(equal("drain_filtered"))
             }
         }
 
@@ -294,12 +309,13 @@ class EnrollmentBackfillWindowingSpec: QuickSpec {
                                                     ["start": iso(now.addingTimeInterval(-2 * day))],
                                                     ["start_ms": Int(now.addingTimeInterval(-day).timeIntervalSince1970 * 1000)],
                                                     ["recorded_at": iso(now.addingTimeInterval(-hour))],
+                                                    ["arrival": ["start": iso(now.addingTimeInterval(-hour))]],
                                                     ["payload": "opaque"]]
-                    for dayAggregated in [true, false] {
+                    for sensor in [SRSensor.accelerometer, .deviceUsageReport, .keyboardMetrics, .visits] {
                         let result = SensorSampleUploadManager.dropPreBoundRecords(records,
                                                                                    lowerBound: bound.date,
                                                                                    windowStart: now.addingTimeInterval(-day),
-                                                                                   dayAggregated: dayAggregated)
+                                                                                   sensor: sensor)
                         expect(result).to(beEmpty())
                     }
                 }
@@ -326,11 +342,11 @@ class EnrollmentBackfillWindowingSpec: QuickSpec {
 
             func drop(_ records: [[String: Any]],
                       windowStart: Date,
-                      dayAggregated: Bool = false) -> [[String: Any]] {
+                      sensor: SRSensor = .accelerometer) -> [[String: Any]] {
                 return SensorSampleUploadManager.dropPreBoundRecords(records,
                                                                      lowerBound: lowerBound,
                                                                      windowStart: windowStart,
-                                                                     dayAggregated: dayAggregated)
+                                                                     sensor: sensor)
             }
 
             it("drops a pre-bound record keyed by 't'") {
@@ -350,9 +366,20 @@ class EnrollmentBackfillWindowingSpec: QuickSpec {
                 expect(result).to(beEmpty())
             }
 
-            it("drops a pre-bound record keyed by 'recorded_at'") {
-                let result = drop([["recorded_at": iso(before)]], windowStart: inBoundsWindowStart)
-                expect(result).to(beEmpty())
+            // Review round 3, C2: `recorded_at` is SRFetchResult.timestamp — a WRITE time — for
+            // every client-push sensor. It may never vouch for a record on any sensor.
+            it("never accepts recorded_at as a measurement time") {
+                let record: [String: Any] = ["recorded_at": iso(after)]
+                // Only the window can save it, and this one opens below the bound.
+                expect(drop([record], windowStart: outOfBoundsWindowStart)).to(beEmpty())
+                // The same record survives an in-bounds window as an undecidable record, not
+                // because its write time looked like a measurement.
+                expect(drop([record], windowStart: inBoundsWindowStart).count).to(equal(1))
+            }
+
+            it("prefers the real measurement time over the write time") {
+                let record: [String: Any] = ["t": iso(before), "recorded_at": iso(after)]
+                expect(drop([record], windowStart: inBoundsWindowStart)).to(beEmpty())
             }
 
             it("drops an unparseable record when the window opens below the bound (review fix #2)") {
@@ -370,10 +397,11 @@ class EnrollmentBackfillWindowingSpec: QuickSpec {
                 expect(result.count).to(equal(1))
             }
 
-            // Review fix #1. The four day-aggregated report sensors (device / phone / messages
-            // usage, keyboard metrics) carry `recorded_at` = SRFetchResult.timestamp — WHEN
-            // SensorKit wrote the report, not the period it describes — plus `duration_s`.
-            context("day-aggregated report sensors") {
+            // Review fix #1. The four day-aggregated report sensors carry `recorded_at` =
+            // SRFetchResult.timestamp — WHEN SensorKit wrote the report, not the period it
+            // describes. Only the three USAGE reports also carry a `duration` that IS the span
+            // the report covers (review round 3, C1: keyboard metrics do not).
+            context("day-aggregated usage reports (device / phone / messages)") {
 
                 // The first window of a backfill opens exactly AT the join day; a report
                 // written during it describes the previous, pre-consent day.
@@ -383,69 +411,161 @@ class EnrollmentBackfillWindowingSpec: QuickSpec {
                 it("drops a report written after the bound that describes the pre-join day") {
                     let record: [String: Any] = ["recorded_at": iso(lowerBound.addingTimeInterval(2 * hour)),
                                                  "duration_s": day]
-                    expect(drop([record], windowStart: firstWindowStart, dayAggregated: true)).to(beEmpty())
-                    // Same payload on a continuous sensor: `recorded_at` IS the measurement
-                    // time there, so it legitimately survives — the flag is what separates them.
-                    expect(drop([record], windowStart: firstWindowStart, dayAggregated: false).count).to(equal(1))
+                    expect(drop([record], windowStart: firstWindowStart, sensor: .deviceUsageReport)).to(beEmpty())
                 }
 
                 it("keeps a report whose derived period start is at or after the bound") {
                     let record: [String: Any] = ["recorded_at": iso(lowerBound.addingTimeInterval(26 * hour)),
                                                  "duration_s": day]
-                    expect(drop([record], windowStart: laterWindowStart, dayAggregated: true).count).to(equal(1))
+                    expect(drop([record], windowStart: laterWindowStart, sensor: .phoneUsageReport).count).to(equal(1))
                 }
 
                 it("keeps a report whose period starts exactly at the bound") {
                     let record: [String: Any] = ["recorded_at": iso(lowerBound.addingTimeInterval(day)),
                                                  "duration_s": day]
-                    expect(drop([record], windowStart: laterWindowStart, dayAggregated: true).count).to(equal(1))
+                    expect(drop([record], windowStart: laterWindowStart, sensor: .messagesUsageReport).count).to(equal(1))
                 }
 
                 it("prefers an explicit period start over the recorded_at/duration derivation") {
                     let preBound: [String: Any] = ["start": iso(before),
                                                    "recorded_at": iso(after),
                                                    "duration_s": 0]
-                    expect(drop([preBound], windowStart: laterWindowStart, dayAggregated: true)).to(beEmpty())
+                    expect(drop([preBound], windowStart: laterWindowStart, sensor: .deviceUsageReport)).to(beEmpty())
                     let inBound: [String: Any] = ["start": iso(after),
                                                   "recorded_at": iso(after.addingTimeInterval(day)),
                                                   "duration_s": 10 * day]
-                    expect(drop([inBound], windowStart: laterWindowStart, dayAggregated: true).count).to(equal(1))
+                    expect(drop([inBound], windowStart: laterWindowStart, sensor: .deviceUsageReport).count).to(equal(1))
+                }
+
+                // Review round 3, C1: a duration that cannot be a report span must not be
+                // turned into one — the record is undecidable, and the window decides.
+                it("refuses an implausibly short duration_s as a period length") {
+                    let record: [String: Any] = ["recorded_at": iso(lowerBound.addingTimeInterval(2 * hour)),
+                                                 "duration_s": 30 * 60]
+                    expect(drop([record], windowStart: firstWindowStart, sensor: .deviceUsageReport)).to(beEmpty())
+                    expect(drop([record], windowStart: laterWindowStart, sensor: .deviceUsageReport).count).to(equal(1))
+                }
+
+                it("refuses a zero or negative duration_s as a period length") {
+                    for duration in [0, -day] {
+                        let record: [String: Any] = ["recorded_at": iso(lowerBound.addingTimeInterval(2 * hour)),
+                                                     "duration_s": duration]
+                        expect(drop([record], windowStart: firstWindowStart, sensor: .deviceUsageReport)).to(beEmpty())
+                    }
                 }
 
                 it("drops a report with no derivable period start unless the window is strictly above the bound") {
                     let record: [String: Any] = ["recorded_at": iso(after)]
                     // Window opening AT the bound: undecidable ⇒ drop.
-                    expect(drop([record], windowStart: firstWindowStart, dayAggregated: true)).to(beEmpty())
+                    expect(drop([record], windowStart: firstWindowStart, sensor: .deviceUsageReport)).to(beEmpty())
                     // Window entirely above the bound: nothing it can contain predates consent.
-                    expect(drop([record], windowStart: laterWindowStart, dayAggregated: true).count).to(equal(1))
+                    expect(drop([record], windowStart: laterWindowStart, sensor: .deviceUsageReport).count).to(equal(1))
                 }
 
                 it("drops an unparseable report unless the window is strictly above the bound") {
-                    expect(drop([["payload": "opaque"]], windowStart: firstWindowStart, dayAggregated: true)).to(beEmpty())
-                    expect(drop([["payload": "opaque"]], windowStart: laterWindowStart, dayAggregated: true).count).to(equal(1))
+                    expect(drop([["payload": "opaque"]],
+                                windowStart: firstWindowStart, sensor: .messagesUsageReport)).to(beEmpty())
+                    expect(drop([["payload": "opaque"]],
+                                windowStart: laterWindowStart, sensor: .messagesUsageReport).count).to(equal(1))
                 }
             }
 
-            // Review fix #2: the persisted batch queue is re-filtered at drain time, where the
-            // originating window is no longer known — `.distantPast` stands in for it, so any
-            // record whose period start cannot be established is dropped rather than shipped.
-            context("re-filtering a persisted batch at drain time (no known window)") {
+            // Review round 3, C1. `SRKeyboardMetrics.duration` is cumulative typing/session time
+            // (minutes), NOT the span the report covers: deriving `recorded_at − duration_s` from
+            // it put a whole pre-consent day of keyboard metrics back inside the bound.
+            context("keyboard metrics (duration is not a report period)") {
 
-                it("keeps only records provably measured at or after the bound") {
-                    let records: [[String: Any]] = [["t": iso(before)],
-                                                    ["t": iso(after)],
-                                                    ["payload": "opaque"]]
-                    for dayAggregated in [true, false] {
-                        let result = drop(records, windowStart: .distantPast, dayAggregated: dayAggregated)
-                        expect(result.count).to(equal(1))
-                        expect(result.first?["t"] as? String).to(equal(iso(after)))
-                    }
+                let firstWindowStart = lowerBound
+                let laterWindowStart = lowerBound.addingTimeInterval(day)
+
+                it("never derives a period start from a cumulative typing duration") {
+                    // 30 minutes of typing written one hour into the join day used to look like
+                    // a period starting 30 minutes BEFORE it.
+                    let typing: [String: Any] = ["recorded_at": iso(lowerBound.addingTimeInterval(hour)),
+                                                 "duration_s": 1800]
+                    expect(drop([typing], windowStart: firstWindowStart, sensor: .keyboardMetrics)).to(beEmpty())
+                    // Even a duration that WOULD be a plausible span is refused for this sensor…
+                    let fullDay: [String: Any] = ["recorded_at": iso(lowerBound.addingTimeInterval(26 * hour)),
+                                                  "duration_s": day]
+                    expect(drop([fullDay], windowStart: firstWindowStart, sensor: .keyboardMetrics)).to(beEmpty())
+                    // …while the very same payload IS derivable for a real usage report.
+                    expect(drop([fullDay], windowStart: firstWindowStart, sensor: .deviceUsageReport).count).to(equal(1))
+                }
+
+                it("gates keyboard metrics on an explicit start when the OS exposes one") {
+                    let preBound: [String: Any] = ["start": iso(before), "recorded_at": iso(after), "duration_s": 1800]
+                    expect(drop([preBound], windowStart: laterWindowStart, sensor: .keyboardMetrics)).to(beEmpty())
+                    let inBound: [String: Any] = ["start": iso(after), "recorded_at": iso(after), "duration_s": 1800]
+                    expect(drop([inBound], windowStart: firstWindowStart, sensor: .keyboardMetrics).count).to(equal(1))
+                }
+            }
+
+            // Review round 3, C2. `VisitsMapper` puts the write time in `recorded_at` and the
+            // real measurement times in the nested arrival/departure intervals. Production
+            // evidence (user 631, IntegrationData 254107980): seven records sharing one
+            // `recorded_at` while their arrivals span the three previous days.
+            context("visits (measurement time is nested, write lag is days)") {
+
+                it("gates a visit on its nested arrival.start, not on the write time") {
+                    let preJoin: [String: Any] = ["recorded_at": iso(after),
+                                                  "arrival": ["start": iso(before), "end": iso(before)],
+                                                  "location_category": "home"]
+                    expect(drop([preJoin], windowStart: inBoundsWindowStart, sensor: .visits)).to(beEmpty())
+                    let postJoin: [String: Any] = ["recorded_at": iso(after.addingTimeInterval(2 * day)),
+                                                   "arrival": ["start": iso(after), "end": iso(after)]]
+                    expect(drop([postJoin], windowStart: inBoundsWindowStart, sensor: .visits).count).to(equal(1))
+                }
+
+                it("falls back to departure.start when the arrival interval is missing") {
+                    let preJoin: [String: Any] = ["recorded_at": iso(after),
+                                                  "departure": ["start": iso(before), "end": iso(before)]]
+                    expect(drop([preJoin], windowStart: inBoundsWindowStart, sensor: .visits)).to(beEmpty())
+                    let postJoin: [String: Any] = ["recorded_at": iso(after),
+                                                   "departure": ["start": iso(after), "end": iso(after)]]
+                    expect(drop([postJoin], windowStart: inBoundsWindowStart, sensor: .visits).count).to(equal(1))
+                }
+
+                it("never lets the fetch window vouch for a visit with no nested time") {
+                    // Visits are indexed by write time, so no window — however far above the
+                    // bound it opens — proves when the visit happened.
+                    let record: [String: Any] = ["recorded_at": iso(after), "location_category": "home"]
+                    expect(drop([record], windowStart: inBoundsWindowStart, sensor: .visits)).to(beEmpty())
+                    expect(drop([record],
+                                windowStart: lowerBound.addingTimeInterval(10 * day), sensor: .visits)).to(beEmpty())
+                }
+            }
+
+            it("treats a media event as undecidable: SRMediaEvent carries no date of its own") {
+                guard #available(iOS 16.4, *) else { return }
+                let record: [String: Any] = ["recorded_at": iso(after), "event_type": "play"]
+                expect(drop([record], windowStart: outOfBoundsWindowStart, sensor: .mediaEvents)).to(beEmpty())
+                expect(drop([record], windowStart: inBoundsWindowStart, sensor: .mediaEvents).count).to(equal(1))
+            }
+
+            // Review fix #2 + review round 3 (I1): the persisted batch queue is re-filtered
+            // immediately before upload, against the window the batch was FETCHED from — which
+            // is persisted with it. `.distantPast` used to stand in for it, which silently
+            // destroyed every undecidable record in the queue, permanently.
+            context("re-filtering a persisted batch at drain time") {
+
+                it("keeps an undecidable record when the batch's own window vouches for it") {
+                    let records: [[String: Any]] = [["t": iso(before)], ["t": iso(after)], ["payload": "opaque"]]
+                    let result = drop(records, windowStart: inBoundsWindowStart)
+                    expect(result.count).to(equal(2))
+                    expect(result.first?["t"] as? String).to(equal(iso(after)))
+                }
+
+                it("still drops everything undecidable when the batch's window opened below the bound") {
+                    let records: [[String: Any]] = [["t": iso(before)], ["t": iso(after)], ["payload": "opaque"]]
+                    let result = drop(records, windowStart: outOfBoundsWindowStart)
+                    expect(result.count).to(equal(1))
+                    expect(result.first?["t"] as? String).to(equal(iso(after)))
                 }
 
                 it("drops a queued day aggregate that describes the pre-join day") {
                     let record: [String: Any] = ["recorded_at": iso(lowerBound.addingTimeInterval(2 * hour)),
                                                  "duration_s": day]
-                    expect(drop([record], windowStart: .distantPast, dayAggregated: true)).to(beEmpty())
+                    expect(drop([record], windowStart: inBoundsWindowStart, sensor: .deviceUsageReport)).to(beEmpty())
                 }
             }
         }
@@ -513,6 +633,28 @@ class EnrollmentBackfillWindowingSpec: QuickSpec {
                 expect(defaults.object(forKey: BackfillClock.storageKey) as? Date).to(equal(now))
             }
 
+            it("does not rewrite the mark for a sub-minute advance (persistence throttle)") {
+                _ = BackfillClock.monotonicNow(current: now, defaults: defaults)
+                let barelyLater = now.addingTimeInterval(30)
+                // The returned value is always the honest one; only the WRITE is throttled.
+                expect(BackfillClock.monotonicNow(current: barelyLater, defaults: defaults)).to(equal(barelyLater))
+                expect(defaults.object(forKey: BackfillClock.storageKey) as? Date).to(equal(now))
+            }
+
+            it("rewrites the mark once the advance passes the granularity") {
+                _ = BackfillClock.monotonicNow(current: now, defaults: defaults)
+                let later = now.addingTimeInterval(BackfillClock.persistenceGranularity + 1)
+                _ = BackfillClock.monotonicNow(current: later, defaults: defaults)
+                expect(defaults.object(forKey: BackfillClock.storageKey) as? Date).to(equal(later))
+            }
+
+            it("never lets the throttle write a mark lower than the stored one") {
+                _ = BackfillClock.monotonicNow(current: now, defaults: defaults)
+                let smallRollback = now.addingTimeInterval(-10)
+                expect(BackfillClock.monotonicNow(current: smallRollback, defaults: defaults)).to(equal(now))
+                expect(defaults.object(forKey: BackfillClock.storageKey) as? Date).to(equal(now))
+            }
+
             it("keeps the join day where it was after a 30-day rollback") {
                 // The leak this defends: a 30-day rollback used to move the derived join day
                 // 30 days earlier, and the plan and the per-record filter agreed on it.
@@ -526,6 +668,44 @@ class EnrollmentBackfillWindowingSpec: QuickSpec {
                                                              calendar: calendar)
                 expect(naive).to(beLessThan(honest))
                 expect(defended).to(equal(honest))
+            }
+
+            context("the clock jumped FORWARD (the accepted residual, FUAM-3945 round 4 I2)") {
+
+                var analytics: CapturingAnalyticsService!
+
+                beforeEach {
+                    analytics = CapturingAnalyticsService()
+                    BackfillClock.clockAheadReported = false
+                }
+
+                func clockAheadEvents(_ events: [AnalyticsEvent]) -> [(mark: String, deviceNow: String)] {
+                    return events.compactMap { event in
+                        if case let .sensorDataClockAhead(mark, deviceNow) = event { return (mark, deviceNow) }
+                        return nil
+                    }
+                }
+
+                it("reports the mark and the device clock once per launch when the mark is over a day ahead") {
+                    let jumped = now.addingTimeInterval(10 * day)
+                    _ = BackfillClock.monotonicNow(current: jumped, defaults: defaults)
+
+                    // Clock corrected: the mark stays ahead, so the bound is pinned in the future
+                    // and collection is suspended. That must not be silent.
+                    _ = BackfillClock.monotonicNow(current: now, defaults: defaults, analytics: analytics)
+                    _ = BackfillClock.monotonicNow(current: now, defaults: defaults, analytics: analytics)
+
+                    let reported = clockAheadEvents(analytics.trackedEvents)
+                    expect(reported.count).to(equal(1))
+                    expect(reported.first?.mark).to(equal(iso(jumped)))
+                    expect(reported.first?.deviceNow).to(equal(iso(now)))
+                }
+
+                it("stays silent for a mark less than a day ahead (clock jitter, not a jump)") {
+                    _ = BackfillClock.monotonicNow(current: now.addingTimeInterval(hour), defaults: defaults)
+                    _ = BackfillClock.monotonicNow(current: now, defaults: defaults, analytics: analytics)
+                    expect(clockAheadEvents(analytics.trackedEvents)).to(beEmpty())
+                }
             }
         }
 
@@ -562,5 +742,393 @@ class EnrollmentBackfillWindowingSpec: QuickSpec {
                 expect(flattened).to(equal([0, 1, 2, 3, 4]))
             }
         }
+    }
+}
+
+// MARK: - The consent gate through its real call paths (FUAM-3945 review round 3, I3)
+
+/// Three fixes previously had no spec that fails when they are reverted, because the specs called
+/// the pure gate directly and passed the very argument the fix is about. These drive the manager's
+/// own call paths instead: `drainQueue` (the drain-time re-filter, I1) and `handleWindowResult`
+/// (the forward-only cursor guard, review fix #4; the `max(planned, re-resolved)` bound, #5).
+class SensorUploadConsentCallPathSpec: QuickSpec {
+
+    override class func spec() {
+
+        let hour: TimeInterval = 3600
+        let day: TimeInterval = 24 * hour
+        let sensor = SRSensor.accelerometer
+
+        func iso(_ date: Date) -> String {
+            return ISO8601DateFormatter().string(from: date)
+        }
+
+        func drainOrigins(_ events: [AnalyticsEvent]) -> [String] {
+            return events.compactMap { event in
+                if case let .sensorDataBackfillReach(_, _, boundedBy) = event { return boundedBy }
+                return nil
+            }
+        }
+
+        var storage: FakeSensorStorage!
+        var analytics: CapturingAnalyticsService!
+        var clearance: FakeSensorClearance!
+        var mapper: FakeSensorMapper!
+        var network: FakeSensorNetwork!
+        var manager: SensorSampleUploadManager!
+        var joinDay: Date!
+
+        beforeEach {
+            joinDay = Date().addingTimeInterval(-30 * day)
+            storage = FakeSensorStorage()
+            analytics = CapturingAnalyticsService()
+            clearance = FakeSensorClearance()
+            clearance.enrollmentDate = joinDay
+            mapper = FakeSensorMapper()
+            network = FakeSensorNetwork()
+            manager = SensorSampleUploadManager(withSensors: [sensor],
+                                                storage: storage,
+                                                reachability: FakeSensorReachability(),
+                                                analytics: analytics,
+                                                mappers: [sensor: mapper])
+            manager.clearanceDelegate = clearance
+            manager.setNetworkDelegate(network)
+        }
+
+        describe("drainQueue (the drain-time re-filter)") {
+
+            it("re-filters a queued batch against the window it was actually fetched from") {
+                storage.seed(records: [["t": iso(joinDay.addingTimeInterval(hour))],
+                                       ["t": iso(joinDay.addingTimeInterval(-hour))],
+                                       ["payload": "opaque"]],
+                             windowStart: joinDay,
+                             for: sensor)
+
+                manager.drainQueue(for: sensor)
+
+                expect(network.uploaded.count).toEventually(equal(1))
+                // The pre-bound record is dropped. The undecidable one survives because the
+                // batch's OWN window opened at the bound — passing `.distantPast` here (the bug)
+                // would destroy it, and only the filtered batch is ever re-enqueued.
+                expect(network.uploaded.first?.count).to(equal(2))
+            }
+
+            it("keeps holding the whole queue while the join day is unknown") {
+                clearance.enrollmentDate = nil
+                storage.seed(records: [["t": iso(joinDay.addingTimeInterval(hour))]],
+                             windowStart: joinDay,
+                             for: sensor)
+
+                manager.drainQueue(for: sensor)
+
+                expect(network.uploaded).toAlways(beEmpty(), until: .milliseconds(200))
+                expect(storage.pendingBatchCount(for: sensor)).to(equal(1))
+            }
+
+            it("leaves a drain_filtered trace when the gate drops records at drain time") {
+                storage.seed(records: [["t": iso(joinDay.addingTimeInterval(hour))],
+                                       ["t": iso(joinDay.addingTimeInterval(-hour))]],
+                             windowStart: joinDay,
+                             for: sensor)
+
+                manager.drainQueue(for: sensor)
+
+                expect(network.uploaded.count).toEventually(equal(1))
+                expect(drainOrigins(analytics.trackedEvents)).to(contain("drain_filtered"))
+            }
+
+            it("stays silent when the drain-time gate drops nothing") {
+                storage.seed(records: [["t": iso(joinDay.addingTimeInterval(hour))]],
+                             windowStart: joinDay,
+                             for: sensor)
+
+                manager.drainQueue(for: sensor)
+
+                expect(network.uploaded.count).toEventually(equal(1))
+                expect(drainOrigins(analytics.trackedEvents)).toNot(contain("drain_filtered"))
+            }
+        }
+
+        describe("handleWindowResult (the per-window consent decisions)") {
+
+            it("leaves the cursor untouched and stops the chain when the user disappears mid-flight") {
+                // Review fix #4: logout / session expiry between plan build and callback makes
+                // the re-resolved bound forward-only. Advancing the cursor over the remaining
+                // windows would forfeit them for good.
+                clearance.enrollmentDate = nil
+                let first = DateInterval(start: joinDay, end: joinDay.addingTimeInterval(day))
+                let second = DateInterval(start: first.end, end: first.end.addingTimeInterval(day))
+
+                manager.handleWindowResult(.success([["t": iso(joinDay.addingTimeInterval(hour))]]),
+                                           window: first,
+                                           at: 0,
+                                           of: [first, second],
+                                           for: sensor,
+                                           using: mapper,
+                                           plannedBound: joinDay)
+
+                expect(storage.lastCursor(for: sensor)).to(beNil())
+                expect(mapper.windows).to(beEmpty())
+                expect(storage.enqueued).to(beEmpty())
+            }
+
+            it("gates on the planned bound when a mid-flight refresh moved the join day earlier") {
+                // Review fix #5: `days_in_study` is not immutable. A live record claiming an
+                // EARLIER join day must not widen the bound the plan was built with.
+                clearance.enrollmentDate = joinDay.addingTimeInterval(-7 * day)
+                let window = DateInterval(start: joinDay, end: joinDay.addingTimeInterval(day))
+
+                manager.handleWindowResult(.success([["t": iso(joinDay.addingTimeInterval(-hour))]]),
+                                           window: window,
+                                           at: 0,
+                                           of: [window],
+                                           for: sensor,
+                                           using: mapper,
+                                           plannedBound: joinDay)
+
+                expect(storage.enqueued).to(beEmpty())
+
+                manager.handleWindowResult(.success([["t": iso(joinDay.addingTimeInterval(hour))]]),
+                                           window: window,
+                                           at: 0,
+                                           of: [window],
+                                           for: sensor,
+                                           using: mapper,
+                                           plannedBound: joinDay)
+
+                expect(storage.enqueued.count).toEventually(equal(1))
+            }
+
+            it("gates on the re-resolved bound when the refresh moved the join day later") {
+                clearance.enrollmentDate = joinDay.addingTimeInterval(7 * day)
+                let window = DateInterval(start: joinDay, end: joinDay.addingTimeInterval(day))
+
+                manager.handleWindowResult(.success([["t": iso(joinDay.addingTimeInterval(hour))]]),
+                                           window: window,
+                                           at: 0,
+                                           of: [window],
+                                           for: sensor,
+                                           using: mapper,
+                                           plannedBound: joinDay)
+
+                expect(storage.enqueued).to(beEmpty())
+            }
+
+            it("persists the fetch window alongside the batch it enqueues") {
+                let window = DateInterval(start: joinDay, end: joinDay.addingTimeInterval(day))
+
+                manager.handleWindowResult(.success([["t": iso(joinDay.addingTimeInterval(hour))]]),
+                                           window: window,
+                                           at: 0,
+                                           of: [window],
+                                           for: sensor,
+                                           using: mapper,
+                                           plannedBound: joinDay)
+
+                expect(storage.enqueued.count).toEventually(equal(1))
+                expect(storage.enqueued.first?.windowStart).to(equal(window.start))
+            }
+        }
+    }
+}
+
+// MARK: - Fakes
+
+/// `NSLocking.withLock` is iOS 16+; the deployment target here is 15.6.
+private extension NSLock {
+    func locked<T>(_ body: () -> T) -> T {
+        self.lock()
+        defer { self.unlock() }
+        return body()
+    }
+}
+
+private final class FakeSensorStorage: SensorSampleUploadManagerStorage, SensorSampleUploaderStorage {
+
+    private let lock = NSLock()
+    private var cursors: [String: Date] = [:]
+    private var queues: [String: [(records: [[String: Any]], windowStart: Date)]] = [:]
+    private var enqueuedBatches: [(records: [[String: Any]], windowStart: Date)] = []
+
+    /// Every batch ever enqueued, kept even after it is dequeued (audit log for the specs).
+    var enqueued: [(records: [[String: Any]], windowStart: Date)] {
+        return self.lock.locked { self.enqueuedBatches }
+    }
+
+    func seed(records: [[String: Any]], windowStart: Date, for sensor: SRSensor) {
+        self.lock.locked { self.queues[sensor.rawValue] = [(records, windowStart)] }
+    }
+
+    func lastCursor(for sensor: SRSensor) -> Date? {
+        return self.lock.locked { self.cursors[sensor.rawValue] }
+    }
+
+    func setLastCursor(_ date: Date, for sensor: SRSensor) {
+        self.lock.locked { self.cursors[sensor.rawValue] = date }
+    }
+
+    func enqueueBatch(_ batch: [[String: Any]], windowStart: Date, for sensor: SRSensor) {
+        self.lock.locked {
+            self.queues[sensor.rawValue, default: []].append((batch, windowStart))
+            self.enqueuedBatches.append((batch, windowStart))
+        }
+    }
+
+    func dequeueNextBatch(for sensor: SRSensor) -> (records: [[String: Any]], windowStart: Date)? {
+        return self.lock.locked {
+            guard var queue = self.queues[sensor.rawValue], !queue.isEmpty else { return nil }
+            let head = queue.removeFirst()
+            self.queues[sensor.rawValue] = queue
+            return head
+        }
+    }
+
+    func pendingBatchCount(for sensor: SRSensor) -> Int {
+        return self.lock.locked { self.queues[sensor.rawValue]?.count ?? 0 }
+    }
+}
+
+private final class FakeSensorReachability: SensorSampleUploadManagerReachability {
+    var isReachable: Bool = true
+    var reachabilityChanged: Observable<Bool> { return .empty() }
+}
+
+private final class FakeSensorClearance: SensorSampleUploadManagerClearanceDelegate {
+    var sensorManagerCanRun: Bool = true
+    var enrollmentDate: Date?
+}
+
+private final class FakeSensorMapper: SensorSampleMapper {
+    private let lock = NSLock()
+    private var fetched: [DateInterval] = []
+
+    var windows: [DateInterval] { return self.lock.locked { self.fetched } }
+
+    func fetchAndMap(from: Date, to: Date, completion: @escaping (Result<[[String: Any]], Error>) -> Void) {
+        self.lock.locked { self.fetched.append(DateInterval(start: from, end: to)) }
+        completion(.success([]))
+    }
+}
+
+private final class FakeSensorNetwork: SensorSampleUploaderNetworkDelegate {
+    private let lock = NSLock()
+    private var payloads: [[[String: Any]]] = []
+
+    var uploaded: [[[String: Any]]] { return self.lock.locked { self.payloads } }
+
+    func uploadSensorBatch(sensor: SRSensor, payload: [[String: Any]]) -> Single<Void> {
+        self.lock.locked { self.payloads.append(payload) }
+        return .just(())
+    }
+}
+
+// MARK: - The HealthKit chunk walk under a future bound (FUAM-3945 review round 4, I2)
+
+/// The backfill bound can land in the FUTURE: the device clock jumped forward, so `BackfillClock`'s
+/// high-water mark — and the join day derived from it — stay ahead of real time until it catches up.
+/// The chunk walk then covers nothing, and the loop used to persist `nextEndDate` on every cycle
+/// anyway, forfeiting the whole suspended window even after the clock was corrected. These specs
+/// drive `startUpload(forUploader:)` itself: no HealthKit query is ever issued once the guard holds,
+/// which is exactly what makes them synchronous.
+class HealthBackfillChunkWalkSpec: QuickSpec {
+
+    override class func spec() {
+
+        let day: TimeInterval = 24 * 3600
+        let dataType = HealthDataType.stepCount
+
+        var storage: FakeHealthStorage!
+        var analytics: CapturingAnalyticsService!
+        var clearance: FakeHealthClearance!
+        var network: FakeHealthNetwork!
+
+        beforeEach {
+            storage = FakeHealthStorage()
+            analytics = CapturingAnalyticsService()
+            clearance = FakeHealthClearance()
+            network = FakeHealthNetwork()
+            // A join day in the future: only reachable through a forward clock jump.
+            clearance.enrollmentDate = Date().addingTimeInterval(5 * day)
+        }
+
+        func makeManager() -> HealthSampleUploadManager {
+            let manager = HealthSampleUploadManager(withDataTypes: [dataType],
+                                                    storage: storage,
+                                                    reachability: FakeHealthReachability(),
+                                                    analytics: analytics)
+            manager.clearanceDelegate = clearance
+            manager.setNetworkDelegate(network)
+            return manager
+        }
+
+        it("skips a data type whose start date has reached the end of the window, cursor unwritten") {
+            let manager = makeManager()
+            guard let uploader = manager.uploaders.first else {
+                fail("no uploader for \(dataType.keyName)")
+                return
+            }
+
+            manager.startUpload(forUploader: uploader)
+
+            // Synchronous: nothing was queried, so the sequence has already moved past this type.
+            expect(storage.pendingUploadDataType).to(beNil())
+            expect(storage.uploadStartDate(forDataType: dataType)).toAlways(beNil(), until: .milliseconds(200))
+        }
+
+        it("leaves an existing cursor exactly where it was, so the suspended window is not lost") {
+            let cursor = Date().addingTimeInterval(-3 * day)
+            storage.setUploadStartDate(cursor, forDataType: dataType)
+            let manager = makeManager()
+            guard let uploader = manager.uploaders.first else {
+                fail("no uploader for \(dataType.keyName)")
+                return
+            }
+
+            manager.startUpload(forUploader: uploader)
+
+            // Same synchronous tell as above: a walk that started would still be pending here.
+            expect(storage.pendingUploadDataType).to(beNil())
+            expect(storage.uploadStartDate(forDataType: dataType)).toAlways(equal(cursor), until: .milliseconds(200))
+        }
+    }
+}
+
+private final class FakeHealthStorage: HealthSampleUploadManagerStorage, HealthSampleUploaderStorage {
+
+    private let lock = NSLock()
+    private var cursors: [HealthDataType: Date] = [:]
+
+    var lastUploadSequenceCompletionDate: Date?
+    var lastUploadSequenceStartingDate: Date?
+    var pendingUploadDataType: HealthDataType?
+
+    func uploadStartDate(forDataType dataType: HealthDataType) -> Date? {
+        return self.lock.locked { self.cursors[dataType] }
+    }
+
+    func setUploadStartDate(_ date: Date?, forDataType dataType: HealthDataType) {
+        self.lock.locked { self.cursors[dataType] = date }
+    }
+
+    func saveLastSampleUploadAnchor<T: NSSecureCoding>(_ anchor: T?, forDataType dateType: HealthDataType) {}
+
+    func loadLastSampleUploadAnchor<T: NSSecureCoding & NSObject>(forDataType dateType: HealthDataType) -> T? {
+        return nil
+    }
+}
+
+private final class FakeHealthReachability: HealthSampleUploadManagerReachability {
+    var isCurrentlyReachableForHealthSampleUpload: Bool { return true }
+    func getIsReachableForHealthSampleUploadObserver() -> Observable<Bool> { return .empty() }
+}
+
+private final class FakeHealthClearance: HealthSampleUploadManagerClearanceDelegate {
+    var healthManagerCanRun: Bool = true
+    var enrollmentDate: Date?
+}
+
+private final class FakeHealthNetwork: HealthSampleUploaderNetworkDelegate {
+    func uploadHealthNetworkData(_ healthNetworkData: HealthNetworkData, source: String) -> Single<()> {
+        return .just(())
     }
 }

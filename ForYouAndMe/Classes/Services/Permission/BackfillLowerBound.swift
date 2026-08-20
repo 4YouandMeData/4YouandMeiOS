@@ -44,6 +44,9 @@ struct BackfillLowerBound {
         case emptyPlan = "empty_plan"
         /// A window was forfeited after repeated fetch failures (data loss trace).
         case gaveUp = "gave_up"
+        /// The drain-time consent gate dropped records from an already-queued batch (data loss
+        /// trace: in steady state this should never fire, so any volume at all is actionable).
+        case drainFiltered = "drain_filtered"
     }
 
     /// Absolute maximum reach into the past, regardless of the join day.
@@ -108,19 +111,55 @@ extension BackfillLowerBound {
 /// The derived join day itself is deliberately NOT persisted: a first resolution against a stale
 /// `days_in_study` would pin the bound too late forever and silently forfeit the backfill.
 ///
-/// ponytail: the mark never decreases, so a clock set far into the FUTURE and then corrected
-/// leaves the join day too late (under-fetch) until real time catches up — the safe direction,
-/// and the same failure mode a stale `days_in_study` already has.
+/// A mark ahead of the device clock is the accepted residual: a clock set into the FUTURE and
+/// then corrected keeps the bound too late (under-fetch, never a leak) until real time catches
+/// up. Two things make that survivable rather than silent: the HealthKit chunk walk skips a data
+/// type whose start date has reached `now` WITHOUT persisting its cursor (so the suspended window
+/// is still collected afterwards), and a mark more than a day ahead emits
+/// `sensor_data_clock_ahead` once per launch. The real fix is to trust the server clock (the
+/// `Date` header on API responses) instead of the device — see README "Backfill window".
 enum BackfillClock {
 
     static let storageKey = "backfill.maxObservedNow"
 
+    /// The mark is only rewritten when it advances by more than this. `enrollmentDate` is read
+    /// several times per window callback and each read used to be a `UserDefaults` write; the
+    /// join day is day-grained, so a mark lagging by up to a minute changes nothing.
+    static let persistenceGranularity: TimeInterval = 60
+
+    /// Beyond this much "ahead", the mark is not clock jitter: the device clock jumped forward
+    /// (user error, bad NTP) and collection is suspended until real time catches up.
+    static let aheadReportThreshold: TimeInterval = 24 * 60 * 60
+
+    /// Once-per-launch guard for the diagnostic below. Internal so specs can reset it.
+    static var clockAheadReported: Bool = false
+
     /// `max(current, high-water mark)`, advancing the mark when the clock has moved forward.
-    static func monotonicNow(current: Date = Date(), defaults: UserDefaults = .standard) -> Date {
-        if let observed = defaults.object(forKey: Self.storageKey) as? Date, observed > current {
+    static func monotonicNow(current: Date = Date(),
+                             defaults: UserDefaults = .standard,
+                             analytics: AnalyticsService? = nil) -> Date {
+        guard let observed = defaults.object(forKey: Self.storageKey) as? Date else {
+            defaults.set(current, forKey: Self.storageKey)
+            return current
+        }
+        if observed > current {
+            Self.reportClockAheadOnce(mark: observed, deviceNow: current, analytics: analytics)
             return observed
         }
-        defaults.set(current, forKey: Self.storageKey)
+        if current.timeIntervalSince(observed) > Self.persistenceGranularity {
+            defaults.set(current, forKey: Self.storageKey)
+        }
         return current
+    }
+
+    /// The stuck state is otherwise invisible: the plan comes out empty and nothing is uploaded
+    /// for roughly half the jump. FUAM-3835 ran for six weeks on exactly that kind of silence.
+    private static func reportClockAheadOnce(mark: Date, deviceNow: Date, analytics: AnalyticsService?) {
+        guard mark.timeIntervalSince(deviceNow) > Self.aheadReportThreshold else { return }
+        guard Self.clockAheadReported == false else { return }
+        Self.clockAheadReported = true
+        let formatter = ISO8601DateFormatter()
+        analytics?.track(event: .sensorDataClockAhead(mark: formatter.string(from: mark),
+                                                      deviceNow: formatter.string(from: deviceNow)))
     }
 }

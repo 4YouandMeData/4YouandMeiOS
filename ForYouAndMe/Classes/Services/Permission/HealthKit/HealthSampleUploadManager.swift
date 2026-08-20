@@ -57,7 +57,8 @@ class HealthSampleUploadManager {
 
     private let reachability: HealthSampleUploadManagerReachability
     private let analytics: AnalyticsService
-    private let uploaders: [HealthSampleUploader]
+    /// Internal (not private) so the specs can drive `startUpload(forUploader:)` directly.
+    let uploaders: [HealthSampleUploader]
     private let disposeBag = DisposeBag()
 
     init(withDataTypes dataTypes: [HealthDataType],
@@ -175,7 +176,7 @@ class HealthSampleUploadManager {
         }
     }
     
-    private func startUpload(forUploader uploader: HealthSampleUploader) {
+    func startUpload(forUploader uploader: HealthSampleUploader) {
         self.storage.pendingUploadDataType = uploader.sampleDataType
 
         guard self.reachability.isCurrentlyReachableForHealthSampleUpload else {
@@ -226,6 +227,21 @@ class HealthSampleUploadManager {
         let historicalThreshold: TimeInterval = 7 * oneDay
 
         func processNextChunk() {
+            // FUAM-3945 (review round 4, I2): the walk cannot return anything once its start has
+            // reached the end of the window, and persisting `nextEndDate` over a window that was
+            // never read forfeits it for good. Skip the data type and leave the cursor ALONE, the
+            // same contract as the forward-only skip above. The live case is a bound in the
+            // FUTURE: the device clock jumped forward, so `BackfillClock`'s high-water mark keeps
+            // the future value (and the join day with it) until real time catches up. Collection
+            // is suspended meanwhile — deliberately, it is the price of the rollback guarantee —
+            // but nothing is lost, and `sensor_data_clock_ahead` says so once per launch.
+            guard startDate < endDate else {
+                self.logDebugText(text: "Skipping \(dataType.keyName): start \(startDate) is not before "
+                                  + "end \(endDate); cursor left untouched")
+                self.processNextUploader(forUploader: uploader)
+                return
+            }
+
             let isHistorical = endDate.timeIntervalSince(startDate) > historicalThreshold
             let chunkDuration = isHistorical ? oneDay : oneHour
             let nextEndDate = min(startDate.addingTimeInterval(chunkDuration), endDate)

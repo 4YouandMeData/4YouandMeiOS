@@ -204,8 +204,9 @@ public final class SensorSampleUploadManager {
         }
     }
     
-    /// Report-like sensors are typically day-aggregated; prefer day-aligned windows when bootstrapping.
-    private let dayAggregatedSensors: Set<SRSensor> = [
+    /// Report-like sensors are typically day-aggregated; prefer day-aligned windows when
+    /// bootstrapping. Static because the per-record consent gate is a pure static too.
+    static let dayAggregatedSensors: Set<SRSensor> = [
         .deviceUsageReport, .phoneUsageReport, .messagesUsageReport, .keyboardMetrics
     ]
     
@@ -228,7 +229,7 @@ public final class SensorSampleUploadManager {
     }
 
     private func buildWindowPlan(for sensor: SRSensor, now: Date) -> WindowPlan {
-        return Self.buildWindowPlan(dayAggregated: dayAggregatedSensors.contains(sensor),
+        return Self.buildWindowPlan(dayAggregated: Self.dayAggregatedSensors.contains(sensor),
                                     now: now,
                                     joinDay: clearanceDelegate?.enrollmentDate,
                                     cursor: storage.lastCursor(for: sensor),
@@ -380,15 +381,18 @@ public final class SensorSampleUploadManager {
         }
     }
 
-    /// Runs on `workQueue` only.
+    /// Runs on `workQueue` only. Internal rather than private so the consent decisions taken
+    /// here (the forward-only cursor guard and the `max(planned, re-resolved)` bound) can be
+    /// exercised through this real call path instead of by calling the pure gate directly
+    /// (review round 3, I3).
     // swiftlint:disable:next function_parameter_count
-    private func handleWindowResult(_ result: Result<[[String: Any]], Error>,
-                                    window: DateInterval,
-                                    at index: Int,
-                                    of windows: [DateInterval],
-                                    for sensor: SRSensor,
-                                    using mapper: SensorSampleMapper,
-                                    plannedBound: Date) {
+    func handleWindowResult(_ result: Result<[[String: Any]], Error>,
+                            window: DateInterval,
+                            at index: Int,
+                            of windows: [DateInterval],
+                            for sensor: SRSensor,
+                            using mapper: SensorSampleMapper,
+                            plannedBound: Date) {
         // Review fix #4: the user can disappear between plan build and this callback (logout,
         // session expiry, failed token refresh). The re-resolved bound is then forward-only and
         // every record would be dropped — but advancing the cursor over the rest of the plan
@@ -443,7 +447,7 @@ public final class SensorSampleUploadManager {
             let uploadable = Self.dropPreBoundRecords(records,
                                                       lowerBound: boundDate,
                                                       windowStart: window.start,
-                                                      dayAggregated: self.dayAggregatedSensors.contains(sensor))
+                                                      sensor: sensor)
 
             if uploadable.isEmpty {
                 // Advance cursor even if empty to avoid refetching the same day/chunk again.
@@ -454,7 +458,7 @@ public final class SensorSampleUploadManager {
             }
 
             // Enqueue in batches bounded by record count AND serialized payload size.
-            self.enqueueRespectingPayloadLimit(uploadable, for: sensor)
+            self.enqueueRespectingPayloadLimit(uploadable, windowStart: window.start, for: sensor)
 
             // === Cursor advancement policy ===
             // "At-least-once" (simple): advance now; queued batches will be retried until uploaded.
@@ -480,17 +484,40 @@ public final class SensorSampleUploadManager {
         return isoPlainFormatter.date(from: string) ?? isoFractionalFormatter.date(from: string)
     }
 
-    /// Best-effort extraction of the START of the period a mapped record describes.
-    /// Mappers use heterogeneous keys: "t" (continuous sensors, one instant), "start"/"start_ms"
-    /// (explicit period start — pedometer, and reports if a future OS exposes `startDate`).
+    /// The three usage reports whose documented `duration` IS the span the report covers, so a
+    /// period start can be derived from it. `SRKeyboardMetrics.duration` is deliberately NOT in
+    /// this set: it is cumulative typing/session time (minutes), not a report period, and
+    /// subtracting it from `recorded_at` put a whole pre-consent day of keyboard metrics back
+    /// inside the bound (review round 3, C1).
+    static let usageReportSensors: Set<SRSensor> = [.deviceUsageReport, .phoneUsageReport, .messagesUsageReport]
+
+    /// Shortest `duration_s` still plausible as a usage-report span. Anything shorter — and
+    /// absent, zero or negative — is not a period length and must not be turned into one.
+    static let minimumPlausibleReportSpan: TimeInterval = 3600
+
+    /// The MEASUREMENT time of a mapped record (the start of the period it describes), or `nil`
+    /// when the record does not carry one — in which case it is undecidable and only
+    /// `windowVouches(for:windowStart:lowerBound:)` can save it.
     ///
-    /// `recorded_at` is `SRFetchResult.timestamp`, i.e. WHEN SENSORKIT WROTE the record, which
-    /// for the day-aggregated report sensors is typically the day after the period it describes
-    /// (review fix #1). It is therefore only accepted as a period start for non-aggregated
-    /// sensors; for a day aggregate the period start is derived as `recorded_at − duration_s`
-    /// (all four report mappers emit `duration_s` from the report's documented `duration`), and
-    /// when no duration is present the period start is unknown — `nil`, i.e. undecidable.
-    static func periodStart(of record: [String: Any], dayAggregated: Bool) -> Date? {
+    /// `recorded_at` is `SRFetchResult.timestamp`: WHEN SENSORKIT WROTE the record. It is a write
+    /// time for every client-push sensor and is never read as a measurement time here (review
+    /// round 3, C2) — production data for `.visits` shows seven records sharing one `recorded_at`
+    /// while the visits themselves span three earlier days.
+    ///
+    /// Where each mapper actually puts the measurement time (audited in review round 3):
+    ///
+    /// | sensor | measurement time in the emitted record |
+    /// | --- | --- |
+    /// | `accelerometer` | `t` (`CMRecordedAccelerometerData.startDate`) |
+    /// | `ambientLightSensor` / `ambientPressure` / `rotationRate` | `t` (KVC `startDate` or
+    ///   `timestamp`; `distantPast` when unresolvable, which fails the gate — the safe direction) |
+    /// | `pedometerData` | `start_ms` (`CMPedometerData.startDate`) |
+    /// | `visits` | nested `arrival.start`, else nested `departure.start` |
+    /// | `deviceUsageReport` / `phoneUsageReport` / `messagesUsageReport` | `start` when the OS
+    ///   exposes `startDate`, else `recorded_at − duration_s` for a plausible span |
+    /// | `keyboardMetrics` | `start` when the OS exposes `startDate`, otherwise NONE |
+    /// | `mediaEvents` | NONE — `SRMediaEvent` exposes no date at all, only `eventType` / `mediaIdentifier` |
+    static func measurementTime(of record: [String: Any], sensor: SRSensor) -> Date? {
         if let startMs = record["start_ms"] as? Int {
             return Date(timeIntervalSince1970: TimeInterval(startMs) / 1000)
         }
@@ -499,47 +526,75 @@ public final class SensorSampleUploadManager {
                 return date
             }
         }
-        guard let recordedAtString = record["recorded_at"] as? String,
+        if sensor == .visits {
+            return Self.nestedStart(in: record, key: "arrival") ?? Self.nestedStart(in: record, key: "departure")
+        }
+        guard Self.usageReportSensors.contains(sensor),
+              let duration = (record["duration_s"] as? NSNumber)?.doubleValue,
+              duration >= Self.minimumPlausibleReportSpan,
+              let recordedAtString = record["recorded_at"] as? String,
               let recordedAt = Self.parseISO8601(recordedAtString) else { return nil }
-        guard dayAggregated else { return recordedAt }
-        guard let duration = (record["duration_s"] as? NSNumber)?.doubleValue else { return nil }
         return recordedAt.addingTimeInterval(-duration)
     }
 
-    /// Hard client-side consent gate: never enqueue (hence never transmit) a record whose
-    /// period starts before the backfill lower bound (`BackfillLowerBound`), independently of
-    /// any server-side validation. The bound is never optional — an unknown join day resolves
-    /// to `now` (forward-only), under which no historical record can survive this filter.
+    /// `{"start": ISO8601, "end": ISO8601}` under `key` — the shape `VisitsMapper` emits for
+    /// `arrival` / `departure`.
+    private static func nestedStart(in record: [String: Any], key: String) -> Date? {
+        guard let nested = record[key] as? [String: Any],
+              let start = nested["start"] as? String else { return nil }
+        return Self.parseISO8601(start)
+    }
+
+    /// Whether the fetch window can vouch for a record whose measurement time is undecidable —
+    /// i.e. whether SensorKit indexes that sensor by measurement time:
     ///
-    /// Records whose period start cannot be established are kept ONLY when the whole fetch
-    /// window is provably in bounds. For day-aggregated sensors that test is STRICT: the first
-    /// window opens exactly AT the join day, and a report written during it describes the
-    /// previous, pre-join day — so a full pre-consent day of device/phone/messages/keyboard
-    /// usage would otherwise leak through its post-join `recorded_at` (review fix #1).
+    /// - continuous sensors (accelerometer, ambient light/pressure, rotation, pedometer, media
+    ///   events): the fetch window IS a measurement-time window, so one opening at or after the
+    ///   bound cannot contain pre-consent data;
+    /// - the four day-aggregated report sensors are indexed by WRITE time, and a report written
+    ///   during the first window describes the previous, pre-consent day — so the window vouches
+    ///   only when it opens STRICTLY above the bound (one window of write lag allowed);
+    /// - `.visits` is indexed by write time with a lag of DAYS (production: one `recorded_at`,
+    ///   arrivals spanning three earlier days), so the window never vouches — a visit with
+    ///   neither `arrival` nor `departure` is always dropped.
     ///
-    /// ponytail: `recorded_at − duration_s` is an upper estimate of the period start (the
-    /// report is written at or after the period end), so a report written more than one period
-    /// late and straddling the bound can still pass. Tighten by subtracting a lag allowance if
-    /// field data shows late reports.
+    /// ponytail: the report allowance is one window (a day) of write lag. A report written more
+    /// than a day late and describing a pre-join day still passes; tighten by requiring
+    /// `windowStart > lowerBound + lag` if field data shows later writes.
+    static func windowVouches(for sensor: SRSensor, windowStart: Date, lowerBound: Date) -> Bool {
+        if sensor == .visits { return false }
+        return Self.dayAggregatedSensors.contains(sensor) ? windowStart > lowerBound : windowStart >= lowerBound
+    }
+
+    /// Hard client-side consent gate: never enqueue (hence never transmit) a record measured
+    /// before the backfill lower bound (`BackfillLowerBound`), independently of any server-side
+    /// validation. The bound is never optional — an unknown join day resolves to `now`
+    /// (forward-only), under which no historical record can survive this filter.
+    ///
+    /// Records with no readable measurement time are kept ONLY when the fetch window itself
+    /// vouches for them (see `windowVouches`). `windowStart` must therefore be the REAL window
+    /// the records came from, both at enqueue time and at drain time.
     static func dropPreBoundRecords(_ records: [[String: Any]],
                                     lowerBound: Date,
                                     windowStart: Date,
-                                    dayAggregated: Bool) -> [[String: Any]] {
-        let windowFullyInBounds = dayAggregated ? windowStart > lowerBound : windowStart >= lowerBound
+                                    sensor: SRSensor) -> [[String: Any]] {
+        let windowFullyInBounds = Self.windowVouches(for: sensor, windowStart: windowStart, lowerBound: lowerBound)
         return records.filter { record in
-            guard let periodStart = Self.periodStart(of: record, dayAggregated: dayAggregated) else {
+            guard let measured = Self.measurementTime(of: record, sensor: sensor) else {
                 return windowFullyInBounds
             }
-            return periodStart >= lowerBound
+            return measured >= lowerBound
         }
     }
 
     /// Enqueue records in batches that respect both the record-count cap and the server's
     /// 10 MB request limit (oversized batches are bisected until they serialize below
     /// `maxBatchBytes`).
-    private func enqueueRespectingPayloadLimit(_ records: [[String: Any]], for sensor: SRSensor) {
+    private func enqueueRespectingPayloadLimit(_ records: [[String: Any]],
+                                               windowStart: Date,
+                                               for sensor: SRSensor) {
         Self.splitRespectingPayloadLimit(records, maxBatchSize: maxBatchSize, maxBatchBytes: maxBatchBytes)
-            .forEach { self.storage.enqueueBatch($0, for: sensor) }
+            .forEach { self.storage.enqueueBatch($0, windowStart: windowStart, for: sensor) }
     }
 
     /// Pure batch splitting (internal for unit tests): caps batches at `maxBatchSize` records,
@@ -579,7 +634,7 @@ public final class SensorSampleUploadManager {
     /// by the window pipeline (`handleWindowResult`), which only ever advances it to the END
     /// of a window whose batches were actually enqueued. Deriving a cursor write from
     /// wall-clock `Date()` on the retry path silently forfeited every pending window.
-    private func drainQueue(for sensor: SRSensor, attempt: Int = 1) {
+    func drainQueue(for sensor: SRSensor, attempt: Int = 1) {
         guard reachability.isReachable else { return }
         // If there is nothing to upload, do not require a delegate
         if storage.pendingBatchCount(for: sensor) == 0 { return }
@@ -615,12 +670,22 @@ public final class SensorSampleUploadManager {
                 // Review fix #2: the persisted queue outlives the policy that filled it (an
                 // offline queue built by an older build, or before the join day resolved), so
                 // the consent gate runs again immediately before the bytes leave the device.
-                // Nothing here knows the fetch window any more, hence `.distantPast`: a record
-                // whose period start cannot be established is dropped rather than shipped.
-                let uploadable = Self.dropPreBoundRecords(batch,
+                // It runs with the batch's OWN window start (review round 3, I1) — standing
+                // `.distantPast` in for it made every undecidable record fail the gate, and
+                // since only the filtered batch is ever re-enqueued that loss was permanent.
+                let uploadable = Self.dropPreBoundRecords(batch.records,
                                                           lowerBound: bound.date,
-                                                          windowStart: .distantPast,
-                                                          dayAggregated: self.dayAggregatedSensors.contains(sensor))
+                                                          windowStart: batch.windowStart,
+                                                          sensor: sensor)
+                if uploadable.count != batch.records.count {
+                    // Dropping at drain time is data loss by design, but it must never be
+                    // invisible: a sensor silently losing 100% of its records (e.g. a future OS
+                    // stops emitting the key the gate reads) has to show up in telemetry.
+                    self.analytics.track(
+                        event: .sensorDataBackfillReach(sensor: sensor.shortSubsource,
+                                                        reachedBack: ISO8601DateFormatter().string(from: batch.windowStart),
+                                                        boundedBy: BackfillLowerBound.Origin.drainFiltered.rawValue))
+                }
                 guard !uploadable.isEmpty else {
                     #if DEBUG
                     print("SensorSampleUploadManager - Dropped a fully out-of-bounds queued batch for \(sensor.rawValue)")
@@ -642,7 +707,7 @@ public final class SensorSampleUploadManager {
                             guard let self = self else { return }
                             // Re-enqueue the FILTERED batch (dropped records must not come back)
                             // and schedule a retry with backoff.
-                            self.storage.enqueueBatch(uploadable, for: sensor)
+                            self.storage.enqueueBatch(uploadable, windowStart: batch.windowStart, for: sensor)
                             #if DEBUG
                             print("SensorSampleUploadManager - Upload failed for \(sensor.rawValue): \(error)")
                             #endif
