@@ -203,7 +203,12 @@ extension EmojiPopupViewController: UICollectionViewDataSource, UICollectionView
 
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
 
-        if indexPath == selectedIndexPath {
+        // A tap that leaves the picker in the state it opened in must not arm Save: confirming
+        // it would PATCH nothing and blank the caller's emoji button for no reason. The case
+        // that matters is picking "no emoji" on a note that has none. Android blocks the same
+        // tap (EmojiSelectorDialog compares the option against initialSelectedItem), and the
+        // two platforms have to agree on this.
+        if indexPath == selectedIndexPath || options[indexPath.item].item == selected {
             return
         }
 

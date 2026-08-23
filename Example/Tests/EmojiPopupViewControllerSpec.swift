@@ -85,7 +85,27 @@ class EmojiPopupViewControllerSpec: QuickSpec {
             // "never fired". A dedicated enum sidesteps it entirely.
             enum ConfirmationResult: Equatable { case notCalled; case confirmed(EmojiItem?) }
 
-            it("saves nil (not a sentinel EmojiItem) when the no-emoji tile is confirmed") {
+            // Clearing a note that HAS an emoji is the real journey for the no-emoji tile, and
+            // the only one where confirming it changes anything. Opening with `selected: nil`
+            // and tapping the same tile is a no-op the picker now refuses (see the spec below),
+            // so it cannot be used to prove the nil contract.
+            it("saves nil (not a sentinel EmojiItem) when the no-emoji tile clears a recorded emoji") {
+                let recorded = EmojiItem(id: "1", type: "feedback_tag", tag: "🙂", label: nil)
+                var result: ConfirmationResult = .notCalled
+                let controller = EmojiPopupViewController(emojis: [recorded],
+                                                           selected: recorded,
+                                                           onSelectionConfirmed: { result = .confirmed($0) })
+                controller.loadViewIfNeeded()
+                controller.collectionView(collectionView(for: controller), didSelectItemAt: IndexPath(item: 0, section: 0))
+                saveTapped(controller)
+                expect(result).to(equal(.confirmed(nil)))
+            }
+
+            // Cross-platform parity: Android's EmojiSelectorDialog ignores a tap whose option
+            // equals initialSelectedItem, so picking "no emoji" on a note that has none cannot
+            // be confirmed there. iOS used to allow it, firing a PATCH that changed nothing and
+            // blanking the caller's emoji button.
+            it("refuses to confirm the no-emoji tile when the note has no emoji to clear") {
                 var result: ConfirmationResult = .notCalled
                 let controller = EmojiPopupViewController(emojis: [EmojiItem(id: "1", type: "feedback_tag", tag: "🙂", label: nil)],
                                                            selected: nil,
@@ -93,7 +113,7 @@ class EmojiPopupViewControllerSpec: QuickSpec {
                 controller.loadViewIfNeeded()
                 controller.collectionView(collectionView(for: controller), didSelectItemAt: IndexPath(item: 0, section: 0))
                 saveTapped(controller)
-                expect(result).to(equal(.confirmed(nil)))
+                expect(result).to(equal(.notCalled))
             }
 
             it("saves the real item (not nil) when a study-configured emoji captioned 'None' is confirmed") {
