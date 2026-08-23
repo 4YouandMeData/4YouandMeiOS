@@ -10,6 +10,17 @@ struct EmojiItem: Codable, Equatable {
     let type: String
     let tag: String
     let label: String?
+
+    // FUAM-3857: the caption an `EmojiCell` displays for this item. Deliberately takes
+    // `isNoneOption` from the caller rather than inspecting `label` itself — whether this is
+    // the "no emoji" sentinel is a POSITIONAL fact owned by `EmojiPopUpViewController` (it's
+    // the item it inserted at index 0), not something derived from the label. A real study
+    // emoji labelled "none" must keep showing its own label, not the sentinel's icon or
+    // caption. Shared by both `EmojiPopUpViewController` (row height) and `EmojiCell`
+    // (rendering) so the two can't drift apart on what counts as "has a caption".
+    func displayedCaption(isNoneOption: Bool) -> String {
+        isNoneOption ? StringsProvider.string(forKey: .emojiNoneLabel) : (label ?? "")
+    }
 }
 
 enum EmojiTagCategory: String, CaseIterable {
@@ -28,6 +39,28 @@ final class EmojiPopupViewController: UIViewController {
     private var emojis: [EmojiItem]
     private let onSave: (EmojiItem?) -> Void
     private let selected: EmojiItem?
+
+    // FUAM-3857: true when the sentinel was inserted (i.e. the caller's `emojis` wasn't
+    // empty). This, plus the item's index, is the ONLY thing that decides "is this the none
+    // option" — see `isNoneOption(at:)`. Never re-derived from `label`.
+    private let sentinelInserted: Bool
+
+    // FUAM-3857: true when at least one item — including the sentinel — has a caption.
+    // `emojis` never changes after init, so this is computed once here rather than per cell
+    // in `sizeForItemAt:`.
+    private let hasCaptions: Bool
+
+    // FUAM-3857: fixed, deliberately NOT derived from `FontPalette.fontStyleData` at call
+    // time. `FontPalette` scales via `UIFontMetrics.default.scaledFont(for:)` with no
+    // `maximumPointSize` cap, so `80 - <that line height>` would SHRINK as the user's Dynamic
+    // Type setting grows, while the cell's content (45pt icon, 4pt blank spacer, 8pt of stack
+    // spacing = 57pt required floor) is fixed-size and doesn't shrink with it. At the first
+    // accessibility text size the row would already be smaller than that 57pt floor, breaking
+    // a required constraint and clipping the icon — the opposite of what a "reduce the row"
+    // feature should do. 64 = 80 minus the header3 caption's line height at the default
+    // (Large) content size, rounded up — comfortably above the 57pt floor and constant
+    // regardless of text size, exactly as Dynamic-Type-safe as the unreduced 80.
+    private static let compactRowHeight: CGFloat = 64
 
     // FUAM-3495 — optional hook fired after the popup is dismissed, on BOTH save and
     // cancel (X). Lets a presenter restore its previous state (e.g. keyboard focus).
@@ -50,15 +83,23 @@ final class EmojiPopupViewController: UIViewController {
          selected: EmojiItem?,
          onSave: @escaping (EmojiItem?) -> Void) {
         
+        let sentinelInserted = !emojis.isEmpty
         self.emojis = emojis
-        if !emojis.isEmpty {
+        if sentinelInserted {
             self.emojis.insert(EmojiItem(id: "", type: "", tag: "❌", label: "none"), at: 0)
+        }
+        self.sentinelInserted = sentinelInserted
+        self.hasCaptions = self.emojis.enumerated().contains { index, item in
+            !item.displayedCaption(isNoneOption: sentinelInserted && index == 0).isEmpty
         }
         self.onSave = onSave
         self.selected = selected
         super.init(nibName: nil, bundle: nil)
         self.selectedIndexPath = selected.flatMap { selectedItem in
-            return emojis.firstIndex(where: { $0.tag == selectedItem.tag && $0.label == selectedItem.label })
+            // Search self.emojis (which has the sentinel inserted at index 0), not the
+            // `emojis` parameter: the collection view renders self.emojis, so an index found
+            // against the parameter is off by one once the sentinel is present.
+            return self.emojis.firstIndex(where: { $0.tag == selectedItem.tag && $0.label == selectedItem.label })
                     .map { IndexPath(item: $0, section: 0) }
             }
         modalPresentationStyle = .overCurrentContext
@@ -66,6 +107,13 @@ final class EmojiPopupViewController: UIViewController {
     }
 
     required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
+
+    // FUAM-3857: this controller is the only place that inserts the sentinel, so it's the
+    // only place that can answer "is this the none option" — by position, not by label. Index
+    // 0 is the none option exactly when the sentinel was inserted.
+    private func isNoneOption(at index: Int) -> Bool {
+        sentinelInserted && index == 0
+    }
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -162,7 +210,7 @@ extension EmojiPopupViewController: UICollectionViewDataSource, UICollectionView
         }
         let emoji = emojis[indexPath.item]
         let isSelected = indexPath == selectedIndexPath
-        cell.configure(with: emoji, selected: isSelected)
+        cell.configure(with: emoji, isNoneOption: isNoneOption(at: indexPath.item), selected: isSelected)
         return cell
     }
 
@@ -190,6 +238,11 @@ extension EmojiPopupViewController: UICollectionViewDataSource, UICollectionView
         let sectionInsets: CGFloat = 5
         let totalSpacing = (itemsPerRow - 1) * interItemSpacing + 2 * sectionInsets
         let width = (collectionView.bounds.width - totalSpacing) / itemsPerRow
-        return CGSize(width: width, height: 80)
+        // FUAM-3857: when no item has a caption, drop the caption label's line height from
+        // the row so the grid doesn't waste a blank line per row. `minimumLineSpacing` (24,
+        // set on the layout in `setupUI`) is left unchanged — that's what still separates one
+        // row from the next.
+        let height: CGFloat = hasCaptions ? 80 : EmojiPopupViewController.compactRowHeight
+        return CGSize(width: width, height: height)
     }
 }

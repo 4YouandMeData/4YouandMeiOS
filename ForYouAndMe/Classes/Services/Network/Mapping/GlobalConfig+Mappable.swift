@@ -26,6 +26,13 @@ extension GlobalConfig: Mappable {
 }
 
 extension Mapper {
+    // FUAM-3857: keys that are optional by design and are absent from most study configs, so
+    // they must not trip the CheckGlobalStrings diagnostic below. Mirrors the
+    // ImagePalette.checkImageAvailability() optionalImages set.
+    // .emojiNoneLabel — opt-in caption for the emoji picker's "no emoji" option; when unset
+    // the option shows the icon alone, which is the intended default.
+    static let optionalStringKeys: Set<StringKey> = [.emojiNoneLabel]
+
     func from(_ field: String) throws -> ColorMap {
         let dict: [String: String] = try self.from(field)
         
@@ -73,11 +80,13 @@ extension Mapper {
         #endif
         if check {
             let keys = stringMap.keys
-            try StringKey.allCases.forEach { stringKey in
-                if false == keys.contains(stringKey) {
-                    throw MapperError.customError(field: field, message: "String '\(stringKey)' is missing in global config")
+            try StringKey.allCases
+                .filter { false == Mapper.optionalStringKeys.contains($0) }
+                .forEach { stringKey in
+                    if false == keys.contains(stringKey) {
+                        throw MapperError.customError(field: field, message: "String '\(stringKey)' is missing in global config")
+                    }
                 }
-            }
         }
         
         return stringMap

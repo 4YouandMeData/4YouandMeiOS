@@ -77,6 +77,8 @@ enum ImageName: String, CaseIterable {
     case cronometerIcon = "cronometer_icon"
     case pinchZoom = "pinch_zoom"
     case emojiICon = "emoji_icon"
+    // FUAM-3857: icon for the "none / no emoji" sentinel option in the emoji picker.
+    case emojiNone = "emoji_none"
 }
 
 enum TemplateImageName: String, CaseIterable {
