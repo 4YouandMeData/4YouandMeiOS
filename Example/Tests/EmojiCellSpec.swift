@@ -255,6 +255,30 @@ class EmojiCellSpec: QuickSpec {
                 expect(findLabel(in: cell, matching: { $0.text == "happy" })).toNot(beNil())
                 expect(findLabel(in: cell, matching: { $0.text == "Skip" })).to(beNil())
             }
+
+            // Regression guard. `item?.label ?? <none caption>` flattens to String?, so the
+            // fallback fires for an UNLABELLED REAL emoji as well as for the no-emoji option,
+            // printing the no-emoji caption under every glyph in a label-less study list. The
+            // spec above cannot catch it because its item has a label; this one has none.
+            it("leaves an unlabelled real emoji with no caption even when EMOJI_NONE_LABEL is set") {
+                StringsProvider.initialize(withFullStringMap: [:], requiredStringMap: [.emojiNoneLabel: "Skip"])
+
+                let unlabelled = EmojiItem(id: "286", type: "feedback_tag", tag: "😡", label: nil)
+                let cell = EmojiCell(frame: CGRect(x: 0, y: 0, width: 80, height: 80))
+                cell.configure(with: unlabelled, selected: false)
+
+                expect(EmojiCell.displayedCaption(for: unlabelled)).to(equal(""))
+                expect(findTitleLabel(in: cell)?.text).to(equal(""))
+                expect(findLabel(in: cell, matching: { $0.text == "Skip" })).to(beNil())
+            }
+
+            it("still gives the no-emoji option its configured caption in the same study") {
+                StringsProvider.initialize(withFullStringMap: [:], requiredStringMap: [.emojiNoneLabel: "Skip"])
+
+                // Same configuration as above: the caption belongs to the no-emoji option
+                // only, so nil must resolve to it while a real unlabelled item resolves to "".
+                expect(EmojiCell.displayedCaption(for: nil)).to(equal("Skip"))
+            }
         }
     }
 }

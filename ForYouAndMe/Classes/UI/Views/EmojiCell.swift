@@ -75,7 +75,15 @@ final class EmojiCell: UICollectionViewCell {
     // that decides it, shared by `configure` here and `EmojiPopupViewController`'s row-height
     // decision — so the two can't drift apart on what counts as "has a caption".
     static func displayedCaption(for item: EmojiItem?) -> String {
-        let raw = item?.label ?? StringsProvider.string(forKey: .emojiNoneLabel)
+        // Two branches, deliberately not `item?.label ?? …`: that flattens to String?, so the
+        // fallback would also fire for a REAL item whose label is nil, printing the no-emoji
+        // caption under every unlabelled study emoji.
+        let raw: String
+        if let item = item {
+            raw = item.label ?? ""
+        } else {
+            raw = StringsProvider.string(forKey: .emojiNoneLabel)
+        }
         return raw.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "" : raw
     }
 
