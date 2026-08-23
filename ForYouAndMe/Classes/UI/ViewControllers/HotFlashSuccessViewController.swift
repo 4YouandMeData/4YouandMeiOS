@@ -107,9 +107,9 @@ final class HotFlashSuccessViewController: UIViewController {
         let emojiVC = EmojiPopupViewController(
             emojis: getEmojis(),
             selected: selectedEmoji
-        ) { [weak self] selected in
+        ) { [weak self] confirmedEmoji in
             guard let self = self else { return }
-            self.selectedEmoji = selected
+            self.selectedEmoji = confirmedEmoji
             self.updateEmojiButton()
         }
 
@@ -119,13 +119,12 @@ final class HotFlashSuccessViewController: UIViewController {
     }
 
     private func updateEmojiButton() {
-        guard let emoji = selectedEmoji else { return }
-        let tag = (emoji.label != "none") ? emoji.tag : nil
         self.emojiButton.setImage(nil, for: .normal)
-        self.emojiButton.setTitle(tag, for: .normal)
+        self.emojiButton.setTitle(selectedEmoji?.tag, for: .normal)
         emojiButton.titleLabel?.font = UIFont.systemFont(ofSize: 32)
         emojiButton.setTitleColor(ColorPalette.color(withType: .primaryText), for: .normal)
-        diaryNote.feedbackTags?.append(emoji)
+        diaryNote.feedbackTagsToDestroy = diaryNote.feedbackTags ?? []
+        diaryNote.feedbackTagToSet = selectedEmoji
         self.repository.updateDiaryNoteText(diaryNote: self.diaryNote)
             .addProgress()
             .subscribe(onSuccess: { [weak self] in

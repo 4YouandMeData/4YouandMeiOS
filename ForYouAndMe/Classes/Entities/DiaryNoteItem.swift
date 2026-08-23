@@ -429,6 +429,16 @@ struct DiaryNoteItem: Codable {
 
     var feedbackTags: [EmojiItem]?
 
+    /// FUAM-3857 — server-recorded tags this update destroys. Set by the presenter right
+    /// before calling `updateDiaryNoteText`/`sendDiaryNoteTextWithFeedback`; never
+    /// round-tripped through JSON (see `encode(to:)` below, which doesn't touch it).
+    var feedbackTagsToDestroy: [EmojiItem] = []
+
+    /// FUAM-3857 — the tag to record, or nil to record none. Absence IS "no emoji"; there is
+    /// no sentinel value. Leaving this AND `feedbackTagsToDestroy` empty means "this update
+    /// doesn't touch the note's feedback tag at all" (omits `feedback_tags_attributes`).
+    var feedbackTagToSet: EmojiItem?
+
     /// FUAM-2934 — BE v0.12.5 series metadata; non-nil only on the compressed
     /// menstrual row / on the show response for the last `yes` of a series.
     var seriesMeta: MenstrualSeriesMeta?

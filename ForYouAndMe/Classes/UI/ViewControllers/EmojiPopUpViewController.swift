@@ -10,17 +10,6 @@ struct EmojiItem: Codable, Equatable {
     let type: String
     let tag: String
     let label: String?
-
-    // FUAM-3857: the caption an `EmojiCell` displays for this item. Deliberately takes
-    // `isNoneOption` from the caller rather than inspecting `label` itself — whether this is
-    // the "no emoji" sentinel is a POSITIONAL fact owned by `EmojiPopUpViewController` (it's
-    // the item it inserted at index 0), not something derived from the label. A real study
-    // emoji labelled "none" must keep showing its own label, not the sentinel's icon or
-    // caption. Shared by both `EmojiPopUpViewController` (row height) and `EmojiCell`
-    // (rendering) so the two can't drift apart on what counts as "has a caption".
-    func displayedCaption(isNoneOption: Bool) -> String {
-        isNoneOption ? StringsProvider.string(forKey: .emojiNoneLabel) : (label ?? "")
-    }
 }
 
 enum EmojiTagCategory: String, CaseIterable {
@@ -36,30 +25,34 @@ enum EmojiTagCategory: String, CaseIterable {
 
 final class EmojiPopupViewController: UIViewController {
 
-    private var emojis: [EmojiItem]
-    private let onSave: (EmojiItem?) -> Void
+    // FUAM-3857: the grid's only two shapes. `.none` is the affordance this controller adds —
+    // the ONLY place "no emoji" exists as a value anywhere in this picker. Every `.emoji` case
+    // is study-configured; there is no synthetic member of the emoji list any more.
+    private enum Option {
+        case none
+        case emoji(EmojiItem)
+
+        var item: EmojiItem? {
+            switch self {
+            case .none: return nil
+            case .emoji(let item): return item
+            }
+        }
+    }
+
+    private let options: [Option]
+    private let onSelectionConfirmed: (EmojiItem?) -> Void
     private let selected: EmojiItem?
 
-    // FUAM-3857: true when the sentinel was inserted (i.e. the caller's `emojis` wasn't
-    // empty). This, plus the item's index, is the ONLY thing that decides "is this the none
-    // option" — see `isNoneOption(at:)`. Never re-derived from `label`.
-    private let sentinelInserted: Bool
-
-    // FUAM-3857: true when at least one item — including the sentinel — has a caption.
-    // `emojis` never changes after init, so this is computed once here rather than per cell
+    // FUAM-3857: true when at least one option — including "no emoji" — has a caption.
+    // `options` never changes after init, so this is computed once here rather than per cell
     // in `sizeForItemAt:`.
     private let hasCaptions: Bool
 
-    // FUAM-3857: fixed, deliberately NOT derived from `FontPalette.fontStyleData` at call
-    // time. `FontPalette` scales via `UIFontMetrics.default.scaledFont(for:)` with no
-    // `maximumPointSize` cap, so `80 - <that line height>` would SHRINK as the user's Dynamic
-    // Type setting grows, while the cell's content (45pt icon, 4pt blank spacer, 8pt of stack
-    // spacing = 57pt required floor) is fixed-size and doesn't shrink with it. At the first
-    // accessibility text size the row would already be smaller than that 57pt floor, breaking
-    // a required constraint and clipping the icon — the opposite of what a "reduce the row"
-    // feature should do. 64 = 80 minus the header3 caption's line height at the default
-    // (Large) content size, rounded up — comfortably above the 57pt floor and constant
-    // regardless of text size, exactly as Dynamic-Type-safe as the unreduced 80.
+    // FUAM-3857: fixed row height for a caption-less grid. `FontPalette` now caps the
+    // caption's scaled point size (see `EmojiCell`), so this doesn't need to track a moving
+    // target either — it only has to clear the same fixed-size icon floor the full 80pt row
+    // does.
     private static let compactRowHeight: CGFloat = 64
 
     // FUAM-3495 — optional hook fired after the popup is dismissed, on BOTH save and
@@ -68,7 +61,7 @@ final class EmojiPopupViewController: UIViewController {
     var onDismiss: (() -> Void)?
 
     private var selectedIndexPath: IndexPath?
-    
+
     private let collectionView: UICollectionView = {
         let layout = UICollectionViewFlowLayout()
         layout.minimumInteritemSpacing = 16
@@ -76,53 +69,47 @@ final class EmojiPopupViewController: UIViewController {
         layout.scrollDirection = .vertical
         return UICollectionView(frame: .zero, collectionViewLayout: layout)
     }()
-    
+
     private let saveButton = GenericButtonView(withTextStyleCategory: .secondaryBackground(shadow: false))
-    
+
     init(emojis: [EmojiItem],
          selected: EmojiItem?,
-         onSave: @escaping (EmojiItem?) -> Void) {
-        
-        let sentinelInserted = !emojis.isEmpty
-        self.emojis = emojis
-        if sentinelInserted {
-            self.emojis.insert(EmojiItem(id: "", type: "", tag: "❌", label: "none"), at: 0)
-        }
-        self.sentinelInserted = sentinelInserted
-        self.hasCaptions = self.emojis.enumerated().contains { index, item in
-            !item.displayedCaption(isNoneOption: sentinelInserted && index == 0).isEmpty
-        }
-        self.onSave = onSave
+         onSelectionConfirmed: @escaping (EmojiItem?) -> Void) {
+
+        self.options = [.none] + emojis.map(Option.emoji)
+        self.hasCaptions = self.options.contains { !EmojiCell.displayedCaption(for: $0.item).isEmpty }
+        self.onSelectionConfirmed = onSelectionConfirmed
         self.selected = selected
         super.init(nibName: nil, bundle: nil)
+        // An absent selection (no tag ever recorded) must not pre-highlight the "no emoji"
+        // tile — nothing is selected, same as before this option existed.
+        //
+        // Match key stays (tag, label), not `id`: every catalog-sourced `EmojiItem` (the
+        // `emojis` this controller receives) carries `id == ""` — `GlobalConfig+Mappable`
+        // always maps it that way — while `selected` (a previously-recorded server tag) has a
+        // real id. Matching on `id` would make every catalog entry collide on the same empty
+        // id and resolve to the first one, breaking selection restore outright; it is not a
+        // safe substitute here, unlike a true single-source list.
         self.selectedIndexPath = selected.flatMap { selectedItem in
-            // Search self.emojis (which has the sentinel inserted at index 0), not the
-            // `emojis` parameter: the collection view renders self.emojis, so an index found
-            // against the parameter is off by one once the sentinel is present.
-            return self.emojis.firstIndex(where: { $0.tag == selectedItem.tag && $0.label == selectedItem.label })
-                    .map { IndexPath(item: $0, section: 0) }
-            }
+            self.options.firstIndex { option in
+                guard let item = option.item else { return false }
+                return item.tag == selectedItem.tag && item.label == selectedItem.label
+            }.map { IndexPath(item: $0, section: 0) }
+        }
         modalPresentationStyle = .overCurrentContext
         modalTransitionStyle = .crossDissolve
     }
 
     required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
 
-    // FUAM-3857: this controller is the only place that inserts the sentinel, so it's the
-    // only place that can answer "is this the none option" — by position, not by label. Index
-    // 0 is the none option exactly when the sentinel was inserted.
-    private func isNoneOption(at index: Int) -> Bool {
-        sentinelInserted && index == 0
-    }
-
     override func viewDidLoad() {
         super.viewDidLoad()
         self.setupUI()
     }
-    
+
     private func setupUI() {
         view.backgroundColor = UIColor.black.withAlphaComponent(0.6)
-        
+
         let cardView = UIView()
         cardView.backgroundColor = ColorPalette.color(withType: .secondary)
         cardView.layer.cornerRadius = 20
@@ -131,7 +118,7 @@ final class EmojiPopupViewController: UIViewController {
         cardView.autoCenterInSuperview()
         cardView.autoSetDimension(.width, toSize: 320)
         cardView.autoSetDimension(.height, toSize: 420, relation: .greaterThanOrEqual)
-        
+
         // Title
         let titleLabel = UILabel()
         titleLabel.text = StringsProvider.string(forKey: .emojiTitle)
@@ -143,20 +130,20 @@ final class EmojiPopupViewController: UIViewController {
         }
         titleLabel.textColor = ColorPalette.color(withType: .primaryText)
         titleLabel.textAlignment = .center
-        
+
         // Close Button
         let closeButton = UIButton(type: .system)
         closeButton.setImage(UIImage(systemName: "xmark"), for: .normal)
         closeButton.tintColor = .darkGray
         closeButton.addTarget(self, action: #selector(closeTapped), for: .touchUpInside)
-        
+
         cardView.addSubview(closeButton)
         cardView.addSubview(titleLabel)
 
         closeButton.autoPinEdge(toSuperviewEdge: .top, withInset: 16)
         closeButton.autoPinEdge(toSuperviewEdge: .leading, withInset: 16)
         closeButton.autoSetDimensions(to: CGSize(width: 24, height: 24))
-        
+
         titleLabel.autoPinEdge(toSuperviewEdge: .top, withInset: 56)
         titleLabel.autoAlignAxis(toSuperviewAxis: .vertical)
 
@@ -188,9 +175,10 @@ final class EmojiPopupViewController: UIViewController {
     }
 
     @objc private func saveTapped() {
-        let selected = selectedIndexPath.map { emojis[$0.item] }
+        guard let indexPath = selectedIndexPath else { return }
+        let confirmed = options[indexPath.item].item
         dismiss(animated: true) {
-            self.onSave(selected)
+            self.onSelectionConfirmed(confirmed)
             self.onDismiss?()
         }
     }
@@ -201,32 +189,31 @@ final class EmojiPopupViewController: UIViewController {
 extension EmojiPopupViewController: UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
 
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        emojis.count
+        options.count
     }
 
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         guard let cell = collectionView.dequeueReusableCell(ofType: EmojiCell.self, forIndexPath: indexPath) else {
             return UICollectionViewCell()
         }
-        let emoji = emojis[indexPath.item]
         let isSelected = indexPath == selectedIndexPath
-        cell.configure(with: emoji, isNoneOption: isNoneOption(at: indexPath.item), selected: isSelected)
+        cell.configure(with: options[indexPath.item].item, selected: isSelected)
         return cell
     }
 
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        
+
         if indexPath == selectedIndexPath {
             return
         }
-        
+
         let previous = selectedIndexPath
         selectedIndexPath = indexPath
-        
+
         var toReload = [indexPath]
         if let previous = previous { toReload.append(previous) }
         collectionView.reloadItems(at: toReload)
-        
+
         saveButton.setButtonEnabled(enabled: true)
     }
 
@@ -238,7 +225,7 @@ extension EmojiPopupViewController: UICollectionViewDataSource, UICollectionView
         let sectionInsets: CGFloat = 5
         let totalSpacing = (itemsPerRow - 1) * interItemSpacing + 2 * sectionInsets
         let width = (collectionView.bounds.width - totalSpacing) / itemsPerRow
-        // FUAM-3857: when no item has a caption, drop the caption label's line height from
+        // FUAM-3857: when no option has a caption, drop the caption label's line height from
         // the row so the grid doesn't waste a blank line per row. `minimumLineSpacing` (24,
         // set on the layout in `setupUI`) is left unchanged — that's what still separates one
         // row from the next.

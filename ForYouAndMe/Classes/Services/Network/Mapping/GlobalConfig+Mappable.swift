@@ -148,7 +148,10 @@ extension Mapper {
                     guard let emoji = item["tag"] as? String else {
                         throw MapperError.customError(field: field, message: "Missing 'tag' in item for key '\(key)'")
                     }
-                    let label = item["label"] as? String ?? " "
+                    // FUAM-3857: honest mapping — nil when the study didn't configure a
+                    // label, never a placeholder space. `EmojiCell.displayedCaption(for:)`
+                    // is where blank/whitespace-only captions are treated as "no caption".
+                    let label = item["label"] as? String
                     return EmojiItem(id: "", type: "", tag: emoji, label: label)
                 }
 

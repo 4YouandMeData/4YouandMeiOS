@@ -2,8 +2,10 @@
 //  EmojiCellSpec.swift
 //  ForYouAndMe_Tests
 //
-//  FUAM-3857: the "none / no emoji" sentinel option in the emoji picker
-//  renders the designer's `emoji_none` icon instead of the emoji glyph.
+//  FUAM-3857: the "none / no emoji" option in the emoji picker renders the
+//  designer's `emoji_none` icon instead of the emoji glyph. It is modelled as
+//  the ABSENCE of an `EmojiItem` (`nil`), never as a synthetic member of the
+//  emoji list — there is no sentinel value anywhere in this cell.
 //
 
 import Quick
@@ -13,14 +15,13 @@ import UIKit
 
 class EmojiCellSpec: QuickSpec {
     override class func spec() {
-        describe("EmojiCell.configure(with:isNoneOption:selected:)") {
+        describe("EmojiCell.configure(with:selected:)") {
 
-            let noneItem = EmojiItem(id: "", type: "", tag: "❌", label: "none")
             let normalItem = EmojiItem(id: "286", type: "feedback_tag", tag: "🥵", label: nil)
 
-            // These examples read the sentinel's caption from StringsProvider, which is
-            // global state other specs also write. Reset it so this block cannot depend on
-            // suite ordering.
+            // These examples read the no-emoji caption from StringsProvider, which is global
+            // state other specs also write. Reset it so this block cannot depend on suite
+            // ordering.
             beforeEach {
                 StringsProvider.initialize(withFullStringMap: [:], requiredStringMap: [:])
             }
@@ -29,9 +30,9 @@ class EmojiCellSpec: QuickSpec {
                 EmojiCell(frame: CGRect(x: 0, y: 0, width: 80, height: 80))
             }
 
-            it("shows the emoji_none image and hides the emoji glyph for the 'none' sentinel") {
+            it("shows the emoji_none image and hides the emoji glyph when item is nil") {
                 let cell = makeCell()
-                cell.configure(with: noneItem, isNoneOption: true, selected: false)
+                cell.configure(with: nil, selected: false)
 
                 let imageView = findImageView(in: cell)
                 expect(imageView).toNot(beNil(), description: "none image view not found")
@@ -50,12 +51,12 @@ class EmojiCellSpec: QuickSpec {
 
             // Regression guard for the constraint conflict this cell is prone to: the stack is
             // pinned to all four edges of a fixed 80pt cell and distributes .fill, so the
-            // blank-caption sentinel state must still leave something stretchable. With only
+            // blank-caption "no emoji" state must still leave something stretchable. With only
             // the 45pt icon and the 4pt blank space at required priority, Auto Layout breaks a
             // constraint and the icon is mispositioned or stretched.
-            it("lays the sentinel icon out at its intrinsic size with no caption configured") {
+            it("lays the no-emoji icon out at its intrinsic size with no caption configured") {
                 let cell = makeCell()
-                cell.configure(with: noneItem, isNoneOption: true, selected: false)
+                cell.configure(with: nil, selected: false)
                 cell.layoutIfNeeded()
 
                 let imageView = findImageView(in: cell)
@@ -67,7 +68,7 @@ class EmojiCellSpec: QuickSpec {
 
             it("shows the tag glyph and hides the none image for a normal item") {
                 let cell = makeCell()
-                cell.configure(with: normalItem, isNoneOption: false, selected: false)
+                cell.configure(with: normalItem, selected: false)
 
                 let emojiLabel = findLabel(in: cell, matching: { $0.font.pointSize == 35 })
                 expect(emojiLabel?.isHidden).to(beFalse())
@@ -77,9 +78,9 @@ class EmojiCellSpec: QuickSpec {
                 expect(imageView?.isHidden).to(beTrue())
             }
 
-            it("shows a blank caption for the 'none' sentinel by default, and item.label for a normal item") {
+            it("shows a blank caption for no-emoji by default, and item.label for a normal item") {
                 let noneCell = makeCell()
-                noneCell.configure(with: noneItem, isNoneOption: true, selected: false)
+                noneCell.configure(with: nil, selected: false)
                 expect(findTitleLabel(in: noneCell)?.text).to(equal(""))
                 // Not hidden: an empty label is the stack's only stretchable arranged
                 // subview in this state (see EmojiCell.configure). Blank text renders nothing.
@@ -87,14 +88,14 @@ class EmojiCellSpec: QuickSpec {
 
                 let normalCell = makeCell()
                 let happyItem = EmojiItem(id: "1", type: "feedback_tag", tag: "🙂", label: "happy")
-                normalCell.configure(with: happyItem, isNoneOption: false, selected: false)
+                normalCell.configure(with: happyItem, selected: false)
                 expect(findLabel(in: normalCell, matching: { $0.text == "happy" })).toNot(beNil())
             }
 
-            it("leaves no stale icon when reused from 'none' into a normal item") {
+            it("leaves no stale icon when reused from no-emoji into a normal item") {
                 let cell = makeCell()
-                cell.configure(with: noneItem, isNoneOption: true, selected: false)
-                cell.configure(with: normalItem, isNoneOption: false, selected: false)
+                cell.configure(with: nil, selected: false)
+                cell.configure(with: normalItem, selected: false)
 
                 expect(findImageView(in: cell)?.isHidden).to(beTrue())
                 let emojiLabel = findLabel(in: cell, matching: { $0.font.pointSize == 35 })
@@ -102,10 +103,10 @@ class EmojiCellSpec: QuickSpec {
                 expect(emojiLabel?.text).to(equal("🥵"))
             }
 
-            it("leaves no stale glyph when reused from a normal item into 'none'") {
+            it("leaves no stale glyph when reused from a normal item into no-emoji") {
                 let cell = makeCell()
-                cell.configure(with: normalItem, isNoneOption: false, selected: false)
-                cell.configure(with: noneItem, isNoneOption: true, selected: false)
+                cell.configure(with: normalItem, selected: false)
+                cell.configure(with: nil, selected: false)
 
                 let emojiLabel = findLabel(in: cell, matching: { $0.font.pointSize == 35 })
                 expect(emojiLabel?.isHidden).to(beTrue())
@@ -115,7 +116,7 @@ class EmojiCellSpec: QuickSpec {
 
             it("clears state on prepareForReuse") {
                 let cell = makeCell()
-                cell.configure(with: noneItem, isNoneOption: true, selected: false)
+                cell.configure(with: nil, selected: false)
                 cell.prepareForReuse()
 
                 expect(findImageView(in: cell)?.isHidden).to(beTrue())
@@ -125,13 +126,13 @@ class EmojiCellSpec: QuickSpec {
                 expect(findImageView(in: cell)?.accessibilityLabel).to(beNil())
             }
 
-            // Replacing the glyph with a UIImageView removes the sentinel's only accessible
-            // content once the caption is blank (a UIImageView is not an accessibility element
-            // by default, and UICollectionViewCell does not aggregate its children), so
-            // VoiceOver would announce nothing at all for the "no emoji" option.
-            it("exposes the sentinel to VoiceOver even with a blank caption") {
+            // Replacing the glyph with a UIImageView removes the no-emoji option's only
+            // accessible content once the caption is blank (a UIImageView is not an
+            // accessibility element by default, and UICollectionViewCell does not aggregate
+            // its children), so VoiceOver would announce nothing at all.
+            it("exposes the no-emoji option to VoiceOver even with a blank caption") {
                 let cell = makeCell()
-                cell.configure(with: noneItem, isNoneOption: true, selected: false)
+                cell.configure(with: nil, selected: false)
 
                 let imageView = findImageView(in: cell)
                 expect(imageView?.isAccessibilityElement).to(beTrue())
@@ -143,26 +144,26 @@ class EmojiCellSpec: QuickSpec {
                 defer { StringsProvider.initialize(withFullStringMap: [:], requiredStringMap: [:]) }
 
                 let cell = makeCell()
-                cell.configure(with: noneItem, isNoneOption: true, selected: false)
+                cell.configure(with: nil, selected: false)
                 expect(findImageView(in: cell)?.accessibilityLabel).to(equal("Remove"))
             }
 
             it("does not mark a normal item's image view as an accessibility element") {
                 let cell = makeCell()
-                cell.configure(with: normalItem, isNoneOption: false, selected: false)
+                cell.configure(with: normalItem, selected: false)
 
                 expect(findImageView(in: cell)?.isAccessibilityElement).to(beFalse())
                 expect(findImageView(in: cell)?.accessibilityLabel).to(beNil())
             }
 
-            // FUAM-3857 (round 4, Jules): identity is positional, decided by the caller, never
-            // re-derived from `label`. A real study emoji that happens to carry the literal
-            // label "none" must still render as itself — its glyph, its own label as caption —
-            // when the caller says it isn't the none option.
-            it("renders a real item as itself, not as the sentinel, even if its label is literally 'none'") {
+            // FUAM-3857 (round 5, Jules): identity is presence/absence of an `EmojiItem?`, not
+            // a value inspected inside one. A real study emoji that happens to carry the
+            // literal label "none" (or the tag "❌") must still render as itself — its glyph,
+            // its own label as caption.
+            it("renders a real item as itself, not as no-emoji, even if its label is literally 'none'") {
                 let impostor = EmojiItem(id: "99", type: "feedback_tag", tag: "🙄", label: "none")
                 let cell = makeCell()
-                cell.configure(with: impostor, isNoneOption: false, selected: false)
+                cell.configure(with: impostor, selected: false)
 
                 let emojiLabel = findLabel(in: cell, matching: { $0.font.pointSize == 35 })
                 expect(emojiLabel?.isHidden).to(beFalse())
@@ -171,13 +172,23 @@ class EmojiCellSpec: QuickSpec {
                 expect(findTitleLabel(in: cell)?.text).to(equal("none"),
                                                            description: "the item's own label, verbatim — not EMOJI_NONE_LABEL")
             }
+
+            it("renders a study-configured ❌ as a glyph, never as the no-emoji icon") {
+                let realCross = EmojiItem(id: "12", type: "feedback_tag", tag: "❌", label: "Not today")
+                let cell = makeCell()
+                cell.configure(with: realCross, selected: false)
+
+                let emojiLabel = findLabel(in: cell, matching: { $0.font.pointSize == 35 })
+                expect(emojiLabel?.isHidden).to(beFalse())
+                expect(emojiLabel?.text).to(equal("❌"))
+                expect(findImageView(in: cell)?.isHidden).to(beTrue())
+                expect(findTitleLabel(in: cell)?.text).to(equal("Not today"))
+            }
         }
 
-        // FUAM-3857: the sentinel's caption is study-configurable via the EMOJI_NONE_LABEL
-        // strings key, decoupled from the internal `label == "none"` detection literal.
-        describe("EmojiCell 'none' caption (EMOJI_NONE_LABEL study string)") {
-
-            let noneItem = EmojiItem(id: "", type: "", tag: "❌", label: "none")
+        // FUAM-3857: the no-emoji option's caption is study-configurable via the
+        // EMOJI_NONE_LABEL strings key, decoupled from any internal "label == none" literal.
+        describe("EmojiCell no-emoji caption (EMOJI_NONE_LABEL study string)") {
 
             afterEach {
                 // Restore the ambient default state (no study strings configured) so this
@@ -189,7 +200,7 @@ class EmojiCellSpec: QuickSpec {
                 StringsProvider.initialize(withFullStringMap: [:], requiredStringMap: [:])
 
                 let cell = EmojiCell(frame: CGRect(x: 0, y: 0, width: 80, height: 80))
-                cell.configure(with: noneItem, isNoneOption: true, selected: false)
+                cell.configure(with: nil, selected: false)
 
                 let title = findTitleLabel(in: cell)
                 expect(title?.text).to(equal(""))
@@ -202,7 +213,7 @@ class EmojiCellSpec: QuickSpec {
                 StringsProvider.initialize(withFullStringMap: [:], requiredStringMap: [.emojiNoneLabel: "Skip"])
 
                 let cell = EmojiCell(frame: CGRect(x: 0, y: 0, width: 80, height: 80))
-                cell.configure(with: noneItem, isNoneOption: true, selected: false)
+                cell.configure(with: nil, selected: false)
 
                 let title = findTitleLabel(in: cell)
                 expect(title?.text).to(equal("Skip"))
@@ -214,7 +225,7 @@ class EmojiCellSpec: QuickSpec {
                 StringsProvider.initialize(withFullStringMap: [:], requiredStringMap: [.emojiNoneLabel: ""])
 
                 let cell = EmojiCell(frame: CGRect(x: 0, y: 0, width: 80, height: 80))
-                cell.configure(with: noneItem, isNoneOption: true, selected: false)
+                cell.configure(with: nil, selected: false)
 
                 let title = findTitleLabel(in: cell)
                 expect(title?.text).to(equal(""))
@@ -223,12 +234,23 @@ class EmojiCellSpec: QuickSpec {
                 expect(findLabel(in: cell, matching: { $0.text == "EMOJI_NONE_LABEL" })).to(beNil())
             }
 
+            it("treats a whitespace-only EMOJI_NONE_LABEL as no caption too") {
+                // Matches Android's isNotBlank() semantics and GlobalConfig+Mappable's honest
+                // (nil, not " ") mapping for a label-less catalog item.
+                StringsProvider.initialize(withFullStringMap: [:], requiredStringMap: [.emojiNoneLabel: "   "])
+
+                let cell = EmojiCell(frame: CGRect(x: 0, y: 0, width: 80, height: 80))
+                cell.configure(with: nil, selected: false)
+
+                expect(findTitleLabel(in: cell)?.text).to(equal(""))
+            }
+
             it("leaves a normal item's caption unaffected by the EMOJI_NONE_LABEL key") {
                 StringsProvider.initialize(withFullStringMap: [:], requiredStringMap: [.emojiNoneLabel: "Skip"])
 
                 let normalItem = EmojiItem(id: "1", type: "feedback_tag", tag: "🙂", label: "happy")
                 let cell = EmojiCell(frame: CGRect(x: 0, y: 0, width: 80, height: 80))
-                cell.configure(with: normalItem, isNoneOption: false, selected: false)
+                cell.configure(with: normalItem, selected: false)
 
                 expect(findLabel(in: cell, matching: { $0.text == "happy" })).toNot(beNil())
                 expect(findLabel(in: cell, matching: { $0.text == "Skip" })).to(beNil())

@@ -451,11 +451,12 @@ extension RepositoryImpl: Repository {
         return self.sendDiaryNoteText(diaryNote: diaryNote, fromChart: fromChart)
             .flatMap { created -> Single<(DiaryNoteItem, Bool)> in
                 // No emoji to attach: the note is saved and nothing else was required.
-                guard let emoji = emoji, emoji.label != "none" else {
+                guard let emoji = emoji else {
                     return .just((created, true))
                 }
                 var noteToPatch = created
-                noteToPatch.feedbackTags = (noteToPatch.feedbackTags ?? []) + [emoji]
+                noteToPatch.feedbackTagsToDestroy = noteToPatch.feedbackTags ?? []
+                noteToPatch.feedbackTagToSet = emoji
                 // retry(2) = 2 total attempts = exactly one retry.
                 return self.updateDiaryNoteText(diaryNote: noteToPatch)
                     .retry(2)

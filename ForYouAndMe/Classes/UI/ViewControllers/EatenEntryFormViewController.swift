@@ -435,16 +435,16 @@ class EatenEntryFormViewController: UIViewController {
             
             let emojiItems = self.emojiItems(for: category)
             let emojiVC = EmojiPopupViewController(emojis: emojiItems,
-                                                   selected: self.selectedEmoji) { [weak self] selectedEmoji in
-                guard let self = self, let emoji = selectedEmoji else { return }
+                                                   selected: self.selectedEmoji) { [weak self] confirmedEmoji in
+                guard let self = self else { return }
                 guard var diaryNote = self.diaryNote else { return }
-                
-                self.selectedEmoji = emoji
-                diaryNote.feedbackTags?.append(emoji)
-                
-                let tag = (emoji.label != "none") ? emoji.tag : nil
+
+                self.selectedEmoji = confirmedEmoji
+                diaryNote.feedbackTagsToDestroy = diaryNote.feedbackTags ?? []
+                diaryNote.feedbackTagToSet = confirmedEmoji
+
                 self.emojiButton.setImage(nil, for: .normal)
-                self.emojiButton.setTitle(tag, for: .normal)
+                self.emojiButton.setTitle(confirmedEmoji?.tag, for: .normal)
                 self.emojiButton.titleLabel?.font = UIFont.systemFont(ofSize: 22)
                 
                 self.repository.updateDiaryNoteText(diaryNote: diaryNote)
