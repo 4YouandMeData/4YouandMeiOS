@@ -42,8 +42,14 @@ struct BackfillLowerBound {
         case cursor
         /// The plan resolved to no window at all (e.g. enrolled today, still inside the embargo).
         case emptyPlan = "empty_plan"
-        /// A window was forfeited after repeated fetch failures (data loss trace).
+        /// A window was forfeited after repeated fetch failures, or because even a floor-sized
+        /// sub-window is over the server's payload cap (data loss trace).
         case gaveUp = "gave_up"
+        /// A HealthKit chunk was over the payload cap and its TIME window was halved (FUAM-3945).
+        case bisected
+        /// One HealthKit chunk burned its attempt budget: the data type was left for the next
+        /// sequence with its cursor untouched (a stall, not data loss — yet).
+        case attemptsExhausted = "attempts_exhausted"
         /// The drain-time consent gate dropped records from an already-queued batch (data loss
         /// trace: in steady state this should never fire, so any volume at all is actionable).
         case drainFiltered = "drain_filtered"

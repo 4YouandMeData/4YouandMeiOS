@@ -776,8 +776,22 @@ extension RepositoryImpl: NotificationTokenDelegate {
 extension RepositoryImpl: HealthManagerNetworkDelegate {
     func uploadHealthNetworkData(_ healthNetworkData: HealthNetworkData, source: String) -> Single<()> {
         return self.api.send(request: ApiRequest(serviceRequest: .sendHealthData(healthData: healthNetworkData, source: source)))
+            .catch { error in
+                // FUAM-3945: recognise the server's payload cap HERE, while the status code still
+                // exists — `handleError` collapses `ApiError` into `RepositoryError`, which has
+                // none, and the chunk walk would then see a generic server error and retry the
+                // identical oversize chunk on every sequence for ever. As an oversize signal it
+                // bisects the chunk's time window instead.
+                if let apiError = error as? ApiError, apiError.httpStatusCode == 413 {
+                    return Single.error(HealthSampleUploaderError.uploadPayloadTooLarge)
+                }
+                return Single.error(error)
+            }
             .handleError()
             .catch { error in
+                if let uploaderError = error as? HealthSampleUploaderError {
+                    return Single.error(uploaderError)
+                }
                 guard let repositoryError = error as? RepositoryError else {
                     assertionFailure("Unexpected error type")
                     return Single.error(error)
@@ -922,6 +936,18 @@ fileprivate extension Error {
 }
 
 fileprivate extension ApiError {
+    /// The HTTP status, where the case carries one. `RepositoryError` drops it, so anything that
+    /// has to branch on a status code (FUAM-3945: 413, the health payload cap) must read it here.
+    var httpStatusCode: Int? {
+        switch self {
+        case .connectivity, .network: return nil
+        case let .cannotParseData(_, _, statusCode, _),
+             let .unexpectedError(_, _, statusCode, _),
+             let .expectedError(_, _, statusCode, _, _),
+             let .userUnauthorized(_, _, statusCode, _): return statusCode
+        }
+    }
+
     var repositoryError: RepositoryError {
         switch self {
         case .cannotParseData: return RepositoryError.remoteServerError

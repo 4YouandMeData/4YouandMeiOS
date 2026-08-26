@@ -147,7 +147,8 @@ enum AnalyticsEvent {
     // reached for a sensor (ISO8601) and what bounded it, so the study team can tell "the OS
     // deleted it" from "the client never asked". `boundedBy` is a
     // `BackfillLowerBound.Origin.rawValue`: "join_date", "hard_cap_365d", "forward_only",
-    // "empty_plan", "gave_up" or "drain_filtered". ("enrollment" and "retention_floor" are superseded.) The
+    // "empty_plan", "gave_up", "drain_filtered", "bisected" or "attempts_exhausted".
+    // ("enrollment" and "retention_floor" are superseded.) The
     // `cursor` origin is carried in the plan but deliberately never emitted: a routine cursor
     // resume is not a backfill and would drown the actionable events.
     case sensorDataBackfillReach(sensor: String, reachedBack: String, boundedBy: String)

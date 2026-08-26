@@ -52,8 +52,9 @@ class HealthSampleUploadManager {
     
     private var uploadSequenceScheduledOrRunning: Bool = false
 
-    /// Data types already reported as forward-only this launch (telemetry noise guard).
-    private var forwardOnlyReported: Set<HealthDataType> = []
+    /// `<data type>|<origin>` pairs already reported this launch (telemetry noise guard): these
+    /// conditions repeat on every hourly sequence and a muted event is a useless event.
+    private var reportedOnce: Set<String> = []
 
     private let reachability: HealthSampleUploadManagerReachability
     private let analytics: AnalyticsService
@@ -77,6 +78,17 @@ class HealthSampleUploadManager {
         // `startUpload(forUploader:)`, once clearance (hence the enrollment date) is available.
     }
     
+    /// How one time chunk is fetched and uploaded. Production value forwards straight to
+    /// `HealthSampleUploader.run`; the specs substitute it, because a simulator's HealthKit store
+    /// cannot be seeded and the payload-size paths would otherwise be unreachable from here.
+    var uploadChunk: (HealthSampleUploader, DateInterval, Date, Bool) -> Single<()> = { uploader, chunk, minimum, anchored in
+        return uploader.run(startDate: chunk.start,
+                            endDate: chunk.end,
+                            source: "health_kit",
+                            minimumSampleDate: minimum,
+                            useAnchoredQuery: anchored)
+    }
+
     public func setNetworkDelegate(_ networkDelegate: HealthSampleUploaderNetworkDelegate) {
         self.uploaders.forEach { $0.networkDelegate = networkDelegate }
     }
@@ -226,6 +238,18 @@ class HealthSampleUploadManager {
         // the anchored query (Apple's guidance: sample queries for history, anchored for sync).
         let historicalThreshold: TimeInterval = 7 * oneDay
 
+        // FUAM-3945: ends of the sub-windows an oversize chunk was split into, innermost last. A
+        // sub-window always STARTS at the cursor, so only its end has to be remembered: the
+        // current chunk is [startDate, bisectedEnds.last], and completing it moves the cursor to
+        // that end, which pops the entry and turns the next one into the following half.
+        // Bisecting by TIME (never by record count) is what keeps a retry reproducible: the same
+        // sub-window yields the same server-side semantic anchor (`min(startDate)` over the
+        // payload), so a re-upload merges by sample `uuid` instead of scattering new rows.
+        var bisectedEnds: [Date] = []
+        // Attempts spent on the CURRENT chunk, reset whenever the chunk changes (completed,
+        // forfeited or bisected). Also bounds the connectivity retry, which had no bound at all.
+        var chunkAttempts = 0
+
         func processNextChunk() {
             // FUAM-3945 (review round 4, I2): the walk cannot return anything once its start has
             // reached the end of the window, and persisting `nextEndDate` over a window that was
@@ -244,27 +268,51 @@ class HealthSampleUploadManager {
 
             let isHistorical = endDate.timeIntervalSince(startDate) > historicalThreshold
             let chunkDuration = isHistorical ? oneDay : oneHour
-            let nextEndDate = min(startDate.addingTimeInterval(chunkDuration), endDate)
+            let nextEndDate = bisectedEnds.last ?? min(startDate.addingTimeInterval(chunkDuration), endDate)
 
-            uploader.run(startDate: startDate,
-                         endDate: nextEndDate,
-                         source: "health_kit",
-                         minimumSampleDate: minimumSampleDate,
-                         useAnchoredQuery: !isHistorical)
+            // Everything up to `date` is uploaded (or deliberately forfeited): persist it — review
+            // fix #7, so an interrupted multi-month walk resumes instead of restarting from
+            // enrollment — and carry on with the next chunk, or with the next data type.
+            //
+            // Walk invariant: the ONLY exit condition here is TIME. It must never be gated on the
+            // chunk having returned something — Apple's own anchored-query sample code stops on
+            // "no added samples && no deleted objects", which truncates a historical walk at its
+            // first empty batch (deletions being rare), while an empty chunk in the middle of a
+            // backfill is perfectly normal and still has to advance the cursor.
+            func advance(past date: Date) {
+                self.storage.setUploadStartDate(date, forDataType: dataType)
+                if bisectedEnds.last == date {
+                    bisectedEnds.removeLast()
+                }
+                chunkAttempts = 0
+                if date < endDate {
+                    startDate = date
+                    processNextChunk()
+                } else {
+                    self.processNextUploader(forUploader: uploader)
+                }
+            }
+
+            chunkAttempts += 1
+            guard chunkAttempts <= Constants.HealthKit.MaxChunkUploadAttempts else {
+                // Budget spent on ONE chunk: hand the sequence on WITHOUT touching the cursor, so
+                // the next sequence retries this very chunk. That costs one cycle and never data,
+                // but it has to be visible — FUAM-3835 ran for six weeks on this kind of silence.
+                self.logDebugText(text: "Giving up on \(dataType.keyName) chunk \(startDate) -> \(nextEndDate) after "
+                                  + "\(chunkAttempts - 1) attempts; cursor left untouched")
+                self.reportOnce(dataType: dataType, date: nextEndDate, origin: .attemptsExhausted)
+                self.processNextUploader(forUploader: uploader)
+                return
+            }
+
+            self.uploadChunk(uploader,
+                             DateInterval(start: startDate, end: nextEndDate),
+                             minimumSampleDate,
+                             !isHistorical)
                 .subscribe(onSuccess: { [weak self] in
                     guard let self = self else { return }
                     self.logDebugText(text: "Upload from \(startDate) to \(nextEndDate) completed")
-
-                    // Review fix #7: persist progress after EACH chunk, so an interrupted
-                    // multi-month walk resumes instead of restarting from enrollment.
-                    self.storage.setUploadStartDate(nextEndDate, forDataType: dataType)
-
-                    if nextEndDate < endDate {
-                        startDate = nextEndDate
-                        processNextChunk()  // Processa il chunk successivo
-                    } else {
-                        self.processNextUploader(forUploader: uploader)
-                    }
+                    advance(past: nextEndDate)
                 }, onFailure: { [weak self] error in
                     guard let self = self else { return }
                     self.logDebugText(text: "Upload failed from \(startDate) to \(nextEndDate) with error: \(error)")
@@ -281,6 +329,30 @@ class HealthSampleUploadManager {
                     case .uploadConnectivityError:
                         self.logDebugText(text: "Upload connectivity error. Retrying current chunk")
                         processNextChunk()  // Riprova l'upload di questo chunk
+                    case .uploadPayloadTooLarge:
+                        // FUAM-3945: over the server's 10 MB request cap. Halve the chunk's TIME
+                        // window and retry each half, in order; the cursor only ever moves to the
+                        // end of a half that actually made it.
+                        let span = nextEndDate.timeIntervalSince(startDate)
+                        guard span > Constants.HealthKit.MinimumChunkDuration else {
+                            // Even a floor-sized sub-window is too large. Forfeit it and move
+                            // past it: that IS data loss, hence the `gave_up` trace, but the
+                            // alternative is retrying the same impossible chunk for ever and
+                            // stalling everything behind it in this data type.
+                            self.logDebugText(text: "Forfeiting \(dataType.keyName) sub-window \(startDate) -> "
+                                              + "\(nextEndDate): still too large at the bisection floor")
+                            self.report(dataType: dataType, date: nextEndDate, origin: .gaveUp)
+                            advance(past: nextEndDate)
+                            return
+                        }
+                        if bisectedEnds.last != nextEndDate {
+                            bisectedEnds.append(nextEndDate)
+                        }
+                        bisectedEnds.append(startDate.addingTimeInterval(span / 2))
+                        chunkAttempts = 0  // each half is a new chunk, with its own budget
+                        self.logDebugText(text: "Bisecting oversize \(dataType.keyName) chunk \(startDate) -> \(nextEndDate)")
+                        self.reportOnce(dataType: dataType, date: nextEndDate, origin: .bisected)
+                        processNextChunk()
                     }
                 }).disposed(by: self.disposeBag)
         }
@@ -293,10 +365,20 @@ class HealthSampleUploadManager {
     /// instead of on every hourly sequence.
     private func reportForwardOnlyOnce(forDataType dataType: HealthDataType, bound: BackfillLowerBound) {
         self.logDebugText(text: "Skipping \(dataType.keyName): no study join day, collection is forward-only")
-        guard self.forwardOnlyReported.insert(dataType).inserted else { return }
+        self.reportOnce(dataType: dataType, date: bound.date, origin: bound.origin)
+    }
+
+    /// `sensor_data_backfill_reach`, at most once per data type per origin per launch.
+    private func reportOnce(dataType: HealthDataType, date: Date, origin: BackfillLowerBound.Origin) {
+        guard self.reportedOnce.insert(dataType.keyName + "|" + origin.rawValue).inserted else { return }
+        self.report(dataType: dataType, date: date, origin: origin)
+    }
+
+    /// `sensor_data_backfill_reach`, unthrottled: for the events that trace actual data loss.
+    private func report(dataType: HealthDataType, date: Date, origin: BackfillLowerBound.Origin) {
         self.analytics.track(event: .sensorDataBackfillReach(sensor: "health_kit_" + dataType.keyName,
-                                                             reachedBack: ISO8601DateFormatter().string(from: bound.date),
-                                                             boundedBy: bound.origin.rawValue))
+                                                             reachedBack: ISO8601DateFormatter().string(from: date),
+                                                             boundedBy: origin.rawValue))
     }
 
     private func processNextUploader(forUploader uploader: HealthSampleUploader) {

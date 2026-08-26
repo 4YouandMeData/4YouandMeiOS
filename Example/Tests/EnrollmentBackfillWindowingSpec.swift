@@ -37,7 +37,11 @@
 //      jump, which suspends collection until real time catches up.
 //  - HealthSampleUploadManager.startUpload(forUploader:)
 //      the chunk walk skips a data type whose start date has reached the end of the window
-//      WITHOUT persisting a cursor, so a bound stuck in the future costs nothing permanently
+//      WITHOUT persisting a cursor, so a bound stuck in the future costs nothing permanently;
+//      and the FUAM-3945 payload-size defence: an oversize chunk is bisected by TIME, the
+//      recursion stops at `MinimumChunkDuration`, a floor-sized chunk that still fails is
+//      forfeited + reported without blocking the rest, the cursor never moves past a sub-window
+//      that did not succeed, and one chunk cannot burn more than `MaxChunkUploadAttempts`
 //      (HealthBackfillChunkWalkSpec, below).
 //  - SensorSampleUploadManager.splitRespectingPayloadLimit(_:maxBatchSize:maxBatchBytes:)
 //      bisection terminates on a single oversized record and preserves order.
@@ -1090,7 +1094,140 @@ class HealthBackfillChunkWalkSpec: QuickSpec {
             expect(storage.pendingUploadDataType).to(beNil())
             expect(storage.uploadStartDate(forDataType: dataType)).toAlways(equal(cursor), until: .milliseconds(200))
         }
+
+        // MARK: - FUAM-3945 payload-size defence
+        //
+        // The server caps one request at 10 MB and the walk cannot advance past a rejected chunk,
+        // so a single dense day used to stall the data type for ever (retried on every sequence,
+        // no telemetry). These drive the REAL walk — `startUpload(forUploader:)` — through the
+        // `uploadChunk` seam, because a simulator's HealthKit store cannot be seeded.
+        describe("oversize chunks") {
+
+            let hour: TimeInterval = 3600
+            let minute: TimeInterval = 60
+            // 90 minutes back: the head path (1-hour chunks), i.e. exactly two chunks —
+            // [cursor, cursor+1h) and [cursor+1h, now] — and no sliver in between.
+            var cursor: Date!
+            var attempted: [DateInterval]!
+
+            beforeEach {
+                clearance.enrollmentDate = Date().addingTimeInterval(-10 * day)
+                cursor = Date().addingTimeInterval(-90 * minute)
+                storage.setUploadStartDate(cursor, forDataType: dataType)
+                attempted = []
+            }
+
+            /// Runs the walk with `rule` deciding each chunk's outcome, recording every attempt.
+            func walk(_ rule: @escaping (DateInterval) -> HealthSampleUploaderError?) {
+                let manager = makeManager()
+                guard let uploader = manager.uploaders.first else {
+                    fail("no uploader for \(dataType.keyName)")
+                    return
+                }
+                manager.uploadChunk = { _, chunk, _, _ in
+                    attempted.append(chunk)
+                    if let error = rule(chunk) {
+                        return Single.error(error)
+                    }
+                    return Single.just(())
+                }
+                manager.startUpload(forUploader: uploader)
+            }
+
+            func reachEvents(boundedBy origin: BackfillLowerBound.Origin) -> [String] {
+                return analytics.trackedEvents.compactMap { event in
+                    guard case .sensorDataBackfillReach(let sensor, let reachedBack, let boundedBy) = event,
+                          boundedBy == origin.rawValue,
+                          sensor == "health_kit_" + dataType.keyName else { return nil }
+                    return reachedBack
+                }
+            }
+
+            it("bisects an oversize chunk by time and uploads both halves") {
+                walk { $0.duration >= hour ? .uploadPayloadTooLarge : nil }
+
+                // The 1-hour chunk, then its two halves in chronological order, then the tail
+                // (whose end is the walk's own `Date()`, hence not asserted).
+                expect(attempted.map { $0.start }).to(equal([cursor, cursor, cursor + 30 * minute, cursor + hour]))
+                expect(Array(attempted.map { $0.end }.dropLast()))
+                    .to(equal([cursor + hour, cursor + 30 * minute, cursor + hour]))
+                // Nothing was forfeited, and the walk ran to the end of the window.
+                expect(reachEvents(boundedBy: .gaveUp)).to(beEmpty())
+                expect(reachEvents(boundedBy: .bisected).count).to(equal(1))
+                expect(storage.uploadStartDate(forDataType: dataType)).to(equal(attempted.last?.end))
+            }
+
+            it("stops halving at the floor instead of recursing for ever") {
+                // Only the sub-windows anchored at the cursor fail, so the failing chain is a
+                // clean 1h -> 30min -> 15min descent with no wall-clock sliver in it.
+                walk { $0.start == cursor ? .uploadPayloadTooLarge : nil }
+
+                let failedSpans = attempted.filter { $0.start == cursor }.map { $0.duration }
+                expect(failedSpans).to(equal([hour, 30 * minute, 15 * minute]))
+                expect(Constants.HealthKit.MinimumChunkDuration).to(equal(15 * minute))
+                // One forfeit — the floor-sized sub-window — and nothing narrower was retried.
+                expect(reachEvents(boundedBy: .gaveUp).count).to(equal(1))
+            }
+
+            it("forfeits a floor-sized chunk that still fails, reports it, and keeps going") {
+                // Everything inside the first hour is impossible; the second chunk is fine.
+                walk { $0.start < cursor + hour ? .uploadPayloadTooLarge : nil }
+
+                // Four 15-minute forfeits cover the hour, each one reported (it IS data loss).
+                let forfeits = reachEvents(boundedBy: .gaveUp)
+                expect(forfeits.count).to(equal(4))
+                expect(Set(forfeits).count).to(equal(4))
+                // The rest of the data type kept flowing, and the cursor is past the whole window.
+                let tail = attempted.filter { $0.start >= cursor + hour }
+                expect(tail.count).to(equal(1))
+                expect(storage.uploadStartDate(forDataType: dataType)).to(equal(tail.first?.end))
+            }
+
+            it("never advances the cursor past a sub-window that did not succeed") {
+                // First half uploads, second half dies of a server error: the cursor must stop at
+                // the midpoint, never at the end of the parent chunk.
+                walk { chunk in
+                    if chunk.duration >= hour { return .uploadPayloadTooLarge }
+                    if chunk.start == cursor + 30 * minute { return .uploadServerError(underlyingError: TestError.generic) }
+                    return nil
+                }
+
+                expect(storage.uploadStartDate(forDataType: dataType)).to(equal(cursor + 30 * minute))
+            }
+
+            it("spends a bounded attempt budget on one chunk and leaves its cursor untouched") {
+                // Connectivity errors used to retry the same chunk in an unbounded tight loop.
+                walk { $0.start == cursor + hour ? .uploadConnectivityError : nil }
+
+                // The literal, deliberately NOT `Constants.HealthKit.MaxChunkUploadAttempts`:
+                // asserting against the constant would move with it and check nothing.
+                let retried = attempted.filter { $0.start == cursor + hour }
+                expect(retried.count).to(equal(5))
+                expect(Constants.HealthKit.MaxChunkUploadAttempts).to(equal(5))
+                expect(reachEvents(boundedBy: .attemptsExhausted).count).to(equal(1))
+                // Cursor left at the end of the last chunk that DID succeed, so the next
+                // sequence retries this one rather than skipping it.
+                expect(storage.uploadStartDate(forDataType: dataType)).to(equal(cursor + hour))
+            }
+
+            it("leaves a normal-sized chunk alone, and an empty chunk does not truncate the walk") {
+                // Every chunk succeeds with nothing to upload — the ordinary case, and the shape
+                // of the Apple `&&` hazard: an empty batch must not end the walk.
+                walk { _ in nil }
+
+                expect(attempted.map { $0.start }).to(equal([cursor, cursor + hour]))
+                expect(attempted.first?.end).to(equal(cursor + hour))
+                expect(storage.uploadStartDate(forDataType: dataType)).to(equal(attempted.last?.end))
+                expect(reachEvents(boundedBy: .bisected)).to(beEmpty())
+                expect(reachEvents(boundedBy: .gaveUp)).to(beEmpty())
+                expect(reachEvents(boundedBy: .attemptsExhausted)).to(beEmpty())
+            }
+        }
     }
+}
+
+private enum TestError: Error {
+    case generic
 }
 
 private final class FakeHealthStorage: HealthSampleUploadManagerStorage, HealthSampleUploaderStorage {

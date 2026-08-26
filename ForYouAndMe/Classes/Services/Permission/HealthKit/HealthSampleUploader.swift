@@ -23,6 +23,9 @@ enum HealthSampleUploaderError: Error {
     case fetchDataError(underlyingError: Error)
     case uploadServerError(underlyingError: Error)
     case uploadConnectivityError
+    /// FUAM-3945: the chunk's payload is over the server's request cap (pre-flight estimate, or
+    /// an HTTP 413). The caller must halve the chunk's TIME window and retry, never retry as is.
+    case uploadPayloadTooLarge
 }
 
 #if HEALTHKIT
@@ -116,8 +119,21 @@ class HealthSampleUploader {
                 return Single.just(result.anchor)
             }
 
-            return networkDelegate.uploadHealthNetworkData(samples.getNetworkData(forDataType: self.sampleDataType),
-                                                           source: source)
+            let networkData = samples.getNetworkData(forDataType: self.sampleDataType)
+
+            // FUAM-3945: pre-flight size gate. The server rejects a request above
+            // `MAX_PAYLOAD_SIZE` (10 MB) and the chunk walk cannot advance past a rejected
+            // chunk, so one dense day of a high-frequency type (watch heart rate) used to stall
+            // the whole data type for ever. Refusing to send here turns that into a
+            // deterministic time bisection in `HealthSampleUploadManager`.
+            if let payloadBytes = Self.serializedSize(of: networkData),
+               payloadBytes > Constants.HealthKit.MaxUploadPayloadBytes {
+                self.logDebugText(text: "Payload of \(payloadBytes) bytes from \(startDate) to \(endDate) "
+                                  + "is over the \(Constants.HealthKit.MaxUploadPayloadBytes) byte threshold")
+                return Single.error(HealthSampleUploaderError.uploadPayloadTooLarge)
+            }
+
+            return networkDelegate.uploadHealthNetworkData(networkData, source: source)
                 .map { result.anchor }
         }
         .do(onSuccess: { anchor in
@@ -126,6 +142,18 @@ class HealthSampleUploader {
             }
         })
         .toVoid()
+    }
+
+    /// Serialized JSON size of an upload payload — the request body is this dictionary inside a
+    /// small `integration_data` envelope, so it is a faithful measure. `nil` when the payload
+    /// cannot be serialized at all, in which case the upload is attempted anyway: a rejected
+    /// request is recoverable, a chunk skipped on a guess is not.
+    // ponytail: serializes the payload once more than strictly needed (Alamofire encodes it
+    // again) — acceptable against a silent per-type stall; revisit only if profiling complains.
+    static func serializedSize(of networkData: HealthNetworkData) -> Int? {
+        guard JSONSerialization.isValidJSONObject(networkData),
+              let data = try? JSONSerialization.data(withJSONObject: networkData) else { return nil }
+        return data.count
     }
 
     private func logDebugText(text: String) {
