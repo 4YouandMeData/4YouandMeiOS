@@ -292,6 +292,13 @@ class FeedListManager: NSObject {
             self.tableView.refreshControl = refreshControl
         }
         
+        // FUAM-3990: reload when the app returns to foreground, so the list doesn't
+        // show stale content (e.g. an outdated empty state) after a background stay.
+        NotificationCenter.default.addObserver(self,
+                                               selector: #selector(self.applicationWillEnterForeground),
+                                               name: UIApplication.willEnterForegroundNotification,
+                                               object: nil)
+        
         // Error View
         delegate.presenter.view.addSubview(self.errorView)
         self.errorView.autoPinEdge(.leading, to: .leading, of: self.tableView)
@@ -670,6 +677,13 @@ class FeedListManager: NSObject {
     // MARK: - Actions
 
     @objc private func refreshControlPulled() {
+        self.reloadItems()
+    }
+    
+    @objc private func applicationWillEnterForeground() {
+        // FUAM-3990: refresh only if this screen is currently on screen (non-selected
+        // tabs have their view out of the window hierarchy) and no request is in flight.
+        guard self.tableView.window != nil, self.currentRequestDisposable == nil else { return }
         self.reloadItems()
     }
 }
