@@ -13,6 +13,12 @@ import Foundation
 import SensorKit
 import CoreMotion
 
+/// `SRFetchResult.timestamp` is an `SRAbsoluteTime` (seconds since the 2001 reference date).
+private func dateFromSRAbsoluteTime(_ srTime: SRAbsoluteTime) -> Date {
+    let cf = srTime.toCFAbsoluteTime()
+    return Date(timeIntervalSinceReferenceDate: cf)
+}
+
 final class PedometerMapper: NSObject, SensorSampleMapper {
 
     // This mapper handles SensorKit pedometer stream
@@ -57,15 +63,22 @@ extension PedometerMapper: SRSensorReaderDelegate {
     func sensorReader(_ reader: SRSensorReader,
                       fetching fetchRequest: SRFetchRequest,
                       didFetchResult result: SRFetchResult<AnyObject>) -> Bool {
+        // FUAM-4013: `recorded_at` is `SRFetchResult.timestamp` — WHEN SensorKit wrote the
+        // record. The backend's semantic anchor (`ClientPush::SemanticAnchor`) reads it as
+        // `min(records[].recorded_at)`; without it the anchor silently falls back to upload
+        // time and re-uploads scatter into new rows instead of de-duplicating. Same
+        // fractional-seconds ISO8601 encoding as the `t` key next to it.
+        let recordedAtISO = ISO8601Strategy.encode(dateFromSRAbsoluteTime(result.timestamp))
+
         // result.sample can be a CMSensorDataList or a single CMPedometerData
         if let list = result.sample as? CMSensorDataList {
             // Iterate NSFastEnumeration via wrapper (no direct Sequence conformance)
             for element in FastEnumerationSequence(base: list) {
                 guard let pedo = element as? CMPedometerData else { continue }
-                collected.append(Self.mapPedometerSample(pedo))
+                collected.append(Self.mapPedometerSample(pedo, recordedAtISO: recordedAtISO))
             }
         } else if let pedo = result.sample as? CMPedometerData {
-            collected.append(Self.mapPedometerSample(pedo))
+            collected.append(Self.mapPedometerSample(pedo, recordedAtISO: recordedAtISO))
         }
         return true // continue fetching
     }
@@ -90,7 +103,7 @@ extension PedometerMapper: SRSensorReaderDelegate {
     // MARK: - Mapping
 
     /// Compact JSON for a CMPedometerData sample
-    private static func mapPedometerSample(_ d: CMPedometerData) -> [String: Any] {
+    private static func mapPedometerSample(_ d: CMPedometerData, recordedAtISO: String) -> [String: Any] {
         // Units (CoreMotion):
         // - numberOfSteps: count
         // - distance: meters (NSNumber?)
@@ -101,7 +114,10 @@ extension PedometerMapper: SRSensorReaderDelegate {
         var rec: [String: Any] = [
             "start_ms": Int(d.startDate.timeIntervalSince1970 * 1000),
             "end_ms":   Int(d.endDate.timeIntervalSince1970 * 1000),
-            "steps":    d.numberOfSteps.intValue
+            "steps":    d.numberOfSteps.intValue,
+            // Write time of the fetch result (the backend's semantic anchor); the measurement
+            // time the consent gate reads stays `start_ms`.
+            "recorded_at": recordedAtISO
         ]
         if let dist = d.distance?.doubleValue { rec["distance_m"] = dist }
         if let pace = d.currentPace?.doubleValue { rec["current_pace_s_per_m"] = pace }

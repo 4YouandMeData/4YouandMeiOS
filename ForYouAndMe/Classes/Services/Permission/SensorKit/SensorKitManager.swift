@@ -50,7 +50,10 @@ protocol SensorKitManagerClearanceDelegate: SensorSampleUploadManagerClearanceDe
 /// Primary entry-point for SensorKit in the app.
 /// - Asks permissions for configured sensors
 /// - Coordinates background/foreground upload via SensorSampleUploadManager
-final class SensorKitManager: SensorKitService {
+/// `NSObject` because the manager is the delegate of the RECORDING readers
+/// (`SRSensorReaderDelegate` is `@objc`): a `startRecording()` that fails is otherwise
+/// indistinguishable from one that succeeded (FUAM-3945 round 7, F3).
+final class SensorKitManager: NSObject, SensorKitService {
 
     // MARK: State
 
@@ -85,6 +88,10 @@ final class SensorKitManager: SensorKitService {
     
     /// Keep one reader per sensor so we can start/stop recording idempotently.
     private var recordingReaders: [SRSensor: SRSensorReader] = [:]
+
+    /// Sensors whose `startRecording()` failure has already been reported this launch, so a
+    /// permanently failing sensor does not emit an event on every `didBecomeActive`.
+    private var recordingFailureReported: Set<SRSensor> = []
 
     // MARK: Dependencies
 
@@ -121,6 +128,8 @@ final class SensorKitManager: SensorKitService {
             analytics: analyticsService,
             mappers: mappers
         )
+
+        super.init()
     }
 
     // MARK: - SensorKitService
@@ -138,7 +147,9 @@ final class SensorKitManager: SensorKitService {
         .deviceUsageReport,
         .keyboardMetrics,
         .phoneUsageReport,
-        .accelerometer,
+        .pedometerData,
+        .ambientLightSensor,
+        .ambientPressure,
         .visits
     ]
 
@@ -273,10 +284,14 @@ final class SensorKitManager: SensorKitService {
         guard self.clearanceDelegate?.sensorManagerCanRun ?? false else { return }
 
         for sensor in self.readSensors {
-            // Reuse or create the reader for this sensor
+            // Reuse or create the reader for this sensor. The delegate is what makes a failed
+            // start visible: `startRecording()` reports asynchronously through
+            // `sensorReader(_:startRecordingFailedWithError:)` and returns nothing, so a reader
+            // with no delegate cannot tell success from failure (FUAM-3945 round 7, F3).
             let reader: SRSensorReader = {
                 if let reader = recordingReaders[sensor] { return reader }
                 let reader = SRSensorReader(sensor: sensor)
+                reader.delegate = self
                 recordingReaders[sensor] = reader
                 return reader
             }()
@@ -372,6 +387,30 @@ final class SensorKitManager: SensorKitService {
 
 // MARK: - InitializableService (same pattern as HealthManager)
 
+// MARK: - SRSensorReaderDelegate (recording only)
+
+/// The manager is the delegate of the RECORDING readers only; every FETCH reader belongs to its
+/// mapper, which is its own delegate. The single callback implemented here is the one that used
+/// to be dropped on the floor: a `startRecording()` that never starts (missing entitlement,
+/// system-wide collection off, an OS-side failure) looked exactly like a healthy sensor that
+/// simply had no data, and the pipeline reported nothing for months. Retry behaviour is
+/// unchanged — `didBecomeActive` already calls `ensureRecordingStarted()` again; this is
+/// visibility only (FUAM-3945 round 7, F3).
+extension SensorKitManager: SRSensorReaderDelegate {
+
+    func sensorReader(_ reader: SRSensorReader, startRecordingFailedWithError error: Error) {
+        let sensor = reader.sensor
+        #if DEBUG
+        print("SensorKitManager - startRecording failed for \(sensor.rawValue): \(error)")
+        #endif
+        // Once per sensor per launch: the retry loop would otherwise emit on every foreground.
+        guard self.recordingFailureReported.insert(sensor).inserted else { return }
+        let nsError = error as NSError
+        self.analyticsService.track(event: .sensorRecordingStartFailed(sensor: sensor.shortSubsource,
+                                                                       error: "\(nsError.domain)/\(nsError.code)"))
+    }
+}
+
 extension SensorKitManager: InitializableService {
     func initialize() -> Single<()> {
         self.isInitialized = true
@@ -391,24 +430,23 @@ extension Constants {
         static var RequestedSensors: Set<SRSensor> = defaultRequestedSensors()
 
         // MARK: - Defaults
+        /// The sensors permission is requested for. `Services` intersects this with the sensors
+        /// that actually have a mapper, so a sensor listed here without a mapper is never asked
+        /// for; keeping the two lists in step is what makes the enabled set readable in one place.
+        /// FUAM-3945 round 7: `.accelerometer` and `.rotationRate` are deliberately absent (raw
+        /// high-rate streams, see the mapper registry in `Services.swift`); pedometer and the two
+        /// ambient sensors are requested — each authorization is asked for individually, so a
+        /// sensor the host is not entitled to fails on its own and does not block the others.
         private static func defaultRequestedSensors() -> Set<SRSensor> {
             // Add here the sensors used by your study
-            if #available(iOS 16.4, *) {
-                return [.accelerometer,
+            return [.pedometerData,
+                    .ambientLightSensor,
+                    .ambientPressure,
                     .visits,
                     .phoneUsageReport,
                     .deviceUsageReport,
                     .messagesUsageReport,
                     .keyboardMetrics]
-            } else {
-                // Fallback on earlier versions
-                return [.accelerometer,
-                        .visits,
-                        .phoneUsageReport,
-                        .deviceUsageReport,
-                        .messagesUsageReport,
-                        .keyboardMetrics]
-            }
         }
 
         // MARK: - Optional: server-driven override
@@ -420,6 +458,8 @@ extension Constants {
                 switch id.lowercased() {
                 case "accelerometer": set.insert(.accelerometer)
                 case "ambient_light", "ambientlight": set.insert(.ambientLightSensor)
+                case "ambient_pressure", "ambientpressure": set.insert(.ambientPressure)
+                case "pedometer", "pedometer_data", "pedometerdata": set.insert(.pedometerData)
                 case "rotation_rate", "rotationrate": set.insert(.rotationRate)
                 case "device_usage", "deviceusage": set.insert(.deviceUsageReport)
                 case "messages_usage", "messagesusage": set.insert(.messagesUsageReport)

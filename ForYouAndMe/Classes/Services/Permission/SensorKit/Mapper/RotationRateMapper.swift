@@ -13,6 +13,12 @@ import Foundation
 import SensorKit
 import CoreMotion
 
+/// `SRFetchResult.timestamp` is an `SRAbsoluteTime` (seconds since the 2001 reference date).
+private func dateFromSRAbsoluteTime(_ srTime: SRAbsoluteTime) -> Date {
+    let cf = srTime.toCFAbsoluteTime()
+    return Date(timeIntervalSinceReferenceDate: cf)
+}
+
 /// Maps SensorKit rotation-rate (gyroscope) samples into JSON-ready records.
 final class RotationRateMapper: NSObject, SensorSampleMapper {
 
@@ -59,16 +65,23 @@ extension RotationRateMapper: SRSensorReaderDelegate {
                       fetching fetchRequest: SRFetchRequest,
                       didFetchResult result: SRFetchResult<AnyObject>) -> Bool {
 
+        // FUAM-4013: `recorded_at` is `SRFetchResult.timestamp` — WHEN SensorKit wrote the
+        // record. The backend's semantic anchor (`ClientPush::SemanticAnchor`) reads it as
+        // `min(records[].recorded_at)`; without it the anchor silently falls back to upload
+        // time and re-uploads scatter into new rows instead of de-duplicating. Same
+        // fractional-seconds ISO8601 encoding as the `t` key next to it.
+        let recordedAtISO = ISO8601Strategy.encode(dateFromSRAbsoluteTime(result.timestamp))
+
         // Typical containers: CMSensorDataList or single sample object
         if let list = result.sample as? CMSensorDataList {
             for element in FastEnumerationSequence(base: list) {
                 guard let obj = element as? NSObject else { continue }
-                if let rec = Self.mapRotationSample(obj) {
+                if let rec = Self.mapRotationSample(obj, recordedAtISO: recordedAtISO) {
                     collected.append(rec)
                 }
             }
         } else if let obj = result.sample as? NSObject {
-            if let rec = Self.mapRotationSample(obj) {
+            if let rec = Self.mapRotationSample(obj, recordedAtISO: recordedAtISO) {
                 collected.append(rec)
             }
         }
@@ -96,35 +109,77 @@ extension RotationRateMapper: SRSensorReaderDelegate {
 
     /// Try to extract x/y/z (rad/s) + timestamp from a gyroscope sample via KVC.
     /// We keep it robust across SDK versions by checking multiple key names.
-    private static func mapRotationSample(_ obj: NSObject) -> [String: Any]? {
+    /// Internal (not private) so the record shape can be unit-tested without an
+    /// `SRFetchResult`, which cannot be constructed outside SensorKit.
+    static func mapRotationSample(_ obj: NSObject, recordedAtISO: String) -> [String: Any]? {
         // Timestamp: prefer 'startDate' then 'timestamp'
-        let ts: Date = (obj.value(forKey: "startDate") as? Date)
-                    ?? (obj.value(forKey: "timestamp") as? Date)
-                    ?? Date.distantPast
+        let ts = Self.sampleDate(obj, keys: ["startDate", "timestamp"])
 
         // Rotation rate keys:
         // - Many streams expose plain "x","y","z"
         // - Some expose "rotationRateX/Y/Z"
         // - Some put a nested object "rotationRate" with x/y/z inside
-        let x = (obj.value(forKey: "x") as? Double)
-             ?? (obj.value(forKey: "rotationRateX") as? Double)
-             ?? (obj.value(forKeyPath: "rotationRate.x") as? Double)
-
-        let y = (obj.value(forKey: "y") as? Double)
-             ?? (obj.value(forKey: "rotationRateY") as? Double)
-             ?? (obj.value(forKeyPath: "rotationRate.y") as? Double)
-
-        let z = (obj.value(forKey: "z") as? Double)
-             ?? (obj.value(forKey: "rotationRateZ") as? Double)
-             ?? (obj.value(forKeyPath: "rotationRate.z") as? Double)
+        let x = Self.axis(obj, "x", "rotationRateX", "rotationRate.x")
+        let y = Self.axis(obj, "y", "rotationRateY", "rotationRate.y")
+        let z = Self.axis(obj, "z", "rotationRateZ", "rotationRate.z")
 
         guard let gx = x, let gy = y, let gz = z else { return nil }
 
         return [
             "t": ISO8601Strategy.encode(ts),
+            "recorded_at": recordedAtISO,
             "x": gx, "y": gy, "z": gz,
             "unit": "rad_per_s",
             "device_kind": "iphone"
         ]
+    }
+
+    /// One rotation axis, tried as a flat key, a prefixed key, then a nested key path.
+    private static func axis(_ obj: NSObject, _ key: String, _ prefixed: String, _ path: String) -> Double? {
+        return (Self.valueIfResponds(obj, key) as? NSNumber)?.doubleValue
+            ?? (Self.valueIfResponds(obj, prefixed) as? NSNumber)?.doubleValue
+            ?? (Self.valuePathIfResponds(obj, path) as? NSNumber)?.doubleValue
+    }
+
+    // MARK: - Safe KVC
+    //
+    // FUAM-3945 round 7: these mappers PROBE speculative key names, and a bare
+    // `value(forKey:)` on an object that does not implement the key raises
+    // `NSUnknownKeyException` — an Objective-C exception, uncatchable from Swift, i.e. a crash.
+    // The mappers that were already enabled all guard with `responds(to:)`
+    // (`DeviceUsageReportMapper.valueIfResponds` and friends); these three did not, which is
+    // why enabling them without this would have crashed on the first fetch.
+
+    static func valueIfResponds(_ obj: NSObject, _ key: String) -> Any? {
+        guard obj.responds(to: NSSelectorFromString(key)) else { return nil }
+        return obj.value(forKey: key)
+    }
+
+    /// Safe `value(forKeyPath:)`: every component is probed before it is followed.
+    static func valuePathIfResponds(_ obj: NSObject, _ keyPath: String) -> Any? {
+        var current: Any? = obj
+        for component in keyPath.split(separator: ".").map(String.init) {
+            guard let object = current as? NSObject,
+                  let next = Self.valueIfResponds(object, component) else { return nil }
+            current = next
+        }
+        return current
+    }
+
+    /// The measurement instant of a sample. SensorKit exposes it either as a `Date` or as an
+    /// `SRAbsoluteTime` (a `double` of CFAbsoluteTime seconds, which KVC hands back as an
+    /// `NSNumber`). A numeric value landing in the future is not a CFAbsoluteTime we understand,
+    /// so it is refused rather than guessed at — `distantPast` fails the consent gate, which is
+    /// the safe direction.
+    static func sampleDate(_ obj: NSObject, keys: [String]) -> Date {
+        for key in keys {
+            let value = Self.valueIfResponds(obj, key)
+            if let date = value as? Date { return date }
+            if let number = value as? NSNumber {
+                let candidate = Date(timeIntervalSinceReferenceDate: number.doubleValue)
+                if candidate.timeIntervalSinceNow < 24 * 60 * 60 { return candidate }
+            }
+        }
+        return Date.distantPast
     }
 }

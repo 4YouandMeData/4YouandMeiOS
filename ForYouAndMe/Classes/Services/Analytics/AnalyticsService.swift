@@ -61,9 +61,11 @@ enum AnalyticsParameter: String {
     case sensor
     case reachedBack = "reached_back"
     case boundedBy = "bounded_by"
-    // FUAM-3945. Forward clock-jump diagnostic attributes.
+    // FUAM-3945 / FUAM-3964. Device-vs-server clock diagnostic attributes.
     case clockMark = "clock_mark"
     case deviceNow = "device_now"
+    // FUAM-3945 round 7. SensorKit recording-start failure attributes.
+    case sensorError = "error"
 }
 
 enum AnalyticsScreens: String {
@@ -153,11 +155,19 @@ enum AnalyticsEvent {
     // resume is not a backfill and would drown the actionable events.
     case sensorDataBackfillReach(sensor: String, reachedBack: String, boundedBy: String)
 
-    // FUAM-3945. Emitted once per launch when `BackfillClock`'s high-water mark is more than a
-    // day ahead of the device clock: the clock jumped forward, so the backfill lower bound is
-    // pinned in the future and collection is suspended until real time catches up. `mark` and
-    // `deviceNow` are ISO8601, so the remaining outage is (mark - deviceNow).
+    // FUAM-3945 / FUAM-3964. Emitted once per launch when the device clock is more than a day
+    // away from the server's (the offset learnt from the `Date` response header, see
+    // `ServerClock`). `mark` is server time, `deviceNow` is device time, both ISO8601, so the
+    // signed drift is (mark - deviceNow) — positive when the device is behind. The event name is
+    // kept from the superseded `BackfillClock` diagnostic it replaces; the parameters now mean
+    // device-vs-server rather than device-vs-high-water-mark.
     case sensorDataClockAhead(mark: String, deviceNow: String)
+
+    // FUAM-3945 round 7. A SensorKit reader's `startRecording()` failed: that sensor records
+    // nothing until the next successful start, and without this event the silence is
+    // indistinguishable from a participant with no data. Once per sensor per launch. `error` is
+    // the NSError domain/code — never the localized description (locale-dependent, unaggregatable).
+    case sensorRecordingStartFailed(sensor: String, error: String)
 
     // Errors
     case serverError(apiError: ApiError)

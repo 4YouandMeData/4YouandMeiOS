@@ -120,28 +120,38 @@ class Services {
         var sensorKitService: SensorKitManager?
         if NSClassFromString("SRSensorReader") != nil {
             var skMappers: [SRSensor: SensorSampleMapper] = [:]
+            // FUAM-3945 round 7 — enabled sensor set.
+            // `.accelerometer` and `.rotationRate` are DISABLED: raw high-rate motion streams.
+            // The volume kills the pipeline (24h windows x archive-rate samples, the whole window
+            // buffered in memory before batching), so re-enabling either one first needs
+            // minute-scale windows, a per-window sample cap and a real on-disk queue store.
+            // `.pedometerData`, `.ambientLightSensor` and `.ambientPressure` are low-rate and are
+            // enabled; they will simply never authorise on a host whose entitlement does not
+            // cover them (Our Transitions production entitles `pedometer` only), and an
+            // unauthorised sensor is skipped by `fetchPendingWindows`.
             if #available(iOS 16.4, *) {
                 skMappers = [
-                    .accelerometer: AccelerometerMapper(),
+                    //            .accelerometer: AccelerometerMapper(),
                     //            .mediaEvents: MediaEventsMapper(),
                     //            .rotationRate: RotationRateMapper(),
-                    //            .ambientLightSensor: AmbientLightMapper(),
-                    //            .ambientPressure: AmbientPressureMapper(),
-                        .visits: VisitsMapper(),
-                    //            .pedometerData: PedometerMapper(),
+                    .ambientLightSensor: AmbientLightMapper(),
+                    .ambientPressure: AmbientPressureMapper(),
+                    .visits: VisitsMapper(),
+                    .pedometerData: PedometerMapper(),
                     .deviceUsageReport: DeviceUsageReportMapper(),
                     .phoneUsageReport: PhoneUsageReportMapper(),
                     .messagesUsageReport: MessagesUsageReportMapper(),
                     .keyboardMetrics: KeyboardMetricsMapper()
                 ]
             } else {
+                // Same set as above, minus `.mediaEvents` (iOS 16.4+ only).
                 skMappers = [
-                    .accelerometer: AccelerometerMapper(),
+                    //            .accelerometer: AccelerometerMapper(),
                     //            .rotationRate: RotationRateMapper(),
-                    //            .ambientLightSensor: AmbientLightMapper(),
-                    //            .ambientPressure: AmbientPressureMapper(),
-                        .visits: VisitsMapper(),
-                    //            .pedometerData: PedometerMapper(),
+                    .ambientLightSensor: AmbientLightMapper(),
+                    .ambientPressure: AmbientPressureMapper(),
+                    .visits: VisitsMapper(),
+                    .pedometerData: PedometerMapper(),
                     .deviceUsageReport: DeviceUsageReportMapper(),
                     .phoneUsageReport: PhoneUsageReportMapper(),
                     .messagesUsageReport: MessagesUsageReportMapper(),

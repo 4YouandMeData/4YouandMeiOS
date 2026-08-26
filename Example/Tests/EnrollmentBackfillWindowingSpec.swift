@@ -15,9 +15,10 @@
 //  - BackfillLowerBound.resolve(joinDay:now:)
 //      the single join-day -> lower-bound policy shared by both subsystems: join day, floored
 //      at 365 days, forward-only when the join day is unknown.
-//  - SensorSampleUploadManager.buildWindowPlan(...)
-//      first window never opens before the bound; upper bound honours the 24h embargo
-//      (day-aligned for report sensors); empty plan when the bound has reached it.
+//  - SensorSampleUploadManager.buildWindowPlan(now:joinDay:cursor:embargo:)
+//      round 7: complete UTC calendar days for EVERY sensor, the one-time migration window from
+//      an unaligned cursor, a plan that never depends on the device timezone, the first window
+//      never opening before the bound, and an empty plan when the bound has reached the cutoff.
 //  - SensorSampleUploadManager.dropPreBoundRecords(_:lowerBound:windowStart:sensor:)
 //      hard consent gate across the heterogeneous timestamp keys. `recorded_at` is a WRITE time
 //      for every sensor and is never read as a measurement time; each sensor's real measurement
@@ -31,10 +32,15 @@
 //  - BackfillLowerBound.healthQuery(storedCursor:)
 //      the three HealthKit enforcement points: forward-only skip, cursor clamped to the bound,
 //      and the non-optional minimumSampleDate handed to the uploader.
-//  - BackfillClock.monotonicNow(current:defaults:analytics:)
-//      clock-rollback fail-safe for the join-day derivation, the throttled persistence of the
-//      high-water mark, and the `sensor_data_clock_ahead` diagnostic for the opposite (forward)
-//      jump, which suspends collection until real time catches up.
+//  - ServerClock.record(headerDate:deviceNow:defaults:) / .now(current:defaults:analytics:)
+//      FUAM-3964: the offset learnt from the backend's `Date` response header, its throttled
+//      persistence, the fallback to the device clock when nothing was ever learnt, the join day
+//      holding still through a rollback AND a forward jump, and the repurposed
+//      `sensor_data_clock_ahead` divergence diagnostic.
+//  - SensorSampleUploadManager.buildWindowPlan(for:now:) / HealthSampleUploadManager.startUpload
+//      the FUAM-3964 acceptance test: a device clock in the future cannot plan a window — and so
+//      cannot write a cursor — past server time (SensorKitServerTimeCapSpec /
+//      HealthBackfillChunkWalkSpec).
 //  - HealthSampleUploadManager.startUpload(forUploader:)
 //      the chunk walk skips a data type whose start date has reached the end of the window
 //      WITHOUT persisting a cursor, so a bound stuck in the future costs nothing permanently;
@@ -45,6 +51,12 @@
 //      (HealthBackfillChunkWalkSpec, below).
 //  - SensorSampleUploadManager.splitRespectingPayloadLimit(_:maxBatchSize:maxBatchBytes:)
 //      bisection terminates on a single oversized record and preserves order.
+//  - the newly enabled mappers' `recorded_at` (SensorRecordedAtSpec): the backend's semantic
+//      anchor, in the fractional-seconds encoding the sibling `t` key already uses, without
+//      moving what the consent gate reads.
+//  - SensorKitManager.sensorReader(_:startRecordingFailedWithError:) (SensorRecordingFailureSpec):
+//      a failed `startRecording()` becomes `sensor_recording_start_failed`, once per sensor
+//      per launch.
 //
 
 import Quick
@@ -181,31 +193,31 @@ class EnrollmentBackfillWindowingSpec: QuickSpec {
             }
         }
 
-        describe("SensorSampleUploadManager.buildWindowPlan") {
+        describe("SensorSampleUploadManager.buildWindowPlan (complete UTC days)") {
 
-            func plan(dayAggregated: Bool,
-                      joinDay: Date?,
-                      cursor: Date?) -> SensorSampleUploadManager.WindowPlan {
-                return SensorSampleUploadManager.buildWindowPlan(dayAggregated: dayAggregated,
-                                                                 now: now,
+            func plan(joinDay: Date?, cursor: Date?, now planningNow: Date = now) -> SensorSampleUploadManager.WindowPlan {
+                return SensorSampleUploadManager.buildWindowPlan(now: planningNow,
                                                                  joinDay: joinDay,
                                                                  cursor: cursor,
-                                                                 embargo: embargo,
-                                                                 calendar: calendar)
+                                                                 embargo: embargo)
             }
 
-            context("continuous sensor") {
+            func utcMidnight(_ date: Date) -> Date {
+                return SensorSampleUploadManager.utcDayStart(date)
+            }
+
+            context("the lower bound (unchanged by round 7)") {
 
                 it("opens at the join day when it is within the 365-day cap") {
-                    let joinDay = now.addingTimeInterval(-200 * day)
-                    let result = plan(dayAggregated: false, joinDay: joinDay, cursor: nil)
+                    let joinDay = utcMidnight(now.addingTimeInterval(-200 * day))
+                    let result = plan(joinDay: joinDay, cursor: nil)
                     expect(result.lowerBoundOrigin).to(equal(BackfillLowerBound.Origin.joinDate))
                     expect(result.lowerBound).to(equal(joinDay))
                     expect(result.windows.first?.start).to(equal(joinDay))
                 }
 
-                it("opens at exactly now - 365 days for a join day 500 days ago, never earlier") {
-                    let result = plan(dayAggregated: false, joinDay: now.addingTimeInterval(-500 * day), cursor: nil)
+                it("never reaches back beyond the 365-day cap for a join day 500 days ago") {
+                    let result = plan(joinDay: now.addingTimeInterval(-500 * day), cursor: nil)
                     expect(result.lowerBoundOrigin).to(equal(BackfillLowerBound.Origin.hardCap365d))
                     expect(result.windows.first?.start).to(equal(now.addingTimeInterval(-hardCap)))
                     for window in result.windows {
@@ -213,73 +225,125 @@ class EnrollmentBackfillWindowingSpec: QuickSpec {
                     }
                 }
 
-                it("never ends past the 24h embargo cutoff") {
-                    let result = plan(dayAggregated: false, joinDay: now.addingTimeInterval(-3 * day), cursor: nil)
-                    expect(result.windows.last?.end).to(equal(now.addingTimeInterval(-embargo)))
-                    for window in result.windows {
-                        expect(window.end.timeIntervalSince(now)).to(beLessThanOrEqualTo(-embargo))
-                    }
-                }
-
                 it("resumes from a cursor ahead of the bound instead of re-uploading") {
                     let cursor = now.addingTimeInterval(-2 * day)
-                    let result = plan(dayAggregated: false, joinDay: now.addingTimeInterval(-10 * day), cursor: cursor)
+                    let result = plan(joinDay: now.addingTimeInterval(-10 * day), cursor: cursor)
                     expect(result.lowerBoundOrigin).to(equal(BackfillLowerBound.Origin.cursor))
                     expect(result.lowerBound).to(equal(cursor))
                     expect(result.windows.first?.start).to(equal(cursor))
                 }
 
                 it("ignores a stale cursor behind the bound") {
-                    let joinDay = now.addingTimeInterval(-3 * day)
-                    let cursor = now.addingTimeInterval(-6 * day)
-                    let result = plan(dayAggregated: false, joinDay: joinDay, cursor: cursor)
+                    let joinDay = utcMidnight(now.addingTimeInterval(-3 * day))
+                    let result = plan(joinDay: joinDay, cursor: now.addingTimeInterval(-6 * day))
                     expect(result.lowerBoundOrigin).to(equal(BackfillLowerBound.Origin.joinDate))
                     expect(result.windows.first?.start).to(equal(joinDay))
                 }
 
                 it("returns an empty plan when the bound has reached the embargo cutoff") {
-                    let result = plan(dayAggregated: false, joinDay: now.addingTimeInterval(-hour), cursor: nil)
+                    let result = plan(joinDay: now.addingTimeInterval(-hour), cursor: nil)
                     expect(result.windows).to(beEmpty())
                 }
             }
 
-            context("day-aggregated (report) sensor") {
+            context("UTC-day alignment (round 7: one scheme for every sensor)") {
 
-                it("never opens the first day-aligned window before a mid-day join day") {
-                    // Review fix #2: startOfDay(from) used to rewind below the bound.
-                    let joinDay = now.addingTimeInterval(-3 * day).addingTimeInterval(3.5 * hour)
-                    let result = plan(dayAggregated: true, joinDay: joinDay, cursor: nil)
-                    expect(result.windows.first?.start).to(equal(joinDay))
+                it("cuts whole UTC days, contiguously, for an aligned bound") {
+                    let joinDay = utcMidnight(now.addingTimeInterval(-5 * day))
+                    let result = plan(joinDay: joinDay, cursor: nil)
+                    expect(result.windows).toNot(beEmpty())
                     for window in result.windows {
-                        expect(window.start.timeIntervalSince(joinDay)).to(beGreaterThanOrEqualTo(0))
+                        expect(window.start).to(equal(utcMidnight(window.start)))
+                        expect(window.duration).to(equal(day))
+                    }
+                    for (previous, next) in zip(result.windows, result.windows.dropFirst()) {
+                        expect(previous.end).to(equal(next.start))
                     }
                 }
 
-                it("day-aligns the resume point of a mid-day cursor without passing the bound") {
-                    let joinDay = now.addingTimeInterval(-10 * day)
-                    let cursor = now.addingTimeInterval(-2 * day).addingTimeInterval(5 * hour)
-                    let result = plan(dayAggregated: true, joinDay: joinDay, cursor: cursor)
-                    expect(result.windows.first?.start).to(equal(max(calendar.startOfDay(for: cursor), joinDay)))
+                it("plans complete days only: no window ever ends past the embargo cutoff") {
+                    let result = plan(joinDay: utcMidnight(now.addingTimeInterval(-10 * day)), cursor: nil)
+                    let safeTo = now.addingTimeInterval(-embargo)
+                    expect(result.windows.last?.end).to(beLessThanOrEqualTo(safeTo))
+                    // The next whole day would overshoot, which is why it is not planned.
+                    expect(result.windows.last?.end.addingTimeInterval(day)).to(beGreaterThan(safeTo))
                 }
 
-                it("ends on a day boundary at most 24h in the past (review fix #11)") {
-                    let result = plan(dayAggregated: true, joinDay: now.addingTimeInterval(-10 * day), cursor: nil)
-                    let expectedSafeTo = calendar.startOfDay(for: now.addingTimeInterval(-embargo))
-                    expect(result.windows.last?.end).to(equal(expectedSafeTo))
+                it("produces the same plan whatever the device timezone is") {
+                    // Round 7 removed the `Calendar` from the planner entirely; this is the
+                    // regression guard against anyone reintroducing `Calendar.current`.
+                    let joinDay = utcMidnight(now.addingTimeInterval(-4 * day)).addingTimeInterval(7 * hour)
+                    let original = NSTimeZone.default
+                    var plans: [[DateInterval]] = []
+                    for identifier in ["UTC", "Asia/Tokyo", "Pacific/Kiritimati", "America/Los_Angeles"] {
+                        NSTimeZone.default = TimeZone(identifier: identifier)!
+                        plans.append(plan(joinDay: joinDay, cursor: nil).windows)
+                    }
+                    NSTimeZone.default = original
+                    for other in plans.dropFirst() {
+                        expect(other).to(equal(plans[0]))
+                    }
+                }
+            }
+
+            context("the one-time migration window") {
+
+                it("emits a single partial window from an unaligned cursor to the next UTC midnight") {
+                    let cursor = utcMidnight(now.addingTimeInterval(-4 * day)).addingTimeInterval(15 * hour + 37 * 60)
+                    let result = plan(joinDay: now.addingTimeInterval(-30 * day), cursor: cursor)
+                    let boundary = utcMidnight(cursor).addingTimeInterval(day)
+                    expect(result.windows.first?.start).to(equal(cursor))
+                    expect(result.windows.first?.end).to(equal(boundary))
+                    // Exactly one partial window: everything after it is a whole UTC day.
                     for window in result.windows.dropFirst() {
-                        expect(window.start).to(equal(calendar.startOfDay(for: window.start)))
+                        expect(window.start).to(equal(utcMidnight(window.start)))
+                        expect(window.duration).to(equal(day))
                     }
                 }
 
-                it("returns an empty plan when the participant joined today (bound >= safeTo)") {
-                    let result = plan(dayAggregated: true, joinDay: startOfToday, cursor: nil)
+                it("never repeats it: the cursor it leaves behind is UTC-aligned") {
+                    let cursor = utcMidnight(now.addingTimeInterval(-4 * day)).addingTimeInterval(15 * hour)
+                    let first = plan(joinDay: now.addingTimeInterval(-30 * day), cursor: cursor)
+                    // The pipeline advances the cursor to the end of each processed window.
+                    guard let lastEnd = first.windows.last?.end else {
+                        fail("expected a non-empty first plan")
+                        return
+                    }
+                    let second = plan(joinDay: now.addingTimeInterval(-30 * day), cursor: lastEnd)
+                    for window in second.windows {
+                        expect(window.start).to(equal(utcMidnight(window.start)))
+                        expect(window.duration).to(equal(day))
+                    }
+                }
+
+                it("waits instead of cutting an incomplete partial window") {
+                    // An unaligned cursor inside the UTC day that is not over yet (as far as the
+                    // embargo is concerned): the migration sliver [cursor, next midnight) would end
+                    // beyond safeTo, so nothing is planned until that day completes.
+                    let safeTo = now.addingTimeInterval(-embargo)
+                    let cursor = utcMidnight(safeTo).addingTimeInterval(hour)
+                    let result = plan(joinDay: now.addingTimeInterval(-30 * day), cursor: cursor)
                     expect(result.windows).to(beEmpty())
                 }
 
-                it("clamps a 500-day-old join day to the 365-day cap here too") {
-                    let result = plan(dayAggregated: true, joinDay: now.addingTimeInterval(-500 * day), cursor: nil)
-                    expect(result.lowerBoundOrigin).to(equal(BackfillLowerBound.Origin.hardCap365d))
-                    expect(result.windows.first?.start).to(equal(now.addingTimeInterval(-hardCap)))
+                it("cuts the migration sliver exactly once when its day is already complete") {
+                    // A cursor at 23:00 of a FINISHED UTC day: the sliver [23:00, midnight) is a
+                    // complete, deterministic window — it is planned once and leaves the cursor
+                    // UTC-aligned, which is the whole migration.
+                    let safeTo = now.addingTimeInterval(-embargo)
+                    let cursor = utcMidnight(safeTo).addingTimeInterval(-hour)
+                    let result = plan(joinDay: now.addingTimeInterval(-30 * day), cursor: cursor)
+                    expect(result.windows.first?.start).to(equal(cursor))
+                    expect(result.windows.first?.end).to(equal(utcMidnight(safeTo)))
+                }
+
+                it("opens the partial window at the join day, never before it") {
+                    let joinDay = utcMidnight(now.addingTimeInterval(-6 * day)).addingTimeInterval(9 * hour)
+                    let result = plan(joinDay: joinDay, cursor: nil)
+                    expect(result.windows.first?.start).to(equal(joinDay))
+                    for window in result.windows {
+                        expect(window.start).to(beGreaterThanOrEqualTo(joinDay))
+                    }
                 }
             }
 
@@ -288,21 +352,18 @@ class EnrollmentBackfillWindowingSpec: QuickSpec {
                 // The host consent-bypass flags (FYAMHealthKitIgnoreOptInConsent /
                 // FYAMSensorKitIgnoreOptInConsent) are deliberately NOT inputs to this policy
                 // any more — there is no code path left that could widen the bound, hence
-                // nothing about them to inject here. What IS varied below is the sensor kind:
-                // both the continuous and the day-aggregated plan must come out empty.
-                it("is forward-only for continuous and day-aggregated sensors alike: bound is now, plan is empty") {
-                    for dayAggregated in [true, false] {
-                        let result = plan(dayAggregated: dayAggregated, joinDay: nil, cursor: nil)
-                        expect(result.lowerBound).to(equal(now))
-                        expect(result.lowerBoundOrigin).to(equal(BackfillLowerBound.Origin.forwardOnly))
-                        expect(result.windows).to(beEmpty())
-                    }
+                // nothing about them to inject here.
+                it("is forward-only: the bound is now and the plan is empty") {
+                    let result = plan(joinDay: nil, cursor: nil)
+                    expect(result.lowerBound).to(equal(now))
+                    expect(result.lowerBoundOrigin).to(equal(BackfillLowerBound.Origin.forwardOnly))
+                    expect(result.windows).to(beEmpty())
                 }
 
                 it("does not reopen history from a stale cursor when the join day is unknown") {
                     // A cursor left behind by a previous enrolment must not become a backfill
                     // bound of its own: the window may only open at (or after) `now`.
-                    let result = plan(dayAggregated: false, joinDay: nil, cursor: now.addingTimeInterval(-30 * day))
+                    let result = plan(joinDay: nil, cursor: now.addingTimeInterval(-30 * day))
                     expect(result.lowerBound).to(equal(now))
                     expect(result.windows).to(beEmpty())
                 }
@@ -315,22 +376,12 @@ class EnrollmentBackfillWindowingSpec: QuickSpec {
                                                     ["recorded_at": iso(now.addingTimeInterval(-hour))],
                                                     ["arrival": ["start": iso(now.addingTimeInterval(-hour))]],
                                                     ["payload": "opaque"]]
-                    for sensor in [SRSensor.accelerometer, .deviceUsageReport, .keyboardMetrics, .visits] {
+                    for sensor in [SRSensor.pedometerData, .deviceUsageReport, .keyboardMetrics, .visits] {
                         let result = SensorSampleUploadManager.dropPreBoundRecords(records,
                                                                                    lowerBound: bound.date,
                                                                                    windowStart: now.addingTimeInterval(-day),
                                                                                    sensor: sensor)
                         expect(result).to(beEmpty())
-                    }
-                }
-            }
-
-            it("produces contiguous windows (no gaps, no overlaps)") {
-                let joinDay = now.addingTimeInterval(-5 * day)
-                for dayAggregated in [true, false] {
-                    let result = plan(dayAggregated: dayAggregated, joinDay: joinDay, cursor: nil)
-                    for (previous, next) in zip(result.windows, result.windows.dropFirst()) {
-                        expect(previous.end).to(equal(next.start))
                     }
                 }
             }
@@ -615,100 +666,130 @@ class EnrollmentBackfillWindowingSpec: QuickSpec {
             }
         }
 
-        describe("BackfillClock.monotonicNow (clock-rollback fail-safe)") {
+        describe("ServerClock (FUAM-3964: trust the server clock, not the device)") {
 
             var defaults: UserDefaults!
+            var analytics: CapturingAnalyticsService!
+
+            /// An HTTP `Date` header (RFC 7231 IMF-fixdate) for a given instant.
+            func header(_ date: Date) -> String {
+                let formatter = DateFormatter()
+                formatter.locale = Locale(identifier: "en_US_POSIX")
+                formatter.timeZone = TimeZone(identifier: "GMT")
+                formatter.dateFormat = "EEE, dd MMM yyyy HH:mm:ss zzz"
+                return formatter.string(from: date)
+            }
+
+            func clockEvents(_ events: [AnalyticsEvent]) -> [(mark: String, deviceNow: String)] {
+                return events.compactMap { event in
+                    if case let .sensorDataClockAhead(mark, deviceNow) = event { return (mark, deviceNow) }
+                    return nil
+                }
+            }
 
             beforeEach {
-                defaults = UserDefaults(suiteName: "BackfillClockSpec.\(UUID().uuidString)")
+                defaults = UserDefaults(suiteName: "ServerClockSpec.\(UUID().uuidString)")
+                analytics = CapturingAnalyticsService()
+                ServerClock.offsetReported = false
             }
 
-            it("returns the current date and records it when the clock moves forward") {
-                expect(BackfillClock.monotonicNow(current: now, defaults: defaults)).to(equal(now))
-                let later = now.addingTimeInterval(day)
-                expect(BackfillClock.monotonicNow(current: later, defaults: defaults)).to(equal(later))
-                expect(defaults.object(forKey: BackfillClock.storageKey) as? Date).to(equal(later))
-            }
+            context("learning the offset from the Date header") {
 
-            it("keeps the high-water mark when the device clock is wound back") {
-                _ = BackfillClock.monotonicNow(current: now, defaults: defaults)
-                let rolledBack = now.addingTimeInterval(-30 * day)
-                expect(BackfillClock.monotonicNow(current: rolledBack, defaults: defaults)).to(equal(now))
-                expect(defaults.object(forKey: BackfillClock.storageKey) as? Date).to(equal(now))
-            }
-
-            it("does not rewrite the mark for a sub-minute advance (persistence throttle)") {
-                _ = BackfillClock.monotonicNow(current: now, defaults: defaults)
-                let barelyLater = now.addingTimeInterval(30)
-                // The returned value is always the honest one; only the WRITE is throttled.
-                expect(BackfillClock.monotonicNow(current: barelyLater, defaults: defaults)).to(equal(barelyLater))
-                expect(defaults.object(forKey: BackfillClock.storageKey) as? Date).to(equal(now))
-            }
-
-            it("rewrites the mark once the advance passes the granularity") {
-                _ = BackfillClock.monotonicNow(current: now, defaults: defaults)
-                let later = now.addingTimeInterval(BackfillClock.persistenceGranularity + 1)
-                _ = BackfillClock.monotonicNow(current: later, defaults: defaults)
-                expect(defaults.object(forKey: BackfillClock.storageKey) as? Date).to(equal(later))
-            }
-
-            it("never lets the throttle write a mark lower than the stored one") {
-                _ = BackfillClock.monotonicNow(current: now, defaults: defaults)
-                let smallRollback = now.addingTimeInterval(-10)
-                expect(BackfillClock.monotonicNow(current: smallRollback, defaults: defaults)).to(equal(now))
-                expect(defaults.object(forKey: BackfillClock.storageKey) as? Date).to(equal(now))
-            }
-
-            it("keeps the join day where it was after a 30-day rollback") {
-                // The leak this defends: a 30-day rollback used to move the derived join day
-                // 30 days earlier, and the plan and the per-record filter agreed on it.
-                _ = BackfillClock.monotonicNow(current: now, defaults: defaults)
-                let rolledBack = now.addingTimeInterval(-30 * day)
-                let honest = RepositoryImpl.enrollmentDate(fromDaysInStudy: 10, now: now, calendar: calendar)
-                let naive = RepositoryImpl.enrollmentDate(fromDaysInStudy: 10, now: rolledBack, calendar: calendar)
-                let defended = RepositoryImpl.enrollmentDate(fromDaysInStudy: 10,
-                                                             now: BackfillClock.monotonicNow(current: rolledBack,
-                                                                                             defaults: defaults),
-                                                             calendar: calendar)
-                expect(naive).to(beLessThan(honest))
-                expect(defended).to(equal(honest))
-            }
-
-            context("the clock jumped FORWARD (the accepted residual, FUAM-3945 round 4 I2)") {
-
-                var analytics: CapturingAnalyticsService!
-
-                beforeEach {
-                    analytics = CapturingAnalyticsService()
-                    BackfillClock.clockAheadReported = false
+                it("persists serverTime - deviceTime") {
+                    let deviceNow = now.addingTimeInterval(-2 * day)   // device clock 2 days behind
+                    ServerClock.record(headerDate: header(now), deviceNow: deviceNow, defaults: defaults)
+                    expect(ServerClock.storedOffset(defaults: defaults)).to(beCloseTo(2 * day, within: 1))
+                    expect(ServerClock.now(current: deviceNow, defaults: defaults)).to(beCloseTo(now, within: 1))
                 }
 
-                func clockAheadEvents(_ events: [AnalyticsEvent]) -> [(mark: String, deviceNow: String)] {
-                    return events.compactMap { event in
-                        if case let .sensorDataClockAhead(mark, deviceNow) = event { return (mark, deviceNow) }
-                        return nil
-                    }
+                it("falls back to the device clock when no offset was ever stored") {
+                    expect(ServerClock.storedOffset(defaults: defaults)).to(beNil())
+                    expect(ServerClock.now(current: now, defaults: defaults)).to(equal(now))
                 }
 
-                it("reports the mark and the device clock once per launch when the mark is over a day ahead") {
+                it("ignores a missing or unparsable header, so a stripping proxy cannot move the clock") {
+                    ServerClock.record(headerDate: nil, deviceNow: now, defaults: defaults)
+                    ServerClock.record(headerDate: "not a date", deviceNow: now, defaults: defaults)
+                    ServerClock.record(headerDate: "2026-08-10T12:00:00Z", deviceNow: now, defaults: defaults)
+                    expect(ServerClock.storedOffset(defaults: defaults)).to(beNil())
+                }
+
+                it("does not rewrite the offset for a sub-threshold change (write throttle)") {
+                    let deviceNow = now.addingTimeInterval(-2 * day)
+                    ServerClock.record(headerDate: header(now), deviceNow: deviceNow, defaults: defaults)
+                    let first = ServerClock.storedOffset(defaults: defaults)
+                    // One second of network jitter is not a clock change.
+                    ServerClock.record(headerDate: header(now.addingTimeInterval(1)), deviceNow: deviceNow, defaults: defaults)
+                    expect(ServerClock.storedOffset(defaults: defaults)).to(equal(first))
+                }
+
+                it("rewrites the offset once the change passes the threshold") {
+                    let deviceNow = now.addingTimeInterval(-2 * day)
+                    ServerClock.record(headerDate: header(now), deviceNow: deviceNow, defaults: defaults)
+                    let moved = now.addingTimeInterval(ServerClock.persistenceGranularity + 5)
+                    ServerClock.record(headerDate: header(moved), deviceNow: deviceNow, defaults: defaults)
+                    expect(ServerClock.storedOffset(defaults: defaults))
+                        .to(beCloseTo(moved.timeIntervalSince(deviceNow), within: 1))
+                }
+            }
+
+            context("the join day no longer moves with the device clock") {
+
+                it("stays put when the device clock is wound BACK 30 days") {
+                    // The leak this defends: a rollback used to move the derived join day 30 days
+                    // earlier, and the plan and the per-record filter agreed on it.
+                    let rolledBack = now.addingTimeInterval(-30 * day)
+                    ServerClock.record(headerDate: header(now), deviceNow: rolledBack, defaults: defaults)
+                    let honest = RepositoryImpl.enrollmentDate(fromDaysInStudy: 10, now: now, calendar: calendar)
+                    let naive = RepositoryImpl.enrollmentDate(fromDaysInStudy: 10, now: rolledBack, calendar: calendar)
+                    let defended = RepositoryImpl.enrollmentDate(fromDaysInStudy: 10,
+                                                                 now: ServerClock.now(current: rolledBack, defaults: defaults),
+                                                                 calendar: calendar)
+                    expect(naive).to(beLessThan(honest))
+                    expect(defended).to(equal(honest))
+                }
+
+                it("stays put when the device clock jumps FORWARD 30 days (which BackfillClock could not do)") {
+                    let jumped = now.addingTimeInterval(30 * day)
+                    ServerClock.record(headerDate: header(now), deviceNow: jumped, defaults: defaults)
+                    let honest = RepositoryImpl.enrollmentDate(fromDaysInStudy: 10, now: now, calendar: calendar)
+                    let naive = RepositoryImpl.enrollmentDate(fromDaysInStudy: 10, now: jumped, calendar: calendar)
+                    let defended = RepositoryImpl.enrollmentDate(fromDaysInStudy: 10,
+                                                                 now: ServerClock.now(current: jumped, defaults: defaults),
+                                                                 calendar: calendar)
+                    expect(naive).to(beGreaterThan(honest))
+                    expect(defended).to(equal(honest))
+                }
+            }
+
+            context("the divergence diagnostic (the repurposed sensor_data_clock_ahead)") {
+
+                it("reports server time and device time once per launch beyond a day of drift") {
                     let jumped = now.addingTimeInterval(10 * day)
-                    _ = BackfillClock.monotonicNow(current: jumped, defaults: defaults)
+                    ServerClock.record(headerDate: header(now), deviceNow: jumped, defaults: defaults)
 
-                    // Clock corrected: the mark stays ahead, so the bound is pinned in the future
-                    // and collection is suspended. That must not be silent.
-                    _ = BackfillClock.monotonicNow(current: now, defaults: defaults, analytics: analytics)
-                    _ = BackfillClock.monotonicNow(current: now, defaults: defaults, analytics: analytics)
+                    _ = ServerClock.now(current: jumped, defaults: defaults, analytics: analytics)
+                    _ = ServerClock.now(current: jumped, defaults: defaults, analytics: analytics)
 
-                    let reported = clockAheadEvents(analytics.trackedEvents)
+                    let reported = clockEvents(analytics.trackedEvents)
                     expect(reported.count).to(equal(1))
-                    expect(reported.first?.mark).to(equal(iso(jumped)))
-                    expect(reported.first?.deviceNow).to(equal(iso(now)))
+                    // `mark` is server now, `device_now` is the device's: the drift is their difference.
+                    expect(reported.first?.deviceNow).to(equal(iso(jumped)))
+                    expect(reported.first?.mark).toNot(equal(reported.first?.deviceNow))
                 }
 
-                it("stays silent for a mark less than a day ahead (clock jitter, not a jump)") {
-                    _ = BackfillClock.monotonicNow(current: now.addingTimeInterval(hour), defaults: defaults)
-                    _ = BackfillClock.monotonicNow(current: now, defaults: defaults, analytics: analytics)
-                    expect(clockAheadEvents(analytics.trackedEvents)).to(beEmpty())
+                it("fires for a device clock BEHIND the server too, not just ahead") {
+                    let behind = now.addingTimeInterval(-10 * day)
+                    ServerClock.record(headerDate: header(now), deviceNow: behind, defaults: defaults)
+                    _ = ServerClock.now(current: behind, defaults: defaults, analytics: analytics)
+                    expect(clockEvents(analytics.trackedEvents).count).to(equal(1))
+                }
+
+                it("stays silent for less than a day of drift (jitter, not a wrong clock)") {
+                    let slightlyOff = now.addingTimeInterval(hour)
+                    ServerClock.record(headerDate: header(now), deviceNow: slightlyOff, defaults: defaults)
+                    _ = ServerClock.now(current: slightlyOff, defaults: defaults, analytics: analytics)
+                    expect(clockEvents(analytics.trackedEvents)).to(beEmpty())
                 }
             }
         }
@@ -1026,10 +1107,274 @@ private final class FakeSensorNetwork: SensorSampleUploaderNetworkDelegate {
     }
 }
 
+// MARK: - FUAM-3964: a wrong device clock cannot move the cursor past server time
+
+/// The acceptance test for the server-time cap on the SensorKit side. The device clock is days
+/// ahead of the server's; every window the planner opens must still end at or before
+/// `serverNow - embargo`, because the pipeline advances the cursor to the end of each window it
+/// processes. Without the cap the plan runs to `deviceNow - embargo`, the cursor is burned there,
+/// and correcting the clock leaves a hole no plan can ever reopen (the cursor only moves forward).
+///
+/// This drives `buildWindowPlan(for:now:)` — the outermost reachable seam. `fetchPendingWindows`
+/// cannot be used: no SensorKit sensor is ever `.authorized` on the simulator, so it returns
+/// before planning anything.
+class SensorKitServerTimeCapSpec: QuickSpec {
+
+    override class func spec() {
+
+        let day: TimeInterval = 24 * 3600
+        let embargo: TimeInterval = day
+        let sensor = SRSensor.pedometerData
+        let clockSkew: TimeInterval = 5 * day
+
+        var storage: FakeSensorStorage!
+        var clearance: FakeSensorClearance!
+        var manager: SensorSampleUploadManager!
+        var deviceNow: Date!
+        var serverNow: Date!
+
+        beforeEach {
+            // The device clock is `clockSkew` AHEAD of the server's.
+            deviceNow = Date()
+            serverNow = deviceNow.addingTimeInterval(-clockSkew)
+            UserDefaults.standard.set(-clockSkew, forKey: ServerClock.storageKey)
+
+            storage = FakeSensorStorage()
+            clearance = FakeSensorClearance()
+            clearance.enrollmentDate = serverNow.addingTimeInterval(-30 * day)
+            manager = SensorSampleUploadManager(withSensors: [sensor],
+                                                storage: storage,
+                                                reachability: FakeSensorReachability(),
+                                                analytics: CapturingAnalyticsService(),
+                                                mappers: [sensor: FakeSensorMapper()])
+            manager.clearanceDelegate = clearance
+        }
+
+        afterEach {
+            UserDefaults.standard.removeObject(forKey: ServerClock.storageKey)
+        }
+
+        it("never plans a window ending past server time, however far ahead the device clock is") {
+            let plan = manager.buildWindowPlan(for: sensor, now: deviceNow)
+            expect(plan.windows).toNot(beEmpty())
+            guard let last = plan.windows.last else { return }
+            // The cursor lands on `last.end`: that is the value that must not escape.
+            expect(last.end).to(beLessThanOrEqualTo(serverNow.addingTimeInterval(-embargo)))
+            expect(last.end).to(beLessThan(deviceNow.addingTimeInterval(-embargo)))
+        }
+
+        it("resumes from a cursor that a wrong clock already pushed into the future, without extending it") {
+            // Worst case: a previous cycle (before the cap) burned the cursor to device time.
+            let burned = deviceNow.addingTimeInterval(-2 * day)   // still ahead of server time
+            storage.setLastCursor(burned, for: sensor)
+            let plan = manager.buildWindowPlan(for: sensor, now: deviceNow)
+            // Nothing can be planned above server time, so the plan is empty and the cursor is
+            // left alone until real time catches up — no further escape, and no data forfeited.
+            expect(plan.windows).to(beEmpty())
+        }
+
+        it("plans normally once the device clock agrees with the server") {
+            UserDefaults.standard.removeObject(forKey: ServerClock.storageKey)
+            let plan = manager.buildWindowPlan(for: sensor, now: deviceNow)
+            expect(plan.windows).toNot(beEmpty())
+            expect(plan.windows.last?.end).to(beGreaterThan(serverNow.addingTimeInterval(-embargo)))
+        }
+    }
+}
+
+// MARK: - FUAM-3945 round 7: `recorded_at` on the newly enabled sensors
+
+/// `SRFetchResult` cannot be constructed outside SensorKit, so the mappers' record shape is
+/// exercised through their (internal) KVC mapping functions, with a KVC-compliant stand-in for
+/// the sample object. What matters and is asserted here:
+/// 1. `recorded_at` is present — the backend's semantic anchor reads
+///    `min(records[].recorded_at)` and silently falls back to UPLOAD time without it, which
+///    destroys de-duplication (FUAM-4013);
+/// 2. it is encoded exactly like the `t` key sitting next to it (`ISO8601Strategy`, fractional
+///    seconds, explicit `Z` — the backend parses strictly and requires an offset);
+/// 3. it does NOT become the measurement time the consent gate reads.
+class SensorRecordedAtSpec: QuickSpec {
+
+    override class func spec() {
+
+        let hour: TimeInterval = 3600
+        let day: TimeInterval = 24 * hour
+        // 2026-08-10 12:00:00.500 UTC — deliberately not on a whole second.
+        let recordedAt = Date(timeIntervalSince1970: 1786363200.5)
+        let measuredAt = Date(timeIntervalSince1970: 1786100000.25)
+        let recordedAtISO = ISO8601Strategy.encode(recordedAt)
+
+        it("encodes with fractional seconds and an explicit offset, like the sibling `t` key") {
+            expect(recordedAtISO).to(equal("2026-08-10T12:00:00.500Z"))
+        }
+
+        it("puts recorded_at on an ambient light record without touching `t`") {
+            let sample = FakeAmbientLightSample(timestamp: measuredAt, lux: 42)
+            let record = AmbientLightMapper.mapAmbientLight(sample, recordedAtISO: recordedAtISO)
+            expect(record?["recorded_at"] as? String).to(equal(recordedAtISO))
+            expect(record?["t"] as? String).to(equal(ISO8601Strategy.encode(measuredAt)))
+        }
+
+        it("puts recorded_at on an ambient pressure record without touching `t`") {
+            let sample = FakeAmbientPressureSample(timestamp: measuredAt, pressure: 101.3)
+            let record = AmbientPressureMapper.mapAmbientPressure(sample, recordedAtISO: recordedAtISO)
+            expect(record?["recorded_at"] as? String).to(equal(recordedAtISO))
+            expect(record?["t"] as? String).to(equal(ISO8601Strategy.encode(measuredAt)))
+        }
+
+        it("puts recorded_at on a rotation rate record even though the sensor stays disabled") {
+            // Unit level only: `.rotationRate` has no mapper registered in `Services`. Emitting
+            // the anchor now is what makes a future enable a backend-side no-op.
+            let sample = FakeRotationRateSample(timestamp: measuredAt)
+            let record = RotationRateMapper.mapRotationSample(sample, recordedAtISO: recordedAtISO)
+            expect(record?["recorded_at"] as? String).to(equal(recordedAtISO))
+            expect(record?["t"] as? String).to(equal(ISO8601Strategy.encode(measuredAt)))
+        }
+
+        context("the consent gate still reads the MEASUREMENT time, not the new key") {
+
+            let bound = Date(timeIntervalSince1970: 1786104000)   // 2026-08-10 12:00:00 UTC
+
+            func pedometerRecord(startedAt: Date) -> [String: Any] {
+                // The shape PedometerMapper emits: epoch-ms measurement window + the write time.
+                return ["start_ms": Int(startedAt.timeIntervalSince1970 * 1000),
+                        "end_ms": Int(startedAt.addingTimeInterval(60).timeIntervalSince1970 * 1000),
+                        "steps": 120,
+                        "recorded_at": ISO8601Strategy.encode(bound.addingTimeInterval(hour))]
+            }
+
+            it("drops a pedometer sample measured before the bound although it was WRITTEN after it") {
+                let record = pedometerRecord(startedAt: bound.addingTimeInterval(-day))
+                let kept = SensorSampleUploadManager.dropPreBoundRecords([record],
+                                                                         lowerBound: bound,
+                                                                         windowStart: bound,
+                                                                         sensor: .pedometerData)
+                expect(kept).to(beEmpty())
+            }
+
+            it("keeps a pedometer sample measured after the bound") {
+                let record = pedometerRecord(startedAt: bound.addingTimeInterval(hour))
+                let kept = SensorSampleUploadManager.dropPreBoundRecords([record],
+                                                                         lowerBound: bound,
+                                                                         windowStart: bound,
+                                                                         sensor: .pedometerData)
+                expect(kept.count).to(equal(1))
+            }
+
+            it("drops an ambient sample measured before the bound although it was WRITTEN after it") {
+                let record: [String: Any] = ["t": ISO8601Strategy.encode(bound.addingTimeInterval(-hour)),
+                                             "lux": 12.0,
+                                             "recorded_at": ISO8601Strategy.encode(bound.addingTimeInterval(hour))]
+                let kept = SensorSampleUploadManager.dropPreBoundRecords([record],
+                                                                         lowerBound: bound,
+                                                                         windowStart: bound,
+                                                                         sensor: .ambientLightSensor)
+                expect(kept).to(beEmpty())
+            }
+
+            it("treats the newly enabled sensors as continuous, so their window vouches at the bound") {
+                for sensor in [SRSensor.pedometerData, .ambientLightSensor, .ambientPressure, .rotationRate] {
+                    expect(SensorSampleUploadManager.windowVouches(for: sensor,
+                                                                   windowStart: bound,
+                                                                   lowerBound: bound)).to(beTrue())
+                }
+            }
+        }
+    }
+}
+
+/// KVC stand-ins for the SensorKit sample objects, which cannot be instantiated. The mappers read
+/// them with `value(forKey:)`, so an `@objc` property of the right name is all they need.
+private final class FakeAmbientLightSample: NSObject {
+    @objc let startDate: Date
+    @objc let lux: Double
+    init(timestamp: Date, lux: Double) {
+        self.startDate = timestamp
+        self.lux = lux
+    }
+}
+
+private final class FakeAmbientPressureSample: NSObject {
+    @objc let timestamp: Date
+    @objc let pressure: NSNumber
+    init(timestamp: Date, pressure: Double) {
+        self.timestamp = timestamp
+        self.pressure = NSNumber(value: pressure)
+    }
+}
+
+private final class FakeRotationRateSample: NSObject {
+    @objc let startDate: Date
+    // These mirror CMRotationRate's KVC keys verbatim.
+    // swiftlint:disable identifier_name
+    @objc let x: Double = 0.1
+    @objc let y: Double = 0.2
+    @objc let z: Double = 0.3
+    // swiftlint:enable identifier_name
+    init(timestamp: Date) {
+        self.startDate = timestamp
+    }
+}
+
+// MARK: - FUAM-3945 round 7 (F3): a failed startRecording() is no longer silent
+
+/// `ensureRecordingStarted()` used to call `startRecording()` on readers with no delegate, so
+/// `sensorReader(_:startRecordingFailedWithError:)` was never delivered and a sensor that never
+/// started looked exactly like a sensor with no data. The manager is now the readers' delegate;
+/// these specs drive that callback directly (the OS side cannot be provoked on a simulator).
+class SensorRecordingFailureSpec: QuickSpec {
+
+    override class func spec() {
+
+        var analytics: CapturingAnalyticsService!
+        var manager: SensorKitManager!
+
+        func failures(_ events: [AnalyticsEvent]) -> [(sensor: String, error: String)] {
+            return events.compactMap { event in
+                if case let .sensorRecordingStartFailed(sensor, error) = event { return (sensor, error) }
+                return nil
+            }
+        }
+
+        beforeEach {
+            analytics = CapturingAnalyticsService()
+            manager = SensorKitManager(withReadSensors: [.pedometerData, .ambientLightSensor],
+                                       analyticsService: analytics,
+                                       storage: FakeSensorStorage(),
+                                       reachability: FakeSensorReachability(),
+                                       mappers: [:])
+        }
+
+        it("reports the sensor and the error domain/code, never the localized description") {
+            let error = NSError(domain: "SRErrorDomain", code: 8, userInfo: [NSLocalizedDescriptionKey: "localized"])
+            manager.sensorReader(SRSensorReader(sensor: .pedometerData), startRecordingFailedWithError: error)
+
+            let reported = failures(analytics.trackedEvents)
+            expect(reported.count).to(equal(1))
+            expect(reported.first?.sensor).to(equal(SRSensor.pedometerData.shortSubsource))
+            expect(reported.first?.error).to(equal("SRErrorDomain/8"))
+            expect(reported.first?.error).toNot(contain("localized"))
+        }
+
+        it("reports each sensor once per launch, however often the retry loop runs") {
+            let error = NSError(domain: "SRErrorDomain", code: 8)
+            for _ in 0..<5 {
+                manager.sensorReader(SRSensorReader(sensor: .pedometerData), startRecordingFailedWithError: error)
+                manager.sensorReader(SRSensorReader(sensor: .ambientLightSensor), startRecordingFailedWithError: error)
+            }
+
+            let reported = failures(analytics.trackedEvents)
+            expect(reported.count).to(equal(2))
+            expect(Set(reported.map { $0.sensor }))
+                .to(equal([SRSensor.pedometerData.shortSubsource, SRSensor.ambientLightSensor.shortSubsource]))
+        }
+    }
+}
+
 // MARK: - The HealthKit chunk walk under a future bound (FUAM-3945 review round 4, I2)
 
-/// The backfill bound can land in the FUTURE: the device clock jumped forward, so `BackfillClock`'s
-/// high-water mark — and the join day derived from it — stay ahead of real time until it catches up.
+/// The backfill bound can land in the FUTURE: a stale `days_in_study` read under a device clock
+/// that was ahead, or a join day that simply has not been reached yet on this device's calendar.
 /// The chunk walk then covers nothing, and the loop used to persist `nextEndDate` on every cycle
 /// anyway, forfeiting the whole suspended window even after the clock was corrected. These specs
 /// drive `startUpload(forUploader:)` itself: no HealthKit query is ever issued once the guard holds,
@@ -1208,6 +1553,25 @@ class HealthBackfillChunkWalkSpec: QuickSpec {
                 // Cursor left at the end of the last chunk that DID succeed, so the next
                 // sequence retries this one rather than skipping it.
                 expect(storage.uploadStartDate(forDataType: dataType)).to(equal(cursor + hour))
+            }
+
+            it("never walks — nor writes a cursor — past server time (FUAM-3964)") {
+                // The device clock is 5 days AHEAD of the server's. `endDate` is capped at server
+                // time, so a cursor sitting above it (written by an earlier cycle under the wrong
+                // clock, or simply a fresh install with a skewed clock) parks the walk: nothing is
+                // queried and the cursor is left exactly where it was, so the suspended window is
+                // still collected once real time catches up. Without the cap the walk runs to
+                // device `now` and burns the cursor there, and the hole is unrecoverable.
+                UserDefaults.standard.set(-5 * day, forKey: ServerClock.storageKey)
+                defer { UserDefaults.standard.removeObject(forKey: ServerClock.storageKey) }
+                let burned = Date().addingTimeInterval(-2 * day)   // ahead of server time
+                storage.setUploadStartDate(burned, forDataType: dataType)
+
+                walk { _ in nil }
+
+                expect(attempted).to(beEmpty())
+                expect(storage.uploadStartDate(forDataType: dataType)).to(equal(burned))
+                expect(storage.pendingUploadDataType).to(beNil())
             }
 
             it("leaves a normal-sized chunk alone, and an empty chunk does not truncate the walk") {

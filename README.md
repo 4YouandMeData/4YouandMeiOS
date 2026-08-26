@@ -445,7 +445,7 @@ end
 
 ### SensorKit (Optional)
 
-ForYouAndMe supports collecting SensorKit data (accelerometer, visits, usage reports, media events on iOS 16.4+, keyboard metrics, etc.) independently of HealthKit. Enabling SensorKit is gated by its own `SENSORKIT` Swift compilation condition — set it alongside `HEALTHKIT` (or on its own) in your Podfile's `post_install` block.
+ForYouAndMe supports collecting SensorKit data (pedometer, ambient light, ambient pressure, visits, usage reports, media events on iOS 16.4+, keyboard metrics, etc.) independently of HealthKit. Enabling SensorKit is gated by its own `SENSORKIT` Swift compilation condition — set it alongside `HEALTHKIT` (or on its own) in your Podfile's `post_install` block.
 
 1.  Add Apple's SensorKit framework entitlement request to your provisioning profile (see [Apple's SensorKit documentation](https://developer.apple.com/documentation/sensorkit)).
 
@@ -469,7 +469,9 @@ If you want both subsystems, set both:
 config.build_settings['SWIFT_ACTIVE_COMPILATION_CONDITIONS'] = '$(inherited) HEALTHKIT SENSORKIT'
 ```
 
-3.  The set of SensorKit sensors collected by the pod is defined in `Constants.SensorKit.RequestedSensors`, intersected with the mappers wired up in `Services.setup(...)`. Update those if you need a different sensor list.
+3.  The set of SensorKit sensors collected by the pod is defined in `Constants.SensorKit.RequestedSensors`, intersected with the mappers wired up in `Services.setup(...)`. Update those if you need a different sensor list. A sensor your provisioning profile is not entitled to simply fails its own authorization request and is skipped — authorization is asked for one sensor at a time, so it cannot break the others.
+
+    **The raw high-rate motion sensors are deliberately disabled** (`accelerometer`, `rotationRate`). At archive sample rates a 24h window produces a volume the pipeline cannot carry (the whole window is mapped in memory before batching), which stalls every other sensor behind it. Re-enabling either one requires minute-scale windows, a per-window sample cap and a real on-disk queue store — not just uncommenting the mapper.
 
 #### Backfill window: study join day + 365-day hard cap
 
@@ -482,7 +484,7 @@ lowerBound = joinDay == nil ? now                              // forward-only
                             : max(joinDay, now - 365 days)
 ```
 
-SensorKit backfills from that bound up to the 24h SensorKit embargo (day-aligned windows for report-type sensors); HealthKit backfills from the same bound up to now. Two rules are absolute, enforced both as the window bound and as a per-record filter on measurement timestamps:
+SensorKit backfills from that bound up to the 24h SensorKit embargo; HealthKit backfills from the same bound up to now. Two rules are absolute, enforced both as the window bound and as a per-record filter on measurement timestamps:
 
 1. **Nothing older than 365 days** is ever transmitted.
 2. **Nothing measured before the participant joined the study in this app** is ever transmitted. The HealthKit and SensorKit stores are device-wide and survive reinstalls, so the same OS store can hold data belonging to a different participant or to an earlier enrolment.
@@ -491,9 +493,17 @@ When the join day cannot be established (no user record, or `days_in_study <= 0`
 
 There is deliberately **no assumed SensorKit retention floor** any more (FUAM-3945 removed FUAM-3841's 7-day `retentionFloor`, which capped every already-enrolled participant's reach at 7 days). Over-requesting is free: `SRSensorReader.fetch` simply returns nothing for a window the OS has already dropped. Apple's real on-device retention is therefore measured, not assumed: the `sensor_data_backfill_reach` analytics event reports how far back the client asked (`bounded_by` ∈ `join_date`, `hard_cap_365d`, `forward_only`, `empty_plan`, `gave_up`, `drain_filtered`; the `cursor` origin is carried in the plan but deliberately never emitted — a routine cursor resume is not a backfill), and the oldest sample that actually arrives is the OS limit.
 
-**Device clock changes.** The join day is derived from a monotonic high-water mark of observed wall-clock time (`BackfillClock`), not from a raw `Date()`, so winding the device clock **backwards** cannot walk the consent boundary into the past and reopen pre-consent history. The accepted price is the opposite direction: a clock jumped **forwards** (user error, bad NTP) pins the mark — and the bound with it — in the future, and collection is **suspended** until real time catches up (roughly half the jump). This is deliberate: under-fetching is recoverable, a pre-consent leak is not. Nothing is lost while suspended — SensorKit produces an empty plan and HealthKit skips each data type without persisting its cursor, so the whole window is collected once the bound is reachable again. The state is not silent either: a mark more than one day ahead of the device clock emits `sensor_data_clock_ahead` (parameters `clock_mark`, `device_now` — the outage left is their difference) once per launch.
+#### Window shape: complete UTC calendar days (SensorKit)
 
-*Follow-up:* the proper fix is to stop trusting the device clock for the boundary and use the **server clock** instead — the `Date` header on API responses — which removes both directions of this failure mode. Not done here.
+Every SensorKit sensor is windowed on **complete UTC calendar days** — `[00:00 UTC, next 00:00 UTC)` — and a day is only planned once its end is at or before the embargo cutoff, so a day is fetched once and never re-fetched in slices. Combined with Apple's 24h holding period the accepted latency is up to ~48h.
+
+A fetch window selects on the OS's **write** time, so this alignment does not change *which* data is collected, only how it is cut. Cutting on UTC makes the boundaries independent of the participant's timezone (and of travel, and of a reinstall), which is what makes the boundaries — and therefore the backend's semantic anchors — reproducible.
+
+A cursor left by an older build sits at an arbitrary instant. The first plan after upgrading emits **one partial migration window** `[cursor, next UTC midnight)`, and whole UTC days from then on. It is forward-only and the cursor it leaves behind is aligned, so it happens exactly once per device.
+
+**Device clock changes.** The join day is derived from **server time** (`ServerClock`), not from the device clock: every backend response carries a standard HTTP `Date` header, and the offset `serverTime − deviceTime` is persisted and applied. Winding the device clock in either direction therefore no longer moves the consent boundary. (Before FUAM-3964 a monotonic high-water mark protected only the backward direction, and a forward jump suspended collection until real time caught up.) The same server time also **caps the planning upper bound** in both subsystems (`min(deviceNow, serverNow)`), so a device clock in the future can never plan a window — and therefore never write a cursor — past server time; any clock excursion self-heals on the next sync once the clock is sane. Fetch requests to the OS still use device wall-clock, because both stores are indexed with the same clock that wrote the samples. With no offset ever learnt (first launch, offline) everything falls back to `Date()`. A divergence over 24h emits `sensor_data_clock_ahead` (parameters `clock_mark` = server time, `device_now` = device time) once per launch.
+
+What this does **not** repair: a measurement timestamp the OS recorded under a wrong clock is wrong for ever. The consent filter and the backend's future-anchor plausibility check are the guards there; server time fixes the machinery (bounds, cursor), not historical samples.
 
 
 ### Collecting HealthKit/SensorKit without an opt-in consent card (Optional)

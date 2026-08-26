@@ -13,6 +13,12 @@ import Foundation
 import SensorKit
 import CoreMotion
 
+/// `SRFetchResult.timestamp` is an `SRAbsoluteTime` (seconds since the 2001 reference date).
+private func dateFromSRAbsoluteTime(_ srTime: SRAbsoluteTime) -> Date {
+    let cf = srTime.toCFAbsoluteTime()
+    return Date(timeIntervalSinceReferenceDate: cf)
+}
+
 /// Maps SensorKit ambient pressure (barometer / elevation) samples into JSON-ready records.
 /// Uses KVC to stay resilient across SDK field/name variations.
 final class AmbientPressureMapper: NSObject, SensorSampleMapper {
@@ -60,16 +66,23 @@ extension AmbientPressureMapper: SRSensorReaderDelegate {
                       fetching fetchRequest: SRFetchRequest,
                       didFetchResult result: SRFetchResult<AnyObject>) -> Bool {
 
+        // FUAM-4013: `recorded_at` is `SRFetchResult.timestamp` — WHEN SensorKit wrote the
+        // record. The backend's semantic anchor (`ClientPush::SemanticAnchor`) reads it as
+        // `min(records[].recorded_at)`; without it the anchor silently falls back to upload
+        // time and re-uploads scatter into new rows instead of de-duplicating. Same
+        // fractional-seconds ISO8601 encoding as the `t` key next to it.
+        let recordedAtISO = ISO8601Strategy.encode(dateFromSRAbsoluteTime(result.timestamp))
+
         if let list = result.sample as? CMSensorDataList {
             // Iterate via NSFastEnumeration wrapper you already have (do not add Sequence conformance)
             for element in FastEnumerationSequence(base: list) {
                 guard let obj = element as? NSObject else { continue }
-                if let rec = Self.mapAmbientPressure(obj) {
+                if let rec = Self.mapAmbientPressure(obj, recordedAtISO: recordedAtISO) {
                     collected.append(rec)
                 }
             }
         } else if let obj = result.sample as? NSObject {
-            if let rec = Self.mapAmbientPressure(obj) {
+            if let rec = Self.mapAmbientPressure(obj, recordedAtISO: recordedAtISO) {
                 collected.append(rec)
             }
         }
@@ -100,34 +113,34 @@ extension AmbientPressureMapper: SRSensorReaderDelegate {
     /// - pressure_kpa: kiloPascals
     /// - sea_level_pressure_kpa: kiloPascals (if present)
     /// - relative_altitude_m: meters (if present)
-    private static func mapAmbientPressure(_ obj: NSObject) -> [String: Any]? {
-        let ts: Date = (obj.value(forKey: "timestamp") as? Date)
-                    ?? (obj.value(forKey: "startDate") as? Date)
-                    ?? (obj.value(forKey: "date") as? Date)
-                    ?? Date.distantPast
+    /// Internal (not private) so the record shape can be unit-tested without an
+    /// `SRFetchResult`, which cannot be constructed outside SensorKit.
+    static func mapAmbientPressure(_ obj: NSObject, recordedAtISO: String) -> [String: Any]? {
+        let ts = Self.sampleDate(obj, keys: ["timestamp", "startDate", "date"])
 
         // Pressure in kPa (common KVC names)
         let pressure: Double? =
-              (obj.value(forKey: "pressure") as? NSNumber)?.doubleValue
-           ?? (obj.value(forKey: "pressureKPa") as? NSNumber)?.doubleValue
-           ?? (obj.value(forKey: "ambientPressure") as? NSNumber)?.doubleValue
-           ?? (obj.value(forKeyPath: "pressure.value") as? NSNumber)?.doubleValue
+              Self.kilopascals(obj, "pressure")
+           ?? Self.kilopascals(obj, "pressureKPa")
+           ?? Self.kilopascals(obj, "ambientPressure")
+           ?? (Self.valuePathIfResponds(obj, "pressure.value") as? NSNumber)?.doubleValue
 
         // Optional: relative altitude (meters) and sea-level pressure (kPa)
         let relAlt: Double? =
-              (obj.value(forKey: "relativeAltitude") as? NSNumber)?.doubleValue
-           ?? (obj.value(forKey: "relativeAltitudeMeters") as? NSNumber)?.doubleValue
-           ?? (obj.value(forKeyPath: "relativeElevation") as? NSNumber)?.doubleValue
+              (Self.valueIfResponds(obj, "relativeAltitude") as? NSNumber)?.doubleValue
+           ?? (Self.valueIfResponds(obj, "relativeAltitudeMeters") as? NSNumber)?.doubleValue
+           ?? (Self.valuePathIfResponds(obj, "relativeElevation") as? NSNumber)?.doubleValue
 
         let slp: Double? =
-              (obj.value(forKey: "seaLevelPressure") as? NSNumber)?.doubleValue
-           ?? (obj.value(forKey: "seaLevelPressureKPa") as? NSNumber)?.doubleValue
+              Self.kilopascals(obj, "seaLevelPressure")
+           ?? Self.kilopascals(obj, "seaLevelPressureKPa")
 
         // If no pressure at all, skip
         guard let p = pressure else { return nil }
 
         var rec: [String: Any] = [
             "t": ISO8601Strategy.encode(ts),
+            "recorded_at": recordedAtISO,
             "pressure_kpa": p,
             "device_kind": "iphone"
         ]
@@ -135,5 +148,58 @@ extension AmbientPressureMapper: SRSensorReaderDelegate {
         if let s  = slp    { rec["sea_level_pressure_kpa"] = s }
 
         return rec
+    }
+
+    /// `SRAmbientPressureSample.pressure` is a `Measurement<UnitPressure>`, not a `Double`: read
+    /// it as one first (converting to kPa, the unit this record documents) and fall back to a
+    /// plain number for any other shape.
+    private static func kilopascals(_ obj: NSObject, _ key: String) -> Double? {
+        let value = Self.valueIfResponds(obj, key)
+        if let measurement = value as? Measurement<UnitPressure> {
+            return measurement.converted(to: .kilopascals).value
+        }
+        return (value as? NSNumber)?.doubleValue
+    }
+
+    // MARK: - Safe KVC
+    //
+    // FUAM-3945 round 7: these mappers PROBE speculative key names, and a bare
+    // `value(forKey:)` on an object that does not implement the key raises
+    // `NSUnknownKeyException` — an Objective-C exception, uncatchable from Swift, i.e. a crash.
+    // The mappers that were already enabled all guard with `responds(to:)`
+    // (`DeviceUsageReportMapper.valueIfResponds` and friends); these three did not, which is
+    // why enabling them without this would have crashed on the first fetch.
+
+    static func valueIfResponds(_ obj: NSObject, _ key: String) -> Any? {
+        guard obj.responds(to: NSSelectorFromString(key)) else { return nil }
+        return obj.value(forKey: key)
+    }
+
+    /// Safe `value(forKeyPath:)`: every component is probed before it is followed.
+    static func valuePathIfResponds(_ obj: NSObject, _ keyPath: String) -> Any? {
+        var current: Any? = obj
+        for component in keyPath.split(separator: ".").map(String.init) {
+            guard let object = current as? NSObject,
+                  let next = Self.valueIfResponds(object, component) else { return nil }
+            current = next
+        }
+        return current
+    }
+
+    /// The measurement instant of a sample. SensorKit exposes it either as a `Date` or as an
+    /// `SRAbsoluteTime` (a `double` of CFAbsoluteTime seconds, which KVC hands back as an
+    /// `NSNumber`). A numeric value landing in the future is not a CFAbsoluteTime we understand,
+    /// so it is refused rather than guessed at — `distantPast` fails the consent gate, which is
+    /// the safe direction.
+    static func sampleDate(_ obj: NSObject, keys: [String]) -> Date {
+        for key in keys {
+            let value = Self.valueIfResponds(obj, key)
+            if let date = value as? Date { return date }
+            if let number = value as? NSNumber {
+                let candidate = Date(timeIntervalSinceReferenceDate: number.doubleValue)
+                if candidate.timeIntervalSinceNow < 24 * 60 * 60 { return candidate }
+            }
+        }
+        return Date.distantPast
     }
 }

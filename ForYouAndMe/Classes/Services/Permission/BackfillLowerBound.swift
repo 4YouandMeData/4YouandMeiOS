@@ -103,69 +103,101 @@ extension BackfillLowerBound {
     }
 }
 
-// MARK: - Monotonic wall clock
+// MARK: - Server clock
 
-/// Monotonic high-water mark of observed wall-clock time (FUAM-3945 review fix #3).
+/// The trusted clock: the backend's, not the device's (FUAM-3964).
 ///
-/// The backfill bound is entirely `Date()`-relative, so moving the device clock back N days
-/// moved the derived join day back N days too — and, since the plan and the per-record filter
-/// both used the same wrong `now`, they agreed and up to a year of pre-consent HealthKit data
-/// became reachable. Deriving the join day from `max(Date(), maxObservedNow)` pins it where it
-/// was, at no under-fetch risk: the embargo / upper bound keeps the REAL `Date()`, so a clock
-/// behind the high-water mark simply yields an empty plan.
+/// Every backend response carries a standard HTTP `Date` header. `NetworkApiGateway` feeds it to
+/// `record(headerDate:)` on every successful response and we keep `offset = serverTime −
+/// deviceTime` in `UserDefaults`, so `ServerClock.now` is available offline and at launch, before
+/// any request has completed. With no offset ever stored (first launch on a fresh install, still
+/// offline) it degrades to `Date()` — today's behaviour.
 ///
-/// The derived join day itself is deliberately NOT persisted: a first resolution against a stale
-/// `days_in_study` would pin the bound too late forever and silently forfeit the backfill.
+/// This supersedes `BackfillClock`, the monotonic high-water mark of observed wall-clock time.
+/// That mark protected the join-day derivation against a clock rolled BACKWARDS, but a clock
+/// rolled FORWARDS then pinned the bound in the future and suspended collection until real time
+/// caught up. A server-anchored clock removes both directions at once.
 ///
-/// A mark ahead of the device clock is the accepted residual: a clock set into the FUTURE and
-/// then corrected keeps the bound too late (under-fetch, never a leak) until real time catches
-/// up. Two things make that survivable rather than silent: the HealthKit chunk walk skips a data
-/// type whose start date has reached `now` WITHOUT persisting its cursor (so the suspended window
-/// is still collected afterwards), and a mark more than a day ahead emits
-/// `sensor_data_clock_ahead` once per launch. The real fix is to trust the server clock (the
-/// `Date` header on API responses) instead of the device — see README "Backfill window".
-enum BackfillClock {
+/// Two uses, and only these two:
+/// 1. the join-day derivation in `RepositoryImpl.enrollmentDate` — moving the device clock no
+///    longer moves the participant's join day, in either direction;
+/// 2. a CAP on the planning upper bound in both subsystems (`min(deviceNow, ServerClock.now)`),
+///    so a device clock years ahead can never plan a window — and therefore never write a
+///    cursor — beyond server time. Any clock excursion self-heals on the next sync once the
+///    clock is sane, instead of leaving a multi-year hole the cursor has already skipped over.
+///
+/// Fetch requests to the OS keep using device wall-clock: HealthKit and SensorKit index their
+/// stores with the same (possibly wrong) clock that wrote the samples, so translating query
+/// bounds into server time would just miss data. Only PLANNING is capped.
+///
+/// What this does NOT fix: a measurement timestamp the OS recorded under a wrong clock is wrong
+/// for ever. The consent filter and the backend's future-anchor plausibility check are the guards
+/// there; server time fixes the machinery (bounds, cursor), not the historical samples.
+enum ServerClock {
 
-    static let storageKey = "backfill.maxObservedNow"
+    static let storageKey = "serverClock.offset"
 
-    /// The mark is only rewritten when it advances by more than this. `enrollmentDate` is read
-    /// several times per window callback and each read used to be a `UserDefaults` write; the
-    /// join day is day-grained, so a mark lagging by up to a minute changes nothing.
-    static let persistenceGranularity: TimeInterval = 60
+    /// Only rewrite the stored offset when it moves by more than this. Every API response would
+    /// otherwise be a `UserDefaults` write, and the offset is only ever read at day granularity;
+    /// this also absorbs the network-latency bias baked into every measurement (the `Date` header
+    /// is stamped when the response is generated, we read the clock when it arrives).
+    static let persistenceGranularity: TimeInterval = 5
 
-    /// Beyond this much "ahead", the mark is not clock jitter: the device clock jumped forward
-    /// (user error, bad NTP) and collection is suspended until real time catches up.
+    /// Beyond this much divergence, the device clock is not drifting, it is wrong.
     static let aheadReportThreshold: TimeInterval = 24 * 60 * 60
 
     /// Once-per-launch guard for the diagnostic below. Internal so specs can reset it.
-    static var clockAheadReported: Bool = false
+    static var offsetReported: Bool = false
 
-    /// `max(current, high-water mark)`, advancing the mark when the clock has moved forward.
-    static func monotonicNow(current: Date = Date(),
-                             defaults: UserDefaults = .standard,
-                             analytics: AnalyticsService? = nil) -> Date {
-        guard let observed = defaults.object(forKey: Self.storageKey) as? Date else {
-            defaults.set(current, forKey: Self.storageKey)
-            return current
-        }
-        if observed > current {
-            Self.reportClockAheadOnce(mark: observed, deviceNow: current, analytics: analytics)
-            return observed
-        }
-        if current.timeIntervalSince(observed) > Self.persistenceGranularity {
-            defaults.set(current, forKey: Self.storageKey)
-        }
-        return current
+    /// RFC 7231 IMF-fixdate, the only format an HTTP `Date` header may use in practice.
+    /// `en_US_POSIX` + a fixed GMT zone: never locale- or timezone-dependent.
+    private static let headerFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = TimeZone(identifier: "GMT")
+        formatter.dateFormat = "EEE, dd MMM yyyy HH:mm:ss zzz"
+        return formatter
+    }()
+
+    /// Persist the offset carried by one response's `Date` header. No-op for a missing or
+    /// unparsable header (a proxy that strips it must not move the clock), and for a change
+    /// below `persistenceGranularity`.
+    static func record(headerDate: String?,
+                       deviceNow: Date = Date(),
+                       defaults: UserDefaults = .standard) {
+        guard let headerDate = headerDate,
+              let serverNow = Self.headerFormatter.date(from: headerDate) else { return }
+        let offset = serverNow.timeIntervalSince(deviceNow)
+        let stored = defaults.object(forKey: Self.storageKey) as? Double
+        guard stored == nil || abs(offset - (stored ?? 0)) > Self.persistenceGranularity else { return }
+        defaults.set(offset, forKey: Self.storageKey)
     }
 
-    /// The stuck state is otherwise invisible: the plan comes out empty and nothing is uploaded
-    /// for roughly half the jump. FUAM-3835 ran for six weeks on exactly that kind of silence.
-    private static func reportClockAheadOnce(mark: Date, deviceNow: Date, analytics: AnalyticsService?) {
-        guard mark.timeIntervalSince(deviceNow) > Self.aheadReportThreshold else { return }
-        guard Self.clockAheadReported == false else { return }
-        Self.clockAheadReported = true
+    /// The stored offset, or `nil` when no response has ever been observed.
+    static func storedOffset(defaults: UserDefaults = .standard) -> TimeInterval? {
+        return defaults.object(forKey: Self.storageKey) as? Double
+    }
+
+    /// Server time as best we know it. Falls back to the device clock when no offset was ever
+    /// stored — that is the pre-FUAM-3964 behaviour, not a new failure mode.
+    static func now(current: Date = Date(),
+                    defaults: UserDefaults = .standard,
+                    analytics: AnalyticsService? = nil) -> Date {
+        guard let offset = Self.storedOffset(defaults: defaults) else { return current }
+        Self.reportOffsetOnce(offset: offset, deviceNow: current, analytics: analytics)
+        return current.addingTimeInterval(offset)
+    }
+
+    /// A device clock more than a day away from the server's is otherwise invisible: the plan
+    /// silently shrinks (clock behind) or the samples carry wrong timestamps (clock ahead).
+    /// FUAM-3835 ran for six weeks on exactly that kind of silence.
+    private static func reportOffsetOnce(offset: TimeInterval, deviceNow: Date, analytics: AnalyticsService?) {
+        guard abs(offset) > Self.aheadReportThreshold else { return }
+        guard Self.offsetReported == false else { return }
+        Self.offsetReported = true
         let formatter = ISO8601DateFormatter()
-        analytics?.track(event: .sensorDataClockAhead(mark: formatter.string(from: mark),
+        let serverNow = deviceNow.addingTimeInterval(offset)
+        analytics?.track(event: .sensorDataClockAhead(mark: formatter.string(from: serverNow),
                                                       deviceNow: formatter.string(from: deviceNow)))
     }
 }

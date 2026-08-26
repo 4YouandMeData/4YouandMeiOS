@@ -32,8 +32,10 @@ private enum FirebaseEventCustomName: String {
     case sensorDataClearanceMismatch = "sensor_data_clearance_mismatch"
     // FUAM-3841. Backfill reach per sensor.
     case sensorDataBackfillReach = "sensor_data_backfill_reach"
-    // FUAM-3945. Device clock ahead of the backfill high-water mark.
+    // FUAM-3945 / FUAM-3964. Device clock diverging from the server clock.
     case sensorDataClockAhead = "sensor_data_clock_ahead"
+    // FUAM-3945 round 7. A SensorKit reader failed to start recording.
+    case sensorRecordingStartFailed = "sensor_recording_start_failed"
 }
 
 private enum FirebaseErrorDomain {
@@ -112,6 +114,8 @@ class FirebaseAnalyticsPlatform: AnalyticsPlatform {
             self.sensorDataBackfillReach(sensor: sensor, reachedBack: reachedBack, boundedBy: boundedBy)
         case .sensorDataClockAhead(let mark, let deviceNow):
             self.sensorDataClockAhead(mark: mark, deviceNow: deviceNow)
+        case .sensorRecordingStartFailed(let sensor, let error):
+            self.sensorRecordingStartFailed(sensor: sensor, error: error)
         default:
             break
         }
@@ -179,6 +183,16 @@ class FirebaseAnalyticsPlatform: AnalyticsPlatform {
                        parameters: [
                            AnalyticsParameter.clockMark.rawValue: mark,
                            AnalyticsParameter.deviceNow.rawValue: deviceNow
+                       ])
+    }
+
+    // MARK: - FUAM-3945 SensorKit recording start failure
+
+    private func sensorRecordingStartFailed(sensor: String, error: String) {
+        self.sendEvent(withEventName: FirebaseEventCustomName.sensorRecordingStartFailed.rawValue,
+                       parameters: [
+                           AnalyticsParameter.sensor.rawValue: sensor,
+                           AnalyticsParameter.sensorError.rawValue: error
                        ])
     }
 

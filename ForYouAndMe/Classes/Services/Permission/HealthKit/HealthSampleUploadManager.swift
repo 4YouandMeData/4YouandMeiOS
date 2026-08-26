@@ -230,7 +230,12 @@ class HealthSampleUploadManager {
                                                                  boundedBy: bound.origin.rawValue))
         }
 
-        let endDate = Date()
+        // FUAM-3964: the walk plans (and persists a cursor) up to here, so it is capped at server
+        // time. A device clock years ahead would otherwise burn the cursor years into the future,
+        // and correcting the clock would then leave the walk with nothing to do until real time
+        // caught up. The QUERY still runs in device wall-clock — HealthKit indexes its store with
+        // the same clock that wrote the samples — only the plan is capped.
+        let endDate = min(Date(), ServerClock.now())
         let oneHour: TimeInterval = 3600
         let oneDay: TimeInterval = 24 * 3600
         // Review fixes #7/#8: while the cursor is far behind (historical walk) use coarse
@@ -254,11 +259,11 @@ class HealthSampleUploadManager {
             // FUAM-3945 (review round 4, I2): the walk cannot return anything once its start has
             // reached the end of the window, and persisting `nextEndDate` over a window that was
             // never read forfeits it for good. Skip the data type and leave the cursor ALONE, the
-            // same contract as the forward-only skip above. The live case is a bound in the
-            // FUTURE: the device clock jumped forward, so `BackfillClock`'s high-water mark keeps
-            // the future value (and the join day with it) until real time catches up. Collection
-            // is suspended meanwhile — deliberately, it is the price of the rollback guarantee —
-            // but nothing is lost, and `sensor_data_clock_ahead` says so once per launch.
+            // same contract as the forward-only skip above. Two live cases: a cursor already at
+            // the head, and a device clock ahead of the server's — `endDate` is capped at server
+            // time (FUAM-3964), so a cursor written under the wrong clock parks the walk here
+            // until real time catches up. Nothing is lost while it does, and
+            // `sensor_data_clock_ahead` reports the divergence once per launch.
             guard startDate < endDate else {
                 self.logDebugText(text: "Skipping \(dataType.keyName): start \(startDate) is not before "
                                   + "end \(endDate); cursor left untouched")

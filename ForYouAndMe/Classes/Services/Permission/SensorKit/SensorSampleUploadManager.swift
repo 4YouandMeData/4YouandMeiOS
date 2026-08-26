@@ -204,8 +204,12 @@ public final class SensorSampleUploadManager {
         }
     }
     
-    /// Report-like sensors are typically day-aggregated; prefer day-aligned windows when
-    /// bootstrapping. Static because the per-record consent gate is a pure static too.
+    /// The report-like sensors SensorKit indexes by WRITE time, aggregated over a day. They no
+    /// longer get their own window scheme (round 7: every sensor is windowed on complete UTC
+    /// days), but the per-record consent gate still needs to know which sensors they are — a
+    /// report written inside the first window describes the previous, pre-consent day, so its
+    /// window only vouches for undecidable records when it opens STRICTLY above the bound
+    /// (see `windowVouches`).
     static let dayAggregatedSensors: Set<SRSensor> = [
         .deviceUsageReport, .phoneUsageReport, .messagesUsageReport, .keyboardMetrics
     ]
@@ -228,34 +232,68 @@ public final class SensorSampleUploadManager {
         return BackfillLowerBound.resolve(joinDay: self.clearanceDelegate?.enrollmentDate)
     }
 
-    private func buildWindowPlan(for sensor: SRSensor, now: Date) -> WindowPlan {
-        return Self.buildWindowPlan(dayAggregated: Self.dayAggregatedSensors.contains(sensor),
-                                    now: now,
+    /// Internal rather than private so the FUAM-3964 server-time cap can be exercised through
+    /// this real call path: `fetchPendingWindows` bails out before planning on the simulator
+    /// (no sensor is ever `.authorized` there), so this is the outermost reachable seam.
+    func buildWindowPlan(for sensor: SRSensor, now: Date) -> WindowPlan {
+        // FUAM-3964: plan against `min(deviceNow, serverNow)`. A device clock in the future would
+        // otherwise plan windows up to that instant and write the cursor there; correcting the
+        // clock would then leave a hole the plan can never reopen (the cursor only moves forward).
+        // Capping at server time means any clock excursion self-heals on the next sync. The
+        // mapper's fetch still uses device wall-clock — SensorKit indexes its store with the same
+        // clock that wrote the samples.
+        return Self.buildWindowPlan(now: min(now, ServerClock.now()),
                                     joinDay: clearanceDelegate?.enrollmentDate,
                                     cursor: storage.lastCursor(for: sensor),
                                     embargo: sensorkitEmbargo)
     }
 
+    /// One UTC calendar day. UTC has no DST, so every UTC day is exactly 86400 seconds and a
+    /// day boundary is plain arithmetic — no `Calendar`, hence no way for the device timezone to
+    /// leak into the plan.
+    static let utcDay: TimeInterval = 24 * 60 * 60
+
+    /// Start of the UTC calendar day containing `date`.
+    static func utcDayStart(_ date: Date) -> Date {
+        let seconds = date.timeIntervalSince1970
+        return Date(timeIntervalSince1970: (seconds / Self.utcDay).rounded(.down) * Self.utcDay)
+    }
+
     /// Build embargo-safe fetch windows from the backfill lower bound up to now.
-    /// The lower bound is the shared FUAM-3945 policy (`BackfillLowerBound`): the study join
-    /// day, floored at 365 days, and forward-only when no join day can be established.
-    /// Over-requesting is free — `SRSensorReader.fetch` simply returns nothing for a window
-    /// the OS has already dropped — so this no longer clamps to an assumed OS retention.
-    /// Pure (internal for unit tests).
-    static func buildWindowPlan(dayAggregated: Bool,
-                                now: Date,
+    ///
+    /// **Windows are complete UTC calendar days** — `[00:00 UTC, next 00:00 UTC)` — for EVERY
+    /// sensor, continuous or day-aggregated (FUAM-3945 round 7). Only a window whose end is at or
+    /// before `safeTo` is planned, so a day is fetched once, complete, and never re-fetched
+    /// partially; combined with the 24h SensorKit embargo the accepted latency is up to ~48h.
+    ///
+    /// Why UTC rather than the previous `Calendar.current` day alignment (report sensors) and
+    /// cursor-relative 24h chunks (continuous sensors): a fetch window selects on the OS's WRITE
+    /// time, so the alignment does not change WHICH data is collected, only how it is cut. Making
+    /// the cut timezone-independent makes the boundaries reproducible — same device, same days,
+    /// whatever the participant's travel or a reinstall did to the local calendar — which is what
+    /// makes the backend's semantic anchors reproducible across re-uploads.
+    ///
+    /// **One-time migration window**: a cursor left by an older build sits at an arbitrary
+    /// instant. When it is not UTC-midnight-aligned the first planned window is the partial
+    /// `[cursor, next UTC midnight)`, after which every window is a whole UTC day. That partial
+    /// window is unique per device and forward-only, so it is planned exactly once and never
+    /// repeats.
+    ///
+    /// The lower bound is the shared FUAM-3945 policy (`BackfillLowerBound`): the study join day,
+    /// floored at 365 days, forward-only when no join day can be established. Over-requesting is
+    /// free — `SRSensorReader.fetch` simply returns nothing for a window the OS has already
+    /// dropped — so this no longer clamps to an assumed OS retention.
+    ///
+    /// `now` must already be capped at server time by the caller (FUAM-3964). Pure (internal for
+    /// unit tests).
+    static func buildWindowPlan(now: Date,
                                 joinDay: Date?,
                                 cursor: Date?,
-                                embargo: TimeInterval,
-                                calendar: Calendar = .current) -> WindowPlan {
-        let cal = calendar
-
-        // Upper bound: honour the 24h SensorKit embargo. Report-type sensors are
-        // day-aggregated, so additionally align DOWN to a day boundary ≤ now − embargo
-        // (review fix #11 — a mid-day upper bound made the cursor land mid-day and the next
-        // cycle re-fetch the same partial day forever).
-        let embargoCutoff = now.addingTimeInterval(-embargo)
-        let safeTo = dayAggregated ? cal.startOfDay(for: embargoCutoff) : embargoCutoff
+                                embargo: TimeInterval) -> WindowPlan {
+        // Upper bound: honour the 24h SensorKit embargo. No day alignment here — completeness is
+        // enforced per window below (`end <= safeTo`), which is the same guarantee without
+        // throwing away the fraction of a day between the last boundary and the cutoff.
+        let safeTo = now.addingTimeInterval(-embargo)
 
         // Lower bound: join day, capped at 365 days, forward-only (== now, hence an empty
         // plan until the join day resolves) when the join day is unknown.
@@ -277,26 +315,21 @@ public final class SensorSampleUploadManager {
         }
 
         var windows: [DateInterval] = []
-        if dayAggregated {
-            // Day-aligned windows: [startOfDay, nextStartOfDay). Day-align `from` but never
-            // rewind below the join-day bound (review fix #2 — startOfDay(from) alone opened
-            // the first window before the join day).
-            var dayStart = max(cal.startOfDay(for: from), lowerBound)
-            while dayStart < safeTo {
-                guard let next = cal.date(byAdding: .day, value: 1, to: cal.startOfDay(for: dayStart)) else { break }
-                windows.append(DateInterval(start: dayStart, end: min(next, safeTo)))
-                dayStart = next
+        var start = from
+        // Migration window: [cursor, next UTC midnight). Skipped when `from` is already aligned
+        // (steady state) and when the partial day is not complete yet — in which case `start`
+        // moves past `safeTo` and the loop below plans nothing, exactly as intended.
+        if start != Self.utcDayStart(start) {
+            let boundary = Self.utcDayStart(start).addingTimeInterval(Self.utcDay)
+            if boundary <= safeTo {
+                windows.append(DateInterval(start: start, end: boundary))
             }
-        } else {
-            // Continuous sensors: chunk in 24h absolute windows; oversized results are
-            // further split by payload size when enqueued.
-            let chunk: TimeInterval = 24 * 60 * 60
-            var start = from
-            while start < safeTo {
-                let end = min(start.addingTimeInterval(chunk), safeTo)
-                windows.append(DateInterval(start: start, end: end))
-                start = end
-            }
+            start = boundary
+        }
+        while start.addingTimeInterval(Self.utcDay) <= safeTo {
+            let end = start.addingTimeInterval(Self.utcDay)
+            windows.append(DateInterval(start: start, end: end))
+            start = end
         }
 
         return WindowPlan(windows: windows, lowerBound: from, lowerBoundOrigin: origin, consentBound: lowerBound)
