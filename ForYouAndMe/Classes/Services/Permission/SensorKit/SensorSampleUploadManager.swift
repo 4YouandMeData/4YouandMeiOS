@@ -21,8 +21,12 @@ public final class SensorSampleUploadManager {
     /// Maximum number of records in a single batch upload.
     private let maxBatchSize: Int = 500
 
-    /// Minimum time between auto-sync cycles (avoid noisy triggers).
-    private let minSyncInterval: TimeInterval = 15 // 15 minutes
+    /// Minimum time between auto-sync cycles (avoid noisy triggers). 15 SECONDS — the comment
+    /// used to say minutes, the value never did. Kept as is: since the in-flight chain guard
+    /// (review C1) a cycle that arrives while a sensor is still fetching is skipped rather than
+    /// re-entering its mapper, so the throttle no longer protects anything and a short interval
+    /// only costs an empty plan lookup. Changing the cadence is a separate decision.
+    private let minSyncInterval: TimeInterval = 15
 
     /// Exponential backoff boundaries for retry.
     private let retryBaseDelay: TimeInterval = 30
@@ -283,6 +287,8 @@ public final class SensorSampleUploadManager {
         // LOWER bound, so it takes `max` — a clock rolled BACK would otherwise move `now - 365d`
         // back with it and let the cap reach 365 + Δ real days. The later of the two clocks can
         // only ever tighten a lower bound, so `max` is the safe direction there.
+        // F8: one breadcrumb per launch when the cap has never had anything to cap with.
+        ServerClock.reportMissingOffsetOnce(analytics: self.analytics)
         return Self.buildWindowPlan(now: min(now, ServerClock.now()),
                                     boundNow: max(now, ServerClock.now()),
                                     joinDay: clearanceDelegate?.enrollmentDate,
@@ -352,8 +358,19 @@ public final class SensorSampleUploadManager {
         // never from `now` — so the gap is re-fetched.
         var from = lowerBound
         if let cursor = cursor, cursor > lowerBound {
-            from = cursor
-            origin = .cursor
+            if BackfillLowerBound.isFutureBurned(cursor: cursor, upperBound: safeTo) {
+                // FUAM-3964 (F1): a cursor more than a day above the capped upper bound was
+                // written by a clock that was wrong, offline, and therefore uncapped. Leaving it
+                // in place means the interval between the excursion and the cursor is never
+                // fetched — the plan comes out empty until real time passes the cursor, and then
+                // resumes AT it. Plan from the bound instead: the caller resets the stored cursor
+                // and reports `future_cursor`. See `BackfillLowerBound.isFutureBurned` for why
+                // this rewind is safe (UTC-day windows re-fetch idempotently).
+                origin = .futureCursor
+            } else {
+                from = cursor
+                origin = .cursor
+            }
         }
 
         guard from < safeTo else {
@@ -468,6 +485,22 @@ public final class SensorSampleUploadManager {
         }
         let device = devices[index]
         let plan = buildWindowPlan(for: sensor, now: now, device: device)
+        if plan.lowerBoundOrigin == .futureCursor {
+            // FUAM-3964 (F1). The stored cursor is provably corrupt (see the planner). Report it
+            // with the corrupt value as the reach — that is the size of the gap being recovered —
+            // and rewind the stored cursor to the consent bound so the walk below actually
+            // re-fetches it. The reset is its own once-per-launch guard: the next cycle reads the
+            // rewound cursor and never re-detects.
+            let burned = self.storage.lastCursor(for: sensor, deviceKey: device.key) ?? plan.lowerBound
+            self.analytics.track(event: .sensorDataBackfillReach(sensor: device.telemetryName(for: sensor),
+                                                                 reachedBack: ISO8601DateFormatter().string(from: burned),
+                                                                 boundedBy: BackfillLowerBound.Origin.futureCursor.rawValue))
+            self.storage.setLastCursor(plan.lowerBound, for: sensor, deviceKey: device.key)
+            #if DEBUG
+            print("SensorSampleUploadManager - Cursor for \(sensor.rawValue)/\(device.key) was burnt into the future "
+                  + "(\(burned)); reset to \(plan.lowerBound)")
+            #endif
+        }
         let context = DeviceChainContext(sensor: sensor,
                                          device: device,
                                          devices: devices,
@@ -481,7 +514,10 @@ public final class SensorSampleUploadManager {
             // telemetry trace — otherwise a sensor that never opens a window is
             // indistinguishable from one never asked. A forward-only bound is reported as
             // such, since it is the actionable case (the join day never resolved).
-            if plan.lowerBoundOrigin != .cursor, !emptyPlanReported.contains(context.failureKey) {
+            // `.futureCursor` is excluded: the reset above already reported it, with the corrupt
+            // cursor as the reach rather than the (less informative) bound.
+            if plan.lowerBoundOrigin != .cursor, plan.lowerBoundOrigin != .futureCursor,
+               !emptyPlanReported.contains(context.failureKey) {
                 emptyPlanReported.insert(context.failureKey)
                 let boundedBy: BackfillLowerBound.Origin = plan.lowerBoundOrigin == .forwardOnly ? .forwardOnly : .emptyPlan
                 analytics.track(event: .sensorDataBackfillReach(sensor: device.telemetryName(for: sensor),
@@ -501,7 +537,7 @@ public final class SensorSampleUploadManager {
         // only when the plan opens a backfill (not a routine cursor resume), so the study team
         // can tell "the OS deleted it" from "the client never asked". With FUAM-3945's floor
         // removed, the oldest sample that ever arrives IS Apple's real on-device retention.
-        if plan.lowerBoundOrigin != .cursor {
+        if plan.lowerBoundOrigin != .cursor, plan.lowerBoundOrigin != .futureCursor {
             analytics.track(event: .sensorDataBackfillReach(sensor: device.telemetryName(for: sensor),
                                                             reachedBack: ISO8601DateFormatter().string(from: firstWindow.start),
                                                             boundedBy: plan.lowerBoundOrigin.rawValue))

@@ -297,7 +297,10 @@ fileprivate extension PrimitiveSequence where Trait == SingleTrait, Element == R
     /// harvested — is what lets the backfill machinery stop trusting the device clock (see
     /// `ServerClock`). Harmless if a proxy strips the header: the offset simply never moves.
     private func handleServerDate(response: Response) {
-        ServerClock.record(headerDate: response.response?.allHeaderFields["Date"] as? String)
+        // `value(forHTTPHeaderField:)` rather than the `allHeaderFields` subscript: HTTP header
+        // names are case-insensitive and an HTTP/2 backend or proxy legitimately sends `date`,
+        // which the exact-match subscript misses (iOS 13+).
+        ServerClock.record(headerDate: response.response?.value(forHTTPHeaderField: "Date"))
     }
 
     private func handleAccessToken(response: Response, storage: NetworkStorage) {

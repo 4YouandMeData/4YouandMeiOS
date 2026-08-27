@@ -53,6 +53,32 @@ struct BackfillLowerBound {
         /// The drain-time consent gate dropped records from an already-queued batch (data loss
         /// trace: in steady state this should never fire, so any volume at all is actionable).
         case drainFiltered = "drain_filtered"
+        /// The stored cursor sat further in the future than any clock could legitimately have
+        /// written it (an offline forward clock excursion), so it was RESET to the consent bound
+        /// and the range it skipped is being re-walked. `reachedBack` carries the corrupt cursor,
+        /// so the size of the gap that was recovered is readable in Firebase (FUAM-3964, F1).
+        case futureCursor = "future_cursor"
+    }
+
+    /// How far a stored cursor may sit above the capped planning upper bound before it is treated
+    /// as corrupt rather than merely recent. One UTC day: a cursor legitimately parked at the end
+    /// of the last complete day must never trip the reset (FUAM-3964, F1).
+    static let futureCursorTolerance: TimeInterval = 24 * 60 * 60
+
+    /// `true` when `cursor` is provably not something a sane clock wrote: it exceeds `upperBound`
+    /// — already capped at `min(deviceNow, serverNow)`, minus any embargo — by more than
+    /// `futureCursorTolerance`.
+    ///
+    /// This is the ONE case in which a cursor may be rewound. The rule everywhere else is
+    /// "cursors only move forward", because rewinding re-uploads data and, worse, can re-open a
+    /// window the participant has since withdrawn consent for. Neither applies here: the rewind
+    /// target is the consent bound itself (never below it), and every window is a whole UTC day,
+    /// so a re-walk reproduces the exact same anchors and the backend union-merges the re-upload
+    /// instead of duplicating it. Bandwidth is the only cost, against the alternative of silently
+    /// never fetching the interval between the excursion and the burnt cursor.
+    static func isFutureBurned(cursor: Date?, upperBound: Date) -> Bool {
+        guard let cursor = cursor else { return false }
+        return cursor > upperBound.addingTimeInterval(Self.futureCursorTolerance)
     }
 
     /// Absolute maximum reach into the past, regardless of the join day.
@@ -134,8 +160,11 @@ extension BackfillLowerBound {
 /// clock. Until then `storedOffset` is `nil` (or stale from when the clock was right),
 /// `ServerClock.now()` degrades to `Date()`, and the whole pipeline — plan, fetch, enqueue and
 /// cursor write — proceeds on the device clock, uncapped. A device that goes offline, has its
-/// clock moved, and syncs while still offline is therefore NOT protected for that excursion; it
-/// self-heals on the first response afterwards. That offline window is the accepted residual:
+/// clock moved, and syncs while still offline is therefore NOT protected for that excursion. The
+/// MACHINERY recovers on the first response afterwards, and a cursor the excursion burnt into the
+/// future is detected at plan time and reset to the consent bound (`isFutureBurned`, reported as
+/// `future_cursor`) so the skipped range is re-fetched — what is never repaired is a measurement
+/// timestamp the OS recorded under the wrong clock. That offline window is the accepted residual:
 /// gating collection on "have we heard from the server recently" would stop collecting for every
 /// participant in a tunnel to protect against a rare one with a wrong clock. There is
 /// deliberately no offline gate.
@@ -167,18 +196,47 @@ enum ServerClock {
     private static let offsetReportLock = NSLock()
     private static var offsetReportedStorage = false
 
-    /// Once-per-launch guard for the diagnostic below. Internal so specs can reset it.
+    /// Once-per-launch guard for the diagnostic below.
     static var offsetReported: Bool {
-        get {
-            Self.offsetReportLock.lock()
-            defer { Self.offsetReportLock.unlock() }
-            return Self.offsetReportedStorage
-        }
-        set {
-            Self.offsetReportLock.lock()
-            defer { Self.offsetReportLock.unlock() }
-            Self.offsetReportedStorage = newValue
-        }
+        Self.offsetReportLock.lock()
+        defer { Self.offsetReportLock.unlock() }
+        return Self.offsetReportedStorage
+    }
+
+    #if DEBUG
+    /// Specs reset the latches between examples. `#if DEBUG` (F15): production code has no reason
+    /// to un-report and must not be able to — the whole point of a latch is that the diagnostic
+    /// fires once.
+    static func resetReportLatchesForTesting() {
+        Self.offsetReportLock.lock()
+        defer { Self.offsetReportLock.unlock() }
+        Self.offsetReportedStorage = false
+        Self.missingOffsetReportedStorage = false
+    }
+    #endif
+
+    /// `mark` value of the `sensor_data_clock_ahead` event when it means "no offset has ever been
+    /// recorded", rather than a measured divergence (F8).
+    static let noOffsetMark = "no_server_offset"
+
+    private static var missingOffsetReportedStorage = false
+
+    /// Once per launch, when a backfill plan is built while no offset has ever been recorded, say
+    /// so (F8). Everything the server clock protects — the planning cap and the 365-day floor —
+    /// is inert in that state, and the absence is otherwise indistinguishable from a healthy
+    /// clock: `now()` simply returns `Date()` and nothing is emitted. Falsifiability breadcrumb,
+    /// not an error: a device that has never had a successful response is a normal first launch.
+    static func reportMissingOffsetOnce(analytics: AnalyticsService?,
+                                        deviceNow: Date = Date(),
+                                        defaults: UserDefaults = .standard) {
+        guard Self.storedOffset(defaults: defaults) == nil else { return }
+        Self.offsetReportLock.lock()
+        let claimed = Self.missingOffsetReportedStorage == false
+        if claimed { Self.missingOffsetReportedStorage = true }
+        Self.offsetReportLock.unlock()
+        guard claimed else { return }
+        analytics?.track(event: .sensorDataClockAhead(mark: Self.noOffsetMark,
+                                                      deviceNow: ISO8601DateFormatter().string(from: deviceNow)))
     }
 
     /// Test-and-set in one critical section: `true` for exactly one caller per launch. A separate

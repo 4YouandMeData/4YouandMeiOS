@@ -91,7 +91,20 @@ final class SensorKitManager: NSObject, SensorKitService {
 
     /// Sensors whose `startRecording()` failure has already been reported this launch, so a
     /// permanently failing sensor does not emit an event on every `didBecomeActive`.
+    /// Mutated from `SRSensorReaderDelegate` callbacks — one reader per sensor, each delivering
+    /// on a framework-owned queue — so it is guarded, like `ServerClock`'s latch, by a single
+    /// test-and-set critical section (`claimRecordingFailureReport`) rather than by a main-queue
+    /// hop: a lock is smaller and does not delay the event.
     private var recordingFailureReported: Set<SRSensor> = []
+    private let recordingFailureLock = NSLock()
+
+    /// `true` for the first caller per sensor per launch. A locked read followed by a locked
+    /// insert would still let two readers both see "not reported" and both emit.
+    private func claimRecordingFailureReport(for sensor: SRSensor) -> Bool {
+        self.recordingFailureLock.lock()
+        defer { self.recordingFailureLock.unlock() }
+        return self.recordingFailureReported.insert(sensor).inserted
+    }
 
     // MARK: Dependencies
 
@@ -404,7 +417,7 @@ extension SensorKitManager: SRSensorReaderDelegate {
         print("SensorKitManager - startRecording failed for \(sensor.rawValue): \(error)")
         #endif
         // Once per sensor per launch: the retry loop would otherwise emit on every foreground.
-        guard self.recordingFailureReported.insert(sensor).inserted else { return }
+        guard self.claimRecordingFailureReport(for: sensor) else { return }
         let nsError = error as NSError
         self.analyticsService.track(event: .sensorRecordingStartFailed(sensor: sensor.shortSubsource,
                                                                        error: "\(nsError.domain)/\(nsError.code)"))

@@ -208,6 +208,8 @@ class HealthSampleUploadManager {
         // `min` for the mirror-image reason.)
         let bound = BackfillLowerBound.resolve(joinDay: self.clearanceDelegate?.enrollmentDate,
                                                now: max(Date(), ServerClock.now()))
+        // F8: one breadcrumb per launch when the cap has never had anything to cap with.
+        ServerClock.reportMissingOffsetOnce(analytics: self.analytics)
 
         // FUAM-3841: per-data-type cursor (review fix #4). When no cursor exists yet (fresh
         // install; legacy shared key covered by the storage fallback) backfill from the bound —
@@ -228,14 +230,6 @@ class HealthSampleUploadManager {
         let minimumSampleDate = query.minimumSampleDate
         var startDate = query.startDate
 
-        if storedStartDate == nil {
-            self.logDebugText(text: "Backfill lower bound for \(dataType.keyName) set to \(startDate) "
-                              + "(\(bound.origin.rawValue))")
-            self.analytics.track(event: .sensorDataBackfillReach(sensor: "health_kit_" + dataType.keyName,
-                                                                 reachedBack: ISO8601DateFormatter().string(from: startDate),
-                                                                 boundedBy: bound.origin.rawValue))
-        }
-
         // FUAM-3964: the walk plans (and persists a cursor) up to here, so it is capped at server
         // time. A device clock years ahead would otherwise burn the cursor years into the future,
         // and correcting the clock would then leave the walk with nothing to do until real time
@@ -244,6 +238,35 @@ class HealthSampleUploadManager {
         let endDate = min(Date(), ServerClock.now())
         let oneHour: TimeInterval = 3600
         let oneDay: TimeInterval = 24 * 3600
+
+        // FUAM-3964 (F1): a cursor more than a day above the capped end of the walk cannot have
+        // been written by a sane clock — only by an offline forward clock excursion, which runs
+        // this pipeline uncapped. Left alone it parks the walk until real time passes it and then
+        // resumes AT it, so the interval in between is silently never fetched. Reset it to the
+        // consent bound and re-walk; `BackfillLowerBound.isFutureBurned` documents why this one
+        // rewind is safe. Reported with the corrupt cursor as the reach, so the recovered gap is
+        // readable. The reset is its own once-per-launch guard: the next sequence cannot re-detect.
+        if BackfillLowerBound.isFutureBurned(cursor: storedStartDate, upperBound: endDate) {
+            self.logDebugText(text: "Cursor for \(dataType.keyName) was burnt into the future "
+                              + "(\(String(describing: storedStartDate))); reset to \(bound.date)")
+            self.report(dataType: dataType,
+                        date: storedStartDate ?? bound.date,
+                        origin: .futureCursor)
+            startDate = bound.date
+            self.storage.setUploadStartDate(startDate, forDataType: dataType)
+        } else {
+            // FUAM-3945 (F9): the reach was previously only reported on a FIRST-EVER walk
+            // (`storedStartDate == nil`), i.e. never for the entire upgrade cohort. Mirror
+            // SensorKit: report whenever a real backfill decision was taken — a cursor at or
+            // below the bound was clamped to it, which is a backfill — and stay silent on a
+            // routine cursor resume. Once per data type per launch.
+            let isCursorResume = (storedStartDate.map { $0 > bound.date }) ?? false
+            if !isCursorResume {
+                self.logDebugText(text: "Backfill lower bound for \(dataType.keyName) set to \(startDate) "
+                                  + "(\(bound.origin.rawValue))")
+                self.reportOnce(dataType: dataType, date: startDate, origin: bound.origin)
+            }
+        }
         // Review fixes #7/#8: while the cursor is far behind (historical walk) use coarse
         // 1-day chunks and a plain HKSampleQuery; near the head revert to 1-hour chunks and
         // the anchored query (Apple's guidance: sample queries for history, anchored for sync).
@@ -266,10 +289,10 @@ class HealthSampleUploadManager {
             // reached the end of the window, and persisting `nextEndDate` over a window that was
             // never read forfeits it for good. Skip the data type and leave the cursor ALONE, the
             // same contract as the forward-only skip above. Two live cases: a cursor already at
-            // the head, and a device clock ahead of the server's — `endDate` is capped at server
-            // time (FUAM-3964), so a cursor written under the wrong clock parks the walk here
-            // until real time catches up. Nothing is lost while it does, and
-            // `sensor_data_clock_ahead` reports the divergence once per launch.
+            // the head (nothing to do, nothing lost), and a bound that has not been reached yet —
+            // a join day in the future. A cursor burnt into the future no longer reaches this
+            // guard: it is detected and reset above (F1), because parking here forfeited the
+            // interval between the excursion and the cursor rather than merely delaying it.
             guard startDate < endDate else {
                 self.logDebugText(text: "Skipping \(dataType.keyName): start \(startDate) is not before "
                                   + "end \(endDate); cursor left untouched")
@@ -329,7 +352,19 @@ class HealthSampleUploadManager {
                     self.logDebugText(text: "Upload failed from \(startDate) to \(nextEndDate) with error: \(error)")
                     
                     guard let sampleUploadError = error as? HealthSampleUploaderError else {
+                        // F3: an error this switch does not know about used to return here —
+                        // without advancing, without clearing `uploadSequenceScheduledOrRunning`
+                        // and without rescheduling, i.e. HealthKit stopped for the whole process
+                        // lifetime, silently, in Release. Report it (the domain/code is the only
+                        // thing that makes it actionable) and hand the sequence on: this data
+                        // type loses one cycle, nothing else stalls, and the cursor is untouched
+                        // so the chunk is retried next sequence.
                         assertionFailure("Unexpected error type")
+                        let nsError = error as NSError
+                        self.report(dataType: dataType,
+                                    date: nextEndDate,
+                                    boundedBy: "\(BackfillLowerBound.Origin.gaveUp.rawValue):\(nsError.domain)#\(nsError.code)")
+                        self.processNextUploader(forUploader: uploader)
                         return
                     }
                     
@@ -339,7 +374,7 @@ class HealthSampleUploadManager {
                         self.processNextUploader(forUploader: uploader)
                     case .uploadConnectivityError:
                         self.logDebugText(text: "Upload connectivity error. Retrying current chunk")
-                        processNextChunk()  // Riprova l'upload di questo chunk
+                        processNextChunk()  // Retry the upload of this chunk
                     case .uploadPayloadTooLarge:
                         // FUAM-3945: over the server's 10 MB request cap. Halve the chunk's TIME
                         // window and retry each half, in order; the cursor only ever moves to the
@@ -368,7 +403,7 @@ class HealthSampleUploadManager {
                 }).disposed(by: self.disposeBag)
         }
 
-        processNextChunk()  // Avvia il primo chunk
+        processNextChunk()  // Start the first chunk
     }
 
     /// Forward-only means "we could not establish the join day", which is actionable but
@@ -387,9 +422,15 @@ class HealthSampleUploadManager {
 
     /// `sensor_data_backfill_reach`, unthrottled: for the events that trace actual data loss.
     private func report(dataType: HealthDataType, date: Date, origin: BackfillLowerBound.Origin) {
+        self.report(dataType: dataType, date: date, boundedBy: origin.rawValue)
+    }
+
+    /// Same event with a free-form `bounded_by`. Used only by the unrecognised-upload-error path,
+    /// which appends the error domain/code to the `gave_up` value (see `AnalyticsEvent`).
+    private func report(dataType: HealthDataType, date: Date, boundedBy: String) {
         self.analytics.track(event: .sensorDataBackfillReach(sensor: "health_kit_" + dataType.keyName,
                                                              reachedBack: ISO8601DateFormatter().string(from: date),
-                                                             boundedBy: origin.rawValue))
+                                                             boundedBy: boundedBy))
     }
 
     private func processNextUploader(forUploader uploader: HealthSampleUploader) {

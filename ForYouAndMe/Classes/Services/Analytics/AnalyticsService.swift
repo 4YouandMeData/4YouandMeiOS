@@ -149,10 +149,15 @@ enum AnalyticsEvent {
     // reached for a sensor (ISO8601) and what bounded it, so the study team can tell "the OS
     // deleted it" from "the client never asked". `boundedBy` is a
     // `BackfillLowerBound.Origin.rawValue`: "join_date", "hard_cap_365d", "forward_only",
-    // "empty_plan", "gave_up", "drain_filtered", "bisected" or "attempts_exhausted".
+    // "empty_plan", "gave_up", "drain_filtered", "bisected", "attempts_exhausted" or
+    // "future_cursor" (a cursor burnt into the future by a clock excursion was reset to the
+    // consent bound; `reachedBack` is then the corrupt cursor, so the recovered gap is readable).
     // ("enrollment" and "retention_floor" are superseded.) The
     // `cursor` origin is carried in the plan but deliberately never emitted: a routine cursor
     // resume is not a backfill and would drown the actionable events.
+    // One exception to the closed vocabulary: the HealthKit "unrecognised upload error" path
+    // emits "gave_up:<error domain>#<code>" — the same class of event (the sequence moved on
+    // without advancing), with the only diagnostic that makes it actionable attached.
     case sensorDataBackfillReach(sensor: String, reachedBack: String, boundedBy: String)
 
     // FUAM-3945 / FUAM-3964. Emitted once per launch when the device clock is more than a day

@@ -63,6 +63,7 @@ import Quick
 import Nimble
 import RxSwift
 import SensorKit
+import HealthKit
 @testable import ForYouAndMe
 
 class EnrollmentBackfillWindowingSpec: QuickSpec {
@@ -691,7 +692,7 @@ class EnrollmentBackfillWindowingSpec: QuickSpec {
             beforeEach {
                 defaults = UserDefaults(suiteName: "ServerClockSpec.\(UUID().uuidString)")
                 analytics = CapturingAnalyticsService()
-                ServerClock.offsetReported = false
+                ServerClock.resetReportLatchesForTesting()
             }
 
             context("learning the offset from the Date header") {
@@ -1148,6 +1149,7 @@ class SensorKitServerTimeCapSpec: QuickSpec {
 
         var storage: FakeSensorStorage!
         var clearance: FakeSensorClearance!
+        var analytics: CapturingAnalyticsService!
         var manager: SensorSampleUploadManager!
         var deviceNow: Date!
         var serverNow: Date!
@@ -1160,11 +1162,12 @@ class SensorKitServerTimeCapSpec: QuickSpec {
 
             storage = FakeSensorStorage()
             clearance = FakeSensorClearance()
+            analytics = CapturingAnalyticsService()
             clearance.enrollmentDate = serverNow.addingTimeInterval(-30 * day)
             manager = SensorSampleUploadManager(withSensors: [sensor],
                                                 storage: storage,
                                                 reachability: FakeSensorReachability(),
-                                                analytics: CapturingAnalyticsService(),
+                                                analytics: analytics,
                                                 mappers: [sensor: FakeSensorMapper()])
             manager.clearanceDelegate = clearance
         }
@@ -1182,14 +1185,52 @@ class SensorKitServerTimeCapSpec: QuickSpec {
             expect(last.end).to(beLessThan(deviceNow.addingTimeInterval(-embargo)))
         }
 
-        it("resumes from a cursor that a wrong clock already pushed into the future, without extending it") {
-            // Worst case: a previous cycle (before the cap) burned the cursor to device time.
-            let burned = deviceNow.addingTimeInterval(-2 * day)   // still ahead of server time
+        it("resets a cursor a wrong clock burnt into the future, and reports the gap") {
+            // Worst case: a previous cycle (offline, before any offset was recorded) burned the
+            // cursor to device time. Parking on it — the pre-F1 behaviour — meant the interval
+            // between the excursion and the cursor was never fetched: the plan stayed empty until
+            // real time passed the cursor and then resumed AT it.
+            let burned = deviceNow.addingTimeInterval(-2 * day)   // > 1 day above the capped bound
             storage.setLastCursor(burned, for: sensor)
+
             let plan = manager.buildWindowPlan(for: sensor, now: deviceNow, device: .current)
-            // Nothing can be planned above server time, so the plan is empty and the cursor is
-            // left alone until real time catches up — no further escape, and no data forfeited.
-            expect(plan.windows).to(beEmpty())
+
+            // The plan reopens at the consent bound, not at the burnt cursor.
+            expect(plan.lowerBoundOrigin).to(equal(BackfillLowerBound.Origin.futureCursor))
+            expect(plan.lowerBound).to(equal(plan.consentBound))
+            expect(plan.windows.first?.start).to(equal(plan.consentBound))
+        }
+
+        it("rewinds the stored cursor and emits future_cursor carrying the corrupt value") {
+            let burned = deviceNow.addingTimeInterval(-2 * day)
+            storage.setLastCursor(burned, for: sensor)
+
+            manager.runDeviceChain(at: 0,
+                                   of: [.current],
+                                   for: sensor,
+                                   now: deviceNow,
+                                   using: FakeSensorMapper())
+
+            let reported: [(String, String)] = analytics.trackedEvents.compactMap { event in
+                guard case let .sensorDataBackfillReach(_, reachedBack, boundedBy) = event,
+                      boundedBy == BackfillLowerBound.Origin.futureCursor.rawValue else { return nil }
+                return (reachedBack, boundedBy)
+            }
+            expect(reported).to(haveCount(1))
+            expect(reported.first?.0).to(equal(ISO8601DateFormatter().string(from: burned)))
+            // The rewind actually happened: the stored cursor is no longer in the future.
+            expect(storage.lastCursor(for: sensor))
+                .toEventually(beLessThan(deviceNow.addingTimeInterval(-day)), timeout: .seconds(5))
+        }
+
+        it("leaves a cursor at the head of the last complete day alone (tolerance)") {
+            // A legitimate cursor sits at most one embargo behind the capped upper bound; the
+            // one-UTC-day tolerance must not turn that into a reset (which would re-fetch a day
+            // on every single cycle).
+            let legitimate = serverNow.addingTimeInterval(-embargo - 60)
+            storage.setLastCursor(legitimate, for: sensor)
+            let plan = manager.buildWindowPlan(for: sensor, now: deviceNow, device: .current)
+            expect(plan.lowerBoundOrigin).to(equal(BackfillLowerBound.Origin.cursor))
         }
 
         it("plans on the device clock alone when no offset was ever recorded (accepted residual)") {
@@ -1593,20 +1634,27 @@ class HealthBackfillChunkWalkSpec: QuickSpec {
 
             it("never walks — nor writes a cursor — past server time (FUAM-3964)") {
                 // The device clock is 5 days AHEAD of the server's. `endDate` is capped at server
-                // time, so a cursor sitting above it (written by an earlier cycle under the wrong
-                // clock, or simply a fresh install with a skewed clock) parks the walk: nothing is
-                // queried and the cursor is left exactly where it was, so the suspended window is
-                // still collected once real time catches up. Without the cap the walk runs to
-                // device `now` and burns the cursor there, and the hole is unrecoverable.
+                // time, so nothing can be queried — nor a cursor written — above it. A cursor
+                // sitting more than a day above that cap was written by an earlier, uncapped cycle
+                // under the wrong clock: F1 resets it to the consent bound and re-walks, because
+                // parking on it (the pre-F1 behaviour) meant the interval between the excursion
+                // and the cursor was never fetched at all.
                 UserDefaults.standard.set(-5 * day, forKey: ServerClock.storageKey)
                 defer { UserDefaults.standard.removeObject(forKey: ServerClock.storageKey) }
-                let burned = Date().addingTimeInterval(-2 * day)   // ahead of server time
+                let burned = Date().addingTimeInterval(-2 * day)   // 3 days above the capped end
                 storage.setUploadStartDate(burned, forDataType: dataType)
 
                 walk { _ in nil }
 
-                expect(attempted).to(beEmpty())
-                expect(storage.uploadStartDate(forDataType: dataType)).to(equal(burned))
+                // Sampled AFTER the walk: the cap is `min(Date(), ServerClock.now())` read inside
+                // it, so a value read before would be milliseconds earlier and fail spuriously.
+                let serverNow = Date().addingTimeInterval(-5 * day)
+
+                expect(reachEvents(boundedBy: .futureCursor)).to(equal([ISO8601DateFormatter().string(from: burned)]))
+                expect(attempted).toNot(beEmpty())
+                // Still capped: neither the walk nor the cursor may pass server time.
+                expect(attempted.last?.end).to(beLessThanOrEqualTo(serverNow))
+                expect(storage.uploadStartDate(forDataType: dataType)).to(beLessThanOrEqualTo(serverNow))
                 expect(storage.pendingUploadDataType).to(beNil())
             }
 
@@ -1998,7 +2046,6 @@ class SensorKitPerDeviceSpec: QuickSpec {
             it("never enumerates the denylisted high-rate sensors") {
                 // Both are disabled today; the denylist keeps "re-enable it" and "fetch it from
                 // the Watch" two separate decisions.
-                expect(DefaultSensorDeviceProvider.enumerationDenylist).to(equal([.accelerometer, .rotationRate]))
                 expect(provider.devices(for: .accelerometer).map { $0.key }).to(equal([SensorDevice.iphoneKey]))
                 expect(provider.devices(for: .rotationRate).map { $0.key }).to(equal([SensorDevice.iphoneKey]))
             }
@@ -2085,5 +2132,258 @@ private final class BlockingDeviceMapper: SensorSampleMapper {
         }
         next?(.success([]))
         return next != nil
+    }
+}
+
+// MARK: - FUAM-3964 (F1): a HealthKit cursor burnt into the future
+
+/// The HealthKit mirror of the SensorKit reset. An offline forward clock excursion runs the walk
+/// uncapped and persists `uploadStartDate` in the future; once the clock is corrected the walk
+/// parks (`startDate >= endDate`) and, when real time finally passes the cursor, resumes AT it —
+/// so the interval in between was never fetched and never reported. It is now detected, reported
+/// as `future_cursor` carrying the corrupt cursor, and reset to the consent bound.
+///
+/// Also pins F9: the reach event used to be gated on `uploadStartDate == nil`, i.e. it never fired
+/// for an install that already had a cursor — the entire upgrade cohort.
+class HealthFutureCursorSpec: QuickSpec {
+
+    override class func spec() {
+
+        let day: TimeInterval = 24 * 3600
+        let dataType = HealthDataType.stepCount
+
+        var storage: FakeHealthStorage!
+        var analytics: CapturingAnalyticsService!
+        var clearance: FakeHealthClearance!
+        var network: FakeHealthNetwork!
+        var attempted: [DateInterval]!
+
+        beforeEach {
+            storage = FakeHealthStorage()
+            analytics = CapturingAnalyticsService()
+            clearance = FakeHealthClearance()
+            network = FakeHealthNetwork()
+            clearance.enrollmentDate = Date().addingTimeInterval(-10 * day)
+            attempted = []
+        }
+
+        /// Runs the real `startUpload` walk with every chunk succeeding.
+        func walk() {
+            let manager = HealthSampleUploadManager(withDataTypes: [dataType],
+                                                    storage: storage,
+                                                    reachability: FakeHealthReachability(),
+                                                    analytics: analytics)
+            manager.clearanceDelegate = clearance
+            manager.setNetworkDelegate(network)
+            manager.uploadChunk = { _, chunk, _, _ in
+                attempted.append(chunk)
+                return Single.just(())
+            }
+            guard let uploader = manager.uploaders.first else {
+                fail("no uploader for \(dataType.keyName)")
+                return
+            }
+            manager.startUpload(forUploader: uploader)
+        }
+
+        func reachEvents(boundedBy origin: BackfillLowerBound.Origin) -> [String] {
+            return analytics.trackedEvents.compactMap { event in
+                guard case .sensorDataBackfillReach(let sensor, let reachedBack, let boundedBy) = event,
+                      boundedBy == origin.rawValue,
+                      sensor == "health_kit_" + dataType.keyName else { return nil }
+                return reachedBack
+            }
+        }
+
+        it("resets a cursor burnt into the future and re-walks from the consent bound") {
+            let burned = Date().addingTimeInterval(3 * day)
+            storage.setUploadStartDate(burned, forDataType: dataType)
+
+            walk()
+
+            // Reported once, with the corrupt cursor as the reach so the gap size is readable.
+            expect(reachEvents(boundedBy: .futureCursor)).to(equal([ISO8601DateFormatter().string(from: burned)]))
+            // The walk actually re-fetched: it opened at the consent bound, not at the cursor.
+            expect(attempted.first?.start).to(beCloseTo(Date().addingTimeInterval(-10 * day), within: 5))
+            expect(storage.uploadStartDate(forDataType: dataType)).to(equal(attempted.last?.end))
+        }
+
+        it("leaves a cursor inside the tolerance alone") {
+            // Half a day ahead is not provably corrupt (clock jitter, a chunk end rounded up),
+            // so the old contract holds: never rewind, park until real time catches up.
+            let nearFuture = Date().addingTimeInterval(day / 2)
+            storage.setUploadStartDate(nearFuture, forDataType: dataType)
+
+            walk()
+
+            expect(reachEvents(boundedBy: .futureCursor)).to(beEmpty())
+            expect(attempted).to(beEmpty())
+            expect(storage.uploadStartDate(forDataType: dataType)).to(equal(nearFuture))
+        }
+
+        it("reports the reach for an install that already has a cursor below the bound (F9)") {
+            // The upgrade cohort: a cursor exists, but it predates the consent bound and is
+            // clamped to it — a real backfill decision, which used to be reported by nobody.
+            storage.setUploadStartDate(Date().addingTimeInterval(-30 * day), forDataType: dataType)
+
+            walk()
+
+            expect(reachEvents(boundedBy: .joinDate)).to(haveCount(1))
+        }
+
+        it("stays silent on a routine cursor resume") {
+            storage.setUploadStartDate(Date().addingTimeInterval(-2 * day), forDataType: dataType)
+
+            walk()
+
+            expect(reachEvents(boundedBy: .joinDate)).to(beEmpty())
+            expect(reachEvents(boundedBy: .futureCursor)).to(beEmpty())
+        }
+    }
+}
+
+// MARK: - FUAM-3945 (F6): the HealthKit per-sample consent gate
+
+/// `HealthSampleUploader.consentFiltered` is the ONLY per-sample consent gate in the HealthKit
+/// path, and until this spec nothing executed it: every chunk-walk spec substitutes the
+/// `uploadChunk` seam, which bypasses the uploader wholesale. `HKQuantitySample` is constructible
+/// without any store access, so the gate can be driven directly.
+class HealthConsentFilterSpec: QuickSpec {
+
+    override class func spec() {
+
+        let hour: TimeInterval = 3600
+        let bound = Date().addingTimeInterval(-24 * hour)
+
+        func sample(at date: Date) -> HKQuantitySample? {
+            guard let type = HKQuantityType.quantityType(forIdentifier: .stepCount) else { return nil }
+            return HKQuantitySample(type: type,
+                                    quantity: HKQuantity(unit: .count(), doubleValue: 1),
+                                    start: date,
+                                    end: date)
+        }
+
+        describe("consentFiltered") {
+
+            it("keeps a sample stamped exactly at the bound") {
+                // `>=`, not `>`: the bound is the START of the join day.
+                guard let atBound = sample(at: bound) else { return fail("no step count type") }
+                expect(HealthSampleUploader.consentFiltered([atBound], minimum: bound)).to(haveCount(1))
+            }
+
+            it("drops everything measured before the bound and keeps everything after") {
+                guard let before = sample(at: bound.addingTimeInterval(-1)),
+                      let after = sample(at: bound.addingTimeInterval(1)) else { return fail("no step count type") }
+                let kept = HealthSampleUploader.consentFiltered([before, after], minimum: bound)
+                expect(kept.map { $0.startDate }).to(equal([after.startDate]))
+            }
+
+            it("returns nothing when every sample predates the bound") {
+                guard let older = sample(at: bound.addingTimeInterval(-10 * hour)),
+                      let oldest = sample(at: bound.addingTimeInterval(-100 * hour)) else { return fail("no step count type") }
+                expect(HealthSampleUploader.consentFiltered([older, oldest], minimum: bound)).to(beEmpty())
+            }
+
+            it("handles an empty input") {
+                expect(HealthSampleUploader.consentFiltered([], minimum: bound)).to(beEmpty())
+            }
+        }
+
+        describe("serializedSize (the pre-flight payload gate)") {
+
+            it("measures the JSON the request will actually carry") {
+                let payload: HealthNetworkData = ["a": "bc"]
+                // {"a":"bc"} — 10 bytes, and under the cap.
+                expect(HealthSampleUploader.serializedSize(of: payload)).to(equal(10))
+                expect(HealthSampleUploader.serializedSize(of: payload) ?? 0)
+                    .to(beLessThan(Constants.HealthKit.MaxUploadPayloadBytes))
+            }
+
+            it("sees a payload over the 8 MB cap as over the cap") {
+                let big: HealthNetworkData = ["data": String(repeating: "x", count: 9 * 1024 * 1024)]
+                guard let size = HealthSampleUploader.serializedSize(of: big) else {
+                    return fail("an oversize payload must still be measurable")
+                }
+                expect(size).to(beGreaterThan(Constants.HealthKit.MaxUploadPayloadBytes))
+            }
+
+            it("returns nil rather than a guess for something that cannot be serialized") {
+                // nil means "send it anyway": a rejected request is recoverable, a chunk skipped
+                // on a guess is not.
+                expect(HealthSampleUploader.serializedSize(of: ["date": Date()])).to(beNil())
+            }
+        }
+
+        describe("the 413 discriminator behind uploadPayloadTooLarge") {
+
+            let request = ApiRequest(serviceRequest: .sendHealthData(healthData: [:], source: "health_kit"))
+
+            it("reads the status code the oversize mapping branches on") {
+                let error = ApiError.unexpectedError(pathUrl: "/health", request: request,
+                                                     statusCode: 413, responseBody: "")
+                expect(error.httpStatusCode).to(equal(413))
+            }
+
+            it("has no status code for a connectivity failure, which must not read as oversize") {
+                expect(ApiError.connectivity.httpStatusCode).to(beNil())
+                expect(ApiError.network(pathUrl: "/health", request: request,
+                                        underlyingError: TestError.generic).httpStatusCode).to(beNil())
+            }
+        }
+    }
+}
+
+// MARK: - FUAM-3945 (F7): the legacy upload-queue purge
+
+/// A batch persisted by a pre-FUAM-3945 build is a bare array of records with no window start, and
+/// the drain-time consent gate cannot decide it (its undecidable records would be dropped anyway).
+/// It is purged on the first load after the upgrade — silently, but it must neither crash nor
+/// survive at rest on the device.
+class SensorLegacyQueuePurgeSpec: QuickSpec {
+
+    override class func spec() {
+
+        let sensor = SRSensor.pedometerData
+        let key = "sensorkit.queue." + sensor.rawValue
+        var storage: DefaultsSensorStorage!
+
+        beforeEach {
+            storage = DefaultsSensorStorage()
+            // The pre-FUAM-3945 shape: [[[String: Any]]] — an array of batches of records.
+            let legacy: [[[String: Any]]] = [[["t": "2025-01-01T00:00:00Z", "steps": 10]],
+                                             [["t": "2025-01-02T00:00:00Z", "steps": 20]]]
+            guard let data = try? JSONSerialization.data(withJSONObject: legacy) else {
+                return fail("could not build the legacy blob")
+            }
+            UserDefaults.standard.set(data, forKey: key)
+        }
+
+        afterEach {
+            UserDefaults.standard.removeObject(forKey: key)
+        }
+
+        it("drops legacy entries, rewrites the blob and does not crash") {
+            expect(storage.pendingBatchCount(for: sensor)).to(equal(0))
+            expect(storage.dequeueNextBatch(for: sensor)).to(beNil())
+
+            // Rewritten in the new shape (an empty array), so nothing is left at rest.
+            guard let data = UserDefaults.standard.data(forKey: key),
+                  let entries = try? JSONSerialization.jsonObject(with: data) as? [Any] else {
+                return fail("the queue blob was not rewritten")
+            }
+            expect(entries).to(beEmpty())
+        }
+
+        it("round-trips a new-format batch enqueued right after the purge") {
+            let windowStart = Date(timeIntervalSince1970: 1_700_000_000)
+            _ = storage.pendingBatchCount(for: sensor)   // triggers the purge
+            storage.enqueueBatch([["t": "2025-06-01T00:00:00Z"]], windowStart: windowStart, for: sensor)
+
+            expect(storage.pendingBatchCount(for: sensor)).to(equal(1))
+            let head = storage.dequeueNextBatch(for: sensor)
+            expect(head?.records.count).to(equal(1))
+            expect(head?.windowStart).to(equal(windowStart))
+            expect(storage.pendingBatchCount(for: sensor)).to(equal(0))
+        }
     }
 }

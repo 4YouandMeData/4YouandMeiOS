@@ -109,10 +109,7 @@ class HealthSampleUploader {
             return Disposables.create()
         }
         .flatMap { result -> Single<HKQueryAnchor?> in
-            // Hard consent gate: drop any sample measured before the backfill lower bound
-            // (the study join day / 365-day cap — see `BackfillLowerBound`), regardless of
-            // what the query returned. Client-side, does not depend on the server.
-            let samples = result.samples.filter { $0.startDate >= minimumSampleDate }
+            let samples = Self.consentFiltered(result.samples, minimum: minimumSampleDate)
             self.logDebugText(text: "Uploading \(samples.count) samples from \(startDate) to \(endDate)")
 
             guard samples.count > 0 else {
@@ -142,6 +139,19 @@ class HealthSampleUploader {
             }
         })
         .toVoid()
+    }
+
+    /// The hard consent gate: drop any sample measured before the backfill lower bound (the study
+    /// join day / 365-day cap — see `BackfillLowerBound`), regardless of what the query returned.
+    /// Client-side, does not depend on the server.
+    ///
+    /// `>=`, not `>`: the bound is the START of the join day, so a sample stamped exactly at
+    /// midnight was measured on the join day and is consented. Extracted from the query pipeline
+    /// (FUAM-3945, F6) purely so it can be executed by a test — the `uploadChunk` seam the chunk
+    /// specs use bypasses this whole uploader, which left the only per-sample consent gate in the
+    /// HealthKit path unexercised.
+    static func consentFiltered(_ samples: [HKSample], minimum: Date) -> [HKSample] {
+        return samples.filter { $0.startDate >= minimum }
     }
 
     /// Serialized JSON size of an upload payload — the request body is this dictionary inside a

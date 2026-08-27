@@ -16,23 +16,23 @@ private func dateFromSRAbsoluteTime(_ srTime: SRAbsoluteTime) -> Date {
 // MARK: - Mapper
 
 /// Maps SensorKit SRDeviceUsageReport into JSON-ready dictionaries.
-/// NOTE: authorization e startRecording() sono gestiti altrove.
+/// NOTE: authorization and startRecording() are handled elsewhere.
 final class DeviceUsageReportMapper: NSObject, SensorSampleMapper {
 
-    // SRSensor di competenza
+    // The SRSensor this mapper owns
     var sensor: SRSensor { .deviceUsageReport }
 
-    // Reader dedicato
+    // Dedicated reader
     private let reader = SRSensorReader(sensor: .deviceUsageReport)
 
-    // Stato richiesta corrente (evita concorrenza)
+    // Current request state (single-flight: no concurrent fetch)
     private var pendingCompletion: ((Result<[[String: Any]], Error>) -> Void)?
     private var collected = [[String: Any]]()
 
-    // Apple impone un embargo di ~24h sui dati
+    // Apple embargoes the last ~24h of data
     private static let holdingPeriod: TimeInterval = 24 * 60 * 60
 
-    // Errori mapper
+    // Mapper errors
     private enum MapperError: LocalizedError {
         case busy
         case notAuthorized(status: SRAuthorizationStatus)
@@ -49,20 +49,20 @@ final class DeviceUsageReportMapper: NSObject, SensorSampleMapper {
 
     // MARK: - SensorSampleMapper
 
-    /// Esegue fetch [from, to) rispettando l’embargo 24h e mappa SRDeviceUsageReport.
+    /// Fetches [from, to) honouring the 24h embargo and maps SRDeviceUsageReport.
     func fetchAndMap(
         from: Date,
         to: Date,
         device: SensorDevice,
         completion: @escaping (Result<[[String: Any]], Error>) -> Void
     ) {
-        // Evita crash su richieste concorrenti
+        // Avoid a crash on concurrent requests
         guard pendingCompletion == nil else {
             completion(.failure(MapperError.busy))
             return
         }
 
-        // Applica il cutoff: non leggere l’ultima 24h
+        // Apply the cutoff: never read the last 24h
         let embargoCutoff = Date().addingTimeInterval(-Self.holdingPeriod)
         let safeTo = min(to, embargoCutoff)
         guard from < safeTo else {
@@ -70,7 +70,7 @@ final class DeviceUsageReportMapper: NSObject, SensorSampleMapper {
             return
         }
 
-        // Costruzione SRFetchRequest
+        // Build the SRFetchRequest
         let req = SRFetchRequest()
         // FUAM-3945: iPhone or paired Watch — the manager walks one device at a time.
         req.device = device.fetchTarget
@@ -96,12 +96,12 @@ extension DeviceUsageReportMapper: SRSensorReaderDelegate {
         // Attach SRFetchResult.timestamp
         let recordedAt = dateFromSRAbsoluteTime(result.timestamp)
 
-        // Report aggregato (non CMSensorDataList)
+        // Aggregated report (not a CMSensorDataList)
         if let obj = result.sample as? NSObject,
            let rec = Self.mapDeviceUsage(obj, recordedAt: recordedAt) {
             collected.append(rec)
         }
-        return true // continua il fetch
+        return true // keep fetching
     }
 
     func sensorReader(_ reader: SRSensorReader, didCompleteFetch fetchRequest: SRFetchRequest) {
@@ -130,7 +130,7 @@ extension DeviceUsageReportMapper: SRSensorReaderDelegate {
 
 private extension DeviceUsageReportMapper {
 
-    // Safe KVC: chiama value(forKey:) solo se il selettore esiste
+    // Safe KVC: only calls value(forKey:) when the selector exists
     static func valueIfResponds(_ obj: NSObject, _ key: String) -> Any? {
         let sel = NSSelectorFromString(key)
         guard obj.responds(to: sel) else { return nil }

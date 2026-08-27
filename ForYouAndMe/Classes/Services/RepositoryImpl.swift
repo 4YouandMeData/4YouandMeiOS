@@ -937,7 +937,10 @@ fileprivate extension Error {
     }
 }
 
-fileprivate extension ApiError {
+/// Internal rather than fileprivate purely so a spec can execute it: it is the discriminator the
+/// 413 -> `uploadPayloadTooLarge` mapping above branches on, and that mapping is what stops the
+/// chunk walk retrying an oversize chunk for ever.
+extension ApiError {
     /// The HTTP status, where the case carries one. `RepositoryError` drops it, so anything that
     /// has to branch on a status code (FUAM-3945: 413, the health payload cap) must read it here.
     var httpStatusCode: Int? {
@@ -949,6 +952,9 @@ fileprivate extension ApiError {
              let .userUnauthorized(_, _, statusCode, _): return statusCode
         }
     }
+}
+
+fileprivate extension ApiError {
 
     var repositoryError: RepositoryError {
         switch self {
