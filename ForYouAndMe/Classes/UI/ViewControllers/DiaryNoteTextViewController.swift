@@ -370,11 +370,26 @@ class DiaryNoteTextViewController: UIViewController {
               let keyboardFrame = userInfo[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect,
               let duration = userInfo[UIResponder.keyboardAnimationDurationUserInfoKey] as? TimeInterval else { return }
 
-        let keyboardHeight = view.convert(keyboardFrame, from: nil).intersection(view.bounds).height
+        // FUAM-3561 — inset by the keyboard's overlap with the TEXT VIEW, not with the
+        // whole root view: the text view's bottom sits well above the screen bottom
+        // (spacer + footer), so the full keyboard height over-insets it and, at large
+        // accessibility fonts/keyboards, the caret line ends up scrolled above the
+        // text view's top border while typing.
+        let keyboardFrameInView = view.convert(keyboardFrame, from: nil)
+        let textViewFrameInView = self.textView.convert(self.textView.bounds, to: view)
+        let overlap = max(0, textViewFrameInView.maxY - keyboardFrameInView.minY)
+        // Clamp so at least one text line stays visible even when the keyboard covers
+        // (almost) the whole text view — small screens at max accessibility sizes.
+        let lineHeight = (self.textView.font?.lineHeight ?? 20.0) + 8.0
+        let maxInset = max(0, self.textView.bounds.height - self.textView.textContainerInset.top - lineHeight)
+        let bottomInset = min(overlap, maxInset)
 
         UIView.animate(withDuration: duration) {
-            self.textView.contentInset.bottom = keyboardHeight
-            self.textView.verticalScrollIndicatorInsets.bottom = keyboardHeight
+            self.textView.contentInset.bottom = bottomInset
+            self.textView.verticalScrollIndicatorInsets.bottom = bottomInset
+            if self.textView.isFirstResponder {
+                self.textView.scrollRangeToVisible(self.textView.selectedRange)
+            }
         }
     }
 
