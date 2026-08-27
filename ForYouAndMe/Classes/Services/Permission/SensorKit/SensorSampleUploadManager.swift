@@ -45,6 +45,8 @@ public final class SensorSampleUploadManager {
     private let reachability: SensorSampleUploadManagerReachability
     private let analytics: AnalyticsService
     private let mappers: [SRSensor: SensorSampleMapper]
+    /// FUAM-3945: which devices (iPhone / paired Watch) hold data for each sensor.
+    private let deviceProvider: SensorDeviceProvider
 
     /// Provided later by the owner (e.g., SensorKitManager) to perform actual uploads.
     private weak var networkDelegate: SensorSampleUploaderNetworkDelegate?
@@ -69,10 +71,12 @@ public final class SensorSampleUploadManager {
     // (review fix #5 — keying on window.start never fired when the bound shifted every
     // cycle). Resets on relaunch; persist it in storage if poison windows turn out to
     // survive app restarts.
-    private var windowFetchFailures: [SRSensor: Int] = [:]
+    // FUAM-3945: keyed by sensor AND device kind (`DeviceChainContext.failureKey`), so a poison
+    // Watch window can never stall the iPhone chain.
+    private var windowFetchFailures: [String: Int] = [:]
     // Once-per-launch guard so the "empty_plan" telemetry (review fix #6) doesn't fire on
     // every 15-minute sync cycle while a fresh enrollment waits out the 24h embargo.
-    private var emptyPlanReported: Set<SRSensor> = []
+    private var emptyPlanReported: Set<String> = []
     private let syncLock = NSLock()
     private var hasStarted = false
 
@@ -82,13 +86,22 @@ public final class SensorSampleUploadManager {
          storage: SensorSampleUploadManagerStorage & SensorSampleUploaderStorage,
          reachability: SensorSampleUploadManagerReachability,
          analytics: AnalyticsService,
-         mappers: [SRSensor: SensorSampleMapper]) {
+         mappers: [SRSensor: SensorSampleMapper],
+         deviceProvider: SensorDeviceProvider = DefaultSensorDeviceProvider()) {
             precondition(!sensors.isEmpty, "Sensors must not be empty")
             self.sensors = sensors
             self.storage = storage
             self.reachability = reachability
             self.analytics = analytics
             self.mappers = mappers
+            self.deviceProvider = deviceProvider
+    }
+
+    /// A paired Watch only shows up in `fetchDevices()` once it has synced data for the sensor,
+    /// so the enumeration legitimately changes over time. Call this when the app comes to the
+    /// foreground (FUAM-3945); the next sync cycle then re-enumerates.
+    public func refreshDeviceCache() {
+        self.deviceProvider.invalidate()
     }
 
     // MARK: - Wiring
@@ -235,17 +248,21 @@ public final class SensorSampleUploadManager {
     /// Internal rather than private so the FUAM-3964 server-time cap can be exercised through
     /// this real call path: `fetchPendingWindows` bails out before planning on the simulator
     /// (no sensor is ever `.authorized` there), so this is the outermost reachable seam.
-    func buildWindowPlan(for sensor: SRSensor, now: Date) -> WindowPlan {
+    func buildWindowPlan(for sensor: SRSensor, now: Date, device: SensorDevice) -> WindowPlan {
         // FUAM-3964: plan against `min(deviceNow, serverNow)`. A device clock in the future would
         // otherwise plan windows up to that instant and write the cursor there; correcting the
         // clock would then leave a hole the plan can never reopen (the cursor only moves forward).
         // Capping at server time means any clock excursion self-heals on the next sync. The
         // mapper's fetch still uses device wall-clock — SensorKit indexes its store with the same
         // clock that wrote the samples.
+        // FUAM-3945: only the cursor position and the upper bound differ per device. The
+        // holdback SUBSUMES the embargo rather than adding to it (`max`, not `+`), so the watch
+        // upper bound is `min(deviceNow, serverNow) - 48h` — still snapped to complete UTC days
+        // by the pure planner, which needs no device knowledge at all.
         return Self.buildWindowPlan(now: min(now, ServerClock.now()),
                                     joinDay: clearanceDelegate?.enrollmentDate,
-                                    cursor: storage.lastCursor(for: sensor),
-                                    embargo: sensorkitEmbargo)
+                                    cursor: storage.lastCursor(for: sensor, deviceKey: device.key),
+                                    embargo: max(sensorkitEmbargo, device.syncHoldback))
     }
 
     /// One UTC calendar day. UTC has no DST, so every UTC day is exactly 86400 seconds and a
@@ -335,6 +352,22 @@ public final class SensorSampleUploadManager {
         return WindowPlan(windows: windows, lowerBound: from, lowerBoundOrigin: origin, consentBound: lowerBound)
     }
 
+    /// Everything one device's window walk needs that does not change inside that walk, plus
+    /// what it needs to hand over to the NEXT device when it ends (FUAM-3945). A struct rather
+    /// than seven more parameters on `processWindow` / `handleWindowResult`.
+    struct DeviceChainContext {
+        let sensor: SRSensor
+        let device: SensorDevice
+        let devices: [SensorDevice]
+        let deviceIndex: Int
+        let now: Date
+        let mapper: SensorSampleMapper
+        let plannedBound: Date
+
+        /// `"<sensor>.<deviceKey>"` — failure and empty-plan counters are per sensor AND device.
+        var failureKey: String { return "\(self.sensor.rawValue).\(self.device.key)" }
+    }
+
     private func fetchPendingWindows(for sensor: SRSensor, now: Date) {
         guard isAuthorized(sensor) else {
             #if DEBUG
@@ -351,23 +384,49 @@ public final class SensorSampleUploadManager {
             return
         }
 
-        let plan = buildWindowPlan(for: sensor, now: now)
+        runDeviceChain(at: 0, of: deviceProvider.devices(for: sensor), for: sensor, now: now, using: mapper)
+    }
+
+    /// Walk device[index]'s window plan to its end, then start device[index + 1]'s. STRICTLY
+    /// sequential: every mapper is single-flight — four of them `precondition` on a concurrent
+    /// fetch, i.e. crash — so two devices must never have a fetch in flight on the same sensor.
+    ///
+    /// Internal rather than private so specs can drive the real chain: no SensorKit sensor is
+    /// ever `.authorized` on the simulator, so `fetchPendingWindows` returns before planning.
+    func runDeviceChain(at index: Int,
+                        of devices: [SensorDevice],
+                        for sensor: SRSensor,
+                        now: Date,
+                        using mapper: SensorSampleMapper) {
+        guard index < devices.count else { return } // every device done
+        let device = devices[index]
+        let plan = buildWindowPlan(for: sensor, now: now, device: device)
+        let context = DeviceChainContext(sensor: sensor,
+                                         device: device,
+                                         devices: devices,
+                                         deviceIndex: index,
+                                         now: now,
+                                         mapper: mapper,
+                                         plannedBound: plan.consentBound)
         guard let firstWindow = plan.windows.first else {
             // Review fix #6: an empty plan on a would-be backfill (e.g. enrolled today, or a
             // forward-only bound because days_in_study <= 0 upstream) must still leave a
             // telemetry trace — otherwise a sensor that never opens a window is
             // indistinguishable from one never asked. A forward-only bound is reported as
             // such, since it is the actionable case (the join day never resolved).
-            if plan.lowerBoundOrigin != .cursor, !emptyPlanReported.contains(sensor) {
-                emptyPlanReported.insert(sensor)
+            if plan.lowerBoundOrigin != .cursor, !emptyPlanReported.contains(context.failureKey) {
+                emptyPlanReported.insert(context.failureKey)
                 let boundedBy: BackfillLowerBound.Origin = plan.lowerBoundOrigin == .forwardOnly ? .forwardOnly : .emptyPlan
-                analytics.track(event: .sensorDataBackfillReach(sensor: sensor.shortSubsource,
+                analytics.track(event: .sensorDataBackfillReach(sensor: device.telemetryName(for: sensor),
                                                                 reachedBack: ISO8601DateFormatter().string(from: plan.lowerBound),
                                                                 boundedBy: boundedBy.rawValue))
             }
             #if DEBUG
-            print("SensorSampleUploadManager - No windows for \(sensor.rawValue) (already up to date or embargo)")
+            print("SensorSampleUploadManager - No windows for \(sensor.rawValue)/\(device.key) "
+                  + "(already up to date or embargo)")
             #endif
+            // Nothing to do for THIS device; the next one may still have windows.
+            runDeviceChain(at: index + 1, of: devices, for: sensor, now: now, using: mapper)
             return
         }
 
@@ -376,56 +435,58 @@ public final class SensorSampleUploadManager {
         // can tell "the OS deleted it" from "the client never asked". With FUAM-3945's floor
         // removed, the oldest sample that ever arrives IS Apple's real on-device retention.
         if plan.lowerBoundOrigin != .cursor {
-            analytics.track(event: .sensorDataBackfillReach(sensor: sensor.shortSubsource,
+            analytics.track(event: .sensorDataBackfillReach(sensor: device.telemetryName(for: sensor),
                                                             reachedBack: ISO8601DateFormatter().string(from: firstWindow.start),
                                                             boundedBy: plan.lowerBoundOrigin.rawValue))
         }
         #if DEBUG
-        print("SensorSampleUploadManager - \(sensor.rawValue): \(plan.windows.count) window(s) "
+        print("SensorSampleUploadManager - \(sensor.rawValue)/\(device.key): \(plan.windows.count) window(s) "
               + "from \(firstWindow.start) (bounded by \(plan.lowerBoundOrigin.rawValue))")
         #endif
 
-        processWindow(at: 0, of: plan.windows, for: sensor, using: mapper, plannedBound: plan.consentBound)
+        processWindow(at: 0, of: plan.windows, context: context)
     }
 
     /// Sequentially process each window to respect mapper's "no concurrent fetch" precondition.
-    private func processWindow(at index: Int,
-                               of windows: [DateInterval],
-                               for sensor: SRSensor,
-                               using mapper: SensorSampleMapper,
-                               plannedBound: Date) {
-        guard index < windows.count else { return } // all done
+    private func processWindow(at index: Int, of windows: [DateInterval], context: DeviceChainContext) {
+        guard index < windows.count else {
+            // This device is done: hand the mapper over to the next one (FUAM-3945).
+            self.nextDeviceChain(after: context)
+            return
+        }
 
         let window = windows[index]
-        mapper.fetchAndMap(from: window.start, to: window.end) { [weak self] result in
+        context.mapper.fetchAndMap(from: window.start, to: window.end, device: context.device) { [weak self] result in
             // Mapper callbacks arrive on arbitrary threads: hop onto the serial work queue
             // before touching windowFetchFailures / retryWorkItems / storage (review fix #10).
             guard let self else { return }
             self.workQueue.async { [weak self] in
                 guard let self else { return }
-                self.handleWindowResult(result,
-                                        window: window,
-                                        at: index,
-                                        of: windows,
-                                        for: sensor,
-                                        using: mapper,
-                                        plannedBound: plannedBound)
+                self.handleWindowResult(result, window: window, at: index, of: windows, context: context)
             }
         }
+    }
+
+    /// Start the chain of the device after `context`'s. The ONLY way a device chain ends, so a
+    /// failing device can never take the remaining devices down with it (FUAM-3945).
+    private func nextDeviceChain(after context: DeviceChainContext) {
+        self.runDeviceChain(at: context.deviceIndex + 1,
+                            of: context.devices,
+                            for: context.sensor,
+                            now: context.now,
+                            using: context.mapper)
     }
 
     /// Runs on `workQueue` only. Internal rather than private so the consent decisions taken
     /// here (the forward-only cursor guard and the `max(planned, re-resolved)` bound) can be
     /// exercised through this real call path instead of by calling the pure gate directly
     /// (review round 3, I3).
-    // swiftlint:disable:next function_parameter_count
     func handleWindowResult(_ result: Result<[[String: Any]], Error>,
                             window: DateInterval,
                             at index: Int,
                             of windows: [DateInterval],
-                            for sensor: SRSensor,
-                            using mapper: SensorSampleMapper,
-                            plannedBound: Date) {
+                            context: DeviceChainContext) {
+        let sensor = context.sensor
         // Review fix #4: the user can disappear between plan build and this callback (logout,
         // session expiry, failed token refresh). The re-resolved bound is then forward-only and
         // every record would be dropped — but advancing the cursor over the rest of the plan
@@ -433,6 +494,8 @@ public final class SensorSampleUploadManager {
         // fast-forwards the cursor" guarantee. Bail out of the chain, cursor untouched.
         let resolvedBound = self.currentBound
         guard !resolvedBound.isForwardOnly else {
+            // Consent gone is consent gone for EVERY device: this aborts the remaining device
+            // chains too, deliberately (FUAM-3945).
             #if DEBUG
             print("SensorSampleUploadManager - Aborting chain for \(sensor.rawValue): no join day (cursor left in place)")
             #endif
@@ -440,7 +503,7 @@ public final class SensorSampleUploadManager {
         }
         // Review fix #5: the join day is NOT immutable (a mid-flight user refresh can move it),
         // so take the stricter of the planned and the current bound rather than trusting either.
-        let boundDate = max(plannedBound, resolvedBound.date)
+        let boundDate = max(context.plannedBound, resolvedBound.date)
 
         switch result {
         case .failure(let error):
@@ -452,28 +515,32 @@ public final class SensorSampleUploadManager {
             // `maxWindowFetchAttempts` consecutive failures (per sensor — the failing window
             // is always the head of the chain, review fix #5), skip it (advance the cursor
             // past it, forfeiting that window) and move on.
-            let attempts = (self.windowFetchFailures[sensor] ?? 0) + 1
+            let attempts = (self.windowFetchFailures[context.failureKey] ?? 0) + 1
             if attempts >= self.maxWindowFetchAttempts {
-                self.windowFetchFailures[sensor] = nil
+                self.windowFetchFailures[context.failureKey] = nil
                 #if DEBUG
                 print("SensorSampleUploadManager - Giving up window [\(window.start) -> \(window.end)] "
-                      + "for \(sensor.rawValue) after \(attempts) attempts")
+                      + "for \(sensor.rawValue)/\(context.device.key) after \(attempts) attempts")
                 #endif
                 // Review fix #9: a forfeited window is data loss — leave a telemetry trace,
                 // not just a DEBUG print.
-                self.analytics.track(event: .sensorDataBackfillReach(sensor: sensor.shortSubsource,
-                                                                     reachedBack: ISO8601DateFormatter().string(from: window.end),
+                let reachedBack = ISO8601DateFormatter().string(from: window.end)
+                self.analytics.track(event: .sensorDataBackfillReach(sensor: context.device.telemetryName(for: sensor),
+                                                                     reachedBack: reachedBack,
                                                                      boundedBy: BackfillLowerBound.Origin.gaveUp.rawValue))
-                self.storage.setLastCursor(window.end, for: sensor)
-                self.processWindow(at: index + 1, of: windows, for: sensor, using: mapper, plannedBound: plannedBound)
+                self.storage.setLastCursor(window.end, for: sensor, deviceKey: context.device.key)
+                self.processWindow(at: index + 1, of: windows, context: context)
             } else {
-                self.windowFetchFailures[sensor] = attempts
-                // Stop the chain for this cycle; the next sync retries from the cursor.
+                self.windowFetchFailures[context.failureKey] = attempts
+                // Stop THIS DEVICE's chain for this cycle (the next sync retries it from its own
+                // cursor) — but never the next device's: the cursors are independent, so a Watch
+                // whose fetches keep failing must not cost the iPhone its windows (FUAM-3945).
                 self.scheduleRetry(for: sensor, attempt: attempts)
+                self.nextDeviceChain(after: context)
             }
 
         case .success(let records):
-            self.windowFetchFailures[sensor] = nil
+            self.windowFetchFailures[context.failureKey] = nil
 
             // Hard consent gate: drop anything measured before the backfill lower bound,
             // regardless of what SensorKit returned for the requested window.
@@ -484,24 +551,35 @@ public final class SensorSampleUploadManager {
 
             if uploadable.isEmpty {
                 // Advance cursor even if empty to avoid refetching the same day/chunk again.
-                self.storage.setLastCursor(window.end, for: sensor)
+                self.storage.setLastCursor(window.end, for: sensor, deviceKey: context.device.key)
                 // Move to next window
-                self.processWindow(at: index + 1, of: windows, for: sensor, using: mapper, plannedBound: plannedBound)
+                self.processWindow(at: index + 1, of: windows, context: context)
                 return
             }
 
             // Enqueue in batches bounded by record count AND serialized payload size.
-            self.enqueueRespectingPayloadLimit(uploadable, windowStart: window.start, for: sensor)
+            self.enqueueRespectingPayloadLimit(Self.tagged(uploadable, with: context.device),
+                                               windowStart: window.start,
+                                               for: sensor)
 
             // === Cursor advancement policy ===
             // "At-least-once" (simple): advance now; queued batches will be retried until uploaded.
-            self.storage.setLastCursor(window.end, for: sensor)
+            self.storage.setLastCursor(window.end, for: sensor, deviceKey: context.device.key)
 
             self.drainQueue(for: sensor)
 
             // Next window
-            self.processWindow(at: index + 1, of: windows, for: sensor, using: mapper, plannedBound: plannedBound)
+            self.processWindow(at: index + 1, of: windows, context: context)
         }
+    }
+
+    /// Stamp every record with the device it was fetched from (FUAM-3945). Done here, once,
+    /// rather than in each of the 11 mappers: one source of truth, and the value is by
+    /// construction the same key the cursor and the telemetry use. The tags are additive
+    /// free-form JSONB — no backend allow-list change, one subsource per sensor as before.
+    static func tagged(_ records: [[String: Any]], with device: SensorDevice) -> [[String: Any]] {
+        let tags = device.recordTags
+        return records.map { $0.merging(tags) { _, tag in tag } }
     }
 
     // MARK: - Join-day gate & payload chunking (FUAM-3841, FUAM-3945)

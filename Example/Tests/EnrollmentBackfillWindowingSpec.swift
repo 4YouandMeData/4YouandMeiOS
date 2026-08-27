@@ -848,6 +848,20 @@ class SensorUploadConsentCallPathSpec: QuickSpec {
             return ISO8601DateFormatter().string(from: date)
         }
 
+        /// FUAM-3945 folded the seven threaded parameters of `handleWindowResult` into one
+        /// per-device chain context; these specs drive the single-device (iPhone) chain, which is
+        /// exactly the pre-FUAM-3945 shape.
+        func context(_ mapper: SensorSampleMapper, _ plannedBound: Date) -> SensorSampleUploadManager.DeviceChainContext {
+            let device = SensorDevice(device: nil, key: SensorDevice.iphoneKey, productType: "iPhone17,1", systemVersion: "18.0")
+            return SensorSampleUploadManager.DeviceChainContext(sensor: sensor,
+                                                                device: device,
+                                                                devices: [device],
+                                                                deviceIndex: 0,
+                                                                now: Date(),
+                                                                mapper: mapper,
+                                                                plannedBound: plannedBound)
+        }
+
         func drainOrigins(_ events: [AnalyticsEvent]) -> [String] {
             return events.compactMap { event in
                 if case let .sensorDataBackfillReach(_, _, boundedBy) = event { return boundedBy }
@@ -948,9 +962,7 @@ class SensorUploadConsentCallPathSpec: QuickSpec {
                                            window: first,
                                            at: 0,
                                            of: [first, second],
-                                           for: sensor,
-                                           using: mapper,
-                                           plannedBound: joinDay)
+                                           context: context(mapper, joinDay))
 
                 expect(storage.lastCursor(for: sensor)).to(beNil())
                 expect(mapper.windows).to(beEmpty())
@@ -967,9 +979,7 @@ class SensorUploadConsentCallPathSpec: QuickSpec {
                                            window: window,
                                            at: 0,
                                            of: [window],
-                                           for: sensor,
-                                           using: mapper,
-                                           plannedBound: joinDay)
+                                           context: context(mapper, joinDay))
 
                 expect(storage.enqueued).to(beEmpty())
 
@@ -977,9 +987,7 @@ class SensorUploadConsentCallPathSpec: QuickSpec {
                                            window: window,
                                            at: 0,
                                            of: [window],
-                                           for: sensor,
-                                           using: mapper,
-                                           plannedBound: joinDay)
+                                           context: context(mapper, joinDay))
 
                 expect(storage.enqueued.count).toEventually(equal(1))
             }
@@ -992,9 +1000,7 @@ class SensorUploadConsentCallPathSpec: QuickSpec {
                                            window: window,
                                            at: 0,
                                            of: [window],
-                                           for: sensor,
-                                           using: mapper,
-                                           plannedBound: joinDay)
+                                           context: context(mapper, joinDay))
 
                 expect(storage.enqueued).to(beEmpty())
             }
@@ -1006,9 +1012,7 @@ class SensorUploadConsentCallPathSpec: QuickSpec {
                                            window: window,
                                            at: 0,
                                            of: [window],
-                                           for: sensor,
-                                           using: mapper,
-                                           plannedBound: joinDay)
+                                           context: context(mapper, joinDay))
 
                 expect(storage.enqueued.count).toEventually(equal(1))
                 expect(storage.enqueued.first?.windowStart).to(equal(window.start))
@@ -1044,12 +1048,12 @@ private final class FakeSensorStorage: SensorSampleUploadManagerStorage, SensorS
         self.lock.locked { self.queues[sensor.rawValue] = [(records, windowStart)] }
     }
 
-    func lastCursor(for sensor: SRSensor) -> Date? {
-        return self.lock.locked { self.cursors[sensor.rawValue] }
+    func lastCursor(for sensor: SRSensor, deviceKey: String = SensorDevice.iphoneKey) -> Date? {
+        return self.lock.locked { self.cursors["\(sensor.rawValue).\(deviceKey)"] }
     }
 
-    func setLastCursor(_ date: Date, for sensor: SRSensor) {
-        self.lock.locked { self.cursors[sensor.rawValue] = date }
+    func setLastCursor(_ date: Date, for sensor: SRSensor, deviceKey: String = SensorDevice.iphoneKey) {
+        self.lock.locked { self.cursors["\(sensor.rawValue).\(deviceKey)"] = date }
     }
 
     func enqueueBatch(_ batch: [[String: Any]], windowStart: Date, for sensor: SRSensor) {
@@ -1089,7 +1093,10 @@ private final class FakeSensorMapper: SensorSampleMapper {
 
     var windows: [DateInterval] { return self.lock.locked { self.fetched } }
 
-    func fetchAndMap(from: Date, to: Date, completion: @escaping (Result<[[String: Any]], Error>) -> Void) {
+    func fetchAndMap(from: Date,
+                     to: Date,
+                     device: SensorDevice,
+                     completion: @escaping (Result<[[String: Any]], Error>) -> Void) {
         self.lock.locked { self.fetched.append(DateInterval(start: from, end: to)) }
         completion(.success([]))
     }
@@ -1155,7 +1162,7 @@ class SensorKitServerTimeCapSpec: QuickSpec {
         }
 
         it("never plans a window ending past server time, however far ahead the device clock is") {
-            let plan = manager.buildWindowPlan(for: sensor, now: deviceNow)
+            let plan = manager.buildWindowPlan(for: sensor, now: deviceNow, device: .current)
             expect(plan.windows).toNot(beEmpty())
             guard let last = plan.windows.last else { return }
             // The cursor lands on `last.end`: that is the value that must not escape.
@@ -1167,7 +1174,7 @@ class SensorKitServerTimeCapSpec: QuickSpec {
             // Worst case: a previous cycle (before the cap) burned the cursor to device time.
             let burned = deviceNow.addingTimeInterval(-2 * day)   // still ahead of server time
             storage.setLastCursor(burned, for: sensor)
-            let plan = manager.buildWindowPlan(for: sensor, now: deviceNow)
+            let plan = manager.buildWindowPlan(for: sensor, now: deviceNow, device: .current)
             // Nothing can be planned above server time, so the plan is empty and the cursor is
             // left alone until real time catches up — no further escape, and no data forfeited.
             expect(plan.windows).to(beEmpty())
@@ -1175,7 +1182,7 @@ class SensorKitServerTimeCapSpec: QuickSpec {
 
         it("plans normally once the device clock agrees with the server") {
             UserDefaults.standard.removeObject(forKey: ServerClock.storageKey)
-            let plan = manager.buildWindowPlan(for: sensor, now: deviceNow)
+            let plan = manager.buildWindowPlan(for: sensor, now: deviceNow, device: .current)
             expect(plan.windows).toNot(beEmpty())
             expect(plan.windows.last?.end).to(beGreaterThan(serverNow.addingTimeInterval(-embargo)))
         }
@@ -1631,5 +1638,332 @@ private final class FakeHealthClearance: HealthSampleUploadManagerClearanceDeleg
 private final class FakeHealthNetwork: HealthSampleUploaderNetworkDelegate {
     func uploadHealthNetworkData(_ healthNetworkData: HealthNetworkData, source: String) -> Single<()> {
         return .just(())
+    }
+}
+
+// MARK: - FUAM-3945: per-device fetching (iPhone + paired Apple Watch)
+
+/// SensorKit stores iPhone and paired-Watch data separately and a fetch request targets exactly
+/// one device, so before this change the Watch stream was unreachable. The invariants these specs
+/// defend:
+///
+/// 1. device identity is by KIND, never by instance (`SRDevice` has no stable id);
+/// 2. the iPhone keeps the LEGACY, unsuffixed cursor key — the whole migration, and what makes a
+///    rollback to an older build safe — while other kinds are suffixed and advance independently;
+/// 3. the watch upper bound is held back 48h (its sync cadence is undocumented) and is still
+///    snapped to complete UTC days;
+/// 4. per-device chains run strictly sequentially (four of the eleven mappers `precondition` on a
+///    concurrent fetch, i.e. crash) and a failing device chain never costs another device its
+///    windows;
+/// 5. with nothing enumerated the pipeline behaves exactly as it did before FUAM-3945.
+class SensorKitPerDeviceSpec: QuickSpec {
+
+    // swiftlint:disable:next function_body_length
+    override class func spec() {
+
+        let day: TimeInterval = 24 * 3600
+        let sensor = SRSensor.pedometerData
+
+        /// A UTC midnight at or before real "now", so `min(now, ServerClock.now())` is `now` and
+        /// every planned boundary is exact.
+        let now = SensorSampleUploadManager.utcDayStart(Date())
+
+        let iphone = SensorDevice(device: nil, key: SensorDevice.iphoneKey,
+                                  productType: "iPhone17,1", systemVersion: "18.0")
+        let watch = SensorDevice(device: nil, key: SensorDevice.watchKey,
+                                 productType: "Watch7,2", systemVersion: "11.2")
+
+        var storage: FakeSensorStorage!
+        var clearance: FakeSensorClearance!
+        var analytics: CapturingAnalyticsService!
+        var mapper: RecordingDeviceMapper!
+        var manager: SensorSampleUploadManager!
+
+        func makeManager(joinDay: Date) {
+            storage = FakeSensorStorage()
+            clearance = FakeSensorClearance()
+            clearance.enrollmentDate = joinDay
+            analytics = CapturingAnalyticsService()
+            mapper = RecordingDeviceMapper()
+            manager = SensorSampleUploadManager(withSensors: [sensor],
+                                                storage: storage,
+                                                reachability: FakeSensorReachability(),
+                                                analytics: analytics,
+                                                mappers: [sensor: mapper])
+            manager.clearanceDelegate = clearance
+        }
+
+        beforeEach { makeManager(joinDay: now.addingTimeInterval(-10 * day)) }
+
+        describe("SensorDevice.key (identity by kind, never by instance)") {
+
+            it("calls a paired Apple Watch a watch, from systemName alone") {
+                // systemName is the discriminator BELOW iOS 17, where `SRDevice.productType`
+                // does not exist at all — our deployment floor is 15.6.
+                expect(SensorDevice.key(productType: "", systemName: "watchOS")).to(equal("watch"))
+            }
+
+            it("still calls it a watch when only the product type is readable") {
+                expect(SensorDevice.key(productType: "Watch7,2", systemName: "")).to(equal("watch"))
+            }
+
+            it("calls the phone an iphone") {
+                expect(SensorDevice.key(productType: "iPhone17,1", systemName: "iOS")).to(equal("iphone"))
+            }
+
+            it("gives an unknown platform a stable, key-safe fallback instead of an empty string") {
+                expect(SensorDevice.key(productType: "", systemName: "iPadOS 18")).to(equal("ipados18"))
+                expect(SensorDevice.key(productType: "", systemName: "")).to(equal("unknown"))
+            }
+
+            it("keys a Watch upgrade to the same kind, so it inherits the watch cursor") {
+                expect(SensorDevice.key(productType: "Watch6,1", systemName: "watchOS"))
+                    .to(equal(SensorDevice.key(productType: "Watch7,2", systemName: "watchOS")))
+            }
+        }
+
+        describe("cursor storage keys (zero-migration, rollback-safe)") {
+
+            let defaults = UserDefaults.standard
+            let legacyKey = "sensorkit.cursor." + sensor.rawValue
+            let watchKey = "sensorkit.cursor." + sensor.rawValue + ".watch"
+            // The key the iPhone must NEVER use — cleared too, so a sibling spec cannot leave a
+            // value behind that makes the legacy-key assertions pass for the wrong reason.
+            let suffixedIphoneKey = "sensorkit.cursor." + sensor.rawValue + ".iphone"
+            var realStorage: DefaultsSensorStorage!
+
+            beforeEach {
+                defaults.removeObject(forKey: legacyKey)
+                defaults.removeObject(forKey: watchKey)
+                defaults.removeObject(forKey: suffixedIphoneKey)
+                realStorage = DefaultsSensorStorage()
+            }
+            afterEach {
+                defaults.removeObject(forKey: legacyKey)
+                defaults.removeObject(forKey: watchKey)
+                defaults.removeObject(forKey: suffixedIphoneKey)
+            }
+
+            it("writes the iPhone cursor to the byte-identical LEGACY key an older build reads") {
+                let date = Date(timeIntervalSince1970: 1_700_000_000)
+                realStorage.setLastCursor(date, for: sensor, deviceKey: SensorDevice.iphoneKey)
+                // The literal key string is the contract with every build ever shipped.
+                expect(defaults.object(forKey: legacyKey) as? Date).to(equal(date))
+                expect(defaults.object(forKey: watchKey)).to(beNil())
+            }
+
+            it("suffixes every other device kind, leaving the legacy key alone") {
+                let date = Date(timeIntervalSince1970: 1_700_000_000)
+                realStorage.setLastCursor(date, for: sensor, deviceKey: SensorDevice.watchKey)
+                expect(defaults.object(forKey: watchKey) as? Date).to(equal(date))
+                expect(defaults.object(forKey: legacyKey)).to(beNil())
+            }
+
+            it("keeps the two cursors independent") {
+                let iphoneDate = Date(timeIntervalSince1970: 1_700_000_000)
+                let watchDate = Date(timeIntervalSince1970: 1_600_000_000)
+                realStorage.setLastCursor(iphoneDate, for: sensor, deviceKey: SensorDevice.iphoneKey)
+                realStorage.setLastCursor(watchDate, for: sensor, deviceKey: SensorDevice.watchKey)
+                expect(realStorage.lastCursor(for: sensor, deviceKey: SensorDevice.iphoneKey)).to(equal(iphoneDate))
+                expect(realStorage.lastCursor(for: sensor, deviceKey: SensorDevice.watchKey)).to(equal(watchDate))
+            }
+
+            it("reads a cursor written by a pre-FUAM-3945 build as the iPhone cursor") {
+                let legacy = Date(timeIntervalSince1970: 1_700_000_000)
+                defaults.set(legacy, forKey: legacyKey)
+                expect(realStorage.lastCursor(for: sensor, deviceKey: SensorDevice.iphoneKey)).to(equal(legacy))
+                // A device kind never seen before starts from nothing and backfills.
+                expect(realStorage.lastCursor(for: sensor, deviceKey: SensorDevice.watchKey)).to(beNil())
+            }
+        }
+
+        describe("the watch holdback") {
+
+            it("holds the watch upper bound back 48h while the iPhone keeps its 24h embargo") {
+                let iphonePlan = manager.buildWindowPlan(for: sensor, now: now, device: iphone)
+                let watchPlan = manager.buildWindowPlan(for: sensor, now: now, device: watch)
+                // `now` is a UTC midnight, so both bounds land exactly on a day boundary.
+                expect(iphonePlan.windows.last?.end).to(equal(now.addingTimeInterval(-day)))
+                expect(watchPlan.windows.last?.end).to(equal(now.addingTimeInterval(-2 * day)))
+            }
+
+            it("still snaps the watch plan to complete UTC days") {
+                let watchPlan = manager.buildWindowPlan(for: sensor, now: now, device: watch)
+                expect(watchPlan.windows).toNot(beEmpty())
+                for window in watchPlan.windows {
+                    expect(window.start).to(equal(SensorSampleUploadManager.utcDayStart(window.start)))
+                    expect(window.duration).to(equal(day))
+                }
+            }
+
+            it("plans nothing for the watch when the holdback swallows the only available day") {
+                // Join day two UTC days back: the iPhone can complete [-2d, -1d), the watch cannot
+                // complete anything yet.
+                makeManager(joinDay: now.addingTimeInterval(-2 * day))
+                expect(manager.buildWindowPlan(for: sensor, now: now, device: iphone).windows.count).to(equal(1))
+                expect(manager.buildWindowPlan(for: sensor, now: now, device: watch).windows).to(beEmpty())
+            }
+
+            it("leaves the iPhone plan identical to the pre-FUAM-3945 one") {
+                // The holdback SUBSUMES the embargo (`max`, not `+`): the iPhone's 0h holdback
+                // must not shorten its plan by a single day.
+                let plan = manager.buildWindowPlan(for: sensor, now: now, device: iphone)
+                let reference = SensorSampleUploadManager.buildWindowPlan(now: now,
+                                                                         joinDay: clearance.enrollmentDate,
+                                                                         cursor: nil,
+                                                                         embargo: day)
+                expect(plan.windows).to(equal(reference.windows))
+            }
+        }
+
+        describe("the per-device chain") {
+
+            it("walks every device sequentially, one fetch at a time, and never interleaves them") {
+                manager.runDeviceChain(at: 0, of: [iphone, watch], for: sensor, now: now, using: mapper)
+
+                expect(mapper.calls.count).toEventually(equal(17), timeout: .seconds(5))
+                // 9 iPhone days [-10d, -1d), then 8 watch days [-10d, -2d) — in that order.
+                expect(Set(mapper.calls.prefix(9).map { $0.deviceKey })).to(equal(["iphone"]))
+                expect(Set(mapper.calls.suffix(8).map { $0.deviceKey })).to(equal(["watch"]))
+                // Four of the eleven real mappers `precondition` on a concurrent fetch.
+                expect(mapper.sawConcurrentFetch).to(beFalse())
+            }
+
+            it("advances each device's cursor independently, the iPhone's on the legacy key") {
+                manager.runDeviceChain(at: 0, of: [iphone, watch], for: sensor, now: now, using: mapper)
+
+                expect(storage.lastCursor(for: sensor, deviceKey: "watch"))
+                    .toEventually(equal(now.addingTimeInterval(-2 * day)), timeout: .seconds(5))
+                expect(storage.lastCursor(for: sensor, deviceKey: "iphone")).to(equal(now.addingTimeInterval(-day)))
+            }
+
+            it("tags every uploaded record with the device it came from") {
+                mapper.records = [["t": ISO8601DateFormatter().string(from: now.addingTimeInterval(-5 * day))]]
+                manager.runDeviceChain(at: 0, of: [watch], for: sensor, now: now, using: mapper)
+
+                expect(storage.enqueued.count).toEventually(beGreaterThan(0), timeout: .seconds(5))
+                let record = storage.enqueued.first?.records.first
+                expect(record?["device_kind"] as? String).to(equal("watch"))
+                expect(record?["device_product_type"] as? String).to(equal("Watch7,2"))
+                expect(record?["device_os_version"] as? String).to(equal("11.2"))
+            }
+
+            it("suffixes the backfill_reach telemetry for the watch and leaves the iPhone series bare") {
+                manager.runDeviceChain(at: 0, of: [iphone, watch], for: sensor, now: now, using: mapper)
+
+                expect(analytics.trackedEvents.count).toEventually(beGreaterThan(1), timeout: .seconds(5))
+                let sensors: [String] = analytics.trackedEvents.compactMap { event in
+                    if case let .sensorDataBackfillReach(name, _, _) = event { return name }
+                    return nil
+                }
+                expect(sensors).to(contain(sensor.shortSubsource))
+                expect(sensors).to(contain("\(sensor.shortSubsource).watch"))
+            }
+        }
+
+        describe("failure isolation between devices") {
+
+            it("keeps walking the remaining devices when the first device's fetches keep failing") {
+                mapper.failingDeviceKeys = ["watch"]
+                // Watch first, so a chain that "stops for this cycle" would swallow the iPhone's
+                // windows entirely if the failure branch did not hand over.
+                manager.runDeviceChain(at: 0, of: [watch, iphone], for: sensor, now: now, using: mapper)
+
+                expect(storage.lastCursor(for: sensor, deviceKey: "iphone"))
+                    .toEventually(equal(now.addingTimeInterval(-day)), timeout: .seconds(5))
+                // The failing device forfeits nothing: its cursor is left where it was.
+                expect(storage.lastCursor(for: sensor, deviceKey: "watch")).to(beNil())
+            }
+
+            it("aborts every remaining device chain when consent disappears mid-flight") {
+                clearance.enrollmentDate = nil
+                let window = DateInterval(start: now.addingTimeInterval(-2 * day), end: now.addingTimeInterval(-day))
+                let context = SensorSampleUploadManager.DeviceChainContext(sensor: sensor,
+                                                                           device: watch,
+                                                                           devices: [watch, iphone],
+                                                                           deviceIndex: 0,
+                                                                           now: now,
+                                                                           mapper: mapper,
+                                                                           plannedBound: now.addingTimeInterval(-10 * day))
+                manager.handleWindowResult(.success([]), window: window, at: 0, of: [window], context: context)
+
+                expect(mapper.calls).toAlways(beEmpty(), until: .milliseconds(300))
+                expect(storage.lastCursor(for: sensor, deviceKey: "iphone")).to(beNil())
+                expect(storage.lastCursor(for: sensor, deviceKey: "watch")).to(beNil())
+            }
+        }
+
+        describe("no devices enumerated yet (identical to pre-FUAM-3945 behaviour)") {
+
+            let provider = DefaultSensorDeviceProvider()
+
+            it("answers with the current device only, and never blocks on the SensorKit delegate") {
+                let devices = provider.devices(for: sensor)
+                expect(devices.count).to(equal(1))
+                expect(devices.first?.key).to(equal(SensorDevice.iphoneKey))
+                expect(devices.first?.device).to(beNil())
+            }
+
+            it("never enumerates the denylisted high-rate sensors") {
+                // Both are disabled today; the denylist keeps "re-enable it" and "fetch it from
+                // the Watch" two separate decisions.
+                expect(DefaultSensorDeviceProvider.enumerationDenylist).to(equal([.accelerometer, .rotationRate]))
+                expect(provider.devices(for: .accelerometer).map { $0.key }).to(equal([SensorDevice.iphoneKey]))
+                expect(provider.devices(for: .rotationRate).map { $0.key }).to(equal([SensorDevice.iphoneKey]))
+            }
+
+            it("puts the current device first and never drops it, whatever enumeration returns") {
+                let ordered = DefaultSensorDeviceProvider.ordered([watch])
+                expect(ordered.map { $0.key }).to(equal([SensorDevice.iphoneKey, SensorDevice.watchKey]))
+            }
+
+            it("walks exactly the pre-FUAM-3945 windows when only the current device exists") {
+                manager.runDeviceChain(at: 0, of: [.current], for: sensor, now: now, using: mapper)
+
+                expect(mapper.calls.count).toEventually(equal(9), timeout: .seconds(5))
+                expect(storage.lastCursor(for: sensor, deviceKey: SensorDevice.iphoneKey))
+                    .to(equal(now.addingTimeInterval(-day)))
+            }
+        }
+    }
+}
+
+/// Records which device each fetch was made for, refuses to overlap two fetches (the real mappers
+/// `precondition` or fail with `.busy` on that), and can be told to fail one device's fetches.
+private final class RecordingDeviceMapper: SensorSampleMapper {
+
+    struct Call {
+        let deviceKey: String
+        let window: DateInterval
+    }
+
+    private let lock = NSLock()
+    private var recorded: [Call] = []
+    private var inFlight = false
+
+    /// Set before driving the chain.
+    var records: [[String: Any]] = []
+    var failingDeviceKeys: Set<String> = []
+    private(set) var sawConcurrentFetch = false
+
+    var calls: [Call] { return self.lock.locked { self.recorded } }
+
+    func fetchAndMap(from: Date,
+                     to: Date,
+                     device: SensorDevice,
+                     completion: @escaping (Result<[[String: Any]], Error>) -> Void) {
+        let shouldFail: Bool = self.lock.locked {
+            if self.inFlight { self.sawConcurrentFetch = true }
+            self.inFlight = true
+            self.recorded.append(Call(deviceKey: device.key, window: DateInterval(start: from, end: to)))
+            return self.failingDeviceKeys.contains(device.key)
+        }
+        let payload = self.records
+        self.lock.locked { self.inFlight = false }
+        if shouldFail {
+            completion(.failure(NSError(domain: "spec.mapper", code: 1)))
+        } else {
+            completion(.success(payload))
+        }
     }
 }

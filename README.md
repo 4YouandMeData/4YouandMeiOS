@@ -505,6 +505,20 @@ A cursor left by an older build sits at an arbitrary instant. The first plan aft
 
 What this does **not** repair: a measurement timestamp the OS recorded under a wrong clock is wrong for ever. The consent filter and the backend's future-anchor plausibility check are the guards there; server time fixes the machinery (bounds, cursor), not historical samples.
 
+#### Per-device fetching: iPhone and paired Apple Watch (SensorKit)
+
+SensorKit stores iPhone data and paired-Apple-Watch data separately, and a fetch request targets **one** device (`SRFetchRequest.device`, defaulting to the current device). The SDK therefore enumerates the devices that hold data for each sensor (`SRSensorReader.fetchDevices()`) and walks them one at a time.
+
+- **Devices are identified by KIND, not by instance**: `"iphone"` for the device the app runs on, `"watch"` for a paired Watch (`SRDevice` exposes no stable identifier, Apple is blinding `name`, and `productType` changes when the participant upgrades their Watch). A Watch upgrade therefore inherits the existing watch cursor, and two Watches paired to one iPhone share one cursor and one window plan.
+- **Cursors are per sensor AND per device kind.** The iPhone keeps the existing unsuffixed key (`sensorkit.cursor.<sensor>`); other kinds are suffixed (`sensorkit.cursor.<sensor>.watch`). There is no migration step, and downgrading to an older build is safe — it reads exactly the key it always wrote.
+- **A 48h holdback applies to non-current devices.** Watch→iPhone SensorKit sync is opportunistic and its cadence is undocumented, so a UTC day is only planned for the Watch once it has had time to sync (`safeTo = min(deviceNow, serverNow) − max(24h embargo, 48h holdback)`, still snapped to complete UTC days). A Watch that stays offline longer than that loses those days from the watch stream only; the iPhone stream is untouched.
+- **One subsource per sensor, one tag per record.** Nothing changes on the wire except three additive fields inside each record: `device_kind` (`iphone` / `watch`), `device_product_type` (iOS 17+ only) and `device_os_version`. `SRDevice.name` is deliberately never sent.
+- **Device chains are isolated and strictly sequential.** Each sensor's mappers are single-flight, so a sensor's devices are fetched one after the other, never in parallel. Failure counters and give-up decisions are per sensor+device, so a poison Watch window can never stall the iPhone chain — and vice versa. Losing consent mid-flight still aborts every device chain, since consent is not per device.
+- **`sensor_data_backfill_reach` gains the device dimension**: the iPhone keeps the bare sensor name (existing series stay continuous), other kinds are reported as `<sensor>.<kind>`, so reach is observable per sensor and device.
+- **Enumeration is data-driven with one exception**: the high-rate `accelerometer` and `rotationRate` sensors are never enumerated (they are disabled today; re-enabling one and fetching it from a Watch stay two separate decisions). Everything else takes whatever `fetchDevices()` returns; if nothing has been enumerated yet, or the enumeration fails, the pipeline behaves exactly as it did before — iPhone only.
+
+No new entitlement and no new `Info.plist` key: SensorKit authorization is per app + sensor, with no per-device grant anywhere in the API, so a granted sensor already covers the paired Watch's store.
+
 
 ### Collecting HealthKit/SensorKit without an opt-in consent card (Optional)
 

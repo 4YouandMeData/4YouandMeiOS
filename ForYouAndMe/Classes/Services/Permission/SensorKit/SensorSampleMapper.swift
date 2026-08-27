@@ -14,6 +14,14 @@ public protocol SensorSampleMapper: AnyObject {
     /// - Parameters:
     ///   - from: Start date (inclusive/exclusive a seconda del tuo handling dei boundary)
     ///   - to: End date
+    ///   - device: The SensorKit device to fetch from (FUAM-3945). SensorKit stores iPhone and
+    ///     paired-Watch data separately and a fetch request targets exactly one of them, so this
+    ///     is what makes a Watch stream reachable at all. Implementations must set
+    ///     `SRFetchRequest.device = device.fetchTarget` and nothing else — the per-record device
+    ///     tag is applied centrally by `SensorSampleUploadManager`.
     ///   - completion: Called on completion with either the mapped records or an error.
-    func fetchAndMap(from: Date, to: Date, completion: @escaping (Result<[[String: Any]], Error>) -> Void)
+    func fetchAndMap(from: Date,
+                     to: Date,
+                     device: SensorDevice,
+                     completion: @escaping (Result<[[String: Any]], Error>) -> Void)
 }

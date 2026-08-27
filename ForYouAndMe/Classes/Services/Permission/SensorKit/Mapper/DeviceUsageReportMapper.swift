@@ -53,6 +53,7 @@ final class DeviceUsageReportMapper: NSObject, SensorSampleMapper {
     func fetchAndMap(
         from: Date,
         to: Date,
+        device: SensorDevice,
         completion: @escaping (Result<[[String: Any]], Error>) -> Void
     ) {
         // Evita crash su richieste concorrenti
@@ -71,7 +72,8 @@ final class DeviceUsageReportMapper: NSObject, SensorSampleMapper {
 
         // Costruzione SRFetchRequest
         let req = SRFetchRequest()
-        req.device = SRDevice.current
+        // FUAM-3945: iPhone or paired Watch — the manager walks one device at a time.
+        req.device = device.fetchTarget
         req.from = from.srAbsoluteTime
         req.to = safeTo.srAbsoluteTime
 
@@ -173,7 +175,7 @@ private extension DeviceUsageReportMapper {
     static func mapDeviceUsage(_ obj: NSObject, recordedAt: Date?) -> [String: Any]? {
         guard isDeviceUsageObject(obj) else { return nil }
         let iso = ISO8601DateFormatter()
-        var rec: [String: Any] = ["device_kind": "iphone"]
+        var rec: [String: Any] = [:]
 
         // Timestamps
         if let ts = recordedAt { rec["recorded_at"] = iso.string(from: ts) }

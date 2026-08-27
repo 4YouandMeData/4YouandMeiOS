@@ -58,6 +58,7 @@ final class KeyboardMetricsMapper: NSObject, SensorSampleMapper {
     func fetchAndMap(
         from: Date,
         to: Date,
+        device: SensorDevice,
         completion: @escaping (Result<[[String: Any]], Error>) -> Void
     ) {
         // Avoid crashing on concurrent calls
@@ -75,7 +76,8 @@ final class KeyboardMetricsMapper: NSObject, SensorSampleMapper {
         }
 
         let req = SRFetchRequest()
-        req.device = SRDevice.current
+        // FUAM-3945: iPhone or paired Watch — the manager walks one device at a time.
+        req.device = device.fetchTarget
         req.from = from.srAbsoluteTime
         req.to = safeTo.srAbsoluteTime
 
@@ -370,7 +372,6 @@ private extension KeyboardMetricsMapper {
         }
         if !pm.isEmpty { rec["probabilityMetrics"] = pm }
 
-        rec["device_kind"] = "iphone"
         return rec
     }
 }

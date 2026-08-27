@@ -48,6 +48,7 @@ final class VisitsMapper: NSObject, SensorSampleMapper {
     func fetchAndMap(
         from: Date,
         to: Date,
+        device: SensorDevice,
         completion: @escaping (Result<[[String: Any]], Error>) -> Void
     ) {
         // Prevent concurrent fetches
@@ -66,7 +67,8 @@ final class VisitsMapper: NSObject, SensorSampleMapper {
 
         // Build request
         let req = SRFetchRequest()
-        req.device = SRDevice.current
+        // FUAM-3945: iPhone or paired Watch — the manager walks one device at a time.
+        req.device = device.fetchTarget
         req.from = from.srAbsoluteTime
         req.to = safeTo.srAbsoluteTime
 
@@ -170,7 +172,7 @@ private extension VisitsMapper {
         guard isSRVisit(obj) else { return nil }
 
         let iso = ISO8601DateFormatter()
-        var rec: [String: Any] = ["device_kind": "iphone"]
+        var rec: [String: Any] = [:]
 
         // When SensorKit recorded this sample
         if let ts = recordedAt { rec["recorded_at"] = iso.string(from: ts) }

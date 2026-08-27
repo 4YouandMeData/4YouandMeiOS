@@ -52,6 +52,7 @@ final class MediaEventsMapper: NSObject, SensorSampleMapper {
     func fetchAndMap(
         from: Date,
         to: Date,
+        device: SensorDevice,
         completion: @escaping (Result<[[String: Any]], Error>) -> Void
     ) {
         // Prevent concurrent fetches
@@ -76,7 +77,8 @@ final class MediaEventsMapper: NSObject, SensorSampleMapper {
         
         // Build request
         let req = SRFetchRequest()
-        req.device = SRDevice.current
+        // FUAM-3945: iPhone or paired Watch — the manager walks one device at a time.
+        req.device = device.fetchTarget
         req.from = from.srAbsoluteTime
         req.to = safeTo.srAbsoluteTime
 
@@ -174,8 +176,7 @@ private extension MediaEventsMapper {
         guard isMediaEvent(obj) else { return nil }
 
         var rec: [String: Any] = [
-            "recorded_at": recordedAtISO,
-            "device_kind": "iphone"
+            "recorded_at": recordedAtISO
         ]
 
         // eventType (enum SRMediaEventType → string)

@@ -51,6 +51,7 @@ final class AccelerometerMapper: NSObject, SensorSampleMapper {
     func fetchAndMap(
         from: Date,
         to: Date,
+        device: SensorDevice,
         completion: @escaping (Result<[[String: Any]], Error>) -> Void
     ) {
         // Avoid concurrent fetches
@@ -69,7 +70,8 @@ final class AccelerometerMapper: NSObject, SensorSampleMapper {
 
         // Build request
         let req = SRFetchRequest()
-        req.device = SRDevice.current
+        // FUAM-3945: iPhone or paired Watch — the manager walks one device at a time.
+        req.device = device.fetchTarget
         req.from = from.srAbsoluteTime
         req.to = safeTo.srAbsoluteTime
 
@@ -138,9 +140,7 @@ extension AccelerometerMapper: SRSensorReaderDelegate {
             // Raw axes
             "x": a.x,
             "y": a.y,
-            "z": a.z,
-            // Device tag
-            "device_kind": "iphone"
+            "z": a.z
         ]
         collected.append(record)
     }

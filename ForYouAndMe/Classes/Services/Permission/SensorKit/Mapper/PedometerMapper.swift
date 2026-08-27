@@ -33,6 +33,7 @@ final class PedometerMapper: NSObject, SensorSampleMapper {
 
     func fetchAndMap(from: Date,
                      to: Date,
+                     device: SensorDevice,
                      completion: @escaping (Result<[[String : Any]], Error>) -> Void) {
 
         precondition(pendingCompletion == nil, "PedometerMapper: concurrent fetch not supported")
@@ -46,7 +47,8 @@ final class PedometerMapper: NSObject, SensorSampleMapper {
 
         // Build request converting Date -> SRAbsoluteTime (CFAbsoluteTime since 2001-01-01)
         let req = SRFetchRequest()
-        req.device = SRDevice.current
+        // FUAM-3945: iPhone or paired Watch — the manager walks one device at a time.
+        req.device = device.fetchTarget
         req.from = SRAbsoluteTime.fromCFAbsoluteTime(_cf: from.timeIntervalSinceReferenceDate)
         req.to   = SRAbsoluteTime.fromCFAbsoluteTime(_cf: safeTo.timeIntervalSinceReferenceDate)
 
@@ -125,7 +127,6 @@ extension PedometerMapper: SRSensorReaderDelegate {
         if let avgP = d.averageActivePace?.doubleValue { rec["avg_active_pace_s_per_m"] = avgP }
         if let up   = d.floorsAscended?.intValue { rec["floors_up"] = up }
         if let down = d.floorsDescended?.intValue { rec["floors_down"] = down }
-        rec["device_kind"] = "iphone"
         return rec
     }
 }

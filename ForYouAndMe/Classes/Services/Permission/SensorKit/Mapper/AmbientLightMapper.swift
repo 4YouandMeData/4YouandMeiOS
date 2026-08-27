@@ -29,6 +29,7 @@ final class AmbientLightMapper: NSObject, SensorSampleMapper {
 
     func fetchAndMap(from: Date,
                      to: Date,
+                     device: SensorDevice,
                      completion: @escaping (Result<[[String: Any]], Error>) -> Void) {
 
         precondition(pendingCompletion == nil, "AmbientLightMapper: concurrent fetch not supported")
@@ -40,7 +41,8 @@ final class AmbientLightMapper: NSObject, SensorSampleMapper {
         }
 
         let req = SRFetchRequest()
-        req.device = SRDevice.current
+        // FUAM-3945: iPhone or paired Watch — the manager walks one device at a time.
+        req.device = device.fetchTarget
         req.from = SRAbsoluteTime.fromCFAbsoluteTime(_cf: from.timeIntervalSinceReferenceDate)
         req.to   = SRAbsoluteTime.fromCFAbsoluteTime(_cf: safeTo.timeIntervalSinceReferenceDate)
 
@@ -96,8 +98,7 @@ extension AmbientLightMapper: SRSensorReaderDelegate {
             "t": ISO8601Strategy.encode(ts),
             "recorded_at": recordedAtISO,
             "lux": lux,
-            "unit": "lux",
-            "device_kind": "iphone"
+            "unit": "lux"
         ]
         if let cct = cct {
             record["cct"] = cct

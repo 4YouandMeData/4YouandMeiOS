@@ -502,7 +502,11 @@ extension SensorKitManager {
         
         // Safe & idempotent: SensorKit ignores duplicate starts
         self.ensureRecordingStarted()
-        
+
+        // FUAM-3945: a paired Watch appears in `fetchDevices()` only once it has synced data for
+        // the sensor, so re-enumerate on every foreground before the cycle plans its windows.
+        self.sensorSampleUploadManager.refreshDeviceCache()
+
         // Kick the pipeline. UploadManager already throttles internally.
         self.sensorSampleUploadManager.triggerSync(reason: "didBecomeActive")
     }

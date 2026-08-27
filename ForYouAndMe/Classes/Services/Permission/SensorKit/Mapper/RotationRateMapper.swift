@@ -34,6 +34,7 @@ final class RotationRateMapper: NSObject, SensorSampleMapper {
 
     func fetchAndMap(from: Date,
                      to: Date,
+                     device: SensorDevice,
                      completion: @escaping (Result<[[String: Any]], Error>) -> Void) {
 
         precondition(pendingCompletion == nil, "RotationRateMapper: concurrent fetch not supported")
@@ -47,7 +48,8 @@ final class RotationRateMapper: NSObject, SensorSampleMapper {
 
         // Build request converting Date -> SRAbsoluteTime (CFAbsoluteTime since 2001-01-01)
         let req = SRFetchRequest()
-        req.device = SRDevice.current
+        // FUAM-3945: iPhone or paired Watch — the manager walks one device at a time.
+        req.device = device.fetchTarget
         req.from = SRAbsoluteTime.fromCFAbsoluteTime(_cf: from.timeIntervalSinceReferenceDate)
         req.to   = SRAbsoluteTime.fromCFAbsoluteTime(_cf: safeTo.timeIntervalSinceReferenceDate)
 
@@ -129,8 +131,7 @@ extension RotationRateMapper: SRSensorReaderDelegate {
             "t": ISO8601Strategy.encode(ts),
             "recorded_at": recordedAtISO,
             "x": gx, "y": gy, "z": gz,
-            "unit": "rad_per_s",
-            "device_kind": "iphone"
+            "unit": "rad_per_s"
         ]
     }
 

@@ -35,6 +35,7 @@ final class AmbientPressureMapper: NSObject, SensorSampleMapper {
 
     func fetchAndMap(from: Date,
                      to: Date,
+                     device: SensorDevice,
                      completion: @escaping (Result<[[String : Any]], Error>) -> Void) {
 
         precondition(pendingCompletion == nil, "AmbientPressureMapper: concurrent fetch not supported")
@@ -48,7 +49,8 @@ final class AmbientPressureMapper: NSObject, SensorSampleMapper {
 
         // Build request converting Date -> SRAbsoluteTime (CFAbsoluteTime since 2001-01-01)
         let req = SRFetchRequest()
-        req.device = SRDevice.current
+        // FUAM-3945: iPhone or paired Watch — the manager walks one device at a time.
+        req.device = device.fetchTarget
         req.from = SRAbsoluteTime.fromCFAbsoluteTime(_cf: from.timeIntervalSinceReferenceDate)
         req.to   = SRAbsoluteTime.fromCFAbsoluteTime(_cf: safeTo.timeIntervalSinceReferenceDate)
 
@@ -141,8 +143,7 @@ extension AmbientPressureMapper: SRSensorReaderDelegate {
         var rec: [String: Any] = [
             "t": ISO8601Strategy.encode(ts),
             "recorded_at": recordedAtISO,
-            "pressure_kpa": p,
-            "device_kind": "iphone"
+            "pressure_kpa": p
         ]
         if let ra = relAlt { rec["relative_altitude_m"] = ra }
         if let s  = slp    { rec["sea_level_pressure_kpa"] = s }

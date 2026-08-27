@@ -57,6 +57,7 @@ final class MessagesUsageReportMapper: NSObject, SensorSampleMapper {
     func fetchAndMap(
         from: Date,
         to: Date,
+        device: SensorDevice,
         completion: @escaping (Result<[[String: Any]], Error>) -> Void
     ) {
         // Avoid crashing on concurrent calls
@@ -74,7 +75,8 @@ final class MessagesUsageReportMapper: NSObject, SensorSampleMapper {
         }
 
         let req = SRFetchRequest()
-        req.device = SRDevice.current
+        // FUAM-3945: iPhone or paired Watch — the manager walks one device at a time.
+        req.device = device.fetchTarget
         req.from = from.srAbsoluteTime
         req.to = safeTo.srAbsoluteTime
 
@@ -185,9 +187,6 @@ private extension MessagesUsageReportMapper {
         if let v = intValue(obj, key: "totalIncomingMessages") { rec["total_incoming_messages"] = v } // :contentReference[oaicite:2]{index=2}
         if let v = intValue(obj, key: "totalOutgoingMessages") { rec["total_outgoing_messages"] = v } // :contentReference[oaicite:3]{index=3}
         if let v = intValue(obj, key: "totalUniqueContacts")  { rec["total_unique_contacts"]  = v } // :contentReference[oaicite:4]{index=4}
-
-        // Explicit device tag
-        rec["device_kind"] = "iphone"
 
         return rec
     }

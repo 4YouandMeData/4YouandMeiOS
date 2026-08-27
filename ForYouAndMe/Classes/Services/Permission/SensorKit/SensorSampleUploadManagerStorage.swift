@@ -9,14 +9,20 @@ import Foundation
 import SensorKit
 
 /// Storage abstraction for SensorKit batching pipeline:
-/// - Keeps per-sensor upload cursor (last successfully uploaded upper bound).
+/// - Keeps per-sensor, per-device upload cursor (last successfully uploaded upper bound).
 /// - Persists pending batches (FIFO) until successfully uploaded.
 public protocol SensorSampleUploadManagerStorage: AnyObject {
-    // Cursor (per sensor)
-    func lastCursor(for sensor: SRSensor) -> Date?
-    func setLastCursor(_ date: Date, for sensor: SRSensor)
+    // Cursor (per sensor AND per device kind)
 
-    // Queue (per sensor) of batches (each batch = array of JSON-ready dictionaries)
+    /// `deviceKey` is `SensorDevice.key` — `"iphone"` for the device the app runs on, `"watch"`
+    /// for a paired Apple Watch (FUAM-3945). Each kind walks its own plan at its own pace, so
+    /// a Watch that syncs days late can never drag the iPhone cursor backwards or forwards.
+    func lastCursor(for sensor: SRSensor, deviceKey: String) -> Date?
+    func setLastCursor(_ date: Date, for sensor: SRSensor, deviceKey: String)
+
+    // Queue (per sensor, device-mixed) of batches (each batch = array of JSON-ready
+    // dictionaries). The device does NOT join the queue key: records are tagged individually
+    // (`device_kind`) and a batch already carries the window it needs for the drain-time gate.
 
     /// `windowStart` is the start of the fetch window the records came from. It is persisted
     /// WITH the batch because the consent gate needs it again at drain time: a record whose
@@ -49,14 +55,21 @@ public final class DefaultsSensorStorage: SensorSampleUploadManagerStorage, Sens
 
     // MARK: - Cursor
 
-    public func lastCursor(for sensor: SRSensor) -> Date? {
-        let key = cursorKeyPrefix + sensor.rawValue
-        return UserDefaults.standard.object(forKey: key) as? Date
+    public func lastCursor(for sensor: SRSensor, deviceKey: String) -> Date? {
+        return UserDefaults.standard.object(forKey: self.cursorKey(for: sensor, deviceKey: deviceKey)) as? Date
     }
 
-    public func setLastCursor(_ date: Date, for sensor: SRSensor) {
-        let key = cursorKeyPrefix + sensor.rawValue
-        UserDefaults.standard.set(date, forKey: key)
+    public func setLastCursor(_ date: Date, for sensor: SRSensor, deviceKey: String) {
+        UserDefaults.standard.set(date, forKey: self.cursorKey(for: sensor, deviceKey: deviceKey))
+    }
+
+    /// The iPhone keeps the LEGACY, unsuffixed key; every other device kind is suffixed. That is
+    /// the whole FUAM-3945 migration: no migration code, and rolling back to an older build is
+    /// automatically safe — it reads exactly the key it always wrote, and the watch keys are
+    /// ignored orphans.
+    private func cursorKey(for sensor: SRSensor, deviceKey: String) -> String {
+        let base = self.cursorKeyPrefix + sensor.rawValue
+        return deviceKey == SensorDevice.iphoneKey ? base : base + "." + deviceKey
     }
 
     // MARK: - Queue
