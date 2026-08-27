@@ -81,7 +81,8 @@ public class PermissionViewController: UIViewController {
         // Once both are resolved we rebuild the stack on the main thread.
         let healthSetupSingle: Single<Bool> = {
             if self.healthService.serviceAvailable,
-               self.repository.currentUser?.getHasAgreedTo(systemPermission: .health) ?? false {
+               HostAppConfig.healthKitIgnoresOptInConsent
+                   || (self.repository.currentUser?.getHasAgreedTo(systemPermission: .health) ?? false) {
                 // True → no read type has ever been requested → "Setup".
                 return self.healthService.isStillShouldRequest().catchAndReturn(false)
             }
@@ -129,7 +130,11 @@ public class PermissionViewController: UIViewController {
 
         self.scrollStackView.stackView.addArrangedSubview(pushItem)
 
-        if self.healthService.serviceAvailable, self.repository.currentUser?.getHasAgreedTo(systemPermission: .health) ?? false {
+        // FUAM-3844: with the host-app flag set there is no opt-in card carrying `health`,
+        // so the row must show without a recorded agreement or HealthKit could never be granted.
+        if self.healthService.serviceAvailable,
+           HostAppConfig.healthKitIgnoresOptInConsent
+               || (self.repository.currentUser?.getHasAgreedTo(systemPermission: .health) ?? false) {
             let healthItemTitle = StringsProvider.string(forKey: .permissionHealthDescription)
             // "Setup" iff getRequestStatusForAuthorization == .shouldRequest, else "Manage".
             let healthTrailingKey: StringKey = healthShouldSetup

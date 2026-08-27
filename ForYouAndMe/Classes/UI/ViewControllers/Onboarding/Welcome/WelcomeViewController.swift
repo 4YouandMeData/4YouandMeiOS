@@ -76,11 +76,17 @@ class WelcomeViewController: UIViewController {
         stackView.addBlankSpace(space: 50)
     }
 
-    /// Explicit layout used when a host provides a partner logo: the main logo is pinned to the
-    /// exact screen centre at its natural size, the Get Started button near the bottom, the small
-    /// FYAM logo (if any) at the top, and the partner logo centred midway between the main logo and
-    /// the button.
+    /// Explicit layout used when a host provides a partner logo: the main logo is pinned at 47% of
+    /// the screen height at its natural size, the Get Started button near the bottom, the small
+    /// FYAM logo (if any) at the top, and the partner logo at 71.5% of the screen height
+    /// (per design review, matching the hosts' launch screens).
     private func setupCenteredLayout(partnerLogoImage: UIImage) {
+        // The navigation bar is opaque (isTranslucent = false), so by default UIKit lays this view
+        // out *below* the bar; "superview centerY" would then sit at ~56% of the physical screen.
+        // Extend the layout under the bar so the centerY multipliers below are true screen
+        // percentages.
+        self.extendedLayoutIncludesOpaqueBars = true
+
         let margins = Constants.Style.DefaultHorizontalMargins
 
         let fyamLogoImageView = UIImageView(image: ImagePalette.image(withName: .fyamLogoSpecific))
@@ -95,7 +101,14 @@ class WelcomeViewController: UIViewController {
         self.headerImageView = mainLogoImageView
         self.view.addSubview(mainLogoImageView)
         mainLogoImageView.autoAlignAxis(toSuperviewAxis: .vertical)
-        mainLogoImageView.autoAlignAxis(toSuperviewAxis: .horizontal)
+        // centerY = 0.94 * view.centerY -> 47% of the screen height.
+        NSLayoutConstraint(item: mainLogoImageView,
+                           attribute: .centerY,
+                           relatedBy: .equal,
+                           toItem: self.view,
+                           attribute: .centerY,
+                           multiplier: 0.94,
+                           constant: 0).isActive = true
         mainLogoImageView.autoPinEdge(toSuperviewEdge: .leading, withInset: margins, relation: .greaterThanOrEqual)
         mainLogoImageView.autoPinEdge(toSuperviewEdge: .trailing, withInset: margins, relation: .greaterThanOrEqual)
 
@@ -104,10 +117,7 @@ class WelcomeViewController: UIViewController {
         self.continueButton.autoPinEdge(toSuperviewEdge: .trailing, withInset: margins)
         self.continueButton.autoPinEdge(toSuperviewSafeArea: .bottom, withInset: 50)
 
-        self.addPartnerLogo(image: partnerLogoImage,
-                            width: 195,
-                            centeredBetween: mainLogoImageView,
-                            and: self.continueButton)
+        self.addPartnerLogo(image: partnerLogoImage, width: 195)
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -128,12 +138,10 @@ class WelcomeViewController: UIViewController {
     
     // MARK: Helpers
 
-    /// Overlays a horizontally-centered partner logo on the view, vertically centered at the
-    /// midpoint between `topView` and `bottomView` (the main logo and the Get Started button).
-    /// The width is fixed and the height follows the image aspect ratio, so the wide landscape
-    /// lockup is never distorted. Kept out of the main stack so its position tracks the two
-    /// anchors rather than the stack's spacing/distribution.
-    private func addPartnerLogo(image: UIImage, width: CGFloat, centeredBetween topView: UIView, and bottomView: UIView) {
+    /// Overlays a horizontally-centered partner logo on the view, vertically centered at 71.5% of
+    /// the screen height (per design review). The width is fixed and the height follows the image
+    /// aspect ratio, so the wide landscape lockup is never distorted.
+    private func addPartnerLogo(image: UIImage, width: CGFloat) {
         let imageView = UIImageView(image: image)
         imageView.contentMode = .scaleAspectFit
         imageView.isUserInteractionEnabled = false
@@ -146,12 +154,14 @@ class WelcomeViewController: UIViewController {
             imageView.autoMatch(.height, to: .width, of: imageView, withMultiplier: aspectRatio)
         }
 
-        // Center the logo at the midpoint of the two anchors via a layout guide spanning them.
-        let spacingGuide = UILayoutGuide()
-        self.view.addLayoutGuide(spacingGuide)
-        spacingGuide.topAnchor.constraint(equalTo: topView.centerYAnchor).isActive = true
-        spacingGuide.bottomAnchor.constraint(equalTo: bottomView.centerYAnchor).isActive = true
-        imageView.centerYAnchor.constraint(equalTo: spacingGuide.centerYAnchor).isActive = true
+        // centerY = 1.43 * view.centerY -> 71.5% of the screen height.
+        NSLayoutConstraint(item: imageView,
+                           attribute: .centerY,
+                           relatedBy: .equal,
+                           toItem: self.view,
+                           attribute: .centerY,
+                           multiplier: 1.43,
+                           constant: 0).isActive = true
     }
 
     // MARK: Actions

@@ -792,7 +792,50 @@ extension RepositoryImpl: HealthManagerNetworkDelegate {
 // MARK: - HealthManagerClearanceDelegate
 
 extension RepositoryImpl: HealthManagerClearanceDelegate {
-    var healthManagerCanRun: Bool { self.currentUser?.getHasAgreedTo(systemPermission: .health) ?? false }
+    var healthManagerCanRun: Bool {
+        // FUAM-3844: hosts may declare (via Info.plist) that the study does not gate
+        // HealthKit collection on an opt-in consent card. Collection still requires a session.
+        if HostAppConfig.healthKitIgnoresOptInConsent { return self.isLoggedIn }
+        return self.currentUser?.getHasAgreedTo(systemPermission: .health) ?? false
+    }
+
+    /// FUAM-3841: lower bound for HealthKit/SensorKit backfill and hard consent gate for
+    /// record timestamps. Satisfies both `HealthSampleUploadManagerClearanceDelegate` and
+    /// `SensorSampleUploadManagerClearanceDelegate`.
+    /// Source: earliest `user_study_phases.start_at` (explicit backend date); when the study
+    /// has no phases, derived from `days_in_study` (day-aligned, conservative).
+    var enrollmentDate: Date? {
+        guard let user = self.currentUser else { return nil }
+        if let phaseStart = user.userPhases?.compactMap({ $0.startAt }).min() {
+            return phaseStart
+        }
+        return Self.enrollmentDate(fromDaysInStudy: user.daysInStudy,
+                                   calendar: Self.enrollmentCalendar(userTimeZone: user.timeZone))
+    }
+
+    /// FUAM-3841 (final review): the backend computes `days_in_study` in the USER's timezone,
+    /// so the derived day boundary must use it too — `Calendar.current` (device tz) can shift
+    /// the enrollment day by one when they differ. Falls back to the device timezone when the
+    /// user record carries none.
+    static func enrollmentCalendar(userTimeZone: TimeZone?) -> Calendar {
+        var calendar = Calendar.current
+        if let userTimeZone = userTimeZone {
+            calendar.timeZone = userTimeZone
+        }
+        return calendar
+    }
+
+    /// Backend semantics: `days_in_study` is 1 ON the enrollment day
+    /// (`(end_date - onboarding_date).to_i + 1`), so enrollment = startOfDay(today)
+    /// minus (daysInStudy - 1) days. `daysInStudy <= 0` is not a valid enrolled state:
+    /// return `nil` so callers fall back to their legacy windows instead of silently
+    /// producing an empty plan (FUAM-3841 review fixes #1/#6).
+    static func enrollmentDate(fromDaysInStudy daysInStudy: Int,
+                               now: Date = Date(),
+                               calendar: Calendar = .current) -> Date? {
+        guard daysInStudy > 0 else { return nil }
+        return calendar.date(byAdding: .day, value: -(daysInStudy - 1), to: calendar.startOfDay(for: now))
+    }
 }
 
 // MARK: - Extension(PrimitiveSequence)
@@ -927,7 +970,12 @@ extension RepositoryImpl: SensorKitManagerClearanceDelegate {
     var sensorManagerCanRun: Bool {
         // Must be logged in AND have SensorKit consent
         guard self.isLoggedIn else { return false }
-        
+
+        // FUAM-3844: hosts may declare (via Info.plist) that the study does not gate
+        // SensorKit collection on an opt-in consent card. Per-sensor OS authorization is
+        // still checked downstream (SensorSampleUploadManager skips non-authorized sensors).
+        if HostAppConfig.sensorKitIgnoresOptInConsent { return true }
+
         // Reuse the same consent mechanism, but check `.sensorKit`
         return self.currentUser?.getHasAgreedTo(systemPermission: .sensorKit) ?? false
     }
