@@ -33,12 +33,27 @@ final class AmbientPressureMapper: NSObject, SensorSampleMapper {
     // Apple withholds last 24h of SensorKit data
     private static let holdingPeriod: TimeInterval = 24 * 60 * 60
 
+    private enum MapperError: LocalizedError {
+        case busy
+
+        var errorDescription: String? {
+            return "Mapper is busy: a fetch is already in flight."
+        }
+    }
+
     func fetchAndMap(from: Date,
                      to: Date,
                      device: SensorDevice,
                      completion: @escaping (Result<[[String : Any]], Error>) -> Void) {
 
-        precondition(pendingCompletion == nil, "AmbientPressureMapper: concurrent fetch not supported")
+        // FUAM-3945 (review C1): fail soft, exactly like the other mappers. The manager's
+        // in-flight chain guard is the real protection against a second sync cycle
+        // re-entering a mid-fetch mapper; this is defence in depth, and a crash is never
+        // the right answer to it in a participant's hands.
+        guard self.pendingCompletion == nil else {
+            completion(.failure(MapperError.busy))
+            return
+        }
 
         // Respect 24h holding period
         let safeTo = min(to, Date().addingTimeInterval(-Self.holdingPeriod))

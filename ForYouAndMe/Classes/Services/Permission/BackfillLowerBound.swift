@@ -118,13 +118,27 @@ extension BackfillLowerBound {
 /// rolled FORWARDS then pinned the bound in the future and suspended collection until real time
 /// caught up. A server-anchored clock removes both directions at once.
 ///
-/// Two uses, and only these two:
+/// Three uses, and only these three:
 /// 1. the join-day derivation in `RepositoryImpl.enrollmentDate` — moving the device clock no
 ///    longer moves the participant's join day, in either direction;
-/// 2. a CAP on the planning upper bound in both subsystems (`min(deviceNow, ServerClock.now)`),
-///    so a device clock years ahead can never plan a window — and therefore never write a
-///    cursor — beyond server time. Any clock excursion self-heals on the next sync once the
-///    clock is sane, instead of leaving a multi-year hole the cursor has already skipped over.
+/// 2. a CAP on the planning UPPER bound in both subsystems (`min(deviceNow, ServerClock.now)`),
+///    so a device clock ahead cannot plan a window — and therefore cannot write a cursor —
+///    beyond server time;
+/// 3. the clock the 365-day hard cap below is measured from, resolved the other way round,
+///    `max(deviceNow, ServerClock.now)` (review I1): the cap is a LOWER bound, so the LATER of
+///    the two clocks is the safe one — it can only ever tighten the reach, while the raw device
+///    clock rolled back by Δ would let the reach grow to 365 + Δ real days.
+///
+/// **How much protection this actually is.** All of it depends on an offset having been RECORDED
+/// while the clock was wrong — i.e. on at least one backend response observed under the wrong
+/// clock. Until then `storedOffset` is `nil` (or stale from when the clock was right),
+/// `ServerClock.now()` degrades to `Date()`, and the whole pipeline — plan, fetch, enqueue and
+/// cursor write — proceeds on the device clock, uncapped. A device that goes offline, has its
+/// clock moved, and syncs while still offline is therefore NOT protected for that excursion; it
+/// self-heals on the first response afterwards. That offline window is the accepted residual:
+/// gating collection on "have we heard from the server recently" would stop collecting for every
+/// participant in a tunnel to protect against a rare one with a wrong clock. There is
+/// deliberately no offline gate.
 ///
 /// Fetch requests to the OS keep using device wall-clock: HealthKit and SensorKit index their
 /// stores with the same (possibly wrong) clock that wrote the samples, so translating query
@@ -146,8 +160,36 @@ enum ServerClock {
     /// Beyond this much divergence, the device clock is not drifting, it is wrong.
     static let aheadReportThreshold: TimeInterval = 24 * 60 * 60
 
+    /// Serialises the once-per-launch latch below. `ServerClock.now` is called from the HealthKit
+    /// upload queue, the SensorKit work queue and the repository's Rx chains, so an unguarded
+    /// `static var` was a genuine data race (review L1) as well as a way to emit the diagnostic
+    /// twice.
+    private static let offsetReportLock = NSLock()
+    private static var offsetReportedStorage = false
+
     /// Once-per-launch guard for the diagnostic below. Internal so specs can reset it.
-    static var offsetReported: Bool = false
+    static var offsetReported: Bool {
+        get {
+            Self.offsetReportLock.lock()
+            defer { Self.offsetReportLock.unlock() }
+            return Self.offsetReportedStorage
+        }
+        set {
+            Self.offsetReportLock.lock()
+            defer { Self.offsetReportLock.unlock() }
+            Self.offsetReportedStorage = newValue
+        }
+    }
+
+    /// Test-and-set in one critical section: `true` for exactly one caller per launch. A separate
+    /// get + set would let two queues both read `false` and both report.
+    private static func claimOffsetReport() -> Bool {
+        Self.offsetReportLock.lock()
+        defer { Self.offsetReportLock.unlock() }
+        guard Self.offsetReportedStorage == false else { return false }
+        Self.offsetReportedStorage = true
+        return true
+    }
 
     /// RFC 7231 IMF-fixdate, the only format an HTTP `Date` header may use in practice.
     /// `en_US_POSIX` + a fixed GMT zone: never locale- or timezone-dependent.
@@ -193,8 +235,7 @@ enum ServerClock {
     /// FUAM-3835 ran for six weeks on exactly that kind of silence.
     private static func reportOffsetOnce(offset: TimeInterval, deviceNow: Date, analytics: AnalyticsService?) {
         guard abs(offset) > Self.aheadReportThreshold else { return }
-        guard Self.offsetReported == false else { return }
-        Self.offsetReported = true
+        guard Self.claimOffsetReport() else { return }
         let formatter = ISO8601DateFormatter()
         let serverNow = deviceNow.addingTimeInterval(offset)
         analytics?.track(event: .sensorDataClockAhead(mark: formatter.string(from: serverNow),

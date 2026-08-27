@@ -77,6 +77,22 @@ public final class SensorSampleUploadManager {
     // Once-per-launch guard so the "empty_plan" telemetry (review fix #6) doesn't fire on
     // every 15-minute sync cycle while a fresh enrollment waits out the 24h embargo.
     private var emptyPlanReported: Set<String> = []
+    // FUAM-3945 (review C1): sensors whose device chain has not yet reached a termination path.
+    // `syncAllSensors` releases `syncLock` as soon as it has KICKED OFF every chain, and the
+    // reachability trigger bypasses the sync throttle entirely, so a second cycle used to
+    // re-enter `runDeviceChain` and call `fetchAndMap` on a mapper with a fetch already in
+    // flight. Every mapper is single-flight; three of them used to `precondition` on that, i.e.
+    // crash in Release. A sensor already in flight is now simply skipped — the next cycle picks
+    // it up — and, crucially, skipping is NOT a fetch failure, so it burns nothing towards
+    // `windowFetchFailures` and can never trigger the give-up cursor skip.
+    // ponytail: a mapper that never fires its completion now blocks its own sensor until the
+    // next launch. That chain was already stalled (the cursor never advanced either way); the
+    // guard turns "stalled, then crashed on the next cycle" into "stalled". Add a watchdog only
+    // if a real mapper is ever seen dropping a completion.
+    private var activeChains: Set<SRSensor> = []
+    /// Guards `activeChains` only. Deliberately NOT `syncLock`: `beginChain` is reached from
+    /// inside `syncAllSensors`, which already holds `syncLock` (NSLock is not recursive).
+    private let chainLock = NSLock()
     private let syncLock = NSLock()
     private var hasStarted = false
 
@@ -242,7 +258,10 @@ public final class SensorSampleUploadManager {
 
     /// The consent bound as it stands right now, resolved from the live user record.
     private var currentBound: BackfillLowerBound {
-        return BackfillLowerBound.resolve(joinDay: self.clearanceDelegate?.enrollmentDate)
+        // FUAM-3964 (review I1): `max(deviceNow, serverNow)`, never the raw device clock — the
+        // 365-day cap is `now - 365d`, so a clock rolled back Δ would let it reach 365 + Δ.
+        return BackfillLowerBound.resolve(joinDay: self.clearanceDelegate?.enrollmentDate,
+                                          now: max(Date(), ServerClock.now()))
     }
 
     /// Internal rather than private so the FUAM-3964 server-time cap can be exercised through
@@ -259,7 +278,13 @@ public final class SensorSampleUploadManager {
         // holdback SUBSUMES the embargo rather than adding to it (`max`, not `+`), so the watch
         // upper bound is `min(deviceNow, serverNow) - 48h` — still snapped to complete UTC days
         // by the pure planner, which needs no device knowledge at all.
+        // FUAM-3964 (review I1): the two bounds want OPPOSITE ends of the clock disagreement.
+        // The upper bound takes `min` (never plan past server time); the 365-day hard cap is a
+        // LOWER bound, so it takes `max` — a clock rolled BACK would otherwise move `now - 365d`
+        // back with it and let the cap reach 365 + Δ real days. The later of the two clocks can
+        // only ever tighten a lower bound, so `max` is the safe direction there.
         return Self.buildWindowPlan(now: min(now, ServerClock.now()),
+                                    boundNow: max(now, ServerClock.now()),
                                     joinDay: clearanceDelegate?.enrollmentDate,
                                     cursor: storage.lastCursor(for: sensor, deviceKey: device.key),
                                     embargo: max(sensorkitEmbargo, device.syncHoldback))
@@ -301,9 +326,13 @@ public final class SensorSampleUploadManager {
     /// free — `SRSensorReader.fetch` simply returns nothing for a window the OS has already
     /// dropped — so this no longer clamps to an assumed OS retention.
     ///
-    /// `now` must already be capped at server time by the caller (FUAM-3964). Pure (internal for
-    /// unit tests).
+    /// `now` must already be capped at server time by the caller — `min(deviceNow, serverNow)`
+    /// (FUAM-3964). `boundNow` is the same instant resolved the other way, `max(deviceNow,
+    /// serverNow)`, and is used ONLY for the 365-day hard cap: capping a lower bound with a
+    /// clock that may have been rolled backwards would let the reach grow past 365 real days
+    /// (review I1). Pure (internal for unit tests).
     static func buildWindowPlan(now: Date,
+                                boundNow: Date,
                                 joinDay: Date?,
                                 cursor: Date?,
                                 embargo: TimeInterval) -> WindowPlan {
@@ -314,7 +343,7 @@ public final class SensorSampleUploadManager {
 
         // Lower bound: join day, capped at 365 days, forward-only (== now, hence an empty
         // plan until the join day resolves) when the join day is unknown.
-        let bound = BackfillLowerBound.resolve(joinDay: joinDay, now: now)
+        let bound = BackfillLowerBound.resolve(joinDay: joinDay, now: boundNow)
         let lowerBound = bound.date
         var origin = bound.origin
 
@@ -387,9 +416,35 @@ public final class SensorSampleUploadManager {
         runDeviceChain(at: 0, of: deviceProvider.devices(for: sensor), for: sensor, now: now, using: mapper)
     }
 
+    /// Claim `sensor`'s chain for this cycle. `false` means one is already running and this
+    /// cycle must leave the sensor alone (FUAM-3945 review C1).
+    private func beginChain(for sensor: SRSensor) -> Bool {
+        self.chainLock.lock()
+        defer { self.chainLock.unlock() }
+        return self.activeChains.insert(sensor).inserted
+    }
+
+    /// Release `sensor`'s chain. Called on EVERY chain-termination path: the `index >= count`
+    /// return below (which every completed, given-up and retried walk funnels into) and the
+    /// forward-only bail in `handleWindowResult`.
+    private func endChain(for sensor: SRSensor) {
+        self.chainLock.lock()
+        defer { self.chainLock.unlock() }
+        self.activeChains.remove(sensor)
+    }
+
+    /// The consecutive fetch failures recorded for one sensor+device. Internal purely so the C1
+    /// spec can assert that a SKIPPED cycle burned none of the give-up budget. Must not be
+    /// called from `workQueue` (it synchronises onto it).
+    func windowFetchFailureCount(for sensor: SRSensor, deviceKey: String) -> Int {
+        return self.workQueue.sync { self.windowFetchFailures["\(sensor.rawValue).\(deviceKey)"] ?? 0 }
+    }
+
     /// Walk device[index]'s window plan to its end, then start device[index + 1]'s. STRICTLY
-    /// sequential: every mapper is single-flight — four of them `precondition` on a concurrent
-    /// fetch, i.e. crash — so two devices must never have a fetch in flight on the same sensor.
+    /// sequential: every mapper is single-flight — three of them used to `precondition` on a
+    /// concurrent fetch, i.e. crash — so two devices must never have a fetch in flight on the
+    /// same sensor, and neither must two sync cycles (review C1: `index == 0` claims the sensor
+    /// or gives up on this cycle entirely).
     ///
     /// Internal rather than private so specs can drive the real chain: no SensorKit sensor is
     /// ever `.authorized` on the simulator, so `fetchPendingWindows` returns before planning.
@@ -398,7 +453,19 @@ public final class SensorSampleUploadManager {
                         for sensor: SRSensor,
                         now: Date,
                         using mapper: SensorSampleMapper) {
-        guard index < devices.count else { return } // every device done
+        // Entry point of a chain: claim the sensor, or skip it — a second concurrent cycle must
+        // never reach `fetchAndMap` on a mapper that is still fetching. `index > 0` is this same
+        // chain walking on to its next device, which already holds the claim.
+        if index == 0, !self.beginChain(for: sensor) {
+            #if DEBUG
+            print("SensorSampleUploadManager - Skip \(sensor.rawValue): a device chain is still in flight")
+            #endif
+            return
+        }
+        guard index < devices.count else {
+            self.endChain(for: sensor) // every device done
+            return
+        }
         let device = devices[index]
         let plan = buildWindowPlan(for: sensor, now: now, device: device)
         let context = DeviceChainContext(sensor: sensor,
@@ -499,6 +566,8 @@ public final class SensorSampleUploadManager {
             #if DEBUG
             print("SensorSampleUploadManager - Aborting chain for \(sensor.rawValue): no join day (cursor left in place)")
             #endif
+            // Terminal path: release the sensor so it is collectable again once consent returns.
+            self.endChain(for: sensor)
             return
         }
         // Review fix #5: the join day is NOT immutable (a mid-flight user refresh can move it),

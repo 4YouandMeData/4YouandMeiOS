@@ -15,7 +15,7 @@
 //  - BackfillLowerBound.resolve(joinDay:now:)
 //      the single join-day -> lower-bound policy shared by both subsystems: join day, floored
 //      at 365 days, forward-only when the join day is unknown.
-//  - SensorSampleUploadManager.buildWindowPlan(now:joinDay:cursor:embargo:)
+//  - SensorSampleUploadManager.buildWindowPlan(now:boundNow:joinDay:cursor:embargo:)
 //      round 7: complete UTC calendar days for EVERY sensor, the one-time migration window from
 //      an unaligned cursor, a plan that never depends on the device timezone, the first window
 //      never opening before the bound, and an empty plan when the bound has reached the cutoff.
@@ -197,6 +197,7 @@ class EnrollmentBackfillWindowingSpec: QuickSpec {
 
             func plan(joinDay: Date?, cursor: Date?, now planningNow: Date = now) -> SensorSampleUploadManager.WindowPlan {
                 return SensorSampleUploadManager.buildWindowPlan(now: planningNow,
+                                                                 boundNow: planningNow,
                                                                  joinDay: joinDay,
                                                                  cursor: cursor,
                                                                  embargo: embargo)
@@ -1114,17 +1115,28 @@ private final class FakeSensorNetwork: SensorSampleUploaderNetworkDelegate {
     }
 }
 
-// MARK: - FUAM-3964: a wrong device clock cannot move the cursor past server time
+// MARK: - FUAM-3964: a RECORDED clock offset caps the plan at server time
 
-/// The acceptance test for the server-time cap on the SensorKit side. The device clock is days
-/// ahead of the server's; every window the planner opens must still end at or before
-/// `serverNow - embargo`, because the pipeline advances the cursor to the end of each window it
-/// processes. Without the cap the plan runs to `deviceNow - embargo`, the cursor is burned there,
-/// and correcting the clock leaves a hole no plan can ever reopen (the cursor only moves forward).
+/// The acceptance test for the server-time cap on the SensorKit side, **conditional on an offset
+/// having been recorded** — which is the whole extent of the protection (review I2). The device
+/// clock is days ahead of the server's AND a response has been observed under that wrong clock,
+/// so `ServerClock.storageKey` holds the offset; every window the planner opens must then end at
+/// or before `serverNow - embargo`, because the pipeline advances the cursor to the end of each
+/// window it processes. Without the cap the plan runs to `deviceNow - embargo`, the cursor is
+/// burned there, and correcting the clock leaves a hole no plan can ever reopen (the cursor only
+/// moves forward).
 ///
-/// This drives `buildWindowPlan(for:now:)` — the outermost reachable seam. `fetchPendingWindows`
-/// cannot be used: no SensorKit sensor is ever `.authorized` on the simulator, so it returns
-/// before planning anything.
+/// What is deliberately NOT covered, because it is not implemented and will not be: a device
+/// whose clock moves while it is offline. With no offset stored (or one recorded before the clock
+/// moved) `ServerClock.now()` is just `Date()` and planning, fetching, enqueuing and the cursor
+/// write all proceed uncapped until the first response afterwards. Gating collection on recent
+/// server contact would punish every participant in a tunnel to protect a rare one with a wrong
+/// clock, so that offline excursion is the accepted residual — see the last example below, which
+/// pins the uncapped behaviour rather than asserting protection.
+///
+/// This drives `buildWindowPlan(for:now:device:)` — the outermost reachable seam.
+/// `fetchPendingWindows` cannot be used: no SensorKit sensor is ever `.authorized` on the
+/// simulator, so it returns before planning anything.
 class SensorKitServerTimeCapSpec: QuickSpec {
 
     override class func spec() {
@@ -1161,7 +1173,7 @@ class SensorKitServerTimeCapSpec: QuickSpec {
             UserDefaults.standard.removeObject(forKey: ServerClock.storageKey)
         }
 
-        it("never plans a window ending past server time, however far ahead the device clock is") {
+        it("never plans past server time once an offset has been recorded under the wrong clock") {
             let plan = manager.buildWindowPlan(for: sensor, now: deviceNow, device: .current)
             expect(plan.windows).toNot(beEmpty())
             guard let last = plan.windows.last else { return }
@@ -1180,11 +1192,28 @@ class SensorKitServerTimeCapSpec: QuickSpec {
             expect(plan.windows).to(beEmpty())
         }
 
-        it("plans normally once the device clock agrees with the server") {
+        it("plans on the device clock alone when no offset was ever recorded (accepted residual)") {
+            // This is BOTH the "clock is fine, don't get in the way" case and the honest statement
+            // of the limit: with nothing stored there is no cap at all, so an offline device with
+            // a wrong clock plans, fetches, enqueues and writes its cursor uncapped (review I2).
             UserDefaults.standard.removeObject(forKey: ServerClock.storageKey)
             let plan = manager.buildWindowPlan(for: sensor, now: deviceNow, device: .current)
             expect(plan.windows).toNot(beEmpty())
             expect(plan.windows.last?.end).to(beGreaterThan(serverNow.addingTimeInterval(-embargo)))
+        }
+
+        it("measures the 365-day hard cap from the LATER clock, so a rolled-back clock cannot widen it") {
+            // Device clock rolled BACK 5 days relative to the server (offset positive). A hard cap
+            // resolved on the raw device clock would reach `deviceNow - 365d` = 370 real days back;
+            // `max(deviceNow, serverNow)` keeps it at `serverNow - 365d` (review I1).
+            let rolledBack = Date()
+            let realNow = rolledBack.addingTimeInterval(clockSkew)
+            UserDefaults.standard.set(clockSkew, forKey: ServerClock.storageKey)
+            clearance.enrollmentDate = realNow.addingTimeInterval(-500 * day)   // well past the cap
+            let plan = manager.buildWindowPlan(for: sensor, now: rolledBack, device: .current)
+            expect(plan.lowerBoundOrigin).to(equal(BackfillLowerBound.Origin.hardCap365d))
+            expect(plan.consentBound).to(beCloseTo(realNow.addingTimeInterval(-365 * day), within: 2))
+            expect(plan.consentBound).to(beGreaterThan(rolledBack.addingTimeInterval(-365 * day)))
         }
     }
 }
@@ -1809,6 +1838,7 @@ class SensorKitPerDeviceSpec: QuickSpec {
                 // must not shorten its plan by a single day.
                 let plan = manager.buildWindowPlan(for: sensor, now: now, device: iphone)
                 let reference = SensorSampleUploadManager.buildWindowPlan(now: now,
+                                                                         boundNow: now,
                                                                          joinDay: clearance.enrollmentDate,
                                                                          cursor: nil,
                                                                          embargo: day)
@@ -1825,8 +1855,10 @@ class SensorKitPerDeviceSpec: QuickSpec {
                 // 9 iPhone days [-10d, -1d), then 8 watch days [-10d, -2d) — in that order.
                 expect(Set(mapper.calls.prefix(9).map { $0.deviceKey })).to(equal(["iphone"]))
                 expect(Set(mapper.calls.suffix(8).map { $0.deviceKey })).to(equal(["watch"]))
-                // Four of the eleven real mappers `precondition` on a concurrent fetch.
-                expect(mapper.sawConcurrentFetch).to(beFalse())
+                // Interleaving WITHIN one chain is structural — `processWindow` only issues the
+                // next fetch from the previous one's completion — so the ordering above is the
+                // whole assertion. Interleaving BETWEEN two sync cycles is the real hazard and
+                // needs a mapper that actually holds its completion: see the C1 block below.
             }
 
             it("advances each device's cursor independently, the iPhone's on the legacy key") {
@@ -1858,6 +1890,65 @@ class SensorKitPerDeviceSpec: QuickSpec {
                 }
                 expect(sensors).to(contain(sensor.shortSubsource))
                 expect(sensors).to(contain("\(sensor.shortSubsource).watch"))
+            }
+        }
+
+        // MARK: - review C1: two sync cycles must never share a mapper
+
+        /// `syncAllSensors` releases `syncLock` as soon as it has kicked off each sensor's chain,
+        /// and the reachability trigger bypasses the sync throttle outright, so a second cycle
+        /// could re-enter `runDeviceChain` while the first was still parked inside `fetchAndMap`.
+        /// Eight mappers answered `.busy`; the three newly enabled ones (`pedometerData`,
+        /// `ambientLightSensor`, `ambientPressure`) hit a `precondition`, i.e. crashed in Release.
+        ///
+        /// These examples need a mapper that HOLDS its completion — with a synchronous fake the
+        /// chain has always unwound before the second cycle starts, which is exactly why the
+        /// previous `sawConcurrentFetch` assertion could never fail.
+        describe("concurrent sync cycles") {
+
+            it("skips a sensor whose chain is mid-fetch instead of re-entering its mapper") {
+                let blocking = BlockingDeviceMapper()
+                manager.runDeviceChain(at: 0, of: [iphone], for: sensor, now: now, using: blocking)
+                // Parked in the first fetch: the completion is held, so the chain cannot advance.
+                expect(blocking.callCount).toEventually(equal(1), timeout: .seconds(5))
+
+                // A second cycle arrives (reachability_up, which the throttle does not stop).
+                manager.runDeviceChain(at: 0, of: [iphone], for: sensor, now: now, using: blocking)
+
+                // The in-flight guard turns the crash into a skip: no second `fetchAndMap`.
+                expect(blocking.callCount).toAlways(equal(1), until: .milliseconds(300))
+                // And a skip is NOT a fetch failure — it must burn none of the give-up budget, or
+                // a burst of cycles would advance the cursor over windows that were never read.
+                expect(manager.windowFetchFailureCount(for: sensor, deviceKey: iphone.key)).to(equal(0))
+            }
+
+            it("releases the guard when the chain reaches its end, so the next cycle plans again") {
+                manager.runDeviceChain(at: 0, of: [iphone], for: sensor, now: now, using: mapper)
+                expect(mapper.calls.count).toEventually(equal(9), timeout: .seconds(5))
+
+                // Rewind the cursor to the join day so the next cycle has the same 9 windows: the
+                // only thing that can stop it now is a guard the finished chain failed to release.
+                storage.setLastCursor(now.addingTimeInterval(-10 * day), for: sensor, deviceKey: iphone.key)
+                manager.runDeviceChain(at: 0, of: [iphone], for: sensor, now: now, using: mapper)
+                expect(mapper.calls.count).toEventually(equal(18), timeout: .seconds(5))
+            }
+
+            it("releases the guard on the forward-only bail, so the sensor recovers with consent") {
+                let blocking = BlockingDeviceMapper()
+                manager.runDeviceChain(at: 0, of: [iphone], for: sensor, now: now, using: blocking)
+                expect(blocking.callCount).toEventually(equal(1), timeout: .seconds(5))
+
+                // Consent disappears while the fetch is parked: the completion lands on the
+                // forward-only bail, the one chain-termination path outside `runDeviceChain`.
+                clearance.enrollmentDate = nil
+                expect(blocking.releaseNext()).to(beTrue())
+                expect(blocking.callCount).toAlways(equal(1), until: .milliseconds(300))
+
+                // Consent comes back. Without the bail releasing the guard the sensor would be
+                // dead until the next app launch.
+                clearance.enrollmentDate = now.addingTimeInterval(-10 * day)
+                manager.runDeviceChain(at: 0, of: [iphone], for: sensor, now: now, using: blocking)
+                expect(blocking.callCount).toEventually(equal(2), timeout: .seconds(5))
             }
         }
 
@@ -1928,8 +2019,9 @@ class SensorKitPerDeviceSpec: QuickSpec {
     }
 }
 
-/// Records which device each fetch was made for, refuses to overlap two fetches (the real mappers
-/// `precondition` or fail with `.busy` on that), and can be told to fail one device's fetches.
+/// Records which device each fetch was made for and can be told to fail one device's fetches.
+/// Completes SYNCHRONOUSLY, so it can never observe two fetches overlapping — use
+/// `BlockingDeviceMapper` for anything about concurrency (review C1).
 private final class RecordingDeviceMapper: SensorSampleMapper {
 
     struct Call {
@@ -1939,12 +2031,10 @@ private final class RecordingDeviceMapper: SensorSampleMapper {
 
     private let lock = NSLock()
     private var recorded: [Call] = []
-    private var inFlight = false
 
     /// Set before driving the chain.
     var records: [[String: Any]] = []
     var failingDeviceKeys: Set<String> = []
-    private(set) var sawConcurrentFetch = false
 
     var calls: [Call] { return self.lock.locked { self.recorded } }
 
@@ -1953,17 +2043,47 @@ private final class RecordingDeviceMapper: SensorSampleMapper {
                      device: SensorDevice,
                      completion: @escaping (Result<[[String: Any]], Error>) -> Void) {
         let shouldFail: Bool = self.lock.locked {
-            if self.inFlight { self.sawConcurrentFetch = true }
-            self.inFlight = true
             self.recorded.append(Call(deviceKey: device.key, window: DateInterval(start: from, end: to)))
             return self.failingDeviceKeys.contains(device.key)
         }
         let payload = self.records
-        self.lock.locked { self.inFlight = false }
         if shouldFail {
             completion(.failure(NSError(domain: "spec.mapper", code: 1)))
         } else {
             completion(.success(payload))
         }
+    }
+}
+
+/// A mapper that never completes on its own: every fetch parks its completion until the spec
+/// releases it. That is what makes a chain observably "mid-fetch" and lets a second sync cycle
+/// arrive while the first is still in flight (review C1) — the case the real single-flight
+/// mappers answer with `.busy`, and used to answer with a `precondition` crash.
+private final class BlockingDeviceMapper: SensorSampleMapper {
+
+    private let lock = NSLock()
+    private var recorded: [String] = []
+    private var held: [(Result<[[String: Any]], Error>) -> Void] = []
+
+    var callCount: Int { return self.lock.locked { self.recorded.count } }
+
+    func fetchAndMap(from: Date,
+                     to: Date,
+                     device: SensorDevice,
+                     completion: @escaping (Result<[[String: Any]], Error>) -> Void) {
+        self.lock.locked {
+            self.recorded.append(device.key)
+            self.held.append(completion)
+        }
+    }
+
+    /// Complete the oldest parked fetch with an empty success. `false` when none is parked.
+    @discardableResult
+    func releaseNext() -> Bool {
+        let next: ((Result<[[String: Any]], Error>) -> Void)? = self.lock.locked {
+            return self.held.isEmpty ? nil : self.held.removeFirst()
+        }
+        next?(.success([]))
+        return next != nil
     }
 }

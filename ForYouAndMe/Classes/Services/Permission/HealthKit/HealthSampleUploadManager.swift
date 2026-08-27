@@ -201,7 +201,13 @@ class HealthSampleUploadManager {
 
         // FUAM-3945: the shared backfill bound — the study join day, floored at 365 days, and
         // forward-only when the join day cannot be established. Identical policy to SensorKit.
-        let bound = BackfillLowerBound.resolve(joinDay: self.clearanceDelegate?.enrollmentDate)
+        // FUAM-3964 (review I1): resolved against `max(deviceNow, serverNow)`. The 365-day floor
+        // is `now - 365d`, so a device clock rolled BACK by Δ would push the floor back with it
+        // and let the walk reach 365 + Δ real days. `max` is the safe direction for a lower
+        // bound — the later of the two clocks can only tighten it. (The upper bound below takes
+        // `min` for the mirror-image reason.)
+        let bound = BackfillLowerBound.resolve(joinDay: self.clearanceDelegate?.enrollmentDate,
+                                               now: max(Date(), ServerClock.now()))
 
         // FUAM-3841: per-data-type cursor (review fix #4). When no cursor exists yet (fresh
         // install; legacy shared key covered by the storage fallback) backfill from the bound —

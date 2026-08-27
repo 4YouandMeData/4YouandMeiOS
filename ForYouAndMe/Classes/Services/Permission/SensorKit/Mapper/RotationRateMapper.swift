@@ -32,12 +32,26 @@ final class RotationRateMapper: NSObject, SensorSampleMapper {
     // Apple withholds last 24h of SensorKit data
     private static let holdingPeriod: TimeInterval = 24 * 60 * 60
 
+    private enum MapperError: LocalizedError {
+        case busy
+
+        var errorDescription: String? {
+            return "Mapper is busy: a fetch is already in flight."
+        }
+    }
+
     func fetchAndMap(from: Date,
                      to: Date,
                      device: SensorDevice,
                      completion: @escaping (Result<[[String: Any]], Error>) -> Void) {
 
-        precondition(pendingCompletion == nil, "RotationRateMapper: concurrent fetch not supported")
+        // Fail soft like every other mapper: a precondition here crashes the app in Release on a
+        // concurrent cycle, and "a fetch is already running" is never the right answer to crash on
+        // in a participant's hands. The in-flight chain guard is the primary protection.
+        guard self.pendingCompletion == nil else {
+            completion(.failure(MapperError.busy))
+            return
+        }
 
         // Respect 24h holding period
         let safeTo = min(to, Date().addingTimeInterval(-Self.holdingPeriod))
