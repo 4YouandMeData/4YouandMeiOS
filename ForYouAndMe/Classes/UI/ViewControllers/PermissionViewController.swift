@@ -179,7 +179,7 @@ public class PermissionViewController: UIViewController {
             let skItem = PermissionItemView(
                 withTitle: skTitle,
                 isAuthorized: nil,
-                iconName: .healthIcon,
+                iconName: .sensorKitIcon,
                 trailingActionText: StringsProvider.string(forKey: skTrailingKey),
                 gestureCallback: { [weak self] in
                     self?.handleSensorKitPermission()
