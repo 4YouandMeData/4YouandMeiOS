@@ -66,6 +66,8 @@ enum AnalyticsParameter: String {
     case deviceNow = "device_now"
     // FUAM-3945 round 7. SensorKit recording-start failure attributes.
     case sensorError = "error"
+    // FUAM-3945 round 8. Sensors dropped because the host is not entitled to them.
+    case droppedSensors = "dropped_sensors"
 }
 
 enum AnalyticsScreens: String {
@@ -173,6 +175,14 @@ enum AnalyticsEvent {
     // indistinguishable from a participant with no data. Once per sensor per launch. `error` is
     // the NSError domain/code — never the localized description (locale-dependent, unaggregatable).
     case sensorRecordingStartFailed(sensor: String, error: String)
+
+    // FUAM-3945 round 8. The host's `com.apple.developer.sensorkit.reader.allow` entitlement does
+    // not cover every sensor the SDK is configured to collect, so those sensors were dropped from
+    // the requested set. iOS would never have prompted for them anyway (it auto-declines instantly
+    // and leaves them `.notDetermined` forever) — this event is what makes the host
+    // misconfiguration visible instead of silent. Emitted once per launch, at service setup;
+    // `sensors` is the comma-joined, sorted list of dropped sensor subsources.
+    case sensorEntitlementMissing(sensors: String)
 
     // Errors
     case serverError(apiError: ApiError)

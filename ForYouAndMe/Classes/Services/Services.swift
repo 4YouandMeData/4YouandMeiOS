@@ -126,9 +126,9 @@ class Services {
             // buffered in memory before batching), so re-enabling either one first needs
             // minute-scale windows, a per-window sample cap and a real on-disk queue store.
             // `.pedometerData`, `.ambientLightSensor` and `.ambientPressure` are low-rate and are
-            // enabled; they will simply never authorise on a host whose entitlement does not
-            // cover them (Our Transitions production entitles `pedometer` only), and an
-            // unauthorised sensor is skipped by `fetchPendingWindows`.
+            // enabled here; round 8 then intersects this list with the host's own entitlement
+            // below, so a host that is not entitled to a sensor (Our Transitions covers pedometer
+            // but neither ambient sensor) never asks for it in the first place.
             if #available(iOS 16.4, *) {
                 skMappers = [
                     //            .accelerometer: AccelerometerMapper(),
@@ -159,21 +159,44 @@ class Services {
                 ]
             }
 
-            let skSensors: [SRSensor] = Array(Constants.SensorKit.RequestedSensors.filter { skMappers[$0] != nil })
+            // FUAM-3945 round 8: the host's own SensorKit entitlement is the CEILING of what we
+            // request. iOS never prompts for an unentitled sensor — it auto-declines instantly and
+            // the sensor stays `.notDetermined` forever, which used to wedge the Permissions row on
+            // "Setup" and made the re-ask loop misdiagnose the system-wide switch as OFF.
+            // Unreadable entitlement => `nil` => fail open (today's behaviour); a readable but empty
+            // one genuinely means "entitled to nothing".
+            let skEntitled = SensorKitEntitlement.entitledSensors()
+            let skConfigured = Constants.SensorKit.RequestedSensors.intersection(Set(skMappers.keys))
+            let skSensors: [SRSensor] = Array(SensorKitEntitlement.effectiveSensors(
+                requested: Constants.SensorKit.RequestedSensors,
+                mapped: Set(skMappers.keys),
+                entitled: skEntitled))
 
-            let skStorage: SensorKitManagerStorage = DefaultsSensorStorage()
-            let skReachability: SensorKitManagerReachability = NWPathReachability()
+            // A host misconfiguration must be visible, not silent: one event per launch listing the
+            // sensors we would have asked for and cannot.
+            let skDropped = skConfigured.subtracting(skSensors)
+            if !skDropped.isEmpty {
+                analytics.track(event: .sensorEntitlementMissing(
+                    sensors: skDropped.map { $0.shortSubsource }.sorted().joined(separator: ",")))
+            }
 
-            let skManager = SensorKitManager(
-                withReadSensors: skSensors,
-                analyticsService: analytics,
-                storage: skStorage,
-                reachability: skReachability,
-                mappers: skMappers
-            )
+            // `SensorKitManager` requires a non-empty sensor set; an entitlement covering none of
+            // the configured sensors means there is no SensorKit service to build at all.
+            if !skSensors.isEmpty {
+                let skStorage: SensorKitManagerStorage = DefaultsSensorStorage()
+                let skReachability: SensorKitManagerReachability = NWPathReachability()
 
-            self.services.append(skManager)
-            sensorKitService = skManager
+                let skManager = SensorKitManager(
+                    withReadSensors: skSensors,
+                    analyticsService: analytics,
+                    storage: skStorage,
+                    reachability: skReachability,
+                    mappers: skMappers
+                )
+
+                self.services.append(skManager)
+                sensorKitService = skManager
+            }
         }
         #endif
         

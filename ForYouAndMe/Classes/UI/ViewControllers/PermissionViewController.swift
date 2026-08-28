@@ -164,14 +164,17 @@ public class PermissionViewController: UIViewController {
         if self.sensorKitService?.serviceAvailable == true,
            IntegrationProvider.isSensorKitSupported() {
 
-            // "Setup" while ANY configured sensor still lacks the user's feedback — i.e. it is
-            // .notDetermined (never prompted, or the user hit Cancel on the system SensorKit
-            // screen, which leaves the sensor .notDetermined). "Manage" only once EVERY sensor is
-            // determined (each .authorized or .denied). authorizationGaps() is synchronous, so we
-            // can decide the label inline. The tap handler mirrors this: undetermined → run the
-            // request flow; all determined → show the Manage settings popup.
-            let skUndetermined = (self.sensorKitService as? SensorKitManager)?.authorizationGaps().undetermined ?? []
-            let skTrailingKey: StringKey = skUndetermined.isEmpty
+            // "Manage" as soon as ANY configured sensor is .authorized; "Setup" only while the
+            // participant has granted nothing yet. hasAnyAuthorized() is synchronous, so we can
+            // decide the label inline, and the tap handler uses the same basis.
+            // It used to be "no sensor is still .notDetermined", which never came true on a host
+            // whose entitlement does not cover a requested sensor: iOS never prompts for it, so it
+            // stays .notDetermined forever and the row was stuck on "Setup" even after a full
+            // grant (FUAM-3945 round 8). Round 8 also removes such sensors from the requested set,
+            // so this is defence in depth — a participant who grants only some sensors must not
+            // wedge the row either.
+            let skHasAnyAuthorized = (self.sensorKitService as? SensorKitManager)?.hasAnyAuthorized() ?? false
+            let skTrailingKey: StringKey = skHasAnyAuthorized
                 ? .permissionSensorKitManageLabel
                 : .permissionSensorKitSetupLabel
 
@@ -275,64 +278,57 @@ public class PermissionViewController: UIViewController {
         // We need the concrete manager to access utility methods
         guard let manager = self.sensorKitService as? SensorKitManager else { return }
 
-        manager.getIsAuthorizationStatusUndetermined()
-            .subscribe(onSuccess: { [weak self] undetermined in
-                guard let self = self else { return }
-
-                if undetermined {
-                    // "Setup" state: at least one sensor still lacks the user's feedback. Run the
-                    // system request flow for only the .notDetermined sensors, then just refresh —
-                    // the row stays "Setup" if anything is still undetermined (e.g. the user
-                    // cancelled), or flips to "Manage" once every sensor is answered. We do NOT
-                    // surface the settings popup here: that popup is the "Manage" action only,
-                    // shown after setup is complete (FUAM-3432). (Note: this drops the FUAM-3370
-                    // fallback that popped the settings alert when iOS refused to show the prompt.)
-                    manager.requestPermissionsDetectingCollectionDisabled()
-                        .subscribe(onSuccess: { [weak self] outcome in
-                            guard let self = self else { return }
-                            switch outcome {
-                            case .collectionDisabledSystemWide:
-                                // The system-wide SensorKit master switch is OFF: iOS refuses
-                                // to prompt, so guide the user to re-enable it (FUAM-3432).
-                                // Do NOT nudge the recording/sync pipeline here.
-                                self.navigator.showSensorKitCollectionDisabledAlert(presenter: self)
-                            case .completed:
-                                // Start readers and sync now that we (may) have permissions
-                                manager.ensureRecordingStarted()
-                                manager.triggerSync(reason: "permissions_view")
-                                self.refreshStatus()
-                            }
-                        }, onFailure: { [weak self] error in
-                            guard let self = self else { return }
-                            self.navigator.handleError(error: error, presenter: self)
-                        })
-                        .disposed(by: self.disposeBag)
-
-                } else {
-                    // SensorKit cannot re-trigger the system prompt once the user has
-                    // responded, and iOS exposes no per-app SensorKit deep-link, so the
-                    // only thing we can offer is the app's general Settings page.
-                    // Always show the alert so the row is never a silent no-op (FUAM-3370).
-                    // The alert content always lists the full configured-sensor set
-                    // regardless of per-sensor authorization state.
-                    let gaps = manager.authorizationGaps() // (undetermined, denied)
-                    self.navigator.showSensorKitPermissionSettingsAlert(
-                        presenter: self,
-                        missingSensors: manager.configuredSensors
-                    )
-                    // Keep the prior behaviour for the all-authorized case: nudge the
-                    // recording pipeline and refresh the status badge in the background.
-                    if gaps.denied.isEmpty {
+        // Same basis as the trailing label (FUAM-3945 round 8): nothing authorized yet → this is
+        // the "Setup" action; anything authorized → this is the "Manage" action. The old basis
+        // ("any sensor still .notDetermined") re-ran the request flow forever on a host whose
+        // entitlement does not cover a requested sensor.
+        if !manager.hasAnyAuthorized() {
+            // "Setup" state: the participant has granted nothing yet. Run the system request flow
+            // for only the .notDetermined sensors, then just refresh — the row flips to "Manage"
+            // as soon as anything is granted. We do NOT surface the settings popup here: that
+            // popup is the "Manage" action only, shown after setup is complete (FUAM-3432).
+            // (Note: this drops the FUAM-3370 fallback that popped the settings alert when iOS
+            // refused to show the prompt.)
+            manager.requestPermissionsDetectingCollectionDisabled()
+                .subscribe(onSuccess: { [weak self] outcome in
+                    guard let self = self else { return }
+                    switch outcome {
+                    case .collectionDisabledSystemWide:
+                        // EVERY asked sensor auto-declined instantly: the system-wide SensorKit
+                        // master switch is OFF, iOS refuses to prompt, so guide the user to
+                        // re-enable it (FUAM-3432). Do NOT nudge the recording/sync pipeline here.
+                        self.navigator.showSensorKitCollectionDisabledAlert(presenter: self)
+                    case .completed:
+                        // Start readers and sync now that we (may) have permissions
                         manager.ensureRecordingStarted()
-                        manager.triggerSync(reason: "permissions_view_already")
+                        manager.triggerSync(reason: "permissions_view")
                         self.refreshStatus()
                     }
-                }
-            }, onFailure: { [weak self] error in
-                guard let self = self else { return }
-                self.navigator.handleError(error: error, presenter: self)
-            })
-            .disposed(by: self.disposeBag)
+                }, onFailure: { [weak self] error in
+                    guard let self = self else { return }
+                    self.navigator.handleError(error: error, presenter: self)
+                })
+                .disposed(by: self.disposeBag)
+        } else {
+            // SensorKit cannot re-trigger the system prompt once the user has
+            // responded, and iOS exposes no per-app SensorKit deep-link, so the
+            // only thing we can offer is the app's general Settings page.
+            // Always show the alert so the row is never a silent no-op (FUAM-3370).
+            // The alert content always lists the full configured-sensor set
+            // regardless of per-sensor authorization state.
+            let gaps = manager.authorizationGaps() // (undetermined, denied)
+            self.navigator.showSensorKitPermissionSettingsAlert(
+                presenter: self,
+                missingSensors: manager.configuredSensors
+            )
+            // Keep the prior behaviour for the all-authorized case: nudge the
+            // recording pipeline and refresh the status badge in the background.
+            if gaps.denied.isEmpty {
+                manager.ensureRecordingStarted()
+                manager.triggerSync(reason: "permissions_view_already")
+                self.refreshStatus()
+            }
+        }
 #endif
     }
 }

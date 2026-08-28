@@ -36,6 +36,8 @@ private enum FirebaseEventCustomName: String {
     case sensorDataClockAhead = "sensor_data_clock_ahead"
     // FUAM-3945 round 7. A SensorKit reader failed to start recording.
     case sensorRecordingStartFailed = "sensor_recording_start_failed"
+    // FUAM-3945 round 8. Configured sensors the host has no entitlement for.
+    case sensorEntitlementMissing = "sensor_entitlement_missing"
 }
 
 private enum FirebaseErrorDomain {
@@ -116,6 +118,8 @@ class FirebaseAnalyticsPlatform: AnalyticsPlatform {
             self.sensorDataClockAhead(mark: mark, deviceNow: deviceNow)
         case .sensorRecordingStartFailed(let sensor, let error):
             self.sensorRecordingStartFailed(sensor: sensor, error: error)
+        case .sensorEntitlementMissing(let sensors):
+            self.sensorEntitlementMissing(sensors: sensors)
         default:
             break
         }
@@ -194,6 +198,13 @@ class FirebaseAnalyticsPlatform: AnalyticsPlatform {
                            AnalyticsParameter.sensor.rawValue: sensor,
                            AnalyticsParameter.sensorError.rawValue: error
                        ])
+    }
+
+    // MARK: - FUAM-3945 SensorKit entitlement gap
+
+    private func sensorEntitlementMissing(sensors: String) {
+        self.sendEvent(withEventName: FirebaseEventCustomName.sensorEntitlementMissing.rawValue,
+                       parameters: [AnalyticsParameter.droppedSensors.rawValue: sensors])
     }
 
     // MARK: - Private Methods
