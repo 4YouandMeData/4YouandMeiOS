@@ -58,6 +58,13 @@ struct BackfillLowerBound {
         /// and the range it skipped is being re-walked. `reachedBack` carries the corrupt cursor,
         /// so the size of the gap that was recovered is readable in Firebase (FUAM-3964, F1).
         case futureCursor = "future_cursor"
+        /// A fetched window's records could not be PERSISTED to the upload queue (FUAM-3945,
+        /// AC4): the cursor was left in place so the window is retried, and after the attempt
+        /// budget it is abandoned via `gave_up`. Any volume here is actionable.
+        case enqueueFailed = "enqueue_failed"
+        /// A HealthKit payload was split proactively at the 8 MB safety margin BEFORE any server
+        /// rejection (FUAM-3945, AC5). Reactive `bisected` stays as the backstop trace.
+        case proactiveSplit = "proactive_split"
     }
 
     /// How far a stored cursor may sit above the capped planning upper bound before it is treated

@@ -17,6 +17,11 @@ protocol HealthSampleUploadManagerClearanceDelegate: AnyObject {
     /// consent gate for sample measurement timestamps. `nil` when it cannot be established
     /// (no user, or `days_in_study <= 0`), which means forward-only collection.
     var enrollmentDate: Date? { get }
+
+    /// The participant's BACKEND-authoritative timezone (`user.time_zone`) — the calendar the
+    /// historical chunk boundaries are computed in (FUAM-3945 AC2 revised). `nil` when no user
+    /// record is loaded; the caller falls back to UTC (never to `TimeZone.current`).
+    var participantTimeZone: TimeZone? { get }
 }
 
 protocol HealthSampleUploadManagerReachability {
@@ -236,7 +241,6 @@ class HealthSampleUploadManager {
         // caught up. The QUERY still runs in device wall-clock — HealthKit indexes its store with
         // the same clock that wrote the samples — only the plan is capped.
         let endDate = min(Date(), ServerClock.now())
-        let oneHour: TimeInterval = 3600
         let oneDay: TimeInterval = 24 * 3600
 
         // FUAM-3964 (F1): a cursor more than a day above the capped end of the walk cannot have
@@ -268,9 +272,16 @@ class HealthSampleUploadManager {
             }
         }
         // Review fixes #7/#8: while the cursor is far behind (historical walk) use coarse
-        // 1-day chunks and a plain HKSampleQuery; near the head revert to 1-hour chunks and
-        // the anchored query (Apple's guidance: sample queries for history, anchored for sync).
+        // day-sized chunks; near the head revert to hour-sized chunks.
         let historicalThreshold: TimeInterval = 7 * oneDay
+
+        // AC2 (revised 2026-08-29): chunk boundaries are a pure function of absolute time —
+        // historical chunks end on PARTICIPANT-timezone day boundaries (the backend-authoritative
+        // `user.time_zone`, the same authority the adherence chart buckets rows with), head
+        // chunks on epoch-hour boundaries — never a cursor-relative stride. A post-reinstall
+        // re-walk therefore partitions the same samples into the same batches and reproduces the
+        // same server anchors instead of minting shifted near-duplicate rows.
+        let partitionTimeZone = self.clearanceDelegate?.participantTimeZone ?? Self.fallbackPartitionTimeZone
 
         // FUAM-3945: ends of the sub-windows an oversize chunk was split into, innermost last. A
         // sub-window always STARTS at the cursor, so only its end has to be remembered: the
@@ -301,8 +312,10 @@ class HealthSampleUploadManager {
             }
 
             let isHistorical = endDate.timeIntervalSince(startDate) > historicalThreshold
-            let chunkDuration = isHistorical ? oneDay : oneHour
-            let nextEndDate = bisectedEnds.last ?? min(startDate.addingTimeInterval(chunkDuration), endDate)
+            let boundary = isHistorical
+                ? Self.nextParticipantDayStart(after: startDate, timeZone: partitionTimeZone)
+                : Self.nextEpochHourBoundary(after: startDate)
+            let nextEndDate = bisectedEnds.last ?? min(boundary, endDate)
 
             // Everything up to `date` is uploaded (or deliberately forfeited): persist it — review
             // fix #7, so an interrupted multi-month walk resumes instead of restarting from
@@ -445,6 +458,28 @@ class HealthSampleUploadManager {
         }
     }
     
+    // MARK: - Absolute-time chunk boundaries (FUAM-3945, AC2 revised)
+
+    /// The deterministic fallback when no backend-authoritative `user.time_zone` is available:
+    /// UTC, never `TimeZone.current` (which would make the partition travel-dependent).
+    static let fallbackPartitionTimeZone = TimeZone(identifier: "UTC")!
+
+    /// The first participant-day boundary STRICTLY after `date` — 23/24/25 real hours away
+    /// depending on DST: proper calendar arithmetic, never a fixed 86400 stride.
+    static func nextParticipantDayStart(after date: Date, timeZone: TimeZone) -> Date {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = timeZone
+        return calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: date))
+            ?? date.addingTimeInterval(24 * 3600)
+    }
+
+    /// The first epoch-hour boundary STRICTLY after `date`. Timezone-free by construction, so
+    /// the head partition is a pure function of absolute time.
+    static func nextEpochHourBoundary(after date: Date) -> Date {
+        let hour: TimeInterval = 3600
+        return Date(timeIntervalSince1970: ((date.timeIntervalSince1970 / hour).rounded(.down) + 1) * hour)
+    }
+
     private func getPendingUploader() -> HealthSampleUploader? {
         if let pendingUploadDataType = self.storage.pendingUploadDataType {
             return self.uploaders.getUploader(forDataType: pendingUploadDataType)

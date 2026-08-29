@@ -46,6 +46,7 @@ private enum FirebaseEventCustomName: String {
     case sensorRefused = "sensor_refused"
     case sensorDeepestWindow = "sensor_deepest_window"
     case sensorRecordDropped = "sensor_record_dropped"
+    case sensorTimezoneFallback = "sensor_tz_fallback"
 }
 
 private enum FirebaseErrorDomain {
@@ -173,6 +174,9 @@ class FirebaseAnalyticsPlatform: AnalyticsPlatform {
                                AnalyticsParameter.count.rawValue: count,
                                AnalyticsParameter.reason.rawValue: reason
                            ])
+        case .sensorTimezoneFallback(let reason):
+            self.sendEvent(withEventName: FirebaseEventCustomName.sensorTimezoneFallback.rawValue,
+                           parameters: [AnalyticsParameter.reason.rawValue: reason])
         default:
             break
         }

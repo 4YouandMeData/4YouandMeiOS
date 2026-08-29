@@ -5,6 +5,7 @@
 //  Created by Giuseppe Lapenta on 01/08/25.
 //
 
+import CryptoKit
 import Foundation
 import RxSwift
 import SensorKit
@@ -41,6 +42,25 @@ public final class SensorSampleUploadManager {
     /// Give up on a window after this many consecutive failed fetch attempts and move past it,
     /// so one poison window doesn't stall the per-sensor chain forever (FUAM-3841).
     private let maxWindowFetchAttempts: Int = 3
+
+    /// FUAM-3945 (D3): how many complete participant-tz days behind the cursor are re-planned,
+    /// once per day. Aug 27 in production was 64/96 buckets ~24.5h after day end and complete at
+    /// ~38h, so 3 days covers any observed write lag with margin; `sensor_rescan_novel` measures
+    /// the real completion curve so this constant can be tuned from the field.
+    static let rescanTailDays: Int = 3
+
+    /// FUAM-3945 (D4): ledger entries are pruned once their day falls this many days behind the
+    /// planning day — rescan depth + 2 days of margin, so nothing the rescan can re-fetch is ever
+    /// forgotten while it still matters. Over-pruning only costs a re-upload the server
+    /// union-merges; under-pruning only costs storage.
+    static let ledgerRetentionDays: TimeInterval = TimeInterval(rescanTailDays) + 2
+
+    /// FUAM-3945 (AC1): a BACKFILL walk probes windows newest-first and stops extending backwards
+    /// after this many CONSECUTIVE confirmed-empty windows — the adaptive replacement for any
+    /// hardcoded OS-retention assumption. If a future iOS retains 4 weeks instead of 7 days, the
+    /// probe simply keeps finding data and keeps going; the join-day consent bound and the
+    /// 365-day cap remain the only hard ceilings.
+    static let probeEmptyWindowStop: Int = 2
 
     // MARK: - Dependencies
 
@@ -94,6 +114,8 @@ public final class SensorSampleUploadManager {
     // guard turns "stalled, then crashed on the next cycle" into "stalled". Add a watchdog only
     // if a real mapper is ever seen dropping a completion.
     private var activeChains: Set<SRSensor> = []
+    /// Once-per-launch guard for the `sensor_tz_fallback` diagnostic (AC2 revised).
+    private var tzFallbackReported = false
     /// Guards `activeChains` only. Deliberately NOT `syncLock`: `beginChain` is reached from
     /// inside `syncAllSensors`, which already holds `syncLock` (NSLock is not recursive).
     private let chainLock = NSLock()
@@ -258,6 +280,11 @@ public final class SensorSampleUploadManager {
         /// never moved forward by the cursor, so a day-aligned window that legitimately opens
         /// before a mid-day cursor is still filtered against the join day and not the cursor.
         let consentBound: Date
+        /// FUAM-3945 (D3): non-nil when the plan's start was rewound behind the cursor by the
+        /// once-per-UTC-day rescan tail — the value is the rewound start. `nil` on a plain
+        /// cursor resume, on a backfill (which covers the recent days anyway) and when the
+        /// rescan already ran today.
+        let rescanFrom: Date?
     }
 
     /// The consent bound as it stands right now, resolved from the live user record.
@@ -289,22 +316,87 @@ public final class SensorSampleUploadManager {
         // only ever tighten a lower bound, so `max` is the safe direction there.
         // F8: one breadcrumb per launch when the cap has never had anything to cap with.
         ServerClock.reportMissingOffsetOnce(analytics: self.analytics)
-        return Self.buildWindowPlan(now: min(now, ServerClock.now()),
-                                    boundNow: max(now, ServerClock.now()),
+        let serverNow = ServerClock.now()
+        let cappedNow = min(now, serverNow)
+        let embargo = max(sensorkitEmbargo, device.syncHoldback)
+        // AC2 (revised): the partition timezone is the BACKEND-authoritative `user.time_zone` —
+        // the same authority the adherence chart buckets rows with — never the handset's.
+        let timeZone = self.partitionTimeZone()
+        let calendar = Self.partitionCalendar(timeZone)
+        // FUAM-3945 (D3): once per day, the plan's start is rewound to re-read the last
+        // `rescanTailDays` complete participant-tz days behind the cursor — the fix for late
+        // writes (D-D: Aug 27 was 64/96 buckets when fetched ~24.5h after day end and complete
+        // at ~38h). The re-reads are ordinary grid windows walked by the same code; records
+        // already uploaded are dropped by the D4 ledger, so a rescan's steady-state upload
+        // volume is zero. The gate is persisted per sensor+device so a 15-second sync cadence
+        // cannot multiply it.
+        let planDay = Self.utcDayStart(cappedNow)
+        let rescanDue = storage.lastRescanDay(for: sensor, deviceKey: device.key).map { planDay > $0 } ?? true
+        var rescanFrom: Date?
+        if rescanDue {
+            let safeTo = cappedNow.addingTimeInterval(-embargo)
+            rescanFrom = calendar.date(byAdding: .day,
+                                       value: -Self.rescanTailDays,
+                                       to: calendar.startOfDay(for: safeTo))
+            // Burned at plan time, deliberately: the rescan is best-effort redundancy (every day
+            // gets `rescanTailDays` passes), so a chain that fails mid-walk just waits for
+            // tomorrow's tail rather than re-arming today's on every sync cycle.
+            storage.setLastRescanDay(planDay, for: sensor, deviceKey: device.key)
+        }
+        return Self.buildWindowPlan(now: cappedNow,
+                                    boundNow: max(now, serverNow),
                                     joinDay: clearanceDelegate?.enrollmentDate,
                                     cursor: storage.lastCursor(for: sensor, deviceKey: device.key),
-                                    embargo: max(sensorkitEmbargo, device.syncHoldback))
+                                    embargo: embargo,
+                                    timeZone: timeZone,
+                                    rescanFrom: rescanFrom)
     }
 
-    /// One UTC calendar day. UTC has no DST, so every UTC day is exactly 86400 seconds and a
-    /// day boundary is plain arithmetic — no `Calendar`, hence no way for the device timezone to
-    /// leak into the plan.
+    /// The backend-authoritative participant timezone, or the deterministic UTC fallback —
+    /// reported once per launch, because a fallback means the partition MAY not match the
+    /// adherence chart's bucketing until the user record loads. Never `TimeZone.current` (AC2).
+    private func partitionTimeZone() -> TimeZone {
+        if let timeZone = self.clearanceDelegate?.participantTimeZone {
+            return timeZone
+        }
+        if !self.tzFallbackReported {
+            self.tzFallbackReported = true
+            self.analytics.track(event: .sensorTimezoneFallback(reason: "missing_user_time_zone"))
+        }
+        return Self.fallbackPartitionTimeZone
+    }
+
+    /// One nominal day. Used ONLY for tz-agnostic bookkeeping (ledger pruning tags, telemetry
+    /// age buckets, the future-cursor tolerance) — NEVER as a partition stride: participant-day
+    /// boundaries come from `partitionCalendar` and can be 23 or 25 hours long on a DST day.
     static let utcDay: TimeInterval = 24 * 60 * 60
 
-    /// Start of the UTC calendar day containing `date`.
+    /// Start of the UTC calendar day containing `date`. Tz-agnostic bookkeeping only (see above).
     static func utcDayStart(_ date: Date) -> Date {
         let seconds = date.timeIntervalSince1970
         return Date(timeIntervalSince1970: (seconds / Self.utcDay).rounded(.down) * Self.utcDay)
+    }
+
+    /// The partition fallback when no backend-authoritative `user.time_zone` is available
+    /// (AC2 revised): UTC — deterministic and travel-independent. Deliberately NEVER
+    /// `TimeZone.current`, which would silently reintroduce handset-dependence.
+    static let fallbackPartitionTimeZone = TimeZone(identifier: "UTC")!
+
+    /// The calendar every window/batch boundary is computed in (AC2 revised): gregorian, pinned
+    /// to the participant's backend-authoritative timezone. A pure function of the timezone
+    /// identifier — `Calendar.current` / `TimeZone.current` must never appear in the planner.
+    static func partitionCalendar(_ timeZone: TimeZone) -> Calendar {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = timeZone
+        return calendar
+    }
+
+    /// The first participant-day boundary STRICTLY after `date` — 23/24/25 real hours away,
+    /// depending on DST. `date` on a boundary yields the next one.
+    static func nextDayStart(after date: Date, in calendar: Calendar) -> Date {
+        // The gregorian calendar cannot fail this; the fallback keeps the walk total anyway.
+        return calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: date))
+            ?? date.addingTimeInterval(Self.utcDay)
     }
 
     /// Build embargo-safe fetch windows from the backfill lower bound up to now.
@@ -337,11 +429,18 @@ public final class SensorSampleUploadManager {
     /// serverNow)`, and is used ONLY for the 365-day hard cap: capping a lower bound with a
     /// clock that may have been rolled backwards would let the reach grow past 365 real days
     /// (review I1). Pure (internal for unit tests).
+    ///
+    /// `rescanFrom` (FUAM-3945, D3): when non-nil, the plan start becomes
+    /// `max(consentBound, min(cursorFrom, rescanFrom))`, re-planning the recent complete UTC
+    /// days BEHIND the cursor as ordinary grid windows. Never lowers the start below the
+    /// consent bound, never moves a start that is already at or below it.
     static func buildWindowPlan(now: Date,
                                 boundNow: Date,
                                 joinDay: Date?,
                                 cursor: Date?,
-                                embargo: TimeInterval) -> WindowPlan {
+                                embargo: TimeInterval,
+                                timeZone: TimeZone = SensorSampleUploadManager.fallbackPartitionTimeZone,
+                                rescanFrom: Date? = nil) -> WindowPlan {
         // Upper bound: honour the 24h SensorKit embargo. No day alignment here — completeness is
         // enforced per window below (`end <= safeTo`), which is the same guarantee without
         // throwing away the fraction of a day between the last boundary and the cutoff.
@@ -373,29 +472,59 @@ public final class SensorSampleUploadManager {
             }
         }
 
-        guard from < safeTo else {
-            return WindowPlan(windows: [], lowerBound: from, lowerBoundOrigin: origin, consentBound: lowerBound)
+        // FUAM-3945 (D3): the rescan tail — re-open the recent days behind the cursor. Applied
+        // AFTER the cursor resolution so `origin` stays `.cursor` (a rescan is a routine pass,
+        // not a backfill: it must not re-emit reach telemetry on every tail).
+        var appliedRescanFrom: Date?
+        if let rescanFrom = rescanFrom {
+            let rewound = max(lowerBound, min(from, rescanFrom))
+            if rewound < from {
+                appliedRescanFrom = rewound
+                from = rewound
+            }
         }
 
+        guard from < safeTo else {
+            return WindowPlan(windows: [],
+                              lowerBound: from,
+                              lowerBoundOrigin: origin,
+                              consentBound: lowerBound,
+                              rescanFrom: nil)
+        }
+
+        // AC2 (revised 2026-08-29): windows are complete PARTICIPANT-timezone calendar days —
+        // the same day the backend's adherence chart buckets rows with
+        // (`date_histogram(time_zone: user.time_zone)`), so a batch's anchor
+        // (`min(records[].recorded_at)`) is inside the day it describes by construction. Proper
+        // calendar arithmetic, never a fixed 86400 stride: a DST spring-forward day is 23 hours
+        // and a fall-back day is 25. The timezone is the BACKEND-authoritative `user.time_zone`,
+        // never the handset's, so the partition is a pure function of (absolute time, timezone
+        // identifier): travel and reinstall reproduce identical boundaries and identical anchors.
+        let calendar = Self.partitionCalendar(timeZone)
         var windows: [DateInterval] = []
         var start = from
-        // Migration window: [cursor, next UTC midnight). Skipped when `from` is already aligned
-        // (steady state) and when the partial day is not complete yet — in which case `start`
-        // moves past `safeTo` and the loop below plans nothing, exactly as intended.
-        if start != Self.utcDayStart(start) {
-            let boundary = Self.utcDayStart(start).addingTimeInterval(Self.utcDay)
+        // Migration window: [cursor, next participant-day boundary). Skipped when `from` is
+        // already aligned (steady state) and when the partial day is not complete yet — in which
+        // case `start` moves past `safeTo` and the loop below plans nothing, exactly as intended.
+        if start != calendar.startOfDay(for: start) {
+            let boundary = Self.nextDayStart(after: start, in: calendar)
             if boundary <= safeTo {
                 windows.append(DateInterval(start: start, end: boundary))
             }
             start = boundary
         }
-        while start.addingTimeInterval(Self.utcDay) <= safeTo {
-            let end = start.addingTimeInterval(Self.utcDay)
+        while true {
+            let end = Self.nextDayStart(after: start, in: calendar)
+            guard end > start, end <= safeTo else { break }
             windows.append(DateInterval(start: start, end: end))
             start = end
         }
 
-        return WindowPlan(windows: windows, lowerBound: from, lowerBoundOrigin: origin, consentBound: lowerBound)
+        return WindowPlan(windows: windows,
+                          lowerBound: from,
+                          lowerBoundOrigin: origin,
+                          consentBound: lowerBound,
+                          rescanFrom: appliedRescanFrom)
     }
 
     /// FUAM-3945 (D1): how far a report-class FETCH reaches back beyond its window start. A
@@ -436,6 +565,41 @@ public final class SensorSampleUploadManager {
         let now: Date
         let mapper: SensorSampleMapper
         let plannedBound: Date
+        /// The stored cursor at plan time: a window ending at or before it is a RESCAN pass
+        /// (D3) — used only to label telemetry, never for control flow.
+        let rescanBoundary: Date?
+        /// FUAM-3945 (AC1): `true` when this walk is a backfill probe — windows are handed over
+        /// NEWEST-first, the cursor is written once at probe termination (never per window), and
+        /// the probe stops after `probeEmptyWindowStop` consecutive confirmed-empty windows.
+        let backwardProbe: Bool
+        /// The end of the newest planned window — the single cursor target of a completed probe.
+        let planHeadEnd: Date?
+        /// Consecutive confirmed-empty windows seen so far by a backward probe.
+        var probeEmptyStreak: Int
+
+        init(sensor: SRSensor,
+             device: SensorDevice,
+             devices: [SensorDevice],
+             deviceIndex: Int,
+             now: Date,
+             mapper: SensorSampleMapper,
+             plannedBound: Date,
+             rescanBoundary: Date? = nil,
+             backwardProbe: Bool = false,
+             planHeadEnd: Date? = nil,
+             probeEmptyStreak: Int = 0) {
+            self.sensor = sensor
+            self.device = device
+            self.devices = devices
+            self.deviceIndex = deviceIndex
+            self.now = now
+            self.mapper = mapper
+            self.plannedBound = plannedBound
+            self.rescanBoundary = rescanBoundary
+            self.backwardProbe = backwardProbe
+            self.planHeadEnd = planHeadEnd
+            self.probeEmptyStreak = probeEmptyStreak
+        }
 
         /// `"<sensor>.<deviceKey>"` — failure and empty-plan counters are per sensor AND device.
         var failureKey: String { return "\(self.sensor.rawValue).\(self.device.key)" }
@@ -528,13 +692,22 @@ public final class SensorSampleUploadManager {
                   + "(\(burned)); reset to \(plan.lowerBound)")
             #endif
         }
+        // FUAM-3945 (AC1): a BACKFILL plan (anything but a routine cursor resume) is walked
+        // NEWEST-first, probing backwards into the OS store and stopping after
+        // `probeEmptyWindowStop` consecutive confirmed-empty windows — reach is bounded by what
+        // the OS actually holds, never by a hardcoded retention assumption. A cursor resume
+        // (including its rescan tail) keeps the plain oldest-first walk.
+        let isBackfillProbe = plan.lowerBoundOrigin != .cursor && !plan.windows.isEmpty
         let context = DeviceChainContext(sensor: sensor,
                                          device: device,
                                          devices: devices,
                                          deviceIndex: index,
                                          now: now,
                                          mapper: mapper,
-                                         plannedBound: plan.consentBound)
+                                         plannedBound: plan.consentBound,
+                                         rescanBoundary: storage.lastCursor(for: sensor, deviceKey: device.key),
+                                         backwardProbe: isBackfillProbe,
+                                         planHeadEnd: plan.windows.last?.end)
         guard let firstWindow = plan.windows.first else {
             // Review fix #6: an empty plan on a would-be backfill (e.g. enrolled today, or a
             // forward-only bound because days_in_study <= 0 upstream) must still leave a
@@ -571,15 +744,22 @@ public final class SensorSampleUploadManager {
         }
         #if DEBUG
         print("SensorSampleUploadManager - \(sensor.rawValue)/\(device.key): \(plan.windows.count) window(s) "
-              + "from \(firstWindow.start) (bounded by \(plan.lowerBoundOrigin.rawValue))")
+              + "from \(firstWindow.start) (bounded by \(plan.lowerBoundOrigin.rawValue))"
+              + (isBackfillProbe ? " [backward probe]" : ""))
         #endif
 
-        processWindow(at: 0, of: plan.windows, context: context)
+        processWindow(at: 0, of: isBackfillProbe ? plan.windows.reversed() : plan.windows, context: context)
     }
 
     /// Sequentially process each window to respect mapper's "no concurrent fetch" precondition.
     private func processWindow(at index: Int, of windows: [DateInterval], context: DeviceChainContext) {
         guard index < windows.count else {
+            if context.backwardProbe, let head = context.planHeadEnd {
+                // The probe reached the consent bound with every window durably handled: park
+                // the cursor at the plan head, once (AC1/AC4 — never per window during a
+                // backward walk, so a crash mid-probe re-probes instead of leaving a hole).
+                self.advanceCursor(to: head, for: context.sensor, deviceKey: context.device.key)
+            }
             // This device is done: hand the mapper over to the next one (FUAM-3945).
             self.nextDeviceChain(after: context)
             return
@@ -646,67 +826,170 @@ public final class SensorSampleUploadManager {
             #if DEBUG
             print("SensorSampleUploadManager - Fetch failed \(sensor.rawValue) [\(window.start) -> \(window.end)]: \(error)")
             #endif
-            // FUAM-3841: one poison window must not stall the per-sensor chain forever.
-            // Retry on subsequent sync cycles (cursor untouched); after
-            // `maxWindowFetchAttempts` consecutive failures (per sensor — the failing window
-            // is always the head of the chain, review fix #5), skip it (advance the cursor
-            // past it, forfeiting that window) and move on.
-            let attempts = (self.windowFetchFailures[context.failureKey] ?? 0) + 1
-            if attempts >= self.maxWindowFetchAttempts {
-                self.windowFetchFailures[context.failureKey] = nil
-                #if DEBUG
-                print("SensorSampleUploadManager - Giving up window [\(window.start) -> \(window.end)] "
-                      + "for \(sensor.rawValue)/\(context.device.key) after \(attempts) attempts")
-                #endif
-                // Review fix #9: a forfeited window is data loss — leave a telemetry trace,
-                // not just a DEBUG print.
-                let reachedBack = ISO8601DateFormatter().string(from: window.end)
-                self.analytics.track(event: .sensorDataBackfillReach(sensor: context.device.telemetryName(for: sensor),
-                                                                     reachedBack: reachedBack,
-                                                                     boundedBy: BackfillLowerBound.Origin.gaveUp.rawValue))
-                self.storage.setLastCursor(window.end, for: sensor, deviceKey: context.device.key)
-                self.processWindow(at: index + 1, of: windows, context: context)
-            } else {
-                self.windowFetchFailures[context.failureKey] = attempts
-                // Stop THIS DEVICE's chain for this cycle (the next sync retries it from its own
-                // cursor) — but never the next device's: the cursors are independent, so a Watch
-                // whose fetches keep failing must not cost the iPhone its windows (FUAM-3945).
-                self.scheduleRetry(for: sensor, attempt: attempts)
-                self.nextDeviceChain(after: context)
-            }
+            // AC4: a failed fetch is UNKNOWN, not empty — the cursor never moves here.
+            self.handleWindowFailure(window: window, at: index, of: windows, context: context)
 
         case .success(let records):
             self.windowFetchFailures[context.failureKey] = nil
 
-            // Hard consent gate: drop anything measured before the backfill lower bound,
-            // regardless of what SensorKit returned for the requested window.
-            let uploadable = Self.dropPreBoundRecords(records,
-                                                      lowerBound: boundDate,
-                                                      windowStart: window.start,
-                                                      sensor: sensor)
+            let deviceKey = context.device.key
+            let windowDay = Self.utcDayStart(window.start)
+            let isRescanPass = context.rescanBoundary.map { window.end <= $0 } ?? false
+            let windowAgeDays = max(0, Int(Self.utcDayStart(context.now).timeIntervalSince(windowDay) / Self.utcDay))
 
-            if uploadable.isEmpty {
-                // Advance cursor even if empty to avoid refetching the same day/chunk again.
-                self.storage.setLastCursor(window.end, for: sensor, deviceKey: context.device.key)
-                // Move to next window
-                self.processWindow(at: index + 1, of: windows, context: context)
+            // AC1: the deepest window that ever returned data IS the measured OS retention.
+            if !records.isEmpty {
+                let deepest = self.storage.deepestProductiveWindowStart(for: sensor, deviceKey: deviceKey)
+                if deepest == nil || window.start < deepest! {
+                    self.storage.setDeepestProductiveWindowStart(window.start, for: sensor, deviceKey: deviceKey)
+                    self.analytics.track(event: .sensorDeepestWindow(sensor: context.device.telemetryName(for: sensor),
+                                                                     windowDay: ISO8601DateFormatter().string(from: windowDay)))
+                }
+            } else {
+                // CONFIRMED-EMPTY: the OS answered successfully with zero records. This is the
+                // one condition that may advance the cursor past a window (AC4), and it was the
+                // loss path with no telemetry at all (window-loss report O6).
+                self.analytics.track(event: .sensorWindowEmpty(sensor: sensor.shortSubsource,
+                                                               device: deviceKey,
+                                                               windowDay: ISO8601DateFormatter().string(from: windowDay),
+                                                               pass: isRescanPass ? "rescan_\(windowAgeDays)" : "first"))
+            }
+
+            // Hard consent gate: drop anything measured before the backfill lower bound,
+            // regardless of what SensorKit returned for the requested window. Deliberate loss,
+            // never silent (AC6).
+            let gated = Self.dropPreBoundRecords(records,
+                                                 lowerBound: boundDate,
+                                                 windowStart: window.start,
+                                                 sensor: sensor)
+            if gated.count != records.count {
+                self.analytics.track(event: .sensorRecordDropped(sensor: context.device.telemetryName(for: sensor),
+                                                                 count: records.count - gated.count,
+                                                                 reason: "consent_gate"))
+            }
+
+            // D4 upload ledger: drop every record already enqueued by an earlier pass (widened
+            // fetch span, rescan tail, travel overlap), so re-fetches cost no upload volume and
+            // anchor instability is harmless.
+            let ledger = self.storage.ledger(for: sensor, deviceKey: deviceKey)
+            let filtered = SensorUploadLedger.filter(records: gated,
+                                                     sensor: sensor,
+                                                     windowDay: windowDay,
+                                                     ledger: ledger)
+            if filtered.nearDuplicateCount > 0 {
+                // S7 re-fetch boundary drift, measured (D12) — never prevented (D13).
+                self.analytics.track(event: .sensorNearDuplicate(sensor: sensor.shortSubsource,
+                                                                 count: filtered.nearDuplicateCount))
+            }
+            if isRescanPass, !filtered.novel.isEmpty {
+                // The D-D completion curve from the field: how late the OS writes a day.
+                self.analytics.track(event: .sensorRescanNovel(sensor: sensor.shortSubsource,
+                                                               device: deviceKey,
+                                                               ageDays: windowAgeDays,
+                                                               novelCount: filtered.novel.count))
+            }
+
+            if !filtered.novel.isEmpty {
+                // Enqueue in batches bounded by record count AND serialized payload size, then
+                // commit the fingerprints — ONLY once the batch is durably persisted (AC4): a
+                // fingerprint committed for a record that never reached the queue would be lost
+                // for good.
+                let enqueued = self.enqueueRespectingPayloadLimit(Self.tagged(filtered.novel, with: context.device),
+                                                                  windowStart: window.start,
+                                                                  for: sensor)
+                guard enqueued else {
+                    self.analytics.track(event: .sensorDataBackfillReach(
+                        sensor: context.device.telemetryName(for: sensor),
+                        reachedBack: ISO8601DateFormatter().string(from: window.start),
+                        boundedBy: BackfillLowerBound.Origin.enqueueFailed.rawValue))
+                    self.handleWindowFailure(window: window, at: index, of: windows, context: context)
+                    return
+                }
+                var updated = ledger
+                filtered.newEntries.forEach { updated[$0.key] = $0.value }
+                let pruneCutoff = Self.utcDayStart(context.now)
+                    .addingTimeInterval(-Self.ledgerRetentionDays * Self.utcDay)
+                self.storage.setLedger(SensorUploadLedger.pruned(updated, keepingDaysOnOrAfter: pruneCutoff),
+                                       for: sensor,
+                                       deviceKey: deviceKey)
+                self.drainQueue(for: sensor)
+            }
+
+            if context.backwardProbe {
+                var next = context
+                next.probeEmptyStreak = records.isEmpty ? context.probeEmptyStreak + 1 : 0
+                if next.probeEmptyStreak >= Self.probeEmptyWindowStop {
+                    // AC1: K consecutive confirmed-empty windows — everything older is beyond
+                    // the OS retention horizon. The planned span is handled: park the cursor at
+                    // the plan head, once.
+                    if let head = context.planHeadEnd {
+                        self.advanceCursor(to: head, for: sensor, deviceKey: deviceKey)
+                    }
+                    self.nextDeviceChain(after: context)
+                    return
+                }
+                self.processWindow(at: index + 1, of: windows, context: next)
                 return
             }
 
-            // Enqueue in batches bounded by record count AND serialized payload size.
-            self.enqueueRespectingPayloadLimit(Self.tagged(uploadable, with: context.device),
-                                               windowStart: window.start,
-                                               for: sensor)
-
-            // === Cursor advancement policy ===
-            // "At-least-once" (simple): advance now; queued batches will be retried until uploaded.
-            self.storage.setLastCursor(window.end, for: sensor, deviceKey: context.device.key)
-
-            self.drainQueue(for: sensor)
-
-            // Next window
+            // Forward walk: the window is durably handled (enqueued, deduplicated, deliberately
+            // filtered, or confirmed empty) — advance, monotonically, and move on. A rescan
+            // window ends at or behind the stored cursor, so the monotonic write is what keeps
+            // "cursors never rewind" true (the only sanctioned rewind stays `future_cursor`).
+            self.advanceCursor(to: window.end, for: sensor, deviceKey: deviceKey)
             self.processWindow(at: index + 1, of: windows, context: context)
         }
+    }
+
+    /// Shared AC4 failure policy for a window that was NOT durably handled (fetch error or
+    /// enqueue/serialization failure): never advance the cursor for it. Retry on later sync
+    /// cycles; after `maxWindowFetchAttempts` consecutive failures the window is abandoned —
+    /// reported as `gave_up`, never silently (FUAM-3841). Runs on `workQueue` only.
+    private func handleWindowFailure(window: DateInterval,
+                                     at index: Int,
+                                     of windows: [DateInterval],
+                                     context: DeviceChainContext) {
+        let sensor = context.sensor
+        let attempts = (self.windowFetchFailures[context.failureKey] ?? 0) + 1
+        if attempts >= self.maxWindowFetchAttempts {
+            self.windowFetchFailures[context.failureKey] = nil
+            #if DEBUG
+            print("SensorSampleUploadManager - Giving up window [\(window.start) -> \(window.end)] "
+                  + "for \(sensor.rawValue)/\(context.device.key) after \(attempts) attempts")
+            #endif
+            // Review fix #9 / AC4: a forfeited window is data loss — leave a telemetry trace,
+            // not just a DEBUG print.
+            let reachedBack = ISO8601DateFormatter().string(from: window.end)
+            self.analytics.track(event: .sensorDataBackfillReach(sensor: context.device.telemetryName(for: sensor),
+                                                                 reachedBack: reachedBack,
+                                                                 boundedBy: BackfillLowerBound.Origin.gaveUp.rawValue))
+            if !context.backwardProbe {
+                // Forward walk: skip past the poison window so it cannot stall the chain.
+                self.advanceCursor(to: window.end, for: sensor, deviceKey: context.device.key)
+            }
+            // Backward probe: keep probing the older windows; the terminal cursor write covers
+            // the abandoned window, and the gave_up trace above is its loss record.
+            self.processWindow(at: index + 1, of: windows, context: context)
+        } else {
+            self.windowFetchFailures[context.failureKey] = attempts
+            // Stop THIS DEVICE's chain for this cycle (the next sync retries it from its own
+            // cursor — or re-probes, for a backfill) — but never the next device's: the cursors
+            // are independent, so a Watch whose fetches keep failing must not cost the iPhone
+            // its windows (FUAM-3945).
+            self.scheduleRetry(for: sensor, attempt: attempts)
+            self.nextDeviceChain(after: context)
+        }
+    }
+
+    /// AC4/D3: cursors are strictly monotonic. A rescan window sits BEHIND the cursor by design
+    /// and a backward probe hands windows over newest-first; writing such a window's end would
+    /// rewind the cursor, and the only sanctioned rewind in the whole design is the
+    /// `future_cursor` corruption reset (which writes the storage directly).
+    private func advanceCursor(to date: Date, for sensor: SRSensor, deviceKey: String) {
+        if let stored = self.storage.lastCursor(for: sensor, deviceKey: deviceKey), stored >= date {
+            return
+        }
+        self.storage.setLastCursor(date, for: sensor, deviceKey: deviceKey)
     }
 
     /// Stamp every record with the device it was fetched from (FUAM-3945). Done here, once,
@@ -836,12 +1119,13 @@ public final class SensorSampleUploadManager {
 
     /// Enqueue records in batches that respect both the record-count cap and the server's
     /// 10 MB request limit (oversized batches are bisected until they serialize below
-    /// `maxBatchBytes`).
+    /// `maxBatchBytes`). Returns `false` when ANY batch failed to persist (AC4): the caller
+    /// must then treat the whole window as not durably handled and leave the cursor alone.
     private func enqueueRespectingPayloadLimit(_ records: [[String: Any]],
                                                windowStart: Date,
-                                               for sensor: SRSensor) {
-        Self.splitRespectingPayloadLimit(records, maxBatchSize: maxBatchSize, maxBatchBytes: maxBatchBytes)
-            .forEach { self.storage.enqueueBatch($0, windowStart: windowStart, for: sensor) }
+                                               for sensor: SRSensor) -> Bool {
+        return Self.splitRespectingPayloadLimit(records, maxBatchSize: maxBatchSize, maxBatchBytes: maxBatchBytes)
+            .allSatisfy { self.storage.enqueueBatch($0, windowStart: windowStart, for: sensor) }
     }
 
     /// Pure batch splitting (internal for unit tests): caps batches at `maxBatchSize` records,
@@ -1013,7 +1297,171 @@ public final class SensorSampleUploadManager {
         for sensor in sensors {
             // Dequeue until the queue is empty
             while storage.dequeueNextBatch(for: sensor) != nil { /* drop */ }
+            // The ledger goes WITH the queue (D4): a purged batch was never uploaded, so its
+            // fingerprints must not survive to suppress a legitimate re-collection.
+            storage.purgeLedger(for: sensor)
         }
+    }
+}
+
+// MARK: - Upload ledger (FUAM-3945, D4)
+
+/// Client-side record idempotency. The server upserts one row per
+/// `(identity, source, subsource, min(records[].recorded_at))` and deduplicates only WITHIN a
+/// row, so a re-fetch whose first record drifted by a minute would land a whole duplicate day in
+/// a new row — and no backend change is allowed. The ledger makes the RECORDS idempotent
+/// instead: every record ever durably enqueued is fingerprinted, and later passes (widened
+/// fetch span D1, rescan tail D3, travel overlap) upload only what is genuinely novel, so
+/// anchor instability becomes harmless.
+///
+/// The fingerprint's whole value collapses silently if it is not byte-stable across two fetches
+/// of identical data, so the serialization is CANONICAL by construction: keys sorted, arrays in
+/// order, deterministic integer/float/bool/date rendering (no `Double.description`, no locale,
+/// no dictionary iteration order), NFC-agnostic byte-wise string escaping. `1` and `1.0` render
+/// identically on purpose — NSNumber boxing must not change a record's identity.
+enum SensorUploadLedger {
+
+    struct FilterResult {
+        /// Records never seen before, in their original order — the only ones to enqueue.
+        let novel: [[String: Any]]
+        /// Ledger entries for `novel`, to commit once the batch is durably persisted (AC4).
+        let newEntries: [String: SensorLedgerEntry]
+        /// Records dropped because their fingerprint was already in the ledger (or duplicated
+        /// within this very batch).
+        let duplicateCount: Int
+        /// Novel records whose measurement period OVERLAPS one already in the ledger: SensorKit
+        /// re-fetch boundary drift (S7). They are still uploaded — suppressing either side would
+        /// lose data — but counted, so the drift rate is a measured quantity (D12/D13).
+        let nearDuplicateCount: Int
+    }
+
+    /// Splits `records` into novel vs already-enqueued. Pure.
+    static func filter(records: [[String: Any]],
+                       sensor: SRSensor,
+                       windowDay: Date,
+                       ledger: [String: SensorLedgerEntry]) -> FilterResult {
+        var novel: [[String: Any]] = []
+        var newEntries: [String: SensorLedgerEntry] = [:]
+        var duplicates = 0
+        var nearDuplicates = 0
+        for record in records {
+            let fingerprint = Self.fingerprint(of: record)
+            guard ledger[fingerprint] == nil, newEntries[fingerprint] == nil else {
+                duplicates += 1
+                continue
+            }
+            let period = Self.period(of: record, sensor: sensor)
+            if let period = period {
+                let overlapsExisting = ledger.values.contains { entry in
+                    guard let start = entry.periodStart, let end = entry.periodEnd else { return false }
+                    return period.start < end && start < period.end
+                }
+                if overlapsExisting { nearDuplicates += 1 }
+            }
+            novel.append(record)
+            newEntries[fingerprint] = SensorLedgerEntry(day: windowDay,
+                                                        periodStart: period?.start,
+                                                        periodEnd: period?.end)
+        }
+        return FilterResult(novel: novel,
+                            newEntries: newEntries,
+                            duplicateCount: duplicates,
+                            nearDuplicateCount: nearDuplicates)
+    }
+
+    /// Drops entries whose window day fell behind `cutoff` — the rescan horizon plus margin.
+    /// Over-pruning only costs a re-upload the server union-merges into the same row.
+    static func pruned(_ ledger: [String: SensorLedgerEntry],
+                       keepingDaysOnOrAfter cutoff: Date) -> [String: SensorLedgerEntry] {
+        return ledger.filter { $0.value.day >= cutoff }
+    }
+
+    /// SHA-256 over the canonical serialization, truncated to 16 bytes, hex-encoded.
+    static func fingerprint(of record: [String: Any]) -> String {
+        let digest = SHA256.hash(data: Data(Self.canonical(record).utf8))
+        return digest.prefix(16).map { String(format: "%02x", $0) }.joined()
+    }
+
+    /// The measurement period of a record, when one is derivable: only the three usage reports,
+    /// whose documented `duration_s` IS the span the report covers. Used solely for the
+    /// near-duplicate telemetry — never for identity, never for control flow.
+    private static func period(of record: [String: Any], sensor: SRSensor) -> (start: Date, end: Date)? {
+        guard SensorSampleUploadManager.usageReportSensors.contains(sensor),
+              let start = SensorSampleUploadManager.measurementTime(of: record, sensor: sensor),
+              let duration = (record["duration_s"] as? NSNumber)?.doubleValue,
+              duration >= SensorSampleUploadManager.minimumPlausibleReportSpan else { return nil }
+        return (start, start.addingTimeInterval(duration))
+    }
+
+    // MARK: Canonical serialization
+
+    /// Deterministic textual form of a JSON-ready value. Internal for the determinism specs.
+    static func canonical(_ value: Any) -> String {
+        switch value {
+        case let dictionary as [String: Any]:
+            let body = dictionary.keys.sorted()
+                .map { "\(Self.escaped($0)):\(Self.canonical(dictionary[$0] ?? NSNull()))" }
+                .joined(separator: ",")
+            return "{" + body + "}"
+        case let array as [Any]:
+            return "[" + array.map { Self.canonical($0) }.joined(separator: ",") + "]"
+        case let string as String:
+            return Self.escaped(string)
+        case let date as Date:
+            // Mappers emit ISO strings, so a raw Date here is defensive: epoch milliseconds,
+            // integer — never a formatter, never a locale.
+            return String(Int64((date.timeIntervalSince1970 * 1000).rounded()))
+        case let number as NSNumber:
+            return Self.canonical(number: number)
+        case is NSNull:
+            return "null"
+        default:
+            // Records are JSON-serializable by contract (they go through JSONSerialization at
+            // upload); anything else is a programming error, rendered stably enough not to trap.
+            assertionFailure("SensorUploadLedger - non-JSON value in a record: \(type(of: value))")
+            return Self.escaped(String(describing: value))
+        }
+    }
+
+    /// NSNumber rendering that does not depend on how the value was boxed: booleans as
+    /// `true`/`false` (a CFBoolean is NOT the integer 1), integral floats as integers (`1.0`
+    /// and `1` are the same logical value), other floats via `%.17g` in the POSIX locale
+    /// (round-trip exact, locale-immune — never `Double.description`).
+    private static func canonical(number: NSNumber) -> String {
+        if CFGetTypeID(number) == CFBooleanGetTypeID() {
+            return number.boolValue ? "true" : "false"
+        }
+        switch String(cString: number.objCType) {
+        case "f", "d":
+            let value = number.doubleValue
+            if value.rounded(.towardZero) == value, abs(value) < 9_007_199_254_740_992 {
+                return String(Int64(value))
+            }
+            return String(format: "%.17g", locale: Locale(identifier: "en_US_POSIX"), value)
+        case "Q":
+            return String(number.uint64Value)
+        default:
+            return String(number.int64Value)
+        }
+    }
+
+    /// JSON-style string escaping, byte-wise over unicode scalars: no locale, no NSString
+    /// bridging surprises.
+    private static func escaped(_ string: String) -> String {
+        var out = "\""
+        for scalar in string.unicodeScalars {
+            switch scalar {
+            case "\"": out += "\\\""
+            case "\\": out += "\\\\"
+            default:
+                if scalar.value < 0x20 {
+                    out += String(format: "\\u%04x", scalar.value)
+                } else {
+                    out.unicodeScalars.append(scalar)
+                }
+            }
+        }
+        return out + "\""
     }
 }
 

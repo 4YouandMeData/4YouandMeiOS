@@ -842,6 +842,14 @@ extension RepositoryImpl: HealthManagerClearanceDelegate {
                                    calendar: Self.enrollmentCalendar(userTimeZone: user.timeZone))
     }
 
+    /// The BACKEND-authoritative `user.time_zone` (FUAM-3945 AC2 revised): the calendar every
+    /// SensorKit window and HealthKit historical chunk boundary is computed in — the same
+    /// authority the adherence chart buckets rows with, and one that does not move when the
+    /// participant travels. Satisfies both clearance-delegate protocols.
+    var participantTimeZone: TimeZone? {
+        return self.currentUser?.timeZone
+    }
+
     /// FUAM-3841 (final review): the backend computes `days_in_study` in the USER's timezone,
     /// so the derived day boundary must use it too — `Calendar.current` (device tz) can shift
     /// the enrollment day by one when they differ. Falls back to the device timezone when the

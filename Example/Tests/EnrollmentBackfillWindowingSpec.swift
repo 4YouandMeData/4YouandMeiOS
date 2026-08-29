@@ -1040,6 +1040,12 @@ private final class FakeSensorStorage: SensorSampleUploadManagerStorage, SensorS
     private var cursors: [String: Date] = [:]
     private var queues: [String: [(records: [[String: Any]], windowStart: Date)]] = [:]
     private var enqueuedBatches: [(records: [[String: Any]], windowStart: Date)] = []
+    private var ledgers: [String: [String: SensorLedgerEntry]] = [:]
+    private var rescanDays: [String: Date] = [:]
+    private var deepestWindows: [String: Date] = [:]
+
+    /// AC4: when `true`, every enqueue reports failure — the persisted-queue write "throws".
+    var failEnqueue = false
 
     /// Every batch ever enqueued, kept even after it is dequeued (audit log for the specs).
     var enqueued: [(records: [[String: Any]], windowStart: Date)] {
@@ -1058,11 +1064,46 @@ private final class FakeSensorStorage: SensorSampleUploadManagerStorage, SensorS
         self.lock.locked { self.cursors["\(sensor.rawValue).\(deviceKey)"] = date }
     }
 
-    func enqueueBatch(_ batch: [[String: Any]], windowStart: Date, for sensor: SRSensor) {
-        self.lock.locked {
+    @discardableResult
+    func enqueueBatch(_ batch: [[String: Any]], windowStart: Date, for sensor: SRSensor) -> Bool {
+        return self.lock.locked {
+            guard !self.failEnqueue else { return false }
             self.queues[sensor.rawValue, default: []].append((batch, windowStart))
             self.enqueuedBatches.append((batch, windowStart))
+            return true
         }
+    }
+
+    func ledger(for sensor: SRSensor, deviceKey: String = SensorDevice.iphoneKey) -> [String: SensorLedgerEntry] {
+        return self.lock.locked { self.ledgers["\(sensor.rawValue).\(deviceKey)"] ?? [:] }
+    }
+
+    func setLedger(_ ledger: [String: SensorLedgerEntry], for sensor: SRSensor, deviceKey: String = SensorDevice.iphoneKey) {
+        self.lock.locked { self.ledgers["\(sensor.rawValue).\(deviceKey)"] = ledger }
+    }
+
+    func purgeLedger(for sensor: SRSensor) {
+        self.lock.locked {
+            for key in self.ledgers.keys where key.hasPrefix(sensor.rawValue + ".") {
+                self.ledgers[key] = nil
+            }
+        }
+    }
+
+    func lastRescanDay(for sensor: SRSensor, deviceKey: String = SensorDevice.iphoneKey) -> Date? {
+        return self.lock.locked { self.rescanDays["\(sensor.rawValue).\(deviceKey)"] }
+    }
+
+    func setLastRescanDay(_ day: Date, for sensor: SRSensor, deviceKey: String = SensorDevice.iphoneKey) {
+        self.lock.locked { self.rescanDays["\(sensor.rawValue).\(deviceKey)"] = day }
+    }
+
+    func deepestProductiveWindowStart(for sensor: SRSensor, deviceKey: String = SensorDevice.iphoneKey) -> Date? {
+        return self.lock.locked { self.deepestWindows["\(sensor.rawValue).\(deviceKey)"] }
+    }
+
+    func setDeepestProductiveWindowStart(_ date: Date, for sensor: SRSensor, deviceKey: String = SensorDevice.iphoneKey) {
+        self.lock.locked { self.deepestWindows["\(sensor.rawValue).\(deviceKey)"] = date }
     }
 
     func dequeueNextBatch(for sensor: SRSensor) -> (records: [[String: Any]], windowStart: Date)? {
@@ -1087,6 +1128,9 @@ private final class FakeSensorReachability: SensorSampleUploadManagerReachabilit
 private final class FakeSensorClearance: SensorSampleUploadManagerClearanceDelegate {
     var sensorManagerCanRun: Bool = true
     var enrollmentDate: Date?
+    /// UTC by default, so every pre-existing grid assertion stays byte-identical (a UTC
+    /// participant gets exactly the round-7 grid); tz-specific specs override it.
+    var participantTimeZone: TimeZone? = TimeZone(identifier: "UTC")
 }
 
 private final class FakeSensorMapper: SensorSampleMapper {
@@ -1527,14 +1571,16 @@ class HealthBackfillChunkWalkSpec: QuickSpec {
 
             let hour: TimeInterval = 3600
             let minute: TimeInterval = 60
-            // 90 minutes back: the head path (1-hour chunks), i.e. exactly two chunks —
-            // [cursor, cursor+1h) and [cursor+1h, now] — and no sliver in between.
+            // Epoch-hour-aligned, 1–2 hours back: head chunks snap to epoch-hour boundaries
+            // (AC2 revised), so an aligned cursor keeps the expected shapes exact — exactly two
+            // chunks, [cursor, cursor+1h) and [cursor+1h, now], with no sliver in between.
             var cursor: Date!
             var attempted: [DateInterval]!
 
             beforeEach {
                 clearance.enrollmentDate = Date().addingTimeInterval(-10 * day)
-                cursor = Date().addingTimeInterval(-90 * minute)
+                let nowEpoch = Date().timeIntervalSince1970
+                cursor = Date(timeIntervalSince1970: ((nowEpoch / hour).rounded(.down) - 1) * hour)
                 storage.setUploadStartDate(cursor, forDataType: dataType)
                 attempted = []
             }
@@ -1710,6 +1756,8 @@ private final class FakeHealthReachability: HealthSampleUploadManagerReachabilit
 private final class FakeHealthClearance: HealthSampleUploadManagerClearanceDelegate {
     var healthManagerCanRun: Bool = true
     var enrollmentDate: Date?
+    /// UTC by default: deterministic day boundaries for the chunk-walk specs.
+    var participantTimeZone: TimeZone? = TimeZone(identifier: "UTC")
 }
 
 private final class FakeHealthNetwork: HealthSampleUploaderNetworkDelegate {
@@ -1899,10 +1947,14 @@ class SensorKitPerDeviceSpec: QuickSpec {
             it("walks every device sequentially, one fetch at a time, and never interleaves them") {
                 manager.runDeviceChain(at: 0, of: [iphone, watch], for: sensor, now: now, using: mapper)
 
-                expect(mapper.calls.count).toEventually(equal(17), timeout: .seconds(5))
-                // 9 iPhone days [-10d, -1d), then 8 watch days [-10d, -2d) — in that order.
-                expect(Set(mapper.calls.prefix(9).map { $0.deviceKey })).to(equal(["iphone"]))
-                expect(Set(mapper.calls.suffix(8).map { $0.deviceKey })).to(equal(["watch"]))
+                // A fresh install is a BACKFILL: each device probes newest-first and stops after
+                // `probeEmptyWindowStop` consecutive confirmed-empty windows (AC1) — the mapper
+                // returns nothing, so each device costs exactly that many fetches.
+                let perDevice = SensorSampleUploadManager.probeEmptyWindowStop
+                expect(mapper.calls.count).toEventually(equal(2 * perDevice), timeout: .seconds(5))
+                // The iPhone's probe first, then the watch's — in that order.
+                expect(Set(mapper.calls.prefix(perDevice).map { $0.deviceKey })).to(equal(["iphone"]))
+                expect(Set(mapper.calls.suffix(perDevice).map { $0.deviceKey })).to(equal(["watch"]))
                 // Interleaving WITHIN one chain is structural — `processWindow` only issues the
                 // next fetch from the previous one's completion — so the ordering above is the
                 // whole assertion. Interleaving BETWEEN two sync cycles is the real hazard and
@@ -1971,14 +2023,16 @@ class SensorKitPerDeviceSpec: QuickSpec {
             }
 
             it("releases the guard when the chain reaches its end, so the next cycle plans again") {
+                let perProbe = SensorSampleUploadManager.probeEmptyWindowStop
                 manager.runDeviceChain(at: 0, of: [iphone], for: sensor, now: now, using: mapper)
-                expect(mapper.calls.count).toEventually(equal(9), timeout: .seconds(5))
+                expect(mapper.calls.count).toEventually(equal(perProbe), timeout: .seconds(5))
 
-                // Rewind the cursor to the join day so the next cycle has the same 9 windows: the
-                // only thing that can stop it now is a guard the finished chain failed to release.
+                // Rewind the cursor to the join day so the next cycle re-probes the same plan:
+                // the only thing that can stop it now is a guard the finished chain failed to
+                // release.
                 storage.setLastCursor(now.addingTimeInterval(-10 * day), for: sensor, deviceKey: iphone.key)
                 manager.runDeviceChain(at: 0, of: [iphone], for: sensor, now: now, using: mapper)
-                expect(mapper.calls.count).toEventually(equal(18), timeout: .seconds(5))
+                expect(mapper.calls.count).toEventually(equal(2 * perProbe), timeout: .seconds(5))
             }
 
             it("releases the guard on the forward-only bail, so the sensor recovers with consent") {
@@ -2055,10 +2109,13 @@ class SensorKitPerDeviceSpec: QuickSpec {
                 expect(ordered.map { $0.key }).to(equal([SensorDevice.iphoneKey, SensorDevice.watchKey]))
             }
 
-            it("walks exactly the pre-FUAM-3945 windows when only the current device exists") {
+            it("probes the backfill and parks the iPhone cursor at the head when only the current device exists") {
                 manager.runDeviceChain(at: 0, of: [.current], for: sensor, now: now, using: mapper)
 
-                expect(mapper.calls.count).toEventually(equal(9), timeout: .seconds(5))
+                // AC1: an all-empty store costs `probeEmptyWindowStop` fetches, and the cursor
+                // still ends at the newest complete day — same terminal state as the old walk.
+                expect(mapper.calls.count)
+                    .toEventually(equal(SensorSampleUploadManager.probeEmptyWindowStop), timeout: .seconds(5))
                 expect(storage.lastCursor(for: sensor, deviceKey: SensorDevice.iphoneKey))
                     .to(equal(now.addingTimeInterval(-day)))
             }

@@ -20,6 +20,13 @@ public protocol SensorSampleUploadManagerClearanceDelegate: AnyObject {
     /// timestamp. `nil` when it cannot be established (no user, or `days_in_study <= 0`),
     /// which means forward-only collection.
     var enrollmentDate: Date? { get }
+
+    /// The participant's BACKEND-authoritative timezone (`user.time_zone`) — the calendar every
+    /// window/batch boundary is computed in (FUAM-3945 AC2 revised): the same authority the
+    /// adherence chart buckets rows with, and one that does not move when the participant
+    /// travels. `nil` when no user record is loaded; the caller falls back to UTC (never to
+    /// `TimeZone.current`).
+    var participantTimeZone: TimeZone? { get }
 }
 
 // MARK: - Typealiases mirroring the Health side wiring
