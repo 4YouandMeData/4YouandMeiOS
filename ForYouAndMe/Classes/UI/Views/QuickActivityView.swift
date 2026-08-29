@@ -51,9 +51,17 @@ class QuickActivityView: UIView {
     
     private let subtitleLabel: UILabel = {
         let label = UILabel()
+        // FUAM-3637: same shrink-to-fit treatment as the title — 2 lines, fitted in
+        // layoutSubviews, `.byTruncatingTail` as the below-floor fallback.
         label.numberOfLines = 2
+        label.lineBreakMode = .byTruncatingTail
         return label
     }()
+
+    // FUAM-3637: subtitle raw text + (text, width) fit cache, mirroring the title's.
+    private var subtitleRawText: String?
+    private var subtitleFittedText: String?
+    private var subtitleFittedWidth: CGFloat = 0.0
     
     private lazy var confirmButtonView: GenericButtonView = {
         let button = GenericButtonView(withTextStyleCategory: .feed, fillWidth: false, topInset: 0.0, bottomInset: 0.0)
@@ -153,18 +161,29 @@ class QuickActivityView: UIView {
 
     override func layoutSubviews() {
         super.layoutSubviews()
-        // FUAM-3637: fit the title to two lines now that the width is known. The (text, width)
-        // cache guard skips the no-op re-apply so the attributedText setter cannot loop every frame.
-        guard let title = self.titleRawText else { return }
+        // FUAM-3637: fit title and subtitle to their two lines now that the width is known.
+        // The (text, width) cache guards skip the no-op re-apply so the attributedText setters
+        // cannot loop every frame. Both labels share the header stack, hence the same inset.
         let availableWidth = self.bounds.width - Self.titleHorizontalInset
         guard availableWidth > 0 else { return }
-        guard self.titleFittedText != title || self.titleFittedWidth != availableWidth else { return }
-        self.titleFittedText = title
-        self.titleFittedWidth = availableWidth
-        self.titleLabel.attributedText = NSAttributedString.createFitted(withText: title,
-                                                                         fontStyle: .header2,
-                                                                         color: self.titleColor,
-                                                                         availableWidth: availableWidth)
+        if let title = self.titleRawText,
+           self.titleFittedText != title || self.titleFittedWidth != availableWidth {
+            self.titleFittedText = title
+            self.titleFittedWidth = availableWidth
+            self.titleLabel.attributedText = NSAttributedString.createFitted(withText: title,
+                                                                             fontStyle: .header2,
+                                                                             color: self.titleColor,
+                                                                             availableWidth: availableWidth)
+        }
+        if let subtitle = self.subtitleRawText,
+           self.subtitleFittedText != subtitle || self.subtitleFittedWidth != availableWidth {
+            self.subtitleFittedText = subtitle
+            self.subtitleFittedWidth = availableWidth
+            self.subtitleLabel.attributedText = NSAttributedString.createFitted(withText: subtitle,
+                                                                                fontStyle: .paragraph,
+                                                                                colorType: .secondaryText,
+                                                                                availableWidth: availableWidth)
+        }
     }
 
     // MARK: - Public Methods
@@ -196,9 +215,15 @@ class QuickActivityView: UIView {
             .applyingLineBreakMode(.byTruncatingTail)
         self.setNeedsLayout()
         
-        self.subtitleLabel.attributedText = NSAttributedString.create(withText: item.body ?? "",
+        // FUAM-3637: same store-raw-then-fit-at-layout dance as the title.
+        let rawSubtitle = item.body ?? ""
+        self.subtitleRawText = rawSubtitle
+        self.subtitleFittedText = nil
+        self.subtitleFittedWidth = 0.0
+        self.subtitleLabel.attributedText = NSAttributedString.create(withText: rawSubtitle,
                                                                       fontStyle: .paragraph,
                                                                       colorType: .secondaryText)
+            .applyingLineBreakMode(.byTruncatingTail)
         
         let buttonText = item.buttonText ?? defaultButtonText
         self.confirmButtonView.setButtonText(buttonText)
