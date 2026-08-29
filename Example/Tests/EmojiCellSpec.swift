@@ -44,7 +44,7 @@ class EmojiCellSpec: QuickSpec {
                 expect(imageView?.image).toNot(beNil(), description: "emoji_none asset did not resolve")
                 expect(imageView?.image?.size).to(equal(CGSize(width: 45, height: 45)))
 
-                let emojiLabel = findLabel(in: cell, matching: { $0.font.pointSize == 35 })
+                let emojiLabel = findLabel(in: cell, matching: { $0.font.pointSize == EmojiCell.glyphSlotHeight })
                 expect(emojiLabel?.isHidden).to(beTrue())
                 expect(emojiLabel?.text).to(beNil())
             }
@@ -93,7 +93,7 @@ class EmojiCellSpec: QuickSpec {
                 let cell = makeCell()
                 cell.configure(with: normalItem, selected: false)
 
-                let emojiLabel = findLabel(in: cell, matching: { $0.font.pointSize == 35 })
+                let emojiLabel = findLabel(in: cell, matching: { $0.font.pointSize == EmojiCell.glyphSlotHeight })
                 expect(emojiLabel?.isHidden).to(beFalse())
                 expect(emojiLabel?.text).to(equal("🥵"))
 
@@ -121,7 +121,7 @@ class EmojiCellSpec: QuickSpec {
                 cell.configure(with: normalItem, selected: false)
 
                 expect(findImageView(in: cell)?.isHidden).to(beTrue())
-                let emojiLabel = findLabel(in: cell, matching: { $0.font.pointSize == 35 })
+                let emojiLabel = findLabel(in: cell, matching: { $0.font.pointSize == EmojiCell.glyphSlotHeight })
                 expect(emojiLabel?.isHidden).to(beFalse())
                 expect(emojiLabel?.text).to(equal("🥵"))
             }
@@ -131,7 +131,7 @@ class EmojiCellSpec: QuickSpec {
                 cell.configure(with: normalItem, selected: false)
                 cell.configure(with: nil, selected: false)
 
-                let emojiLabel = findLabel(in: cell, matching: { $0.font.pointSize == 35 })
+                let emojiLabel = findLabel(in: cell, matching: { $0.font.pointSize == EmojiCell.glyphSlotHeight })
                 expect(emojiLabel?.isHidden).to(beTrue())
                 expect(emojiLabel?.text).to(beNil())
                 expect(findImageView(in: cell)?.isHidden).to(beFalse())
@@ -143,7 +143,7 @@ class EmojiCellSpec: QuickSpec {
                 cell.prepareForReuse()
 
                 expect(findImageView(in: cell)?.isHidden).to(beTrue())
-                let emojiLabel = findLabel(in: cell, matching: { $0.font.pointSize == 35 })
+                let emojiLabel = findLabel(in: cell, matching: { $0.font.pointSize == EmojiCell.glyphSlotHeight })
                 expect(emojiLabel?.text).to(beNil())
                 expect(findImageView(in: cell)?.isAccessibilityElement).to(beFalse())
                 expect(findImageView(in: cell)?.accessibilityLabel).to(beNil())
@@ -188,7 +188,7 @@ class EmojiCellSpec: QuickSpec {
                 let cell = makeCell()
                 cell.configure(with: impostor, selected: false)
 
-                let emojiLabel = findLabel(in: cell, matching: { $0.font.pointSize == 35 })
+                let emojiLabel = findLabel(in: cell, matching: { $0.font.pointSize == EmojiCell.glyphSlotHeight })
                 expect(emojiLabel?.isHidden).to(beFalse())
                 expect(emojiLabel?.text).to(equal("🙄"))
                 expect(findImageView(in: cell)?.isHidden).to(beTrue())
@@ -201,7 +201,7 @@ class EmojiCellSpec: QuickSpec {
                 let cell = makeCell()
                 cell.configure(with: realCross, selected: false)
 
-                let emojiLabel = findLabel(in: cell, matching: { $0.font.pointSize == 35 })
+                let emojiLabel = findLabel(in: cell, matching: { $0.font.pointSize == EmojiCell.glyphSlotHeight })
                 expect(emojiLabel?.isHidden).to(beFalse())
                 expect(emojiLabel?.text).to(equal("❌"))
                 expect(findImageView(in: cell)?.isHidden).to(beTrue())
@@ -303,6 +303,133 @@ class EmojiCellSpec: QuickSpec {
                 expect(EmojiCell.displayedCaption(for: nil)).to(equal("Skip"))
             }
         }
+
+        // FUAM-3857 round 8 (Jules): a long caption like "pasta pastafarian" shrinks to fit
+        // before it ellipsises, at least 2pt below the base size (mirrored on Android as 2sp).
+        // `adjustsFontSizeToFitWidth` + `minimumScaleFactor` do the shrinking natively; below the
+        // floor, the pre-existing `.byTruncatingTail` takes back over.
+        //
+        // These specs predict UILabel's own single-line layout math (`NSString.size(withAttributes:)`,
+        // the same measurement `adjustsFontSizeToFitWidth` uses internally) rather than asserting
+        // on rendered pixels, so they stay deterministic across whatever Dynamic Type / content
+        // size category the test host happens to be running under — everything is measured
+        // against the label's OWN live base font, never a hardcoded point size.
+        describe("EmojiCell caption shrink-to-fit before ellipsis") {
+
+            func makeCell(width: CGFloat = 80) -> EmojiCell {
+                EmojiCell(frame: CGRect(x: 0, y: 0, width: width, height: 80))
+            }
+
+            func naturalWidth(_ text: String, font: UIFont) -> CGFloat {
+                (text as NSString).size(withAttributes: [.font: font]).width
+            }
+
+            it("configures adjustsFontSizeToFitWidth with the 11pt floor coordinated with Android") {
+                let cell = makeCell()
+                let item = EmojiItem(id: "1", type: "feedback_tag", tag: "🙂", label: "happy")
+                cell.configure(with: item, selected: false)
+
+                let title = findTitleLabel(in: cell)
+                expect(title?.adjustsFontSizeToFitWidth).to(beTrue())
+                expect(title?.numberOfLines).to(equal(1))
+                expect(title?.lineBreakMode).to(equal(.byTruncatingTail))
+
+                let basePointSize = title!.font.pointSize
+                let expectedFloor = min(EmojiCell.captionFloorPointSize, basePointSize - EmojiCell.captionMinShrinkPoints)
+                expect(title?.minimumScaleFactor).to(beCloseTo(expectedFloor / basePointSize, within: 0.001))
+            }
+
+            // At the default content size category, `.header3`'s base is 13pt (see
+            // FontPalette.FontStyle.defaultData) and the coordinated floor is 11pt — exactly the
+            // 2pt minimum, with zero margin to spare (Android's 14sp base gives it 3sp). This
+            // pins that fact down so a future `.header3` change that erodes the margin further
+            // trips the `assert` in EmojiCell.setupUI instead of silently shrinking less.
+            it("has exactly 2pt of margin at the default content size category (13pt base, 11pt floor)") {
+                let original = UITraitCollection.current
+                UITraitCollection.current = UITraitCollection(preferredContentSizeCategory: .large)
+                defer { UITraitCollection.current = original }
+
+                let cell = makeCell()
+                let item = EmojiItem(id: "1", type: "feedback_tag", tag: "🙂", label: "happy")
+                cell.configure(with: item, selected: false)
+
+                expect(findTitleLabel(in: cell)?.font.pointSize).to(beCloseTo(13, within: 0.01))
+            }
+
+            it("renders a short caption at the base size, since it already fits unshrunk") {
+                let cell = makeCell()
+                let item = EmojiItem(id: "1", type: "feedback_tag", tag: "🙂", label: "happy")
+                cell.configure(with: item, selected: false)
+                cell.layoutIfNeeded()
+
+                let title = findTitleLabel(in: cell)!
+                expect(title.text).to(equal("happy"))
+                expect(naturalWidth("happy", font: title.font)).to(
+                    beLessThanOrEqualTo(title.bounds.width),
+                    description: "the base-size caption must already fit, or this spec isn't proving 'no shrink needed'"
+                )
+            }
+
+            // Font/minimumScaleFactor are fixed in `setupUI` regardless of the cell's frame or
+            // configured text, so a throwaway zero-frame cell is enough to read them — used
+            // below to size a test cell that's wide enough to prove the shrink MECHANISM
+            // deterministically, independent of any real device's actual grid column width.
+            func liveTitleFont() -> (base: UIFont, minimumScaleFactor: CGFloat) {
+                let probe = findTitleLabel(in: EmojiCell(frame: .zero))!
+                return (probe.font, probe.minimumScaleFactor)
+            }
+
+            it("shrinks (does not truncate) a long caption like 'pasta pastafarian'") {
+                let caption = "pasta pastafarian"
+                let (baseFont, minimumScaleFactor) = liveTitleFont()
+                let floorFont = baseFont.withSize(baseFont.pointSize * minimumScaleFactor)
+                let widthAtFloor = naturalWidth(caption, font: floorFont)
+                let widthAtBase = naturalWidth(caption, font: baseFont)
+
+                // A cell width strictly between the two: too narrow for the caption at its base
+                // size (so the shrink path actually has to engage) but wide enough at the floor
+                // size (so it does NOT have to fall back to ellipsis). Real grid cells are
+                // narrower (~65-90pt on a phone, 4-per-row) and CAN still legitimately ellipsis a
+                // caption this long even at the 11pt floor — that's an expected, separate outcome
+                // (see the "absurdly long" spec below), not what this spec is proving.
+                let cell = makeCell(width: (widthAtFloor + widthAtBase) / 2)
+                let item = EmojiItem(id: "1", type: "feedback_tag", tag: "🍝", label: caption)
+                cell.configure(with: item, selected: false)
+                cell.layoutIfNeeded()
+
+                let title = findTitleLabel(in: cell)!
+                // UILabel always stores the full string; truncation is a draw-time artifact of
+                // lineBreakMode, never reflected in `.text` — so this only proves the value made
+                // it through unmodified, not that it renders un-truncated (the assertions below do).
+                expect(title.text).to(equal(caption))
+
+                expect(naturalWidth(caption, font: title.font)).to(
+                    beGreaterThan(title.bounds.width),
+                    description: "the caption must NOT already fit at the base size, or this spec doesn't exercise the shrink path"
+                )
+                expect(naturalWidth(caption, font: floorFont)).to(
+                    beLessThanOrEqualTo(title.bounds.width),
+                    description: "the floor size must fit without truncating, or adjustsFontSizeToFitWidth can't avoid the ellipsis"
+                )
+            }
+
+            it("still ellipsises an absurdly long caption once even the floor size doesn't fit") {
+                let cell = makeCell()
+                let absurd = String(repeating: "supercalifragilisticexpialidocious ", count: 10)
+                let item = EmojiItem(id: "1", type: "feedback_tag", tag: "🙂", label: absurd)
+                cell.configure(with: item, selected: false)
+                cell.layoutIfNeeded()
+
+                let title = findTitleLabel(in: cell)!
+                let floorFont = title.font.withSize(title.font.pointSize * title.minimumScaleFactor)
+                expect(naturalWidth(absurd, font: floorFont)).to(
+                    beGreaterThan(title.bounds.width),
+                    description: "the floor must still be too small here, or this spec doesn't exercise the ellipsis fallback"
+                )
+                expect(title.lineBreakMode).to(equal(.byTruncatingTail))
+                expect(title.numberOfLines).to(equal(1))
+            }
+        }
     }
 }
 
@@ -321,10 +448,12 @@ private func findLabel(in view: UIView, matching predicate: (UILabel) -> Bool) -
     return collectLabels(in: view).first(where: predicate)
 }
 
-// The emoji glyph label has a unique 35pt font (see EmojiCell.setupUI); the caption
-// title label is the only other UILabel in the cell, distinguished by font size.
+// The emoji glyph label's font point size is EmojiCell.glyphSlotHeight (see EmojiCell.setupUI);
+// the caption title label is the only other UILabel in the cell, distinguished by font size.
+// `titleLabel.font.pointSize` stays at its base (<=18pt) value even while
+// `adjustsFontSizeToFitWidth` shrinks the on-screen rendering, so this stays unambiguous.
 private func findTitleLabel(in view: UIView) -> UILabel? {
-    return findLabel(in: view, matching: { $0.font.pointSize != 35 })
+    return findLabel(in: view, matching: { $0.font.pointSize != EmojiCell.glyphSlotHeight })
 }
 
 private func collectImageViews(in view: UIView) -> [UIImageView] {

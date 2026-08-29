@@ -10,7 +10,43 @@ final class EmojiCell: UICollectionViewCell {
     // FUAM-3857: the glyph label and the icon share one slot size so the caption sits at the
     // same height regardless of which branch renders — previously 45x45 for the icon next to
     // an unrelated ~41pt glyph line box.
-    private static let glyphSlotHeight: CGFloat = 45
+    //
+    // FUAM-3857 round 8: this ALSO doubles as the emoji glyph's font point size — the shared
+    // contract agreed with Android is "one glyph box constant on each platform, the emoji font
+    // size derived as box / ink-overfill-ratio measured on THAT platform's own emoji font"
+    // (Android's Noto overshoots by ~3.3%; Apple Color Emoji does not, see below). The no-emoji
+    // icon's 45x45pt canvas (its drawn circle measures 41, per the designer's export) is the
+    // canonical box; a real emoji must render at that same visual size (matching the box, not
+    // just the 41pt circle).
+    //
+    // Measured on-device (iPhone 15 simulator, Apple Color Emoji), three ways — this file's own
+    // pixel scan of a rendered UILabel, an independent `ImageMagick -trim` cross-check at two
+    // fuzz thresholds, and a visual overlay against the icon at 4x zoom — all agreeing: a
+    // circular emoji's (🙂 😢 ❌) drawn ink height tracks UIFont's point size almost exactly
+    // (ratio ~1.00 at every size tried, 35-45pt), NOT the ~1.16 initially assumed. So the
+    // overfill ratio is ~1.00 here and `UIFont.systemFont(ofSize: 45)` renders a ~45pt-tall
+    // glyph directly, no compensation needed — unlike Android, which had to divide its 45sp box
+    // by its measured 1.033 ratio to land on ~43.56sp. (A compound emoji like 🥵 — face plus
+    // separate droplets — measured slightly smaller, ~96-98% of point size; normal glyph-shape
+    // variance, not evidence of a different ratio for the common case.) One constant drives both
+    // the icon and the emoji font size here, so they can't drift apart.
+    //
+    // Internal (not private): the test target reads it too, so specs assert against the real
+    // value instead of a second hardcoded copy of "45" that could silently drift from this one.
+    static let glyphSlotHeight: CGFloat = 45
+
+    // FUAM-3857 round 8: Jules requires at least 2pt of shrink below the caption's base size
+    // before it falls back to ellipsis.
+    static let captionMinShrinkPoints: CGFloat = 2
+
+    // FUAM-3857 round 8: 11pt is the ABSOLUTE floor coordinated with Android (11sp there,
+    // against Android's 14sp base — 3sp of margin over the 2sp minimum). iOS's `.header3` base
+    // is 13pt at the default content size category (see FontPalette.FontStyle.defaultData), so
+    // 11pt gives exactly `captionMinShrinkPoints` of margin here — zero to spare, unlike
+    // Android's. `minimumScaleFactor` is still derived from the label's LIVE font at configure
+    // time (not this constant divided by a hardcoded "13"), so it stays correct as Dynamic Type
+    // scales the base up toward the 18pt cap.
+    static let captionFloorPointSize: CGFloat = 11
 
     private let emojiLabel = UILabel()
     private let noneImageView = UIImageView()
@@ -26,7 +62,7 @@ final class EmojiCell: UICollectionViewCell {
     }
 
     private func setupUI() {
-        emojiLabel.font = UIFont.systemFont(ofSize: 35)
+        emojiLabel.font = UIFont.systemFont(ofSize: Self.glyphSlotHeight)
         emojiLabel.textAlignment = .center
         emojiLabel.autoSetDimension(.height, toSize: Self.glyphSlotHeight)
 
@@ -40,6 +76,22 @@ final class EmojiCell: UICollectionViewCell {
         titleLabel.font = FontPalette.fontStyleData(forStyle: .header3, maximumPointSize: 18).font
         titleLabel.textColor = .darkGray
         titleLabel.textAlignment = .center
+        titleLabel.numberOfLines = 1
+        // FUAM-3857 round 8: a long caption (e.g. "pasta pastafarian") shrinks to fit before it
+        // ellipsises, down to `captionFloorPointSize`. Below that floor, `.byTruncatingTail`
+        // takes back over — confirmed empirically (not assumed) to already be UILabel's own
+        // default, but set explicitly here so it can't silently drift.
+        titleLabel.adjustsFontSizeToFitWidth = true
+        titleLabel.lineBreakMode = .byTruncatingTail
+        let baseCaptionPointSize = titleLabel.font.pointSize
+        // Guards `minimumScaleFactor` against ever exceeding 1.0 (which UILabel would treat as
+        // "no shrink") if a future `.header3` change ever drops the base below the floor — see
+        // `captionFloorPointSize`'s doc comment on what that would mean for the 2pt requirement.
+        let shrinkMargin = baseCaptionPointSize - Self.captionFloorPointSize
+        assert(shrinkMargin >= Self.captionMinShrinkPoints,
+               "caption floor gives only \(shrinkMargin)pt of shrink vs. base \(baseCaptionPointSize)pt — recheck with Android")
+        let effectiveFloor = min(Self.captionFloorPointSize, baseCaptionPointSize - Self.captionMinShrinkPoints)
+        titleLabel.minimumScaleFactor = max(effectiveFloor, 1) / baseCaptionPointSize
 
         // The glyph label and the icon are both arranged subviews so that hiding one removes
         // it from the layout outright. Nesting them in a plain container instead would leave
@@ -53,6 +105,14 @@ final class EmojiCell: UICollectionViewCell {
 
         contentView.addSubview(stack)
         stack.autoPinEdgesToSuperviewEdges()
+
+        // FUAM-3857 round 8: the stack's cross-axis alignment is `.center`, which only
+        // centers arranged subviews — it does NOT constrain their width — so titleLabel would
+        // otherwise size to its own intrinsic (full, unshrunk) text width and just get cropped
+        // by `contentView.clipsToBounds`, with `adjustsFontSizeToFitWidth` never triggering
+        // (nothing is actually narrower than the text). Pin it to the full cell width so
+        // shrink-then-ellipsis has a real width to shrink against.
+        titleLabel.autoMatch(.width, to: .width, of: contentView)
 
         contentView.layer.cornerRadius = 8
         contentView.clipsToBounds = true

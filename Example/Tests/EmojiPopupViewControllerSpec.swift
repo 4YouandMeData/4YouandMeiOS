@@ -74,7 +74,7 @@ class EmojiPopupViewControllerSpec: QuickSpec {
                     return
                 }
                 let glyphLabel = cell.contentView.subviews.flatMap { $0.subviews }.compactMap { $0 as? UILabel }
-                    .first { $0.font.pointSize == 35 }
+                    .first { $0.font.pointSize == EmojiCell.glyphSlotHeight }
                 expect(glyphLabel?.text).to(equal("🙄"))
                 expect(glyphLabel?.isHidden).to(beFalse())
             }
