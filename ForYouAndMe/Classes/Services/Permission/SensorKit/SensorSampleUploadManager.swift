@@ -398,6 +398,33 @@ public final class SensorSampleUploadManager {
         return WindowPlan(windows: windows, lowerBound: from, lowerBoundOrigin: origin, consentBound: lowerBound)
     }
 
+    /// FUAM-3945 (D1): how far a report-class FETCH reaches back beyond its window start. A
+    /// local-calendar-day report (SensorKit returns a usage report only when its whole period
+    /// fits inside the fetch range — the containment behaviour that killed `phone_usage_report`
+    /// on every non-UTC device) can start up to 14h before or after the UTC midnight the window
+    /// grid uses; a 24h lookback makes the 48h span contain any local day at any UTC offset,
+    /// permanently, with no `Calendar` in the planner.
+    static let reportFetchLookback: TimeInterval = utcDay
+
+    /// FUAM-3945 (D1): 1-second backward epsilon for the continuous sensors. `from` is
+    /// documented EXCLUSIVE, `to` inclusivity is undocumented; under exclusive-both a record
+    /// stamped exactly on a UTC midnight is returned by neither adjacent window. The epsilon
+    /// makes it always returned by the later window; any double-return under an inclusive `to`
+    /// is absorbed by the upload ledger (D4).
+    static let continuousFetchEpsilon: TimeInterval = 1
+
+    /// The span handed to the MAPPER for one planned window (FUAM-3945, D1). Decoupled from the
+    /// cursor grid on purpose: the cursor, `enqueueBatch(windowStart:)` and `windowVouches` all
+    /// keep the NARROW `window` — widening any of them would either re-open a consent hole
+    /// (a widened `windowStart` would let a pre-join report be vouched for) or break the grid.
+    /// Over-fetch is upload-free: re-fetched records are dropped by the upload ledger (D4).
+    static func fetchSpan(for sensor: SRSensor, window: DateInterval) -> DateInterval {
+        let lookback = Self.dayAggregatedSensors.contains(sensor)
+            ? Self.reportFetchLookback
+            : Self.continuousFetchEpsilon
+        return DateInterval(start: window.start.addingTimeInterval(-lookback), end: window.end)
+    }
+
     /// Everything one device's window walk needs that does not change inside that walk, plus
     /// what it needs to hand over to the NEXT device when it ends (FUAM-3945). A struct rather
     /// than seven more parameters on `processWindow` / `handleWindowResult`.
@@ -559,7 +586,11 @@ public final class SensorSampleUploadManager {
         }
 
         let window = windows[index]
-        context.mapper.fetchAndMap(from: window.start, to: window.end, device: context.device) { [weak self] result in
+        // FUAM-3945 (D1): the mapper fetches the WIDENED span; everything downstream — the
+        // cursor write, the enqueue windowStart, the consent gate's `windowVouches` — keeps
+        // receiving the narrow `window`.
+        let fetchSpan = Self.fetchSpan(for: context.sensor, window: window)
+        context.mapper.fetchAndMap(from: fetchSpan.start, to: fetchSpan.end, device: context.device) { [weak self] result in
             // Mapper callbacks arrive on arbitrary threads: hop onto the serial work queue
             // before touching windowFetchFailures / retryWorkItems / storage (review fix #10).
             guard let self else { return }

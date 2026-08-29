@@ -2387,3 +2387,119 @@ class SensorLegacyQueuePurgeSpec: QuickSpec {
         }
     }
 }
+
+// MARK: - FUAM-3945 (D1): the FETCH span widens; the grid, the cursor and the consent proxy do not
+
+/// D-C in production: `SRPhoneUsageReport` covers one LOCAL calendar day and SensorKit returns a
+/// usage report only when its whole period fits inside the fetch range, so a UTC-day fetch can
+/// never contain it on a non-UTC device. The fix widens only what is handed to the MAPPER
+/// (reports −24h, continuous −1s); the cursor, `enqueueBatch(windowStart:)` and `windowVouches`
+/// keep the narrow window (AC6: fetch widens, vouching does not).
+class SensorFetchSpanSpec: QuickSpec {
+
+    // swiftlint:disable:next function_body_length
+    override class func spec() {
+
+        let hour: TimeInterval = 3600
+        let day: TimeInterval = 24 * hour
+        let windowStart = SensorSampleUploadManager.utcDayStart(Date().addingTimeInterval(-30 * day))
+        let window = DateInterval(start: windowStart, end: windowStart.addingTimeInterval(day))
+
+        describe("fetchSpan(for:window:)") {
+
+            it("widens a report-class fetch by 24h backwards") {
+                for sensor in [SRSensor.deviceUsageReport, .phoneUsageReport, .messagesUsageReport, .keyboardMetrics] {
+                    let span = SensorSampleUploadManager.fetchSpan(for: sensor, window: window)
+                    expect(span.start).to(equal(window.start.addingTimeInterval(-day)))
+                }
+            }
+
+            it("nudges a continuous fetch 1s backwards (the boundary-instant epsilon)") {
+                for sensor in [SRSensor.visits, .pedometerData, .ambientLightSensor, .ambientPressure] {
+                    let span = SensorSampleUploadManager.fetchSpan(for: sensor, window: window)
+                    expect(span.start).to(equal(window.start.addingTimeInterval(-1)))
+                }
+            }
+
+            it("never touches the fetch END for either class") {
+                expect(SensorSampleUploadManager.fetchSpan(for: .deviceUsageReport, window: window).end)
+                    .to(equal(window.end))
+                expect(SensorSampleUploadManager.fetchSpan(for: .visits, window: window).end)
+                    .to(equal(window.end))
+            }
+
+            it("contains any local calendar day, at any UTC offset, in at least one planned window's span") {
+                // F4 regression guard for D-C: for every offset in [-14h, +14h] there must be a
+                // UTC-day window whose WIDENED span contains the whole local day.
+                for offsetHours in -14...14 {
+                    let localDayStart = window.start.addingTimeInterval(TimeInterval(-offsetHours) * hour)
+                    let localDay = DateInterval(start: localDayStart, end: localDayStart.addingTimeInterval(day))
+                    // Candidate planned windows: the UTC days overlapping the local day.
+                    let candidates = [-day, 0, day].map { offset -> DateInterval in
+                        let start = SensorSampleUploadManager.utcDayStart(localDayStart.addingTimeInterval(offset + day))
+                        return DateInterval(start: start, end: start.addingTimeInterval(day))
+                    }
+                    let contained = candidates.contains { candidate in
+                        let span = SensorSampleUploadManager.fetchSpan(for: .phoneUsageReport, window: candidate)
+                        return span.start <= localDay.start && localDay.end <= span.end
+                    }
+                    expect(contained).to(beTrue(), description: "no widened window contains the local day at UTC\(offsetHours)")
+                }
+            }
+        }
+
+        describe("processWindow (the one seam that widens)") {
+
+            let sensor = SRSensor.deviceUsageReport
+            let planningNow = SensorSampleUploadManager.utcDayStart(Date())
+
+            var storage: FakeSensorStorage!
+            var clearance: FakeSensorClearance!
+            var mapper: RecordingDeviceMapper!
+            var manager: SensorSampleUploadManager!
+
+            beforeEach {
+                storage = FakeSensorStorage()
+                clearance = FakeSensorClearance()
+                clearance.enrollmentDate = planningNow.addingTimeInterval(-30 * day)
+                mapper = RecordingDeviceMapper()
+                manager = SensorSampleUploadManager(withSensors: [sensor],
+                                                    storage: storage,
+                                                    reachability: FakeSensorReachability(),
+                                                    analytics: CapturingAnalyticsService(),
+                                                    mappers: [sensor: mapper])
+                manager.clearanceDelegate = clearance
+                // Routine cursor resume, so this exercises the plain forward walk.
+                storage.setLastCursor(planningNow.addingTimeInterval(-3 * day), for: sensor)
+            }
+
+            it("hands the mapper the widened span and everything else the narrow window") {
+                let recordStart = planningNow.addingTimeInterval(-2 * day + hour)
+                mapper.records = [["start": ISO8601DateFormatter().string(from: recordStart),
+                                   "duration_s": 3600,
+                                   "recorded_at": ISO8601DateFormatter().string(from: recordStart.addingTimeInterval(hour))]]
+
+                manager.runDeviceChain(at: 0, of: [.current], for: sensor, now: planningNow, using: mapper)
+
+                expect(mapper.calls.count).toEventually(beGreaterThan(0), timeout: .seconds(5))
+                expect(storage.enqueued.count).toEventually(beGreaterThan(0), timeout: .seconds(5))
+                // Every fetch spans [W − 24h, W + 24h) for a UTC-day window [W, W + 24h).
+                for call in mapper.calls {
+                    let narrowStart = call.window.start.addingTimeInterval(day)
+                    expect(call.window.duration).to(equal(2 * day))
+                    expect(narrowStart).to(equal(SensorSampleUploadManager.utcDayStart(narrowStart)))
+                }
+                // The enqueue keeps the NARROW window start (the consent gate re-reads it at
+                // drain time; a widened value would let a pre-join report be vouched for).
+                for batch in storage.enqueued {
+                    expect(batch.windowStart).to(equal(SensorSampleUploadManager.utcDayStart(batch.windowStart)))
+                    let widened = mapper.calls.contains { $0.window.start.addingTimeInterval(day) == batch.windowStart }
+                    expect(widened).to(beTrue())
+                }
+                // The cursor is owned by the narrow grid: it ends at the last complete UTC day.
+                expect(storage.lastCursor(for: sensor)).toEventually(equal(planningNow.addingTimeInterval(-day)),
+                                                                     timeout: .seconds(5))
+            }
+        }
+    }
+}
