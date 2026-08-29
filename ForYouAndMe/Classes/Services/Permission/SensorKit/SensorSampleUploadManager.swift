@@ -585,20 +585,25 @@ public final class SensorSampleUploadManager {
         guard let measured = Self.measurementTime(of: record, sensor: sensor),
               measured < window.start else { return false }
         let olderSpan = Self.fetchSpan(for: sensor, window: olderWindow)
-        let duration = (record["duration_s"] as? NSNumber)?.doubleValue ?? 0
-        let periodEnd = measured.addingTimeInterval(Swift.max(0, duration))
-        guard measured > olderSpan.start, periodEnd <= olderSpan.end else { return false }
         if Self.dayAggregatedSensors.contains(sensor) {
             // Report sensors: period CONTAINMENT is the evidenced selection semantics (the
             // window-loss report refuted write-time selection outright), so containment alone
             // decides — a write-time condition here would re-open a small order-dependence for
-            // late-written reports.
-            return true
+            // late-written reports. Only the three usage reports carry a trustworthy period
+            // length (round 3, R2-1): `SRKeyboardMetrics.duration` is CUMULATIVE typing time,
+            // not a period — the same adjudication `measurementTime` already made — so a
+            // keyboard record with a readable start but no derivable period end is KEPT, the
+            // never-lossy direction.
+            guard Self.usageReportSensors.contains(sensor),
+                  let duration = (record["duration_s"] as? NSNumber)?.doubleValue else { return false }
+            let periodEnd = measured.addingTimeInterval(Swift.max(0, duration))
+            return measured > olderSpan.start && periodEnd <= olderSpan.end
         }
-        // Non-report sensors (visits is write-time-indexed with DAYS of lag): only defer when
-        // the older fetch would see it under write-time selection too. An unreadable
-        // `recorded_at` keeps the record here (never lossy).
-        guard let recordedAtString = record["recorded_at"] as? String,
+        // Continuous sensors: the record is a point at `measured`. Only defer when the older
+        // fetch would ALSO see it under write-time selection (visits is write-time-indexed with
+        // DAYS of lag). An unreadable `recorded_at` keeps the record here (never lossy).
+        guard measured > olderSpan.start, measured <= olderSpan.end,
+              let recordedAtString = record["recorded_at"] as? String,
               let recordedAt = Self.parseISO8601(recordedAtString) else { return false }
         return recordedAt > olderSpan.start && recordedAt <= olderSpan.end
     }

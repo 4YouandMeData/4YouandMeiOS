@@ -3672,6 +3672,50 @@ class SensorProbeWindowBindingSpec: QuickSpec {
             })
             expect(probeByDay).to(equal(forwardByDay))
         }
+
+        it("binds PRODUCTION-shape reports — recorded_at + duration_s only, end−1s stamp — one per day (R2-3)") {
+            // Prod usage reports expose no start date (window-loss report L262): the membership
+            // rule runs on the DERIVED period [recorded_at − duration_s, recorded_at], whose
+            // start sits 1s before the report's own window. This pins the derived path the
+            // friendly fixtures above cannot reach.
+            let iso = ISO8601DateFormatter()
+            let storage = FakeSensorStorage()
+            let clearance = FakeSensorClearance()
+            clearance.enrollmentDate = now.addingTimeInterval(-6 * day)
+            let mapper = ContainmentReportMapper()
+            mapper.reports = (2...5).map { age -> ContainmentReportMapper.Report in
+                let start = now.addingTimeInterval(TimeInterval(-age) * day)
+                return ContainmentReportMapper.Report(
+                    start: start,
+                    duration: day,
+                    record: ["duration_s": day,
+                             "recorded_at": iso.string(from: start.addingTimeInterval(day - 1))])
+            }
+            let manager = SensorSampleUploadManager(withSensors: [sensor],
+                                                    storage: storage,
+                                                    reachability: FakeSensorReachability(),
+                                                    analytics: CapturingAnalyticsService(),
+                                                    mappers: [sensor: mapper])
+            manager.clearanceDelegate = clearance
+
+            manager.runDeviceChain(at: 0, of: [.current], for: sensor, now: now, using: mapper)
+            expect(storage.lastCursor(for: sensor)).toEventually(equal(now.addingTimeInterval(-day)),
+                                                                 timeout: .seconds(5))
+
+            let batches = storage.enqueued
+            expect(batches.count).to(equal(4))
+            for batch in batches {
+                expect(batch.records.count).to(equal(1))
+                guard let stamp = batch.records.first?["recorded_at"] as? String,
+                      let recordedAt = iso.date(from: stamp) else {
+                    fail("unreadable recorded_at in \(batch.records)")
+                    continue
+                }
+                // The report landed on its OWN day's window.
+                expect(recordedAt).to(beGreaterThanOrEqualTo(batch.windowStart))
+                expect(recordedAt).to(beLessThan(batch.windowStart.addingTimeInterval(day)))
+            }
+        }
     }
 }
 
@@ -3802,6 +3846,49 @@ private final class WindowFailingMapper: SensorSampleMapper {
             completion(.failure(NSError(domain: "spec.mapper", code: 7)))
         } else {
             completion(.success([]))
+        }
+    }
+}
+
+// MARK: - Round 3, R2-1: only a trustworthy period may drive probe deferral
+
+/// `SRKeyboardMetrics.duration` is cumulative typing time, not a report period —
+/// `measurementTime` already refuses it, and the probe's membership rule must agree: a
+/// (hypothetical future) keyboard record exposing a start date computes a period end far short
+/// of the true day-long period, false-passes containment, and is deferred into the no-window
+/// loss class. Keeping it is the never-lossy direction.
+class SensorProbeDeferralPeriodSpec: QuickSpec {
+
+    override class func spec() {
+
+        let hour: TimeInterval = 3600
+        let day: TimeInterval = 24 * hour
+        let now = SensorSampleUploadManager.utcDayStart(Date())
+        let window = DateInterval(start: now.addingTimeInterval(-2 * day), end: now.addingTimeInterval(-day))
+        let olderWindow = DateInterval(start: now.addingTimeInterval(-3 * day), end: now.addingTimeInterval(-2 * day))
+
+        it("never defers a keyboard record on its cumulative duration") {
+            let iso = ISO8601DateFormatter()
+            // Start inside the older window, tiny cumulative typing time: containment against
+            // the older span would false-pass if the duration were trusted as a period.
+            let record: [String: Any] = ["start": iso.string(from: olderWindow.start.addingTimeInterval(hour)),
+                                         "duration_s": 900,
+                                         "recorded_at": iso.string(from: olderWindow.start.addingTimeInterval(2 * hour))]
+            expect(SensorSampleUploadManager.belongsToOlderProbeWindow(record,
+                                                                       sensor: .keyboardMetrics,
+                                                                       window: window,
+                                                                       olderWindow: olderWindow)).to(beFalse())
+        }
+
+        it("still defers the same shape for a usage report, whose duration IS the period") {
+            let iso = ISO8601DateFormatter()
+            let record: [String: Any] = ["start": iso.string(from: olderWindow.start.addingTimeInterval(hour)),
+                                         "duration_s": 900,
+                                         "recorded_at": iso.string(from: olderWindow.start.addingTimeInterval(2 * hour))]
+            expect(SensorSampleUploadManager.belongsToOlderProbeWindow(record,
+                                                                       sensor: .deviceUsageReport,
+                                                                       window: window,
+                                                                       olderWindow: olderWindow)).to(beTrue())
         }
     }
 }
