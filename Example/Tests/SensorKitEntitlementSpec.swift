@@ -26,6 +26,7 @@
 
 import Quick
 import Nimble
+import RxSwift
 import SensorKit
 @testable import ForYouAndMe
 
@@ -433,4 +434,75 @@ class SensorKitEntitlementSpec: QuickSpec {
             }
         }
     }
+}
+
+// MARK: - FUAM-3945 round 9: refused sensors leave the request order and the row aggregate
+
+/// Manager-level composition of the refusal ledger (D6 layer 3): a refused sensor must stop
+/// feeding `getIsAuthorizationStatusUndetermined` / `hasRequestableUndeterminedSensors`, or the
+/// Permissions row would keep re-running a request flow that can never succeed.
+class SensorRefusalExclusionSpec: QuickSpec {
+
+    override class func spec() {
+
+        let defaults = UserDefaults.standard
+
+        func currentVersion() -> String {
+            let info = Bundle.main.infoDictionary
+            let short = info?["CFBundleShortVersionString"] as? String ?? "0"
+            let build = info?["CFBundleVersion"] as? String ?? "0"
+            return short + "-" + build
+        }
+
+        func makeManager() -> SensorKitManager {
+            return SensorKitManager(withReadSensors: [.pedometerData],
+                                    analyticsService: CapturingAnalyticsService(),
+                                    storage: NullSensorStorage(),
+                                    reachability: FakeEntitlementReachability(),
+                                    mappers: [:])
+        }
+
+        beforeEach {
+            defaults.removeObject(forKey: SensorRefusalStore.sensorsKey)
+            defaults.removeObject(forKey: SensorRefusalStore.versionKey)
+        }
+        afterEach {
+            defaults.removeObject(forKey: SensorRefusalStore.sensorsKey)
+            defaults.removeObject(forKey: SensorRefusalStore.versionKey)
+        }
+
+        it("stops counting a refused sensor as requestable") {
+            // Control first: on this simulator the sensor must read `.notDetermined`, or the
+            // example cannot distinguish anything and bails out rather than asserting vacuously.
+            guard makeManager().hasRequestableUndeterminedSensors() else { return }
+
+            // Seed the ledger under the REAL bundle version (the store clears itself on any
+            // version change, which is itself under test in SensorRefusalStore specs).
+            SensorRefusalStore(version: currentVersion()).recordRefusals([.pedometerData])
+
+            expect(makeManager().hasRequestableUndeterminedSensors()).to(beFalse())
+        }
+    }
+}
+
+private final class FakeEntitlementReachability: SensorSampleUploadManagerReachability {
+    var isReachable: Bool = true
+    var reachabilityChanged: Observable<Bool> { return .empty() }
+}
+
+/// Inert storage: this spec never runs the upload pipeline.
+private final class NullSensorStorage: SensorSampleUploadManagerStorage, SensorSampleUploaderStorage {
+    func lastCursor(for sensor: SRSensor, deviceKey: String) -> Date? { return nil }
+    func setLastCursor(_ date: Date, for sensor: SRSensor, deviceKey: String) {}
+    @discardableResult
+    func enqueueBatch(_ batch: [[String: Any]], windowStart: Date, for sensor: SRSensor) -> Bool { return true }
+    func dequeueNextBatch(for sensor: SRSensor) -> (records: [[String: Any]], windowStart: Date)? { return nil }
+    func pendingBatchCount(for sensor: SRSensor) -> Int { return 0 }
+    func ledger(for sensor: SRSensor, deviceKey: String) -> [String: SensorLedgerEntry] { return [:] }
+    func setLedger(_ ledger: [String: SensorLedgerEntry], for sensor: SRSensor, deviceKey: String) {}
+    func purgeLedger(for sensor: SRSensor) {}
+    func lastRescanDay(for sensor: SRSensor, deviceKey: String) -> Date? { return nil }
+    func setLastRescanDay(_ day: Date, for sensor: SRSensor, deviceKey: String) {}
+    func deepestProductiveWindowStart(for sensor: SRSensor, deviceKey: String) -> Date? { return nil }
+    func setDeepestProductiveWindowStart(_ date: Date, for sensor: SRSensor, deviceKey: String) {}
 }
