@@ -38,6 +38,14 @@ private enum FirebaseEventCustomName: String {
     case sensorRecordingStartFailed = "sensor_recording_start_failed"
     // FUAM-3945 round 8. Configured sensors the host has no entitlement for.
     case sensorEntitlementMissing = "sensor_entitlement_missing"
+    // FUAM-3945 round 9 (D12/AC8). Windowing observability.
+    case sensorWindowEmpty = "sensor_window_empty"
+    case sensorRescanNovel = "sensor_rescan_novel"
+    case sensorDeletionRecord = "sensor_deletion_record"
+    case sensorNearDuplicate = "sensor_near_duplicate"
+    case sensorRefused = "sensor_refused"
+    case sensorDeepestWindow = "sensor_deepest_window"
+    case sensorRecordDropped = "sensor_record_dropped"
 }
 
 private enum FirebaseErrorDomain {
@@ -118,8 +126,53 @@ class FirebaseAnalyticsPlatform: AnalyticsPlatform {
             self.sensorDataClockAhead(mark: mark, deviceNow: deviceNow)
         case .sensorRecordingStartFailed(let sensor, let error):
             self.sensorRecordingStartFailed(sensor: sensor, error: error)
-        case .sensorEntitlementMissing(let sensors):
-            self.sensorEntitlementMissing(sensors: sensors)
+        case .sensorEntitlementMissing(let sensors, let count):
+            self.sensorEntitlementMissing(sensors: sensors, count: count)
+        case .sensorWindowEmpty(let sensor, let device, let windowDay, let pass):
+            self.sendEvent(withEventName: FirebaseEventCustomName.sensorWindowEmpty.rawValue,
+                           parameters: [
+                               AnalyticsParameter.sensor.rawValue: sensor,
+                               AnalyticsParameter.device.rawValue: device,
+                               AnalyticsParameter.windowDay.rawValue: windowDay,
+                               AnalyticsParameter.pass.rawValue: pass
+                           ])
+        case .sensorRescanNovel(let sensor, let device, let ageDays, let novelCount):
+            self.sendEvent(withEventName: FirebaseEventCustomName.sensorRescanNovel.rawValue,
+                           parameters: [
+                               AnalyticsParameter.sensor.rawValue: sensor,
+                               AnalyticsParameter.device.rawValue: device,
+                               AnalyticsParameter.ageDays.rawValue: ageDays,
+                               AnalyticsParameter.novelCount.rawValue: novelCount
+                           ])
+        case .sensorDeletionRecord(let sensor, let reason, let spanSeconds):
+            self.sendEvent(withEventName: FirebaseEventCustomName.sensorDeletionRecord.rawValue,
+                           parameters: [
+                               AnalyticsParameter.sensor.rawValue: sensor,
+                               AnalyticsParameter.reason.rawValue: reason,
+                               AnalyticsParameter.spanSeconds.rawValue: spanSeconds
+                           ])
+        case .sensorNearDuplicate(let sensor, let count):
+            self.sendEvent(withEventName: FirebaseEventCustomName.sensorNearDuplicate.rawValue,
+                           parameters: [
+                               AnalyticsParameter.sensor.rawValue: sensor,
+                               AnalyticsParameter.count.rawValue: count
+                           ])
+        case .sensorRefused(let sensor):
+            self.sendEvent(withEventName: FirebaseEventCustomName.sensorRefused.rawValue,
+                           parameters: [AnalyticsParameter.sensor.rawValue: sensor])
+        case .sensorDeepestWindow(let sensor, let windowDay):
+            self.sendEvent(withEventName: FirebaseEventCustomName.sensorDeepestWindow.rawValue,
+                           parameters: [
+                               AnalyticsParameter.sensor.rawValue: sensor,
+                               AnalyticsParameter.windowDay.rawValue: windowDay
+                           ])
+        case .sensorRecordDropped(let sensor, let count, let reason):
+            self.sendEvent(withEventName: FirebaseEventCustomName.sensorRecordDropped.rawValue,
+                           parameters: [
+                               AnalyticsParameter.sensor.rawValue: sensor,
+                               AnalyticsParameter.count.rawValue: count,
+                               AnalyticsParameter.reason.rawValue: reason
+                           ])
         default:
             break
         }
@@ -202,9 +255,15 @@ class FirebaseAnalyticsPlatform: AnalyticsPlatform {
 
     // MARK: - FUAM-3945 SensorKit entitlement gap
 
-    private func sensorEntitlementMissing(sensors: String) {
+    private func sensorEntitlementMissing(sensors: String, count: Int) {
+        // F7: `sensors` arrives already capped at Firebase's 100-char string-parameter limit
+        // (see `SensorKitEntitlement.droppedSensorsParameter`); `count` carries the cardinality
+        // that survives any truncation.
         self.sendEvent(withEventName: FirebaseEventCustomName.sensorEntitlementMissing.rawValue,
-                       parameters: [AnalyticsParameter.droppedSensors.rawValue: sensors])
+                       parameters: [
+                           AnalyticsParameter.droppedSensors.rawValue: sensors,
+                           AnalyticsParameter.droppedCount.rawValue: count
+                       ])
     }
 
     // MARK: - Private Methods

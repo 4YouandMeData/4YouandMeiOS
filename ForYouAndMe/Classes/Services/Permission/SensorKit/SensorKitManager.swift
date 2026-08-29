@@ -770,6 +770,25 @@ enum SensorKitEntitlement {
         guard let values = self.entitlementValues() else { return nil }
         return self.sensors(fromEntitlementValues: values)
     }
+
+    /// The `dropped_sensors` value of `sensor_entitlement_missing`, capped at Firebase's 100-char
+    /// string-parameter limit (F7: all eight subsources joined run to 137 chars, and the all-eight
+    /// case is precisely the one where this event is the only signal that SensorKit died). Names
+    /// are sorted, whole names only are kept, and `count` carries the true cardinality.
+    static func droppedSensorsParameter(_ sensors: [String], limit: Int = 100) -> (list: String, count: Int) {
+        let sorted = sensors.sorted()
+        var list = ""
+        for name in sorted {
+            let candidate = list.isEmpty ? name : list + "," + name
+            guard candidate.count <= limit else { break }
+            list = candidate
+        }
+        if list.isEmpty, let first = sorted.first {
+            // A single name longer than the whole limit still needs something readable.
+            list = String(first.prefix(limit))
+        }
+        return (list, sorted.count)
+    }
 }
 
 extension SRSensor {

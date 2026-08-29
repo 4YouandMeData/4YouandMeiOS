@@ -68,6 +68,15 @@ enum AnalyticsParameter: String {
     case sensorError = "error"
     // FUAM-3945 round 8. Sensors dropped because the host is not entitled to them.
     case droppedSensors = "dropped_sensors"
+    // FUAM-3945 round 9 (D12/AC8). Windowing observability attributes.
+    case device
+    case windowDay = "window_day"
+    case pass
+    case ageDays = "age_days"
+    case novelCount = "novel_count"
+    case count
+    case spanSeconds = "span_s"
+    case droppedCount = "dropped_count"
 }
 
 enum AnalyticsScreens: String {
@@ -176,13 +185,41 @@ enum AnalyticsEvent {
     // the NSError domain/code — never the localized description (locale-dependent, unaggregatable).
     case sensorRecordingStartFailed(sensor: String, error: String)
 
-    // FUAM-3945 round 8. The host's `com.apple.developer.sensorkit.reader.allow` entitlement does
-    // not cover every sensor the SDK is configured to collect, so those sensors were dropped from
-    // the requested set. iOS would never have prompted for them anyway (it auto-declines instantly
-    // and leaves them `.notDetermined` forever) — this event is what makes the host
-    // misconfiguration visible instead of silent. Emitted once per launch, at service setup;
-    // `sensors` is the comma-joined, sorted list of dropped sensor subsources.
-    case sensorEntitlementMissing(sensors: String)
+    // FUAM-3945 round 8. The host's declared SensorKit entitlement does not cover every sensor
+    // the SDK is configured to collect, so those sensors were dropped from the requested set. iOS
+    // would never have prompted for them anyway (it auto-declines instantly and leaves them
+    // `.notDetermined` forever) — this event is what makes the host misconfiguration visible
+    // instead of silent. Emitted once per launch, at service setup; `sensors` is the
+    // comma-joined, sorted list of dropped sensor subsources, CAPPED at Firebase's 100-char
+    // string-parameter limit (F7), with `count` carrying the true cardinality.
+    case sensorEntitlementMissing(sensors: String, count: Int)
+
+    // FUAM-3945 round 9 (D12/AC8) — the windowing observability set. These are what make the
+    // D-C/D-D class of production data loss findable in Firebase instead of by hand-diffing
+    // production tables.
+
+    // A window the OS answered successfully with ZERO records. `pass` is "first" for a window at
+    // the head of the walk and "rescan_N" (N = age of the window's day, in days) for a rescan
+    // re-read: a report sensor empty on first pass AND every rescan is a windowing bug.
+    case sensorWindowEmpty(sensor: String, device: String, windowDay: String, pass: String)
+    // A rescan pass found records the ledger had never seen: the field measurement of SensorKit's
+    // write lag (D-D). `ageDays` buckets the completion curve that tunes the rescan depth R.
+    case sensorRescanNovel(sensor: String, device: String, ageDays: Int, novelCount: Int)
+    // An `SRDeletionRecord` observed during a rescan pass: the gap is permanent and the OS named
+    // the reason — as opposed to a gap that may still fill on a later rescan (S10).
+    case sensorDeletionRecord(sensor: String, reason: String, spanSeconds: Int)
+    // A record whose fingerprint is new but whose measurement period overlaps one already in the
+    // upload ledger: SensorKit re-fetch boundary drift (S7), measured — never prevented (D13).
+    case sensorNearDuplicate(sensor: String, count: Int)
+    // iOS refused to draw the authorization prompt for a sensor that was asked (fast auto-decline
+    // outside a master-switch-off round): the empirical entitlement fallback firing (D6).
+    case sensorRefused(sensor: String)
+    // The deepest (oldest) window that ever returned data for a sensor+device: the MEASURED OS
+    // retention (AC1), so the real horizon is a number, not an assumption.
+    case sensorDeepestWindow(sensor: String, windowDay: String)
+    // Records dropped client-side before upload (consent gate, unreadable measurement time):
+    // deliberate, but never silent (AC6).
+    case sensorRecordDropped(sensor: String, count: Int, reason: String)
 
     // Errors
     case serverError(apiError: ApiError)

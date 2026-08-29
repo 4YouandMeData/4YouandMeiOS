@@ -176,8 +176,8 @@ class Services {
             // sensors we would have asked for and cannot.
             let skDropped = skConfigured.subtracting(skSensors)
             if !skDropped.isEmpty {
-                analytics.track(event: .sensorEntitlementMissing(
-                    sensors: skDropped.map { $0.shortSubsource }.sorted().joined(separator: ",")))
+                let dropped = SensorKitEntitlement.droppedSensorsParameter(skDropped.map { $0.shortSubsource })
+                analytics.track(event: .sensorEntitlementMissing(sensors: dropped.list, count: dropped.count))
             }
 
             // `SensorKitManager` requires a non-empty sensor set; an entitlement covering none of
