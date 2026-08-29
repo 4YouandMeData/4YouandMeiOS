@@ -221,36 +221,58 @@ class SensorKitEntitlementSpec: QuickSpec {
             // XPC cold-start cannot suppress a genuine detection (review F4).
 
             it("blames the switch when nothing authorized and everything fast-declined") {
-                expect(SensorKitManager.setupOutcome(fastDeclineCount: 4, askedCount: 4, anyAuthorizedAfterLoop: false))
+                expect(SensorKitManager.setupOutcome(fastDeclineCount: 4, askedCount: 4, anyAuthorizedAfterLoop: false, hasEntitlementDeclaration: true))
                     == .collectionDisabledSystemWide
-                expect(SensorKitManager.setupOutcome(fastDeclineCount: 1, askedCount: 1, anyAuthorizedAfterLoop: false))
+                expect(SensorKitManager.setupOutcome(fastDeclineCount: 1, askedCount: 1, anyAuthorizedAfterLoop: false, hasEntitlementDeclaration: true))
                     == .collectionDisabledSystemWide
             }
 
             it("survives one slow cold-start: 7 of 8 fast with nothing authorized is still the switch") {
-                expect(SensorKitManager.setupOutcome(fastDeclineCount: 7, askedCount: 8, anyAuthorizedAfterLoop: false))
+                expect(SensorKitManager.setupOutcome(fastDeclineCount: 7, askedCount: 8, anyAuthorizedAfterLoop: false, hasEntitlementDeclaration: true))
                     == .collectionDisabledSystemWide
             }
 
             it("never blames the switch while ANYTHING is authorized (the permission-cell scenario)") {
                 // 2 unentitled sensors fast-decline while 6 are authorized: a per-sensor
                 // condition, not the master switch — the device-confirmed false alert.
-                expect(SensorKitManager.setupOutcome(fastDeclineCount: 2, askedCount: 2, anyAuthorizedAfterLoop: true))
+                expect(SensorKitManager.setupOutcome(fastDeclineCount: 2, askedCount: 2, anyAuthorizedAfterLoop: true, hasEntitlementDeclaration: true))
                     == .completed
-                expect(SensorKitManager.setupOutcome(fastDeclineCount: 8, askedCount: 8, anyAuthorizedAfterLoop: true))
+                expect(SensorKitManager.setupOutcome(fastDeclineCount: 8, askedCount: 8, anyAuthorizedAfterLoop: true, hasEntitlementDeclaration: true))
                     == .completed
             }
 
             it("stays quiet below a majority of fast declines") {
-                expect(SensorKitManager.setupOutcome(fastDeclineCount: 2, askedCount: 8, anyAuthorizedAfterLoop: false))
+                expect(SensorKitManager.setupOutcome(fastDeclineCount: 2, askedCount: 8, anyAuthorizedAfterLoop: false, hasEntitlementDeclaration: true))
                     == .completed
-                expect(SensorKitManager.setupOutcome(fastDeclineCount: 0, askedCount: 3, anyAuthorizedAfterLoop: false))
+                expect(SensorKitManager.setupOutcome(fastDeclineCount: 0, askedCount: 3, anyAuthorizedAfterLoop: false, hasEntitlementDeclaration: true))
                     == .completed
             }
 
             it("never reports 'disabled' when there was nothing to ask") {
-                expect(SensorKitManager.setupOutcome(fastDeclineCount: 0, askedCount: 0, anyAuthorizedAfterLoop: false))
+                expect(SensorKitManager.setupOutcome(fastDeclineCount: 0, askedCount: 0, anyAuthorizedAfterLoop: false, hasEntitlementDeclaration: true))
                     == .completed
+            }
+
+            context("a host with NO entitlement declaration (round 2, review F6)") {
+
+                it("does not blame the switch when half the set fast-declines and the user denies the rest") {
+                    // No-plist host entitled to 4 of 8: 4 unentitled auto-declines + 4 real
+                    // prompts the user DENIED (slow). The switch is ON — a majority rule here
+                    // false-alarmed on every Setup tap, forever, and blocked refusal learning.
+                    expect(SensorKitManager.setupOutcome(fastDeclineCount: 4,
+                                                         askedCount: 8,
+                                                         anyAuthorizedAfterLoop: false,
+                                                         hasEntitlementDeclaration: false))
+                        == .completed
+                }
+
+                it("still detects a genuinely off switch: everything fast-declines unanimously") {
+                    expect(SensorKitManager.setupOutcome(fastDeclineCount: 8,
+                                                         askedCount: 8,
+                                                         anyAuthorizedAfterLoop: false,
+                                                         hasEntitlementDeclaration: false))
+                        == .collectionDisabledSystemWide
+                }
             }
         }
 
@@ -283,14 +305,14 @@ class SensorKitEntitlementSpec: QuickSpec {
 
             let defaults = UserDefaults.standard
 
-            beforeEach {
+            func wipe() {
                 defaults.removeObject(forKey: SensorRefusalStore.sensorsKey)
+                defaults.removeObject(forKey: SensorRefusalStore.candidatesKey)
                 defaults.removeObject(forKey: SensorRefusalStore.versionKey)
             }
-            afterEach {
-                defaults.removeObject(forKey: SensorRefusalStore.sensorsKey)
-                defaults.removeObject(forKey: SensorRefusalStore.versionKey)
-            }
+
+            beforeEach { wipe() }
+            afterEach { wipe() }
 
             it("persists refusals and merges new ones") {
                 let store = SensorRefusalStore(version: "1.0-1")
@@ -299,10 +321,38 @@ class SensorKitEntitlementSpec: QuickSpec {
                 expect(store.refusedSensors()) == Set<SRSensor>([.ambientLightSensor, .ambientPressure])
             }
 
-            it("clears itself when the app version changes — a host that gains the entitlement re-asks once") {
-                SensorRefusalStore(version: "1.0-1").recordRefusals([.ambientLightSensor])
+            it("does NOT refuse a sensor on its first sighting — one transient fast decline is not proof (F5)") {
+                let store = SensorRefusalStore(version: "1.0-1")
+                let promoted = store.registerRefusalCandidates([.ambientLightSensor])
+                expect(promoted).to(beEmpty())
+                expect(store.refusedSensors()).to(beEmpty())
+            }
+
+            it("promotes a sensor refused in a SECOND, separate round, and reports only the promotion") {
+                let store = SensorRefusalStore(version: "1.0-1")
+                store.registerRefusalCandidates([.ambientLightSensor, .ambientPressure])
+                let promoted = store.registerRefusalCandidates([.ambientLightSensor])
+                expect(promoted) == Set<SRSensor>([.ambientLightSensor])
+                expect(store.refusedSensors()) == Set<SRSensor>([.ambientLightSensor])
+                // The pressure sensor stays a candidate: one sighting so far.
+                expect(store.refusedSensors()).toNot(contain(SRSensor.ambientPressure))
+            }
+
+            it("does not re-promote (and re-report) an already-refused sensor") {
+                let store = SensorRefusalStore(version: "1.0-1")
+                store.registerRefusalCandidates([.ambientLightSensor])
+                store.registerRefusalCandidates([.ambientLightSensor])
+                expect(store.registerRefusalCandidates([.ambientLightSensor])).to(beEmpty())
+            }
+
+            it("clears itself — candidates included — when the app version changes") {
+                let store = SensorRefusalStore(version: "1.0-1")
+                store.registerRefusalCandidates([.ambientLightSensor])
+                store.registerRefusalCandidates([.ambientLightSensor])
                 let updated = SensorRefusalStore(version: "1.1-2")
                 expect(updated.refusedSensors()).to(beEmpty())
+                // The candidate memory is gone too: the first sighting after an update starts over.
+                expect(updated.registerRefusalCandidates([.ambientLightSensor])).to(beEmpty())
             }
 
             it("keeps the ledger across launches of the same version") {
@@ -464,10 +514,12 @@ class SensorRefusalExclusionSpec: QuickSpec {
 
         beforeEach {
             defaults.removeObject(forKey: SensorRefusalStore.sensorsKey)
+            defaults.removeObject(forKey: SensorRefusalStore.candidatesKey)
             defaults.removeObject(forKey: SensorRefusalStore.versionKey)
         }
         afterEach {
             defaults.removeObject(forKey: SensorRefusalStore.sensorsKey)
+            defaults.removeObject(forKey: SensorRefusalStore.candidatesKey)
             defaults.removeObject(forKey: SensorRefusalStore.versionKey)
         }
 

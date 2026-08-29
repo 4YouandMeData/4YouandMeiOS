@@ -267,15 +267,26 @@ final class SensorKitManager: NSObject, SensorKitService {
     /// cold-start on the first call of the launch (0.9s > the 0.8s threshold) made the sequence
     /// 7/8 fast and suppressed the alert while the master switch genuinely was off (review F4).
     /// The verdict is therefore decided AFTER the loop from the strongest evidence available:
-    /// the switch is blamed only when nothing whatsoever ended `.authorized` AND at least half of
-    /// what was asked fast-declined. Anything authorized proves the switch is ON, whatever the
+    /// the switch is blamed only when nothing whatsoever ended `.authorized` AND enough of what
+    /// was asked fast-declined. Anything authorized proves the switch is ON, whatever the
     /// timings said.
+    ///
+    /// The threshold depends on whether the host DECLARED its entitlements (round 2, review F6):
+    /// - with a `FYAMSensorKitEntitledSensors` declaration, unentitled sensors never reach the
+    ///   request set, so fast declines are meaningful evidence — a majority blames the switch
+    ///   (tolerating the one slow cold-start);
+    /// - with NO declaration, unentitled sensors fast-decline while the switch is ON: a host
+    ///   entitled to half its request set would otherwise false-alarm every time the user simply
+    ///   denies the real prompts (and, because the round is then not `.completed`, the refusal
+    ///   ledger never learns — layer 3 never converges on exactly the host it exists for). Only
+    ///   unanimity may blame the switch there.
     static func setupOutcome(fastDeclineCount: Int,
                              askedCount: Int,
-                             anyAuthorizedAfterLoop: Bool) -> SensorKitSetupOutcome {
-        guard !anyAuthorizedAfterLoop,
-              askedCount > 0,
-              fastDeclineCount >= max(1, askedCount / 2) else { return .completed }
+                             anyAuthorizedAfterLoop: Bool,
+                             hasEntitlementDeclaration: Bool) -> SensorKitSetupOutcome {
+        guard !anyAuthorizedAfterLoop, askedCount > 0 else { return .completed }
+        let threshold = hasEntitlementDeclaration ? max(1, askedCount / 2) : askedCount
+        guard fastDeclineCount >= threshold else { return .completed }
         return .collectionDisabledSystemWide
     }
 
@@ -350,18 +361,19 @@ final class SensorKitManager: NSObject, SensorKitService {
     private func finishDetectingRound(asked: [SRSensor], fastDeclined: Set<SRSensor>) -> SensorKitSetupOutcome {
         let outcome = Self.setupOutcome(fastDeclineCount: fastDeclined.count,
                                         askedCount: asked.count,
-                                        anyAuthorizedAfterLoop: self.hasAnyAuthorized())
+                                        anyAuthorizedAfterLoop: self.hasAnyAuthorized(),
+                                        hasEntitlementDeclaration: SensorKitEntitlement.hostDeclaredValues() != nil)
         let stillNotDetermined = Set(asked.filter {
             SRSensorReader(sensor: $0).authorizationStatus == .notDetermined
         })
         let refused = Self.refusals(fastDeclined: fastDeclined,
                                     stillNotDetermined: stillNotDetermined,
                                     outcome: outcome)
-        if !refused.isEmpty {
-            self.refusalStore.recordRefusals(refused)
-            for sensor in refused.sorted(by: { $0.rawValue < $1.rawValue }) {
-                self.analyticsService.track(event: .sensorRefused(sensor: sensor.shortSubsource))
-            }
+        // F5: this round's refusals are EVIDENCE; the store promotes a sensor to refused only
+        // on its second sighting, and only the promotions are reported.
+        let promoted = self.refusalStore.registerRefusalCandidates(refused)
+        for sensor in promoted.sorted(by: { $0.rawValue < $1.rawValue }) {
+            self.analyticsService.track(event: .sensorRefused(sensor: sensor.shortSubsource))
         }
         return outcome
     }
@@ -909,6 +921,7 @@ enum SensorKitEntitlement {
 final class SensorRefusalStore {
 
     static let sensorsKey = "sensorkit.refusedSensors"
+    static let candidatesKey = "sensorkit.refusedSensors.candidates"
     static let versionKey = "sensorkit.refusedSensors.version"
 
     private let defaults: UserDefaults
@@ -923,10 +936,32 @@ final class SensorRefusalStore {
     }
 
     func refusedSensors() -> Set<SRSensor> {
-        guard let raw = self.defaults.stringArray(forKey: Self.sensorsKey) else { return [] }
-        return Set(raw.map { SRSensor(rawValue: $0) })
+        return self.sensors(forKey: Self.sensorsKey)
     }
 
+    /// One sighting is EVIDENCE, not proof (review round 1, F5): a transient system condition —
+    /// a Screen Time restriction flipped on, a momentary SensorKit XPC fast-fail — during an
+    /// otherwise-successful round would permanently lock an entitled, grantable sensor out
+    /// until the next app version. A sensor is promoted to REFUSED only when it fast-declines
+    /// in a SECOND, separate round; the first sighting is remembered as a candidate. Returns
+    /// the sensors newly promoted this round (for telemetry).
+    @discardableResult
+    func registerRefusalCandidates(_ sensors: Set<SRSensor>) -> Set<SRSensor> {
+        guard !sensors.isEmpty else { return [] }
+        let candidates = self.sensors(forKey: Self.candidatesKey)
+        let alreadyRefused = self.refusedSensors()
+        let promoted = sensors.intersection(candidates).subtracting(alreadyRefused)
+        if !promoted.isEmpty {
+            self.recordRefusals(promoted)
+        }
+        let newCandidates = candidates.union(sensors)
+        self.defaults.set(newCandidates.map { $0.rawValue }.sorted(), forKey: Self.candidatesKey)
+        self.defaults.set(self.version, forKey: Self.versionKey)
+        return promoted
+    }
+
+    /// Direct write, no candidate round-trip. Kept for tests and for callers that already hold
+    /// proof (none in production today — `registerRefusalCandidates` is the production path).
     func recordRefusals(_ sensors: Set<SRSensor>) {
         guard !sensors.isEmpty else { return }
         let merged = self.refusedSensors().union(sensors)
@@ -934,9 +969,15 @@ final class SensorRefusalStore {
         self.defaults.set(self.version, forKey: Self.versionKey)
     }
 
+    private func sensors(forKey key: String) -> Set<SRSensor> {
+        guard let raw = self.defaults.stringArray(forKey: key) else { return [] }
+        return Set(raw.map { SRSensor(rawValue: $0) })
+    }
+
     private func invalidateOnVersionChange() {
         guard self.defaults.string(forKey: Self.versionKey) != self.version else { return }
         self.defaults.removeObject(forKey: Self.sensorsKey)
+        self.defaults.removeObject(forKey: Self.candidatesKey)
         self.defaults.set(self.version, forKey: Self.versionKey)
     }
 
