@@ -277,12 +277,13 @@ class HealthSampleUploadManager {
         // day-sized chunks; near the head revert to hour-sized chunks.
         let historicalThreshold: TimeInterval = 7 * oneDay
 
-        // AC2 (revised 2026-08-29): chunk boundaries are a pure function of absolute time —
-        // historical chunks end on PARTICIPANT-timezone day boundaries (the backend-authoritative
+        // AC2 (revised 2026-08-29): chunk boundaries land only on grid boundaries — historical
+        // chunks on PARTICIPANT-timezone day boundaries (the backend-authoritative
         // `user.time_zone`, the same authority the adherence chart buckets rows with), head
-        // chunks on epoch-hour boundaries — never a cursor-relative stride. A post-reinstall
-        // re-walk therefore partitions the same samples into the same batches and reproduces the
-        // same server anchors instead of minting shifted near-duplicate rows.
+        // chunks on epoch-hour boundaries — never a cursor-relative stride and never wall-clock
+        // `now` (F3). WITHIN one regime a re-walk reproduces the same batches and anchors; the
+        // regime SELECTION itself is still cursor-relative — see the F3 residual note in
+        // `processNextChunk`.
         let partitionTimeZone = self.clearanceDelegate?.participantTimeZone ?? Self.fallbackPartitionTimeZone
 
         // FUAM-3945: ends of the sub-windows an oversize chunk was split into, innermost last. A
@@ -313,11 +314,29 @@ class HealthSampleUploadManager {
                 return
             }
 
+            // KNOWN RESIDUAL (review round 1, F3 — fix belongs to T-A): the hour-vs-day REGIME
+            // selection is still a function of how far the cursor lags `now`, so a reinstalled
+            // device re-walks territory that was originally uploaded in hour chunks using day
+            // chunks — different partition, different anchors, cross-row duplication of the
+            // live-collected history. Making the regime itself a pure function of absolute time
+            // needs the T-A walk restructuring; until then HK reinstall re-uploads are NOT
+            // batch-deterministic across the regime boundary — documented, not claimed away.
             let isHistorical = endDate.timeIntervalSince(startDate) > historicalThreshold
             let boundary = isHistorical
                 ? Self.nextParticipantDayStart(after: startDate, timeZone: partitionTimeZone)
                 : Self.nextEpochHourBoundary(after: startDate)
-            let nextEndDate = bisectedEnds.last ?? min(boundary, endDate)
+            // F3: chunks end ONLY on grid boundaries, never at wall-clock `now` — an arbitrary
+            // head cut becomes a batch boundary (and the follow-on chunk's anchor) that no
+            // re-walk can reproduce. The incomplete grid unit at the head waits for a later
+            // sequence: a deliberate, bounded lag (≤1h at the head) instead of a
+            // non-reproducible partition.
+            guard bisectedEnds.last != nil || boundary <= endDate else {
+                self.logDebugText(text: "Head of \(dataType.keyName) inside an incomplete grid unit "
+                                  + "(next boundary \(boundary) > \(endDate)); waiting for the next sequence")
+                self.processNextUploader(forUploader: uploader)
+                return
+            }
+            let nextEndDate = bisectedEnds.last ?? boundary
 
             // Everything up to `date` is uploaded (or deliberately forfeited): persist it — review
             // fix #7, so an interrupted multi-month walk resumes instead of restarting from
