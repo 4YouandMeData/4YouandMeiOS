@@ -212,27 +212,192 @@ class SensorKitEntitlementSpec: QuickSpec {
             }
         }
 
-        describe("SensorKitManager.setupOutcome(fastDeclineCount:askedCount:)") {
+        describe("SensorKitManager.setupOutcome(fastDeclineCount:askedCount:anyAuthorizedAfterLoop:)") {
 
-            it("reports the system-wide switch OFF only when EVERY asked sensor fast-declined") {
-                expect(SensorKitManager.setupOutcome(fastDeclineCount: 4, askedCount: 4)) == .collectionDisabledSystemWide
-                expect(SensorKitManager.setupOutcome(fastDeclineCount: 1, askedCount: 1)) == .collectionDisabledSystemWide
+            // FUAM-3945 round 9 (D7/R3): the verdict is decided AFTER the loop from the
+            // strongest evidence — anything authorized proves the master switch is ON; with
+            // nothing authorized, a majority of fast declines blames the switch, so one slow
+            // XPC cold-start cannot suppress a genuine detection (review F4).
+
+            it("blames the switch when nothing authorized and everything fast-declined") {
+                expect(SensorKitManager.setupOutcome(fastDeclineCount: 4, askedCount: 4, anyAuthorizedAfterLoop: false))
+                    == .collectionDisabledSystemWide
+                expect(SensorKitManager.setupOutcome(fastDeclineCount: 1, askedCount: 1, anyAuthorizedAfterLoop: false))
+                    == .collectionDisabledSystemWide
             }
 
-            it("stays quiet on a mixed outcome — that is a per-sensor condition, not the master switch") {
-                // The production defect: 2 unentitled sensors auto-decline instantly while the
-                // other 6 prompt normally. One fast decline used to be enough to claim the
-                // system-wide switch was off.
-                expect(SensorKitManager.setupOutcome(fastDeclineCount: 2, askedCount: 8)) == .completed
-                expect(SensorKitManager.setupOutcome(fastDeclineCount: 7, askedCount: 8)) == .completed
+            it("survives one slow cold-start: 7 of 8 fast with nothing authorized is still the switch") {
+                expect(SensorKitManager.setupOutcome(fastDeclineCount: 7, askedCount: 8, anyAuthorizedAfterLoop: false))
+                    == .collectionDisabledSystemWide
             }
 
-            it("stays quiet when nothing declined") {
-                expect(SensorKitManager.setupOutcome(fastDeclineCount: 0, askedCount: 3)) == .completed
+            it("never blames the switch while ANYTHING is authorized (the permission-cell scenario)") {
+                // 2 unentitled sensors fast-decline while 6 are authorized: a per-sensor
+                // condition, not the master switch — the device-confirmed false alert.
+                expect(SensorKitManager.setupOutcome(fastDeclineCount: 2, askedCount: 2, anyAuthorizedAfterLoop: true))
+                    == .completed
+                expect(SensorKitManager.setupOutcome(fastDeclineCount: 8, askedCount: 8, anyAuthorizedAfterLoop: true))
+                    == .completed
+            }
+
+            it("stays quiet below a majority of fast declines") {
+                expect(SensorKitManager.setupOutcome(fastDeclineCount: 2, askedCount: 8, anyAuthorizedAfterLoop: false))
+                    == .completed
+                expect(SensorKitManager.setupOutcome(fastDeclineCount: 0, askedCount: 3, anyAuthorizedAfterLoop: false))
+                    == .completed
             }
 
             it("never reports 'disabled' when there was nothing to ask") {
-                expect(SensorKitManager.setupOutcome(fastDeclineCount: 0, askedCount: 0)) == .completed
+                expect(SensorKitManager.setupOutcome(fastDeclineCount: 0, askedCount: 0, anyAuthorizedAfterLoop: false))
+                    == .completed
+            }
+        }
+
+        describe("SensorKitManager.refusals (the empirical entitlement fallback, D6 layer 3)") {
+
+            it("records a sensor that fast-declined and stayed undetermined after a completed round") {
+                let refused = SensorKitManager.refusals(fastDeclined: [.ambientLightSensor, .ambientPressure],
+                                                        stillNotDetermined: [.ambientLightSensor, .ambientPressure],
+                                                        outcome: .completed)
+                expect(refused) == Set<SRSensor>([.ambientLightSensor, .ambientPressure])
+            }
+
+            it("records NOTHING from a round blamed on the master switch (it must not poison the ledger)") {
+                let refused = SensorKitManager.refusals(fastDeclined: [.visits, .pedometerData],
+                                                        stillNotDetermined: [.visits, .pedometerData],
+                                                        outcome: .collectionDisabledSystemWide)
+                expect(refused).to(beEmpty())
+            }
+
+            it("never records a slow user cancel — iOS will re-prompt it (R2)") {
+                // Cancelled slowly: not in fastDeclined, still undetermined → not refused.
+                let refused = SensorKitManager.refusals(fastDeclined: [],
+                                                        stillNotDetermined: [.visits],
+                                                        outcome: .completed)
+                expect(refused).to(beEmpty())
+            }
+        }
+
+        describe("SensorRefusalStore") {
+
+            let defaults = UserDefaults.standard
+
+            beforeEach {
+                defaults.removeObject(forKey: SensorRefusalStore.sensorsKey)
+                defaults.removeObject(forKey: SensorRefusalStore.versionKey)
+            }
+            afterEach {
+                defaults.removeObject(forKey: SensorRefusalStore.sensorsKey)
+                defaults.removeObject(forKey: SensorRefusalStore.versionKey)
+            }
+
+            it("persists refusals and merges new ones") {
+                let store = SensorRefusalStore(version: "1.0-1")
+                store.recordRefusals([.ambientLightSensor])
+                store.recordRefusals([.ambientPressure])
+                expect(store.refusedSensors()) == Set<SRSensor>([.ambientLightSensor, .ambientPressure])
+            }
+
+            it("clears itself when the app version changes — a host that gains the entitlement re-asks once") {
+                SensorRefusalStore(version: "1.0-1").recordRefusals([.ambientLightSensor])
+                let updated = SensorRefusalStore(version: "1.1-2")
+                expect(updated.refusedSensors()).to(beEmpty())
+            }
+
+            it("keeps the ledger across launches of the same version") {
+                SensorRefusalStore(version: "1.0-1").recordRefusals([.ambientLightSensor])
+                expect(SensorRefusalStore(version: "1.0-1").refusedSensors()) == Set<SRSensor>([.ambientLightSensor])
+            }
+        }
+
+        describe("SensorKitPermissionRowState (D7: label and action are two different questions)") {
+
+            it("partial grant: Manage label AND the request flow — the R2 regression guard") {
+                // Granted sensor 1, cancelled prompt 2: the row must say Manage but the tap must
+                // re-run the request flow, or prompts 2..8 are unreachable for ever.
+                let state = SensorKitPermissionRowState.resolve(anyAuthorized: true, hasRequestableUndetermined: true)
+                expect(state.showsManageLabel).to(beTrue())
+                expect(state.action) == SensorKitPermissionRowState.Action.requestFlow
+            }
+
+            it("everything decided (or refused): Manage label, settings alert") {
+                let state = SensorKitPermissionRowState.resolve(anyAuthorized: true, hasRequestableUndetermined: false)
+                expect(state.action) == SensorKitPermissionRowState.Action.settingsAlert
+            }
+
+            it("fresh install: Setup label, request flow") {
+                let state = SensorKitPermissionRowState.resolve(anyAuthorized: false, hasRequestableUndetermined: true)
+                expect(state.showsManageLabel).to(beFalse())
+                expect(state.action) == SensorKitPermissionRowState.Action.requestFlow
+            }
+
+            it("nothing granted and nothing promptable (all refused): Setup label, settings alert") {
+                let state = SensorKitPermissionRowState.resolve(anyAuthorized: false, hasRequestableUndetermined: false)
+                expect(state.showsManageLabel).to(beFalse())
+                expect(state.action) == SensorKitPermissionRowState.Action.settingsAlert
+            }
+        }
+
+        describe("SensorKitEntitlement.resolveEntitledSensors(fromPlist:) — the host declaration (D6 layer 1)") {
+
+            it("fails open when the key is absent") {
+                expect(SensorKitEntitlement.resolveEntitledSensors(fromPlist: nil))
+                    == SensorKitEntitlement.PlistResolution.failOpen
+            }
+
+            it("honours an explicit empty array as 'entitled to nothing'") {
+                expect(SensorKitEntitlement.resolveEntitledSensors(fromPlist: []))
+                    == SensorKitEntitlement.PlistResolution.entitled([], unmapped: [])
+            }
+
+            it("FAILS OPEN — with the values reported — when a non-empty declaration maps to nothing (R1)") {
+                // 'I read a list and understood none of it' is OUR mapping drift, not a host
+                // entitled to nothing: silently disabling all collection here was the round-8
+                // fail-closed regression.
+                let values = ["some-future-sensor", "another-one"]
+                expect(SensorKitEntitlement.resolveEntitledSensors(fromPlist: values))
+                    == SensorKitEntitlement.PlistResolution.unmappable(values: values)
+            }
+
+            it("maps a usable declaration and carries the unmapped leftovers for telemetry") {
+                let resolution = SensorKitEntitlement.resolveEntitledSensors(fromPlist: ["pedometer", "mystery-sensor"])
+                expect(resolution)
+                    == SensorKitEntitlement.PlistResolution.entitled([.pedometerData], unmapped: ["mystery-sensor"])
+            }
+        }
+
+        describe("the single mapping table (F6: remote config and entitlement can no longer drift)") {
+
+            it("resolves the remote-config vocabulary through the same table as the entitlements") {
+                guard #available(iOS 17.4, *) else { return }
+                let ids = ["ambient_light", "keyboard_events", "device_usage", "electrocardiogram", "visits"]
+                let viaRemoteConfig = Constants.SensorKit.makeSensors(from: ids)
+                let viaEntitlement = Set(ids.compactMap { SensorKitEntitlement.sensor(forEntitlementValue: $0) })
+                expect(viaRemoteConfig) == viaEntitlement
+                expect(viaRemoteConfig).to(contain(SRSensor.electrocardiogram))
+                expect(viaRemoteConfig).to(contain(SRSensor.keyboardMetrics))
+            }
+        }
+
+        describe("droppedSensorsParameter (F7: Firebase caps string parameters at 100 chars)") {
+
+            it("keeps all eight subsources under the cap and reports the true count") {
+                let all = [SRSensor.deviceUsageReport, .messagesUsageReport, .phoneUsageReport,
+                           .ambientLightSensor, .ambientPressure, .keyboardMetrics,
+                           .pedometerData, .visits].map { $0.shortSubsource }
+                let parameter = SensorKitEntitlement.droppedSensorsParameter(all)
+                expect(parameter.list.count).to(beLessThanOrEqualTo(100))
+                expect(parameter.count) == 8
+                // Whole names only: the capped list must still be parseable.
+                for name in parameter.list.split(separator: ",") {
+                    expect(all).to(contain(String(name)))
+                }
+            }
+
+            it("leaves a short list untouched") {
+                let parameter = SensorKitEntitlement.droppedSensorsParameter(["ambient_light_sensor", "ambient_pressure"])
+                expect(parameter.list) == "ambient_light_sensor,ambient_pressure"
+                expect(parameter.count) == 2
             }
         }
 

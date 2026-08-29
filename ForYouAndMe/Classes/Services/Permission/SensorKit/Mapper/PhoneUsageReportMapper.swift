@@ -131,7 +131,10 @@ extension PhoneUsageReportMapper: SRSensorReaderDelegate {
 
 // MARK: - Mapping (documented keys only)
 
-private extension PhoneUsageReportMapper {
+// Internal (was private): the per-mapper recorded_at anchor-guard specs exercise the mapping
+// seams with KVC stand-ins (FUAM-3945 round 9, F1: a mapper regression dropping recorded_at
+// silently degrades the server row anchor to upload time).
+extension PhoneUsageReportMapper {
 
     // --- Safe KVC (only call value(forKey:) if the selector exists) ---
     static func valueIfResponds(_ obj: NSObject, _ key: String) -> Any? {

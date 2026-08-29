@@ -78,6 +78,7 @@ class HealthSampleUploadManager {
             .filter { $0.sampleType != nil }
             .filter { $0.isValid }
         self.uploaders = sampleTypes.map { HealthSampleUploader(withSampleDataType: $0, storage: storage) }
+        self.uploaders.forEach { $0.analytics = analytics }
         self.logDebugText(text: "Initialized with \(self.uploaders.count) uploaders")
         // FUAM-3841: per-data-type upload start dates are initialized lazily in
         // `startUpload(forUploader:)`, once clearance (hence the enrollment date) is available.
@@ -86,12 +87,13 @@ class HealthSampleUploadManager {
     /// How one time chunk is fetched and uploaded. Production value forwards straight to
     /// `HealthSampleUploader.run`; the specs substitute it, because a simulator's HealthKit store
     /// cannot be seeded and the payload-size paths would otherwise be unreachable from here.
-    var uploadChunk: (HealthSampleUploader, DateInterval, Date, Bool) -> Single<()> = { uploader, chunk, minimum, anchored in
+    /// FUAM-3945 round 9 (C1 item 7): no anchored-query flag any more — the walk cannot even
+    /// express an anchored fetch, by type.
+    var uploadChunk: (HealthSampleUploader, DateInterval, Date) -> Single<()> = { uploader, chunk, minimum in
         return uploader.run(startDate: chunk.start,
                             endDate: chunk.end,
                             source: "health_kit",
-                            minimumSampleDate: minimum,
-                            useAnchoredQuery: anchored)
+                            minimumSampleDate: minimum)
     }
 
     public func setNetworkDelegate(_ networkDelegate: HealthSampleUploaderNetworkDelegate) {
@@ -354,8 +356,7 @@ class HealthSampleUploadManager {
 
             self.uploadChunk(uploader,
                              DateInterval(start: startDate, end: nextEndDate),
-                             minimumSampleDate,
-                             !isHistorical)
+                             minimumSampleDate)
                 .subscribe(onSuccess: { [weak self] in
                     guard let self = self else { return }
                     self.logDebugText(text: "Upload from \(startDate) to \(nextEndDate) completed")

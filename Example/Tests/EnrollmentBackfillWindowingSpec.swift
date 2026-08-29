@@ -1592,7 +1592,7 @@ class HealthBackfillChunkWalkSpec: QuickSpec {
                     fail("no uploader for \(dataType.keyName)")
                     return
                 }
-                manager.uploadChunk = { _, chunk, _, _ in
+                manager.uploadChunk = { _, chunk, _ in
                     attempted.append(chunk)
                     if let error = rule(chunk) {
                         return Single.error(error)
@@ -2232,7 +2232,7 @@ class HealthFutureCursorSpec: QuickSpec {
                                                     analytics: analytics)
             manager.clearanceDelegate = clearance
             manager.setNetworkDelegate(network)
-            manager.uploadChunk = { _, chunk, _, _ in
+            manager.uploadChunk = { _, chunk, _ in
                 attempted.append(chunk)
                 return Single.just(())
             }
@@ -3270,6 +3270,234 @@ private final class ClosureDeviceMapper: SensorSampleMapper {
             completion(.failure(NSError(domain: "spec.mapper", code: 1)))
         } else {
             completion(.success(self.recordsForWindow(from, to)))
+        }
+    }
+}
+
+// MARK: - FUAM-3945 round 9 (F1 rev 2, H2.5): per-mapper recorded_at anchor guard
+
+/// The backend derives each row's semantic anchor as `min(records[].recorded_at)` with a STRICT,
+/// offset-requiring ISO8601 parse — and silently falls back to UPLOAD time when nothing parses,
+/// quietly corrupting the row's position in history. These specs pin, mapper by mapper, that the
+/// emitted `recorded_at` exists and parses strictly. The KVC-based mapping seams are exercised
+/// with stand-ins named to satisfy each mapper's type guard; the CoreMotion-backed mappers
+/// (pedometer, accelerometer) pass `recorded_at` through verbatim from `ISO8601Strategy.encode`,
+/// whose format is pinned here and in `SensorRecordedAtSpec`.
+class SensorRecordedAtAnchorGuardSpec: QuickSpec {
+
+    // swiftlint:disable:next function_body_length
+    override class func spec() {
+
+        // 2026-08-10 12:00:00.500 UTC — deliberately not on a whole second.
+        let recordedAt = Date(timeIntervalSince1970: 1786363200.5)
+        let recordedAtISO = ISO8601Strategy.encode(recordedAt)
+
+        /// The backend's parse, mirrored: internet date-time WITH a mandatory offset, in the
+        /// plain and the fractional-seconds variants.
+        func strictOffsetParse(_ string: String?) -> Date? {
+            guard let string = string else { return nil }
+            let plain = ISO8601DateFormatter()
+            let fractional = ISO8601DateFormatter()
+            fractional.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+            return plain.date(from: string) ?? fractional.date(from: string)
+        }
+
+        it("device usage report: recorded_at present and strictly parsable") {
+            let record = DeviceUsageReportMapper.mapDeviceUsage(FakeDeviceUsageReportSample(), recordedAt: recordedAt)
+            expect(strictOffsetParse(record?["recorded_at"] as? String)).toNot(beNil())
+        }
+
+        it("phone usage report: recorded_at present and strictly parsable") {
+            let record = PhoneUsageReportMapper.mapPhoneUsage(FakePhoneUsageReportSample(), recordedAt: recordedAt)
+            expect(strictOffsetParse(record?["recorded_at"] as? String)).toNot(beNil())
+        }
+
+        it("messages usage report: recorded_at present and strictly parsable") {
+            let record = MessagesUsageReportMapper.mapMessagesUsage(FakeMessagesUsageReportSample(), recordedAt: recordedAt)
+            expect(strictOffsetParse(record?["recorded_at"] as? String)).toNot(beNil())
+        }
+
+        it("keyboard metrics: recorded_at present and strictly parsable") {
+            let record = KeyboardMetricsMapper.mapKeyboardMetrics(FakeKeyboardMetricsSample(), recordedAt: recordedAt)
+            expect(strictOffsetParse(record?["recorded_at"] as? String)).toNot(beNil())
+        }
+
+        it("visits: recorded_at present and strictly parsable") {
+            let record = VisitsMapper.mapVisit(FakeSRVisitSample(), recordedAt: recordedAt)
+            expect(strictOffsetParse(record?["recorded_at"] as? String)).toNot(beNil())
+        }
+
+        it("media events: recorded_at present and strictly parsable") {
+            guard #available(iOS 16.4, *) else { return }
+            let record = MediaEventsMapper.mapMediaEvent(FakeSRMediaEventSample(), recordedAtISO: recordedAtISO)
+            expect(strictOffsetParse(record?["recorded_at"] as? String)).toNot(beNil())
+        }
+
+        it("ambient light: recorded_at present and strictly parsable") {
+            let sample = FakeAnchorAmbientLightSample(startDate: recordedAt.addingTimeInterval(-3600))
+            let record = AmbientLightMapper.mapAmbientLight(sample, recordedAtISO: recordedAtISO)
+            expect(strictOffsetParse(record?["recorded_at"] as? String)).toNot(beNil())
+        }
+
+        it("ambient pressure: recorded_at present and strictly parsable") {
+            let sample = FakeAnchorAmbientPressureSample(timestamp: recordedAt.addingTimeInterval(-3600))
+            let record = AmbientPressureMapper.mapAmbientPressure(sample, recordedAtISO: recordedAtISO)
+            expect(strictOffsetParse(record?["recorded_at"] as? String)).toNot(beNil())
+        }
+
+        it("rotation rate: recorded_at present and strictly parsable") {
+            let sample = FakeAnchorRotationSample(startDate: recordedAt.addingTimeInterval(-3600))
+            let record = RotationRateMapper.mapRotationSample(sample, recordedAtISO: recordedAtISO)
+            expect(strictOffsetParse(record?["recorded_at"] as? String)).toNot(beNil())
+        }
+
+        it("both ISO encodings in use (whole-second and fractional) parse under the strict rule") {
+            // The five report mappers emit whole seconds (plain ISO8601DateFormatter); the
+            // FUAM-4013 continuous mappers, pedometer and accelerometer emit fractional seconds
+            // (ISO8601Strategy.encode). Both must stay offset-bearing.
+            expect(strictOffsetParse(ISO8601DateFormatter().string(from: recordedAt))).toNot(beNil())
+            expect(strictOffsetParse(ISO8601Strategy.encode(recordedAt))).toNot(beNil())
+        }
+    }
+}
+
+// KVC stand-ins named to satisfy each mapper's `NSStringFromClass(...).contains(...)` guard.
+// Every field the mappers read is optional except the type name, so bare objects suffice.
+private final class FakeDeviceUsageReportSample: NSObject {}
+private final class FakePhoneUsageReportSample: NSObject {}
+private final class FakeMessagesUsageReportSample: NSObject {}
+private final class FakeKeyboardMetricsSample: NSObject {}
+// The visits and media-events mappers drop records with no substantive field beyond
+// `recorded_at`, so these two carry one readable field each.
+private final class FakeSRVisitSample: NSObject {
+    @objc let distanceFromHome: Double = 120
+}
+private final class FakeSRMediaEventSample: NSObject {
+    @objc let mediaIdentifier: String = "media-1"
+    @objc let eventType: NSNumber = 1
+}
+
+private final class FakeAnchorAmbientLightSample: NSObject {
+    @objc let startDate: Date
+    @objc let lux: Double = 42
+    init(startDate: Date) { self.startDate = startDate }
+}
+
+private final class FakeAnchorAmbientPressureSample: NSObject {
+    @objc let timestamp: Date
+    @objc let pressure: NSNumber = 101.3
+    init(timestamp: Date) { self.timestamp = timestamp }
+}
+
+private final class FakeAnchorRotationSample: NSObject {
+    @objc let startDate: Date
+    // swiftlint:disable identifier_name
+    @objc let x: Double = 0.1
+    @objc let y: Double = 0.2
+    @objc let z: Double = 0.3
+    // swiftlint:enable identifier_name
+    init(startDate: Date) { self.startDate = startDate }
+}
+
+// MARK: - FUAM-3945 (C1 item 7 / AC5): the plain-query walk and the proactive payload split
+
+/// H3: the anchored-query path is REMOVED from the walk by type — `HealthSampleUploader.run` and
+/// the `uploadChunk` seam can no longer express an anchored fetch. H4: the one predicate the walk
+/// owns is `.strictStartDate`, so a boundary-straddling sample belongs to exactly one chunk.
+/// AC5: payloads are sized as the batch is built and split proactively at the margin —
+/// deterministically, so a reinstall reproduces the same chunks and the same anchors (AC2).
+class HealthChunkQuerySpec: QuickSpec {
+
+    // swiftlint:disable:next function_body_length
+    override class func spec() {
+
+        let start = Date(timeIntervalSince1970: 1_786_000_000)
+        let end = start.addingTimeInterval(3600)
+
+        func sample(at date: Date, padding: Int = 0) -> HKQuantitySample? {
+            guard let type = HKQuantityType.quantityType(forIdentifier: .stepCount) else { return nil }
+            let metadata: [String: Any]? = padding > 0
+                ? [HKMetadataKeyExternalUUID: String(repeating: "x", count: padding)]
+                : nil
+            return HKQuantitySample(type: type,
+                                    quantity: HKQuantity(unit: .count(), doubleValue: 1),
+                                    start: date,
+                                    end: date,
+                                    metadata: metadata)
+        }
+
+        describe("chunkPredicate (H4)") {
+
+            it("is the strict-start-date predicate, byte for byte") {
+                let expected = HKQuery.predicateForSamples(withStart: start, end: end, options: [.strictStartDate])
+                expect(HealthSampleUploader.chunkPredicate(startDate: start, endDate: end).predicateFormat)
+                    == expected.predicateFormat
+            }
+
+            it("is NOT the default overlap predicate that returned boundary samples twice") {
+                let overlap = HKQuery.predicateForSamples(withStart: start, end: end, options: [])
+                expect(HealthSampleUploader.chunkPredicate(startDate: start, endDate: end).predicateFormat)
+                    .toNot(equal(overlap.predicateFormat))
+            }
+        }
+
+        describe("deterministicallyOrdered (AC2)") {
+
+            it("orders same-start samples by uuid, whatever order they arrived in") {
+                guard let one = sample(at: start), let two = sample(at: start), let three = sample(at: start) else {
+                    return fail("no step count type")
+                }
+                let forward = HealthSampleUploader.deterministicallyOrdered([one, two, three])
+                let backward = HealthSampleUploader.deterministicallyOrdered([three, two, one])
+                expect(forward.map { $0.uuid }).to(equal(backward.map { $0.uuid }))
+            }
+        }
+
+        describe("proactiveChunks (AC5)") {
+
+            let dataType = HealthDataType.stepCount
+
+            it("splits a batch straddling the margin into chunks that all fit, losing nothing") {
+                let samples = (0..<8).compactMap { sample(at: start.addingTimeInterval(TimeInterval($0)), padding: 400) }
+                guard samples.count == 8 else { return fail("no step count type") }
+                let margin = 2500
+                guard let chunks = HealthSampleUploader.proactiveChunks(of: samples,
+                                                                        forDataType: dataType,
+                                                                        marginBytes: margin) else {
+                    return fail("splittable batch reported as unsplittable")
+                }
+                expect(chunks.count).to(beGreaterThan(1))
+                for chunk in chunks {
+                    let bytes = HealthSampleUploader.serializedSize(of: chunk.getNetworkData(forDataType: dataType))
+                    expect(bytes ?? 0).to(beLessThanOrEqualTo(margin))
+                }
+                expect(chunks.flatMap { $0 }.map { $0.uuid }).to(equal(samples.map { $0.uuid }))
+            }
+
+            it("produces the same split for the same input, twice (AC2)") {
+                let samples = (0..<8).compactMap { sample(at: start.addingTimeInterval(TimeInterval($0)), padding: 400) }
+                guard samples.count == 8 else { return fail("no step count type") }
+                let first = HealthSampleUploader.proactiveChunks(of: samples, forDataType: dataType, marginBytes: 2500)
+                let second = HealthSampleUploader.proactiveChunks(of: samples, forDataType: dataType, marginBytes: 2500)
+                expect(first?.map { $0.count }).to(equal(second?.map { $0.count }))
+                expect(first?.map { chunk in chunk.map { $0.uuid } }).to(equal(second?.map { chunk in chunk.map { $0.uuid } }))
+            }
+
+            it("reports a single sample that cannot fit alone as a hard error, never a silent drop") {
+                guard let oversize = sample(at: start, padding: 4000) else { return fail("no step count type") }
+                expect(HealthSampleUploader.proactiveChunks(of: [oversize], forDataType: dataType, marginBytes: 2500))
+                    .to(beNil())
+            }
+
+            it("leaves a batch under the margin whole") {
+                let samples = (0..<3).compactMap { sample(at: start.addingTimeInterval(TimeInterval($0))) }
+                guard samples.count == 3 else { return fail("no step count type") }
+                let chunks = HealthSampleUploader.proactiveChunks(of: samples,
+                                                                  forDataType: dataType,
+                                                                  marginBytes: Constants.HealthKit.MaxUploadPayloadBytes)
+                expect(chunks?.count).to(equal(1))
+                expect(chunks?.first?.count).to(equal(3))
+            }
         }
     }
 }

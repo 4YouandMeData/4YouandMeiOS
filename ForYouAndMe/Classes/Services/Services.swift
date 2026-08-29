@@ -159,13 +159,36 @@ class Services {
                 ]
             }
 
-            // FUAM-3945 round 8: the host's own SensorKit entitlement is the CEILING of what we
+            // FUAM-3945 round 8/9: the host's SensorKit entitlement is the CEILING of what we
             // request. iOS never prompts for an unentitled sensor — it auto-declines instantly and
             // the sensor stays `.notDetermined` forever, which used to wedge the Permissions row on
             // "Setup" and made the re-ask loop misdiagnose the system-wide switch as OFF.
-            // Unreadable entitlement => `nil` => fail open (today's behaviour); a readable but empty
-            // one genuinely means "entitled to nothing".
-            let skEntitled = SensorKitEntitlement.entitledSensors()
+            // Round 9 (D6): the source is the host's `FYAMSensorKitEntitledSensors` Info.plist
+            // declaration — the round-8 provisioning-profile read is stripped from App Store
+            // builds and was inert in production (F1). Missing key => fail open; a non-empty
+            // declaration that maps to NOTHING is OUR mapping drift => fail open + telemetry
+            // (R1/F2); only an explicit empty array means "entitled to nothing".
+            let skDeclared = SensorKitEntitlement.hostDeclaredValues()
+            let skEntitled: Set<SRSensor>?
+            switch SensorKitEntitlement.resolveEntitledSensors(fromPlist: skDeclared) {
+            case .failOpen:
+                skEntitled = nil
+            case .unmappable(let values):
+                skEntitled = nil
+                let unmapped = SensorKitEntitlement.droppedSensorsParameter(values)
+                analytics.track(event: .sensorEntitlementMissing(sensors: unmapped.list, count: unmapped.count))
+            case .entitled(let sensors, let unmapped):
+                skEntitled = sensors
+                if !unmapped.isEmpty {
+                    let leftover = SensorKitEntitlement.droppedSensorsParameter(unmapped)
+                    analytics.track(event: .sensorEntitlementMissing(sensors: leftover.list, count: leftover.count))
+                }
+            }
+            #if DEBUG
+            // Development builds carry the provisioning profile: the one channel where the
+            // declaration can be verified against the real entitlement (D6 layer 2).
+            SensorKitEntitlement.debugCrossCheckProvisioningProfile(declared: skDeclared)
+            #endif
             let skConfigured = Constants.SensorKit.RequestedSensors.intersection(Set(skMappers.keys))
             let skSensors: [SRSensor] = Array(SensorKitEntitlement.effectiveSensors(
                 requested: Constants.SensorKit.RequestedSensors,

@@ -117,6 +117,9 @@ final class SensorKitManager: NSObject, SensorKitService {
 
     private let analyticsService: AnalyticsService
     private let sensorSampleUploadManager: SensorSampleUploadManager
+    /// D6 layer 3: sensors iOS empirically refused to prompt for. Self-correcting: cleared when
+    /// the app version changes (a host that gains the entitlement in an update starts clean).
+    private let refusalStore = SensorRefusalStore()
 
     private let disposeBag = DisposeBag()
 
@@ -173,15 +176,28 @@ final class SensorKitManager: NSObject, SensorKitService {
         .visits
     ]
 
-    /// Returns the `.notDetermined` subset of `readSensors`, sorted by
+    /// Returns the REQUESTABLE `.notDetermined` subset of `readSensors`, sorted by
     /// `canonicalRequestOrder` (sensors not in the canonical list keep their input order
-    /// and go at the end).
+    /// and go at the end). Sensors the refusal ledger marked as refused are excluded (D6
+    /// layer 3): iOS has already shown it will never draw their prompt, so re-asking only
+    /// re-triggers the fast auto-decline that used to be misread as "collection is off".
     private func orderedNotDeterminedSensors() -> [SRSensor] {
-        let undetermined = readSensors.filter { SRSensorReader(sensor: $0).authorizationStatus == .notDetermined }
+        let refused = self.refusalStore.refusedSensors()
+        let undetermined = readSensors.filter {
+            !refused.contains($0) && SRSensorReader(sensor: $0).authorizationStatus == .notDetermined
+        }
         let undeterminedSet = Set(undetermined)
         let canonical = Self.canonicalRequestOrder.filter { undeterminedSet.contains($0) }
         let extras = undetermined.filter { !Self.canonicalRequestOrder.contains($0) }
         return canonical + extras
+    }
+
+    /// `true` when at least one effective, non-refused sensor could still be prompted for —
+    /// the Permissions row's ACTION predicate (D7): run the request flow iff this holds,
+    /// otherwise show the Manage/Settings alert. Distinct from the LABEL predicate
+    /// (`hasAnyAuthorized`), deliberately: they answer two different questions.
+    func hasRequestableUndeterminedSensors() -> Bool {
+        return !self.orderedNotDeterminedSensors().isEmpty
     }
 
     /// Requests SensorKit authorization for all not-determined sensors in `readSensors`.
@@ -240,18 +256,40 @@ final class SensorKitManager: NSObject, SensorKitService {
         return self.isPromptDeclined(error) && elapsed < self.collectionDisabledMaxElapsed
     }
 
-    /// The verdict of a whole request sequence (FUAM-3945 round 8).
+    /// The verdict of a whole request sequence (FUAM-3945 round 8, corrected round 9 per D7/R3).
     ///
     /// A single fast `promptDeclined` used to be treated as proof that the system-wide "Sensor &
     /// Usage Data Collection" switch is OFF. It is not: a sensor the host has no entitlement for
     /// auto-declines exactly as fast, with the same error, while the switch is perfectly ON — which
     /// is how a participant who had granted everything still got the "collection is off" alert.
-    /// Only a sequence in which EVERY asked sensor fast-declined can be the master switch; a mixed
-    /// outcome is a per-sensor condition and the normal missing-sensors path handles it. Nothing
-    /// asked means nothing to conclude.
-    static func setupOutcome(fastDeclineCount: Int, askedCount: Int) -> SensorKitSetupOutcome {
-        guard askedCount > 0, fastDeclineCount == askedCount else { return .completed }
+    ///
+    /// Round 8's unanimity rule (`fastDeclineCount == askedCount`) over-corrected: one slow XPC
+    /// cold-start on the first call of the launch (0.9s > the 0.8s threshold) made the sequence
+    /// 7/8 fast and suppressed the alert while the master switch genuinely was off (review F4).
+    /// The verdict is therefore decided AFTER the loop from the strongest evidence available:
+    /// the switch is blamed only when nothing whatsoever ended `.authorized` AND at least half of
+    /// what was asked fast-declined. Anything authorized proves the switch is ON, whatever the
+    /// timings said.
+    static func setupOutcome(fastDeclineCount: Int,
+                             askedCount: Int,
+                             anyAuthorizedAfterLoop: Bool) -> SensorKitSetupOutcome {
+        guard !anyAuthorizedAfterLoop,
+              askedCount > 0,
+              fastDeclineCount >= max(1, askedCount / 2) else { return .completed }
         return .collectionDisabledSystemWide
+    }
+
+    /// The sensors a completed request round proved iOS refuses to prompt for (D6 layer 3):
+    /// asked, fast-declined with no prompt drawn, and still `.notDetermined`. A round blamed on
+    /// the master switch records NOTHING — every sensor fast-declines under a switch that is
+    /// off, and marking them refused would poison the ledger for after the user re-enables it.
+    /// A SLOW decline (a real human cancel) is never recorded: iOS will happily re-prompt it
+    /// (R2 is exactly the ability to do so).
+    static func refusals(fastDeclined: Set<SRSensor>,
+                         stillNotDetermined: Set<SRSensor>,
+                         outcome: SensorKitSetupOutcome) -> Set<SRSensor> {
+        guard outcome == .completed else { return [] }
+        return fastDeclined.intersection(stillNotDetermined)
     }
 
     /// Requests SensorKit authorization for the not-determined sensors only, detecting
@@ -277,7 +315,7 @@ final class SensorKitManager: NSObject, SensorKitService {
         return Single.create { observer in
             if #available(iOS 17.4, *) {
                 Task { @MainActor in
-                    var fastDeclines = 0
+                    var fastDeclined: Set<SRSensor> = []
                     for sensor in toAsk {
                         let start = Date()
                         do {
@@ -288,18 +326,18 @@ final class SensorKitManager: NSObject, SensorKitService {
                             print("SensorKitManager – requestAuthorization failed for \(sensor.rawValue): \(error)")
                             #endif
                             if Self.isFastAutoDecline(error: error, elapsed: elapsed) {
-                                fastDeclines += 1
+                                fastDeclined.insert(sensor)
                             }
                             // Slow promptDeclined (real user cancel) or any other error:
                             // non-fatal, continue with the next sensor.
                         }
                     }
-                    observer(.success(Self.setupOutcome(fastDeclineCount: fastDeclines, askedCount: toAsk.count)))
+                    observer(.success(self.finishDetectingRound(asked: toAsk, fastDeclined: fastDeclined)))
                 }
             } else {
-                self.requestAuthorizationDetectingCollectionDisabled(sensors: toAsk) { outcome in
+                self.requestAuthorizationDetectingCollectionDisabled(sensors: toAsk) { fastDeclined in
                     DispatchQueue.main.async {
-                        observer(.success(outcome))
+                        observer(.success(self.finishDetectingRound(asked: toAsk, fastDeclined: fastDeclined)))
                     }
                 }
             }
@@ -307,10 +345,32 @@ final class SensorKitManager: NSObject, SensorKitService {
         }
     }
 
-    /// Returns true if at least one of the configured sensors is still undetermined.
+    /// Post-loop verdict + refusal-ledger update for one detect-capable request round (D6/D7).
+    /// Call on the main thread once every asked sensor's request has returned.
+    private func finishDetectingRound(asked: [SRSensor], fastDeclined: Set<SRSensor>) -> SensorKitSetupOutcome {
+        let outcome = Self.setupOutcome(fastDeclineCount: fastDeclined.count,
+                                        askedCount: asked.count,
+                                        anyAuthorizedAfterLoop: self.hasAnyAuthorized())
+        let stillNotDetermined = Set(asked.filter {
+            SRSensorReader(sensor: $0).authorizationStatus == .notDetermined
+        })
+        let refused = Self.refusals(fastDeclined: fastDeclined,
+                                    stillNotDetermined: stillNotDetermined,
+                                    outcome: outcome)
+        if !refused.isEmpty {
+            self.refusalStore.recordRefusals(refused)
+            for sensor in refused.sorted(by: { $0.rawValue < $1.rawValue }) {
+                self.analyticsService.track(event: .sensorRefused(sensor: sensor.shortSubsource))
+            }
+        }
+        return outcome
+    }
+
+    /// Returns true if at least one of the configured, NON-REFUSED sensors is still
+    /// undetermined — i.e. a request round could still change something (D6 layer 3: a sensor
+    /// iOS refuses to prompt for stays `.notDetermined` forever and must not keep this true).
     func getIsAuthorizationStatusUndetermined() -> Single<Bool> {
-        let anyUndetermined = readSensors.contains { SRSensorReader(sensor: $0).authorizationStatus == .notDetermined }
-        return .just(anyUndetermined)
+        return .just(self.hasRequestableUndeterminedSensors())
     }
 
     // MARK: - Public control
@@ -374,18 +434,18 @@ final class SensorKitManager: NSObject, SensorKitService {
     }
 
     /// Requests authorization for each sensor one at a time using the completion-based API,
-    /// counting the fast auto-declines that reveal the system-wide SensorKit collection switch is
-    /// OFF. Used on iOS 16.4–17.3 where the async API is unavailable. Like the async path, the loop
-    /// always runs to the end: only an ALL-fast-decline sequence blames the master switch
-    /// (FUAM-3945 round 8).
+    /// collecting the fast auto-declines. Used on iOS 16.4–17.3 where the async API is
+    /// unavailable. Like the async path, the loop always runs to the end; the VERDICT is the
+    /// caller's (`finishDetectingRound`), decided post-loop from the strongest evidence
+    /// (FUAM-3945 round 9, D7).
     private func requestAuthorizationDetectingCollectionDisabled(sensors: [SRSensor],
-                                                                 completion: @escaping (_ outcome: SensorKitSetupOutcome) -> Void) {
+                                                                 completion: @escaping (_ fastDeclined: Set<SRSensor>) -> Void) {
         var remaining = sensors
-        var fastDeclines = 0
+        var fastDeclined: Set<SRSensor> = []
 
         func next() {
             guard let sensor = remaining.first else {
-                completion(Self.setupOutcome(fastDeclineCount: fastDeclines, askedCount: sensors.count))
+                completion(fastDeclined)
                 return
             }
             remaining.removeFirst()
@@ -398,7 +458,7 @@ final class SensorKitManager: NSObject, SensorKitService {
                     #endif
                     if Self.isFastAutoDecline(error: error, elapsed: elapsed) {
                         // A slow promptDeclined is a real user cancel: not counted.
-                        fastDeclines += 1
+                        fastDeclined.insert(sensor)
                     }
                 }
                 next()
@@ -494,28 +554,14 @@ extension Constants {
         }
 
         // MARK: - Optional: server-driven override
-        /// Map server strings -> SRSensor to drive this list from remote config
+        /// Map server strings -> SRSensor to drive this list from remote config.
+        /// FUAM-3945 round 9 (F6): delegates to `SensorKitEntitlement.sensor(forEntitlementValue:)`
+        /// — ONE mapping table for both the remote-config vocabulary and the entitlement ceiling,
+        /// so the two can never drift apart again (the old copies already disagreed on
+        /// `electrocardiogram` and `keyboard_events`).
         @available(iOS 17.4, *)
         static func makeSensors(from ids: [String]) -> Set<SRSensor> {
-            var set: Set<SRSensor> = []
-            for id in ids {
-                switch id.lowercased() {
-                case "accelerometer": set.insert(.accelerometer)
-                case "ambient_light", "ambientlight": set.insert(.ambientLightSensor)
-                case "ambient_pressure", "ambientpressure": set.insert(.ambientPressure)
-                case "pedometer", "pedometer_data", "pedometerdata": set.insert(.pedometerData)
-                case "rotation_rate", "rotationrate": set.insert(.rotationRate)
-                case "device_usage", "deviceusage": set.insert(.deviceUsageReport)
-                case "messages_usage", "messagesusage": set.insert(.messagesUsageReport)
-                case "phone_usage", "phoneusage": set.insert(.phoneUsageReport)
-                case "visits": set.insert(.visits)
-                case "keyboard_events": set.insert(.keyboardMetrics)
-                case "electrocardiogram" : set.insert(.electrocardiogram)
-                // TODO: add others
-                default: break
-                }
-            }
-            return set
+            return Set(ids.compactMap { SensorKitEntitlement.sensor(forEntitlementValue: $0) })
         }
     }
 }
@@ -639,10 +685,10 @@ extension SensorKitManager {
     }
 }
 
-// MARK: - Entitlement ceiling (FUAM-3945 round 8)
+// MARK: - Entitlement ceiling (FUAM-3945 round 8, redesigned round 9 per D6)
 
-/// Reads the host app's OWN `com.apple.developer.sensorkit.reader.allow` entitlement and turns it
-/// into the ceiling of the sensor set the SDK asks permission for.
+/// Turns the host's SensorKit entitlement into the ceiling of the sensor set the SDK asks
+/// permission for.
 ///
 /// Why this exists: iOS never prompts for a sensor the app is not entitled to. The call returns
 /// without showing anything and the sensor stays `.notDetermined` FOREVER. Two user-visible bugs
@@ -651,20 +697,75 @@ extension SensorKitManager {
 /// Permissions row stayed on "Setup" after a full grant, and the re-ask loop read the instant
 /// auto-decline of those two sensors as "system-wide collection is off".
 ///
-/// The entitlement is the single source of truth — deliberately NOT a host Info.plist list, which
-/// would be a second place to keep in step and would drift.
+/// **How the entitlement is learnt (D6, three layers):**
+/// 1. PRIMARY — `FYAMSensorKitEntitledSensors`, an Info.plist array of Apple entitlement strings
+///    the host copies verbatim from its `.entitlements` file. Round 8 tried to read
+///    `embedded.mobileprovision` at runtime instead; Apple strips that file from App Store
+///    builds (entitlement review F1), so the read was inert on the only channel that matters.
+/// 2. DEBUG cross-check — development builds DO carry the provisioning profile, so DEBUG is the
+///    one channel where the declaration can be verified against it (`assertionFailure` on drift).
+/// 3. Fallback — the empirical refusal ledger (`SensorRefusalStore`): a sensor iOS refused to
+///    prompt for is learnt after one request round and excluded from later rounds and the UI.
 ///
 /// It is a **ceiling, not a floor**: a sensor that is entitled but deliberately absent from
 /// `RequestedSensors` (e.g. `motion-accelerometer`, disabled for data volume) stays out.
 ///
-/// It **fails open**: when the entitlement cannot be read at all (API failure, missing key, a value
-/// that is not an array) we keep the previous behaviour rather than silently stopping all
-/// collection. An entitlement that IS readable but EMPTY is a genuine "entitled to nothing" and is
-/// honoured as such.
+/// It **fails open** (R1/F2 fix): a missing key keeps today's behaviour, and a non-empty key
+/// mapping to ZERO known sensors also fails open — "I read a list and understood none of it" is
+/// mapping drift on OUR side, not a host entitled to nothing. Only an explicitly EMPTY array
+/// means "entitled to nothing" and is honoured as such.
 enum SensorKitEntitlement {
 
     /// The entitlement key iOS uses to gate `SRSensorReader` access.
     static let entitlementKey = "com.apple.developer.sensorkit.reader.allow"
+
+    /// The host's Info.plist declaration: the entitlement values, copied verbatim (D6 layer 1).
+    static let infoPlistKey = "FYAMSensorKitEntitledSensors"
+
+    /// The outcome of reading the host declaration. Pure, so the fail-open semantics have a
+    /// regression test (R1).
+    enum PlistResolution: Equatable {
+        /// No key: nothing declared — fail open (no ceiling).
+        case failOpen
+        /// A non-empty declaration in which NOTHING mapped: our mapping table has drifted from
+        /// Apple's vocabulary. Fail open AND report (`sensor_entitlement_missing`).
+        case unmappable(values: [String])
+        /// A usable declaration (including the explicit empty array = entitled to nothing).
+        /// `unmapped` carries any leftover values that did not map — reported, not fatal.
+        case entitled(Set<SRSensor>, unmapped: [String])
+    }
+
+    /// Resolves the host's declared values. `nil` means the key is absent or not a string array.
+    static func resolveEntitledSensors(fromPlist values: [String]?) -> PlistResolution {
+        guard let values = values else { return .failOpen }
+        guard !values.isEmpty else { return .entitled([], unmapped: []) }
+        let mapped = self.sensors(fromEntitlementValues: values)
+        guard !mapped.isEmpty else { return .unmappable(values: values) }
+        let unmapped = values.filter { self.sensor(forEntitlementValue: $0) == nil }
+        return .entitled(mapped, unmapped: unmapped)
+    }
+
+    /// The raw `FYAMSensorKitEntitledSensors` array, or `nil` when absent/malformed.
+    static func hostDeclaredValues(bundle: Bundle = .main) -> [String]? {
+        guard let array = bundle.object(forInfoDictionaryKey: self.infoPlistKey) as? [Any] else { return nil }
+        return array.compactMap { $0 as? String }
+    }
+
+    #if DEBUG
+    /// D6 layer 2: development builds carry `embedded.mobileprovision` (that is exactly why the
+    /// round-8 runtime read passed device QA), so DEBUG is where the plist declaration gets its
+    /// verification loop. No-op when there is no declaration or no profile (simulator).
+    static func debugCrossCheckProvisioningProfile(declared: [String]?) {
+        guard let declared = declared, let profileValues = self.entitlementValues() else { return }
+        let declaredSensors = self.sensors(fromEntitlementValues: declared)
+        let profileSensors = self.sensors(fromEntitlementValues: profileValues)
+        if declaredSensors != profileSensors {
+            assertionFailure("FYAMSensorKitEntitledSensors \(declared.sorted()) disagrees with the provisioning "
+                             + "profile's \(self.entitlementKey) \(profileValues.sorted()). "
+                             + "Copy the values verbatim from the host .entitlements file.")
+        }
+    }
+    #endif
 
     // MARK: Pure logic (unit-testable)
 
@@ -699,6 +800,12 @@ enum SensorKitEntitlement {
         case "mediaevents":
             if #available(iOS 16.4, *) { return .mediaEvents }
             return nil
+        case "electrocardiogram", "ecg":
+            // Carried over from the remote-config vocabulary (F6: this table is now the ONE
+            // string -> SRSensor mapping, read by the entitlement ceiling AND by
+            // `Constants.SensorKit.makeSensors(from:)`).
+            if #available(iOS 17.4, *) { return .electrocardiogram }
+            return nil
         default: return nil
         }
     }
@@ -726,21 +833,20 @@ enum SensorKitEntitlement {
         return configured.intersection(entitled)
     }
 
-    // MARK: Runtime read
+    // MARK: Provisioning-profile read (DEBUG cross-check only)
 
-    /// The raw entitlement values of THIS app, or `nil` when they cannot be read (→ fail open).
+    /// The raw entitlement values from `embedded.mobileprovision`, or `nil` when unreadable.
+    ///
+    /// FUAM-3945 round 9: this is NO LONGER the production source — Apple strips
+    /// `embedded.mobileprovision` from App Store builds (entitlement review F1: Google ships
+    /// "no embedded profile ⇒ App Store build" as a production heuristic in GoogleUtilities), so
+    /// in the store this always returned `nil` and the round-8 ceiling silently failed open. The
+    /// production source is the host's `FYAMSensorKitEntitledSensors` Info.plist declaration;
+    /// this read survives only as the DEBUG cross-check, the one channel where the file exists.
     ///
     /// iOS has no public API for "read my own entitlements": `SecTaskCopyValueForEntitlement` is
-    /// declared for macOS only and does not compile against the iOS SDK, and reaching it by
-    /// `dlsym` is not something we are willing to ship through App Review. What every iOS build
-    /// does carry is `embedded.mobileprovision`, whose `Entitlements` dictionary is what the App
-    /// ID was provisioned with — the same list Apple approves when it grants SensorKit access.
-    ///
-    /// Two consequences, both benign here:
-    /// - the Simulator has no embedded profile, so this returns `nil` and we fail open;
-    /// - the profile is what the App ID is ENTITLED to, which can in principle be wider than what
-    ///   a given build was signed with. Reading wide only ever restores the previous behaviour for
-    ///   the extra sensor (asked for, never prompted), never blocks an entitled one.
+    /// declared for macOS only and does not compile against the iOS SDK. The Simulator has no
+    /// embedded profile either, so unit tests never trip the cross-check.
     static func entitlementValues() -> [String]? {
         guard let url = Bundle.main.url(forResource: "embedded", withExtension: "mobileprovision"),
               let data = try? Data(contentsOf: url) else { return nil }
@@ -772,12 +878,6 @@ enum SensorKitEntitlement {
         return array.compactMap { $0 as? String }
     }
 
-    /// The sensors this build is entitled to read, or `nil` when the entitlement is unreadable.
-    static func entitledSensors() -> Set<SRSensor>? {
-        guard let values = self.entitlementValues() else { return nil }
-        return self.sensors(fromEntitlementValues: values)
-    }
-
     /// The `dropped_sensors` value of `sensor_entitlement_missing`, capped at Firebase's 100-char
     /// string-parameter limit (F7: all eight subsources joined run to 137 chars, and the all-eight
     /// case is precisely the one where this event is the only signal that SensorKit died). Names
@@ -795,6 +895,56 @@ enum SensorKitEntitlement {
             list = String(first.prefix(limit))
         }
         return (list, sorted.count)
+    }
+}
+
+// MARK: - Empirical refusal ledger (FUAM-3945 round 9, D6 layer 3)
+
+/// Persists the sensors iOS has empirically refused to prompt for (asked, fast-declined with no
+/// prompt drawn, still `.notDetermined` after the round). The fallback entitlement signal for a
+/// host that ships no `FYAMSensorKitEntitledSensors` declaration: it needs one request round to
+/// learn, then keeps the Permissions row truthful and stops the re-ask loop from re-triggering
+/// the auto-decline. Cleared whenever the app version changes, so a host that GAINS an
+/// entitlement in an update starts clean and re-asks once.
+final class SensorRefusalStore {
+
+    static let sensorsKey = "sensorkit.refusedSensors"
+    static let versionKey = "sensorkit.refusedSensors.version"
+
+    private let defaults: UserDefaults
+    private let version: String
+
+    /// `version` defaults to `CFBundleShortVersionString-CFBundleVersion`: any release the host
+    /// ships invalidates the ledger.
+    init(defaults: UserDefaults = .standard, version: String? = nil) {
+        self.defaults = defaults
+        self.version = version ?? Self.currentBundleVersion()
+        self.invalidateOnVersionChange()
+    }
+
+    func refusedSensors() -> Set<SRSensor> {
+        guard let raw = self.defaults.stringArray(forKey: Self.sensorsKey) else { return [] }
+        return Set(raw.map { SRSensor(rawValue: $0) })
+    }
+
+    func recordRefusals(_ sensors: Set<SRSensor>) {
+        guard !sensors.isEmpty else { return }
+        let merged = self.refusedSensors().union(sensors)
+        self.defaults.set(merged.map { $0.rawValue }.sorted(), forKey: Self.sensorsKey)
+        self.defaults.set(self.version, forKey: Self.versionKey)
+    }
+
+    private func invalidateOnVersionChange() {
+        guard self.defaults.string(forKey: Self.versionKey) != self.version else { return }
+        self.defaults.removeObject(forKey: Self.sensorsKey)
+        self.defaults.set(self.version, forKey: Self.versionKey)
+    }
+
+    private static func currentBundleVersion() -> String {
+        let info = Bundle.main.infoDictionary
+        let short = info?["CFBundleShortVersionString"] as? String ?? "0"
+        let build = info?["CFBundleVersion"] as? String ?? "0"
+        return short + "-" + build
     }
 }
 

@@ -8,6 +8,29 @@
 import PureLayout
 import RxSwift
 
+/// The SensorKit permission row's presentation state (FUAM-3945 round 9, D7). Label and action
+/// answer two DIFFERENT questions and the round-8 fix conflated them (review F3):
+/// - the LABEL says whether anything was ever granted ("Manage" vs "Setup");
+/// - the ACTION says whether a request round could still change something — as long as one
+///   effective, non-refused sensor is `.notDetermined`, tapping must re-run the request flow
+///   (a participant who cancelled prompt 2 of 8 gets prompts 2..8 again); only when nothing is
+///   promptable is the Settings alert the right answer.
+struct SensorKitPermissionRowState: Equatable {
+
+    enum Action: Equatable {
+        case requestFlow
+        case settingsAlert
+    }
+
+    let showsManageLabel: Bool
+    let action: Action
+
+    static func resolve(anyAuthorized: Bool, hasRequestableUndetermined: Bool) -> SensorKitPermissionRowState {
+        return SensorKitPermissionRowState(showsManageLabel: anyAuthorized,
+                                           action: hasRequestableUndetermined ? .requestFlow : .settingsAlert)
+    }
+}
+
 public class PermissionViewController: UIViewController {
     
     private var titleString: String
@@ -165,24 +188,24 @@ public class PermissionViewController: UIViewController {
            IntegrationProvider.isSensorKitSupported() {
 
             // "Manage" as soon as ANY configured sensor is .authorized; "Setup" only while the
-            // participant has granted nothing yet. hasAnyAuthorized() is synchronous, so we can
-            // decide the label inline, and the tap handler uses the same basis.
-            // It used to be "no sensor is still .notDetermined", which never came true on a host
-            // whose entitlement does not cover a requested sensor: iOS never prompts for it, so it
-            // stays .notDetermined forever and the row was stuck on "Setup" even after a full
-            // grant (FUAM-3945 round 8). Round 8 also removes such sensors from the requested set,
-            // so this is defence in depth — a participant who grants only some sensors must not
-            // wedge the row either.
-            let skHasAnyAuthorized = (self.sensorKitService as? SensorKitManager)?.hasAnyAuthorized() ?? false
-            let skTrailingKey: StringKey = skHasAnyAuthorized
+            // participant has granted nothing yet (FUAM-3945 round 8: "no sensor is still
+            // .notDetermined" never came true on a host whose entitlement does not cover a
+            // requested sensor, wedging the row on "Setup" after a full grant). The label and
+            // the tap ACTION are two different questions — see `SensorKitPermissionRowState`.
+            let skRowState = self.sensorKitRowState()
+            let skTrailingKey: StringKey = skRowState.showsManageLabel
                 ? .permissionSensorKitManageLabel
                 : .permissionSensorKitSetupLabel
 
             let skTitle = StringsProvider.string(forKey: .permissionSensorKitDescription)
+            // FUAM-3945 round 9 (cell bug S3): the row gets its own icon when the asset exists —
+            // host bundle first, framework second — and keeps the legacy heart otherwise, so no
+            // host is left with a missing image.
+            let skIconName: ImageName = ImagePalette.image(withName: .sensorKitIcon) != nil ? .sensorKitIcon : .healthIcon
             let skItem = PermissionItemView(
                 withTitle: skTitle,
                 isAuthorized: nil,
-                iconName: .sensorKitIcon,
+                iconName: skIconName,
                 trailingActionText: StringsProvider.string(forKey: skTrailingKey),
                 gestureCallback: { [weak self] in
                     self?.handleSensorKitPermission()
@@ -273,22 +296,34 @@ public class PermissionViewController: UIViewController {
             }).disposed(by: self.disposeBag)
     }
     
+#if SENSORKIT
+    /// Label + action for the SensorKit row, from the two predicates D7 keeps separate.
+    private func sensorKitRowState() -> SensorKitPermissionRowState {
+        guard let manager = self.sensorKitService as? SensorKitManager else {
+            return SensorKitPermissionRowState.resolve(anyAuthorized: false, hasRequestableUndetermined: false)
+        }
+        return SensorKitPermissionRowState.resolve(anyAuthorized: manager.hasAnyAuthorized(),
+                                                   hasRequestableUndetermined: manager.hasRequestableUndeterminedSensors())
+    }
+#endif
+
     private func handleSensorKitPermission() {
 #if SENSORKIT
         // We need the concrete manager to access utility methods
         guard let manager = self.sensorKitService as? SensorKitManager else { return }
 
-        // Same basis as the trailing label (FUAM-3945 round 8): nothing authorized yet → this is
-        // the "Setup" action; anything authorized → this is the "Manage" action. The old basis
-        // ("any sensor still .notDetermined") re-ran the request flow forever on a host whose
-        // entitlement does not cover a requested sensor.
-        if !manager.hasAnyAuthorized() {
-            // "Setup" state: the participant has granted nothing yet. Run the system request flow
-            // for only the .notDetermined sensors, then just refresh — the row flips to "Manage"
-            // as soon as anything is granted. We do NOT surface the settings popup here: that
-            // popup is the "Manage" action only, shown after setup is complete (FUAM-3432).
-            // (Note: this drops the FUAM-3370 fallback that popped the settings alert when iOS
-            // refused to show the prompt.)
+        // FUAM-3945 round 9 (D7, review F3): the ACTION gate is "could a request round still
+        // change something", NOT the label's "was anything granted". Round 8 gated the action on
+        // `hasAnyAuthorized`, which removed the only path that could re-prompt a
+        // partially-granted set: a participant who granted sensor 1 and cancelled prompt 2 was
+        // permanently locked out of prompts 2..8 (iOS Settings cannot grant a never-prompted
+        // sensor). Refused sensors are excluded from the predicate, so an unentitled leftover
+        // cannot re-open the request flow forever either.
+        if self.sensorKitRowState().action == .requestFlow {
+            // Run the system request flow for the requestable .notDetermined sensors, then
+            // refresh — the row flips to "Manage" as soon as anything is granted. We do NOT
+            // surface the settings popup here: that popup is the settings-only action, shown
+            // when no prompt can change anything any more (FUAM-3432).
             manager.requestPermissionsDetectingCollectionDisabled()
                 .subscribe(onSuccess: { [weak self] outcome in
                     guard let self = self else { return }

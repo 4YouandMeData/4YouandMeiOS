@@ -143,7 +143,10 @@ extension MediaEventsMapper: SRSensorReaderDelegate {
 // MARK: - Mapping (documented keys only, safe KVC)
 
 @available(iOS 16.4, *)
-private extension MediaEventsMapper {
+// Internal (was private): the per-mapper recorded_at anchor-guard specs exercise the mapping
+// seams with KVC stand-ins (FUAM-3945 round 9, F1: a mapper regression dropping recorded_at
+// silently degrades the server row anchor to upload time).
+extension MediaEventsMapper {
 
     // Safe KVC helpers
     static func valueIfResponds(_ obj: NSObject, _ key: String) -> Any? {

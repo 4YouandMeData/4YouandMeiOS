@@ -748,7 +748,42 @@ public final class SensorSampleUploadManager {
               + (isBackfillProbe ? " [backward probe]" : ""))
         #endif
 
+        // FUAM-3945 (D3/D12, C1 item 9): a rescan tail is the one moment recent windows are
+        // re-read, so it is also when `SRDeletionRecord`s are worth looking for — one extra
+        // fetch per sensor+device per day, telemetry only, no control flow (S10: "the gap is
+        // permanent and the OS said why" vs "the gap may still fill on a later rescan").
+        if let rescanFrom = plan.rescanFrom, let headEnd = plan.windows.last?.end {
+            self.launchDeletionRecordProbe(for: sensor, device: device, from: rescanFrom, to: headEnd)
+        }
+
         processWindow(at: 0, of: isBackfillProbe ? plan.windows.reversed() : plan.windows, context: context)
+    }
+
+    /// Kept alive for the duration of their fetch (`SRSensorReader` holds its delegate weakly).
+    private var deletionProbes: [SensorDeletionRecordProbe] = []
+    private let deletionProbeLock = NSLock()
+
+    /// Fire-and-forget `SRDeletionRecord` reader over the rescan span (C1 item 9). Guarded by
+    /// the same authorization check as the pipeline, so it never runs where fetches cannot
+    /// (including the simulator, where no sensor is ever `.authorized`).
+    private func launchDeletionRecordProbe(for sensor: SRSensor, device: SensorDevice, from: Date, to: Date) {
+        guard self.isAuthorized(sensor) else { return }
+        let probe = SensorDeletionRecordProbe(sensor: sensor)
+        self.deletionProbeLock.lock()
+        self.deletionProbes.append(probe)
+        self.deletionProbeLock.unlock()
+        probe.start(from: from, to: to, device: device) { [weak self] deletions in
+            guard let self else { return }
+            for deletion in deletions {
+                self.analytics.track(event: .sensorDeletionRecord(
+                    sensor: sensor.shortSubsource,
+                    reason: deletion.reason,
+                    spanSeconds: Int(deletion.end.timeIntervalSince(deletion.start))))
+            }
+            self.deletionProbeLock.lock()
+            self.deletionProbes.removeAll { $0 === probe }
+            self.deletionProbeLock.unlock()
+        }
     }
 
     /// Sequentially process each window to respect mapper's "no concurrent fetch" precondition.
@@ -1300,6 +1335,88 @@ public final class SensorSampleUploadManager {
             // The ledger goes WITH the queue (D4): a purged batch was never uploaded, so its
             // fingerprints must not survive to suppress a legitimate re-collection.
             storage.purgeLedger(for: sensor)
+        }
+    }
+}
+
+// MARK: - Deletion-record probe (FUAM-3945, C1 item 9 — telemetry only)
+
+/// One `SRFetchRequest` whose only interest is the `SRDeletionRecord`s in the range: the OS's
+/// own statement that data in a span was deleted and why. Regular samples are ignored (the
+/// pipeline's mappers own those). The reader is its own delegate holder; the manager retains
+/// the probe until the fetch completes or fails.
+final class SensorDeletionRecordProbe: NSObject, SRSensorReaderDelegate {
+
+    struct Deletion {
+        let start: Date
+        let end: Date
+        let reason: String
+    }
+
+    private let reader: SRSensorReader
+    private let lock = NSLock()
+    private var collected: [Deletion] = []
+    private var completion: (([Deletion]) -> Void)?
+
+    init(sensor: SRSensor) {
+        self.reader = SRSensorReader(sensor: sensor)
+        super.init()
+    }
+
+    func start(from: Date, to: Date, device: SensorDevice, completion: @escaping ([Deletion]) -> Void) {
+        self.lock.lock()
+        self.completion = completion
+        self.lock.unlock()
+        self.reader.delegate = self
+        let request = SRFetchRequest()
+        request.device = device.fetchTarget
+        request.from = from.srAbsoluteTime
+        request.to = to.srAbsoluteTime
+        self.reader.fetch(request)
+    }
+
+    func sensorReader(_ reader: SRSensorReader,
+                      fetching fetchRequest: SRFetchRequest,
+                      didFetchResult result: SRFetchResult<AnyObject>) -> Bool {
+        if let deletion = result.sample as? SRDeletionRecord {
+            let record = Deletion(start: Date(timeIntervalSinceReferenceDate: deletion.startTime.toCFAbsoluteTime()),
+                                  end: Date(timeIntervalSinceReferenceDate: deletion.endTime.toCFAbsoluteTime()),
+                                  reason: Self.reasonName(deletion.reason))
+            self.lock.lock()
+            self.collected.append(record)
+            self.lock.unlock()
+        }
+        return true
+    }
+
+    func sensorReader(_ reader: SRSensorReader, didCompleteFetch fetchRequest: SRFetchRequest) {
+        self.finish()
+    }
+
+    func sensorReader(_ reader: SRSensorReader,
+                      fetching fetchRequest: SRFetchRequest,
+                      failedWithError error: Error) {
+        // Best-effort telemetry: deliver whatever was collected before the failure.
+        self.finish()
+    }
+
+    private func finish() {
+        self.lock.lock()
+        let completion = self.completion
+        self.completion = nil
+        let deletions = self.collected
+        self.lock.unlock()
+        completion?(deletions)
+    }
+
+    static func reasonName(_ reason: SRDeletionReason) -> String {
+        switch reason {
+        case .userInitiated: return "user_initiated"
+        case .lowDiskSpace: return "low_disk_space"
+        case .ageLimit: return "age_limit"
+        case .noInterestedClients: return "no_interested_clients"
+        case .systemInitiated: return "system_initiated"
+        @unknown default: return "unknown_\(reason.rawValue)"
         }
     }
 }
