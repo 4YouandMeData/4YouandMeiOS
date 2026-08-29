@@ -221,35 +221,59 @@ class SensorKitEntitlementSpec: QuickSpec {
             // XPC cold-start cannot suppress a genuine detection (review F4).
 
             it("blames the switch when nothing authorized and everything fast-declined") {
-                expect(SensorKitManager.setupOutcome(fastDeclineCount: 4, askedCount: 4, anyAuthorizedAfterLoop: false, hasEntitlementDeclaration: true))
+                expect(SensorKitManager.setupOutcome(fastDeclineCount: 4,
+                                                     askedCount: 4,
+                                                     anyAuthorizedAfterLoop: false,
+                                                     hasEntitlementDeclaration: true))
                     == .collectionDisabledSystemWide
-                expect(SensorKitManager.setupOutcome(fastDeclineCount: 1, askedCount: 1, anyAuthorizedAfterLoop: false, hasEntitlementDeclaration: true))
+                expect(SensorKitManager.setupOutcome(fastDeclineCount: 1,
+                                                     askedCount: 1,
+                                                     anyAuthorizedAfterLoop: false,
+                                                     hasEntitlementDeclaration: true))
                     == .collectionDisabledSystemWide
             }
 
             it("survives one slow cold-start: 7 of 8 fast with nothing authorized is still the switch") {
-                expect(SensorKitManager.setupOutcome(fastDeclineCount: 7, askedCount: 8, anyAuthorizedAfterLoop: false, hasEntitlementDeclaration: true))
+                expect(SensorKitManager.setupOutcome(fastDeclineCount: 7,
+                                                     askedCount: 8,
+                                                     anyAuthorizedAfterLoop: false,
+                                                     hasEntitlementDeclaration: true))
                     == .collectionDisabledSystemWide
             }
 
             it("never blames the switch while ANYTHING is authorized (the permission-cell scenario)") {
                 // 2 unentitled sensors fast-decline while 6 are authorized: a per-sensor
                 // condition, not the master switch — the device-confirmed false alert.
-                expect(SensorKitManager.setupOutcome(fastDeclineCount: 2, askedCount: 2, anyAuthorizedAfterLoop: true, hasEntitlementDeclaration: true))
+                expect(SensorKitManager.setupOutcome(fastDeclineCount: 2,
+                                                     askedCount: 2,
+                                                     anyAuthorizedAfterLoop: true,
+                                                     hasEntitlementDeclaration: true))
                     == .completed
-                expect(SensorKitManager.setupOutcome(fastDeclineCount: 8, askedCount: 8, anyAuthorizedAfterLoop: true, hasEntitlementDeclaration: true))
+                expect(SensorKitManager.setupOutcome(fastDeclineCount: 8,
+                                                     askedCount: 8,
+                                                     anyAuthorizedAfterLoop: true,
+                                                     hasEntitlementDeclaration: true))
                     == .completed
             }
 
             it("stays quiet below a majority of fast declines") {
-                expect(SensorKitManager.setupOutcome(fastDeclineCount: 2, askedCount: 8, anyAuthorizedAfterLoop: false, hasEntitlementDeclaration: true))
+                expect(SensorKitManager.setupOutcome(fastDeclineCount: 2,
+                                                     askedCount: 8,
+                                                     anyAuthorizedAfterLoop: false,
+                                                     hasEntitlementDeclaration: true))
                     == .completed
-                expect(SensorKitManager.setupOutcome(fastDeclineCount: 0, askedCount: 3, anyAuthorizedAfterLoop: false, hasEntitlementDeclaration: true))
+                expect(SensorKitManager.setupOutcome(fastDeclineCount: 0,
+                                                     askedCount: 3,
+                                                     anyAuthorizedAfterLoop: false,
+                                                     hasEntitlementDeclaration: true))
                     == .completed
             }
 
             it("never reports 'disabled' when there was nothing to ask") {
-                expect(SensorKitManager.setupOutcome(fastDeclineCount: 0, askedCount: 0, anyAuthorizedAfterLoop: false, hasEntitlementDeclaration: true))
+                expect(SensorKitManager.setupOutcome(fastDeclineCount: 0,
+                                                     askedCount: 0,
+                                                     anyAuthorizedAfterLoop: false,
+                                                     hasEntitlementDeclaration: true))
                     == .completed
             }
 
