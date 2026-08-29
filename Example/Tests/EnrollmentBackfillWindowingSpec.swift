@@ -2560,3 +2560,716 @@ class SensorFetchSpanSpec: QuickSpec {
         }
     }
 }
+
+// MARK: - FUAM-3945 AC2 (revised): the participant-timezone partition
+
+/// Window/batch boundaries are a pure function of (absolute time, the BACKEND-authoritative
+/// `user.time_zone`) — the same authority the adherence chart buckets rows with. Never the
+/// handset's timezone, never a fixed 86400-second stride (DST days are 23 or 25 hours long).
+class SensorPartitionSpec: QuickSpec {
+
+    // swiftlint:disable:next function_body_length
+    override class func spec() {
+
+        let hour: TimeInterval = 3600
+        let day: TimeInterval = 24 * hour
+        let rome = TimeZone(identifier: "Europe/Rome")!
+        var romeCalendar = Calendar(identifier: .gregorian)
+        romeCalendar.timeZone = rome
+
+        func plan(now: Date, joinDay: Date?, cursor: Date?, timeZone: TimeZone) -> SensorSampleUploadManager.WindowPlan {
+            return SensorSampleUploadManager.buildWindowPlan(now: now,
+                                                             boundNow: now,
+                                                             joinDay: joinDay,
+                                                             cursor: cursor,
+                                                             embargo: day,
+                                                             timeZone: timeZone)
+        }
+
+        it("cuts windows on participant-timezone day boundaries, not UTC midnights") {
+            // 2026-08-10 12:00:00 UTC; Rome is UTC+2 in August.
+            let now = Date(timeIntervalSince1970: 1786104000)
+            let joinDay = romeCalendar.startOfDay(for: now.addingTimeInterval(-5 * day))
+            let result = plan(now: now, joinDay: joinDay, cursor: nil, timeZone: rome)
+            expect(result.windows).toNot(beEmpty())
+            for window in result.windows {
+                expect(window.start).to(equal(romeCalendar.startOfDay(for: window.start)))
+                expect(window.start).toNot(equal(SensorSampleUploadManager.utcDayStart(window.start)))
+            }
+            for (previous, next) in zip(result.windows, result.windows.dropFirst()) {
+                expect(previous.end).to(equal(next.start))
+            }
+        }
+
+        it("plans a 23-hour window across the DST spring-forward day, with no gap or overlap") {
+            // EU spring-forward 2026: Sunday 2026-03-29 (02:00 -> 03:00 in Rome).
+            // 2026-04-02 12:00:00 UTC.
+            let now = Date(timeIntervalSince1970: 1775131200)
+            let joinDay = romeCalendar.startOfDay(for: now.addingTimeInterval(-7 * day))
+            let result = plan(now: now, joinDay: joinDay, cursor: nil, timeZone: rome)
+            let durations = result.windows.map { $0.duration }
+            expect(durations).to(contain(23 * hour))
+            expect(durations.filter { $0 != 23 * hour && $0 != 24 * hour }).to(beEmpty())
+            for (previous, next) in zip(result.windows, result.windows.dropFirst()) {
+                expect(previous.end).to(equal(next.start))
+            }
+        }
+
+        it("plans a 25-hour window across the DST fall-back day, with no gap or overlap") {
+            // EU fall-back 2026: Sunday 2026-10-25 (03:00 -> 02:00 in Rome).
+            // 2026-10-29 12:00:00 UTC.
+            let now = Date(timeIntervalSince1970: 1793275200)
+            let joinDay = romeCalendar.startOfDay(for: now.addingTimeInterval(-7 * day))
+            let result = plan(now: now, joinDay: joinDay, cursor: nil, timeZone: rome)
+            let durations = result.windows.map { $0.duration }
+            expect(durations).to(contain(25 * hour))
+            expect(durations.filter { $0 != 25 * hour && $0 != 24 * hour }).to(beEmpty())
+            for (previous, next) in zip(result.windows, result.windows.dropFirst()) {
+                expect(previous.end).to(equal(next.start))
+            }
+        }
+
+        it("is invariant to the HANDSET timezone while user.time_zone is held fixed (AC3)") {
+            let now = Date(timeIntervalSince1970: 1786104000)
+            let joinDay = romeCalendar.startOfDay(for: now.addingTimeInterval(-4 * day))
+            let original = NSTimeZone.default
+            var plans: [[DateInterval]] = []
+            for identifier in ["UTC", "Asia/Tokyo", "Pacific/Kiritimati", "America/Los_Angeles"] {
+                NSTimeZone.default = TimeZone(identifier: identifier)!
+                plans.append(plan(now: now, joinDay: joinDay, cursor: nil, timeZone: rome).windows)
+            }
+            NSTimeZone.default = original
+            for other in plans.dropFirst() {
+                expect(other).to(equal(plans[0]))
+            }
+        }
+
+        it("reproduces byte-identical batches and anchors after a wipe + device-timezone change (AC2)") {
+            // The reinstall simulation: same underlying records, fresh client state, different
+            // handset timezone — the partition, the batches and the client-side anchor
+            // (min recorded_at, what the server derives retrieved_at from) must not move.
+            let sensor = SRSensor.deviceUsageReport
+            let now = SensorSampleUploadManager.utcDayStart(Date())
+            let joinDay = romeCalendar.startOfDay(for: now.addingTimeInterval(-6 * day))
+            let recordTime = now.addingTimeInterval(-2 * day + 3 * hour)
+            let records: [[String: Any]] = [
+                ["start": ISO8601DateFormatter().string(from: recordTime),
+                 "duration_s": 3600,
+                 "recorded_at": ISO8601DateFormatter().string(from: recordTime.addingTimeInterval(hour))],
+                ["start": ISO8601DateFormatter().string(from: recordTime.addingTimeInterval(2 * hour)),
+                 "duration_s": 3600,
+                 "recorded_at": ISO8601DateFormatter().string(from: recordTime.addingTimeInterval(3 * hour))]
+            ]
+
+            func runOnce(deviceTimeZone: String) -> [(records: [[String: Any]], windowStart: Date)] {
+                let original = NSTimeZone.default
+                NSTimeZone.default = TimeZone(identifier: deviceTimeZone)!
+                defer { NSTimeZone.default = original }
+                let storage = FakeSensorStorage()
+                let clearance = FakeSensorClearance()
+                clearance.enrollmentDate = joinDay
+                clearance.participantTimeZone = rome
+                let mapper = RecordingDeviceMapper()
+                mapper.records = records
+                let manager = SensorSampleUploadManager(withSensors: [sensor],
+                                                        storage: storage,
+                                                        reachability: FakeSensorReachability(),
+                                                        analytics: CapturingAnalyticsService(),
+                                                        mappers: [sensor: mapper])
+                manager.clearanceDelegate = clearance
+                manager.runDeviceChain(at: 0, of: [.current], for: sensor, now: now, using: mapper)
+                expect(storage.enqueued.count).toEventually(beGreaterThan(0), timeout: .seconds(5))
+                return storage.enqueued
+            }
+
+            let first = runOnce(deviceTimeZone: "Pacific/Auckland")
+            let second = runOnce(deviceTimeZone: "America/Los_Angeles")
+
+            expect(second.count).to(equal(first.count))
+            for (batchA, batchB) in zip(first, second) {
+                expect(batchB.windowStart).to(equal(batchA.windowStart))
+                let bytesA = SensorUploadLedger.canonical(["records": batchA.records])
+                let bytesB = SensorUploadLedger.canonical(["records": batchB.records])
+                expect(bytesB).to(equal(bytesA))
+                // The client-side anchor: min recorded_at over the batch.
+                let anchorA = batchA.records.compactMap { $0["recorded_at"] as? String }.min()
+                let anchorB = batchB.records.compactMap { $0["recorded_at"] as? String }.min()
+                expect(anchorB).to(equal(anchorA))
+            }
+        }
+
+        it("plans on the device clock capped by server time even 30 days ahead or behind (AC3)") {
+            let sensor = SRSensor.pedometerData
+            defer { UserDefaults.standard.removeObject(forKey: ServerClock.storageKey) }
+
+            // Device 30 days AHEAD: no window may end past serverNow - embargo.
+            let deviceAhead = Date()
+            UserDefaults.standard.set(-30 * day, forKey: ServerClock.storageKey)
+            let storage = FakeSensorStorage()
+            let clearance = FakeSensorClearance()
+            clearance.enrollmentDate = deviceAhead.addingTimeInterval(-60 * day)
+            let manager = SensorSampleUploadManager(withSensors: [sensor],
+                                                    storage: storage,
+                                                    reachability: FakeSensorReachability(),
+                                                    analytics: CapturingAnalyticsService(),
+                                                    mappers: [sensor: RecordingDeviceMapper()])
+            manager.clearanceDelegate = clearance
+            let ahead = manager.buildWindowPlan(for: sensor, now: deviceAhead, device: .current)
+            expect(ahead.windows.last?.end)
+                .to(beLessThanOrEqualTo(deviceAhead.addingTimeInterval(-30 * day - day)))
+
+            // Device 30 days BEHIND: the 365-day floor is measured from the LATER clock.
+            UserDefaults.standard.set(30 * day, forKey: ServerClock.storageKey)
+            clearance.enrollmentDate = deviceAhead.addingTimeInterval(-500 * day)
+            let behind = manager.buildWindowPlan(for: sensor, now: deviceAhead, device: .current)
+            expect(behind.consentBound)
+                .to(beGreaterThan(deviceAhead.addingTimeInterval(-365 * day)))
+        }
+
+        it("falls back to UTC — never the handset timezone — and reports it, when user.time_zone is missing") {
+            let sensor = SRSensor.pedometerData
+            let now = SensorSampleUploadManager.utcDayStart(Date())
+            let storage = FakeSensorStorage()
+            let clearance = FakeSensorClearance()
+            clearance.enrollmentDate = now.addingTimeInterval(-4 * day)
+            clearance.participantTimeZone = nil
+            let analytics = CapturingAnalyticsService()
+            let manager = SensorSampleUploadManager(withSensors: [sensor],
+                                                    storage: storage,
+                                                    reachability: FakeSensorReachability(),
+                                                    analytics: analytics,
+                                                    mappers: [sensor: RecordingDeviceMapper()])
+            manager.clearanceDelegate = clearance
+
+            let original = NSTimeZone.default
+            NSTimeZone.default = TimeZone(identifier: "Pacific/Kiritimati")!
+            let result = manager.buildWindowPlan(for: sensor, now: now, device: .current)
+            NSTimeZone.default = original
+
+            for window in result.windows {
+                expect(window.start).to(equal(SensorSampleUploadManager.utcDayStart(window.start)))
+            }
+            let fallbacks = analytics.trackedEvents.filter {
+                if case .sensorTimezoneFallback = $0 { return true }
+                return false
+            }
+            expect(fallbacks.count).to(equal(1))
+        }
+    }
+}
+
+// MARK: - FUAM-3945 (D3): the rescan tail
+
+class SensorRescanTailSpec: QuickSpec {
+
+    // swiftlint:disable:next function_body_length
+    override class func spec() {
+
+        let hour: TimeInterval = 3600
+        let day: TimeInterval = 24 * hour
+        let sensor = SRSensor.deviceUsageReport
+        let now = SensorSampleUploadManager.utcDayStart(Date())
+        let joinDay = now.addingTimeInterval(-30 * day)
+        // With a 24h embargo and `now` on a UTC midnight, safeTo = now - 1d (aligned).
+        let tail = now.addingTimeInterval(-4 * day)   // dayStart(safeTo) - 3 days
+
+        func plan(cursor: Date?, rescanFrom: Date?) -> SensorSampleUploadManager.WindowPlan {
+            return SensorSampleUploadManager.buildWindowPlan(now: now,
+                                                             boundNow: now,
+                                                             joinDay: joinDay,
+                                                             cursor: cursor,
+                                                             embargo: day,
+                                                             rescanFrom: rescanFrom)
+        }
+
+        it("re-plans the tail days behind the cursor when the rescan is due") {
+            let cursor = now.addingTimeInterval(-day)
+            let result = plan(cursor: cursor, rescanFrom: tail)
+            expect(result.windows.first?.start).to(equal(tail))
+            expect(result.rescanFrom).to(equal(tail))
+            // Routine pass: the origin must stay `.cursor`, so no reach telemetry fires daily.
+            expect(result.lowerBoundOrigin).to(equal(BackfillLowerBound.Origin.cursor))
+        }
+
+        it("keeps the plain cursor resume when the rescan is not due") {
+            let cursor = now.addingTimeInterval(-2 * day)
+            let result = plan(cursor: cursor, rescanFrom: nil)
+            expect(result.windows.first?.start).to(equal(cursor))
+            expect(result.rescanFrom).to(beNil())
+        }
+
+        it("never rewinds below the consent bound") {
+            let bound = now.addingTimeInterval(-2 * day)
+            let result = SensorSampleUploadManager.buildWindowPlan(now: now,
+                                                                   boundNow: now,
+                                                                   joinDay: bound,
+                                                                   cursor: now.addingTimeInterval(-day),
+                                                                   embargo: day,
+                                                                   rescanFrom: tail)
+            expect(result.windows.first?.start).to(equal(bound))
+        }
+
+        it("does not touch a plan already starting at or before the tail") {
+            let cursor = now.addingTimeInterval(-10 * day)
+            let result = plan(cursor: cursor, rescanFrom: tail)
+            expect(result.windows.first?.start).to(equal(cursor))
+            expect(result.rescanFrom).to(beNil())
+        }
+
+        it("re-plans the tail as whole grid days, so re-fetches reproduce the original windows") {
+            let result = plan(cursor: now.addingTimeInterval(-day), rescanFrom: tail)
+            for window in result.windows {
+                expect(window.start).to(equal(SensorSampleUploadManager.utcDayStart(window.start)))
+                expect(window.duration).to(equal(day))
+            }
+        }
+
+        describe("the manager-level gate and cursor safety") {
+
+            var storage: FakeSensorStorage!
+            var clearance: FakeSensorClearance!
+            var analytics: CapturingAnalyticsService!
+            var mapper: RecordingDeviceMapper!
+            var manager: SensorSampleUploadManager!
+
+            beforeEach {
+                storage = FakeSensorStorage()
+                clearance = FakeSensorClearance()
+                clearance.enrollmentDate = joinDay
+                analytics = CapturingAnalyticsService()
+                mapper = RecordingDeviceMapper()
+                manager = SensorSampleUploadManager(withSensors: [sensor],
+                                                    storage: storage,
+                                                    reachability: FakeSensorReachability(),
+                                                    analytics: analytics,
+                                                    mappers: [sensor: mapper])
+                manager.clearanceDelegate = clearance
+            }
+
+            it("arms the tail at most once per day (a 15-second sync cadence cannot multiply it)") {
+                storage.setLastCursor(now.addingTimeInterval(-day), for: sensor)
+                let first = manager.buildWindowPlan(for: sensor, now: now, device: .current)
+                let second = manager.buildWindowPlan(for: sensor, now: now, device: .current)
+                expect(first.rescanFrom).toNot(beNil())
+                expect(second.rescanFrom).to(beNil())
+                expect(second.windows).to(beEmpty())   // plain resume from the head cursor
+            }
+
+            it("re-reads windows behind the cursor without ever rewinding it (D-D fix, AC4)") {
+                let head = now.addingTimeInterval(-day)
+                storage.setLastCursor(head, for: sensor)
+                mapper.records = [["t": ISO8601DateFormatter().string(from: now.addingTimeInterval(-3 * day + hour))]]
+
+                manager.runDeviceChain(at: 0, of: [.current], for: sensor, now: now, using: mapper)
+
+                // The three tail days were re-fetched...
+                expect(mapper.calls.count).toEventually(equal(3), timeout: .seconds(5))
+                // ...their novel records enqueued...
+                expect(storage.enqueued.count).toEventually(beGreaterThan(0), timeout: .seconds(5))
+                // ...and the cursor never moved backwards.
+                expect(storage.lastCursor(for: sensor)).toAlways(equal(head), until: .milliseconds(300))
+            }
+
+            it("reports novel records found on a rescan pass (the D-D completion curve)") {
+                storage.setLastCursor(now.addingTimeInterval(-day), for: sensor)
+                mapper.records = [["t": ISO8601DateFormatter().string(from: now.addingTimeInterval(-2 * day + hour))]]
+
+                manager.runDeviceChain(at: 0, of: [.current], for: sensor, now: now, using: mapper)
+
+                func novelCounts() -> [Int] {
+                    return analytics.trackedEvents.compactMap { event in
+                        if case let .sensorRescanNovel(_, _, _, novelCount) = event { return novelCount }
+                        return nil
+                    }
+                }
+                expect(novelCounts()).toEventuallyNot(beEmpty(), timeout: .seconds(5))
+                expect(novelCounts().reduce(0, +)).to(beGreaterThan(0))
+            }
+        }
+    }
+}
+
+// MARK: - FUAM-3945 (D4): the upload ledger and its canonical serializer
+
+class SensorUploadLedgerSpec: QuickSpec {
+
+    // swiftlint:disable:next function_body_length
+    override class func spec() {
+
+        let hour: TimeInterval = 3600
+        let day: TimeInterval = 24 * hour
+        let windowDay = SensorSampleUploadManager.utcDayStart(Date().addingTimeInterval(-2 * day))
+
+        describe("the canonical serializer (the load-bearing property: byte stability)") {
+
+            it("hashes the same logical record identically however it was built") {
+                // Same record, two constructions: different key insertion order, Int vs Double
+                // NSNumber boxing, nested containers built separately.
+                var recordA: [String: Any] = [:]
+                recordA["duration_s"] = 900
+                recordA["recorded_at"] = "2026-08-26T00:14:59Z"
+                recordA["nested"] = ["b": 2, "a": [1, 2, 3]] as [String: Any]
+                recordA["flag"] = true
+
+                var recordB: [String: Any] = [:]
+                recordB["flag"] = true
+                var nested: [String: Any] = [:]
+                nested["a"] = [NSNumber(value: 1.0), NSNumber(value: 2.0), NSNumber(value: 3.0)]
+                nested["b"] = NSNumber(value: 2.0)
+                recordB["nested"] = nested
+                recordB["recorded_at"] = "2026-08-26T00:14:59Z"
+                recordB["duration_s"] = NSNumber(value: 900.0)
+
+                expect(SensorUploadLedger.fingerprint(of: recordB))
+                    .to(equal(SensorUploadLedger.fingerprint(of: recordA)))
+            }
+
+            it("does not confuse a boolean with the integer 1") {
+                expect(SensorUploadLedger.canonical(["v": true])).toNot(equal(SensorUploadLedger.canonical(["v": 1])))
+            }
+
+            it("renders fractional doubles deterministically and integral doubles as integers") {
+                expect(SensorUploadLedger.canonical(["v": 0.1])).to(equal(SensorUploadLedger.canonical(["v": 0.1])))
+                expect(SensorUploadLedger.canonical(["v": NSNumber(value: 42.0)]))
+                    .to(equal(SensorUploadLedger.canonical(["v": 42])))
+                expect(SensorUploadLedger.canonical(["v": 0.1])).toNot(equal(SensorUploadLedger.canonical(["v": 0.2])))
+            }
+
+            it("sorts keys, so dictionary iteration order can never leak into the fingerprint") {
+                expect(SensorUploadLedger.canonical(["b": 1, "a": 2]))
+                    .to(equal("{\"a\":2,\"b\":1}"))
+            }
+
+            it("escapes strings byte-wise, locale-free") {
+                expect(SensorUploadLedger.canonical(["s": "a\"b\\c\n"]))
+                    .to(equal("{\"s\":\"a\\\"b\\\\c\\u000a\"}"))
+            }
+        }
+
+        describe("filter") {
+
+            let sensor = SRSensor.deviceUsageReport
+            let record: [String: Any] = ["start": "2026-08-26T00:00:00Z",
+                                         "duration_s": 3600,
+                                         "recorded_at": "2026-08-26T01:00:00Z"]
+
+            it("drops a record whose fingerprint is already in the ledger") {
+                let first = SensorUploadLedger.filter(records: [record], sensor: sensor, windowDay: windowDay, ledger: [:])
+                expect(first.novel.count).to(equal(1))
+                let second = SensorUploadLedger.filter(records: [record],
+                                                       sensor: sensor,
+                                                       windowDay: windowDay,
+                                                       ledger: first.newEntries)
+                expect(second.novel).to(beEmpty())
+                expect(second.duplicateCount).to(equal(1))
+            }
+
+            it("drops a duplicate within one batch") {
+                let result = SensorUploadLedger.filter(records: [record, record],
+                                                       sensor: sensor,
+                                                       windowDay: windowDay,
+                                                       ledger: [:])
+                expect(result.novel.count).to(equal(1))
+                expect(result.duplicateCount).to(equal(1))
+            }
+
+            it("keeps a drifted record (different bytes) and counts it as a near-duplicate") {
+                let first = SensorUploadLedger.filter(records: [record], sensor: sensor, windowDay: windowDay, ledger: [:])
+                var drifted = record
+                drifted["recorded_at"] = "2026-08-26T01:01:00Z"   // S7: boundary moved a minute
+                let second = SensorUploadLedger.filter(records: [drifted],
+                                                       sensor: sensor,
+                                                       windowDay: windowDay,
+                                                       ledger: first.newEntries)
+                expect(second.novel.count).to(equal(1))            // uploaded — never suppressed
+                expect(second.nearDuplicateCount).to(equal(1))     // but measured
+            }
+
+            it("treats a non-overlapping late record as genuinely novel, not a near-duplicate") {
+                let first = SensorUploadLedger.filter(records: [record], sensor: sensor, windowDay: windowDay, ledger: [:])
+                let late: [String: Any] = ["start": "2026-08-26T16:00:00Z",
+                                           "duration_s": 3600,
+                                           "recorded_at": "2026-08-26T17:00:00Z"]
+                let second = SensorUploadLedger.filter(records: [late],
+                                                       sensor: sensor,
+                                                       windowDay: windowDay,
+                                                       ledger: first.newEntries)
+                expect(second.novel.count).to(equal(1))
+                expect(second.nearDuplicateCount).to(equal(0))
+            }
+
+            it("prunes by window day and keeps everything at or after the cutoff") {
+                let old = SensorLedgerEntry(day: windowDay.addingTimeInterval(-6 * day))
+                let recent = SensorLedgerEntry(day: windowDay)
+                let pruned = SensorUploadLedger.pruned(["old": old, "recent": recent],
+                                                       keepingDaysOnOrAfter: windowDay.addingTimeInterval(-day))
+                expect(pruned.keys.sorted()).to(equal(["recent"]))
+            }
+        }
+
+        describe("persistence") {
+
+            let sensor = SRSensor.messagesUsageReport
+            let ledgerKey = "sensorkit.ledger." + sensor.rawValue
+
+            afterEach { UserDefaults.standard.removeObject(forKey: ledgerKey) }
+
+            it("round-trips per device and purges per sensor (the purge path clears it with the queue)") {
+                let storage = DefaultsSensorStorage()
+                let entry = SensorLedgerEntry(day: windowDay,
+                                              periodStart: windowDay,
+                                              periodEnd: windowDay.addingTimeInterval(hour))
+                storage.setLedger(["fp1": entry], for: sensor, deviceKey: "iphone")
+                storage.setLedger(["fp2": SensorLedgerEntry(day: windowDay)], for: sensor, deviceKey: "watch")
+
+                expect(storage.ledger(for: sensor, deviceKey: "iphone")["fp1"]).to(equal(entry))
+                expect(storage.ledger(for: sensor, deviceKey: "watch").count).to(equal(1))
+
+                storage.purgeLedger(for: sensor)
+                expect(storage.ledger(for: sensor, deviceKey: "iphone")).to(beEmpty())
+                expect(storage.ledger(for: sensor, deviceKey: "watch")).to(beEmpty())
+            }
+        }
+    }
+}
+
+// MARK: - FUAM-3945 (AC1): the adaptive backfill probe
+
+/// A backfill reaches as far back as the OS actually holds data — bounded only by the join day,
+/// the 365-day cap and the cursor, never by a hardcoded retention assumption. The walk probes
+/// newest-first and stops after `probeEmptyWindowStop` consecutive confirmed-empty windows.
+class SensorBackfillProbeSpec: QuickSpec {
+
+    // swiftlint:disable:next function_body_length
+    override class func spec() {
+
+        let hour: TimeInterval = 3600
+        let day: TimeInterval = 24 * hour
+        let sensor = SRSensor.pedometerData
+        let now = SensorSampleUploadManager.utcDayStart(Date())
+        let stop = SensorSampleUploadManager.probeEmptyWindowStop
+
+        var storage: FakeSensorStorage!
+        var clearance: FakeSensorClearance!
+        var analytics: CapturingAnalyticsService!
+        var manager: SensorSampleUploadManager!
+        var mapper: ClosureDeviceMapper!
+
+        func makeManager(retainedDays: Double) {
+            storage = FakeSensorStorage()
+            clearance = FakeSensorClearance()
+            clearance.enrollmentDate = now.addingTimeInterval(-60 * day)
+            analytics = CapturingAnalyticsService()
+            let productiveFrom = now.addingTimeInterval(-retainedDays * day)
+            mapper = ClosureDeviceMapper { _, to in
+                // The OS "holds" data for the last `retainedDays` days: a window whose end is
+                // inside that horizon returns one record, an older one returns nothing.
+                guard to > productiveFrom else { return [] }
+                return [["t": ISO8601DateFormatter().string(from: to.addingTimeInterval(-hour))]]
+            }
+            manager = SensorSampleUploadManager(withSensors: [sensor],
+                                                storage: storage,
+                                                reachability: FakeSensorReachability(),
+                                                analytics: analytics,
+                                                mappers: [sensor: mapper])
+            manager.clearanceDelegate = clearance
+        }
+
+        it("reaches 25 days back when the OS holds 25 days — no hardcoded horizon") {
+            makeManager(retainedDays: 25)
+            manager.runDeviceChain(at: 0, of: [.current], for: sensor, now: now, using: mapper)
+
+            // 24 productive windows (ends -24d .. -1d) + `stop` empty probes, newest-first.
+            expect(mapper.callCount).toEventually(equal(24 + stop), timeout: .seconds(5))
+            expect(storage.deepestProductiveWindowStart(for: sensor)).to(equal(now.addingTimeInterval(-25 * day)))
+            expect(storage.lastCursor(for: sensor)).to(equal(now.addingTimeInterval(-day)))
+        }
+
+        it("stops after the empty streak when the OS holds only 3 days — instead of grinding to the bound") {
+            makeManager(retainedDays: 3)
+            manager.runDeviceChain(at: 0, of: [.current], for: sensor, now: now, using: mapper)
+
+            expect(mapper.callCount).toEventually(equal(2 + stop), timeout: .seconds(5))
+            expect(storage.lastCursor(for: sensor)).to(equal(now.addingTimeInterval(-day)))
+        }
+
+        it("persists and reports the deepest productive window (measured OS retention, AC8)") {
+            makeManager(retainedDays: 3)
+            manager.runDeviceChain(at: 0, of: [.current], for: sensor, now: now, using: mapper)
+
+            expect(storage.deepestProductiveWindowStart(for: sensor))
+                .toEventually(equal(now.addingTimeInterval(-3 * day)), timeout: .seconds(5))
+            let deepestEvents = analytics.trackedEvents.filter {
+                if case .sensorDeepestWindow = $0 { return true }
+                return false
+            }
+            expect(deepestEvents).toNot(beEmpty())
+        }
+
+        it("aborts on a fetch failure without writing any cursor, so the next cycle re-probes (AC4)") {
+            makeManager(retainedDays: 3)
+            mapper.failEverything = true
+            manager.runDeviceChain(at: 0, of: [.current], for: sensor, now: now, using: mapper)
+
+            expect(mapper.callCount).toEventually(equal(1), timeout: .seconds(5))
+            expect(storage.lastCursor(for: sensor)).toAlways(beNil(), until: .milliseconds(300))
+        }
+
+        it("never fetches before the consent bound even when every window has data") {
+            makeManager(retainedDays: 500)
+            clearance.enrollmentDate = now.addingTimeInterval(-4 * day)
+            manager.runDeviceChain(at: 0, of: [.current], for: sensor, now: now, using: mapper)
+
+            // 3 planned windows [-4d, -1d), all productive, probed newest-first — then the bound.
+            expect(mapper.callCount).toEventually(equal(3), timeout: .seconds(5))
+            expect(mapper.earliestFrom).toNot(beNil())
+            // The widened continuous fetch reaches at most epsilon past the oldest window start.
+            expect(mapper.earliestFrom)
+                .to(beGreaterThanOrEqualTo(now.addingTimeInterval(-4 * day - 1)))
+            expect(storage.lastCursor(for: sensor)).to(equal(now.addingTimeInterval(-day)))
+        }
+    }
+}
+
+// MARK: - FUAM-3945 (AC4): the cursor moves only past durably handled windows
+
+class SensorCursorDurabilitySpec: QuickSpec {
+
+    // swiftlint:disable:next function_body_length
+    override class func spec() {
+
+        let hour: TimeInterval = 3600
+        let day: TimeInterval = 24 * hour
+        let sensor = SRSensor.deviceUsageReport
+        let now = SensorSampleUploadManager.utcDayStart(Date())
+        let joinDay = now.addingTimeInterval(-30 * day)
+        let head = now.addingTimeInterval(-4 * day)
+
+        var storage: FakeSensorStorage!
+        var clearance: FakeSensorClearance!
+        var analytics: CapturingAnalyticsService!
+        var mapper: RecordingDeviceMapper!
+        var manager: SensorSampleUploadManager!
+
+        beforeEach {
+            storage = FakeSensorStorage()
+            clearance = FakeSensorClearance()
+            clearance.enrollmentDate = joinDay
+            analytics = CapturingAnalyticsService()
+            mapper = RecordingDeviceMapper()
+            manager = SensorSampleUploadManager(withSensors: [sensor],
+                                                storage: storage,
+                                                reachability: FakeSensorReachability(),
+                                                analytics: analytics,
+                                                mappers: [sensor: mapper])
+            manager.clearanceDelegate = clearance
+            // A cursor resume with the rescan already burnt for today: the plain forward walk.
+            storage.setLastCursor(head, for: sensor)
+            storage.setLastRescanDay(SensorSampleUploadManager.utcDayStart(now), for: sensor)
+        }
+
+        func origins() -> [String] {
+            return analytics.trackedEvents.compactMap { event in
+                if case let .sensorDataBackfillReach(_, _, boundedBy) = event { return boundedBy }
+                return nil
+            }
+        }
+
+        it("does not move the cursor on a fetch error") {
+            mapper.failingDeviceKeys = [SensorDevice.iphoneKey]
+            manager.runDeviceChain(at: 0, of: [.current], for: sensor, now: now, using: mapper)
+
+            expect(mapper.calls.count).toEventually(equal(1), timeout: .seconds(5))
+            expect(storage.lastCursor(for: sensor)).toAlways(equal(head), until: .milliseconds(300))
+        }
+
+        it("advances past a CONFIRMED-EMPTY window, and says so in telemetry") {
+            manager.runDeviceChain(at: 0, of: [.current], for: sensor, now: now, using: mapper)
+
+            expect(storage.lastCursor(for: sensor)).toEventually(equal(now.addingTimeInterval(-day)),
+                                                                 timeout: .seconds(5))
+            let empties: [(String, String)] = analytics.trackedEvents.compactMap { event in
+                if case let .sensorWindowEmpty(_, _, windowDay, pass) = event { return (windowDay, pass) }
+                return nil
+            }
+            expect(empties.count).to(equal(3))
+            expect(Set(empties.map { $0.1 })).to(equal(["first"]))
+        }
+
+        it("does not move the cursor when the enqueue fails, and reports enqueue_failed") {
+            storage.failEnqueue = true
+            mapper.records = [["t": ISO8601DateFormatter().string(from: head.addingTimeInterval(hour))]]
+            manager.runDeviceChain(at: 0, of: [.current], for: sensor, now: now, using: mapper)
+
+            expect(origins()).toEventually(contain(BackfillLowerBound.Origin.enqueueFailed.rawValue),
+                                           timeout: .seconds(5))
+            expect(storage.lastCursor(for: sensor)).toAlways(equal(head), until: .milliseconds(300))
+        }
+
+        it("advances past a window whose records were all deliberately consent-dropped, reporting the drop") {
+            mapper.records = [["t": ISO8601DateFormatter().string(from: joinDay.addingTimeInterval(-day))]]
+            manager.runDeviceChain(at: 0, of: [.current], for: sensor, now: now, using: mapper)
+
+            expect(storage.lastCursor(for: sensor)).toEventually(equal(now.addingTimeInterval(-day)),
+                                                                 timeout: .seconds(5))
+            let drops = analytics.trackedEvents.filter {
+                if case .sensorRecordDropped = $0 { return true }
+                return false
+            }
+            expect(drops).toNot(beEmpty())
+            expect(storage.enqueued).to(beEmpty())
+        }
+
+        it("labels an empty rescan window as a rescan pass") {
+            let window = DateInterval(start: now.addingTimeInterval(-3 * day), end: now.addingTimeInterval(-2 * day))
+            let context = SensorSampleUploadManager.DeviceChainContext(sensor: sensor,
+                                                                       device: .current,
+                                                                       devices: [.current],
+                                                                       deviceIndex: 0,
+                                                                       now: now,
+                                                                       mapper: mapper,
+                                                                       plannedBound: joinDay,
+                                                                       rescanBoundary: now.addingTimeInterval(-day))
+            manager.handleWindowResult(.success([]), window: window, at: 0, of: [window], context: context)
+
+            let passes: [String] = analytics.trackedEvents.compactMap { event in
+                if case let .sensorWindowEmpty(_, _, _, pass) = event { return pass }
+                return nil
+            }
+            expect(passes).toEventually(equal(["rescan_3"]), timeout: .seconds(5))
+        }
+    }
+}
+
+/// A mapper whose per-window result is decided by a closure over the (widened) fetch span.
+private final class ClosureDeviceMapper: SensorSampleMapper {
+
+    private let lock = NSLock()
+    private var count = 0
+    private var earliest: Date?
+    private let recordsForWindow: (Date, Date) -> [[String: Any]]
+
+    var failEverything = false
+
+    var callCount: Int { return self.lock.locked { self.count } }
+    var earliestFrom: Date? { return self.lock.locked { self.earliest } }
+
+    init(recordsForWindow: @escaping (Date, Date) -> [[String: Any]]) {
+        self.recordsForWindow = recordsForWindow
+    }
+
+    func fetchAndMap(from: Date,
+                     to: Date,
+                     device: SensorDevice,
+                     completion: @escaping (Result<[[String: Any]], Error>) -> Void) {
+        self.lock.locked {
+            self.count += 1
+            if self.earliest == nil || from < self.earliest! { self.earliest = from }
+        }
+        if self.failEverything {
+            completion(.failure(NSError(domain: "spec.mapper", code: 1)))
+        } else {
+            completion(.success(self.recordsForWindow(from, to)))
+        }
+    }
+}
