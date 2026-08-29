@@ -852,13 +852,17 @@ extension RepositoryImpl: HealthManagerClearanceDelegate {
 
     /// FUAM-3841 (final review): the backend computes `days_in_study` in the USER's timezone,
     /// so the derived day boundary must use it too — `Calendar.current` (device tz) can shift
-    /// the enrollment day by one when they differ. Falls back to the device timezone when the
-    /// user record carries none.
+    /// the enrollment day by one when they differ.
+    ///
+    /// FUAM-3945 round 2 (review F2): a missing `user.time_zone` falls back to UTC — the SAME
+    /// fallback the window partition uses — never to the device timezone. The consent bound and
+    /// the grid must share one day-boundary authority (AC2): a device-tz bound made the join
+    /// sliver window, hence its batch anchor, a function of the handset, and east of UTC it sat
+    /// up to ~14h below the UTC join-day floor. The tz-less condition is already reported once
+    /// per launch by the planner's `sensor_tz_fallback` (same trigger, same launch).
     static func enrollmentCalendar(userTimeZone: TimeZone?) -> Calendar {
-        var calendar = Calendar.current
-        if let userTimeZone = userTimeZone {
-            calendar.timeZone = userTimeZone
-        }
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = userTimeZone ?? TimeZone(identifier: "UTC")!
         return calendar
     }
 
