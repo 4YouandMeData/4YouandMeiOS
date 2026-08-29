@@ -892,10 +892,19 @@ public final class SensorSampleUploadManager {
 
             // Hard consent gate: drop anything measured before the backfill lower bound,
             // regardless of what SensorKit returned for the requested window. Deliberate loss,
-            // never silent (AC6).
+            // never silent (AC6). The vouch anchor is the NARROW window start — with one
+            // exception: a BACKWARD probe walks newest-first, so a widened report fetch can hand
+            // an undecidable record to a window one day NEWER than its own before that window is
+            // reached (the forward walk fetches a record's own window first and the ledger binds
+            // it there). Vouching such a record on the newer window's start would let a pre-join
+            // report through at the join boundary, so the probe vouches on the WIDENED span's
+            // start instead — conservative, never generous.
+            let vouchAnchor: Date = context.backwardProbe && Self.dayAggregatedSensors.contains(sensor)
+                ? window.start.addingTimeInterval(-Self.reportFetchLookback)
+                : window.start
             let gated = Self.dropPreBoundRecords(records,
                                                  lowerBound: boundDate,
-                                                 windowStart: window.start,
+                                                 windowStart: vouchAnchor,
                                                  sensor: sensor)
             if gated.count != records.count {
                 self.analytics.track(event: .sensorRecordDropped(sensor: context.device.telemetryName(for: sensor),

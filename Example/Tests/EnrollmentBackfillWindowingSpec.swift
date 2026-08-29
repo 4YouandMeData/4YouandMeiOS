@@ -3501,3 +3501,47 @@ class HealthChunkQuerySpec: QuickSpec {
         }
     }
 }
+
+// MARK: - FUAM-3945: probe-order consent guard (the widened fetch must never over-vouch)
+
+/// The backward probe walks newest-first, so a widened report fetch returns records BEFORE their
+/// own window is reached; vouching an undecidable record on the newer window's start would let a
+/// pre-join report through at the join boundary. The probe therefore vouches on the widened
+/// span's start — conservative, never generous (AC6).
+class SensorProbeVouchGuardSpec: QuickSpec {
+
+    override class func spec() {
+
+        let day: TimeInterval = 24 * 3600
+        let sensor = SRSensor.deviceUsageReport
+        let now = SensorSampleUploadManager.utcDayStart(Date())
+
+        it("drops an undecidable report record at the join boundary during the probe") {
+            let storage = FakeSensorStorage()
+            let clearance = FakeSensorClearance()
+            clearance.enrollmentDate = now.addingTimeInterval(-3 * day)   // two planned windows
+            let analytics = CapturingAnalyticsService()
+            let mapper = RecordingDeviceMapper()
+            // No readable measurement time: only the vouch can save it. Pre-fix, the probe's
+            // newest window ([-2d, -1d), start > bound) vouched for it and uploaded a record
+            // that may describe the pre-join day.
+            mapper.records = [["payload": "opaque"]]
+            let manager = SensorSampleUploadManager(withSensors: [sensor],
+                                                    storage: storage,
+                                                    reachability: FakeSensorReachability(),
+                                                    analytics: analytics,
+                                                    mappers: [sensor: mapper])
+            manager.clearanceDelegate = clearance
+
+            manager.runDeviceChain(at: 0, of: [.current], for: sensor, now: now, using: mapper)
+
+            expect(mapper.calls.count).toEventually(equal(2), timeout: .seconds(5))
+            expect(storage.enqueued).toAlways(beEmpty(), until: .milliseconds(300))
+            let drops = analytics.trackedEvents.filter {
+                if case .sensorRecordDropped = $0 { return true }
+                return false
+            }
+            expect(drops).toNot(beEmpty())
+        }
+    }
+}
