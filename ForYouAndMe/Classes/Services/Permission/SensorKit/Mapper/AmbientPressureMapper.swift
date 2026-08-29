@@ -56,8 +56,9 @@ final class AmbientPressureMapper: NSObject, SensorSampleMapper {
         }
 
         // Respect 24h holding period
-        // F10 (review round 1): never the raw device clock — a rollback between plan time and
-        // fetch time must not silently truncate the planned span.
+        // F10 (review round 1; wording corrected round 3): the best clock available — an
+        // improvement, not immunity: a rollback lowers BOTH operands until the next API
+        // response re-records the ServerClock offset.
         let safeTo = min(to, max(Date(), ServerClock.now()).addingTimeInterval(-Self.holdingPeriod))
         guard from < safeTo else {
             completion(.success([]))

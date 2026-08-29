@@ -61,10 +61,12 @@ final class AccelerometerMapper: NSObject, SensorSampleMapper {
         }
 
         // Enforce embargo: do not read within last 24h
-        // F10 (review round 1): never the raw device clock — a rollback between plan time and
-        // fetch time must not silently truncate the planned span (the manager would treat the
-        // partial result as the whole window). The planner owns embargo policy; this stays as
-        // defence in depth on the best clock available.
+        // F10 (review round 1; wording corrected round 3): the best clock available, not the raw
+        // device clock. An improvement, not immunity: ServerClock.now() is Date() + storedOffset,
+        // so a rollback lowers BOTH operands until the next API response re-records the offset —
+        // inside that gap the cutoff can still truncate the planned span (the manager would treat
+        // the partial result as the whole window). The planner owns embargo policy; this stays as
+        // defence in depth.
         let embargoCutoff = max(Date(), ServerClock.now()).addingTimeInterval(-Self.holdingPeriod)
         let safeTo = min(to, embargoCutoff)
         guard from < safeTo else {
