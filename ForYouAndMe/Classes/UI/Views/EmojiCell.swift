@@ -31,6 +31,27 @@ final class EmojiCell: UICollectionViewCell {
     // variance, not evidence of a different ratio for the common case.) One constant drives both
     // the icon and the emoji font size here, so they can't drift apart.
     //
+    // Round 9 (Jules pushed back on trusting a measured ratio, since Android's turned out wrong
+    // on-device): re-verified with CoreText's own ink metric —
+    // `CTLineGetBoundsWithOptions(line, .useGlyphPathBounds)` — which is authoritative in a way
+    // a pixel scan isn't. At 45pt it reports ~45.0001pt of ink for 🙂, 😡 AND 🍝 alike: Apple
+    // defines a color emoji glyph's design box as exactly its point size, for every glyph,
+    // regardless of how much of that box any one glyph's artwork actually paints. (For
+    // reference, `boundingRect(with:options:)` WITHOUT `.usesDeviceMetrics` reports ~53.7pt at
+    // the same 45pt — that's the line's layout box padded for ascent/descent/leading, not what
+    // gets visually compared against the icon; adding `.usesDeviceMetrics` back brings it to
+    // ~45.0001pt too, matching the CoreText ink metric.) A raw pixel scan of 🍝's rendered
+    // bitmap, by contrast, found only ~36.7pt of visible ink — spaghetti is wide, not tall; a
+    // per-glyph artwork fact, the same reason "i" and "W" don't paint equally tall in any font,
+    // and not something a font-wide constant could or should chase. Conclusion: unlike Android's
+    // Noto emoji, which overfills its box as a WHOLE FONT (fixable with one constant), Apple
+    // Color Emoji's box already equals its point size — there is nothing here for a runtime
+    // measure-then-solve calibration to correct, so this file deliberately keeps the one
+    // constant instead of adding that machinery. `EmojiCellSpec` pins this down two ways: a
+    // CoreText-ink-metric test with no calibration involved, and a live-layout test that renders
+    // both branches and asserts the glyph box and the icon box come out equal (the box, not
+    // individual glyph artwork — see the spec's comment for why that's the right level).
+    //
     // Internal (not private): the test target reads it too, so specs assert against the real
     // value instead of a second hardcoded copy of "45" that could silently drift from this one.
     static let glyphSlotHeight: CGFloat = 45

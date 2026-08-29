@@ -11,6 +11,7 @@
 import Quick
 import Nimble
 import UIKit
+import CoreText
 @testable import ForYouAndMe
 
 class EmojiCellSpec: QuickSpec {
@@ -428,6 +429,67 @@ class EmojiCellSpec: QuickSpec {
                 )
                 expect(title.lineBreakMode).to(equal(.byTruncatingTail))
                 expect(title.numberOfLines).to(equal(1))
+            }
+        }
+
+        // FUAM-3857 round 9 (Jules): "emojis should always be the same size as the none image
+        // or it will feel off" — enforced here, not just asserted in a comment. Two checks, at
+        // the two levels that actually matter:
+        //   1. CoreText's own ink metric for the emoji glyph, pinned to `glyphSlotHeight` with
+        //      no calibration math involved (see EmojiCell's round-9 comment for why: Apple
+        //      Color Emoji's glyph box already equals its point size, so there's nothing for a
+        //      measure-then-solve calibration to correct).
+        //   2. A live layout of both branches (real emoji vs. no-emoji icon), asserting their
+        //      rendered glyph boxes come out equal — this is the check that would have caught
+        //      Android's font-wide overfill, had it existed here.
+        // Deliberately NOT asserting on a raw pixel scan of each glyph's *painted* pixels: a
+        // pixel scan of 🍝 finds only ~36.7pt of ink at a 45pt font (spaghetti is wide, not
+        // tall) — that is normal per-glyph artwork variance, not a "sizes don't match" bug, the
+        // same reason "i" and "W" don't paint equally tall in any font at the same point size.
+        // The box is the right, meaningful, and stable level to hold this invariant at.
+        describe("FUAM-3857 round 9: emoji glyph box matches the no-emoji icon box, by construction") {
+
+            // CoreText's authoritative ink metric — `.useGlyphPathBounds`, NOT the plain layout
+            // box (which pads for ascent/descent/leading and measures ~54pt at a 45pt font,
+            // nowhere near what gets visually compared against the icon).
+            func glyphInkHeight(for text: String, font: UIFont) -> CGFloat {
+                let attrString = NSAttributedString(string: text, attributes: [.font: font])
+                let line = CTLineCreateWithAttributedString(attrString)
+                return CTLineGetBoundsWithOptions(line, .useGlyphPathBounds).height
+            }
+
+            it("reports ~glyphSlotHeight of CoreText ink for representative emoji, no calibration needed") {
+                let font = UIFont.systemFont(ofSize: EmojiCell.glyphSlotHeight)
+                for emoji in ["🙂", "😡", "🍝"] {
+                    expect(glyphInkHeight(for: emoji, font: font)).to(
+                        beCloseTo(EmojiCell.glyphSlotHeight, within: 0.5),
+                        description: "\(emoji)'s CoreText ink height should already equal glyphSlotHeight"
+                    )
+                }
+            }
+
+            it("lays out a real emoji's glyph box at the same height as the no-emoji icon's box") {
+                let iconCell = EmojiCell(frame: CGRect(x: 0, y: 0, width: 80, height: 80))
+                iconCell.configure(with: nil, selected: false)
+                iconCell.layoutIfNeeded()
+                let iconHeight = findImageView(in: iconCell)!.frame.height
+
+                for emoji in ["🙂", "😡", "🍝"] {
+                    let item = EmojiItem(id: "1", type: "feedback_tag", tag: emoji, label: nil)
+                    let emojiCell = EmojiCell(frame: CGRect(x: 0, y: 0, width: 80, height: 80))
+                    emojiCell.configure(with: item, selected: false)
+                    emojiCell.layoutIfNeeded()
+                    let label = findLabel(in: emojiCell, matching: { $0.font.pointSize == EmojiCell.glyphSlotHeight })!
+
+                    expect(label.frame.height).to(
+                        beCloseTo(iconHeight, within: 0.5),
+                        description: "\(emoji)'s glyph box must be laid out at the same height as the icon's box"
+                    )
+                    expect(glyphInkHeight(for: emoji, font: label.font)).to(
+                        beCloseTo(iconHeight, within: 0.5),
+                        description: "\(emoji)'s CoreText ink height must match the icon's box height"
+                    )
+                }
             }
         }
     }
