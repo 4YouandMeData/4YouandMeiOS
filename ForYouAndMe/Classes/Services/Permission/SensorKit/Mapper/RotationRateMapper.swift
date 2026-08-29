@@ -54,7 +54,9 @@ final class RotationRateMapper: NSObject, SensorSampleMapper {
         }
 
         // Respect 24h holding period
-        let safeTo = min(to, Date().addingTimeInterval(-Self.holdingPeriod))
+        // F10 (review round 1): never the raw device clock — a rollback between plan time and
+        // fetch time must not silently truncate the planned span.
+        let safeTo = min(to, max(Date(), ServerClock.now()).addingTimeInterval(-Self.holdingPeriod))
         guard from < safeTo else {
             completion(.success([]))
             return

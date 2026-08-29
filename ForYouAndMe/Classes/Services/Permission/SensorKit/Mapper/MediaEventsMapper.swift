@@ -68,7 +68,11 @@ final class MediaEventsMapper: NSObject, SensorSampleMapper {
         }
 
         // Enforce embargo: do not read within last 24h
-        let embargoCutoff = Date().addingTimeInterval(-Self.holdingPeriod)
+        // F10 (review round 1): never the raw device clock — a rollback between plan time and
+        // fetch time must not silently truncate the planned span (the manager would treat the
+        // partial result as the whole window). The planner owns embargo policy; this stays as
+        // defence in depth on the best clock available.
+        let embargoCutoff = max(Date(), ServerClock.now()).addingTimeInterval(-Self.holdingPeriod)
         let safeTo = min(to, embargoCutoff)
         guard from < safeTo else {
             completion(.success([]))
