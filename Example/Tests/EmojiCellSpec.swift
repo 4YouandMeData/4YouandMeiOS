@@ -315,6 +315,103 @@ class EmojiCellSpec: QuickSpec {
         // on rendered pixels, so they stay deterministic across whatever Dynamic Type / content
         // size category the test host happens to be running under — everything is measured
         // against the label's OWN live base font, never a hardcoded point size.
+        // FUAM-3857 round 10: Jules found Android's tiles shifting vertically depending on
+        // whether a tile had a caption and whether that caption had shrunk to fit - "the
+        // smileys should always be perfectly aligned regardless of the height or presence of
+        // the label". iOS gets the property from a different mechanism than Android does (a
+        // fixed-height glyph label and a fixed-size image view as arranged subviews of the
+        // stack, vs. a fixed-height slot Box in Compose), so it is pinned here independently
+        // rather than assumed to follow from Android's fix.
+        describe("EmojiCell glyph alignment is independent of the caption") {
+
+            beforeEach {
+                StringsProvider.initialize(withFullStringMap: [:], requiredStringMap: [:])
+            }
+
+            // Narrow enough that "pasta pastafarian" cannot fit unshrunk, so the third case
+            // really is exercising the shrink path and not just a third short caption.
+            func makeCell() -> EmojiCell {
+                EmojiCell(frame: CGRect(x: 0, y: 0, width: 80, height: 100))
+            }
+
+            // The shrink-describe block below defines its own copy; this one is local so the
+            // two blocks stay independent of each other's ordering.
+            func unshrunkWidth(_ text: String, font: UIFont) -> CGFloat {
+                (text as NSString).size(withAttributes: [.font: font]).width
+            }
+
+            func glyphFrame(of cell: EmojiCell) -> CGRect {
+                let glyph = findLabel(in: cell, matching: { $0.font.pointSize == EmojiCell.glyphSlotHeight })
+                return glyph?.frame ?? .zero
+            }
+
+            it("puts the glyph in the same place with no caption, a short one, and a shrunk one") {
+                let noCaption = makeCell()
+                noCaption.configure(with: EmojiItem(id: "1", type: "feedback_tag", tag: "🙂", label: nil),
+                                    selected: false)
+                noCaption.layoutIfNeeded()
+
+                let shortCaption = makeCell()
+                shortCaption.configure(with: EmojiItem(id: "2", type: "feedback_tag", tag: "😠", label: "angry"),
+                                       selected: false)
+                shortCaption.layoutIfNeeded()
+
+                let shrunkCaption = makeCell()
+                shrunkCaption.configure(with: EmojiItem(id: "3", type: "feedback_tag", tag: "🍝",
+                                                       label: "pasta pastafarian"),
+                                        selected: false)
+                shrunkCaption.layoutIfNeeded()
+
+                // Guard: if the long caption ever stopped shrinking, this example would still
+                // pass while proving nothing about the shrink case.
+                let shrunkTitle = findTitleLabel(in: shrunkCaption)!
+                expect(unshrunkWidth("pasta pastafarian", font: shrunkTitle.font)).to(
+                    beGreaterThan(shrunkTitle.bounds.width),
+                    description: "the long caption must actually need shrinking for this example to mean anything"
+                )
+
+                expect(glyphFrame(of: shortCaption)).to(equal(glyphFrame(of: noCaption)))
+                expect(glyphFrame(of: shrunkCaption)).to(equal(glyphFrame(of: noCaption)))
+            }
+
+            it("gives the caption row the same height whether it is empty, short or shrunk") {
+                let empty = makeCell()
+                empty.configure(with: nil, selected: false)
+                empty.layoutIfNeeded()
+
+                let short = makeCell()
+                short.configure(with: EmojiItem(id: "2", type: "feedback_tag", tag: "😠", label: "angry"),
+                                selected: false)
+                short.layoutIfNeeded()
+
+                let shrunk = makeCell()
+                shrunk.configure(with: EmojiItem(id: "3", type: "feedback_tag", tag: "🍝",
+                                                label: "pasta pastafarian"),
+                                 selected: false)
+                shrunk.layoutIfNeeded()
+
+                // The caption's own rendering shrinks; the row it sits in must not, or every
+                // tile in the grid lands at a different height - the Android symptom.
+                let emptyFrame = findTitleLabel(in: empty)!.frame
+                expect(findTitleLabel(in: short)!.frame).to(equal(emptyFrame))
+                expect(findTitleLabel(in: shrunk)!.frame).to(equal(emptyFrame))
+            }
+
+            it("puts the no-emoji icon on the same centre line as a real glyph") {
+                let none = makeCell()
+                none.configure(with: nil, selected: false)
+                none.layoutIfNeeded()
+
+                let emoji = makeCell()
+                emoji.configure(with: EmojiItem(id: "1", type: "feedback_tag", tag: "🙂", label: nil),
+                                selected: false)
+                emoji.layoutIfNeeded()
+
+                let iconCentre = findImageView(in: none)!.frame.midY
+                expect(iconCentre).to(beCloseTo(glyphFrame(of: emoji).midY, within: 0.5))
+            }
+        }
+
         describe("EmojiCell caption shrink-to-fit before ellipsis") {
 
             func makeCell(width: CGFloat = 80) -> EmojiCell {
