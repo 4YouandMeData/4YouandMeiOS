@@ -527,13 +527,16 @@ public final class SensorSampleUploadManager {
                           rescanFrom: appliedRescanFrom)
     }
 
-    /// FUAM-3945 (D1): how far a report-class FETCH reaches back beyond its window start. A
-    /// local-calendar-day report (SensorKit returns a usage report only when its whole period
-    /// fits inside the fetch range — the containment behaviour that killed `phone_usage_report`
-    /// on every non-UTC device) can start up to 14h before or after the UTC midnight the window
-    /// grid uses; a 24h lookback makes the 48h span contain any local day at any UTC offset,
-    /// permanently, with no `Calendar` in the planner.
-    static let reportFetchLookback: TimeInterval = utcDay
+    /// FUAM-3945 (D1, F4): how far a report-class FETCH reaches back beyond its window start.
+    /// A device-local-calendar-day report (SensorKit returns a usage report only when its whole
+    /// period fits inside the fetch range — the containment behaviour that killed
+    /// `phone_usage_report` on every non-UTC device) can start up to 14h before or after the
+    /// participant-day boundary the grid uses. 26h, not 24h (review round 1, F4): a 25-hour
+    /// DST fall-back report day combined with a participant-tz 25-hour window on the same date
+    /// (device one zone west of the profile zone — a traveller inside the same DST bloc) leaves
+    /// a 1-hour placement hole under a 24h widen, so that day fits NO window on any of its four
+    /// passes. The extra over-fetch is dropped by the window-membership filter and the ledger.
+    static let reportFetchLookback: TimeInterval = 26 * 60 * 60
 
     /// FUAM-3945 (D1): 1-second backward epsilon for the continuous sensors. `from` is
     /// documented EXCLUSIVE, `to` inclusivity is undocumented; under exclusive-both a record
@@ -546,12 +549,58 @@ public final class SensorSampleUploadManager {
     /// cursor grid on purpose: the cursor, `enqueueBatch(windowStart:)` and `windowVouches` all
     /// keep the NARROW `window` — widening any of them would either re-open a consent hole
     /// (a widened `windowStart` would let a pre-join report be vouched for) or break the grid.
-    /// Over-fetch is upload-free: re-fetched records are dropped by the upload ledger (D4).
+    /// Over-fetch is upload-free: on the forward walk the older window was processed first, so
+    /// the ledger (D4) drops the re-fetch; on the backward probe the older window has NOT run
+    /// yet, so `belongsToOlderProbeWindow` (review round 1, F1) keeps the record out of the
+    /// wrong window's batch instead.
     static func fetchSpan(for sensor: SRSensor, window: DateInterval) -> DateInterval {
         let lookback = Self.dayAggregatedSensors.contains(sensor)
             ? Self.reportFetchLookback
             : Self.continuousFetchEpsilon
         return DateInterval(start: window.start.addingTimeInterval(-lookback), end: window.end)
+    }
+
+    /// F1 (review round 1): window-membership rule for the BACKWARD probe. The probe walks
+    /// newest-first, so window W's widened fetch returns the previous day's records BEFORE
+    /// their own window has run; on a fresh/reinstalled device the ledger is empty, so without
+    /// this check both days landed in ONE batch anchored at the older day's minimum — a
+    /// permanently rowless newest day (a false "no data" adherence dot) on every fresh install,
+    /// cross-row duplication on reinstall, and batch composition dependent on walk direction
+    /// (AC2's rule, violated verbatim).
+    ///
+    /// A record is deferred to the OLDER window iff its measurement time precedes this window
+    /// AND the older window's own widened span would actually return it under BOTH candidate
+    /// SensorKit selection semantics — containment of the measurement period (`from` exclusive,
+    /// `to` inclusive) AND write-time membership (`recorded_at` inside the span). Deferring is
+    /// the only lossy direction: a traveller's device-local report can straddle the boundary
+    /// such that ONLY the newer window's span contains it, and a late-written bucket carries a
+    /// `recorded_at` beyond the older span — in either case the record is KEPT here, which is
+    /// exactly where the forward walk binds it too, so order-independence is preserved.
+    /// Undecidable records (no readable measurement time) stay bound to the window that fetched
+    /// them, guarded by the conservative widened-anchor vouch.
+    static func belongsToOlderProbeWindow(_ record: [String: Any],
+                                          sensor: SRSensor,
+                                          window: DateInterval,
+                                          olderWindow: DateInterval) -> Bool {
+        guard let measured = Self.measurementTime(of: record, sensor: sensor),
+              measured < window.start else { return false }
+        let olderSpan = Self.fetchSpan(for: sensor, window: olderWindow)
+        let duration = (record["duration_s"] as? NSNumber)?.doubleValue ?? 0
+        let periodEnd = measured.addingTimeInterval(Swift.max(0, duration))
+        guard measured > olderSpan.start, periodEnd <= olderSpan.end else { return false }
+        if Self.dayAggregatedSensors.contains(sensor) {
+            // Report sensors: period CONTAINMENT is the evidenced selection semantics (the
+            // window-loss report refuted write-time selection outright), so containment alone
+            // decides — a write-time condition here would re-open a small order-dependence for
+            // late-written reports.
+            return true
+        }
+        // Non-report sensors (visits is write-time-indexed with DAYS of lag): only defer when
+        // the older fetch would see it under write-time selection too. An unreadable
+        // `recorded_at` keeps the record here (never lossy).
+        guard let recordedAtString = record["recorded_at"] as? String,
+              let recordedAt = Self.parseISO8601(recordedAtString) else { return false }
+        return recordedAt > olderSpan.start && recordedAt <= olderSpan.end
     }
 
     /// Everything one device's window walk needs that does not change inside that walk, plus
@@ -865,7 +914,7 @@ public final class SensorSampleUploadManager {
             self.handleWindowFailure(window: window, at: index, of: windows, context: context)
 
         case .success(let records):
-            self.windowFetchFailures[context.failureKey] = nil
+            self.windowFetchFailures[Self.attemptKey(context: context, window: window)] = nil
 
             let deviceKey = context.device.key
             let windowDay = Self.utcDayStart(window.start)
@@ -912,11 +961,29 @@ public final class SensorSampleUploadManager {
                                                                  reason: "consent_gate"))
             }
 
+            // F1 (review round 1): window membership. On the backward probe the widened fetch
+            // returns the previous day's records BEFORE their own window has run and the ledger
+            // cannot yet know them — without this filter both days land in one batch anchored a
+            // day low (rowless newest day on fresh installs, cross-row duplication on
+            // reinstall, order-dependent batches). Records the next-older window will fetch are
+            // deferred to it; records ONLY this window's span can return are kept. The forward
+            // walk needs none of this: there the older window ran first and the ledger owns the
+            // dedup.
+            let windowBound: [[String: Any]]
+            if context.backwardProbe, index + 1 < windows.count {
+                let olderWindow = windows[index + 1]
+                windowBound = gated.filter {
+                    !Self.belongsToOlderProbeWindow($0, sensor: sensor, window: window, olderWindow: olderWindow)
+                }
+            } else {
+                windowBound = gated
+            }
+
             // D4 upload ledger: drop every record already enqueued by an earlier pass (widened
             // fetch span, rescan tail, travel overlap), so re-fetches cost no upload volume and
             // anchor instability is harmless.
             let ledger = self.storage.ledger(for: sensor, deviceKey: deviceKey)
-            let filtered = SensorUploadLedger.filter(records: gated,
+            let filtered = SensorUploadLedger.filter(records: windowBound,
                                                      sensor: sensor,
                                                      windowDay: windowDay,
                                                      ledger: ledger)
@@ -985,6 +1052,19 @@ public final class SensorSampleUploadManager {
         }
     }
 
+    /// The give-up budget's dictionary key. Forward walk: per sensor+device — the failing window
+    /// is always the head of the chain there (the cursor sits right below it), so one bucket is
+    /// exact. Backward probe (round 2, found by the F8 test): per sensor+device+WINDOW — the
+    /// probe re-fetches the NEWER windows before the failing one on every cycle, and their
+    /// successes were wiping the shared counter, so a mid-plan poison window never exhausted its
+    /// budget: the probe aborted every cycle for ever, the terminal cursor was never written and
+    /// the whole backfill stalled silently. Probe windows are stable grid days, so the
+    /// per-window key accumulates correctly across cycles.
+    private static func attemptKey(context: DeviceChainContext, window: DateInterval) -> String {
+        guard context.backwardProbe else { return context.failureKey }
+        return "\(context.failureKey).\(window.start.timeIntervalSince1970)"
+    }
+
     /// Shared AC4 failure policy for a window that was NOT durably handled (fetch error or
     /// enqueue/serialization failure): never advance the cursor for it. Retry on later sync
     /// cycles; after `maxWindowFetchAttempts` consecutive failures the window is abandoned —
@@ -994,9 +1074,10 @@ public final class SensorSampleUploadManager {
                                      of windows: [DateInterval],
                                      context: DeviceChainContext) {
         let sensor = context.sensor
-        let attempts = (self.windowFetchFailures[context.failureKey] ?? 0) + 1
+        let attemptKey = Self.attemptKey(context: context, window: window)
+        let attempts = (self.windowFetchFailures[attemptKey] ?? 0) + 1
         if attempts >= self.maxWindowFetchAttempts {
-            self.windowFetchFailures[context.failureKey] = nil
+            self.windowFetchFailures[attemptKey] = nil
             #if DEBUG
             print("SensorSampleUploadManager - Giving up window [\(window.start) -> \(window.end)] "
                   + "for \(sensor.rawValue)/\(context.device.key) after \(attempts) attempts")
@@ -1007,15 +1088,22 @@ public final class SensorSampleUploadManager {
             self.analytics.track(event: .sensorDataBackfillReach(sensor: context.device.telemetryName(for: sensor),
                                                                  reachedBack: reachedBack,
                                                                  boundedBy: BackfillLowerBound.Origin.gaveUp.rawValue))
-            if !context.backwardProbe {
-                // Forward walk: skip past the poison window so it cannot stall the chain.
-                self.advanceCursor(to: window.end, for: sensor, deviceKey: context.device.key)
+            if context.backwardProbe {
+                // Keep probing the older windows; the terminal cursor write covers the
+                // abandoned window and the gave_up trace above is its loss record. The
+                // empty-streak RESETS (F8): an unread window is UNKNOWN, not empty, and AC1's
+                // stop criterion is K CONSECUTIVE confirmed-empties — two empties separated by
+                // a gave-up window must not satisfy it.
+                var next = context
+                next.probeEmptyStreak = 0
+                self.processWindow(at: index + 1, of: windows, context: next)
+                return
             }
-            // Backward probe: keep probing the older windows; the terminal cursor write covers
-            // the abandoned window, and the gave_up trace above is its loss record.
+            // Forward walk: skip past the poison window so it cannot stall the chain.
+            self.advanceCursor(to: window.end, for: sensor, deviceKey: context.device.key)
             self.processWindow(at: index + 1, of: windows, context: context)
         } else {
-            self.windowFetchFailures[context.failureKey] = attempts
+            self.windowFetchFailures[attemptKey] = attempts
             // Stop THIS DEVICE's chain for this cycle (the next sync retries it from its own
             // cursor — or re-probes, for a backfill) — but never the next device's: the cursors
             // are independent, so a Watch whose fetches keep failing must not cost the iPhone
@@ -1281,8 +1369,18 @@ public final class SensorSampleUploadManager {
                         onFailure: { [weak self] error in
                             guard let self = self else { return }
                             // Re-enqueue the FILTERED batch (dropped records must not come back)
-                            // and schedule a retry with backoff.
-                            self.storage.enqueueBatch(uploadable, windowStart: batch.windowStart, for: sensor)
+                            // and schedule a retry with backoff. A failed re-persist is
+                            // unrecoverable at this point — the batch is already dequeued, the
+                            // cursor long advanced and the fingerprints committed — but it must
+                            // never be SILENT (review round 1, F7 / AC6): the enqueue_failed
+                            // trace is what distinguishes "lost to a storage failure" from
+                            // "never collected".
+                            if !self.storage.enqueueBatch(uploadable, windowStart: batch.windowStart, for: sensor) {
+                                self.analytics.track(event: .sensorDataBackfillReach(
+                                    sensor: sensor.shortSubsource,
+                                    reachedBack: ISO8601DateFormatter().string(from: batch.windowStart),
+                                    boundedBy: BackfillLowerBound.Origin.enqueueFailed.rawValue))
+                            }
                             #if DEBUG
                             print("SensorSampleUploadManager - Upload failed for \(sensor.rawValue): \(error)")
                             #endif

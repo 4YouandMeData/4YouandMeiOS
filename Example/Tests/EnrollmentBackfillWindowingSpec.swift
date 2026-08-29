@@ -148,8 +148,11 @@ class EnrollmentBackfillWindowingSpec: QuickSpec {
                     .toNot(equal(expected))
             }
 
-            it("falls back to the device timezone when the user record carries none") {
-                expect(RepositoryImpl.enrollmentCalendar(userTimeZone: nil).timeZone).to(equal(Calendar.current.timeZone))
+            it("falls back to UTC — the partition's fallback — never the device timezone (round 2, F2)") {
+                // The consent bound and the window grid must share one day-boundary authority
+                // (AC2): a device-tz bound made the join sliver window a function of the handset.
+                expect(RepositoryImpl.enrollmentCalendar(userTimeZone: nil).timeZone)
+                    .to(equal(TimeZone(identifier: "UTC")))
             }
         }
 
@@ -1571,16 +1574,17 @@ class HealthBackfillChunkWalkSpec: QuickSpec {
 
             let hour: TimeInterval = 3600
             let minute: TimeInterval = 60
-            // Epoch-hour-aligned, 1–2 hours back: head chunks snap to epoch-hour boundaries
-            // (AC2 revised), so an aligned cursor keeps the expected shapes exact — exactly two
-            // chunks, [cursor, cursor+1h) and [cursor+1h, now], with no sliver in between.
+            // Epoch-hour-aligned, 2–3 hours back: chunks end ONLY on grid boundaries (F3 —
+            // never at wall-clock `now`), so an aligned cursor two full hours back yields
+            // exactly two whole chunks, [cursor, cursor+1h) and [cursor+1h, cursor+2h), with
+            // the incomplete head hour deliberately left for the next sequence.
             var cursor: Date!
             var attempted: [DateInterval]!
 
             beforeEach {
                 clearance.enrollmentDate = Date().addingTimeInterval(-10 * day)
                 let nowEpoch = Date().timeIntervalSince1970
-                cursor = Date(timeIntervalSince1970: ((nowEpoch / hour).rounded(.down) - 1) * hour)
+                cursor = Date(timeIntervalSince1970: ((nowEpoch / hour).rounded(.down) - 2) * hour)
                 storage.setUploadStartDate(cursor, forDataType: dataType)
                 attempted = []
             }
@@ -1612,17 +1616,31 @@ class HealthBackfillChunkWalkSpec: QuickSpec {
             }
 
             it("bisects an oversize chunk by time and uploads both halves") {
-                walk { $0.duration >= hour ? .uploadPayloadTooLarge : nil }
+                walk { $0.duration >= hour && $0.start == cursor ? .uploadPayloadTooLarge : nil }
 
-                // The 1-hour chunk, then its two halves in chronological order, then the tail
-                // (whose end is the walk's own `Date()`, hence not asserted).
-                expect(attempted.map { $0.start }).to(equal([cursor, cursor, cursor + 30 * minute, cursor + hour]))
-                expect(Array(attempted.map { $0.end }.dropLast()))
-                    .to(equal([cursor + hour, cursor + 30 * minute, cursor + hour]))
-                // Nothing was forfeited, and the walk ran to the end of the window.
+                // The 1-hour chunk, then its two halves in chronological order, then the second
+                // whole hour — every boundary on the grid (F3), so all four are asserted exactly.
+                let half: Date = cursor + 30 * minute
+                let first: Date = cursor + hour
+                let second: Date = cursor + 2 * hour
+                let expectedStarts: [Date] = [cursor, cursor, half, first]
+                let expectedEnds: [Date] = [first, half, first, second]
+                expect(attempted.map { $0.start }).to(equal(expectedStarts))
+                expect(attempted.map { $0.end }).to(equal(expectedEnds))
+                // Nothing was forfeited, and the walk ran to the last complete grid unit.
                 expect(reachEvents(boundedBy: .gaveUp)).to(beEmpty())
                 expect(reachEvents(boundedBy: .bisected).count).to(equal(1))
                 expect(storage.uploadStartDate(forDataType: dataType)).to(equal(attempted.last?.end))
+            }
+
+            it("never cuts a chunk at wall-clock now: the incomplete head hour waits (F3)") {
+                walk { _ in nil }
+
+                for chunk in attempted {
+                    expect(chunk.end.timeIntervalSince1970.truncatingRemainder(dividingBy: hour)).to(equal(0))
+                }
+                expect(attempted.last?.end).to(equal(cursor + 2 * hour))
+                expect(storage.uploadStartDate(forDataType: dataType)).to(equal(cursor + 2 * hour))
             }
 
             it("stops halving at the floor instead of recursing for ever") {
@@ -2464,10 +2482,10 @@ class SensorFetchSpanSpec: QuickSpec {
 
         describe("fetchSpan(for:window:)") {
 
-            it("widens a report-class fetch by 24h backwards") {
+            it("widens a report-class fetch by 26h backwards (24h local day + DST/diverging-device margin, F4)") {
                 for sensor in [SRSensor.deviceUsageReport, .phoneUsageReport, .messagesUsageReport, .keyboardMetrics] {
                     let span = SensorSampleUploadManager.fetchSpan(for: sensor, window: window)
-                    expect(span.start).to(equal(window.start.addingTimeInterval(-day)))
+                    expect(span.start).to(equal(window.start.addingTimeInterval(-26 * hour)))
                 }
             }
 
@@ -2542,15 +2560,15 @@ class SensorFetchSpanSpec: QuickSpec {
                 expect(storage.enqueued.count).toEventually(beGreaterThan(0), timeout: .seconds(5))
                 // Every fetch spans [W − 24h, W + 24h) for a UTC-day window [W, W + 24h).
                 for call in mapper.calls {
-                    let narrowStart = call.window.start.addingTimeInterval(day)
-                    expect(call.window.duration).to(equal(2 * day))
+                    let narrowStart = call.window.start.addingTimeInterval(26 * hour)
+                    expect(call.window.duration).to(equal(day + 26 * hour))
                     expect(narrowStart).to(equal(SensorSampleUploadManager.utcDayStart(narrowStart)))
                 }
                 // The enqueue keeps the NARROW window start (the consent gate re-reads it at
                 // drain time; a widened value would let a pre-join report be vouched for).
                 for batch in storage.enqueued {
                     expect(batch.windowStart).to(equal(SensorSampleUploadManager.utcDayStart(batch.windowStart)))
-                    let widened = mapper.calls.contains { $0.window.start.addingTimeInterval(day) == batch.windowStart }
+                    let widened = mapper.calls.contains { $0.window.start.addingTimeInterval(26 * hour) == batch.windowStart }
                     expect(widened).to(beTrue())
                 }
                 // The cursor is owned by the narrow grid: it ends at the last complete UTC day.
@@ -3542,6 +3560,248 @@ class SensorProbeVouchGuardSpec: QuickSpec {
                 return false
             }
             expect(drops).toNot(beEmpty())
+        }
+    }
+}
+
+// MARK: - Review round 1, F1: window membership under the widened fetch
+
+/// The harness gap the round-1 review named: every fake ignored the requested span, so the
+/// containment behaviour that motivates the widen was unmodeled and F1 was invisible. This
+/// mapper honours it — a report is returned iff its whole period fits the span (`from`
+/// exclusive, `to` inclusive), which is the evidenced SensorKit selection semantics.
+private final class ContainmentReportMapper: SensorSampleMapper {
+
+    struct Report {
+        let start: Date
+        let duration: TimeInterval
+        let record: [String: Any]
+    }
+
+    var reports: [Report] = []
+
+    func fetchAndMap(from: Date,
+                     to: Date,
+                     device: SensorDevice,
+                     completion: @escaping (Result<[[String: Any]], Error>) -> Void) {
+        let contained = reports
+            .filter { $0.start > from && $0.start.addingTimeInterval($0.duration) <= to }
+            .map { $0.record }
+        completion(.success(contained))
+    }
+}
+
+/// F1: the widened fetch of probe window W returns the previous day's report before that day's
+/// window has run; without the membership filter both days land in ONE batch anchored a day low
+/// — a permanently rowless newest day on fresh installs, and probe batches that differ from the
+/// forward walk's (order-dependent composition, AC2 violated).
+class SensorProbeWindowBindingSpec: QuickSpec {
+
+    // swiftlint:disable:next function_body_length
+    override class func spec() {
+
+        let hour: TimeInterval = 3600
+        let day: TimeInterval = 24 * hour
+        let sensor = SRSensor.phoneUsageReport
+        let now = SensorSampleUploadManager.utcDayStart(Date())
+
+        func dailyReports(days: ClosedRange<Int>) -> [ContainmentReportMapper.Report] {
+            return days.map { age in
+                let start = now.addingTimeInterval(TimeInterval(-age) * day)
+                let iso = ISO8601DateFormatter()
+                return ContainmentReportMapper.Report(
+                    start: start,
+                    duration: day,
+                    record: ["start": iso.string(from: start),
+                             "duration_s": day,
+                             "recorded_at": iso.string(from: start.addingTimeInterval(day - 1))])
+            }
+        }
+
+        func runWalk(joinDay: Date, cursor: Date?) -> [(records: [[String: Any]], windowStart: Date)] {
+            let storage = FakeSensorStorage()
+            let clearance = FakeSensorClearance()
+            clearance.enrollmentDate = joinDay
+            let mapper = ContainmentReportMapper()
+            mapper.reports = dailyReports(days: 2...5)
+            let manager = SensorSampleUploadManager(withSensors: [sensor],
+                                                    storage: storage,
+                                                    reachability: FakeSensorReachability(),
+                                                    analytics: CapturingAnalyticsService(),
+                                                    mappers: [sensor: mapper])
+            manager.clearanceDelegate = clearance
+            if let cursor = cursor {
+                storage.setLastCursor(cursor, for: sensor)
+                // Pre-burn the rescan so the forward walk is a plain cursor resume.
+                storage.setLastRescanDay(SensorSampleUploadManager.utcDayStart(now), for: sensor)
+            }
+            manager.runDeviceChain(at: 0, of: [.current], for: sensor, now: now, using: mapper)
+            expect(storage.enqueued.count).toEventually(beGreaterThan(0), timeout: .seconds(5))
+            // Wait for the chain to finish: the cursor parks at the plan head on every path.
+            expect(storage.lastCursor(for: sensor)).toEventually(equal(now.addingTimeInterval(-day)),
+                                                                 timeout: .seconds(5))
+            return storage.enqueued
+        }
+
+        it("binds every probe batch to its OWN day — never the previous day's records (F1)") {
+            // Fresh install: join day 5 days back, no cursor -> backward probe over 4 windows,
+            // with a report available for every one of them.
+            let batches = runWalk(joinDay: now.addingTimeInterval(-5 * day), cursor: nil)
+
+            expect(batches.count).to(equal(4))
+            for batch in batches {
+                expect(batch.records.count).to(equal(1))
+                let measured = SensorSampleUploadManager.measurementTime(of: batch.records[0], sensor: sensor)
+                // The record's own day IS the batch's window: the anchor lands on the right day.
+                expect(measured).to(equal(batch.windowStart))
+            }
+            // Including the NEWEST complete day, which the misbinding left permanently rowless.
+            expect(batches.map { $0.windowStart }).to(contain(now.addingTimeInterval(-2 * day)))
+        }
+
+        it("produces the same per-day batches whichever direction the walk ran (AC2: order independence)") {
+            // Forward: cursor resume from -5d (join day further back). Probe: fresh, join -5d.
+            let forward = runWalk(joinDay: now.addingTimeInterval(-10 * day), cursor: now.addingTimeInterval(-5 * day))
+            let probe = runWalk(joinDay: now.addingTimeInterval(-5 * day), cursor: nil)
+
+            let forwardByDay = Dictionary(uniqueKeysWithValues: forward.map {
+                ($0.windowStart, SensorUploadLedger.canonical(["records": $0.records]))
+            })
+            let probeByDay = Dictionary(uniqueKeysWithValues: probe.map {
+                ($0.windowStart, SensorUploadLedger.canonical(["records": $0.records]))
+            })
+            expect(probeByDay).to(equal(forwardByDay))
+        }
+    }
+}
+
+// MARK: - Review round 1, F4: the 26h widen closes the DST + diverging-device hole
+
+/// A 25-hour device-local report day (fall-back) with the participant zone falling back on the
+/// SAME date one zone east: under a 24h widen the placement interval for the period was 24h
+/// against a 25h gap between participant midnights — a 1h hole, the day fit NO window on any of
+/// its four passes. 26h closes it.
+class SensorDstWidenSpec: QuickSpec {
+
+    override class func spec() {
+
+        let hour: TimeInterval = 3600
+        let day: TimeInterval = 24 * hour
+        let rome = TimeZone(identifier: "Europe/Rome")!
+        let london = TimeZone(identifier: "Europe/London")!
+
+        it("a London-device 25h fall-back day fits a Rome-participant window's widened span") {
+            // 2026-10-28 12:00:00 UTC — three days after the shared EU fall-back (Oct 25 2026).
+            let now = Date(timeIntervalSince1970: 1793188800)
+            var romeCalendar = Calendar(identifier: .gregorian)
+            romeCalendar.timeZone = rome
+            var londonCalendar = Calendar(identifier: .gregorian)
+            londonCalendar.timeZone = london
+
+            let joinDay = romeCalendar.startOfDay(for: now.addingTimeInterval(-7 * day))
+            let plan = SensorSampleUploadManager.buildWindowPlan(now: now,
+                                                                 boundNow: now,
+                                                                 joinDay: joinDay,
+                                                                 cursor: nil,
+                                                                 embargo: day,
+                                                                 timeZone: rome)
+
+            // The device-local reporting day: London's Oct 25 2026, which is 25 hours long.
+            let fallBackNoon = Date(timeIntervalSince1970: 1792929600)   // 2026-10-25 12:00:00 UTC
+            let periodStart = londonCalendar.startOfDay(for: fallBackNoon)
+            guard let periodEnd = londonCalendar.date(byAdding: .day, value: 1, to: periodStart) else {
+                return fail("calendar arithmetic failed")
+            }
+            expect(periodEnd.timeIntervalSince(periodStart)).to(equal(25 * hour))
+
+            // Containment (`from` exclusive, `to` inclusive) against every window's widened span.
+            let contained = plan.windows.contains { window in
+                let span = SensorSampleUploadManager.fetchSpan(for: .phoneUsageReport, window: window)
+                return periodStart > span.start && periodEnd <= span.end
+            }
+            expect(contained).to(beTrue())
+        }
+    }
+}
+
+// MARK: - Review round 1, F8: a gave-up window resets the probe's empty streak
+
+/// AC1's stop criterion is K CONSECUTIVE confirmed-empty windows. An unread (gave-up) window is
+/// UNKNOWN, not empty: letting the streak survive it allowed two empties separated by a failure
+/// to stop the probe, forfeiting everything older on weaker evidence than specified.
+class SensorProbeStreakResetSpec: QuickSpec {
+
+    override class func spec() {
+
+        let day: TimeInterval = 24 * 3600
+        let sensor = SRSensor.pedometerData
+        let now = SensorSampleUploadManager.utcDayStart(Date())
+
+        it("keeps probing past a gave-up window instead of counting it toward the empty streak") {
+            let storage = FakeSensorStorage()
+            let clearance = FakeSensorClearance()
+            clearance.enrollmentDate = now.addingTimeInterval(-6 * day)
+            // Windows newest-first: [-2,-1) empty, [-3,-2) FAILS (three cycles -> gave up),
+            // then [-4,-3) and [-5,-4) empty. With the streak reset the probe must read BOTH
+            // of them to satisfy K=2; with the carried-over streak it stopped one window early.
+            let failingStart = now.addingTimeInterval(-3 * day)
+            let failing = WindowFailingMapper(failingWindowStart: failingStart)
+            let manager = SensorSampleUploadManager(withSensors: [sensor],
+                                                    storage: storage,
+                                                    reachability: FakeSensorReachability(),
+                                                    analytics: CapturingAnalyticsService(),
+                                                    mappers: [sensor: failing])
+            manager.clearanceDelegate = clearance
+
+            // Cycle 1 and 2: the failing window aborts the probe (attempts 1 and 2), no cursor.
+            manager.runDeviceChain(at: 0, of: [.current], for: sensor, now: now, using: failing)
+            expect(failing.failureCount).toEventually(equal(1), timeout: .seconds(5))
+            expect(storage.lastCursor(for: sensor)).to(beNil())
+            manager.runDeviceChain(at: 0, of: [.current], for: sensor, now: now, using: failing)
+            expect(failing.failureCount).toEventually(equal(2), timeout: .seconds(5))
+
+            // Cycle 3: attempts exhaust -> gave_up -> the probe must CONTINUE and read two more
+            // confirmed-empty windows before stopping.
+            manager.runDeviceChain(at: 0, of: [.current], for: sensor, now: now, using: failing)
+
+            expect(storage.lastCursor(for: sensor)).toEventually(equal(now.addingTimeInterval(-day)),
+                                                                 timeout: .seconds(5))
+            // The window BELOW the gave-up one was fetched: the streak did not carry over.
+            expect(failing.fetchedWindowEnds).to(contain(now.addingTimeInterval(-4 * day)))
+        }
+    }
+}
+
+/// Fails every fetch of one specific window; every other window succeeds empty.
+private final class WindowFailingMapper: SensorSampleMapper {
+
+    private let lock = NSLock()
+    private let failingWindowStart: Date
+    private var failures = 0
+    private var windowEnds: [Date] = []
+
+    init(failingWindowStart: Date) {
+        self.failingWindowStart = failingWindowStart
+    }
+
+    var failureCount: Int { return self.lock.locked { self.failures } }
+    var fetchedWindowEnds: [Date] { return self.lock.locked { self.windowEnds } }
+
+    func fetchAndMap(from: Date,
+                     to: Date,
+                     device: SensorDevice,
+                     completion: @escaping (Result<[[String: Any]], Error>) -> Void) {
+        // `from` is the widened span start (continuous epsilon = 1s); `to` is the narrow end.
+        let windowStart = from.addingTimeInterval(1)
+        let isFailing = abs(windowStart.timeIntervalSince(self.failingWindowStart)) < 0.5
+        self.lock.locked {
+            self.windowEnds.append(to)
+            if isFailing { self.failures += 1 }
+        }
+        if isFailing {
+            completion(.failure(NSError(domain: "spec.mapper", code: 7)))
+        } else {
+            completion(.success([]))
         }
     }
 }
