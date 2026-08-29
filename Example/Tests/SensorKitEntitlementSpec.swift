@@ -302,17 +302,20 @@ class SensorKitEntitlementSpec: QuickSpec {
 
         describe("SensorKitManager.refusals (the empirical entitlement fallback, D6 layer 3)") {
 
-            it("records a sensor that fast-declined and stayed undetermined after a completed round") {
+            it("records a sensor that fast-declined and stayed undetermined while others authorized") {
                 let refused = SensorKitManager.refusals(fastDeclined: [.ambientLightSensor, .ambientPressure],
                                                         stillNotDetermined: [.ambientLightSensor, .ambientPressure],
-                                                        outcome: .completed)
+                                                        anyAuthorizedAfterLoop: true)
                 expect(refused) == Set<SRSensor>([.ambientLightSensor, .ambientPressure])
             }
 
-            it("records NOTHING from a round blamed on the master switch (it must not poison the ledger)") {
+            it("records NOTHING from a round in which nothing authorized (round 3, R2-2)") {
+                // Only `anyAuthorized` PROVES the master switch is on. A verdict-gated ledger
+                // registered every sensor when the switch was off but one slow cold-start
+                // decline broke unanimity and the verdict came back `.completed`.
                 let refused = SensorKitManager.refusals(fastDeclined: [.visits, .pedometerData],
                                                         stillNotDetermined: [.visits, .pedometerData],
-                                                        outcome: .collectionDisabledSystemWide)
+                                                        anyAuthorizedAfterLoop: false)
                 expect(refused).to(beEmpty())
             }
 
@@ -320,8 +323,40 @@ class SensorKitEntitlementSpec: QuickSpec {
                 // Cancelled slowly: not in fastDeclined, still undetermined → not refused.
                 let refused = SensorKitManager.refusals(fastDeclined: [],
                                                         stillNotDetermined: [.visits],
-                                                        outcome: .completed)
+                                                        anyAuthorizedAfterLoop: true)
                 expect(refused).to(beEmpty())
+            }
+
+            it("switch off on an undeclared host, cold-start slow decline, TWICE: nothing is ever promoted (R2-2)") {
+                // The full poisoning chain the round-2 review traced: 8 sensors asked, 7 fast
+                // auto-declines + 1 evidenced-slow cold start, nothing authorized. Unanimity is
+                // unmet, so the verdict is the (wrong) `.completed` — but learning is gated on
+                // proof the switch is ON, so two such launches must leave the refusal ledger
+                // untouched and the sensors re-promptable after the user re-enables the switch.
+                let defaults = UserDefaults.standard
+                defer {
+                    defaults.removeObject(forKey: SensorRefusalStore.sensorsKey)
+                    defaults.removeObject(forKey: SensorRefusalStore.candidatesKey)
+                    defaults.removeObject(forKey: SensorRefusalStore.versionKey)
+                }
+                let store = SensorRefusalStore(version: "1.0-1")
+                let asked: Set<SRSensor> = [.pedometerData, .ambientLightSensor, .ambientPressure, .visits,
+                                            .phoneUsageReport, .deviceUsageReport, .messagesUsageReport,
+                                            .keyboardMetrics]
+                for _ in 0..<2 {
+                    let fastDeclined = asked.subtracting([.messagesUsageReport])   // the slow cold start
+                    let outcome = SensorKitManager.setupOutcome(fastDeclineCount: fastDeclined.count,
+                                                                askedCount: asked.count,
+                                                                anyAuthorizedAfterLoop: false,
+                                                                hasEntitlementDeclaration: false)
+                    expect(outcome) == .completed   // the relocated false negative, by design
+                    let refused = SensorKitManager.refusals(fastDeclined: fastDeclined,
+                                                            stillNotDetermined: asked,
+                                                            anyAuthorizedAfterLoop: false)
+                    let promoted = store.registerRefusalCandidates(refused)
+                    expect(promoted).to(beEmpty())
+                }
+                expect(store.refusedSensors()).to(beEmpty())
             }
         }
 

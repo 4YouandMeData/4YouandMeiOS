@@ -290,16 +290,22 @@ final class SensorKitManager: NSObject, SensorKitService {
         return .collectionDisabledSystemWide
     }
 
-    /// The sensors a completed request round proved iOS refuses to prompt for (D6 layer 3):
-    /// asked, fast-declined with no prompt drawn, and still `.notDetermined`. A round blamed on
-    /// the master switch records NOTHING — every sensor fast-declines under a switch that is
-    /// off, and marking them refused would poison the ledger for after the user re-enables it.
-    /// A SLOW decline (a real human cancel) is never recorded: iOS will happily re-prompt it
-    /// (R2 is exactly the ability to do so).
+    /// The sensors this round proved iOS refuses to prompt for (D6 layer 3): asked,
+    /// fast-declined with no prompt drawn, and still `.notDetermined`.
+    ///
+    /// Learning is gated on `anyAuthorizedAfterLoop` — PROOF the master switch is on — not on
+    /// the round's verdict (round 3, review R2-2): on an undeclared host with the switch
+    /// genuinely OFF, one slow cold-start decline breaks unanimity, the verdict comes back
+    /// `.completed`, and a verdict-gated ledger would register EVERY sensor as a candidate;
+    /// two such launches promoted them all to refused, locking them behind the Settings alert
+    /// even after the participant re-enabled the switch. A round in which nothing authorized
+    /// teaches the ledger nothing — which only forgoes learning in the one state where the
+    /// verdict can be wrong. A SLOW decline (a real human cancel) is never recorded either:
+    /// iOS will happily re-prompt it (R2 is exactly the ability to do so).
     static func refusals(fastDeclined: Set<SRSensor>,
                          stillNotDetermined: Set<SRSensor>,
-                         outcome: SensorKitSetupOutcome) -> Set<SRSensor> {
-        guard outcome == .completed else { return [] }
+                         anyAuthorizedAfterLoop: Bool) -> Set<SRSensor> {
+        guard anyAuthorizedAfterLoop else { return [] }
         return fastDeclined.intersection(stillNotDetermined)
     }
 
@@ -359,16 +365,17 @@ final class SensorKitManager: NSObject, SensorKitService {
     /// Post-loop verdict + refusal-ledger update for one detect-capable request round (D6/D7).
     /// Call on the main thread once every asked sensor's request has returned.
     private func finishDetectingRound(asked: [SRSensor], fastDeclined: Set<SRSensor>) -> SensorKitSetupOutcome {
+        let anyAuthorized = self.hasAnyAuthorized()
         let outcome = Self.setupOutcome(fastDeclineCount: fastDeclined.count,
                                         askedCount: asked.count,
-                                        anyAuthorizedAfterLoop: self.hasAnyAuthorized(),
+                                        anyAuthorizedAfterLoop: anyAuthorized,
                                         hasEntitlementDeclaration: SensorKitEntitlement.hostDeclaredValues() != nil)
         let stillNotDetermined = Set(asked.filter {
             SRSensorReader(sensor: $0).authorizationStatus == .notDetermined
         })
         let refused = Self.refusals(fastDeclined: fastDeclined,
                                     stillNotDetermined: stillNotDetermined,
-                                    outcome: outcome)
+                                    anyAuthorizedAfterLoop: anyAuthorized)
         // F5: this round's refusals are EVIDENCE; the store promotes a sensor to refused only
         // on its second sighting, and only the promotions are reported.
         let promoted = self.refusalStore.registerRefusalCandidates(refused)
