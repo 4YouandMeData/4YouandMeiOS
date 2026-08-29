@@ -49,6 +49,29 @@ class EmojiCellSpec: QuickSpec {
                 expect(emojiLabel?.text).to(beNil())
             }
 
+            // FUAM-3857: the no-emoji icon's baked-in grey (#D9D9D9) sits almost on top of the
+            // selected-cell background (ColorPalette .inactive, #DFDFDF by default in light
+            // mode) — selecting the tile made the icon all but disappear, mirroring an Android
+            // bug fixed the same way there. Tint white ONLY while selected; keep the designer's
+            // original colour otherwise (the asset stays outside `Templates/` on purpose, so it
+            // must never be blanket-tinted).
+            it("keeps the no-emoji icon in its original colour when not selected") {
+                let cell = makeCell()
+                cell.configure(with: nil, selected: false)
+
+                let imageView = findImageView(in: cell)
+                expect(imageView?.image?.renderingMode).to(equal(.alwaysOriginal))
+            }
+
+            it("tints the no-emoji icon white when its tile is selected") {
+                let cell = makeCell()
+                cell.configure(with: nil, selected: true)
+
+                let imageView = findImageView(in: cell)
+                expect(imageView?.image?.renderingMode).to(equal(.alwaysTemplate))
+                expect(imageView?.tintColor).to(equal(.white))
+            }
+
             // Regression guard for the constraint conflict this cell is prone to: the stack is
             // pinned to all four edges of a fixed 80pt cell and distributes .fill, so the
             // blank-caption "no emoji" state must still leave something stretchable. With only

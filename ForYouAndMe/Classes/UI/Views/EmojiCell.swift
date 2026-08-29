@@ -95,6 +95,17 @@ final class EmojiCell: UICollectionViewCell {
         emojiLabel.text = item?.tag
         emojiLabel.isHidden = isNoneOption
         noneImageView.isHidden = !isNoneOption
+        // FUAM-3857: the icon's baked-in grey (#D9D9D9) sits almost on top of the selected-cell
+        // background (ColorPalette .inactive — #DFDFDF light / #3A3A3C dark by default), so the
+        // icon all but disappears once its tile is selected, same as the Android bug this
+        // mirrors. Tint it white ONLY while selected via `.alwaysTemplate`; the rest of the time
+        // it keeps rendering with its own baked colour (`.alwaysOriginal`) — the asset lives
+        // outside `Templates/` specifically so it is never blanket-tinted.
+        if isNoneOption {
+            let baseImage = ImagePalette.image(withName: .emojiNone)
+            noneImageView.image = selected ? baseImage?.withRenderingMode(.alwaysTemplate) : baseImage?.withRenderingMode(.alwaysOriginal)
+            noneImageView.tintColor = .white
+        }
         let caption = Self.displayedCaption(for: item)
         // titleLabel is never hidden: the stack is pinned to a fixed-height cell and
         // distributes .fill, so it needs at least one stretchable arranged subview to absorb

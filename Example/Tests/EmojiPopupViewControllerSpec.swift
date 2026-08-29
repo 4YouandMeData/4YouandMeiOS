@@ -101,11 +101,13 @@ class EmojiPopupViewControllerSpec: QuickSpec {
                 expect(result).to(equal(.confirmed(nil)))
             }
 
-            // Cross-platform parity: Android's EmojiSelectorDialog ignores a tap whose option
-            // equals initialSelectedItem, so picking "no emoji" on a note that has none cannot
-            // be confirmed there. iOS used to allow it, firing a PATCH that changed nothing and
-            // blanking the caller's emoji button.
-            it("refuses to confirm the no-emoji tile when the note has no emoji to clear") {
+            // Jules (on-device, round 7): the only way to close without applying an emoji used
+            // to be the X button or the OS back gesture — tapping "no emoji" itself was
+            // rejected as a no-op. Overruled on UX grounds: tapping "no emoji" must arm Save
+            // and confirm nil, on a note that has none, exactly as it already does when the
+            // tile clears a recorded emoji. This reverses cd7b8b60 at Jules's direction —
+            // Android is being changed to match in parallel, so do not re-apply that guard.
+            it("confirms the no-emoji tile with nil when the note already has no emoji") {
                 var result: ConfirmationResult = .notCalled
                 let controller = EmojiPopupViewController(emojis: [EmojiItem(id: "1", type: "feedback_tag", tag: "🙂", label: nil)],
                                                            selected: nil,
@@ -113,7 +115,7 @@ class EmojiPopupViewControllerSpec: QuickSpec {
                 controller.loadViewIfNeeded()
                 controller.collectionView(collectionView(for: controller), didSelectItemAt: IndexPath(item: 0, section: 0))
                 saveTapped(controller)
-                expect(result).to(equal(.notCalled))
+                expect(result).to(equal(.confirmed(nil)))
             }
 
             it("saves the real item (not nil) when a study-configured emoji captioned 'None' is confirmed") {
