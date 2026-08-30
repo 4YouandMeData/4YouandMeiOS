@@ -62,6 +62,19 @@ public final class SensorSampleUploadManager {
     /// 365-day cap remain the only hard ceilings.
     static let probeEmptyWindowStop: Int = 2
 
+    /// FUAM-3945 (round 4): how many records a backward probe may hold buffered in memory while
+    /// it discovers the retention horizon. The probe FETCHES newest-first (that is what makes
+    /// the horizon discoverable without walking hundreds of empty windows) but ENQUEUES
+    /// oldest-first, by buffering each window's record set and flushing the buffer
+    /// chronologically at probe termination. A fresh install against a dense sensor and a long
+    /// OS retention could buffer a lot, so past this cap the buffer is flushed early and the
+    /// rest of the probe falls back to enqueue-as-you-go (still correct — the membership filter
+    /// stays in place there — just no longer strictly chronological), with a
+    /// `probe_buffer_overflow` telemetry trace. Counted in records, not serialized bytes:
+    /// measuring bytes would cost a serialization pass larger than the buffer itself.
+    /// Internal and mutable for the overflow specs only.
+    var probeBufferMaxRecords: Int = 10_000
+
     // MARK: - Dependencies
 
     private let sensors: [SRSensor]
@@ -549,10 +562,13 @@ public final class SensorSampleUploadManager {
     /// cursor grid on purpose: the cursor, `enqueueBatch(windowStart:)` and `windowVouches` all
     /// keep the NARROW `window` — widening any of them would either re-open a consent hole
     /// (a widened `windowStart` would let a pre-join report be vouched for) or break the grid.
-    /// Over-fetch is upload-free: on the forward walk the older window was processed first, so
-    /// the ledger (D4) drops the re-fetch; on the backward probe the older window has NOT run
-    /// yet, so `belongsToOlderProbeWindow` (review round 1, F1) keeps the record out of the
-    /// wrong window's batch instead.
+    /// Over-fetch is upload-free because the ledger drops re-fetched records — unconditionally,
+    /// on every path, since round 4: the forward walk processes the older window first by
+    /// construction, and the backward probe FETCHES newest-first but ENQUEUES oldest-first (the
+    /// buffered flush in `flushProbeBuffer`), so by the time a widened fetch's batch is
+    /// committed, the previous day's records are already fingerprinted. The one exception is the
+    /// probe's rare buffer-overflow fallback, where `belongsToOlderProbeWindow` (review round 1,
+    /// F1) still carries the load; everywhere else it is a defensive guard.
     static func fetchSpan(for sensor: SRSensor, window: DateInterval) -> DateInterval {
         let lookback = Self.dayAggregatedSensors.contains(sensor)
             ? Self.reportFetchLookback
@@ -560,13 +576,24 @@ public final class SensorSampleUploadManager {
         return DateInterval(start: window.start.addingTimeInterval(-lookback), end: window.end)
     }
 
-    /// F1 (review round 1): window-membership rule for the BACKWARD probe. The probe walks
+    /// F1 (review round 1): window-membership rule for the BACKWARD probe. The probe FETCHES
     /// newest-first, so window W's widened fetch returns the previous day's records BEFORE
     /// their own window has run; on a fresh/reinstalled device the ledger is empty, so without
-    /// this check both days landed in ONE batch anchored at the older day's minimum — a
+    /// a membership rule both days landed in ONE batch anchored at the older day's minimum — a
     /// permanently rowless newest day (a false "no data" adherence dot) on every fresh install,
     /// cross-row duplication on reinstall, and batch composition dependent on walk direction
     /// (AC2's rule, violated verbatim).
+    ///
+    /// ROUND 4: no longer load-bearing on the main probe path. The probe now buffers its
+    /// windows and ENQUEUES them oldest-first (`flushProbeBuffer`), so the ledger drops the
+    /// over-fetched previous-day records exactly as it does on the forward walk — ordering does
+    /// for free what this predicate held by cleverness. It survives in two roles:
+    /// - DEFENSIVE guard at the terminal flush, with a DEBUG assertion that it defers nothing
+    ///   (anything left for it there is an ordering regression, or an OS fetch that defied the
+    ///   containment model — either way it must be loud, not silent);
+    /// - the load-bearing filter on the buffer-OVERFLOW fallback, where newer windows are
+    ///   enqueued before their older neighbours have been fetched, i.e. the original round-2/3
+    ///   regime this predicate was verified for.
     ///
     /// A record is deferred to the OLDER window iff its measurement time precedes this window
     /// AND the older window's own widened span would actually return it under BOTH candidate
@@ -622,14 +649,29 @@ public final class SensorSampleUploadManager {
         /// The stored cursor at plan time: a window ending at or before it is a RESCAN pass
         /// (D3) — used only to label telemetry, never for control flow.
         let rescanBoundary: Date?
-        /// FUAM-3945 (AC1): `true` when this walk is a backfill probe — windows are handed over
-        /// NEWEST-first, the cursor is written once at probe termination (never per window), and
-        /// the probe stops after `probeEmptyWindowStop` consecutive confirmed-empty windows.
+        /// FUAM-3945 (AC1): `true` when this walk is a backfill probe — windows are FETCHED
+        /// NEWEST-first, ENQUEUED oldest-first via the buffered flush (round 4), the cursor is
+        /// written once at probe termination (never per window), and the probe stops after
+        /// `probeEmptyWindowStop` consecutive confirmed-empty windows.
         let backwardProbe: Bool
         /// The end of the newest planned window — the single cursor target of a completed probe.
         let planHeadEnd: Date?
         /// Consecutive confirmed-empty windows seen so far by a backward probe.
         var probeEmptyStreak: Int
+        /// FUAM-3945 (round 4): the probe's per-window record sets, accumulated newest-first
+        /// during discovery and flushed OLDEST-first at termination (`flushProbeBuffer`), so no
+        /// code path enqueues out of chronological order.
+        var probeBuffer: [ProbeBufferedWindow] = []
+        /// Records currently buffered — checked against `probeBufferMaxRecords`.
+        var probeBufferRecordCount: Int = 0
+        /// `true` once the cap tripped: the buffer was flushed early and the rest of the probe
+        /// enqueues as-you-go (the pre-round-4 regime, still correct via the membership filter).
+        var probeBufferOverflowed: Bool = false
+        /// Starts of windows forfeited via `gave_up` during this probe. Their stragglers in a
+        /// newer window's buffer must still be DROPPED at flush (the sanctioned loss class —
+        /// uploading them would anchor the newer row a day low) but must not trip the
+        /// ordering-regression assertion: a fetch failure is not an ordering bug.
+        var probeForfeitedWindowStarts: Set<Date> = []
 
         init(sensor: SRSensor,
              device: SensorDevice,
@@ -657,6 +699,24 @@ public final class SensorSampleUploadManager {
 
         /// `"<sensor>.<deviceKey>"` — failure and empty-plan counters are per sensor AND device.
         var failureKey: String { return "\(self.sensor.rawValue).\(self.device.key)" }
+    }
+
+    /// One backward-probe window's consent-gated, ledger-prefiltered record set, held until the
+    /// chronological flush (FUAM-3945 round 4). The prefilter at buffer time is read-only and
+    /// only keeps a re-probe over already-uploaded days from ballooning the buffer; the
+    /// authoritative ledger filter re-runs at flush, when earlier (older) windows of the same
+    /// flush have committed their fingerprints.
+    struct ProbeBufferedWindow {
+        let window: DateInterval
+        /// The next-older grid window at fetch time (`nil` for the plan's oldest window) — the
+        /// argument the defensive membership guard needs at flush.
+        let olderWindow: DateInterval?
+        /// Consent-gated, ledger-prefiltered, still untagged (tagging happens at enqueue, as on
+        /// every other path, so fingerprints stay device-tag-free per D4).
+        let records: [[String: Any]]
+        let windowDay: Date
+        let isRescanPass: Bool
+        let windowAgeDays: Int
     }
 
     private func fetchPendingWindows(for sensor: SRSensor, now: Date) {
@@ -843,11 +903,13 @@ public final class SensorSampleUploadManager {
     /// Sequentially process each window to respect mapper's "no concurrent fetch" precondition.
     private func processWindow(at index: Int, of windows: [DateInterval], context: DeviceChainContext) {
         guard index < windows.count else {
-            if context.backwardProbe, let head = context.planHeadEnd {
-                // The probe reached the consent bound with every window durably handled: park
-                // the cursor at the plan head, once (AC1/AC4 — never per window during a
-                // backward walk, so a crash mid-probe re-probes instead of leaving a hole).
-                self.advanceCursor(to: head, for: context.sensor, deviceKey: context.device.key)
+            if context.backwardProbe {
+                // The probe reached the consent bound: flush the buffer oldest-first and, when
+                // every buffered window was durably handled, park the cursor at the plan head,
+                // once (AC1/AC4 — never per window during a backward walk, so a crash mid-probe
+                // re-probes instead of leaving a hole).
+                self.finishProbe(context: context)
+                return
             }
             // This device is done: hand the mapper over to the next one (FUAM-3945).
             self.nextDeviceChain(after: context)
@@ -966,13 +1028,27 @@ public final class SensorSampleUploadManager {
                                                                  reason: "consent_gate"))
             }
 
-            // F1 (review round 1): window membership. On the backward probe the widened fetch
-            // returns the previous day's records BEFORE their own window has run and the ledger
-            // cannot yet know them — without this filter both days land in one batch anchored a
-            // day low (rowless newest day on fresh installs, cross-row duplication on
-            // reinstall, order-dependent batches). Records the next-older window will fetch are
-            // deferred to it; records ONLY this window's span can return are kept. The forward
-            // walk needs none of this: there the older window ran first and the ledger owns the
+            // Round 4: the probe's main path BUFFERS instead of enqueueing, so the flush can
+            // enqueue oldest-first and the ledger — not walk order — owns the dedup on every
+            // path. Batch COMPOSITION is untouched (AC2): the same pure filters run, only the
+            // sequence batches reach the queue in changes.
+            if context.backwardProbe, !context.probeBufferOverflowed {
+                self.bufferProbeWindow(gated: gated,
+                                       at: index,
+                                       of: windows,
+                                       rawRecordsWereEmpty: records.isEmpty,
+                                       context: context)
+                return
+            }
+
+            // F1 (review round 1): window membership. This branch is the forward walk and the
+            // probe's buffer-overflow fallback. On the fallback the widened fetch returns the
+            // previous day's records BEFORE their own window has run and the ledger cannot yet
+            // know them — without this filter both days land in one batch anchored a day low
+            // (rowless newest day on fresh installs, cross-row duplication on reinstall,
+            // order-dependent batches). Records the next-older window will fetch are deferred
+            // to it; records ONLY this window's span can return are kept. The forward walk
+            // needs none of this: there the older window ran first and the ledger owns the
             // dedup.
             let windowBound: [[String: Any]]
             if context.backwardProbe, index + 1 < windows.count {
@@ -1032,16 +1108,16 @@ public final class SensorSampleUploadManager {
             }
 
             if context.backwardProbe {
+                // Only reached by the OVERFLOWED (as-you-go) probe: the buffering path returned
+                // above. The empty-streak rule is shared with `bufferProbeWindow`.
                 var next = context
                 next.probeEmptyStreak = records.isEmpty ? context.probeEmptyStreak + 1 : 0
                 if next.probeEmptyStreak >= Self.probeEmptyWindowStop {
                     // AC1: K consecutive confirmed-empty windows — everything older is beyond
                     // the OS retention horizon. The planned span is handled: park the cursor at
-                    // the plan head, once.
-                    if let head = context.planHeadEnd {
-                        self.advanceCursor(to: head, for: sensor, deviceKey: deviceKey)
-                    }
-                    self.nextDeviceChain(after: context)
+                    // the plan head, once (the buffer is empty here, so `finishProbe`'s flush
+                    // is a no-op and only the terminal cursor write remains).
+                    self.finishProbe(context: next)
                     return
                 }
                 self.processWindow(at: index + 1, of: windows, context: next)
@@ -1055,6 +1131,180 @@ public final class SensorSampleUploadManager {
             self.advanceCursor(to: window.end, for: sensor, deviceKey: deviceKey)
             self.processWindow(at: index + 1, of: windows, context: context)
         }
+    }
+
+    /// Buffers one backward-probe window's records for the chronological flush (FUAM-3945
+    /// round 4) and continues the walk. `windows[index]` is the window the records came from.
+    /// Runs on `workQueue` only.
+    private func bufferProbeWindow(gated: [[String: Any]],
+                                   at index: Int,
+                                   of windows: [DateInterval],
+                                   rawRecordsWereEmpty: Bool,
+                                   context: DeviceChainContext) {
+        let sensor = context.sensor
+        let window = windows[index]
+        let windowDay = Self.utcDayStart(window.start)
+        let isRescanPass = context.rescanBoundary.map { window.end <= $0 } ?? false
+        let windowAgeDays = max(0, Int(Self.utcDayStart(context.now).timeIntervalSince(windowDay) / Self.utcDay))
+        var next = context
+        if !gated.isEmpty {
+            // Read-only prefilter: a re-probe over already-uploaded days (crash recovery,
+            // future_cursor reset) must not balloon the buffer with records the flush would
+            // drop anyway. The authoritative filter re-runs at flush.
+            let stored = self.storage.ledger(for: sensor, deviceKey: context.device.key)
+            let novel = SensorUploadLedger.filter(records: gated,
+                                                  sensor: sensor,
+                                                  windowDay: windowDay,
+                                                  ledger: stored).novel
+            if !novel.isEmpty {
+                let olderWindow = index + 1 < windows.count ? windows[index + 1] : nil
+                next.probeBuffer.append(ProbeBufferedWindow(window: window,
+                                                            olderWindow: olderWindow,
+                                                            records: novel,
+                                                            windowDay: windowDay,
+                                                            isRescanPass: isRescanPass,
+                                                            windowAgeDays: windowAgeDays))
+                next.probeBufferRecordCount += novel.count
+            }
+        }
+        next.probeEmptyStreak = rawRecordsWereEmpty ? context.probeEmptyStreak + 1 : 0
+        if next.probeEmptyStreak >= Self.probeEmptyWindowStop {
+            // AC1: K consecutive confirmed-empty windows — everything older is beyond the OS
+            // retention horizon. Flush chronologically and park the cursor, once.
+            self.finishProbe(context: next)
+            return
+        }
+        if next.probeBufferRecordCount > self.probeBufferMaxRecords {
+            // The cap: flush what is buffered now (chronological among themselves, NO cursor —
+            // the probe is not done) and fall back to enqueue-as-you-go for the rest of the
+            // walk, where the F1 membership filter is load-bearing again. Correctness is
+            // unchanged; strict chronology across the whole probe is what is given up, and the
+            // trace says so.
+            self.analytics.track(event: .sensorDataBackfillReach(
+                sensor: context.device.telemetryName(for: sensor),
+                reachedBack: ISO8601DateFormatter().string(from: window.start),
+                boundedBy: BackfillLowerBound.Origin.probeBufferOverflow.rawValue))
+            guard self.flushProbeBuffer(context: next, assertGuardInert: false) else {
+                // Retryable flush failure: abort this cycle's probe with no cursor written;
+                // the next cycle re-probes and the ledger drops whatever already committed.
+                self.nextDeviceChain(after: next)
+                return
+            }
+            next.probeBuffer = []
+            next.probeBufferRecordCount = 0
+            next.probeBufferOverflowed = true
+        }
+        self.processWindow(at: index + 1, of: windows, context: next)
+    }
+
+    /// Terminal path of a backward probe (consent bound reached, or the empty-streak stop):
+    /// flush the buffer OLDEST-first, then — only when every buffered window was durably
+    /// handled — write the terminal cursor, once (AC1/AC4). Runs on `workQueue` only.
+    private func finishProbe(context: DeviceChainContext) {
+        if self.flushProbeBuffer(context: context, assertGuardInert: true), let head = context.planHeadEnd {
+            self.advanceCursor(to: head, for: context.sensor, deviceKey: context.device.key)
+        }
+        self.nextDeviceChain(after: context)
+    }
+
+    /// Enqueues the probe's buffered windows in CHRONOLOGICAL order — oldest first, the same
+    /// order the forward walk produces, so no code path enqueues out of chronological order
+    /// (FUAM-3945 round 4). Per window: authoritative ledger filter (older windows of this very
+    /// flush have already committed, which is what makes the F1 membership guard inert) →
+    /// defensive membership guard → enqueue → fingerprint commit (AC4: only after the batch is
+    /// durably persisted).
+    ///
+    /// Returns `false` on a retryable enqueue failure: the caller must NOT write the terminal
+    /// cursor (the next sync cycle re-probes; re-fetched records that already committed are
+    /// ledger-dropped). A window whose enqueue exhausts the per-window attempt budget is
+    /// forfeited via `gave_up` — sanctioned, telemetered — and the flush continues.
+    ///
+    /// `assertGuardInert` is `true` only at the TERMINAL flush, where chronology is complete:
+    /// anything the guard defers there is an ordering regression (or an OS fetch that defied
+    /// the containment model) and must be loud in DEBUG. A mid-walk overflow flush runs before
+    /// the older neighbours were fetched, so there the guard is legitimately load-bearing.
+    /// Runs on `workQueue` only.
+    private func flushProbeBuffer(context: DeviceChainContext, assertGuardInert: Bool) -> Bool {
+        guard !context.probeBuffer.isEmpty else { return true }
+        let sensor = context.sensor
+        let deviceKey = context.device.key
+        var forfeited = context.probeForfeitedWindowStarts
+        var enqueuedAnything = false
+        for buffered in context.probeBuffer.sorted(by: { $0.window.start < $1.window.start }) {
+            let ledger = self.storage.ledger(for: sensor, deviceKey: deviceKey)
+            let filtered = SensorUploadLedger.filter(records: buffered.records,
+                                                     sensor: sensor,
+                                                     windowDay: buffered.windowDay,
+                                                     ledger: ledger)
+            if filtered.nearDuplicateCount > 0 {
+                self.analytics.track(event: .sensorNearDuplicate(sensor: sensor.shortSubsource,
+                                                                 count: filtered.nearDuplicateCount))
+            }
+            if buffered.isRescanPass, !filtered.novel.isEmpty {
+                self.analytics.track(event: .sensorRescanNovel(sensor: sensor.shortSubsource,
+                                                               device: deviceKey,
+                                                               ageDays: buffered.windowAgeDays,
+                                                               novelCount: filtered.novel.count))
+            }
+            var novel = filtered.novel
+            var newEntries = filtered.newEntries
+            if let older = buffered.olderWindow {
+                let kept = novel.filter {
+                    !Self.belongsToOlderProbeWindow($0, sensor: sensor, window: buffered.window, olderWindow: older)
+                }
+                if kept.count != novel.count {
+                    // The guard fired. Dropping is the right call either way — these records
+                    // would anchor THIS window's row a day low — but only an ordering
+                    // regression should be loud: a forfeited (gave_up) older window's
+                    // stragglers are the sanctioned round-2 loss class, not a bug.
+                    if assertGuardInert, !forfeited.contains(older.start) {
+                        assertionFailure("flushProbeBuffer: the F1 membership guard deferred "
+                                         + "\(novel.count - kept.count) record(s) at the terminal flush — "
+                                         + "the chronological enqueue order has regressed (or an OS fetch "
+                                         + "defied the containment model). Check the probe flush ordering.")
+                    }
+                    let keptFingerprints = Set(kept.map { SensorUploadLedger.fingerprint(of: $0) })
+                    newEntries = newEntries.filter { keptFingerprints.contains($0.key) }
+                    novel = kept
+                }
+            }
+            guard !novel.isEmpty else { continue }
+            let enqueued = self.enqueueRespectingPayloadLimit(Self.tagged(novel, with: context.device),
+                                                              windowStart: buffered.window.start,
+                                                              for: sensor)
+            guard enqueued else {
+                self.analytics.track(event: .sensorDataBackfillReach(
+                    sensor: context.device.telemetryName(for: sensor),
+                    reachedBack: ISO8601DateFormatter().string(from: buffered.window.start),
+                    boundedBy: BackfillLowerBound.Origin.enqueueFailed.rawValue))
+                let attemptKey = Self.attemptKey(context: context, window: buffered.window)
+                let attempts = (self.windowFetchFailures[attemptKey] ?? 0) + 1
+                guard attempts >= self.maxWindowFetchAttempts else {
+                    self.windowFetchFailures[attemptKey] = attempts
+                    return false
+                }
+                self.windowFetchFailures[attemptKey] = nil
+                self.analytics.track(event: .sensorDataBackfillReach(
+                    sensor: context.device.telemetryName(for: sensor),
+                    reachedBack: ISO8601DateFormatter().string(from: buffered.window.end),
+                    boundedBy: BackfillLowerBound.Origin.gaveUp.rawValue))
+                forfeited.insert(buffered.window.start)
+                continue
+            }
+            self.windowFetchFailures[Self.attemptKey(context: context, window: buffered.window)] = nil
+            var updated = self.storage.ledger(for: sensor, deviceKey: deviceKey)
+            newEntries.forEach { updated[$0.key] = $0.value }
+            let pruneCutoff = Self.utcDayStart(context.now)
+                .addingTimeInterval(-Self.ledgerRetentionDays * Self.utcDay)
+            self.storage.setLedger(SensorUploadLedger.pruned(updated, keepingDaysOnOrAfter: pruneCutoff),
+                                   for: sensor,
+                                   deviceKey: deviceKey)
+            enqueuedAnything = true
+        }
+        if enqueuedAnything {
+            self.drainQueue(for: sensor)
+        }
+        return true
     }
 
     /// The give-up budget's dictionary key. Forward walk: per sensor+device — the failing window
@@ -1098,9 +1348,12 @@ public final class SensorSampleUploadManager {
                 // abandoned window and the gave_up trace above is its loss record. The
                 // empty-streak RESETS (F8): an unread window is UNKNOWN, not empty, and AC1's
                 // stop criterion is K CONSECUTIVE confirmed-empties — two empties separated by
-                // a gave-up window must not satisfy it.
+                // a gave-up window must not satisfy it. The forfeit is remembered (round 4) so
+                // the flush neither uploads this day's stragglers into the newer window's row
+                // nor mistakes their deferral for an ordering regression.
                 var next = context
                 next.probeEmptyStreak = 0
+                next.probeForfeitedWindowStarts.insert(window.start)
                 self.processWindow(at: index + 1, of: windows, context: next)
                 return
             }

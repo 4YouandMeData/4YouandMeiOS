@@ -65,6 +65,11 @@ struct BackfillLowerBound {
         /// A HealthKit payload was split proactively at the 8 MB safety margin BEFORE any server
         /// rejection (FUAM-3945, AC5). Reactive `bisected` stays as the backstop trace.
         case proactiveSplit = "proactive_split"
+        /// A backward probe buffered more records than `probeBufferMaxRecords` while discovering
+        /// the retention horizon: the buffered windows were flushed early and the rest of the
+        /// probe enqueued as-you-go — correct, but no longer strictly chronological (FUAM-3945
+        /// round 4). `reachedBack` carries the window that tripped the cap.
+        case probeBufferOverflow = "probe_buffer_overflow"
     }
 
     /// How far a stored cursor may sit above the capped planning upper bound before it is treated

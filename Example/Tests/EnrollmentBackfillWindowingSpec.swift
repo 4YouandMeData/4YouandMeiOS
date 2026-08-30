@@ -3892,3 +3892,138 @@ class SensorProbeDeferralPeriodSpec: QuickSpec {
         }
     }
 }
+
+// MARK: - Round 4: the probe enqueues chronologically (discovery order decoupled from upload order)
+
+/// The backward probe still DISCOVERS newest-first (that is what finds the OS retention horizon
+/// without fetching hundreds of empty windows) but buffers each window and ENQUEUES oldest-first
+/// at termination, so no code path enqueues out of chronological order and the D4 ledger — not
+/// walk order — owns the cross-window dedup everywhere. Past the buffer cap the probe flushes
+/// early and falls back to enqueue-as-you-go (the pre-round-4 regime): still the same batches,
+/// telemetered, just not strictly chronological.
+class SensorProbeChronologySpec: QuickSpec {
+
+    // swiftlint:disable:next function_body_length
+    override class func spec() {
+
+        let hour: TimeInterval = 3600
+        let day: TimeInterval = 24 * hour
+        let now = SensorSampleUploadManager.utcDayStart(Date())
+        let iso = ISO8601DateFormatter()
+
+        it("enqueues probe windows OLDEST-first even though discovery walks newest-first") {
+            let sensor = SRSensor.pedometerData
+            let storage = FakeSensorStorage()
+            let clearance = FakeSensorClearance()
+            clearance.enrollmentDate = now.addingTimeInterval(-5 * day)
+            let mapper = ClosureDeviceMapper { _, to in
+                [["t": iso.string(from: to.addingTimeInterval(-hour))]]
+            }
+            let manager = SensorSampleUploadManager(withSensors: [sensor],
+                                                    storage: storage,
+                                                    reachability: FakeSensorReachability(),
+                                                    analytics: CapturingAnalyticsService(),
+                                                    mappers: [sensor: mapper])
+            manager.clearanceDelegate = clearance
+
+            manager.runDeviceChain(at: 0, of: [.current], for: sensor, now: now, using: mapper)
+            expect(storage.lastCursor(for: sensor)).toEventually(equal(now.addingTimeInterval(-day)),
+                                                                 timeout: .seconds(5))
+
+            // Discovery fetched [-2,-1) first; the queue must still read oldest-first.
+            let starts = storage.enqueued.map { $0.windowStart }
+            expect(starts).to(equal([now.addingTimeInterval(-5 * day),
+                                     now.addingTimeInterval(-4 * day),
+                                     now.addingTimeInterval(-3 * day),
+                                     now.addingTimeInterval(-2 * day)]))
+        }
+
+        it("the forward walk enqueues oldest-first too (no path enqueues out of chronological order)") {
+            let sensor = SRSensor.pedometerData
+            let storage = FakeSensorStorage()
+            let clearance = FakeSensorClearance()
+            clearance.enrollmentDate = now.addingTimeInterval(-30 * day)
+            let mapper = ClosureDeviceMapper { _, to in
+                [["t": iso.string(from: to.addingTimeInterval(-hour))]]
+            }
+            let manager = SensorSampleUploadManager(withSensors: [sensor],
+                                                    storage: storage,
+                                                    reachability: FakeSensorReachability(),
+                                                    analytics: CapturingAnalyticsService(),
+                                                    mappers: [sensor: mapper])
+            manager.clearanceDelegate = clearance
+            // A plain cursor resume: cursor 5 days back, today's rescan already burnt.
+            storage.setLastCursor(now.addingTimeInterval(-5 * day), for: sensor)
+            storage.setLastRescanDay(SensorSampleUploadManager.utcDayStart(now), for: sensor)
+
+            manager.runDeviceChain(at: 0, of: [.current], for: sensor, now: now, using: mapper)
+            expect(storage.lastCursor(for: sensor)).toEventually(equal(now.addingTimeInterval(-day)),
+                                                                 timeout: .seconds(5))
+
+            let starts = storage.enqueued.map { $0.windowStart }
+            expect(starts).to(equal(starts.sorted()))
+            expect(starts.count).to(equal(4))
+        }
+
+        it("past the buffer cap the probe falls back to enqueue-as-you-go and still produces IDENTICAL batches") {
+            let sensor = SRSensor.phoneUsageReport
+
+            func reports() -> [ContainmentReportMapper.Report] {
+                return (2...5).map { age in
+                    let start = now.addingTimeInterval(TimeInterval(-age) * day)
+                    return ContainmentReportMapper.Report(
+                        start: start,
+                        duration: day,
+                        record: ["start": iso.string(from: start),
+                                 "duration_s": day,
+                                 "recorded_at": iso.string(from: start.addingTimeInterval(day - 1))])
+                }
+            }
+
+            func runProbe(bufferCap: Int?) -> (batches: [Date: String], analytics: CapturingAnalyticsService) {
+                let storage = FakeSensorStorage()
+                let clearance = FakeSensorClearance()
+                clearance.enrollmentDate = now.addingTimeInterval(-5 * day)
+                let analytics = CapturingAnalyticsService()
+                let mapper = ContainmentReportMapper()
+                mapper.reports = reports()
+                let manager = SensorSampleUploadManager(withSensors: [sensor],
+                                                        storage: storage,
+                                                        reachability: FakeSensorReachability(),
+                                                        analytics: analytics,
+                                                        mappers: [sensor: mapper])
+                manager.clearanceDelegate = clearance
+                if let bufferCap = bufferCap {
+                    manager.probeBufferMaxRecords = bufferCap
+                }
+                manager.runDeviceChain(at: 0, of: [.current], for: sensor, now: now, using: mapper)
+                expect(storage.lastCursor(for: sensor)).toEventually(equal(now.addingTimeInterval(-day)),
+                                                                     timeout: .seconds(5))
+                let batches = Dictionary(uniqueKeysWithValues: storage.enqueued.map {
+                    ($0.windowStart, SensorUploadLedger.canonical(["records": $0.records]))
+                })
+                return (batches, analytics)
+            }
+
+            // The widened report fetch makes the newest window buffer TWO records, so cap 1
+            // trips the overflow on the very first window.
+            let capped = runProbe(bufferCap: 1)
+            let uncapped = runProbe(bufferCap: nil)
+
+            expect(capped.batches).to(equal(uncapped.batches))
+            expect(capped.batches.count).to(equal(4))
+
+            func overflowOrigins(_ analytics: CapturingAnalyticsService) -> [String] {
+                return analytics.trackedEvents.compactMap { event in
+                    if case let .sensorDataBackfillReach(_, _, boundedBy) = event,
+                       boundedBy == BackfillLowerBound.Origin.probeBufferOverflow.rawValue {
+                        return boundedBy
+                    }
+                    return nil
+                }
+            }
+            expect(overflowOrigins(capped.analytics)).toNot(beEmpty())
+            expect(overflowOrigins(uncapped.analytics)).to(beEmpty())
+        }
+    }
+}
