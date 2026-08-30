@@ -256,6 +256,23 @@ final class SensorKitManager: NSObject, SensorKitService {
         return self.isPromptDeclined(error) && elapsed < self.collectionDisabledMaxElapsed
     }
 
+    /// Maximum elapsed time under which a `promptDeclined` can be treated as PROMPTLESS — no
+    /// consent sheet was drawn, no human was involved (FUAM-3945 round 4, R2-2 residual). Sits
+    /// well above `collectionDisabledMaxElapsed` on purpose: the confounder that broke the old
+    /// unanimity-of-fast rule is the first call of a launch declining in ~0.9s on a cold
+    /// SensorKit XPC start (round 8's own measurement) — still nowhere near a human reading the
+    /// full-screen SensorKit consent sheet and tapping Cancel, which takes seconds. Between the
+    /// two thresholds a decline is "promptless but not fast": machine-speed evidence, tolerated
+    /// once per round (the cold start) by `setupOutcome`'s undeclared-host rule.
+    private static let humanPromptMinElapsed: TimeInterval = 3.0
+
+    /// `true` when this decline shows no evidence that a prompt was ever drawn: a
+    /// `promptDeclined` returned faster than any human round-trip through the consent sheet.
+    /// Every fast auto-decline is also promptless (`0.8 < 3.0`).
+    static func isPromptlessDecline(error: Error, elapsed: TimeInterval) -> Bool {
+        return self.isPromptDeclined(error) && elapsed < self.humanPromptMinElapsed
+    }
+
     /// The verdict of a whole request sequence (FUAM-3945 round 8, corrected round 9 per D7/R3).
     ///
     /// A single fast `promptDeclined` used to be treated as proof that the system-wide "Sensor &
@@ -271,23 +288,40 @@ final class SensorKitManager: NSObject, SensorKitService {
     /// was asked fast-declined. Anything authorized proves the switch is ON, whatever the
     /// timings said.
     ///
-    /// The threshold depends on whether the host DECLARED its entitlements (round 2, review F6):
+    /// The rule depends on whether the host DECLARED its entitlements (round 2, review F6):
     /// - with a `FYAMSensorKitEntitledSensors` declaration, unentitled sensors never reach the
     ///   request set, so fast declines are meaningful evidence — a majority blames the switch
     ///   (tolerating the one slow cold-start);
     /// - with NO declaration, unentitled sensors fast-decline while the switch is ON: a host
     ///   entitled to half its request set would otherwise false-alarm every time the user simply
-    ///   denies the real prompts (and, because the round is then not `.completed`, the refusal
-    ///   ledger never learns — layer 3 never converges on exactly the host it exists for). Only
-    ///   unanimity may blame the switch there.
+    ///   denies the real prompts. Round 2 required unanimity of FAST declines there, which the
+    ///   cold-start confounder defeated: with the switch genuinely OFF, the launch's first call
+    ///   declines in ~0.9s > 0.8s, unanimity is unmet, and the participant never sees the
+    ///   "re-enable Sensor & Usage Data Collection" alert (review R2-2, residual half). Round 4
+    ///   decides from the OBSERVED evidence instead: the switch is blamed iff EVERY asked sensor
+    ///   declined PROMPTLESSLY (no drawn-prompt evidence anywhere — a real human cancel takes
+    ///   seconds and breaks this unanimity, so the entitled-half + user-denies host stays quiet)
+    ///   AND all but at most one declined genuinely FAST (the exact shape of a switch-off round:
+    ///   all instant, at most the one cold start). Residuals, accepted and narrower than before:
+    ///   a switch-off round containing a non-`promptDeclined` failure or a >3s decline still
+    ///   reports `.completed`, and an undeclared host entitled to NOTHING still false-alarms
+    ///   with the switch ON (it always did, under every rule so far — indistinguishable without
+    ///   a declaration).
+    ///
+    /// `promptlessDeclineCount` counts declines under `humanPromptMinElapsed` and is therefore
+    /// always >= `fastDeclineCount`.
     static func setupOutcome(fastDeclineCount: Int,
+                             promptlessDeclineCount: Int,
                              askedCount: Int,
                              anyAuthorizedAfterLoop: Bool,
                              hasEntitlementDeclaration: Bool) -> SensorKitSetupOutcome {
         guard !anyAuthorizedAfterLoop, askedCount > 0 else { return .completed }
-        let threshold = hasEntitlementDeclaration ? max(1, askedCount / 2) : askedCount
-        guard fastDeclineCount >= threshold else { return .completed }
-        return .collectionDisabledSystemWide
+        if hasEntitlementDeclaration {
+            return fastDeclineCount >= max(1, askedCount / 2) ? .collectionDisabledSystemWide : .completed
+        }
+        return promptlessDeclineCount == askedCount && fastDeclineCount >= askedCount - 1
+            ? .collectionDisabledSystemWide
+            : .completed
     }
 
     /// The sensors this round proved iOS refuses to prompt for (D6 layer 3): asked,
@@ -300,8 +334,10 @@ final class SensorKitManager: NSObject, SensorKitService {
     /// two such launches promoted them all to refused, locking them behind the Settings alert
     /// even after the participant re-enabled the switch. A round in which nothing authorized
     /// teaches the ledger nothing — which only forgoes learning in the one state where the
-    /// verdict can be wrong. A SLOW decline (a real human cancel) is never recorded either:
-    /// iOS will happily re-prompt it (R2 is exactly the ability to do so).
+    /// verdict can be wrong. (Round 4 closed that verdict's false negative too — see
+    /// `setupOutcome` — but the learning gate stays evidence-based on purpose: it must not
+    /// depend on the verdict rule being right.) A SLOW decline (a real human cancel) is never
+    /// recorded either: iOS will happily re-prompt it (R2 is exactly the ability to do so).
     static func refusals(fastDeclined: Set<SRSensor>,
                          stillNotDetermined: Set<SRSensor>,
                          anyAuthorizedAfterLoop: Bool) -> Set<SRSensor> {
@@ -323,8 +359,8 @@ final class SensorKitManager: NSObject, SensorKitService {
     ///
     /// FUAM-3945 round 8: one fast decline is NOT enough to blame the master switch — a sensor the
     /// host is not entitled to auto-declines identically. The loop therefore always runs to the
-    /// end and `setupOutcome(fastDeclineCount:askedCount:)` reports
-    /// `.collectionDisabledSystemWide` only when EVERY asked sensor fast-declined. (FUAM-3432)
+    /// end, collecting both the FAST declines (< 0.8s) and the PROMPTLESS declines (< 3s, no
+    /// drawn-prompt evidence — round 4), and the post-loop `setupOutcome` decides. (FUAM-3432)
     func requestPermissionsDetectingCollectionDisabled() -> Single<SensorKitSetupOutcome> {
         let toAsk = orderedNotDeterminedSensors()
         guard !toAsk.isEmpty else { return .just(.completed) }
@@ -333,6 +369,7 @@ final class SensorKitManager: NSObject, SensorKitService {
             if #available(iOS 17.4, *) {
                 Task { @MainActor in
                     var fastDeclined: Set<SRSensor> = []
+                    var promptlessDeclined: Set<SRSensor> = []
                     for sensor in toAsk {
                         let start = Date()
                         do {
@@ -345,16 +382,23 @@ final class SensorKitManager: NSObject, SensorKitService {
                             if Self.isFastAutoDecline(error: error, elapsed: elapsed) {
                                 fastDeclined.insert(sensor)
                             }
+                            if Self.isPromptlessDecline(error: error, elapsed: elapsed) {
+                                promptlessDeclined.insert(sensor)
+                            }
                             // Slow promptDeclined (real user cancel) or any other error:
                             // non-fatal, continue with the next sensor.
                         }
                     }
-                    observer(.success(self.finishDetectingRound(asked: toAsk, fastDeclined: fastDeclined)))
+                    observer(.success(self.finishDetectingRound(asked: toAsk,
+                                                                fastDeclined: fastDeclined,
+                                                                promptlessDeclined: promptlessDeclined)))
                 }
             } else {
-                self.requestAuthorizationDetectingCollectionDisabled(sensors: toAsk) { fastDeclined in
+                self.requestAuthorizationDetectingCollectionDisabled(sensors: toAsk) { fastDeclined, promptlessDeclined in
                     DispatchQueue.main.async {
-                        observer(.success(self.finishDetectingRound(asked: toAsk, fastDeclined: fastDeclined)))
+                        observer(.success(self.finishDetectingRound(asked: toAsk,
+                                                                    fastDeclined: fastDeclined,
+                                                                    promptlessDeclined: promptlessDeclined)))
                     }
                 }
             }
@@ -364,9 +408,12 @@ final class SensorKitManager: NSObject, SensorKitService {
 
     /// Post-loop verdict + refusal-ledger update for one detect-capable request round (D6/D7).
     /// Call on the main thread once every asked sensor's request has returned.
-    private func finishDetectingRound(asked: [SRSensor], fastDeclined: Set<SRSensor>) -> SensorKitSetupOutcome {
+    private func finishDetectingRound(asked: [SRSensor],
+                                      fastDeclined: Set<SRSensor>,
+                                      promptlessDeclined: Set<SRSensor>) -> SensorKitSetupOutcome {
         let anyAuthorized = self.hasAnyAuthorized()
         let outcome = Self.setupOutcome(fastDeclineCount: fastDeclined.count,
+                                        promptlessDeclineCount: promptlessDeclined.count,
                                         askedCount: asked.count,
                                         anyAuthorizedAfterLoop: anyAuthorized,
                                         hasEntitlementDeclaration: SensorKitEntitlement.hostDeclaredValues() != nil)
@@ -457,14 +504,16 @@ final class SensorKitManager: NSObject, SensorKitService {
     /// unavailable. Like the async path, the loop always runs to the end; the VERDICT is the
     /// caller's (`finishDetectingRound`), decided post-loop from the strongest evidence
     /// (FUAM-3945 round 9, D7).
-    private func requestAuthorizationDetectingCollectionDisabled(sensors: [SRSensor],
-                                                                 completion: @escaping (_ fastDeclined: Set<SRSensor>) -> Void) {
+    private func requestAuthorizationDetectingCollectionDisabled(
+        sensors: [SRSensor],
+        completion: @escaping (_ fastDeclined: Set<SRSensor>, _ promptlessDeclined: Set<SRSensor>) -> Void) {
         var remaining = sensors
         var fastDeclined: Set<SRSensor> = []
+        var promptlessDeclined: Set<SRSensor> = []
 
         func next() {
             guard let sensor = remaining.first else {
-                completion(fastDeclined)
+                completion(fastDeclined, promptlessDeclined)
                 return
             }
             remaining.removeFirst()
@@ -478,6 +527,9 @@ final class SensorKitManager: NSObject, SensorKitService {
                     if Self.isFastAutoDecline(error: error, elapsed: elapsed) {
                         // A slow promptDeclined is a real user cancel: not counted.
                         fastDeclined.insert(sensor)
+                    }
+                    if Self.isPromptlessDecline(error: error, elapsed: elapsed) {
+                        promptlessDeclined.insert(sensor)
                     }
                 }
                 next()

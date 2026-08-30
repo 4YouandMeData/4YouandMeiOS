@@ -19,8 +19,9 @@
 //    intersection: the entitlement is a CEILING (entitled-but-not-requested stays out), a
 //    requested-but-unentitled sensor is dropped, an unreadable entitlement FAILS OPEN and an
 //    empty one means "entitled to nothing".
-//  - SensorKitManager.setupOutcome(fastDeclineCount:askedCount:) — only an ALL-fast-decline
-//    sequence may be blamed on the system-wide switch.
+//  - SensorKitManager.setupOutcome — the post-loop verdict: declared hosts blame the switch on
+//    a fast-decline majority with nothing authorized; undeclared hosts on promptless unanimity
+//    with at most one non-fast decline (round 4, R2-2 residual).
 //  - AppNavigator.displayName(for:) — the study string when seeded, the rawValue when not.
 //
 
@@ -213,20 +214,25 @@ class SensorKitEntitlementSpec: QuickSpec {
             }
         }
 
-        describe("SensorKitManager.setupOutcome(fastDeclineCount:askedCount:anyAuthorizedAfterLoop:)") {
+        describe("SensorKitManager.setupOutcome (post-loop verdict)") {
 
             // FUAM-3945 round 9 (D7/R3): the verdict is decided AFTER the loop from the
             // strongest evidence — anything authorized proves the master switch is ON; with
-            // nothing authorized, a majority of fast declines blames the switch, so one slow
-            // XPC cold-start cannot suppress a genuine detection (review F4).
+            // nothing authorized, a majority of fast declines blames the switch on a DECLARED
+            // host, so one slow XPC cold-start cannot suppress a genuine detection (review F4).
+            // Round 4 (R2-2 residual): an UNDECLARED host decides from drawn-prompt evidence —
+            // promptless unanimity (< 3s, no consent sheet drawn) with at most one non-fast
+            // decline (the cold start) — instead of unanimity of fast declines.
 
             it("blames the switch when nothing authorized and everything fast-declined") {
                 expect(SensorKitManager.setupOutcome(fastDeclineCount: 4,
+                                                     promptlessDeclineCount: 4,
                                                      askedCount: 4,
                                                      anyAuthorizedAfterLoop: false,
                                                      hasEntitlementDeclaration: true))
                     == .collectionDisabledSystemWide
                 expect(SensorKitManager.setupOutcome(fastDeclineCount: 1,
+                                                     promptlessDeclineCount: 1,
                                                      askedCount: 1,
                                                      anyAuthorizedAfterLoop: false,
                                                      hasEntitlementDeclaration: true))
@@ -235,6 +241,7 @@ class SensorKitEntitlementSpec: QuickSpec {
 
             it("survives one slow cold-start: 7 of 8 fast with nothing authorized is still the switch") {
                 expect(SensorKitManager.setupOutcome(fastDeclineCount: 7,
+                                                     promptlessDeclineCount: 8,
                                                      askedCount: 8,
                                                      anyAuthorizedAfterLoop: false,
                                                      hasEntitlementDeclaration: true))
@@ -245,11 +252,13 @@ class SensorKitEntitlementSpec: QuickSpec {
                 // 2 unentitled sensors fast-decline while 6 are authorized: a per-sensor
                 // condition, not the master switch — the device-confirmed false alert.
                 expect(SensorKitManager.setupOutcome(fastDeclineCount: 2,
+                                                     promptlessDeclineCount: 2,
                                                      askedCount: 2,
                                                      anyAuthorizedAfterLoop: true,
                                                      hasEntitlementDeclaration: true))
                     == .completed
                 expect(SensorKitManager.setupOutcome(fastDeclineCount: 8,
+                                                     promptlessDeclineCount: 8,
                                                      askedCount: 8,
                                                      anyAuthorizedAfterLoop: true,
                                                      hasEntitlementDeclaration: true))
@@ -258,11 +267,13 @@ class SensorKitEntitlementSpec: QuickSpec {
 
             it("stays quiet below a majority of fast declines") {
                 expect(SensorKitManager.setupOutcome(fastDeclineCount: 2,
+                                                     promptlessDeclineCount: 2,
                                                      askedCount: 8,
                                                      anyAuthorizedAfterLoop: false,
                                                      hasEntitlementDeclaration: true))
                     == .completed
                 expect(SensorKitManager.setupOutcome(fastDeclineCount: 0,
+                                                     promptlessDeclineCount: 0,
                                                      askedCount: 3,
                                                      anyAuthorizedAfterLoop: false,
                                                      hasEntitlementDeclaration: true))
@@ -271,19 +282,23 @@ class SensorKitEntitlementSpec: QuickSpec {
 
             it("never reports 'disabled' when there was nothing to ask") {
                 expect(SensorKitManager.setupOutcome(fastDeclineCount: 0,
+                                                     promptlessDeclineCount: 0,
                                                      askedCount: 0,
                                                      anyAuthorizedAfterLoop: false,
                                                      hasEntitlementDeclaration: true))
                     == .completed
             }
 
-            context("a host with NO entitlement declaration (round 2, review F6)") {
+            context("a host with NO entitlement declaration (round 2 F6, revised round 4 for R2-2)") {
 
                 it("does not blame the switch when half the set fast-declines and the user denies the rest") {
                     // No-plist host entitled to 4 of 8: 4 unentitled auto-declines + 4 real
-                    // prompts the user DENIED (slow). The switch is ON — a majority rule here
-                    // false-alarmed on every Setup tap, forever, and blocked refusal learning.
+                    // prompts the user DENIED (slow — a human round-trip through the consent
+                    // sheet). The switch is ON: a drawn prompt anywhere breaks promptless
+                    // unanimity, so this must never alert (the case that killed the old
+                    // majority rule).
                     expect(SensorKitManager.setupOutcome(fastDeclineCount: 4,
+                                                         promptlessDeclineCount: 4,
                                                          askedCount: 8,
                                                          anyAuthorizedAfterLoop: false,
                                                          hasEntitlementDeclaration: false))
@@ -292,10 +307,44 @@ class SensorKitEntitlementSpec: QuickSpec {
 
                 it("still detects a genuinely off switch: everything fast-declines unanimously") {
                     expect(SensorKitManager.setupOutcome(fastDeclineCount: 8,
+                                                         promptlessDeclineCount: 8,
                                                          askedCount: 8,
                                                          anyAuthorizedAfterLoop: false,
                                                          hasEntitlementDeclaration: false))
                         == .collectionDisabledSystemWide
+                }
+
+                it("detects a genuinely off switch DESPITE one cold-start slow decline (R2-2 residual, closed)") {
+                    // The shape round 2's unanimity-of-fast rule missed: switch off, 7 instant
+                    // auto-declines + the launch's first call at ~0.9s — promptless (no sheet
+                    // was drawn) but not fast. The participant must see the re-enable alert.
+                    expect(SensorKitManager.setupOutcome(fastDeclineCount: 7,
+                                                         promptlessDeclineCount: 8,
+                                                         askedCount: 8,
+                                                         anyAuthorizedAfterLoop: false,
+                                                         hasEntitlementDeclaration: false))
+                        == .collectionDisabledSystemWide
+                }
+
+                it("does not blame the switch when more than one decline was slower than a cold start") {
+                    // Two+ ambiguous-band declines is not the evidenced switch-off shape
+                    // (exactly one cold start per launch): stay quiet rather than guess.
+                    expect(SensorKitManager.setupOutcome(fastDeclineCount: 6,
+                                                         promptlessDeclineCount: 8,
+                                                         askedCount: 8,
+                                                         anyAuthorizedAfterLoop: false,
+                                                         hasEntitlementDeclaration: false))
+                        == .completed
+                }
+
+                it("does not blame the switch when any decline shows a drawn prompt (a human was involved)") {
+                    // 7 fast + 1 slow HUMAN cancel (> 3s): promptless unanimity broken.
+                    expect(SensorKitManager.setupOutcome(fastDeclineCount: 7,
+                                                         promptlessDeclineCount: 7,
+                                                         askedCount: 8,
+                                                         anyAuthorizedAfterLoop: false,
+                                                         hasEntitlementDeclaration: false))
+                        == .completed
                 }
             }
         }
@@ -327,12 +376,13 @@ class SensorKitEntitlementSpec: QuickSpec {
                 expect(refused).to(beEmpty())
             }
 
-            it("switch off on an undeclared host, cold-start slow decline, TWICE: nothing is ever promoted (R2-2)") {
-                // The full poisoning chain the round-2 review traced: 8 sensors asked, 7 fast
-                // auto-declines + 1 evidenced-slow cold start, nothing authorized. Unanimity is
-                // unmet, so the verdict is the (wrong) `.completed` — but learning is gated on
-                // proof the switch is ON, so two such launches must leave the refusal ledger
-                // untouched and the sensors re-promptable after the user re-enables the switch.
+            it("switch off on an undeclared host, cold-start slow decline, TWICE: alert shown, nothing promoted (R2-2)") {
+                // The full chain the round-2 review traced: 8 sensors asked, 7 fast
+                // auto-declines + 1 evidenced-slow cold start (promptless — no sheet drawn),
+                // nothing authorized. Round 4: the verdict now correctly blames the switch
+                // (the relocated false negative, closed) AND learning stays gated on proof the
+                // switch is ON, so two such launches leave the refusal ledger untouched and the
+                // sensors re-promptable after the user re-enables the switch.
                 let defaults = UserDefaults.standard
                 defer {
                     defaults.removeObject(forKey: SensorRefusalStore.sensorsKey)
@@ -346,10 +396,11 @@ class SensorKitEntitlementSpec: QuickSpec {
                 for _ in 0..<2 {
                     let fastDeclined = asked.subtracting([.messagesUsageReport])   // the slow cold start
                     let outcome = SensorKitManager.setupOutcome(fastDeclineCount: fastDeclined.count,
+                                                                promptlessDeclineCount: asked.count,
                                                                 askedCount: asked.count,
                                                                 anyAuthorizedAfterLoop: false,
                                                                 hasEntitlementDeclaration: false)
-                    expect(outcome) == .completed   // the relocated false negative, by design
+                    expect(outcome) == .collectionDisabledSystemWide   // round 4: the alert fires
                     let refused = SensorKitManager.refusals(fastDeclined: fastDeclined,
                                                             stillNotDetermined: asked,
                                                             anyAuthorizedAfterLoop: false)
