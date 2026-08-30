@@ -102,9 +102,9 @@ final class MenstrualEntrySuccessViewController: UIViewController {
         let emojiVC = EmojiPopupViewController(
             emojis: getEmojis(),
             selected: selectedEmoji
-        ) { [weak self] selected in
+        ) { [weak self] confirmedEmoji in
             guard let self = self else { return }
-            self.selectedEmoji = selected
+            self.selectedEmoji = confirmedEmoji
             self.updateEmojiButton()
         }
         emojiVC.modalPresentationStyle = .overCurrentContext
@@ -113,19 +113,21 @@ final class MenstrualEntrySuccessViewController: UIViewController {
     }
 
     private func updateEmojiButton() {
-        guard let emoji = selectedEmoji else { return }
-        let tag = (emoji.label != "none") ? emoji.tag : nil
         emojiButton.setImage(nil, for: .normal)
-        emojiButton.setTitle(tag, for: .normal)
+        emojiButton.setTitle(selectedEmoji?.tag, for: .normal)
         emojiButton.titleLabel?.font = UIFont.systemFont(ofSize: 32)
         emojiButton.setTitleColor(ColorPalette.color(withType: .primaryText), for: .normal)
-        // Newly-created entries come back from the wizard with feedbackTags = nil;
-        // append via optional chaining would silently no-op and the PATCH would
-        // skip the feedback_tags_attributes block entirely (FUAM-2934).
-        if diaryNote.feedbackTags == nil {
-            diaryNote.feedbackTags = []
+        // FUAM-3857: `feedbackTagsToDestroy`/`feedbackTagToSet` are explicit, so a
+        // newly-created entry with `feedbackTags == nil` (FUAM-2934) no longer needs a
+        // special-case nil-check before the update — `?? []` handles it uniformly.
+        // FUAM-3857: confirming the note's current emoji again - skip the request, keep going.
+        guard !diaryNote.feedbackTagIsUnchanged(by: selectedEmoji) else {
+            self.closeButtonTapped()
+            return
         }
-        diaryNote.feedbackTags?.append(emoji)
+
+        diaryNote.feedbackTagsToDestroy = diaryNote.feedbackTags ?? []
+        diaryNote.feedbackTagToSet = selectedEmoji
         repository.updateDiaryNoteText(diaryNote: diaryNote)
             .addProgress()
             .subscribe(onSuccess: { [weak self] in

@@ -266,10 +266,9 @@ final class MenstrualEntryFormViewController: UIViewController {
         return cache.feedbackList[EmojiTagCategory.menstrualPeriod.rawValue] ?? []
     }
 
-    private func applyEmojiToButton(_ emoji: EmojiItem) {
-        let tag = (emoji.label != "none") ? emoji.tag : nil
+    private func applyEmojiToButton(_ emoji: EmojiItem?) {
         emojiButton.setImage(nil, for: .normal)
-        emojiButton.setTitle(tag, for: .normal)
+        emojiButton.setTitle(emoji?.tag, for: .normal)
         emojiButton.titleLabel?.font = UIFont.systemFont(ofSize: 22)
     }
 
@@ -280,17 +279,25 @@ final class MenstrualEntryFormViewController: UIViewController {
         let emojiVC = EmojiPopupViewController(
             emojis: items,
             selected: selectedEmoji
-        ) { [weak self] selected in
-            guard let self = self, let emoji = selected else { return }
+        ) { [weak self] confirmedEmoji in
+            guard let self = self else { return }
             guard var note = self.diaryNote else { return }
 
-            self.selectedEmoji = emoji
-            if note.feedbackTags == nil {
-                note.feedbackTags = []
+            self.selectedEmoji = confirmedEmoji
+            self.applyEmojiToButton(confirmedEmoji)
+
+            // FUAM-3857: confirming the emoji the note already carries would send a
+            // destroy+create pair for the same tag, which the backend rejects as a
+            // uniqueness violation (see `feedbackTagIsUnchanged` docs). Skip the
+            // network round-trip but still run the same success continuation.
+            guard !note.feedbackTagIsUnchanged(by: confirmedEmoji) else {
+                self.onEntryUpdated?(note)
+                return
             }
-            note.feedbackTags?.append(emoji)
+
+            note.feedbackTagsToDestroy = note.feedbackTags ?? []
+            note.feedbackTagToSet = confirmedEmoji
             self.diaryNote = note
-            self.applyEmojiToButton(emoji)
 
             self.repository.updateDiaryNoteText(diaryNote: note)
                 .addProgress()

@@ -873,23 +873,17 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
             var dataParams: [String: Any] = [:]
             dataParams["title"] = diaryNote.title
             dataParams["body"] = diaryNote.body
-            if let feedbackTags = diaryNote.feedbackTags, !feedbackTags.isEmpty {
-                let lastIndex = feedbackTags.count - 1
-                let attributes = feedbackTags.enumerated().map { index, item in
-                    var dict: [String: Any] = [:]
-                    if item.label != "none" {
-                         dict = [
-                            "id": item.id,
-                            "tag": item.tag
-                        ]
-                    } else {
-                        dict["_destroy"] = true
-                    }
-                    if index != lastIndex {
-                        dict["_destroy"] = true
-                    }
-                    return dict
-                }
+            // FUAM-3857: intent is explicit, not positional — no `label`/index reasoning.
+            // Every tag to destroy is marked so regardless of where it sits; the tag to set
+            // (if any) is appended last. Absence of `feedbackTagToSet` IS "no emoji"; there is
+            // no sentinel value standing in for it.
+            var attributes: [[String: Any]] = diaryNote.feedbackTagsToDestroy.map {
+                ["id": $0.id, "tag": $0.tag, "_destroy": true]
+            }
+            if let tag = diaryNote.feedbackTagToSet {
+                attributes.append(["id": tag.id, "tag": tag.tag])
+            }
+            if !attributes.isEmpty {
                 dataParams["feedback_tags_attributes"] = attributes
             }
             return .requestParameters(parameters: ["diary_note": dataParams], encoding: JSONEncoding.default)

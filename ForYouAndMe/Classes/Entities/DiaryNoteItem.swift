@@ -429,6 +429,46 @@ struct DiaryNoteItem: Codable {
 
     var feedbackTags: [EmojiItem]?
 
+    /// FUAM-3857 — server-recorded tags this update destroys. Set by the presenter right
+    /// before calling `updateDiaryNoteText`/`sendDiaryNoteTextWithFeedback`; never
+    /// round-tripped through JSON (see `encode(to:)` below, which doesn't touch it).
+    var feedbackTagsToDestroy: [EmojiItem] = []
+
+    /// FUAM-3857 — the tag to record, or nil to record none. Absence IS "no emoji"; there is
+    /// no sentinel value. Leaving this AND `feedbackTagsToDestroy` empty means "this update
+    /// doesn't touch the note's feedback tag at all" (omits `feedback_tags_attributes`).
+    var feedbackTagToSet: EmojiItem?
+
+    /// True when confirming `emoji` would leave the server in exactly the state it is already
+    /// in, so the PATCH can be skipped entirely.
+    ///
+    /// FUAM-3857 round 13. Confirming the emoji a note ALREADY carries used to send
+    /// `[{id: <existing>, tag: "🙂", _destroy: true}, {id: "", tag: "🙂"}]` in one request.
+    /// That payload is rejected: `FeedbackTag` declares
+    /// `validates_uniqueness_of_without_deleted :tag, scope: [:taggable]`, and ActiveRecord
+    /// validates the new row while the old one is still present - `association_valid?` skips
+    /// records marked for destruction from VALIDATION, but the destroy itself only happens
+    /// later, during save. So the twin collides with a live row, the update is rejected, and
+    /// the participant gets an error alert for having confirmed what was already there.
+    ///
+    /// The comparison is by `tag`, not by `id`: the ids differ by design (a persisted
+    /// FeedbackTag's server id vs. the study-configuration item's id), and `tag` is precisely
+    /// the column the uniqueness constraint is scoped on, so this predicate characterises
+    /// exactly the payload the backend would refuse.
+    ///
+    /// Deliberately an exact list comparison rather than "does the current set contain it":
+    /// a note carrying stray extra tags must still be cleaned up by a real request.
+    ///
+    /// Both of the cases with no prior emoji fall out of this naturally, unguarded:
+    /// - a note that has no emoji, when a real emoji is picked -> `[] != ["🙂"]`, sends;
+    /// - a not-yet-created note -> it has no persisted tags at all, so its pending pick is
+    ///   `[] != ["🙂"]` and is attached on save exactly as before.
+    func feedbackTagIsUnchanged(by emoji: EmojiItem?) -> Bool {
+        let current = (self.feedbackTags ?? []).map { $0.tag }
+        let desired = [emoji?.tag].compactMap { $0 }
+        return current == desired
+    }
+
     /// FUAM-2934 — BE v0.12.5 series metadata; non-nil only on the compressed
     /// menstrual row / on the show response for the last `yes` of a series.
     var seriesMeta: MenstrualSeriesMeta?

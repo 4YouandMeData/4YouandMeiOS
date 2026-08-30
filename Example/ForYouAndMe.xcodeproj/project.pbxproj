@@ -35,6 +35,9 @@
 		3364A0010001F37A0001AAAA /* OptInPermissionDecodingSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3364A0020001F37A0001AAAA /* OptInPermissionDecodingSpec.swift */; };
 		2937A0050001F37A0001AAAA /* MenstrualOnboardingFlowSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2937A0060001F37A0001AAAA /* MenstrualOnboardingFlowSpec.swift */; };
 		2934A0010001F37A0001AAAA /* MenstrualPeriodEntryCellSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2934A0020001F37A0001AAAA /* MenstrualPeriodEntryCellSpec.swift */; };
+		EF01A0010001F37A0001AAAA /* EmojiCellSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF01A0020001F37A0001AAAA /* EmojiCellSpec.swift */; };
+		EF02A0010001F37A0001AAAA /* EmojiPopupViewControllerSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF02A0020001F37A0001AAAA /* EmojiPopupViewControllerSpec.swift */; };
+		EF03A0010001F37A0001AAAA /* ResourceResolutionSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF03A0020001F37A0001AAAA /* ResourceResolutionSpec.swift */; };
 		2933A0010001F37A0001AAAA /* MenstrualSequenceGroupingSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2933A0020001F37A0001AAAA /* MenstrualSequenceGroupingSpec.swift */; };
 		2925A0010001F37A0001AAAA /* DiaryNotesEndpointPathSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2925A0020001F37A0001AAAA /* DiaryNotesEndpointPathSpec.swift */; };
 		3467A0010001F37A0001AAAA /* ClientMetadataPluginSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3467A0020001F37A0001AAAA /* ClientMetadataPluginSpec.swift */; };
@@ -118,6 +121,9 @@
 		3364A0020001F37A0001AAAA /* OptInPermissionDecodingSpec.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = OptInPermissionDecodingSpec.swift; sourceTree = "<group>"; };
 		2937A0060001F37A0001AAAA /* MenstrualOnboardingFlowSpec.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MenstrualOnboardingFlowSpec.swift; sourceTree = "<group>"; };
 		2934A0020001F37A0001AAAA /* MenstrualPeriodEntryCellSpec.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MenstrualPeriodEntryCellSpec.swift; sourceTree = "<group>"; };
+		EF01A0020001F37A0001AAAA /* EmojiCellSpec.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = EmojiCellSpec.swift; sourceTree = "<group>"; };
+		EF02A0020001F37A0001AAAA /* EmojiPopupViewControllerSpec.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = EmojiPopupViewControllerSpec.swift; sourceTree = "<group>"; };
+		EF03A0020001F37A0001AAAA /* ResourceResolutionSpec.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ResourceResolutionSpec.swift; sourceTree = "<group>"; };
 		2933A0020001F37A0001AAAA /* MenstrualSequenceGroupingSpec.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MenstrualSequenceGroupingSpec.swift; sourceTree = "<group>"; };
 		2925A0020001F37A0001AAAA /* DiaryNotesEndpointPathSpec.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DiaryNotesEndpointPathSpec.swift; sourceTree = "<group>"; };
 		3467A0020001F37A0001AAAA /* ClientMetadataPluginSpec.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ClientMetadataPluginSpec.swift; sourceTree = "<group>"; };
@@ -248,6 +254,9 @@
 				3364A0020001F37A0001AAAA /* OptInPermissionDecodingSpec.swift */,
 				2937A0060001F37A0001AAAA /* MenstrualOnboardingFlowSpec.swift */,
 				2934A0020001F37A0001AAAA /* MenstrualPeriodEntryCellSpec.swift */,
+				EF01A0020001F37A0001AAAA /* EmojiCellSpec.swift */,
+				EF02A0020001F37A0001AAAA /* EmojiPopupViewControllerSpec.swift */,
+				EF03A0020001F37A0001AAAA /* ResourceResolutionSpec.swift */,
 				2933A0020001F37A0001AAAA /* MenstrualSequenceGroupingSpec.swift */,
 				2925A0020001F37A0001AAAA /* DiaryNotesEndpointPathSpec.swift */,
 				3467A0020001F37A0001AAAA /* ClientMetadataPluginSpec.swift */,
@@ -576,6 +585,9 @@
 				3364A0010001F37A0001AAAA /* OptInPermissionDecodingSpec.swift in Sources */,
 				2937A0050001F37A0001AAAA /* MenstrualOnboardingFlowSpec.swift in Sources */,
 				2934A0010001F37A0001AAAA /* MenstrualPeriodEntryCellSpec.swift in Sources */,
+				EF01A0010001F37A0001AAAA /* EmojiCellSpec.swift in Sources */,
+				EF02A0010001F37A0001AAAA /* EmojiPopupViewControllerSpec.swift in Sources */,
+				EF03A0010001F37A0001AAAA /* ResourceResolutionSpec.swift in Sources */,
 				2933A0010001F37A0001AAAA /* MenstrualSequenceGroupingSpec.swift in Sources */,
 				2925A0010001F37A0001AAAA /* DiaryNotesEndpointPathSpec.swift in Sources */,
 				3467A0010001F37A0001AAAA /* ClientMetadataPluginSpec.swift in Sources */,
