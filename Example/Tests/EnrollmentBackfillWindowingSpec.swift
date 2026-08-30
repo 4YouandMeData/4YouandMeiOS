@@ -992,8 +992,10 @@ class SensorUploadConsentCallPathSpec: QuickSpec {
 
                 expect(network.uploaded.count).to(equal(1))
                 expect(network.uploaded.first?.first?["marker"] as? String).to(equal("good"))
-                expect(drainOrigins(analytics.trackedEvents)).to(contain("upload_stuck"))
-                expect(droppedReasons(analytics.trackedEvents)).to(contain("upload_rejected_422"))
+                // `pendingBatchCount` drops to 0 at the DEQUEUE, before attempt 4's failure
+                // callback hops back onto the work queue and tracks these two events — await them.
+                expect(drainOrigins(analytics.trackedEvents)).toEventually(contain("upload_stuck"), timeout: .seconds(5))
+                expect(droppedReasons(analytics.trackedEvents)).toEventually(contain("upload_rejected_422"), timeout: .seconds(5))
             }
 
             it("never burns the budget on a transient failure: the batch outlives every retry") {
@@ -2070,13 +2072,17 @@ class SensorKitPerDeviceSpec: QuickSpec {
             it("suffixes the backfill_reach telemetry for the watch and leaves the iPhone series bare") {
                 manager.runDeviceChain(at: 0, of: [iphone, watch], for: sensor, now: now, using: mapper)
 
-                expect(analytics.trackedEvents.count).toEventually(beGreaterThan(1), timeout: .seconds(5))
-                let sensors: [String] = analytics.trackedEvents.compactMap { event in
-                    if case let .sensorDataBackfillReach(name, _, _) = event { return name }
-                    return nil
+                // The iPhone chain alone can push `trackedEvents.count` past 1 before the watch
+                // chain has even started, so the watch's reach event has to be awaited itself —
+                // a snapshot taken after a bare count wait races the second chain.
+                func reachSensors() -> [String] {
+                    return analytics.trackedEvents.compactMap { event in
+                        if case let .sensorDataBackfillReach(name, _, _) = event { return name }
+                        return nil
+                    }
                 }
-                expect(sensors).to(contain(sensor.shortSubsource))
-                expect(sensors).to(contain("\(sensor.shortSubsource).watch"))
+                expect(reachSensors()).toEventually(contain(sensor.shortSubsource), timeout: .seconds(5))
+                expect(reachSensors()).toEventually(contain("\(sensor.shortSubsource).watch"), timeout: .seconds(5))
             }
         }
 
@@ -2113,6 +2119,11 @@ class SensorKitPerDeviceSpec: QuickSpec {
                 let perProbe = SensorSampleUploadManager.probeEmptyWindowStop
                 manager.runDeviceChain(at: 0, of: [iphone], for: sensor, now: now, using: mapper)
                 expect(mapper.calls.count).toEventually(equal(perProbe), timeout: .seconds(5))
+                // `calls.count` is observable before the terminal work-queue block releases the
+                // chain claim; without waiting for its last effect (the parked cursor) the
+                // re-entry below could be skipped by the still-held guard and never re-probe.
+                expect(storage.lastCursor(for: sensor, deviceKey: iphone.key))
+                    .toEventually(equal(now.addingTimeInterval(-day)), timeout: .seconds(5))
 
                 // Rewind the cursor to the join day so the next cycle re-probes the same plan:
                 // the only thing that can stop it now is a guard the finished chain failed to
@@ -2203,8 +2214,10 @@ class SensorKitPerDeviceSpec: QuickSpec {
                 // still ends at the newest complete day — same terminal state as the old walk.
                 expect(mapper.calls.count)
                     .toEventually(equal(SensorSampleUploadManager.probeEmptyWindowStop), timeout: .seconds(5))
+                // The cursor is parked by the terminal work-queue block, which runs after the
+                // final fetch made `calls.count` observable — await it rather than read it.
                 expect(storage.lastCursor(for: sensor, deviceKey: SensorDevice.iphoneKey))
-                    .to(equal(now.addingTimeInterval(-day)))
+                    .toEventually(equal(now.addingTimeInterval(-day)), timeout: .seconds(5))
             }
         }
     }
@@ -2766,6 +2779,9 @@ class SensorPartitionSpec: QuickSpec {
                 manager.clearanceDelegate = clearance
                 manager.runDeviceChain(at: 0, of: [.current], for: sensor, now: now, using: mapper)
                 expect(storage.enqueued.count).toEventually(beGreaterThan(0), timeout: .seconds(5))
+                // The terminal flush enqueues SEVERAL batches before the single cursor write:
+                // returning on `count > 0` alone could hand back a partially flushed queue.
+                expect(storage.lastCursor(for: sensor)).toEventuallyNot(beNil(), timeout: .seconds(5))
                 return storage.enqueued
             }
 
@@ -3168,8 +3184,12 @@ class SensorBackfillProbeSpec: QuickSpec {
 
             // 24 productive windows (ends -24d .. -1d) + `stop` empty probes, newest-first.
             expect(mapper.callCount).toEventually(equal(24 + stop), timeout: .seconds(5))
-            expect(storage.deepestProductiveWindowStart(for: sensor)).to(equal(now.addingTimeInterval(-25 * day)))
-            expect(storage.lastCursor(for: sensor)).to(equal(now.addingTimeInterval(-day)))
+            // The mapper's call count is observable BEFORE the final fetch's work-queue hop:
+            // the terminal flush and cursor write land after it, so the storage state has to
+            // be awaited too — same expected values, later clock.
+            expect(storage.deepestProductiveWindowStart(for: sensor))
+                .toEventually(equal(now.addingTimeInterval(-25 * day)), timeout: .seconds(5))
+            expect(storage.lastCursor(for: sensor)).toEventually(equal(now.addingTimeInterval(-day)), timeout: .seconds(5))
         }
 
         it("stops after the empty streak when the OS holds only 3 days — instead of grinding to the bound") {
@@ -3177,7 +3197,8 @@ class SensorBackfillProbeSpec: QuickSpec {
             manager.runDeviceChain(at: 0, of: [.current], for: sensor, now: now, using: mapper)
 
             expect(mapper.callCount).toEventually(equal(2 + stop), timeout: .seconds(5))
-            expect(storage.lastCursor(for: sensor)).to(equal(now.addingTimeInterval(-day)))
+            // Terminal cursor write happens after the final fetch's work-queue hop (see above).
+            expect(storage.lastCursor(for: sensor)).toEventually(equal(now.addingTimeInterval(-day)), timeout: .seconds(5))
         }
 
         it("persists and reports the deepest productive window (measured OS retention, AC8)") {
@@ -3213,7 +3234,8 @@ class SensorBackfillProbeSpec: QuickSpec {
             // The widened continuous fetch reaches at most epsilon past the oldest window start.
             expect(mapper.earliestFrom)
                 .to(beGreaterThanOrEqualTo(now.addingTimeInterval(-4 * day - 1)))
-            expect(storage.lastCursor(for: sensor)).to(equal(now.addingTimeInterval(-day)))
+            // Terminal cursor write happens after the final fetch's work-queue hop (see above).
+            expect(storage.lastCursor(for: sensor)).toEventually(equal(now.addingTimeInterval(-day)), timeout: .seconds(5))
         }
     }
 }
@@ -3867,11 +3889,15 @@ class SensorProbeStreakResetSpec: QuickSpec {
             manager.clearanceDelegate = clearance
 
             // Cycle 1 and 2: the failing window aborts the probe (attempts 1 and 2), no cursor.
+            // `failureCount` is observable before the failure's work-queue block winds the chain
+            // down and releases the claim, so each `toAlways` below doubles as the settle window
+            // that keeps the next cycle from being skipped by the still-held guard.
             manager.runDeviceChain(at: 0, of: [.current], for: sensor, now: now, using: failing)
             expect(failing.failureCount).toEventually(equal(1), timeout: .seconds(5))
-            expect(storage.lastCursor(for: sensor)).to(beNil())
+            expect(storage.lastCursor(for: sensor)).toAlways(beNil(), until: .milliseconds(300))
             manager.runDeviceChain(at: 0, of: [.current], for: sensor, now: now, using: failing)
             expect(failing.failureCount).toEventually(equal(2), timeout: .seconds(5))
+            expect(storage.lastCursor(for: sensor)).toAlways(beNil(), until: .milliseconds(300))
 
             // Cycle 3: attempts exhaust -> gave_up -> the probe must CONTINUE and read two more
             // confirmed-empty windows before stopping.
