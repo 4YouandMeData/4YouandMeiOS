@@ -1249,10 +1249,6 @@ public final class SensorSampleUploadManager {
                                                      sensor: sensor,
                                                      windowDay: buffered.windowDay,
                                                      ledger: ledger)
-            if filtered.nearDuplicateCount > 0 {
-                self.analytics.track(event: .sensorNearDuplicate(sensor: sensor.shortSubsource,
-                                                                 count: filtered.nearDuplicateCount))
-            }
             if buffered.isRescanPass, !filtered.novel.isEmpty {
                 self.analytics.track(event: .sensorRescanNovel(sensor: sensor.shortSubsource,
                                                                device: deviceKey,
@@ -1261,25 +1257,48 @@ public final class SensorSampleUploadManager {
             }
             var novel = filtered.novel
             var newEntries = filtered.newEntries
+            var nearDuplicateFingerprints = filtered.nearDuplicateFingerprints
             if let older = buffered.olderWindow {
-                let kept = novel.filter {
-                    !Self.belongsToOlderProbeWindow($0, sensor: sensor, window: buffered.window, olderWindow: older)
+                var dropped: [[String: Any]] = []
+                let kept = novel.filter { record in
+                    guard Self.belongsToOlderProbeWindow(record,
+                                                         sensor: sensor,
+                                                         window: buffered.window,
+                                                         olderWindow: older) else { return true }
+                    dropped.append(record)
+                    return false
                 }
-                if kept.count != novel.count {
-                    // The guard fired. Dropping is the right call either way — these records
+                if !dropped.isEmpty {
+                    // The guard fired. Dropping is the right call in every case — these records
                     // would anchor THIS window's row a day low — but only an ordering
-                    // regression should be loud: a forfeited (gave_up) older window's
-                    // stragglers are the sanctioned round-2 loss class, not a bug.
-                    if assertGuardInert, !forfeited.contains(older.start) {
+                    // regression should be loud. Two sanctioned causes are exempt (round 5):
+                    // a forfeited (gave_up) older window's stragglers (the round-2 loss class,
+                    // not a bug), and an S7 DRIFT TWIN — a re-fetched copy of an
+                    // already-enqueued record whose period boundary drifted backwards across
+                    // the window edge, which passes the ledger on its new fingerprint and
+                    // legitimately satisfies the containment predicate.
+                    let droppedFingerprints = Set(dropped.map { SensorUploadLedger.fingerprint(of: $0) })
+                    let driftTwinCount = droppedFingerprints.intersection(nearDuplicateFingerprints).count
+                    // `sensor_near_duplicate`'s contract is "still uploaded": a drifted twin
+                    // the guard drops must not count (round 5, item 2).
+                    nearDuplicateFingerprints.subtract(droppedFingerprints)
+                    if assertGuardInert, !forfeited.contains(older.start), driftTwinCount != dropped.count {
                         assertionFailure("flushProbeBuffer: the F1 membership guard deferred "
-                                         + "\(novel.count - kept.count) record(s) at the terminal flush — "
-                                         + "the chronological enqueue order has regressed (or an OS fetch "
-                                         + "defied the containment model). Check the probe flush ordering.")
+                                         + "\(dropped.count - driftTwinCount) record(s) at the terminal flush "
+                                         + "that are neither S7 drift twins nor a forfeited window's "
+                                         + "stragglers — the chronological enqueue order has regressed (or "
+                                         + "an OS fetch defied the containment model). Check the probe "
+                                         + "flush ordering.")
                     }
-                    let keptFingerprints = Set(kept.map { SensorUploadLedger.fingerprint(of: $0) })
-                    newEntries = newEntries.filter { keptFingerprints.contains($0.key) }
+                    newEntries = newEntries.filter { !droppedFingerprints.contains($0.key) }
                     novel = kept
                 }
+            }
+            if !nearDuplicateFingerprints.isEmpty {
+                // S7 re-fetch boundary drift, measured (D12) — counted AFTER the membership
+                // guard, so the count and the upload outcome agree (round 5, item 2).
+                self.analytics.track(event: .sensorNearDuplicate(sensor: sensor.shortSubsource,
+                                                                 count: nearDuplicateFingerprints.count))
             }
             guard !novel.isEmpty else { continue }
             let enqueued = self.enqueueRespectingPayloadLimit(Self.tagged(novel, with: context.device),
@@ -1867,10 +1886,16 @@ enum SensorUploadLedger {
         /// Records dropped because their fingerprint was already in the ledger (or duplicated
         /// within this very batch).
         let duplicateCount: Int
-        /// Novel records whose measurement period OVERLAPS one already in the ledger: SensorKit
-        /// re-fetch boundary drift (S7). They are still uploaded — suppressing either side would
-        /// lose data — but counted, so the drift rate is a measured quantity (D12/D13).
-        let nearDuplicateCount: Int
+        /// Fingerprints of novel records whose measurement period OVERLAPS one already in the
+        /// ledger: SensorKit re-fetch boundary drift (S7). They are still uploaded — suppressing
+        /// either side would lose data — but counted, so the drift rate is a measured quantity
+        /// (D12/D13). Fingerprints rather than a bare count (round 5, item 2) so the terminal
+        /// probe flush can (a) exempt a drifted twin from the ordering-regression assertion and
+        /// (b) keep `sensor_near_duplicate` in agreement with what was actually uploaded when
+        /// the membership guard drops one.
+        let nearDuplicateFingerprints: Set<String>
+
+        var nearDuplicateCount: Int { return self.nearDuplicateFingerprints.count }
     }
 
     /// Splits `records` into novel vs already-enqueued. Pure.
@@ -1881,7 +1906,7 @@ enum SensorUploadLedger {
         var novel: [[String: Any]] = []
         var newEntries: [String: SensorLedgerEntry] = [:]
         var duplicates = 0
-        var nearDuplicates = 0
+        var nearDuplicates: Set<String> = []
         for record in records {
             let fingerprint = Self.fingerprint(of: record)
             guard ledger[fingerprint] == nil, newEntries[fingerprint] == nil else {
@@ -1894,7 +1919,7 @@ enum SensorUploadLedger {
                     guard let start = entry.periodStart, let end = entry.periodEnd else { return false }
                     return period.start < end && start < period.end
                 }
-                if overlapsExisting { nearDuplicates += 1 }
+                if overlapsExisting { nearDuplicates.insert(fingerprint) }
             }
             novel.append(record)
             newEntries[fingerprint] = SensorLedgerEntry(day: windowDay,
@@ -1904,7 +1929,7 @@ enum SensorUploadLedger {
         return FilterResult(novel: novel,
                             newEntries: newEntries,
                             duplicateCount: duplicates,
-                            nearDuplicateCount: nearDuplicates)
+                            nearDuplicateFingerprints: nearDuplicates)
     }
 
     /// Drops entries whose window day fell behind `cutoff` — the rescan horizon plus margin.

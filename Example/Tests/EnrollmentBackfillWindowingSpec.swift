@@ -4096,3 +4096,88 @@ class SensorProbeChronologySpec: QuickSpec {
         }
     }
 }
+
+// MARK: - Round 5, item 2: S7 drift twins at the terminal flush
+
+/// SensorKit re-fetch boundary drift (S7, ~0.5% of overlapping re-fetched report records) mints
+/// a twin of an already-enqueued record with a shifted period start: a new fingerprint (passes
+/// the ledger), an overlapping period (a near-duplicate), and — when the drift crosses the
+/// window edge backwards — a legitimate hit on the membership guard at the TERMINAL flush.
+/// That is ordinary OS behaviour, not an ordering regression: it must not trip the DEBUG
+/// assertion (which would fire during exactly the on-device QA meant to measure drift), and a
+/// dropped twin must not count in `sensor_near_duplicate`, whose contract is "still uploaded".
+class SensorProbeDriftTwinSpec: QuickSpec {
+
+    // swiftlint:disable:next function_body_length
+    override class func spec() {
+
+        let day: TimeInterval = 24 * 3600
+        let sensor = SRSensor.phoneUsageReport
+        let now = SensorSampleUploadManager.utcDayStart(Date())
+        let iso = ISO8601DateFormatter()
+
+        /// Join 4 days back -> probe windows, newest-first: [-2d,-1d), [-3d,-2d), [-4d,-3d).
+        /// The ORIGINAL report (its own day is [-3d,-2d)) is returned by its own window's fetch;
+        /// the newest window's widened re-fetch returns the DRIFTED twin instead.
+        func runProbe(twinStart: Date) -> (storage: FakeSensorStorage, analytics: CapturingAnalyticsService) {
+            func report(start: Date) -> [String: Any] {
+                return ["start": iso.string(from: start),
+                        "duration_s": day,
+                        "recorded_at": iso.string(from: start.addingTimeInterval(day - 1))]
+            }
+            let storage = FakeSensorStorage()
+            let clearance = FakeSensorClearance()
+            clearance.enrollmentDate = now.addingTimeInterval(-4 * day)
+            let analytics = CapturingAnalyticsService()
+            let mapper = ClosureDeviceMapper { _, to in
+                if abs(to.timeIntervalSince(now.addingTimeInterval(-day))) < 0.5 {
+                    return [report(start: twinStart)]
+                }
+                if abs(to.timeIntervalSince(now.addingTimeInterval(-2 * day))) < 0.5 {
+                    return [report(start: now.addingTimeInterval(-3 * day))]
+                }
+                return []
+            }
+            let manager = SensorSampleUploadManager(withSensors: [sensor],
+                                                    storage: storage,
+                                                    reachability: FakeSensorReachability(),
+                                                    analytics: analytics,
+                                                    mappers: [sensor: mapper])
+            manager.clearanceDelegate = clearance
+            manager.runDeviceChain(at: 0, of: [.current], for: sensor, now: now, using: mapper)
+            expect(storage.lastCursor(for: sensor)).toEventually(equal(now.addingTimeInterval(-day)),
+                                                                 timeout: .seconds(5))
+            return (storage, analytics)
+        }
+
+        func nearDuplicateCounts(_ analytics: CapturingAnalyticsService) -> [Int] {
+            return analytics.trackedEvents.compactMap { event in
+                if case let .sensorNearDuplicate(_, count) = event { return count }
+                return nil
+            }
+        }
+
+        it("a twin drifted BACKWARDS across the window edge is dropped quietly and not counted as a near-duplicate") {
+            // Under the round-4 code this scenario tripped `assertionFailure` (crashing this
+            // very spec) AND counted the dropped twin in sensor_near_duplicate.
+            let (storage, analytics) = runProbe(twinStart: now.addingTimeInterval(-3 * day - 30))
+
+            // Only the original's own-day batch is enqueued; the twin (a copy of content the
+            // server already has) is dropped by the guard, without asserting.
+            expect(storage.enqueued.count).to(equal(1))
+            expect(storage.enqueued.first?.windowStart).to(equal(now.addingTimeInterval(-3 * day)))
+            expect(nearDuplicateCounts(analytics)).to(beEmpty())
+        }
+
+        it("a twin drifted FORWARDS stays in its window, is uploaded, and IS counted as a near-duplicate") {
+            let (storage, analytics) = runProbe(twinStart: now.addingTimeInterval(-3 * day + 30))
+
+            // The guard does not fire (the older span cannot contain the twin's period), so the
+            // twin uploads with its own window and the metric counts it: count and outcome agree.
+            expect(storage.enqueued.count).to(equal(2))
+            expect(storage.enqueued.map { $0.windowStart }.sorted())
+                .to(equal([now.addingTimeInterval(-3 * day), now.addingTimeInterval(-2 * day)]))
+            expect(nearDuplicateCounts(analytics)).to(equal([1]))
+        }
+    }
+}
