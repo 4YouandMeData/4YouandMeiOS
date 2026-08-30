@@ -73,6 +73,18 @@ class FeedTableViewCell: UITableViewCell {
     
     private var buttonPressedCallback: NotificationCallback?
     private var skipButtonPressedCallback: NotificationCallback?
+
+    // FUAM-3637: total horizontal inset around the title — 24pt background margins (both sides)
+    // + 16pt stack insets (both sides). Used to derive the width the title must fit into.
+    private static var titleHorizontalInset: CGFloat { 2 * Constants.Style.DefaultHorizontalMargins + 2 * 16.0 }
+
+    // FUAM-3637: the untouched title, whether it must fit two lines, and the (title, width) pair
+    // last fitted — so the systemLayoutSizeFitting refit is skipped when nothing changed and does
+    // not loop (the attributedText setter invalidates layout unconditionally).
+    private var feedTitleRawText: String?
+    private var feedTitleLimitedToTwoLines: Bool = false
+    private var feedTitleFittedText: String?
+    private var feedTitleFittedWidth: CGFloat = 0.0
     
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
@@ -137,6 +149,44 @@ class FeedTableViewCell: UITableViewCell {
         // Compact-pinned reuse safety: restore the hero image's spacer so a
         // recycled cell rendered as compact does not bleed into the next row.
         self.imageBottomSpacer?.isHidden = false
+        // FUAM-3637: drop any fitted-title state so a recycled cell does not refit a stale title.
+        self.feedTitleRawText = nil
+        self.feedTitleLimitedToTwoLines = false
+        self.feedTitleFittedText = nil
+        self.feedTitleFittedWidth = 0.0
+    }
+
+    // FUAM-3637: the self-sizing measurement pass hands us the real content width — fit the
+    // two-line title here, BEFORE super measures, so the committed cell height matches the shrunk
+    // title instead of leaving permanent whitespace.
+    override func systemLayoutSizeFitting(_ targetSize: CGSize,
+                                          withHorizontalFittingPriority horizontalFittingPriority: UILayoutPriority,
+                                          verticalFittingPriority: UILayoutPriority) -> CGSize {
+        self.fitFeedTitleIfNeeded(forContainerWidth: targetSize.width)
+        return super.systemLayoutSizeFitting(targetSize,
+                                             withHorizontalFittingPriority: horizontalFittingPriority,
+                                             verticalFittingPriority: verticalFittingPriority)
+    }
+
+    /// FUAM-3637 rotation/width-change fallback: re-fit if the container width changed after the
+    /// self-sizing pass. The (title, width) cache guard skips the no-op case so the attributedText
+    /// setter cannot loop layout every frame.
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        self.fitFeedTitleIfNeeded(forContainerWidth: self.contentView.bounds.width)
+    }
+
+    private func fitFeedTitleIfNeeded(forContainerWidth containerWidth: CGFloat) {
+        guard self.feedTitleLimitedToTwoLines, let title = self.feedTitleRawText else { return }
+        let availableWidth = containerWidth - Self.titleHorizontalInset
+        guard availableWidth > 0 else { return }
+        guard self.feedTitleFittedText != title || self.feedTitleFittedWidth != availableWidth else { return }
+        self.feedTitleFittedText = title
+        self.feedTitleFittedWidth = availableWidth
+        self.feedTitleLabel.attributedText = NSAttributedString.createFitted(withText: title,
+                                                                             fontStyle: .header2,
+                                                                             colorType: .secondaryText,
+                                                                             availableWidth: availableWidth)
     }
     
     // MARK: - Public Methods
@@ -149,9 +199,9 @@ class FeedTableViewCell: UITableViewCell {
         self.skipButtonPressedCallback = skipButtonPressedCallback
         self.updateGradientView(startColor: data.startColor, endColor: data.endColor, singleColor: data.cardColor)
         self.setFeedImage(imageUrl: data.image)
-        self.setFeedTitle(text: data.title)
+        self.setFeedTitle(text: data.title, limitedToTwoLines: true)
         self.setFeedDescription(text: data.body)
-        
+
         if nil != data.taskType {
             let buttonText = data.buttonText ?? StringsProvider.string(forKey: .activityButtonDefault)
             self.buttonView.isHidden = false
@@ -197,9 +247,9 @@ class FeedTableViewCell: UITableViewCell {
         
         self.updateGradientView(startColor: data.startColor, endColor: data.endColor, singleColor: data.cardColor)
         self.setFeedImage(imageUrl: data.image)
-        self.setFeedTitle(text: data.title)
+        self.setFeedTitle(text: data.title, limitedToTwoLines: true)
         self.setFeedDescription(text: data.body)
-        
+
         let buttonText = data.buttonText ?? StringsProvider.string(forKey: .surveyButtonDefault)
         self.buttonView.isHidden = false
         self.buttonView.setButtonText(buttonText)
@@ -344,14 +394,43 @@ class FeedTableViewCell: UITableViewCell {
     
     // MARK: - Private Methods
     
-    private func setFeedTitle(text: String?) {
+    /// Sets the card title. When `limitedToTwoLines` is true (activity and survey cards,
+    /// FUAM-3637) the title is capped at two lines and the font is shrunk to fit them instead of
+    /// growing the card or clipping — Dynamic Type included. The actual fit needs the content
+    /// width, which only the self-sizing measurement pass knows, so the fitted string is applied in
+    /// `fitFeedTitleIfNeeded`; here we just store the raw title and set an initial (unshrunk)
+    /// truncating string. Since this cell class is shared across all feed card variants, the other
+    /// branch restores the flexible multiline layout and clears the fit state on reuse.
+    private func setFeedTitle(text: String?, limitedToTwoLines: Bool = false) {
         if let title = text {
             self.feedTitleLabel.isHidden = false
-            self.feedTitleLabel.attributedText = NSAttributedString.create(withText: title,
-                                                                           fontStyle: .header2,
-                                                                           colorType: .secondaryText)
+            // Invalidate the fit cache so the next measurement pass refits this title.
+            self.feedTitleFittedText = nil
+            self.feedTitleFittedWidth = 0.0
+            let attributedTitle = NSAttributedString.create(withText: title,
+                                                            fontStyle: .header2,
+                                                            colorType: .secondaryText)
+            if limitedToTwoLines {
+                self.feedTitleRawText = title
+                self.feedTitleLimitedToTwoLines = true
+                self.feedTitleLabel.numberOfLines = 2
+                self.feedTitleLabel.lineBreakMode = .byTruncatingTail
+                self.feedTitleLabel.attributedText = attributedTitle.applyingLineBreakMode(.byTruncatingTail)
+                self.setNeedsLayout()
+            } else {
+                // Non-limited variants (educational/alert/reward) keep the flexible multiline
+                // layout; clear the fit state so a recycled cell does not refit a stale title.
+                self.feedTitleRawText = nil
+                self.feedTitleLimitedToTwoLines = false
+                self.feedTitleLabel.numberOfLines = 0
+                self.feedTitleLabel.attributedText = attributedTitle
+            }
         } else {
             self.feedTitleLabel.isHidden = true
+            self.feedTitleRawText = nil
+            self.feedTitleLimitedToTwoLines = false
+            self.feedTitleFittedText = nil
+            self.feedTitleFittedWidth = 0.0
         }
     }
     
