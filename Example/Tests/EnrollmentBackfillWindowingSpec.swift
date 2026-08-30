@@ -4157,6 +4157,13 @@ class SensorProbeDriftTwinSpec: QuickSpec {
             }
         }
 
+        func droppedReasons(_ analytics: CapturingAnalyticsService) -> [String] {
+            return analytics.trackedEvents.compactMap { event in
+                if case let .sensorRecordDropped(_, _, reason) = event { return reason }
+                return nil
+            }
+        }
+
         it("a twin drifted BACKWARDS across the window edge is dropped quietly and not counted as a near-duplicate") {
             // Under the round-4 code this scenario tripped `assertionFailure` (crashing this
             // very spec) AND counted the dropped twin in sensor_near_duplicate.
@@ -4167,6 +4174,9 @@ class SensorProbeDriftTwinSpec: QuickSpec {
             expect(storage.enqueued.count).to(equal(1))
             expect(storage.enqueued.first?.windowStart).to(equal(now.addingTimeInterval(-3 * day)))
             expect(nearDuplicateCounts(analytics)).to(beEmpty())
+            // Item 3 (AC6/AC8): the drop is deliberate but never invisible — in a Release
+            // build this breadcrumb is the ONLY witness of a terminal-flush guard drop.
+            expect(droppedReasons(analytics)).to(equal(["probe_drift_twin"]))
         }
 
         it("a twin drifted FORWARDS stays in its window, is uploaded, and IS counted as a near-duplicate") {
@@ -4178,6 +4188,7 @@ class SensorProbeDriftTwinSpec: QuickSpec {
             expect(storage.enqueued.map { $0.windowStart }.sorted())
                 .to(equal([now.addingTimeInterval(-3 * day), now.addingTimeInterval(-2 * day)]))
             expect(nearDuplicateCounts(analytics)).to(equal([1]))
+            expect(droppedReasons(analytics)).to(beEmpty())
         }
     }
 }

@@ -1290,6 +1290,25 @@ public final class SensorSampleUploadManager {
                                          + "an OS fetch defied the containment model). Check the probe "
                                          + "flush ordering.")
                     }
+                    if assertGuardInert {
+                        // Round 5, item 3 (AC6/AC8): at the TERMINAL flush every window has
+                        // already been fetched, so a guard drop is a real drop — it must be
+                        // visible in Firebase, not only to the DEBUG assertion above. A
+                        // mid-walk overflow flush is different: there the guard DEFERS records
+                        // the older window will re-fetch itself, so nothing is lost or traced.
+                        let reason: String
+                        if forfeited.contains(older.start) {
+                            reason = "probe_forfeited_window"
+                        } else if driftTwinCount == dropped.count {
+                            reason = "probe_drift_twin"
+                        } else {
+                            reason = "probe_guard_dropped"
+                        }
+                        self.analytics.track(event: .sensorRecordDropped(
+                            sensor: context.device.telemetryName(for: sensor),
+                            count: dropped.count,
+                            reason: reason))
+                    }
                     newEntries = newEntries.filter { !droppedFingerprints.contains($0.key) }
                     novel = kept
                 }
