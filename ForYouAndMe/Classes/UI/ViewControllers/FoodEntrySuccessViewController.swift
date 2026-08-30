@@ -133,6 +133,12 @@ final class FoodEntrySuccessViewController: UIViewController {
         self.emojiButton.setTitle(selectedEmoji?.tag, for: .normal)
         emojiButton.titleLabel?.font = UIFont.systemFont(ofSize: 32)
         emojiButton.setTitleColor(ColorPalette.color(withType: .primaryText), for: .normal)
+        // FUAM-3857: confirming the note's current emoji again - skip the request, keep going.
+        guard !diaryNote.feedbackTagIsUnchanged(by: selectedEmoji) else {
+            self.closeButtonTapped()
+            return
+        }
+
         diaryNote.feedbackTagsToDestroy = diaryNote.feedbackTags ?? []
         diaryNote.feedbackTagToSet = selectedEmoji
         self.repository.updateDiaryNoteText(diaryNote: self.diaryNote)

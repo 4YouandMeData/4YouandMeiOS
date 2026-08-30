@@ -120,6 +120,12 @@ final class MenstrualEntrySuccessViewController: UIViewController {
         // FUAM-3857: `feedbackTagsToDestroy`/`feedbackTagToSet` are explicit, so a
         // newly-created entry with `feedbackTags == nil` (FUAM-2934) no longer needs a
         // special-case nil-check before the update — `?? []` handles it uniformly.
+        // FUAM-3857: confirming the note's current emoji again - skip the request, keep going.
+        guard !diaryNote.feedbackTagIsUnchanged(by: selectedEmoji) else {
+            self.closeButtonTapped()
+            return
+        }
+
         diaryNote.feedbackTagsToDestroy = diaryNote.feedbackTags ?? []
         diaryNote.feedbackTagToSet = selectedEmoji
         repository.updateDiaryNoteText(diaryNote: diaryNote)

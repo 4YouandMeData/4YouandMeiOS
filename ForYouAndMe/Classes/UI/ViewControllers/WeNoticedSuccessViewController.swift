@@ -130,6 +130,9 @@ final class WeNoticedSuccessViewController: UIViewController {
         emojiButton.setTitle(selectedEmoji?.tag, for: .normal)
         emojiButton.titleLabel?.font = UIFont.systemFont(ofSize: 32)
         emojiButton.setTitleColor(ColorPalette.color(withType: .primaryText), for: .normal)
+        // FUAM-3857: confirming the note's current emoji again - skip the request.
+        guard !diaryNote.feedbackTagIsUnchanged(by: selectedEmoji) else { return }
+
         diaryNote.feedbackTagsToDestroy = diaryNote.feedbackTags ?? []
         diaryNote.feedbackTagToSet = selectedEmoji
         repository.updateDiaryNoteText(diaryNote: diaryNote)

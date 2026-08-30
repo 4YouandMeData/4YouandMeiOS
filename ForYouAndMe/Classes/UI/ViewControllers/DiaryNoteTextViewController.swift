@@ -535,6 +535,11 @@ class DiaryNoteTextViewController: UIViewController {
             // note persist immediately, then refetch so feedbackTags carry the real
             // server record ids for the next change.
             guard var diaryNote = self.diaryNote else { return }
+
+            // FUAM-3857: confirming the note's current emoji again - skip the request.
+            // No need to `reloadDiaryNoteFromServer()` either: nothing changed server-side.
+            guard !diaryNote.feedbackTagIsUnchanged(by: confirmedEmoji) else { return }
+
             diaryNote.feedbackTagsToDestroy = diaryNote.feedbackTags ?? []
             diaryNote.feedbackTagToSet = confirmedEmoji
 

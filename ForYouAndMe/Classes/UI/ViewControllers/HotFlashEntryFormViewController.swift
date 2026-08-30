@@ -306,10 +306,14 @@ final class HotFlashEntryFormViewController: UIViewController {
             guard var note = self.diaryNote else { return }
 
             self.selectedEmoji = confirmedEmoji
+            self.applyEmojiToButton(confirmedEmoji)
+
+            // FUAM-3857: confirming the note's current emoji again - skip the request.
+            guard !note.feedbackTagIsUnchanged(by: confirmedEmoji) else { return }
+
             note.feedbackTagsToDestroy = note.feedbackTags ?? []
             note.feedbackTagToSet = confirmedEmoji
             self.diaryNote = note
-            self.applyEmojiToButton(confirmedEmoji)
 
             self.repository.updateDiaryNoteText(diaryNote: note)
                 .addProgress()

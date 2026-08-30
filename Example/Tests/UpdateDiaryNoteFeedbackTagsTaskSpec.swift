@@ -140,6 +140,86 @@ class UpdateDiaryNoteFeedbackTagsTaskSpec: QuickSpec {
                 expect(body?["feedback_tags_attributes"]).toNot(beNil())
             }
         }
+
+        // FUAM-3857 round 13. Confirming the emoji a note ALREADY carries used to send a
+        // destroy+create pair for the same tag in one PATCH. The backend refuses that:
+        // FeedbackTag validates uniqueness of `tag` scoped to the taggable, excluding
+        // soft-deleted rows, and ActiveRecord validates the incoming twin while the old row is
+        // still live — records marked for destruction are skipped from validation, but the
+        // destroy itself only happens later, during save. So the participant got an error alert
+        // for confirming what was already set. `feedbackTagIsUnchanged(by:)` is the guard that
+        // lets every call site skip the request entirely.
+        describe("DiaryNoteItem.feedbackTagIsUnchanged(by:)") {
+
+            func note(carrying tags: [String]) -> DiaryNoteItem {
+                var note = DiaryNoteItem(
+                    id: "42",
+                    type: "diary_note",
+                    diaryNoteId: Date(),
+                    diaryNoteType: .text,
+                    title: nil,
+                    body: nil,
+                    interval: nil
+                )
+                note.feedbackTags = tags.enumerated().map { index, tag in
+                    EmojiItem(id: "\(100 + index)", type: "feedback_tag", tag: tag, label: nil)
+                }
+                return note
+            }
+
+            // The study-configuration item and the persisted record carry DIFFERENT ids by
+            // design, so an id comparison would report "changed" for the very case this guards.
+            func configured(_ tag: String, label: String? = nil) -> EmojiItem {
+                EmojiItem(id: "999", type: "feedback_tag", tag: tag, label: label)
+            }
+
+            it("is unchanged when the confirmed emoji is the one already recorded") {
+                expect(note(carrying: ["🙂"]).feedbackTagIsUnchanged(by: configured("🙂"))).to(beTrue())
+            }
+
+            it("compares by tag, not by id — the ids never match by design") {
+                let subject = note(carrying: ["🙂"])
+                expect(subject.feedbackTags?.first?.id).toNot(equal(configured("🙂").id))
+                expect(subject.feedbackTagIsUnchanged(by: configured("🙂"))).to(beTrue())
+            }
+
+            it("ignores the label entirely, which is display-only") {
+                expect(note(carrying: ["🙂"]).feedbackTagIsUnchanged(by: configured("🙂", label: "happy")))
+                    .to(beTrue())
+            }
+
+            it("is changed when a different emoji is confirmed") {
+                expect(note(carrying: ["🙂"]).feedbackTagIsUnchanged(by: configured("😠"))).to(beFalse())
+            }
+
+            it("is changed when the emoji is cleared from a note that has one") {
+                expect(note(carrying: ["🙂"]).feedbackTagIsUnchanged(by: nil)).to(beFalse())
+            }
+
+            // Jules's first special case: a note that never had an emoji. Picking a real one
+            // must still send, or the emoji would never be recorded at all.
+            it("is changed when a first emoji is set on a note that had none") {
+                expect(note(carrying: []).feedbackTagIsUnchanged(by: configured("🙂"))).to(beFalse())
+            }
+
+            // Jules's second special case, the other half: confirming "no emoji" on a note that
+            // has none is genuinely nothing to do, so it sends nothing.
+            it("is unchanged when no emoji is confirmed on a note that had none") {
+                expect(note(carrying: []).feedbackTagIsUnchanged(by: nil)).to(beTrue())
+            }
+
+            // Deliberately an exact comparison rather than "does the current set contain it":
+            // a note carrying stray extra tags must still be cleaned up by a real request.
+            it("is changed when the note carries extra tags beyond the confirmed one") {
+                expect(note(carrying: ["🙂", "😠"]).feedbackTagIsUnchanged(by: configured("🙂")))
+                    .to(beFalse())
+            }
+
+            it("is unchanged only when the whole recorded list matches") {
+                expect(note(carrying: ["😠"]).feedbackTagIsUnchanged(by: configured("🙂"))).to(beFalse())
+            }
+        }
+
     }
 }
 

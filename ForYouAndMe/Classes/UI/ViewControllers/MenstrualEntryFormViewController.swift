@@ -284,10 +284,20 @@ final class MenstrualEntryFormViewController: UIViewController {
             guard var note = self.diaryNote else { return }
 
             self.selectedEmoji = confirmedEmoji
+            self.applyEmojiToButton(confirmedEmoji)
+
+            // FUAM-3857: confirming the emoji the note already carries would send a
+            // destroy+create pair for the same tag, which the backend rejects as a
+            // uniqueness violation (see `feedbackTagIsUnchanged` docs). Skip the
+            // network round-trip but still run the same success continuation.
+            guard !note.feedbackTagIsUnchanged(by: confirmedEmoji) else {
+                self.onEntryUpdated?(note)
+                return
+            }
+
             note.feedbackTagsToDestroy = note.feedbackTags ?? []
             note.feedbackTagToSet = confirmedEmoji
             self.diaryNote = note
-            self.applyEmojiToButton(confirmedEmoji)
 
             self.repository.updateDiaryNoteText(diaryNote: note)
                 .addProgress()

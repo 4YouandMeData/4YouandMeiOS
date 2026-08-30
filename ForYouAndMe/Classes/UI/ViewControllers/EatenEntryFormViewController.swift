@@ -440,13 +440,20 @@ class EatenEntryFormViewController: UIViewController {
                 guard var diaryNote = self.diaryNote else { return }
 
                 self.selectedEmoji = confirmedEmoji
-                diaryNote.feedbackTagsToDestroy = diaryNote.feedbackTags ?? []
-                diaryNote.feedbackTagToSet = confirmedEmoji
 
                 self.emojiButton.setImage(nil, for: .normal)
                 self.emojiButton.setTitle(confirmedEmoji?.tag, for: .normal)
                 self.emojiButton.titleLabel?.font = UIFont.systemFont(ofSize: 22)
-                
+
+                // FUAM-3857: confirming the note's current emoji again - skip the request.
+                guard !diaryNote.feedbackTagIsUnchanged(by: confirmedEmoji) else {
+                    self.dismiss(animated: true)
+                    return
+                }
+
+                diaryNote.feedbackTagsToDestroy = diaryNote.feedbackTags ?? []
+                diaryNote.feedbackTagToSet = confirmedEmoji
+
                 self.repository.updateDiaryNoteText(diaryNote: diaryNote)
                     .addProgress()
                     .subscribe(onSuccess: { [weak self] in
