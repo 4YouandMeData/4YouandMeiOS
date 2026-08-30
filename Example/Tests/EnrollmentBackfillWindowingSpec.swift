@@ -953,6 +953,66 @@ class SensorUploadConsentCallPathSpec: QuickSpec {
             }
         }
 
+        describe("drainQueue (the permanent-rejection budget, FUAM-3945 round 5 / AC6)") {
+
+            func droppedReasons(_ events: [AnalyticsEvent]) -> [String] {
+                return events.compactMap { event in
+                    if case let .sensorRecordDropped(_, _, reason) = event { return reason }
+                    return nil
+                }
+            }
+
+            it("drops a permanently rejected batch after the budget, reports it, and drains the rest") {
+                storage.seed(records: [["t": iso(joinDay.addingTimeInterval(hour)), "marker": "poison"]],
+                             windowStart: joinDay,
+                             for: sensor)
+                storage.enqueueBatch([["t": iso(joinDay.addingTimeInterval(2 * hour)), "marker": "good"]],
+                                     windowStart: joinDay,
+                                     for: sensor)
+                network.errorForPayload = { payload in
+                    let isPoison = payload.contains { $0["marker"] as? String == "poison" }
+                    return isPoison ? SensorUploadError.permanentlyRejected(statusCode: 422) : nil
+                }
+
+                // Drain 1: poison (head) rejected once, re-enqueued at the tail.
+                manager.drainQueue(for: sensor)
+                expect(network.attemptCount).toEventually(equal(1), timeout: .seconds(5))
+                expect(storage.pendingBatchCount(for: sensor)).toEventually(equal(2), timeout: .seconds(5))
+
+                // Drain 2: good uploads, poison rejected a second time.
+                manager.drainQueue(for: sensor)
+                expect(network.attemptCount).toEventually(equal(3), timeout: .seconds(5))
+                expect(storage.pendingBatchCount(for: sensor)).toEventually(equal(1), timeout: .seconds(5))
+
+                // Drain 3: the third rejection exhausts the budget — the batch is dropped
+                // (NOT re-enqueued), reported, and the drain runs on to the end of the queue.
+                manager.drainQueue(for: sensor)
+                expect(network.attemptCount).toEventually(equal(4), timeout: .seconds(5))
+                expect(storage.pendingBatchCount(for: sensor)).toEventually(equal(0), timeout: .seconds(5))
+
+                expect(network.uploaded.count).to(equal(1))
+                expect(network.uploaded.first?.first?["marker"] as? String).to(equal("good"))
+                expect(drainOrigins(analytics.trackedEvents)).to(contain("upload_stuck"))
+                expect(droppedReasons(analytics.trackedEvents)).to(contain("upload_rejected_422"))
+            }
+
+            it("never burns the budget on a transient failure: the batch outlives every retry") {
+                storage.seed(records: [["t": iso(joinDay.addingTimeInterval(hour))]],
+                             windowStart: joinDay,
+                             for: sensor)
+                network.errorForPayload = { _ in RepositoryError.connectivityError }
+
+                for drain in 1...5 {
+                    manager.drainQueue(for: sensor)
+                    expect(network.attemptCount).toEventually(equal(drain), timeout: .seconds(5))
+                    expect(storage.pendingBatchCount(for: sensor)).toEventually(equal(1), timeout: .seconds(5))
+                }
+
+                expect(drainOrigins(analytics.trackedEvents)).toNot(contain("upload_stuck"))
+                expect(droppedReasons(analytics.trackedEvents)).to(beEmpty())
+            }
+        }
+
         describe("handleWindowResult (the per-window consent decisions)") {
 
             it("leaves the cursor untouched and stops the chain when the user disappears mid-flight") {
@@ -1154,10 +1214,19 @@ private final class FakeSensorMapper: SensorSampleMapper {
 private final class FakeSensorNetwork: SensorSampleUploaderNetworkDelegate {
     private let lock = NSLock()
     private var payloads: [[[String: Any]]] = []
+    private var attempts = 0
 
+    /// When set, decides the outcome per payload (round 5): a non-nil error fails that upload.
+    var errorForPayload: (([[String: Any]]) -> Error?)?
+
+    /// Successful uploads only.
     var uploaded: [[[String: Any]]] { return self.lock.locked { self.payloads } }
+    /// Every upload attempt, successful or not.
+    var attemptCount: Int { return self.lock.locked { self.attempts } }
 
     func uploadSensorBatch(sensor: SRSensor, payload: [[String: Any]]) -> Single<Void> {
+        self.lock.locked { self.attempts += 1 }
+        if let error = self.errorForPayload?(payload) { return .error(error) }
         self.lock.locked { self.payloads.append(payload) }
         return .just(())
     }

@@ -65,6 +65,11 @@ struct BackfillLowerBound {
         /// A HealthKit payload was split proactively at the 8 MB safety margin BEFORE any server
         /// rejection (FUAM-3945, AC5). Reactive `bisected` stays as the backstop trace.
         case proactiveSplit = "proactive_split"
+        /// A queued batch the server PERMANENTLY rejected (the 4xx validation class — see
+        /// `SensorUploadError`) exhausted its upload budget and was dropped from the persisted
+        /// queue (FUAM-3945 round 5, AC6): `reachedBack` carries the batch's window start, so
+        /// the age of the lost data is readable in Firebase. Any volume here is actionable.
+        case uploadStuck = "upload_stuck"
         /// A backward probe buffered more records than `probeBufferMaxRecords` while discovering
         /// the retention horizon: the buffered windows were flushed early and the rest of the
         /// probe enqueued as-you-go — correct, but no longer strictly chronological (FUAM-3945

@@ -1018,6 +1018,19 @@ extension RepositoryImpl: SensorKitManagerNetworkDelegate {
         // enforces "sensor_kit" as the source.
         return self.api
             .send(request: ApiRequest(serviceRequest: .sendSensorKitData(sensorData: data)))
+            .catch { error in
+                // FUAM-3945 round 5 (AC6): recognise a PERMANENT server rejection here, while
+                // the status code still exists — same rationale as the 413 mapping in
+                // `uploadHealthNetworkData` above. Without the marker the drain path cannot
+                // tell a validation rejection from a network outage and retries the identical
+                // payload for the life of the install.
+                if let apiError = error as? ApiError,
+                   let statusCode = apiError.httpStatusCode,
+                   SensorUploadError.permanentRejectionStatusCodes.contains(statusCode) {
+                    return Single.error(SensorUploadError.permanentlyRejected(statusCode: statusCode))
+                }
+                return Single.error(error)
+            }
             .handleError() // visible if this extension stays in RepositoryImpl.swift
     }
 }

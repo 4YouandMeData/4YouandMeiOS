@@ -43,6 +43,13 @@ public final class SensorSampleUploadManager {
     /// so one poison window doesn't stall the per-sensor chain forever (FUAM-3841).
     private let maxWindowFetchAttempts: Int = 3
 
+    /// FUAM-3945 round 5 (AC6): upload budget for a queued batch the server PERMANENTLY
+    /// rejects (`SensorUploadError.permanentlyRejected` — the 4xx validation class; transient
+    /// failures never count). On exhaustion the batch is dropped from the persisted queue —
+    /// reported via `upload_stuck` + `sensor_record_dropped`, never silently — so one poisoned
+    /// batch cannot sit in the queue for the life of the install.
+    private let maxBatchUploadRejections: Int = 3
+
     /// FUAM-3945 (D3): how many complete participant-tz days behind the cursor are re-planned,
     /// once per day. Aug 27 in production was 64/96 buckets ~24.5h after day end and complete at
     /// ~38h, so 3 days covers any observed write lag with margin; `sensor_rescan_novel` measures
@@ -111,6 +118,12 @@ public final class SensorSampleUploadManager {
     // FUAM-3945: keyed by sensor AND device kind (`DeviceChainContext.failureKey`), so a poison
     // Watch window can never stall the iPhone chain.
     private var windowFetchFailures: [String: Int] = [:]
+    // FUAM-3945 round 5 (AC6): per-batch permanent-rejection counter, mutated on `workQueue`
+    // only (the drain's failure callback hops there first).
+    // ponytail: in-memory, so a relaunch refunds the budget — the safe direction: a genuinely
+    // permanent rejection recurs on every drain of the same session, so it still exhausts;
+    // persist alongside the queue only if field telemetry shows stuck batches surviving it.
+    private var batchUploadRejections: [String: Int] = [:]
     // Once-per-launch guard so the "empty_plan" telemetry (review fix #6) doesn't fire on
     // every 15-minute sync cycle while a fresh enrollment waits out the 24h embargo.
     private var emptyPlanReported: Set<String> = []
@@ -1626,23 +1639,55 @@ public final class SensorSampleUploadManager {
                         },
                         onFailure: { [weak self] error in
                             guard let self = self else { return }
-                            // Re-enqueue the FILTERED batch (dropped records must not come back)
-                            // and schedule a retry with backoff. A failed re-persist is
-                            // unrecoverable at this point — the batch is already dequeued, the
-                            // cursor long advanced and the fingerprints committed — but it must
-                            // never be SILENT (review round 1, F7 / AC6): the enqueue_failed
-                            // trace is what distinguishes "lost to a storage failure" from
-                            // "never collected".
-                            if !self.storage.enqueueBatch(uploadable, windowStart: batch.windowStart, for: sensor) {
-                                self.analytics.track(event: .sensorDataBackfillReach(
-                                    sensor: sensor.shortSubsource,
-                                    reachedBack: ISO8601DateFormatter().string(from: batch.windowStart),
-                                    boundedBy: BackfillLowerBound.Origin.enqueueFailed.rawValue))
-                            }
                             #if DEBUG
                             print("SensorSampleUploadManager - Upload failed for \(sensor.rawValue): \(error)")
                             #endif
-                            self.scheduleRetry(for: sensor, attempt: attempt + 1)
+                            // Hop onto the work queue: `batchUploadRejections` is mutated there
+                            // only, and this callback arrives on an arbitrary Rx thread.
+                            self.workQueue.async { [weak self] in
+                                guard let self = self else { return }
+                                // FUAM-3945 round 5 (AC6): only a PERMANENT rejection burns the
+                                // batch's upload budget — a network outage or server error stays
+                                // on the unbounded backoff retry below. On exhaustion the batch
+                                // is dropped (it is already dequeued: not re-enqueueing IS the
+                                // drop), reported, and the drain moves on so it cannot shadow
+                                // the batches queued behind it.
+                                if let uploadError = error as? SensorUploadError,
+                                   case .permanentlyRejected(let statusCode) = uploadError {
+                                    let key = Self.batchRejectionKey(sensor: sensor,
+                                                                     windowStart: batch.windowStart,
+                                                                     records: uploadable)
+                                    let rejections = (self.batchUploadRejections[key] ?? 0) + 1
+                                    guard rejections < self.maxBatchUploadRejections else {
+                                        self.batchUploadRejections[key] = nil
+                                        self.analytics.track(event: .sensorDataBackfillReach(
+                                            sensor: sensor.shortSubsource,
+                                            reachedBack: ISO8601DateFormatter().string(from: batch.windowStart),
+                                            boundedBy: BackfillLowerBound.Origin.uploadStuck.rawValue))
+                                        self.analytics.track(event: .sensorRecordDropped(
+                                            sensor: sensor.shortSubsource,
+                                            count: uploadable.count,
+                                            reason: "upload_rejected_\(statusCode)"))
+                                        uploadNextBatch()
+                                        return
+                                    }
+                                    self.batchUploadRejections[key] = rejections
+                                }
+                                // Re-enqueue the FILTERED batch (dropped records must not come
+                                // back) and schedule a retry with backoff. A failed re-persist
+                                // is unrecoverable at this point — the batch is already
+                                // dequeued, the cursor long advanced and the fingerprints
+                                // committed — but it must never be SILENT (review round 1,
+                                // F7 / AC6): the enqueue_failed trace is what distinguishes
+                                // "lost to a storage failure" from "never collected".
+                                if !self.storage.enqueueBatch(uploadable, windowStart: batch.windowStart, for: sensor) {
+                                    self.analytics.track(event: .sensorDataBackfillReach(
+                                        sensor: sensor.shortSubsource,
+                                        reachedBack: ISO8601DateFormatter().string(from: batch.windowStart),
+                                        boundedBy: BackfillLowerBound.Origin.enqueueFailed.rawValue))
+                                }
+                                self.scheduleRetry(for: sensor, attempt: attempt + 1)
+                            }
                         }
                     )
                     .disposed(by: self.disposeBag)
@@ -1650,6 +1695,16 @@ public final class SensorSampleUploadManager {
         }
 
         uploadNextBatch()
+    }
+
+    /// Identity of a queued batch across drain retries (FUAM-3945 round 5). Stable because the
+    /// re-enqueued content is the drain-FILTERED record set, which the gate reproduces
+    /// byte-identically on the next pass under the same bound. A key collision (two batches of
+    /// the same window, count and head record) would only merge two budgets — never lose the
+    /// drop trace. A bound shift changes the key and refunds the budget: the safe direction.
+    private static func batchRejectionKey(sensor: SRSensor, windowStart: Date, records: [[String: Any]]) -> String {
+        let head = records.first.map { SensorUploadLedger.fingerprint(of: $0) } ?? "empty"
+        return "\(sensor.rawValue).\(windowStart.timeIntervalSince1970).\(records.count).\(head)"
     }
 
     // MARK: - Retry
@@ -1690,6 +1745,7 @@ public final class SensorSampleUploadManager {
         retryWorkItems.values.forEach { $0.cancel() }
         retryWorkItems.removeAll()
         windowFetchFailures.removeAll()
+        batchUploadRejections.removeAll()
 
         // Drop ALL queued batches. The cursor is deliberately NOT fast-forwarded (FUAM-3844):
         // dropping queued batches on clearance loss is correct; forfeiting the ability to
