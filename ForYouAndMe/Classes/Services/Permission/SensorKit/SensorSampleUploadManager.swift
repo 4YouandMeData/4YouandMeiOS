@@ -1807,10 +1807,11 @@ public final class SensorSampleUploadManager {
                     return
                 }
 
-                // FUAM-3945: the fetch-stable identity companions are ledger bookkeeping, never
-                // payload — the server contract (`recorded_at` as row-anchor source) is
-                // unchanged. Stripped at the last hop before the bytes leave the device; the
-                // re-enqueue below keeps `uploadable` stamped so the identity survives retries.
+                // FUAM-3945: `sr_absolute_time` SHIPS in every record — the server builds its
+                // cross-row dedup on it (FUAM-4030). Only the `_sr_raw_replaces` bookkeeping is
+                // stripped at this last hop; the server contract (`recorded_at` as row-anchor
+                // source) is unchanged. The re-enqueue below keeps `uploadable` stamped so the
+                // identity survives retries.
                 net.uploadSensorBatch(sensor: sensor, payload: SensorRecordIdentity.stripped(uploadable))
                     .subscribe(
                         onSuccess: { [weak self] in

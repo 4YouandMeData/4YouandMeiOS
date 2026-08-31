@@ -23,13 +23,22 @@ import SensorKit
 /// Each mapper therefore stamps every record with the raw, unprojected value under `rawKey` and
 /// lists the wall-projected keys that value stands in for under `replacesKey`. The ledger hashes
 /// the record with the listed keys removed and the raw value kept
-/// (`SensorUploadLedger.fetchStableForm`); the drain strips both companion keys from every
-/// outgoing payload (`SensorSampleUploadManager.drainQueue`), so they can never reach the server.
+/// (`SensorUploadLedger.fetchStableForm`). The raw value SHIPS in every uploaded record as
+/// `sr_absolute_time` — the server needs the same fetch-stable identity for cross-row
+/// deduplication (FUAM-4030), because its whole-element fingerprint suffers the exact drift
+/// described above. Only the `replacesKey` bookkeeping is stripped before upload
+/// (`SensorSampleUploadManager.drainQueue`); it never reaches the server.
 enum SensorRecordIdentity {
 
-    /// `SRFetchResult.timestamp.rawValue` — monotonic seconds, fetch-stable. Never uploaded.
-    static let rawKey = "_sr_raw_timestamp"
-    /// The wall-projected keys `rawKey` stands in for inside the fingerprint. Never uploaded.
+    /// `SRFetchResult.timestamp.rawValue` — `SRAbsoluteTime` in seconds (Double), UPLOADED in
+    /// every SensorKit record. For analysts and the backend: this is a MONOTONIC DEVICE CLOCK
+    /// value that ticks across sleeps and reboots (SRAbsoluteTime.h) — a fetch-stable
+    /// deduplication identity for the sample, nothing more. It is NOT a date, NOT comparable
+    /// across devices, and NEVER a substitute for `recorded_at` (which stays the row-anchor
+    /// source, byte-for-byte unchanged).
+    static let rawKey = "sr_absolute_time"
+    /// The wall-projected keys `rawKey` stands in for inside the fingerprint. Internal
+    /// bookkeeping — never uploaded.
     static let replacesKey = "_sr_raw_replaces"
 
     /// The record with its fetch-stable identity companions attached.
@@ -42,13 +51,16 @@ enum SensorRecordIdentity {
         return out
     }
 
-    /// The records exactly as uploaded: no identity companions. Idempotent — a record enqueued
-    /// by a pre-fix build simply has nothing to strip.
+    /// The records exactly as uploaded: `rawKey` (`sr_absolute_time`) stays — it ships as the
+    /// server-side dedup identity — while the `replacesKey` bookkeeping is removed. Idempotent;
+    /// a record enqueued by a pre-fix build simply has nothing to strip. Also removes the
+    /// pre-rename `_sr_raw_timestamp` a queue persisted by an interim dev build may still carry:
+    /// that spelling was never meant to leave the device.
     static func stripped(_ records: [[String: Any]]) -> [[String: Any]] {
         return records.map { record in
             var out = record
-            out.removeValue(forKey: Self.rawKey)
             out.removeValue(forKey: Self.replacesKey)
+            out.removeValue(forKey: "_sr_raw_timestamp")
             return out
         }
     }

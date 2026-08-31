@@ -952,12 +952,15 @@ class SensorUploadConsentCallPathSpec: QuickSpec {
                 expect(drainOrigins(analytics.trackedEvents)).toNot(contain("drain_filtered"))
             }
 
-            it("never lets the fetch-stable identity companions reach an uploaded payload") {
-                // FUAM-3945: the raw SRAbsoluteTime is ledger bookkeeping. The payload contract
+            it("ships sr_absolute_time in the uploaded payload and strips the internal bookkeeping") {
+                // FUAM-3945 → FUAM-4030: the raw SRAbsoluteTime SHIPS as the server-side dedup
+                // identity; only the `_sr_raw_replaces` list is internal. The payload contract
                 // (recorded_at as the server row-anchor source) must leave the device unchanged.
                 let stamped = SensorRecordIdentity.stamped(["t": iso(joinDay.addingTimeInterval(hour)),
                                                             "recorded_at": iso(joinDay.addingTimeInterval(2 * hour)),
-                                                            "lux": 3],
+                                                            "lux": 3,
+                                                            // As persisted by an interim dev build, pre-rename:
+                                                            "_sr_raw_timestamp": 780_000_000.25],
                                                            raw: SRAbsoluteTime(rawValue: 780_000_000.25),
                                                            replacing: ["recorded_at"])
                 expect(stamped[SensorRecordIdentity.rawKey]).toNot(beNil()) // queued form carries it
@@ -967,8 +970,9 @@ class SensorUploadConsentCallPathSpec: QuickSpec {
 
                 expect(network.uploaded.count).toEventually(equal(1))
                 let uploaded = network.uploaded.first?.first
-                expect(uploaded?[SensorRecordIdentity.rawKey]).to(beNil())
+                expect(uploaded?["sr_absolute_time"] as? Double).to(equal(780_000_000.25))
                 expect(uploaded?[SensorRecordIdentity.replacesKey]).to(beNil())
+                expect(uploaded?["_sr_raw_timestamp"]).to(beNil()) // pre-rename spelling never ships
                 expect(uploaded?["recorded_at"] as? String).to(equal(iso(joinDay.addingTimeInterval(2 * hour))))
                 expect(uploaded?["lux"] as? Int).to(equal(3))
             }
