@@ -69,9 +69,38 @@ final class EmojiCell: UICollectionViewCell {
     // scales the base up toward the 18pt cap.
     static let captionFloorPointSize: CGFloat = 11
 
+    // FUAM-3740 (Jules): the selection highlight must be inset by the SAME amount on all four
+    // sides — a square when no option in the grid carries a caption, a vertical rectangle as
+    // soon as one does. It used to be the cell's own `contentView`, i.e. the whole grid tile:
+    // ~5pt of slack either side of the 45pt glyph box horizontally, none above it and ~19pt
+    // below. So it becomes its own view, sized around the content, and the inset is derived
+    // from the horizontal slack the tile already has (`selectionInset(forCellWidth:)`) rather
+    // than being a new magic number. Mirrors the Android dialog's `EmojiItem` column.
+    private let highlightView = UIView()
+
     private let emojiLabel = UILabel()
     private let noneImageView = UIImageView()
     private let titleLabel = UILabel()
+
+    private var stackTopConstraint: NSLayoutConstraint?
+    private var stackBottomConstraint: NSLayoutConstraint?
+
+    /// The equal inset between the selection highlight and the `glyphSlotHeight`-tall glyph
+    /// box. It is exactly the horizontal slack the tile already leaves around that box, so the
+    /// highlight keeps its current width and, with no caption row, comes out square.
+    static func selectionInset(forCellWidth cellWidth: CGFloat) -> CGFloat {
+        return max(0, (cellWidth - Self.glyphSlotHeight) / 2.0)
+    }
+
+    /// Vertical spacing between the glyph slot and the caption row (the stack's spacing).
+    static let captionSpacing: CGFloat = 4
+
+    /// One line of the caption's base font. Fixed per tile so every caption row in a grid is
+    /// the same height whether its caption is empty, short, or shrunk to fit — and so
+    /// `EmojiPopupViewController` can size a row without laying a cell out first.
+    static var captionRowHeight: CGFloat {
+        return FontPalette.fontStyleData(forStyle: .header3, maximumPointSize: 18).font.lineHeight
+    }
 
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -113,6 +142,12 @@ final class EmojiCell: UICollectionViewCell {
                "caption floor gives only \(shrinkMargin)pt of shrink vs. base \(baseCaptionPointSize)pt — recheck with Android")
         let effectiveFloor = min(Self.captionFloorPointSize, baseCaptionPointSize - Self.captionMinShrinkPoints)
         titleLabel.minimumScaleFactor = max(effectiveFloor, 1) / baseCaptionPointSize
+        // FUAM-3740: the stack now hugs its content instead of being stretched to fill a fixed
+        // cell height, so the caption row no longer gets a uniform height for free. Pin it to
+        // one line of the base font: every tile's caption row is then the same height whether
+        // the caption is empty, short, or shrunk to fit — which is what keeps the glyphs across
+        // a row on one line (the FUAM-3857 round-10 requirement).
+        titleLabel.autoSetDimension(.height, toSize: Self.captionRowHeight)
 
         // The glyph label and the icon are both arranged subviews so that hiding one removes
         // it from the layout outright. Nesting them in a plain container instead would leave
@@ -121,11 +156,24 @@ final class EmojiCell: UICollectionViewCell {
         let stack = UIStackView(arrangedSubviews: [emojiLabel, noneImageView, titleLabel])
         stack.axis = .vertical
         stack.alignment = .center
-        stack.spacing = 4
-        stack.addBlankSpace(space: 4)
+        stack.spacing = Self.captionSpacing
 
-        contentView.addSubview(stack)
-        stack.autoPinEdgesToSuperviewEdges()
+        // FUAM-3740: the highlight wraps the content with an equal inset on all four sides
+        // instead of being the whole tile. The old trailing 4pt blank space is gone with it —
+        // it only existed to give `.fill` something to absorb the fixed cell height's slack,
+        // and it would have made the bottom inset 4pt larger than the other three.
+        contentView.addSubview(highlightView)
+        highlightView.autoPinEdge(toSuperviewEdge: .leading)
+        highlightView.autoPinEdge(toSuperviewEdge: .trailing)
+        highlightView.autoPinEdge(toSuperviewEdge: .top)
+        highlightView.layer.cornerRadius = 8
+        highlightView.clipsToBounds = true
+
+        highlightView.addSubview(stack)
+        stack.autoPinEdge(toSuperviewEdge: .leading)
+        stack.autoPinEdge(toSuperviewEdge: .trailing)
+        self.stackTopConstraint = stack.autoPinEdge(toSuperviewEdge: .top)
+        self.stackBottomConstraint = stack.autoPinEdge(toSuperviewEdge: .bottom)
 
         // FUAM-3857 round 8: the stack's cross-axis alignment is `.center`, which only
         // centers arranged subviews — it does NOT constrain their width — so titleLabel would
@@ -135,8 +183,17 @@ final class EmojiCell: UICollectionViewCell {
         // shrink-then-ellipsis has a real width to shrink against.
         titleLabel.autoMatch(.width, to: .width, of: contentView)
 
-        contentView.layer.cornerRadius = 8
-        contentView.clipsToBounds = true
+        // FUAM-3740: the tile itself must not clip any more — the highlight is what has the
+        // corner radius, and the glyph label's line box is a hair wider than the 45pt glyph
+        // slot it renders.
+        contentView.clipsToBounds = false
+    }
+
+    override func layoutSubviews() {
+        let inset = Self.selectionInset(forCellWidth: self.bounds.width)
+        self.stackTopConstraint?.constant = inset
+        self.stackBottomConstraint?.constant = -inset
+        super.layoutSubviews()
     }
 
     override func prepareForReuse() {
@@ -147,6 +204,8 @@ final class EmojiCell: UICollectionViewCell {
         noneImageView.isAccessibilityElement = false
         noneImageView.accessibilityLabel = nil
         titleLabel.text = nil
+        titleLabel.isHidden = false
+        highlightView.backgroundColor = .clear
     }
 
     // FUAM-3857: the caption for an option. `item == nil` IS the no-emoji option — its
@@ -171,8 +230,14 @@ final class EmojiCell: UICollectionViewCell {
     // FUAM-3857: `item == nil` is the no-emoji option — there is no sentinel `EmojiItem`
     // standing in for it. A real study emoji, even one captioned "None" or tagged "❌", is an
     // ordinary `Optional.some` and renders as itself.
-    func configure(with item: EmojiItem?, selected: Bool) {
+    /// - Parameter reservesCaptionRow: whether the grid this cell belongs to has any captions
+    ///   at all. FUAM-3740: it is a property of the WHOLE grid, never of the single item —
+    ///   otherwise an unlabelled emoji sitting next to labelled ones would get a square
+    ///   highlight while its neighbours got rectangles, and its glyph would sit on a different
+    ///   line. `EmojiPopupViewController.hasCaptions` is the single source of truth.
+    func configure(with item: EmojiItem?, selected: Bool, reservesCaptionRow: Bool = true) {
         let isNoneOption = item == nil
+        titleLabel.isHidden = !reservesCaptionRow
         emojiLabel.text = item?.tag
         emojiLabel.isHidden = isNoneOption
         noneImageView.isHidden = !isNoneOption
@@ -188,11 +253,9 @@ final class EmojiCell: UICollectionViewCell {
             noneImageView.tintColor = .white
         }
         let caption = Self.displayedCaption(for: item)
-        // titleLabel is never hidden: the stack is pinned to a fixed-height cell and
-        // distributes .fill, so it needs at least one stretchable arranged subview to absorb
-        // the slack. Hiding it in the (default) blank-caption state leaves only required
-        // heights, which cannot satisfy the cell's required height and breaks a constraint.
-        // An empty label renders nothing anyway.
+        // Kept visible (just blank) whenever the grid reserves a caption row, so every tile in
+        // that grid keeps the same height and the glyphs stay on one line. It is only hidden
+        // when NO option in the grid has a caption — that is what makes the highlight square.
         titleLabel.text = caption
         // Replacing the glyph with an image would otherwise leave the no-emoji option with no
         // accessible content at all once the caption is blank; VoiceOver announced "❌" plus
@@ -200,6 +263,6 @@ final class EmojiCell: UICollectionViewCell {
         // so the announcement survives a study that sets no caption.
         noneImageView.isAccessibilityElement = isNoneOption
         noneImageView.accessibilityLabel = isNoneOption ? (caption.isEmpty ? "none" : caption) : nil
-        contentView.backgroundColor = selected ? ColorPalette.color(withType: .inactive) : .clear
+        highlightView.backgroundColor = selected ? ColorPalette.color(withType: .inactive) : .clear
     }
 }

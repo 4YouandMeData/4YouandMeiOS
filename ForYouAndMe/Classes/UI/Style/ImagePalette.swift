@@ -14,6 +14,14 @@ enum ImageName: String, CaseIterable {
     case fyamLogoSpecific = "fyam_logo_specific"
     case fyamLogoGeneric = "fyam_logo_generic"
     case mainLogo = "main_logo"
+    // Optional host-injectable logo for the feed header button (top-left of the feed).
+    // Falls back to `mainLogo` when the host does not ship it, so hosts that only
+    // provide `main_logo` render exactly as before.
+    case headerLogo = "header_logo"
+    // Optional host-injectable logo for the onboarding screens drawn on the light
+    // `.secondary` background (e.g. the email input). Falls back to `mainLogo`.
+    // Studies whose `main_logo` is white need this to stay visible there.
+    case onboardingLogo = "onboarding_logo"
     // Canonical host-injectable partner logo shown on the welcome screen.
     case partnerLogo = "partner_logo"
     // Deprecated: legacy partner-logo key. Prefer `partnerLogo`; kept as a backward-compatible
@@ -145,8 +153,20 @@ enum TemplateImageName: String, CaseIterable {
 
 public class ImagePalette {
     
+    // Optional, host-injectable slots that degrade to another slot when the host does not
+    // ship them. Keeps every existing host pixel-identical while letting a study override
+    // a single screen's logo (FUAM-3740).
+    private static let fallbacks: [ImageName: ImageName] = [
+        .headerLogo: .mainLogo,
+        .onboardingLogo: .mainLogo
+    ]
+
     static func image(withName name: ImageName, forPhaseIndex phaseIndex: PhaseIndex? = nil) -> UIImage? {
-        return Self.image(withName: name.rawValue, forPhaseIndex: phaseIndex)
+        if let image = Self.image(withName: name.rawValue, forPhaseIndex: phaseIndex) {
+            return image
+        }
+        guard let fallback = Self.fallbacks[name] else { return nil }
+        return Self.image(withName: fallback, forPhaseIndex: phaseIndex)
     }
     
     static func templateImage(withName name: TemplateImageName, forPhaseIndex phaseIndex: PhaseIndex? = nil) -> UIImage? {
@@ -170,6 +190,7 @@ public class ImagePalette {
     static func checkImageAvailability() {
         // Optional, host-injectable images that are absent for most studies and must not
         // trip the availability assertion (the welcome-screen partner logo is presence-based).
+        // Note: the `fallbacks` slots need no exemption — they resolve through `mainLogo`.
         let optionalImages: Set<ImageName> = [.partnerLogo, .cziLogo]
         ImageName.allCases
             .filter { !optionalImages.contains($0) }

@@ -25,7 +25,7 @@ class FeedHeaderView: UIView {
     private lazy var profileButton: UIButton = {
         let button = UIButton()
         button.addTarget(self, action: #selector(self.onProfileButtonPressed), for: .touchUpInside)
-        button.setImage(ImagePalette.image(withName: .mainLogo), for: .normal)
+        button.setImage(ImagePalette.image(withName: .headerLogo), for: .normal)
         button.imageView?.contentMode = .scaleAspectFit
         button.autoSetDimension(.width, toSize: Self.buttonWidth)
         button.autoSetDimension(.height, toSize: Self.buttonWidth)
@@ -108,7 +108,7 @@ class FeedHeaderView: UIView {
     }
     
     public func refreshUI() {
-        self.profileButton.syncWithPhase(repository: self.repository, imageName: .mainLogo)
+        self.profileButton.syncWithPhase(repository: self.repository, imageName: .headerLogo)
     }
     
     public func setComingSoonTitle(title: String) {
