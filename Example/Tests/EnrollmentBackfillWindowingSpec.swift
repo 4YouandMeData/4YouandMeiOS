@@ -4281,3 +4281,415 @@ class SensorProbeDriftTwinSpec: QuickSpec {
         }
     }
 }
+
+// MARK: - FUAM-3945 fidelity audit (X1/X2/X3/X4/X5/X6): mapper payload-shape guards
+
+/// Pins the emitted dictionary shape for every fidelity-audit change, so a future regression is
+/// loud. KVC-reachable fields are exercised with stand-ins named to satisfy each mapper's type
+/// guard. Values only reachable through the real OS classes cannot be pinned here and are tested
+/// at their pure derivation seam instead, stated per case:
+/// - keyboard sentiment counts need a real `SRKeyboardMetrics` (typed method calls) — the
+///   category-name table is pinned, plus the stand-in falling through without the keys;
+/// - ambient-light `chromaticity` needs a real `SRAmbientLightSample` (C-struct property) — only
+///   the KVC-reachable `placement` and its name table are pinned.
+class SensorMapperFidelitySpec: QuickSpec {
+
+    // swiftlint:disable:next function_body_length
+    override class func spec() {
+
+        // Deliberately not on a whole second, so precision claims are real.
+        let recordedAt = Date(timeIntervalSince1970: 1786363200.5)
+
+        let fractionalParser: ISO8601DateFormatter = {
+            let formatter = ISO8601DateFormatter()
+            formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+            return formatter
+        }()
+
+        func expectPreciseCompanion(_ record: [String: Any]?) {
+            let precise = record?["recorded_at_precise"] as? String
+            expect(precise).toNot(beNil())
+            let parsed = precise.flatMap { fractionalParser.date(from: $0) }
+            expect(parsed).to(equal(recordedAt))
+            // And the whole-second anchor key is untouched next to it.
+            let plain = record?["recorded_at"] as? String
+            expect(plain.flatMap { ISO8601DateFormatter().date(from: $0) })
+                .to(equal(Date(timeIntervalSince1970: recordedAt.timeIntervalSince1970.rounded(.down))))
+        }
+
+        describe("X6 — full-precision recorded_at_precise on every whole-second report mapper") {
+
+            it("device usage report") {
+                expectPreciseCompanion(DeviceUsageReportMapper.mapDeviceUsage(FidelityDeviceUsageReportSample(),
+                                                                              recordedAt: recordedAt))
+            }
+            it("phone usage report") {
+                expectPreciseCompanion(PhoneUsageReportMapper.mapPhoneUsage(FidelityPhoneUsageReportSample(),
+                                                                            recordedAt: recordedAt))
+            }
+            it("messages usage report") {
+                expectPreciseCompanion(MessagesUsageReportMapper.mapMessagesUsage(FidelityMessagesUsageReportSample(),
+                                                                                  recordedAt: recordedAt))
+            }
+            it("keyboard metrics") {
+                expectPreciseCompanion(KeyboardMetricsMapper.mapKeyboardMetrics(FidelityKeyboardMetricsSample(),
+                                                                                recordedAt: recordedAt))
+            }
+            it("visits") {
+                expectPreciseCompanion(VisitsMapper.mapVisit(FidelitySRVisitSample(), recordedAt: recordedAt))
+            }
+        }
+
+        describe("X1 — device usage applications: the usageTime probe, never-drop, and the stats seam") {
+
+            let record = DeviceUsageReportMapper.mapDeviceUsage(FidelityDeviceUsageReportSample(),
+                                                                recordedAt: recordedAt)
+
+            it("reads per-app usage through the header KVC name usageTime") {
+                let apps = record?["applications"] as? [[String: Any]]
+                let usages = apps?.compactMap { $0["usage_s"] as? Double }
+                expect(usages).to(equal([123.5]))
+            }
+
+            it("keeps an entry with no readable usage value instead of dropping it") {
+                let apps = record?["applications"] as? [[String: Any]]
+                expect(apps?.count).to(equal(2))
+                let bare = apps?.first { $0["usage_s"] == nil }
+                expect(bare?["category"] as? String).to(equal("SRDeviceUsageCategoryProductivity"))
+                expect(bare?["report_app_id"] as? String).to(equal("app-bare"))
+            }
+
+            it("counts usage-less entries against the total (the telemetry seam)") {
+                let stats = DeviceUsageReportMapper.applicationUsageStats(in: [record ?? [:]])
+                expect(stats.missing).to(equal(1))
+                expect(stats.total).to(equal(2))
+            }
+        }
+
+        describe("X4 — documented fields the mappers now read") {
+
+            it("device usage report: version (an NSString in the SDK header)") {
+                let record = DeviceUsageReportMapper.mapDeviceUsage(FidelityDeviceUsageReportSample(),
+                                                                    recordedAt: recordedAt)
+                expect(record?["version"] as? String).to(equal("algo-2"))
+            }
+
+            it("keyboard metrics: version string and the two correction counters") {
+                let record = KeyboardMetricsMapper.mapKeyboardMetrics(FidelityKeyboardMetricsSample(),
+                                                                      recordedAt: recordedAt)
+                expect(record?["version"] as? String).to(equal("2.1"))
+                expect(record?["total_retro_corrections"] as? Int).to(equal(3))
+                expect(record?["total_substitution_corrections"] as? Int).to(equal(4))
+            }
+
+            it("keyboard metrics: the sentiment category table is complete and snake_case") {
+                let names = KeyboardMetricsMapper.sentimentCategoryNames.map { $0.1 }
+                expect(names.count).to(equal(10))
+                expect(Set(names).count).to(equal(10))
+                expect(names).to(contain("low_energy", "anger", "anxiety", "positive"))
+            }
+
+            it("keyboard metrics: a KVC stand-in gets NO sentiment keys (typed-call seam, stated)") {
+                // `wordCount(for:)`/`emojiCount(for:)` are methods on the real SRKeyboardMetrics;
+                // a stand-in cannot exercise them, so absence-here is the pinned behaviour.
+                let record = KeyboardMetricsMapper.mapKeyboardMetrics(FidelityKeyboardMetricsSample(),
+                                                                      recordedAt: recordedAt)
+                expect(record?["sentiment_word_counts"]).to(beNil())
+                expect(record?["sentiment_emoji_counts"]).to(beNil())
+            }
+
+            it("ambient light: placement is read by KVC and emitted symbolically") {
+                let sample = FidelityAmbientLightSample(startDate: recordedAt.addingTimeInterval(-3600))
+                let record = AmbientLightMapper.mapAmbientLight(sample,
+                                                                recordedAtISO: ISO8601Strategy.encode(recordedAt))
+                expect(record?["placement"] as? String).to(equal("front_bottom"))
+            }
+
+            it("ambient light: the placement name table matches the SDK enum, unknowns carried") {
+                expect(AmbientLightMapper.placementName(rawValue: 0)).to(equal("unknown"))
+                expect(AmbientLightMapper.placementName(rawValue: 2)).to(equal("front_bottom"))
+                expect(AmbientLightMapper.placementName(rawValue: 8)).to(equal("front_bottom_left"))
+                expect(AmbientLightMapper.placementName(rawValue: 99)).to(equal("unknown_99"))
+            }
+
+            it("ambient pressure: temperature converts to Celsius under a suffixed key") {
+                let sample = FidelityAmbientPressureSample(timestamp: recordedAt.addingTimeInterval(-3600))
+                let record = AmbientPressureMapper.mapAmbientPressure(sample,
+                                                                      recordedAtISO: ISO8601Strategy.encode(recordedAt))
+                expect(record?["temperature_c"] as? Double).to(beCloseTo(21.5, within: 0.0001))
+            }
+        }
+
+        describe("X5 — symbolic companions next to the untouched numeric enum keys") {
+
+            it("visits: location_category stays the stringified number, name rides alongside") {
+                let record = VisitsMapper.mapVisit(FidelitySRVisitSample(), recordedAt: recordedAt)
+                expect(record?["location_category"] as? String).to(equal("1"))
+                expect(record?["location_category_name"] as? String).to(equal("home"))
+            }
+
+            it("visits: the location category table matches the SDK enum, unknown raws yield nil") {
+                expect(VisitsMapper.locationCategoryName(rawValue: 0)).to(equal("unknown"))
+                expect(VisitsMapper.locationCategoryName(rawValue: 4)).to(equal("gym"))
+                expect(VisitsMapper.locationCategoryName(rawValue: 99)).to(beNil())
+            }
+
+            it("device usage notifications: event stays the stringified number, name rides alongside") {
+                let record = DeviceUsageReportMapper.mapDeviceUsage(FidelityDeviceUsageReportSample(),
+                                                                    recordedAt: recordedAt)
+                let notifs = record?["notifications"] as? [[String: Any]]
+                expect(notifs?.count).to(equal(1))
+                expect(notifs?.first?["event"] as? String).to(equal("11"))
+                expect(notifs?.first?["event_name"] as? String).to(equal("expired"))
+            }
+
+            it("device usage notifications: the event name table matches the SDK enum") {
+                expect(DeviceUsageReportMapper.notificationEventName(rawValue: 0)).to(equal("unknown"))
+                expect(DeviceUsageReportMapper.notificationEventName(rawValue: 1)).to(equal("received"))
+                expect(DeviceUsageReportMapper.notificationEventName(rawValue: 16)).to(equal("device_unlocked"))
+                expect(DeviceUsageReportMapper.notificationEventName(rawValue: 99)).to(beNil())
+            }
+        }
+
+        describe("X2 — keyboard probability distributions ride raw, next to the untouched summary") {
+
+            it("emits the raw samples, the summary stats, and a unit, inside the record") {
+                let record = KeyboardMetricsMapper.mapKeyboardMetrics(FidelityKeyboardMetricsSample(),
+                                                                      recordedAt: recordedAt)
+                let pm = record?["probabilityMetrics"] as? [String: Any]
+                let touch = pm?["touchDownUp"] as? [String: Any]
+                expect(touch?["samples"] as? [Double]).to(equal([0.1, 0.2, 0.3]))
+                expect(touch?["unit"] as? String).to(equal("seconds"))
+                expect(touch?["count"] as? Int).to(equal(3))
+                expect(touch?["mean"]).toNot(beNil())
+                expect(touch?["p95"]).toNot(beNil())
+                expect(touch?["samples_truncated"]).to(beNil())
+            }
+
+            it("falls back to the hardcoded per-metric unit when samples arrive as bare numbers") {
+                let metric = FidelityBareNumberMetric(count: 5)
+                let out = KeyboardMetricsMapper.exportProbabilityMetric(metric,
+                                                                        metricKey: "deleteDownErrorDistance")
+                expect(out?["unit"] as? String).to(equal("meters"))
+                expect((out?["samples"] as? [Double])?.count).to(equal(5))
+            }
+
+            it("truncates a pathological distribution loudly: flag set, count untruncated") {
+                let metric = FidelityBareNumberMetric(count: 1_200)
+                let out = KeyboardMetricsMapper.exportProbabilityMetric(metric,
+                                                                        metricKey: "touchDownUp")
+                expect((out?["samples"] as? [Double])?.count)
+                    .to(equal(KeyboardMetricsMapper.maxProbabilitySamples))
+                expect(out?["samples_truncated"] as? Bool).to(beTrue())
+                expect(out?["count"] as? Int).to(equal(1_200))
+            }
+        }
+
+        describe("X3 — joinBoundaryDropCount (counting only, the gate itself is untouched)") {
+
+            let bound = Date(timeIntervalSince1970: 1_786_000_000)
+            let iso = ISO8601DateFormatter()
+
+            func report(recordedAtOffset: TimeInterval, duration: TimeInterval = 86_400) -> [String: Any] {
+                return ["recorded_at": iso.string(from: bound.addingTimeInterval(recordedAtOffset)),
+                        "duration_s": duration]
+            }
+
+            it("counts a report whose derived start missed the bound by less than one period") {
+                // recorded_at = bound + duration − 1 → derived start = bound − 1 (the end−1s shape).
+                let records = [report(recordedAtOffset: 86_399)]
+                expect(SensorSampleUploadManager.joinBoundaryDropCount(records,
+                                                                       lowerBound: bound,
+                                                                       sensor: .deviceUsageReport)).to(equal(1))
+            }
+
+            it("does not count a report a full period or more below the bound") {
+                let records = [report(recordedAtOffset: -86_400)]
+                expect(SensorSampleUploadManager.joinBoundaryDropCount(records,
+                                                                       lowerBound: bound,
+                                                                       sensor: .deviceUsageReport)).to(equal(0))
+            }
+
+            it("does not count records that are not consent-dropped at all") {
+                let records = [report(recordedAtOffset: 2 * 86_400)]
+                expect(SensorSampleUploadManager.joinBoundaryDropCount(records,
+                                                                       lowerBound: bound,
+                                                                       sensor: .deviceUsageReport)).to(equal(0))
+            }
+
+            it("only applies to the usage-report sensors") {
+                let records = [report(recordedAtOffset: 86_399)]
+                expect(SensorSampleUploadManager.joinBoundaryDropCount(records,
+                                                                       lowerBound: bound,
+                                                                       sensor: .visits)).to(equal(0))
+            }
+        }
+    }
+}
+
+// MARK: - FUAM-3945 fidelity audit: the two telemetry hooks through the real call path
+
+class SensorFidelityTelemetrySpec: QuickSpec {
+
+    // swiftlint:disable:next function_body_length
+    override class func spec() {
+
+        let day: TimeInterval = 24 * 3600
+        let sensor = SRSensor.deviceUsageReport
+        let now = SensorSampleUploadManager.utcDayStart(Date())
+        let joinDay = now.addingTimeInterval(-30 * day)
+        let head = now.addingTimeInterval(-4 * day)
+        let iso = ISO8601DateFormatter()
+
+        var storage: FakeSensorStorage!
+        var clearance: FakeSensorClearance!
+        var analytics: CapturingAnalyticsService!
+        var mapper: RecordingDeviceMapper!
+        var manager: SensorSampleUploadManager!
+
+        beforeEach {
+            storage = FakeSensorStorage()
+            clearance = FakeSensorClearance()
+            clearance.enrollmentDate = joinDay
+            analytics = CapturingAnalyticsService()
+            mapper = RecordingDeviceMapper()
+            manager = SensorSampleUploadManager(withSensors: [sensor],
+                                                storage: storage,
+                                                reachability: FakeSensorReachability(),
+                                                analytics: analytics,
+                                                mappers: [sensor: mapper])
+            manager.clearanceDelegate = clearance
+            storage.setLastCursor(head, for: sensor)
+            storage.setLastRescanDay(SensorSampleUploadManager.utcDayStart(now), for: sensor)
+        }
+
+        func droppedReasons() -> [String] {
+            return analytics.trackedEvents.compactMap { event in
+                if case let .sensorRecordDropped(_, _, reason) = event { return reason }
+                return nil
+            }
+        }
+
+        it("X3: a boundary-straddling consent drop is sub-counted as join_boundary") {
+            // Derived start = joinDay − 1 s: consent-dropped, within one period of the bound.
+            mapper.records = [["recorded_at": iso.string(from: joinDay.addingTimeInterval(86_399)),
+                               "duration_s": 86_400]]
+            manager.runDeviceChain(at: 0, of: [.current], for: sensor, now: now, using: mapper)
+
+            expect(droppedReasons()).toEventually(contain("join_boundary"), timeout: .seconds(5))
+            expect(droppedReasons()).to(contain("consent_gate"))
+        }
+
+        it("X3: a deep pre-bound drop is consent_gate only, never join_boundary") {
+            mapper.records = [["recorded_at": iso.string(from: joinDay.addingTimeInterval(-5 * day)),
+                               "duration_s": 86_400]]
+            manager.runDeviceChain(at: 0, of: [.current], for: sensor, now: now, using: mapper)
+
+            expect(droppedReasons()).toEventually(contain("consent_gate"), timeout: .seconds(5))
+            expect(droppedReasons()).toNot(contain("join_boundary"))
+        }
+
+        it("X1: usage-less applications entries surface as sensor_field_missing, entries kept") {
+            mapper.records = [["recorded_at": iso.string(from: now.addingTimeInterval(-2 * day)),
+                               "applications": [["category": "cat", "report_app_id": "a"],
+                                                ["category": "cat", "report_app_id": "b", "usage_s": 12.5]]]]
+            manager.runDeviceChain(at: 0, of: [.current], for: sensor, now: now, using: mapper)
+
+            let fieldEvents: () -> [(String, Int, Int)] = {
+                analytics.trackedEvents.compactMap { event in
+                    if case let .sensorFieldMissing(_, field, missing, total) = event {
+                        return (field, missing, total)
+                    }
+                    return nil
+                }
+            }
+            expect(fieldEvents()).toEventuallyNot(beEmpty(), timeout: .seconds(5))
+            expect(fieldEvents().first?.0).to(equal("usage_s"))
+            expect(fieldEvents().first?.1).to(equal(1))
+            expect(fieldEvents().first?.2).to(equal(2))
+            // The usage-less entry is never dropped: the whole record reaches the queue.
+            expect(storage.enqueued).toNot(beEmpty())
+        }
+
+        it("X1: no event when every applications entry carries a usage value") {
+            mapper.records = [["recorded_at": iso.string(from: now.addingTimeInterval(-2 * day)),
+                               "applications": [["category": "cat", "report_app_id": "a", "usage_s": 3.0]]]]
+            manager.runDeviceChain(at: 0, of: [.current], for: sensor, now: now, using: mapper)
+
+            expect(storage.enqueued).toEventuallyNot(beEmpty(), timeout: .seconds(5))
+            let fieldEvents = analytics.trackedEvents.filter {
+                if case .sensorFieldMissing = $0 { return true }
+                return false
+            }
+            expect(fieldEvents).to(beEmpty())
+        }
+    }
+}
+
+// MARK: - Fidelity stand-ins (KVC, named to satisfy each mapper's type guard)
+
+private final class FidelityDeviceUsageReportSample: NSObject {
+    @objc let duration: TimeInterval = 900
+    @objc let version = "algo-2"
+    @objc let applicationUsageByCategory: NSDictionary = [
+        "SRDeviceUsageCategoryProductivity": [FidelityAppUsageWithTime(), FidelityAppUsageBare()]
+    ]
+    @objc let notificationUsageByCategory: NSDictionary = [
+        "SRDeviceUsageCategoryProductivity": [FidelityNotificationUsage()]
+    ]
+}
+
+private final class FidelityAppUsageWithTime: NSObject {
+    @objc let usageTime: TimeInterval = 123.5
+    @objc let reportApplicationIdentifier = "app-timed"
+}
+
+private final class FidelityAppUsageBare: NSObject {
+    @objc let reportApplicationIdentifier = "app-bare"
+}
+
+private final class FidelityNotificationUsage: NSObject {
+    @objc let event: Int = 11 // SRNotificationEventExpired
+}
+
+private final class FidelityPhoneUsageReportSample: NSObject {}
+private final class FidelityMessagesUsageReportSample: NSObject {}
+
+private final class FidelityKeyboardMetricsSample: NSObject {
+    @objc let version = "2.1"
+    @objc let totalRetroCorrections: Int = 3
+    @objc let totalSubstitutionCorrections: Int = 4
+    @objc let touchDownUp = FidelityDurationMetric()
+}
+
+private final class FidelityDurationMetric: NSObject {
+    @objc let distributionSampleValues: [NSMeasurement] = [0.1, 0.2, 0.3].map {
+        NSMeasurement(doubleValue: $0, unit: UnitDuration.seconds)
+    }
+}
+
+private final class FidelityBareNumberMetric: NSObject {
+    @objc let distributionSampleValues: [NSNumber]
+    init(count: Int) {
+        self.distributionSampleValues = (0..<count).map { NSNumber(value: Double($0) / 1000) }
+    }
+}
+
+private final class FidelitySRVisitSample: NSObject {
+    @objc let distanceFromHome: Double = 120
+    @objc let locationCategory: Int = 1 // SRLocationCategoryHome
+}
+
+private final class FidelityAmbientLightSample: NSObject {
+    @objc let startDate: Date
+    @objc let lux: Double = 42
+    @objc let placement: Int = 2 // SRAmbientLightSensorPlacementFrontBottom
+    init(startDate: Date) { self.startDate = startDate }
+}
+
+private final class FidelityAmbientPressureSample: NSObject {
+    @objc let timestamp: Date
+    @objc let pressure: NSNumber = 101.3
+    @objc let temperature = NSMeasurement(doubleValue: 21.5, unit: UnitTemperature.celsius)
+    init(timestamp: Date) { self.timestamp = timestamp }
+}
