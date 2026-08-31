@@ -95,7 +95,7 @@ Pod::Spec.new do |s|
     core.dependency 'Firebase/Crashlytics', '~> 11.7.0'
     core.dependency 'Firebase/Messaging', '~> 11.7.0'
     core.dependency 'PhoneNumberKit', '3.3.1'
-    core.dependency 'CountryPickerView', '~> 3.1.2'
+    core.dependency 'CountryPickerView', '~> 3.2.0'
     core.dependency 'UberSignature', '~> 1.0.3'
     core.dependency 'RxSwiftExt', '~> 6.2.1'
     core.dependency 'FYAMResearchKit', '~> 3.0.0'

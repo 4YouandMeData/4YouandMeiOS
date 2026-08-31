@@ -21765,25 +21765,6 @@
 			};
 			name = Release;
 		};
-		4509CFB7D28BA4229EE272BEF0B832BC /* Debug */ = {
-			isa = XCBuildConfiguration;
-			baseConfigurationReference = 2DF6B2C39F3E60815BB2B29F51C4BD68 /* CountryPickerView.debug.xcconfig */;
-			buildSettings = {
-				CODE_SIGNING_ALLOWED = NO;
-				CODE_SIGNING_REQUIRED = NO;
-				CONFIGURATION_BUILD_DIR = "$(BUILD_DIR)/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)/CountryPickerView";
-				EXPANDED_CODE_SIGN_IDENTITY = "";
-				IBSC_MODULE = CountryPickerView;
-				INFOPLIST_FILE = "Target Support Files/CountryPickerView/ResourceBundle-CountryPickerView-CountryPickerView-Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 15.6;
-				PRODUCT_NAME = CountryPickerView;
-				SDKROOT = iphoneos;
-				SKIP_INSTALL = YES;
-				TARGETED_DEVICE_FAMILY = "1,2";
-				WRAPPER_EXTENSION = bundle;
-			};
-			name = Debug;
-		};
 		4587BA0CAC75BBAD93047319D82617B0 /* Release */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 43C49064E0BEE53977C1FA95AF69BDD5 /* FYAMResearchKit.release.xcconfig */;
@@ -21866,25 +21847,6 @@
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
-		};
-		4BBD2CAED2DDEE171D487DEE816EC18E /* Release */ = {
-			isa = XCBuildConfiguration;
-			baseConfigurationReference = E1DF915C892C03DC4DFFE413DE110B22 /* CountryPickerView.release.xcconfig */;
-			buildSettings = {
-				CODE_SIGNING_ALLOWED = NO;
-				CODE_SIGNING_REQUIRED = NO;
-				CONFIGURATION_BUILD_DIR = "$(BUILD_DIR)/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)/CountryPickerView";
-				EXPANDED_CODE_SIGN_IDENTITY = "";
-				IBSC_MODULE = CountryPickerView;
-				INFOPLIST_FILE = "Target Support Files/CountryPickerView/ResourceBundle-CountryPickerView-CountryPickerView-Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 15.6;
-				PRODUCT_NAME = CountryPickerView;
-				SDKROOT = iphoneos;
-				SKIP_INSTALL = YES;
-				TARGETED_DEVICE_FAMILY = "1,2";
-				WRAPPER_EXTENSION = bundle;
-			};
-			name = Release;
 		};
 		4C08927515305A8714B07D7435632CF1 /* Release */ = {
 			isa = XCBuildConfiguration;
@@ -23002,6 +22964,25 @@
 			};
 			name = Debug;
 		};
+		89087D83D9C596C9D1F103883C5655AF /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 2DF6B2C39F3E60815BB2B29F51C4BD68 /* CountryPickerView.debug.xcconfig */;
+			buildSettings = {
+				CODE_SIGNING_ALLOWED = NO;
+				CODE_SIGNING_REQUIRED = NO;
+				CONFIGURATION_BUILD_DIR = "$(BUILD_DIR)/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)/CountryPickerView";
+				EXPANDED_CODE_SIGN_IDENTITY = "";
+				IBSC_MODULE = CountryPickerView;
+				INFOPLIST_FILE = "Target Support Files/CountryPickerView/ResourceBundle-CountryPickerView-CountryPickerView-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.6;
+				PRODUCT_NAME = CountryPickerView;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				WRAPPER_EXTENSION = bundle;
+			};
+			name = Debug;
+		};
 		94BE013D6792E35A403ECEE74AC23E84 /* Release */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 6EF63671270369727DF7ACC25AEC6538 /* GoogleDataTransport.release.xcconfig */;
@@ -23670,6 +23651,46 @@
 			};
 			name = Debug;
 		};
+		B7C03A64216962907DB966BC5EFD42E8 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 2DF6B2C39F3E60815BB2B29F51C4BD68 /* CountryPickerView.debug.xcconfig */;
+			buildSettings = {
+				CODE_SIGNING_ALLOWED = NO;
+				CODE_SIGNING_REQUIRED = NO;
+				"CODE_SIGN_IDENTITY[sdk=appletvos*]" = "";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "";
+				"CODE_SIGN_IDENTITY[sdk=watchos*]" = "";
+				CURRENT_PROJECT_VERSION = 1;
+				DEFINES_MODULE = YES;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_MODULE_VERIFIER = NO;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				EXPANDED_CODE_SIGN_IDENTITY = "";
+				GCC_PREFIX_HEADER = "Target Support Files/CountryPickerView/CountryPickerView-prefix.pch";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = "Target Support Files/CountryPickerView/CountryPickerView-Info.plist";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.6;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MODULEMAP_FILE = "Target Support Files/CountryPickerView/CountryPickerView.modulemap";
+				PRODUCT_MODULE_NAME = CountryPickerView;
+				PRODUCT_NAME = CountryPickerView;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) ";
+				SWIFT_INSTALL_OBJC_HEADER = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = Debug;
+		};
 		BAF8E5CE2CC3B0D2FC1AB2CF6B6DF9F8 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 5740008148C04C46D16CEDA3D20D2997 /* FirebaseInstallations.debug.xcconfig */;
@@ -24009,6 +24030,25 @@
 			};
 			name = Release;
 		};
+		D0B318D5EAA40EFABF3266467C97C4F9 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = E1DF915C892C03DC4DFFE413DE110B22 /* CountryPickerView.release.xcconfig */;
+			buildSettings = {
+				CODE_SIGNING_ALLOWED = NO;
+				CODE_SIGNING_REQUIRED = NO;
+				CONFIGURATION_BUILD_DIR = "$(BUILD_DIR)/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)/CountryPickerView";
+				EXPANDED_CODE_SIGN_IDENTITY = "";
+				IBSC_MODULE = CountryPickerView;
+				INFOPLIST_FILE = "Target Support Files/CountryPickerView/ResourceBundle-CountryPickerView-CountryPickerView-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.6;
+				PRODUCT_NAME = CountryPickerView;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				WRAPPER_EXTENSION = bundle;
+			};
+			name = Release;
+		};
 		D147C4DC9DA7A18B56475A3CEAB6EC1C /* Release */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = FF2DA097021CCBCD174CC78BA1132194 /* Moya.release.xcconfig */;
@@ -24169,6 +24209,47 @@
 				SKIP_INSTALL = YES;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				WRAPPER_EXTENSION = bundle;
+			};
+			name = Release;
+		};
+		D60E5F3804625080E8A97C2A562B5CF8 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = E1DF915C892C03DC4DFFE413DE110B22 /* CountryPickerView.release.xcconfig */;
+			buildSettings = {
+				CODE_SIGNING_ALLOWED = NO;
+				CODE_SIGNING_REQUIRED = NO;
+				"CODE_SIGN_IDENTITY[sdk=appletvos*]" = "";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "";
+				"CODE_SIGN_IDENTITY[sdk=watchos*]" = "";
+				CURRENT_PROJECT_VERSION = 1;
+				DEFINES_MODULE = YES;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_MODULE_VERIFIER = NO;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				EXPANDED_CODE_SIGN_IDENTITY = "";
+				GCC_PREFIX_HEADER = "Target Support Files/CountryPickerView/CountryPickerView-prefix.pch";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = "Target Support Files/CountryPickerView/CountryPickerView-Info.plist";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.6;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MODULEMAP_FILE = "Target Support Files/CountryPickerView/CountryPickerView.modulemap";
+				PRODUCT_MODULE_NAME = CountryPickerView;
+				PRODUCT_NAME = CountryPickerView;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) ";
+				SWIFT_INSTALL_OBJC_HEADER = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
 			};
 			name = Release;
 		};
@@ -24650,46 +24731,6 @@
 			};
 			name = Debug;
 		};
-		F25CEEDF3EDCDD8A023B9F06C290EDEF /* Debug */ = {
-			isa = XCBuildConfiguration;
-			baseConfigurationReference = 2DF6B2C39F3E60815BB2B29F51C4BD68 /* CountryPickerView.debug.xcconfig */;
-			buildSettings = {
-				CODE_SIGNING_ALLOWED = NO;
-				CODE_SIGNING_REQUIRED = NO;
-				"CODE_SIGN_IDENTITY[sdk=appletvos*]" = "";
-				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "";
-				"CODE_SIGN_IDENTITY[sdk=watchos*]" = "";
-				CURRENT_PROJECT_VERSION = 1;
-				DEFINES_MODULE = YES;
-				DYLIB_COMPATIBILITY_VERSION = 1;
-				DYLIB_CURRENT_VERSION = 1;
-				DYLIB_INSTALL_NAME_BASE = "@rpath";
-				ENABLE_MODULE_VERIFIER = NO;
-				ENABLE_USER_SCRIPT_SANDBOXING = NO;
-				EXPANDED_CODE_SIGN_IDENTITY = "";
-				GCC_PREFIX_HEADER = "Target Support Files/CountryPickerView/CountryPickerView-prefix.pch";
-				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = "Target Support Files/CountryPickerView/CountryPickerView-Info.plist";
-				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				IPHONEOS_DEPLOYMENT_TARGET = 15.6;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-					"@loader_path/Frameworks",
-				);
-				MODULEMAP_FILE = "Target Support Files/CountryPickerView/CountryPickerView.modulemap";
-				PRODUCT_MODULE_NAME = CountryPickerView;
-				PRODUCT_NAME = CountryPickerView;
-				SDKROOT = iphoneos;
-				SKIP_INSTALL = YES;
-				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) ";
-				SWIFT_INSTALL_OBJC_HEADER = YES;
-				TARGETED_DEVICE_FAMILY = "1,2";
-				VERSIONING_SYSTEM = "apple-generic";
-				VERSION_INFO_PREFIX = "";
-			};
-			name = Debug;
-		};
 		F2AA23B4F76C2ECC5F166CEF0283F6C2 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 2FCAFE9561DEADBA9CA24A5E63CE3D35 /* FirebaseAnalytics.debug.xcconfig */;
@@ -24750,47 +24791,6 @@
 				SWIFT_INSTALL_OBJC_HEADER = YES;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.9;
-				TARGETED_DEVICE_FAMILY = "1,2";
-				VALIDATE_PRODUCT = YES;
-				VERSIONING_SYSTEM = "apple-generic";
-				VERSION_INFO_PREFIX = "";
-			};
-			name = Release;
-		};
-		F653883260568A63F24A4DF52FCC744B /* Release */ = {
-			isa = XCBuildConfiguration;
-			baseConfigurationReference = E1DF915C892C03DC4DFFE413DE110B22 /* CountryPickerView.release.xcconfig */;
-			buildSettings = {
-				CODE_SIGNING_ALLOWED = NO;
-				CODE_SIGNING_REQUIRED = NO;
-				"CODE_SIGN_IDENTITY[sdk=appletvos*]" = "";
-				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "";
-				"CODE_SIGN_IDENTITY[sdk=watchos*]" = "";
-				CURRENT_PROJECT_VERSION = 1;
-				DEFINES_MODULE = YES;
-				DYLIB_COMPATIBILITY_VERSION = 1;
-				DYLIB_CURRENT_VERSION = 1;
-				DYLIB_INSTALL_NAME_BASE = "@rpath";
-				ENABLE_MODULE_VERIFIER = NO;
-				ENABLE_USER_SCRIPT_SANDBOXING = NO;
-				EXPANDED_CODE_SIGN_IDENTITY = "";
-				GCC_PREFIX_HEADER = "Target Support Files/CountryPickerView/CountryPickerView-prefix.pch";
-				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = "Target Support Files/CountryPickerView/CountryPickerView-Info.plist";
-				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				IPHONEOS_DEPLOYMENT_TARGET = 15.6;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-					"@loader_path/Frameworks",
-				);
-				MODULEMAP_FILE = "Target Support Files/CountryPickerView/CountryPickerView.modulemap";
-				PRODUCT_MODULE_NAME = CountryPickerView;
-				PRODUCT_NAME = CountryPickerView;
-				SDKROOT = iphoneos;
-				SKIP_INSTALL = YES;
-				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) ";
-				SWIFT_INSTALL_OBJC_HEADER = YES;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VALIDATE_PRODUCT = YES;
 				VERSIONING_SYSTEM = "apple-generic";
@@ -25141,8 +25141,8 @@
 		44E79379BAF83BE183A02E6377B042BE /* Build configuration list for PBXNativeTarget "CountryPickerView" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				F25CEEDF3EDCDD8A023B9F06C290EDEF /* Debug */,
-				F653883260568A63F24A4DF52FCC744B /* Release */,
+				B7C03A64216962907DB966BC5EFD42E8 /* Debug */,
+				D60E5F3804625080E8A97C2A562B5CF8 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
@@ -25231,8 +25231,8 @@
 		7713B156CE168214E0DD109C3EB26CCA /* Build configuration list for PBXNativeTarget "CountryPickerView-CountryPickerView" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				4509CFB7D28BA4229EE272BEF0B832BC /* Debug */,
-				4BBD2CAED2DDEE171D487DEE816EC18E /* Release */,
+				89087D83D9C596C9D1F103883C5655AF /* Debug */,
+				D0B318D5EAA40EFABF3266467C97C4F9 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
