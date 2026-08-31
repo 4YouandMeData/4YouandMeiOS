@@ -553,16 +553,47 @@ public final class SensorSampleUploadManager {
                           rescanFrom: appliedRescanFrom)
     }
 
-    /// FUAM-3945 (D1, F4): how far a report-class FETCH reaches back beyond its window start.
-    /// A device-local-calendar-day report (SensorKit returns a usage report only when its whole
-    /// period fits inside the fetch range — the containment behaviour that killed
+    /// FUAM-3945 (D1, F4): the FLOOR on how far a report-class FETCH reaches back beyond its
+    /// window start. A device-local-calendar-day report (SensorKit returns a usage report only
+    /// when its whole period fits inside the fetch range — the containment behaviour that killed
     /// `phone_usage_report` on every non-UTC device) can start up to 14h before or after the
     /// participant-day boundary the grid uses. 26h, not 24h (review round 1, F4): a 25-hour
     /// DST fall-back report day combined with a participant-tz 25-hour window on the same date
     /// (device one zone west of the profile zone — a traveller inside the same DST bloc) leaves
     /// a 1-hour placement hole under a 24h widen, so that day fits NO window on any of its four
     /// passes. The extra over-fetch is dropped by the window-membership filter and the ledger.
+    /// Round 5: no longer asserted to cover every zone — `reportFetchLookback(for:timeZone:)`
+    /// derives the actual reach per window and only ever WIDENS past this floor.
     static let reportFetchLookback: TimeInterval = 26 * 60 * 60
+
+    /// The diverging-device margin on top of a report-day length (review round 1, F4): the
+    /// handset may run one zone west/east of the profile zone inside the same DST bloc, so the
+    /// report day can start up to this much beyond the anomaly the profile calendar shows.
+    /// It is the same margin that turned the 25h worst-case day into the 26h floor above.
+    static let reportFetchLookbackMargin: TimeInterval = 60 * 60
+
+    /// FUAM-3945 (round 5): the report-class lookback for ONE window, derived from the ACTUAL
+    /// participant-day lengths around it instead of asserting that no day anywhere exceeds 25h.
+    /// The widened span must contain a whole device-local report day straddling the window's
+    /// opening boundary (containment selection, F4), so the reach needed is one report-day
+    /// length plus the diverging-device margin. The device zone is unknowable here, but the
+    /// profile zone's own calendar is the best available estimator of a local anomaly (a DST
+    /// bloc shares its transition dates), so take the longer of the window's participant day
+    /// and the day before it (the day the lookback reaches into). Floored at the fixed 26h
+    /// (`reportFetchLookback`), so every zone the constant covers today is byte-identical and
+    /// the derivation can only ever WIDEN — never narrow — the fetch; a calendar with a longer
+    /// day (a fall-back exceeding 1h, e.g. Antarctica/Casey's 3h hops → a 27h day) widens
+    /// accordingly, where the constant silently under-reached. Pure in (window, timeZone):
+    /// no wall clock, no cursor, no `Calendar.current`/`TimeZone.current`.
+    static func reportFetchLookback(for window: DateInterval, timeZone: TimeZone) -> TimeInterval {
+        let calendar = Self.partitionCalendar(timeZone)
+        let dayStart = calendar.startOfDay(for: window.start)
+        let dayEnd = Self.nextDayStart(after: dayStart, in: calendar)
+        let previousDayStart = calendar.date(byAdding: .day, value: -1, to: dayStart)
+            ?? dayStart.addingTimeInterval(-Self.utcDay)
+        let longestDay = max(dayEnd.timeIntervalSince(dayStart), dayStart.timeIntervalSince(previousDayStart))
+        return max(Self.reportFetchLookback, longestDay + Self.reportFetchLookbackMargin)
+    }
 
     /// FUAM-3945 (D1): 1-second backward epsilon for the continuous sensors. `from` is
     /// documented EXCLUSIVE, `to` inclusivity is undocumented; under exclusive-both a record
@@ -582,9 +613,16 @@ public final class SensorSampleUploadManager {
     /// committed, the previous day's records are already fingerprinted. The one exception is the
     /// probe's rare buffer-overflow fallback, where `belongsToOlderProbeWindow` (review round 1,
     /// F1) still carries the load; everywhere else it is a defensive guard.
-    static func fetchSpan(for sensor: SRSensor, window: DateInterval) -> DateInterval {
+    /// `timeZone` is the backend-authoritative participant zone (round 5) — the walk passes
+    /// `context.timeZone`; the default is the deterministic UTC fallback (24h days, so the
+    /// derived lookback is exactly the 26h floor), NEVER `TimeZone.current`. The end is never
+    /// touched: widening it forward could newly overlap the SensorKit embargo, which voids the
+    /// whole request rather than trimming it.
+    static func fetchSpan(for sensor: SRSensor,
+                          window: DateInterval,
+                          timeZone: TimeZone = SensorSampleUploadManager.fallbackPartitionTimeZone) -> DateInterval {
         let lookback = Self.dayAggregatedSensors.contains(sensor)
-            ? Self.reportFetchLookback
+            ? Self.reportFetchLookback(for: window, timeZone: timeZone)
             : Self.continuousFetchEpsilon
         return DateInterval(start: window.start.addingTimeInterval(-lookback), end: window.end)
     }
@@ -621,10 +659,11 @@ public final class SensorSampleUploadManager {
     static func belongsToOlderProbeWindow(_ record: [String: Any],
                                           sensor: SRSensor,
                                           window: DateInterval,
-                                          olderWindow: DateInterval) -> Bool {
+                                          olderWindow: DateInterval,
+                                          timeZone: TimeZone = SensorSampleUploadManager.fallbackPartitionTimeZone) -> Bool {
         guard let measured = Self.measurementTime(of: record, sensor: sensor),
               measured < window.start else { return false }
-        let olderSpan = Self.fetchSpan(for: sensor, window: olderWindow)
+        let olderSpan = Self.fetchSpan(for: sensor, window: olderWindow, timeZone: timeZone)
         if Self.dayAggregatedSensors.contains(sensor) {
             // Report sensors: period CONTAINMENT is the evidenced selection semantics (the
             // window-loss report refuted write-time selection outright), so containment alone
@@ -659,6 +698,9 @@ public final class SensorSampleUploadManager {
         let now: Date
         let mapper: SensorSampleMapper
         let plannedBound: Date
+        /// The backend-authoritative participant timezone the plan was built in (round 5) —
+        /// what `fetchSpan` derives the report lookback from. Never `TimeZone.current`.
+        let timeZone: TimeZone
         /// The stored cursor at plan time: a window ending at or before it is a RESCAN pass
         /// (D3) — used only to label telemetry, never for control flow.
         let rescanBoundary: Date?
@@ -693,6 +735,7 @@ public final class SensorSampleUploadManager {
              now: Date,
              mapper: SensorSampleMapper,
              plannedBound: Date,
+             timeZone: TimeZone = SensorSampleUploadManager.fallbackPartitionTimeZone,
              rescanBoundary: Date? = nil,
              backwardProbe: Bool = false,
              planHeadEnd: Date? = nil,
@@ -704,6 +747,7 @@ public final class SensorSampleUploadManager {
             self.now = now
             self.mapper = mapper
             self.plannedBound = plannedBound
+            self.timeZone = timeZone
             self.rescanBoundary = rescanBoundary
             self.backwardProbe = backwardProbe
             self.planHeadEnd = planHeadEnd
@@ -832,6 +876,7 @@ public final class SensorSampleUploadManager {
                                          now: now,
                                          mapper: mapper,
                                          plannedBound: plan.consentBound,
+                                         timeZone: self.partitionTimeZone(),
                                          rescanBoundary: storage.lastCursor(for: sensor, deviceKey: device.key),
                                          backwardProbe: isBackfillProbe,
                                          planHeadEnd: plan.windows.last?.end)
@@ -933,7 +978,7 @@ public final class SensorSampleUploadManager {
         // FUAM-3945 (D1): the mapper fetches the WIDENED span; everything downstream — the
         // cursor write, the enqueue windowStart, the consent gate's `windowVouches` — keeps
         // receiving the narrow `window`.
-        let fetchSpan = Self.fetchSpan(for: context.sensor, window: window)
+        let fetchSpan = Self.fetchSpan(for: context.sensor, window: window, timeZone: context.timeZone)
         context.mapper.fetchAndMap(from: fetchSpan.start, to: fetchSpan.end, device: context.device) { [weak self] result in
             // Mapper callbacks arrive on arbitrary threads: hop onto the serial work queue
             // before touching windowFetchFailures / retryWorkItems / storage (review fix #10).
@@ -1029,7 +1074,7 @@ public final class SensorSampleUploadManager {
             // report through at the join boundary, so the probe vouches on the WIDENED span's
             // start instead — conservative, never generous.
             let vouchAnchor: Date = context.backwardProbe && Self.dayAggregatedSensors.contains(sensor)
-                ? window.start.addingTimeInterval(-Self.reportFetchLookback)
+                ? Self.fetchSpan(for: sensor, window: window, timeZone: context.timeZone).start
                 : window.start
             let gated = Self.dropPreBoundRecords(records,
                                                  lowerBound: boundDate,
@@ -1067,7 +1112,11 @@ public final class SensorSampleUploadManager {
             if context.backwardProbe, index + 1 < windows.count {
                 let olderWindow = windows[index + 1]
                 windowBound = gated.filter {
-                    !Self.belongsToOlderProbeWindow($0, sensor: sensor, window: window, olderWindow: olderWindow)
+                    !Self.belongsToOlderProbeWindow($0,
+                                                    sensor: sensor,
+                                                    window: window,
+                                                    olderWindow: olderWindow,
+                                                    timeZone: context.timeZone)
                 }
             } else {
                 windowBound = gated
@@ -1264,7 +1313,8 @@ public final class SensorSampleUploadManager {
                     guard Self.belongsToOlderProbeWindow(record,
                                                          sensor: sensor,
                                                          window: buffered.window,
-                                                         olderWindow: older) else { return true }
+                                                         olderWindow: older,
+                                                         timeZone: context.timeZone) else { return true }
                     dropped.append(record)
                     return false
                 }

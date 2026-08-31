@@ -2605,6 +2605,69 @@ class SensorFetchSpanSpec: QuickSpec {
             }
         }
 
+        describe("reportFetchLookback derivation (round 5: arithmetic, not a 25h assumption)") {
+
+            let rome = TimeZone(identifier: "Europe/Rome")!
+            let casey = TimeZone(identifier: "Antarctica/Casey")!
+
+            func participantDayWindow(containing instant: Date, in timeZone: TimeZone) -> DateInterval {
+                let calendar = SensorSampleUploadManager.partitionCalendar(timeZone)
+                let start = calendar.startOfDay(for: instant)
+                let end = calendar.date(byAdding: .day, value: 1, to: start)!
+                return DateInterval(start: start, end: end)
+            }
+
+            it("keeps a 25h fall-back day at least as wide as the fixed 26h behaviour") {
+                // Europe/Rome 2026-10-25 is 25 hours long (EU fall-back).
+                let fallBackNoon = Date(timeIntervalSince1970: 1792929600)   // 2026-10-25 12:00:00 UTC
+                let window = participantDayWindow(containing: fallBackNoon, in: rome)
+                expect(window.duration).to(equal(25 * hour))
+                let span = SensorSampleUploadManager.fetchSpan(for: .phoneUsageReport, window: window, timeZone: rome)
+                expect(span.start).to(beLessThanOrEqualTo(window.start.addingTimeInterval(-26 * hour)))
+                expect(span.end).to(equal(window.end))
+            }
+
+            it("widens past the old constant on a >25h day (Antarctica/Casey's 3h fall-back hop)") {
+                // Antarctica/Casey 2018-03-11: +11 -> +8, a 27-hour day the 26h constant never covered.
+                let hopAfternoon = Date(timeIntervalSince1970: 1520748000)   // 2018-03-11 06:00:00 UTC
+                let window = participantDayWindow(containing: hopAfternoon, in: casey)
+                expect(window.duration).to(equal(27 * hour))                 // the premise: tzdb knows the hop
+                let span = SensorSampleUploadManager.fetchSpan(for: .phoneUsageReport, window: window, timeZone: casey)
+                // 27h day + the 1h diverging-device margin = 28h; the constant under-reached by 2h.
+                expect(span.start).to(equal(window.start.addingTimeInterval(-28 * hour)))
+                expect(span.end).to(equal(window.end))                       // the end NEVER moves (embargo)
+            }
+
+            it("the day AFTER a long day inherits its reach (the seam the lookback crosses into)") {
+                let dayAfterHop = Date(timeIntervalSince1970: 1520834400)    // 2018-03-12 06:00:00 UTC
+                let window = participantDayWindow(containing: dayAfterHop, in: casey)
+                expect(window.duration).to(equal(24 * hour))
+                let span = SensorSampleUploadManager.fetchSpan(for: .phoneUsageReport, window: window, timeZone: casey)
+                expect(span.start).to(equal(window.start.addingTimeInterval(-28 * hour)))
+            }
+
+            it("a normal 24h day is byte-identical to the fixed 26h behaviour") {
+                let plainSummerNoon = Date(timeIntervalSince1970: 1755000000)   // 2025-08-12, no transition
+                let window = participantDayWindow(containing: plainSummerNoon, in: rome)
+                expect(window.duration).to(equal(24 * hour))
+                let span = SensorSampleUploadManager.fetchSpan(for: .phoneUsageReport, window: window, timeZone: rome)
+                expect(span.start).to(equal(window.start.addingTimeInterval(-26 * hour)))
+                // Continuous sensors keep the 1s epsilon whatever timezone is passed.
+                expect(SensorSampleUploadManager.fetchSpan(for: .visits, window: window, timeZone: casey).start)
+                    .to(equal(window.start.addingTimeInterval(-1)))
+            }
+
+            it("is pure: same (window, sensor, timezone) gives the same span whatever the process default timezone") {
+                let window = participantDayWindow(containing: Date(timeIntervalSince1970: 1520748000), in: casey)
+                let before = SensorSampleUploadManager.fetchSpan(for: .phoneUsageReport, window: window, timeZone: casey)
+                let savedDefault = NSTimeZone.default
+                NSTimeZone.default = TimeZone(identifier: "Pacific/Kiritimati")!
+                let during = SensorSampleUploadManager.fetchSpan(for: .phoneUsageReport, window: window, timeZone: casey)
+                NSTimeZone.default = savedDefault
+                expect(during).to(equal(before))
+            }
+        }
+
         describe("processWindow (the one seam that widens)") {
 
             let sensor = SRSensor.deviceUsageReport
