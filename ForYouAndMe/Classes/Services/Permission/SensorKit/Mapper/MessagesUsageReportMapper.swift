@@ -111,7 +111,11 @@ extension MessagesUsageReportMapper: SRSensorReaderDelegate {
         // Usage reports arrive as single aggregated objects (no CMSensorDataList).
         if let report = result.sample as? NSObject,
            let record = Self.mapMessagesUsage(report, recordedAt: recordedAt) {
-            collected.append(record)
+            // FUAM-3945: ledger identity — the raw monotonic timestamp, never its wall
+            // projection (see SensorRecordIdentity). Stripped before upload.
+            collected.append(SensorRecordIdentity.stamped(record,
+                                                          raw: result.timestamp,
+                                                          replacing: ["recorded_at", "recorded_at_precise"]))
         }
         return true // continue
     }

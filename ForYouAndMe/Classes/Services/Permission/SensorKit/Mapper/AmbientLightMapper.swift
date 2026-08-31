@@ -93,7 +93,18 @@ extension AmbientLightMapper: SRSensorReaderDelegate {
         guard let sampleObj = result.sample as? NSObject else { return true }
 
         if let record = Self.mapAmbientLight(sampleObj, recordedAt: recordedAt) {
-            self.collected.append(record)
+            // FUAM-3945: ledger identity — the raw monotonic timestamp, never its wall
+            // projection (see SensorRecordIdentity). Stripped before upload. `t` is
+            // recordedAt-derived only when `mapAmbientLight` fell back to it (real
+            // `SRAmbientLightSample`s expose no date, so on-device it always does); the
+            // fallback encodes the SAME Date with the SAME strategy as `recorded_at`, so
+            // byte-equality is exactly "the fallback fired" — a `t` from a stored sample
+            // date stays in the fingerprint, it is already fetch-stable.
+            var replaced = ["recorded_at"]
+            if record["t"] as? String == record["recorded_at"] as? String {
+                replaced.append("t")
+            }
+            self.collected.append(SensorRecordIdentity.stamped(record, raw: result.timestamp, replacing: replaced))
         }
 
         return true // continue fetching

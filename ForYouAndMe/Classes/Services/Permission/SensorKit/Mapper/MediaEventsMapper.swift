@@ -116,15 +116,17 @@ extension MediaEventsMapper: SRSensorReaderDelegate {
         fetchedResults += 1
 
         // Sample may be a fast-enumerable list (e.g., CMSensorDataList-like) or a single object.
+        // FUAM-3945: ledger identity — the raw monotonic timestamp, never its wall
+        // projection (see SensorRecordIdentity). Stripped before upload.
         if let enumerable = result.sample as? NSFastEnumeration {
             for element in FastEnumerationSequence(base: enumerable) {
                 guard let obj = element as? NSObject,
                       let rec = Self.mapMediaEvent(obj, recordedAtISO: recordedAtISO) else { continue }
-                collected.append(rec)
+                collected.append(SensorRecordIdentity.stamped(rec, raw: result.timestamp, replacing: ["recorded_at"]))
             }
         } else if let obj = result.sample as? NSObject,
                   let rec = Self.mapMediaEvent(obj, recordedAtISO: recordedAtISO) {
-            collected.append(rec)
+            collected.append(SensorRecordIdentity.stamped(rec, raw: result.timestamp, replacing: ["recorded_at"]))
         }
         return true // continue fetching
     }

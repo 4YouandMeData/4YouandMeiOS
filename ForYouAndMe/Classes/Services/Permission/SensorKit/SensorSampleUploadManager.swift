@@ -353,9 +353,13 @@ public final class SensorSampleUploadManager {
         // `rescanTailDays` complete participant-tz days behind the cursor — the fix for late
         // writes (D-D: Aug 27 was 64/96 buckets when fetched ~24.5h after day end and complete
         // at ~38h). The re-reads are ordinary grid windows walked by the same code; records
-        // already uploaded are dropped by the D4 ledger, so a rescan's steady-state upload
-        // volume is zero. The gate is persisted per sensor+device so a 15-second sync cadence
-        // cannot multiply it.
+        // already uploaded are dropped by the D4 ledger. Its fingerprint hashes the FETCH-STABLE
+        // form (raw SRAbsoluteTime in place of its wall projection, `fetchStableForm`) — with
+        // the projection in the hash, any wall-vs-monotonic offset movement between fetches
+        // (production: ~1 s over 2 days) invalidated every fingerprint and the rescan re-uploaded
+        // its whole tail. Steady-state rescan volume is therefore genuine novelty (late OS
+        // writes) plus S7 boundary churn, nothing else. The gate is persisted per sensor+device
+        // so a 15-second sync cadence cannot multiply it.
         let planDay = Self.utcDayStart(cappedNow)
         let rescanDue = storage.lastRescanDay(for: sensor, deviceKey: device.key).map { planDay > $0 } ?? true
         var rescanFrom: Date?
@@ -1803,7 +1807,11 @@ public final class SensorSampleUploadManager {
                     return
                 }
 
-                net.uploadSensorBatch(sensor: sensor, payload: uploadable)
+                // FUAM-3945: the fetch-stable identity companions are ledger bookkeeping, never
+                // payload — the server contract (`recorded_at` as row-anchor source) is
+                // unchanged. Stripped at the last hop before the bytes leave the device; the
+                // re-enqueue below keeps `uploadable` stamped so the identity survives retries.
+                net.uploadSensorBatch(sensor: sensor, payload: SensorRecordIdentity.stripped(uploadable))
                     .subscribe(
                         onSuccess: { [weak self] in
                             guard let self = self else { return }
@@ -2032,6 +2040,11 @@ final class SensorDeletionRecordProbe: NSObject, SRSensorReaderDelegate {
 /// order, deterministic integer/float/bool/date rendering (no `Double.description`, no locale,
 /// no dictionary iteration order), NFC-agnostic byte-wise string escaping. `1` and `1.0` render
 /// identically on purpose — NSNumber boxing must not change a record's identity.
+///
+/// Byte-stable INPUT matters just as much (FUAM-3945): the wall projection of
+/// `SRFetchResult.timestamp` is NOT fetch-stable — it moves with every wall-vs-monotonic clock
+/// offset change — so the hash runs over `fetchStableForm`, which swaps the projected keys for
+/// the raw monotonic value the mappers stamp via `SensorRecordIdentity`.
 enum SensorUploadLedger {
 
     struct FilterResult {
@@ -2095,10 +2108,30 @@ enum SensorUploadLedger {
         return ledger.filter { $0.value.day >= cutoff }
     }
 
-    /// SHA-256 over the canonical serialization, truncated to 16 bytes, hex-encoded.
+    /// SHA-256 over the canonical serialization of the FETCH-STABLE form, truncated to
+    /// 16 bytes, hex-encoded.
     static func fingerprint(of record: [String: Any]) -> String {
-        let digest = SHA256.hash(data: Data(Self.canonical(record).utf8))
+        let digest = SHA256.hash(data: Data(Self.canonical(Self.fetchStableForm(of: record)).utf8))
         return digest.prefix(16).map { String(format: "%02x", $0) }.joined()
+    }
+
+    /// The record as fingerprinted (FUAM-3945): the wall-projected `SRAbsoluteTime` keys the
+    /// mapper listed (`recorded_at`, `recorded_at_precise`, a derived `t` fallback) are DROPPED
+    /// and identity is carried by the raw monotonic value instead — the projection moves with
+    /// every wall-vs-monotonic offset change between fetches (NTP step/slew), the raw value does
+    /// not, and hashing it kept every fingerprint hostage to the device's clock discipline.
+    /// Fields NOT derived from `SRAbsoluteTime` (visit arrival/departure, any stored Foundation
+    /// date, the measured values) stay in the hash untouched: they are already fetch-stable and
+    /// carry the discriminating power. A record without the companion key (built by an older
+    /// build, or a stub) hashes exactly as before. Internal for the determinism specs.
+    static func fetchStableForm(of record: [String: Any]) -> [String: Any] {
+        guard record[SensorRecordIdentity.rawKey] != nil else { return record }
+        var form = record
+        for key in (record[SensorRecordIdentity.replacesKey] as? [String]) ?? [] {
+            form.removeValue(forKey: key)
+        }
+        form.removeValue(forKey: SensorRecordIdentity.replacesKey)
+        return form
     }
 
     /// The measurement period of a record, when one is derivable: only the three usage reports,

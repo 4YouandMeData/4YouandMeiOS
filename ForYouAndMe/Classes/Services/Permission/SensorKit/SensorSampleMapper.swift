@@ -6,6 +6,53 @@
 //
 
 import Foundation
+import SensorKit
+
+/// FUAM-3945: fetch-stable record identity.
+///
+/// `SRFetchResult.timestamp` is an `SRAbsoluteTime` — a monotonic clock value that "ticks across
+/// sleeps and reboots" (SRAbsoluteTime.h). `toCFAbsoluteTime()` projects it onto the wall clock
+/// AT CONVERSION TIME, so the same stored sample converts to a DIFFERENT wall instant whenever
+/// the device's wall-vs-monotonic offset moved between two fetches — any NTP step or slew
+/// (measured ~1 s over 2 days on the production device). The uploaded `recorded_at` /
+/// `recorded_at_precise` keys must keep that projection (the server derives the row anchor from
+/// them, and the payload shape is contractual), but the D4 upload ledger must NOT hash it: an
+/// offset movement of 1 ms would invalidate every fingerprint and make the daily rescan
+/// re-upload its whole tail as "novel" — the exact duplication the ledger exists to prevent.
+///
+/// Each mapper therefore stamps every record with the raw, unprojected value under `rawKey` and
+/// lists the wall-projected keys that value stands in for under `replacesKey`. The ledger hashes
+/// the record with the listed keys removed and the raw value kept
+/// (`SensorUploadLedger.fetchStableForm`); the drain strips both companion keys from every
+/// outgoing payload (`SensorSampleUploadManager.drainQueue`), so they can never reach the server.
+enum SensorRecordIdentity {
+
+    /// `SRFetchResult.timestamp.rawValue` — monotonic seconds, fetch-stable. Never uploaded.
+    static let rawKey = "_sr_raw_timestamp"
+    /// The wall-projected keys `rawKey` stands in for inside the fingerprint. Never uploaded.
+    static let replacesKey = "_sr_raw_replaces"
+
+    /// The record with its fetch-stable identity companions attached.
+    static func stamped(_ record: [String: Any],
+                        raw: SRAbsoluteTime,
+                        replacing keys: [String]) -> [String: Any] {
+        var out = record
+        out[Self.rawKey] = raw.rawValue
+        out[Self.replacesKey] = keys
+        return out
+    }
+
+    /// The records exactly as uploaded: no identity companions. Idempotent — a record enqueued
+    /// by a pre-fix build simply has nothing to strip.
+    static func stripped(_ records: [[String: Any]]) -> [[String: Any]] {
+        return records.map { record in
+            var out = record
+            out.removeValue(forKey: Self.rawKey)
+            out.removeValue(forKey: Self.replacesKey)
+            return out
+        }
+    }
+}
 
 /// Maps raw SensorKit samples fetched over a [from, to) window into JSON-ready dictionaries.
 /// Implementations will own the SRSensorReader and perform SRFetchRequest + mapping.

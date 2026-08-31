@@ -111,10 +111,10 @@ extension AccelerometerMapper: SRSensorReaderDelegate {
         if let list = result.sample as? CMSensorDataList {
             for element in FastEnumerationSequence(base: list) {
                 guard let item = element as? CMRecordedAccelerometerData else { continue }
-                appendRecord(from: item, recordedAtISO: recordedAtISO)
+                appendRecord(from: item, recordedAtISO: recordedAtISO, raw: result.timestamp)
             }
         } else if let item = result.sample as? CMRecordedAccelerometerData {
-            appendRecord(from: item, recordedAtISO: recordedAtISO)
+            appendRecord(from: item, recordedAtISO: recordedAtISO, raw: result.timestamp)
         }
         // Keep fetching subsequent chunks
         return true
@@ -138,12 +138,13 @@ extension AccelerometerMapper: SRSensorReaderDelegate {
     // MARK: - Helpers
 
     /// Build one JSON record from a CMRecordedAccelerometerData sample.
-    private func appendRecord(from sample: CMRecordedAccelerometerData, recordedAtISO: String) {
+    private func appendRecord(from sample: CMRecordedAccelerometerData, recordedAtISO: String, raw: SRAbsoluteTime) {
         // CMAcceleration is expressed in g's (unitless gravitational acceleration).
         let a = sample.acceleration
         let iso = ISO8601DateFormatter()
         let record: [String: Any] = [
-            // Sample timestamp (when motion was measured)
+            // Sample timestamp (when motion was measured) — a stored Foundation date,
+            // fetch-stable, so it stays in the ledger fingerprint untouched.
             "t": iso.string(from: sample.startDate),
             // Batch record time from SRFetchResult.timestamp (useful for auditing)
             "recorded_at": recordedAtISO,
@@ -152,7 +153,9 @@ extension AccelerometerMapper: SRSensorReaderDelegate {
             "y": a.y,
             "z": a.z
         ]
-        collected.append(record)
+        // FUAM-3945: ledger identity — the raw monotonic timestamp, never its wall
+        // projection (see SensorRecordIdentity). Stripped before upload.
+        collected.append(SensorRecordIdentity.stamped(record, raw: raw, replacing: ["recorded_at"]))
     }
 
     /// Centralized cleanup + callback.

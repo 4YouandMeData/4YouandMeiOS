@@ -96,7 +96,10 @@ extension AmbientPressureMapper: SRSensorReaderDelegate {
         let recordedAtISO = ISO8601Strategy.encode(dateFromSRAbsoluteTime(result.timestamp))
 
         fetchedResults += 1
-        collected.append(contentsOf: Self.mapFetchedSample(result.sample, recordedAtISO: recordedAtISO))
+        // FUAM-3945: ledger identity — the raw monotonic timestamp, never its wall
+        // projection (see SensorRecordIdentity). Stripped before upload.
+        collected.append(contentsOf: Self.mapFetchedSample(result.sample, recordedAtISO: recordedAtISO)
+            .map { SensorRecordIdentity.stamped($0, raw: result.timestamp, replacing: ["recorded_at"]) })
         return true // continue fetching
     }
 

@@ -95,14 +95,20 @@ extension PedometerMapper: SRSensorReaderDelegate {
         fetchedResults += 1
 
         // result.sample can be a CMSensorDataList or a single CMPedometerData
+        // FUAM-3945: ledger identity — the raw monotonic timestamp, never its wall
+        // projection (see SensorRecordIdentity). Stripped before upload.
         if let list = result.sample as? CMSensorDataList {
             // Iterate NSFastEnumeration via wrapper (no direct Sequence conformance)
             for element in FastEnumerationSequence(base: list) {
                 guard let pedo = element as? CMPedometerData else { continue }
-                collected.append(Self.mapPedometerSample(pedo, recordedAtISO: recordedAtISO))
+                collected.append(SensorRecordIdentity.stamped(Self.mapPedometerSample(pedo, recordedAtISO: recordedAtISO),
+                                                              raw: result.timestamp,
+                                                              replacing: ["recorded_at"]))
             }
         } else if let pedo = result.sample as? CMPedometerData {
-            collected.append(Self.mapPedometerSample(pedo, recordedAtISO: recordedAtISO))
+            collected.append(SensorRecordIdentity.stamped(Self.mapPedometerSample(pedo, recordedAtISO: recordedAtISO),
+                                                          raw: result.timestamp,
+                                                          replacing: ["recorded_at"]))
         }
         return true // continue fetching
     }

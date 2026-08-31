@@ -108,7 +108,11 @@ extension PhoneUsageReportMapper: SRSensorReaderDelegate {
         // Usage reports are aggregated objects (no CMSensorDataList expected)
         if let report = result.sample as? NSObject,
            let record = Self.mapPhoneUsage(report, recordedAt: recordedAt) {
-            collected.append(record)
+            // FUAM-3945: ledger identity — the raw monotonic timestamp, never its wall
+            // projection (see SensorRecordIdentity). Stripped before upload.
+            collected.append(SensorRecordIdentity.stamped(record,
+                                                          raw: result.timestamp,
+                                                          replacing: ["recorded_at", "recorded_at_precise"]))
         }
         return true // continue
     }
