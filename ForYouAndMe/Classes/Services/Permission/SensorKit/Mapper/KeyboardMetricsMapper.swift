@@ -200,6 +200,39 @@ extension KeyboardMetricsMapper {
         return nil
     }
 
+    // MARK: Sentiment counts (FUAM-3945 fidelity audit, X4)
+
+    /// The full `SRKeyboardMetrics.SentimentCategory` roster with snake_case payload names.
+    /// Compile-checked: a case rename in the SDK breaks the build here, not the data.
+    static let sentimentCategoryNames: [(SRKeyboardMetrics.SentimentCategory, String)] = [
+        (.absolutist, "absolutist"),
+        (.down, "down"),
+        (.death, "death"),
+        (.anxiety, "anxiety"),
+        (.anger, "anger"),
+        (.health, "health"),
+        (.positive, "positive"),
+        (.sad, "sad"),
+        (.lowEnergy, "low_energy"),
+        (.confused, "confused")
+    ]
+
+    /// Per-sentiment word and emoji counts. `wordCount(for:)` / `emojiCount(for:)` are METHODS
+    /// with a scalar argument — unreachable via the KVC probing the rest of this mapper uses —
+    /// so this is a direct typed call, taken only when the object really is an
+    /// `SRKeyboardMetrics` (unit-test stand-ins fall through to `nil`; the derivation is pinned
+    /// via `sentimentCategoryNames` instead).
+    static func sentimentCounts(_ obj: NSObject) -> (words: [String: Int], emojis: [String: Int])? {
+        guard let metrics = obj as? SRKeyboardMetrics else { return nil }
+        var words = [String: Int]()
+        var emojis = [String: Int]()
+        for (category, name) in sentimentCategoryNames {
+            words[name] = metrics.wordCount(for: category)
+            emojis[name] = metrics.emojiCount(for: category)
+        }
+        return (words, emojis)
+    }
+
     // MARK: Probability metrics (safe, no undefined KVC)
 
     /// Extract numeric samples from known ProbabilityMetric arrays.
@@ -330,7 +363,14 @@ extension KeyboardMetricsMapper {
         if let dur = seconds(obj, key: "duration") { rec["duration_s"] = dur }
 
         // Identifiers & metadata
-        if let version = number(obj, key: "version")?.intValue { rec["version"] = version }
+        // FUAM-3945 fidelity audit, X4: the SDK header declares `version` as `NSString`, so the
+        // NSNumber-only read could never populate it (absent in every production record). The
+        // String branch is first; the Int branch stays as a defensive fallback.
+        if let version = string(obj, key: "version") {
+            rec["version"] = version
+        } else if let version = number(obj, key: "version")?.intValue {
+            rec["version"] = version
+        }
         if let sessions = valueIfResponds(obj, "sessionIdentifiers") as? [String] {
             rec["sessionIdentifiers"] = sessions
         }
@@ -360,7 +400,10 @@ extension KeyboardMetricsMapper {
             ("totalAutoCorrections", "total_autocorrections"),
             ("totalTranspositionCorrections", "total_transposition_corrections"),
             ("totalSpaceCorrections", "total_space_corrections"),
-            ("totalDeletes", "total_deletes")
+            ("totalDeletes", "total_deletes"),
+            // FUAM-3945 fidelity audit, X4: the two documented correction counters the map missed.
+            ("totalRetroCorrections", "total_retro_corrections"),
+            ("totalSubstitutionCorrections", "total_substitution_corrections")
         ]
         for (src, dst) in countMap {
             if let v = number(obj, key: src)?.intValue { rec[dst] = v }
@@ -385,6 +428,13 @@ extension KeyboardMetricsMapper {
             }
         }
         if !pm.isEmpty { rec["probabilityMetrics"] = pm }
+
+        // Per-sentiment word/emoji counts (FUAM-3945 X4) — zeros included, so "measured zero"
+        // stays distinguishable from "API unavailable" (both dicts absent).
+        if let sentiment = sentimentCounts(obj) {
+            rec["sentiment_word_counts"] = sentiment.words
+            rec["sentiment_emoji_counts"] = sentiment.emojis
+        }
 
         return rec
     }

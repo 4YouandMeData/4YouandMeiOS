@@ -122,7 +122,46 @@ extension AmbientLightMapper: SRSensorReaderDelegate {
             record["cct"] = cct
             record["cct_unit"] = "K"
         }
+
+        // FUAM-3945 fidelity audit, X4: documented fields the mapper never read. Inert today
+        // (the sensor is unentitled for the current studies) but the mapper should be complete.
+        // `placement` is a plain NSInteger property — KVC-reachable — emitted as its symbolic
+        // name (a NEW key follows the X5 rule directly).
+        if let placementRaw = (Self.valueIfResponds(sampleObj, "placement") as? NSNumber)?.intValue {
+            record["placement"] = Self.placementName(rawValue: placementRaw)
+        }
+        // `chromaticity` is a C struct property (Float32 x/y) — not extractable through KVC —
+        // so it needs the typed class, which unit-test stand-ins cannot be. The header states
+        // both components are zero on unsupporting devices; an all-zero pair is "not measured",
+        // not a measurement, and is omitted.
+        if let sample = sampleObj as? SRAmbientLightSample {
+            let chromaticity = sample.chromaticity
+            if chromaticity.x != 0 || chromaticity.y != 0 {
+                record["chromaticity"] = ["x": Double(chromaticity.x), "y": Double(chromaticity.y)]
+            }
+        }
         return record
+    }
+
+    /// FUAM-3945 fidelity audit, X4/X5: symbolic name for `SRAmbientLightSample.SensorPlacement`.
+    /// Compile-checked against the SDK enum; raw values the SDK does not know yet are still
+    /// carried, as "unknown_<raw>".
+    static func placementName(rawValue: Int) -> String {
+        guard let placement = SRAmbientLightSample.SensorPlacement(rawValue: rawValue) else {
+            return "unknown_\(rawValue)"
+        }
+        switch placement {
+        case .unknown: return "unknown"
+        case .frontTop: return "front_top"
+        case .frontBottom: return "front_bottom"
+        case .frontRight: return "front_right"
+        case .frontLeft: return "front_left"
+        case .frontTopRight: return "front_top_right"
+        case .frontTopLeft: return "front_top_left"
+        case .frontBottomRight: return "front_bottom_right"
+        case .frontBottomLeft: return "front_bottom_left"
+        @unknown default: return "unknown_\(rawValue)"
+        }
     }
 
     /// `SRAmbientLightSample.lux` is a `Measurement<UnitIlluminance>`, not a `Double`: read it as

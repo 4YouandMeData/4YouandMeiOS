@@ -232,6 +232,15 @@ extension DeviceUsageReportMapper {
         if let n = intValue(obj, key: "totalUnlocks") { rec["total_unlocks"] = n }          // totalUnlocks :contentReference[oaicite:7]{index=7}
         if let s = seconds(obj, key: "totalUnlockDuration") { rec["total_unlock_duration_s"] = s } // totalUnlockDuration :contentReference[oaicite:8]{index=8}
 
+        // FUAM-3945 fidelity audit, X4: the report's algorithm version — needed to compare
+        // usage metrics across OS versions. The SDK header declares it `NSString` (iOS 16.4+);
+        // the NSNumber branch is defensive only.
+        if let v = valueIfResponds(obj, "version") as? String {
+            rec["version"] = v
+        } else if let v = intValue(obj, key: "version") {
+            rec["version"] = v
+        }
+
         // ---- By-category: Applications ----
         if let dict = valueIfResponds(obj, "applicationUsageByCategory") as? NSDictionary { // :contentReference[oaicite:9]{index=9}
             var apps: [[String: Any]] = []

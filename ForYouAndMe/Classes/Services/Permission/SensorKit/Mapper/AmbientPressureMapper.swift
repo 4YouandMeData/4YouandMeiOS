@@ -166,7 +166,23 @@ extension AmbientPressureMapper: SRSensorReaderDelegate {
         if let ra = relAlt { rec["relative_altitude_m"] = ra }
         if let s  = slp    { rec["sea_level_pressure_kpa"] = s }
 
+        // FUAM-3945 fidelity audit, X4: `temperature` is a documented co-variate
+        // (`CMAmbientPressureData.temperature`, a Measurement<UnitTemperature>) the mapper
+        // never read. Inert today (sensor unentitled), unit key-suffixed like the others.
+        if let t = Self.celsius(obj, "temperature") { rec["temperature_c"] = t }
+
         return rec
+    }
+
+    /// `temperature` is a `Measurement<UnitTemperature>`: read it as one first (converting to
+    /// Celsius, the unit this record documents) and fall back to a plain number for any other
+    /// shape.
+    private static func celsius(_ obj: NSObject, _ key: String) -> Double? {
+        let value = Self.valueIfResponds(obj, key)
+        if let measurement = value as? Measurement<UnitTemperature> {
+            return measurement.converted(to: .celsius).value
+        }
+        return (value as? NSNumber)?.doubleValue
     }
 
     /// `SRAmbientPressureSample.pressure` is a `Measurement<UnitPressure>`, not a `Double`: read
