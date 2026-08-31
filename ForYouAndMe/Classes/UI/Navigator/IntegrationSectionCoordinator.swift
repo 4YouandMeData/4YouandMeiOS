@@ -76,19 +76,17 @@ extension IntegrationSectionCoordinator: PagedSectionCoordinator {
     
     var pages: [Page] { self.sectionData.pages }
     
-    /// FUAM-4045. The welcome page is optional: without it the section starts
-    /// directly at its first content page, or at the success page if there is
-    /// no content page at all. A section with none of the three is skipped
-    /// before the coordinator is ever built (see
-    /// `OnboardingSection.getAsyncCoordinatorRequest`).
+    /// FUAM-4045. The welcome page is the section's only entry point: the loose
+    /// `pages` are reachable exclusively via the page links of the welcome (or
+    /// success) page, never as an automatic first step or a fallback. A section
+    /// without a welcome page is therefore skipped before the coordinator is
+    /// ever built (see `OnboardingSection.getAsyncCoordinatorRequest`).
     func getStartingPage() -> UIViewController {
-        // `pages` is the BE-declared order; with no welcome page its first
-        // entry is the section's entry point.
-        guard let startingPage = self.sectionData.welcomePage ?? self.sectionData.pages.first ?? self.sectionData.successPage else {
-            assertionFailure("Empty integration section should have been skipped")
+        guard let welcomePage = self.sectionData.welcomePage else {
+            assertionFailure("Integration section without a welcome page should have been skipped")
             return UIViewController()
         }
-        return IntegrationPageViewController(withPage: startingPage, coordinator: self, backwardNavigation: false)
+        return IntegrationPageViewController(withPage: welcomePage, coordinator: self, backwardNavigation: false)
     }
     
     func showPage(_ page: Page) {

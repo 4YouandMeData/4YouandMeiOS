@@ -215,13 +215,18 @@ class SectionOptionalPagesDecodingSpec: QuickSpec {
                 expect(section?.isEmpty).to(beFalse())
             }
 
-            it("decodes with an absent welcome page") {
+            // The loose `pages` are reachable only via page links from the
+            // welcome (or success) page, never as a starting step or a
+            // fallback: without a welcome page nothing is reachable, so the
+            // whole section is skipped regardless of pages / success page.
+            it("is empty without a welcome page, even with content and success pages") {
                 let section = decode(IntegrationSection.self,
                                      from: integrationPayload(welcomePageId: nil, successPageId: "109", pageIds: ["102", "109"]))
                 expect(section).toNot(beNil())
                 expect(section?.welcomePage).to(beNil())
                 expect(section?.pages.first?.id).to(equal("102"))
-                expect(section?.isEmpty).to(beFalse())
+                expect(section?.successPage?.id).to(equal("109"))
+                expect(section?.isEmpty).to(beTrue())
             }
 
             it("decodes with an absent success page") {
@@ -233,16 +238,24 @@ class SectionOptionalPagesDecodingSpec: QuickSpec {
                 expect(section?.isEmpty).to(beFalse())
             }
 
-            it("decodes with both pages absent but content pages present — not empty") {
+            it("is empty when only content pages are present — they are not a starting step") {
                 let section = decode(IntegrationSection.self,
                                      from: integrationPayload(welcomePageId: nil, successPageId: nil, pageIds: ["102"]))
                 expect(section?.welcomePage).to(beNil())
                 expect(section?.successPage).to(beNil())
                 expect(section?.pages.count).to(equal(1))
+                expect(section?.isEmpty).to(beTrue())
+            }
+
+            it("is not empty with a welcome page alone") {
+                let section = decode(IntegrationSection.self,
+                                     from: integrationPayload(welcomePageId: "101", successPageId: nil))
+                expect(section?.welcomePage?.id).to(equal("101"))
+                expect(section?.pages).to(beEmpty())
                 expect(section?.isEmpty).to(beFalse())
             }
 
-            it("is empty when both pages and every content page are absent") {
+            it("is empty when the welcome page is absent") {
                 let section = decode(IntegrationSection.self,
                                      from: integrationPayload(welcomePageId: nil, successPageId: nil))
                 expect(section).toNot(beNil())

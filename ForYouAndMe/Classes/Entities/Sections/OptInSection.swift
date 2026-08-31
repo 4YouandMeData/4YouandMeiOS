@@ -15,7 +15,11 @@ import Foundation
 // This optional-pages / skip-when-empty pattern is meant to be extended to the
 // other onboarding sections (see FUAM-4044); keep the section model exposing an
 // `isEmpty`-style predicate and the coordinator's `getStartingPage()` nil-safe
-// so the same wiring in `OnboardingSection` can be reused as-is.
+// so the same wiring in `OnboardingSection` can be reused as-is. What varies
+// per section is only *what makes it non-empty*: here the welcome page, the
+// success page or an iOS-visible permission; in `IntegrationSection` it is the
+// welcome page alone, because that section's loose `pages` are reachable only
+// through page links and never as a starting step or a fallback.
 struct OptInSection {
     let id: String
     let type: String

@@ -22,9 +22,14 @@ struct IntegrationSection {
 }
 
 extension IntegrationSection {
-    /// FUAM-4045. `true` when the section would present no screen at all.
+    /// FUAM-4045. `true` when the section would present no screen at all, which
+    /// here means simply: no welcome page. The loose `pages` are only ever
+    /// reached through the page links of the welcome (or success) page — they
+    /// are never an automatic starting step nor a fallback — so without a
+    /// welcome page nothing in the section is reachable and it is skipped, no
+    /// matter what `pages` and `successPage` contain.
     var isEmpty: Bool {
-        return self.welcomePage == nil && self.successPage == nil && self.pages.isEmpty
+        return self.welcomePage == nil
     }
 }
 
