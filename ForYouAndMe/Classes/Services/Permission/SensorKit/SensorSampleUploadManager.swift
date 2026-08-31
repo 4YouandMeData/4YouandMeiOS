@@ -1084,6 +1084,16 @@ public final class SensorSampleUploadManager {
                 self.analytics.track(event: .sensorRecordDropped(sensor: context.device.telemetryName(for: sensor),
                                                                  count: records.count - gated.count,
                                                                  reason: "consent_gate"))
+                // FUAM-3945 fidelity audit, X3: sub-count the drops that sit within one report
+                // period of the bound — the ones the report-timestamp semantics ambiguity may
+                // be costing (see the contradiction note on `measurementTime`). Semantics
+                // deliberately unchanged: the gate keeps erring conservative.
+                let boundaryDrops = Self.joinBoundaryDropCount(records, lowerBound: boundDate, sensor: sensor)
+                if boundaryDrops > 0 {
+                    self.analytics.track(event: .sensorRecordDropped(sensor: context.device.telemetryName(for: sensor),
+                                                                     count: boundaryDrops,
+                                                                     reason: "join_boundary"))
+                }
             }
 
             // FUAM-3945 fidelity audit, X1: production device-usage rows store `applications[]`
@@ -1551,6 +1561,24 @@ public final class SensorSampleUploadManager {
     ///   exposes `startDate`, else `recorded_at − duration_s` for a plausible span |
     /// | `keyboardMetrics` | `start` when the OS exposes `startDate`, otherwise NONE |
     /// | `mediaEvents` | NONE — `SRMediaEvent` exposes no date at all, only `eventType` / `mediaIdentifier` |
+    ///
+    /// THE REPORT-TIMESTAMP CONTRADICTION (FUAM-3945 fidelity audit, X3 — both readings recorded
+    /// here so the next reader does not have to rediscover it; resolvable only by an on-device
+    /// probe):
+    ///
+    /// - Apple staff say `SRFetchResult.timestamp` on a usage report is the period START
+    ///   (forums thread 816051, accepted answer). Under that reading, `recorded_at − duration`
+    ///   below lands a FULL PERIOD too early and every report is misattributed by one period.
+    /// - Production rows say otherwise for sub-day buckets: device-usage 15-min buckets are
+    ///   stamped :14:59 / :29:59 / :44:59 and messages 30-min buckets at xx:59:59 — i.e. period
+    ///   END − 1 s. Under that reading the derivation below lands 1 second before the true
+    ///   period start, so the consent gate drops the FIRST report bucket after enrolment — a
+    ///   bounded loss (one bucket per participant per sensor), the conservative direction for a
+    ///   consent boundary, counted by the `join_boundary` telemetry in `handleWindowResult`.
+    ///
+    /// The semantics are deliberately left as-is (end − 1 s evidence wins for gating, erring
+    /// conservative); any consumer doing day-attribution of report records must document which
+    /// reading it assumed.
     static func measurementTime(of record: [String: Any], sensor: SRSensor) -> Date? {
         if let startMs = record["start_ms"] as? Int {
             return Date(timeIntervalSince1970: TimeInterval(startMs) / 1000)
@@ -1608,6 +1636,24 @@ public final class SensorSampleUploadManager {
     /// Records with no readable measurement time are kept ONLY when the fetch window itself
     /// vouches for them (see `windowVouches`). `windowStart` must therefore be the REAL window
     /// the records came from, both at enqueue time and at drain time.
+    /// FUAM-3945 fidelity audit, X3 telemetry seam: of the records `dropPreBoundRecords` would
+    /// drop, how many are usage-report records whose derived period start missed the bound by
+    /// LESS than one report period — i.e. exactly the drops that flip to keeps under the
+    /// "timestamp = period start" reading of the contradiction documented on
+    /// `measurementTime`. Pure; counting only, never control flow.
+    static func joinBoundaryDropCount(_ records: [[String: Any]],
+                                      lowerBound: Date,
+                                      sensor: SRSensor) -> Int {
+        guard Self.usageReportSensors.contains(sensor) else { return 0 }
+        return records.filter { record in
+            guard let measured = Self.measurementTime(of: record, sensor: sensor),
+                  measured < lowerBound,
+                  let duration = (record["duration_s"] as? NSNumber)?.doubleValue,
+                  duration >= Self.minimumPlausibleReportSpan else { return false }
+            return measured.addingTimeInterval(duration) >= lowerBound
+        }.count
+    }
+
     static func dropPreBoundRecords(_ records: [[String: Any]],
                                     lowerBound: Date,
                                     windowStart: Date,

@@ -221,7 +221,10 @@ enum AnalyticsEvent {
     // retention (AC1), so the real horizon is a number, not an assumption.
     case sensorDeepestWindow(sensor: String, windowDay: String)
     // Records dropped client-side before upload (consent gate, unreadable measurement time):
-    // deliberate, but never silent (AC6).
+    // deliberate, but never silent (AC6). `reason` "join_boundary" is a SUB-count of
+    // "consent_gate": report records whose derived period start fell below the join bound by
+    // less than one report period — the drops the X3 timestamp-semantics ambiguity may be
+    // costing (FUAM-3945 fidelity audit).
     case sensorRecordDropped(sensor: String, count: Int, reason: String)
     // FUAM-3945 fidelity audit (X1). A mapped record carried entries whose documented field the
     // OS did not populate (today: device-usage `applications[]` without `usage_s`). `missing`
