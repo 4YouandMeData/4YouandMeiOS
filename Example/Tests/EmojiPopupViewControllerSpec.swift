@@ -73,7 +73,7 @@ class EmojiPopupViewControllerSpec: QuickSpec {
                     fail("expected an EmojiCell")
                     return
                 }
-                let glyphLabel = cell.contentView.subviews.flatMap { $0.subviews }.compactMap { $0 as? UILabel }
+                let glyphLabel = firstLabelSequence(in: cell.contentView)
                     .first { $0.font.pointSize == EmojiCell.glyphSlotHeight }
                 expect(glyphLabel?.text).to(equal("🙄"))
                 expect(glyphLabel?.isHidden).to(beFalse())
@@ -222,10 +222,10 @@ class EmojiPopupViewControllerSpec: QuickSpec {
 }
 
 // FUAM-3857: when no option — including the no-emoji tile — has any caption, the grid should
-// not waste a blank caption row per line. The reduced height is FIXED (not derived from
-// Dynamic-Type-scaled metrics at call time) because the cell's content (45pt icon, 4pt blank
-// spacer, 8pt of stack spacing = 57pt required floor) doesn't shrink with the user's text size
-// either — see EmojiPopUpViewController.compactRowHeight.
+// not waste a blank caption row per line.
+// FUAM-3740: the reduced height is now the tile width, i.e. a square tile whose selection
+// highlight is inset equally on all four sides around the 45pt glyph box. It still does not
+// shrink with the user's text size, because the glyph slot doesn't either.
 class EmojiPopupViewControllerRowHeightSpec: QuickSpec {
     override class func spec() {
         describe("EmojiPopupViewController row height (compact rows with no captions)") {
@@ -239,10 +239,16 @@ class EmojiPopupViewControllerRowHeightSpec: QuickSpec {
                 EmojiItem(id: "2", type: "feedback_tag", tag: "😢", label: nil)
             ]
 
-            // Concrete expected numbers, not a re-derivation of production's own formula.
-            let fullHeight: CGFloat = 80
-            let reducedHeight: CGFloat = 64
-            let requiredFloor: CGFloat = 57 // 45pt icon + 4pt blank spacer + 2 x 4pt stack spacing
+            // FUAM-3740: the tile is now exactly as tall as its selection highlight, so the two
+            // heights follow from the tile WIDTH. The collection view these examples drive is
+            // 320pt wide and the grid is 4-up with 16pt gutters and 5pt section insets, so the
+            // tile is (320 - (3*16 + 2*5)) / 4 = 65.5pt wide. Concrete numbers, not a
+            // re-derivation of production's own formula — except `captionRowHeight`, which is a
+            // Dynamic-Type-scaled font metric and cannot honestly be hardcoded.
+            let tileWidth: CGFloat = 65.5
+            let reducedHeight: CGFloat = tileWidth // square: equal inset around the 45pt glyph box
+            var fullHeight: CGFloat { tileWidth + 4 + EmojiCell.captionRowHeight }
+            let requiredFloor: CGFloat = 45 // the glyph slot / no-emoji icon
 
             afterEach {
                 StringsProvider.initialize(withFullStringMap: [:], requiredStringMap: [:])
@@ -301,14 +307,11 @@ class EmojiPopupViewControllerRowHeightSpec: QuickSpec {
             it("still leaves the 45pt no-emoji icon unclipped at the reduced height, default and accessibility text sizes") {
                 for category: UIContentSizeCategory in [.large, .accessibilityExtraExtraExtraLarge] {
                     withContentSizeCategory(category) {
-                        let cell = EmojiCell(frame: CGRect(x: 0, y: 0, width: 80, height: reducedHeight))
-                        cell.configure(with: nil, selected: false)
+                        let cell = EmojiCell(frame: CGRect(x: 0, y: 0, width: reducedHeight, height: reducedHeight))
+                        cell.configure(with: nil, selected: false, reservesCaptionRow: false)
                         cell.layoutIfNeeded()
 
-                        let imageView = cell.contentView.subviews
-                            .flatMap { $0.subviews }
-                            .compactMap { $0 as? UIImageView }
-                            .first
+                        let imageView = firstImageView(in: cell.contentView)
                         expect(imageView?.frame.height).to(beCloseTo(45, within: 0.5))
                         expect(imageView?.frame.maxY).to(beLessThanOrEqualTo(cell.contentView.bounds.height))
                         expect(imageView?.frame.minY).to(beGreaterThanOrEqualTo(0))
@@ -320,6 +323,89 @@ class EmojiPopupViewControllerRowHeightSpec: QuickSpec {
 }
 
 // MARK: - Helpers
+
+// FUAM-3740: the cell's view tree gained a level (contentView -> highlightView -> stack), so
+// depth-specific traversal is no longer safe here.
+private func firstImageView(in view: UIView) -> UIImageView? {
+    if let imageView = view as? UIImageView { return imageView }
+    for subview in view.subviews {
+        if let found = firstImageView(in: subview) { return found }
+    }
+    return nil
+}
+
+// FUAM-3740 (Jules): the selection highlight's padding must be EQUAL on all four sides — a
+// square when the catalog has no labels, a vertical rectangle as soon as one emoji does. This
+// is the check that fails if the highlight goes back to being the whole tile.
+private func selectionHighlight(in cell: EmojiCell) -> UIView? {
+    return cell.contentView.subviews.first
+}
+
+class EmojiCellSelectionGeometrySpec: QuickSpec {
+    override class func spec() {
+        describe("EmojiCell selection highlight geometry (FUAM-3740)") {
+
+            afterEach {
+                StringsProvider.initialize(withFullStringMap: [:], requiredStringMap: [:])
+            }
+
+            // The tile a caption-less grid produces: square, side == width (see
+            // EmojiPopupViewController.sizeForItemAt).
+            let side: CGFloat = 65.5
+
+            func layOutCell(reservesCaptionRow: Bool, height: CGFloat) -> EmojiCell {
+                let cell = EmojiCell(frame: CGRect(x: 0, y: 0, width: side, height: height))
+                cell.configure(with: EmojiItem(id: "1", type: "feedback_tag", tag: "🙂",
+                                               label: reservesCaptionRow ? "happy" : nil),
+                               selected: true,
+                               reservesCaptionRow: reservesCaptionRow)
+                cell.layoutIfNeeded()
+                return cell
+            }
+
+            it("insets the highlight equally on all four sides around the glyph box") {
+                let cell = layOutCell(reservesCaptionRow: false, height: side)
+                let highlight = selectionHighlight(in: cell)!
+                let glyph = firstLabel(in: cell, matching: { $0.font.pointSize == EmojiCell.glyphSlotHeight })!
+                let glyphBox = highlight.convert(CGRect(x: glyph.frame.midX - EmojiCell.glyphSlotHeight / 2,
+                                                        y: glyph.frame.minY,
+                                                        width: EmojiCell.glyphSlotHeight,
+                                                        height: EmojiCell.glyphSlotHeight),
+                                                 from: glyph.superview)
+
+                let expectedInset = EmojiCell.selectionInset(forCellWidth: side)
+                // 0.5pt of slack: Auto Layout snaps frames to the device pixel grid (1/3pt at
+                // @3x), so the four insets land within a third of a point of each other, not
+                // bit-identically.
+                expect(glyphBox.minX).to(beCloseTo(expectedInset, within: 0.5))
+                expect(highlight.bounds.maxX - glyphBox.maxX).to(beCloseTo(expectedInset, within: 0.5))
+                expect(glyphBox.minY).to(beCloseTo(expectedInset, within: 0.5))
+                expect(highlight.bounds.maxY - glyphBox.maxY).to(beCloseTo(expectedInset, within: 0.5))
+            }
+
+            it("makes the highlight square when the catalog has no labels") {
+                let highlight = selectionHighlight(in: layOutCell(reservesCaptionRow: false, height: side))!
+                expect(highlight.bounds.width).to(beCloseTo(highlight.bounds.height, within: 0.5))
+                expect(highlight.bounds.width).to(beCloseTo(side, within: 0.5))
+            }
+
+            it("makes the highlight a vertical rectangle when any emoji has a label") {
+                let height = side + EmojiCell.captionSpacing + EmojiCell.captionRowHeight
+                let highlight = selectionHighlight(in: layOutCell(reservesCaptionRow: true, height: height))!
+                expect(highlight.bounds.height).to(beGreaterThan(highlight.bounds.width))
+                expect(highlight.bounds.height).to(beCloseTo(height, within: 0.5))
+            }
+        }
+    }
+}
+
+private func firstLabel(in view: UIView, matching predicate: (UILabel) -> Bool) -> UILabel? {
+    if let label = view as? UILabel, predicate(label) { return label }
+    for subview in view.subviews {
+        if let found = firstLabel(in: subview, matching: predicate) { return found }
+    }
+    return nil
+}
 
 // `selectedIndexPath` is private; the closest reachable seam is the UICollectionViewDataSource
 // conformance, which is internal and testable, and which surfaces the selection via EmojiCell's
@@ -344,18 +430,24 @@ private func isSelected(_ controller: EmojiPopupViewController, at indexPath: In
     // produce two distinct provider closures that are never `==` to each other, even when they
     // resolve to the same color. Resolve both against a fixed trait collection before comparing.
     let trait = UITraitCollection(userInterfaceStyle: .light)
-    let actual = cell.contentView.backgroundColor?.resolvedColor(with: trait)
+    // FUAM-3740: the selection colour now lives on the highlight view inside the tile,
+    // not on contentView itself.
+    let actual = selectionHighlight(in: cell)?.backgroundColor?.resolvedColor(with: trait)
     let expected = ColorPalette.color(withType: .inactive).resolvedColor(with: trait)
     return actual == expected
 }
 
 private func isNoneOptionCell(_ cell: EmojiCell) -> Bool {
-    let imageView = cell.contentView.subviews.flatMap { $0.subviews }.compactMap { $0 as? UIImageView }.first
+    let imageView = firstImageView(in: cell.contentView)
     return imageView?.isHidden == false
 }
 
 private func allSubviews(of view: UIView) -> [UIView] {
     view.subviews.flatMap { [$0] + allSubviews(of: $0) }
+}
+
+private func firstLabelSequence(in view: UIView) -> [UILabel] {
+    return allSubviews(of: view).compactMap { $0 as? UILabel }
 }
 
 // `saveTapped` is a private @objc selector; invoke it the same way a real button tap would.

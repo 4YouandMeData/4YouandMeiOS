@@ -49,11 +49,11 @@ final class EmojiPopupViewController: UIViewController {
     // in `sizeForItemAt:`.
     private let hasCaptions: Bool
 
-    // FUAM-3857: fixed row height for a caption-less grid. `FontPalette` now caps the
-    // caption's scaled point size (see `EmojiCell`), so this doesn't need to track a moving
-    // target either — it only has to clear the same fixed-size icon floor the full 80pt row
-    // does.
-    private static let compactRowHeight: CGFloat = 64
+    // FUAM-3740: the tile is exactly as tall as the selection highlight it contains, so the row
+    // height is derived from the tile WIDTH (which is what sets the highlight's equal inset)
+    // rather than from a fixed 80/64 pair. `FontPalette` caps the caption's scaled point size
+    // (see `EmojiCell.captionRowHeight`), so this still doesn't chase Dynamic Type upward
+    // without bound.
 
     // FUAM-3495 — optional hook fired after the popup is dismissed, on BOTH save and
     // cancel (X). Lets a presenter restore its previous state (e.g. keyboard focus).
@@ -197,7 +197,7 @@ extension EmojiPopupViewController: UICollectionViewDataSource, UICollectionView
             return UICollectionViewCell()
         }
         let isSelected = indexPath == selectedIndexPath
-        cell.configure(with: options[indexPath.item].item, selected: isSelected)
+        cell.configure(with: options[indexPath.item].item, selected: isSelected, reservesCaptionRow: hasCaptions)
         return cell
     }
 
@@ -230,7 +230,13 @@ extension EmojiPopupViewController: UICollectionViewDataSource, UICollectionView
         // the row so the grid doesn't waste a blank line per row. `minimumLineSpacing` (24,
         // set on the layout in `setupUI`) is left unchanged — that's what still separates one
         // row from the next.
-        let height: CGFloat = hasCaptions ? 80 : EmojiPopupViewController.compactRowHeight
+        //
+        // FUAM-3740: the row is now exactly as tall as the selection highlight, so that the
+        // highlight fills the tile and no dead space is left under it. With no captions that
+        // means a SQUARE tile (side = width): an equal inset above and below the 45pt glyph
+        // box, matching the inset the tile's width already leaves either side of it. With
+        // captions, one caption row plus the stack's 4pt spacing on top of that square.
+        let height: CGFloat = hasCaptions ? (width + EmojiCell.captionSpacing + EmojiCell.captionRowHeight) : width
         return CGSize(width: width, height: height)
     }
 }

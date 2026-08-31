@@ -92,7 +92,7 @@ public class UserEmailViewController: UIViewController {
                                                                   right: Constants.Style.DefaultHorizontalMargins))
         stackView.autoAlignAxis(toSuperviewAxis: .vertical)
         
-        self.headerImageView = stackView.addHeaderImage(image: ImagePalette.image(withName: .mainLogo), height: 100.0)
+        self.headerImageView = stackView.addHeaderImage(image: ImagePalette.image(withName: .onboardingLogo), height: 100.0)
         stackView.addBlankSpace(space: 100.0)
         stackView.addLabel(withText: StringsProvider.string(forKey: .onboardingUserEmailEmailDescription),
                            fontStyle: .paragraph,
@@ -120,7 +120,7 @@ public class UserEmailViewController: UIViewController {
     
     public override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        self.headerImageView?.syncWithPhase(repository: self.repository, imageName: .mainLogo)
+        self.headerImageView?.syncWithPhase(repository: self.repository, imageName: .onboardingLogo)
         self.analytics.track(event: .recordScreen(screenName: AnalyticsScreens.emailInsert.rawValue,
                                                   screenClass: String(describing: type(of: self))))
         self.navigationController?.navigationBar.apply(style: NavigationBarStyleCategory.secondary(hidden: false).style)
