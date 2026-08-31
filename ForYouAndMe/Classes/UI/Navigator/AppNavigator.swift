@@ -302,12 +302,17 @@ class AppNavigator {
             navigationController.loadViewForRequest(asyncCoordinatorRequest,
                                                     hidesBottomBarWhenPushed: hidesBottomBarWhenPushed,
                                                     allowBackwardNavigation: false,
-                                                    viewForData: { coordinator -> UIViewController in
+                                                    viewForData: { coordinator -> UIViewController? in
+                // FUAM-4045. A nil coordinator means the section has nothing
+                // to present (no pages, no content, or no such section on the
+                // backend): skip straight to the next one.
+                guard let coordinator = coordinator else { return nil }
                 self.setCurrentCoordinator(coordinator,
                                            hidesBottomBarWhenPushed: hidesBottomBarWhenPushed,
                                            addAbortOnboardingButton: addAbortOnboardingButton)
                 return coordinator.getStartingPage()
-            })
+            },
+                                                    onNoView: { completionCallback(navigationController) })
         } else {
             assertionFailure("Section has neither a syncCoorindator nor an asyncCoordinator")
             self.currentCoordinator = nil

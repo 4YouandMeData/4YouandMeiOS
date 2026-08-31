@@ -33,6 +33,7 @@
 		2937A0030001F37A0001AAAA /* UserSettingsDecodingSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2937A0040001F37A0001AAAA /* UserSettingsDecodingSpec.swift */; };
 		55A1A0010001F37A0001AAAA /* SpatialSpanMemoryTaskSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55A1A0020001F37A0001AAAA /* SpatialSpanMemoryTaskSpec.swift */; };
 		3364A0010001F37A0001AAAA /* OptInPermissionDecodingSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3364A0020001F37A0001AAAA /* OptInPermissionDecodingSpec.swift */; };
+		3364A0030001F37A0001AAAA /* SectionOptionalPagesDecodingSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3364A0040001F37A0001AAAA /* SectionOptionalPagesDecodingSpec.swift */; };
 		2937A0050001F37A0001AAAA /* MenstrualOnboardingFlowSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2937A0060001F37A0001AAAA /* MenstrualOnboardingFlowSpec.swift */; };
 		2934A0010001F37A0001AAAA /* MenstrualPeriodEntryCellSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2934A0020001F37A0001AAAA /* MenstrualPeriodEntryCellSpec.swift */; };
 		EF01A0010001F37A0001AAAA /* EmojiCellSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF01A0020001F37A0001AAAA /* EmojiCellSpec.swift */; };
@@ -119,6 +120,7 @@
 		2937A0040001F37A0001AAAA /* UserSettingsDecodingSpec.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = UserSettingsDecodingSpec.swift; sourceTree = "<group>"; };
 		55A1A0020001F37A0001AAAA /* SpatialSpanMemoryTaskSpec.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SpatialSpanMemoryTaskSpec.swift; sourceTree = "<group>"; };
 		3364A0020001F37A0001AAAA /* OptInPermissionDecodingSpec.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = OptInPermissionDecodingSpec.swift; sourceTree = "<group>"; };
+		3364A0040001F37A0001AAAA /* SectionOptionalPagesDecodingSpec.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SectionOptionalPagesDecodingSpec.swift; sourceTree = "<group>"; };
 		2937A0060001F37A0001AAAA /* MenstrualOnboardingFlowSpec.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MenstrualOnboardingFlowSpec.swift; sourceTree = "<group>"; };
 		2934A0020001F37A0001AAAA /* MenstrualPeriodEntryCellSpec.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MenstrualPeriodEntryCellSpec.swift; sourceTree = "<group>"; };
 		EF01A0020001F37A0001AAAA /* EmojiCellSpec.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = EmojiCellSpec.swift; sourceTree = "<group>"; };
@@ -252,6 +254,7 @@
 				2937A0040001F37A0001AAAA /* UserSettingsDecodingSpec.swift */,
 				55A1A0020001F37A0001AAAA /* SpatialSpanMemoryTaskSpec.swift */,
 				3364A0020001F37A0001AAAA /* OptInPermissionDecodingSpec.swift */,
+				3364A0040001F37A0001AAAA /* SectionOptionalPagesDecodingSpec.swift */,
 				2937A0060001F37A0001AAAA /* MenstrualOnboardingFlowSpec.swift */,
 				2934A0020001F37A0001AAAA /* MenstrualPeriodEntryCellSpec.swift */,
 				EF01A0020001F37A0001AAAA /* EmojiCellSpec.swift */,
@@ -583,6 +586,7 @@
 				2937A0030001F37A0001AAAA /* UserSettingsDecodingSpec.swift in Sources */,
 				55A1A0010001F37A0001AAAA /* SpatialSpanMemoryTaskSpec.swift in Sources */,
 				3364A0010001F37A0001AAAA /* OptInPermissionDecodingSpec.swift in Sources */,
+				3364A0030001F37A0001AAAA /* SectionOptionalPagesDecodingSpec.swift in Sources */,
 				2937A0050001F37A0001AAAA /* MenstrualOnboardingFlowSpec.swift in Sources */,
 				2934A0010001F37A0001AAAA /* MenstrualPeriodEntryCellSpec.swift in Sources */,
 				EF01A0010001F37A0001AAAA /* EmojiCellSpec.swift in Sources */,
