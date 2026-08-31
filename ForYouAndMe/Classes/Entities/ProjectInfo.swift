@@ -7,6 +7,13 @@
 
 import Foundation
 
+/// Note type a host app can offer when creating a diary note or a reflection (FUAM-4031).
+enum HostAppNoteType: String, CaseIterable {
+    case text
+    case audio
+    case video
+}
+
 /// Host-app configuration flags read from the HOST app's `Info.plist` (NOT `ProjectInfo.plist`).
 /// Absent keys default to `false`, which preserves the pre-existing behaviour — a missing key
 /// is a valid, expected state, so no assertion is raised and these keys are deliberately
@@ -17,11 +24,31 @@ enum HostAppConfig {
     static var healthKitIgnoresOptInConsent: Bool { flag("FYAMHealthKitIgnoreOptInConsent") }
     static var sensorKitIgnoresOptInConsent: Bool { flag("FYAMSensorKitIgnoreOptInConsent") }
 
+    /// Note types offered by the "I have noticed" chooser and the diary list footer.
+    static var diaryNoteTypes: [HostAppNoteType] { noteTypes("FYAMDiaryNoteTypes") }
+    /// Note types offered by the reflection task start page.
+    static var reflectionTypes: [HostAppNoteType] { noteTypes("FYAMReflectionTypes") }
+
+    /// The only diary note type allowed, when the host app narrowed the setting down to one.
+    static var singleDiaryNoteType: HostAppNoteType? {
+        let types = self.diaryNoteTypes
+        return types.count == 1 ? types.first : nil
+    }
+
     private static func flag(_ key: String) -> Bool {
         guard let value = Bundle.main.object(forInfoDictionaryKey: key) else { return false }
         if let bool = value as? Bool { return bool }
         assertionFailure("\(key) must be a Boolean in Info.plist, got \(type(of: value))")
         return (value as? NSString)?.boolValue ?? false
+    }
+
+    /// Lenient on purpose: a missing key, a malformed value, an empty array or an array with no
+    /// recognised entry all mean "every type", which is the behaviour of every host app that
+    /// doesn't set the key. Unknown strings are ignored.
+    private static func noteTypes(_ key: String) -> [HostAppNoteType] {
+        let rawValues = (Bundle.main.object(forInfoDictionaryKey: key) as? [String] ?? []).map { $0.lowercased() }
+        let types = HostAppNoteType.allCases.filter { rawValues.contains($0.rawValue) }
+        return types.isEmpty ? HostAppNoteType.allCases : types
     }
 }
 
