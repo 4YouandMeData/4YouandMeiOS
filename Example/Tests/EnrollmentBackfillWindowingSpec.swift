@@ -4482,6 +4482,15 @@ class SensorMapperFidelitySpec: QuickSpec {
                 expect(out?["samples_truncated"] as? Bool).to(beTrue())
                 expect(out?["count"] as? Int).to(equal(1_200))
             }
+
+            it("R5: every probed probability metric key has a unit table entry") {
+                // A key added to `probabilityMetricKeys` without a `probabilityMetricUnits`
+                // entry would ship unit-less bare-number stats whenever the OS hands samples
+                // over unmeasured. Fail loudly here instead.
+                let uncovered = Set(KeyboardMetricsMapper.probabilityMetricKeys)
+                    .subtracting(KeyboardMetricsMapper.probabilityMetricUnits.keys)
+                expect(uncovered).to(beEmpty())
+            }
         }
 
         describe("X3 — joinBoundaryDropCount (counting only, the gate itself is untouched)") {

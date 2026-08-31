@@ -1102,6 +1102,13 @@ public final class SensorSampleUploadManager {
             // FUAM-3945 fidelity audit, X1: production device-usage rows store `applications[]`
             // entries with no `usage_s`. The entries are never dropped for it; this makes the
             // field's presence a measurable Firebase ratio.
+            //
+            // Reading caveat (review R4) for whoever checks that ratio: this event can only see
+            // ABSENT values. If the first post-release rows show `usage_s` PRESENT but uniformly
+            // zero for every application, that is entitlement-level blinding by iOS answering
+            // the selector with 0 — not success — and this metric will read "fixed" anyway.
+            // Blinded-zero and measured-zero are indistinguishable client-side; check the value
+            // distribution in the stored rows before declaring X1 resolved.
             if sensor == .deviceUsageReport {
                 let usage = DeviceUsageReportMapper.applicationUsageStats(in: gated)
                 if usage.missing > 0 {
