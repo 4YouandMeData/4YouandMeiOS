@@ -54,6 +54,7 @@ enum ImageName: String, CaseIterable {
     case pushNotificationIcon = "push_notification_icon"
     case locationIcon = "location_icon"
     case healthIcon = "health_icon"
+    case sensorKitIcon = "sensor_kit_icon"
     case textNoteListImage = "text_note_list_image"
     case audioNoteListImage = "audio_note_list_image"
     case audioRecording = "audio_recording"
