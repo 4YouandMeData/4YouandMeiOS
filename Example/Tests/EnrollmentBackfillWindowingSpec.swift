@@ -4773,7 +4773,9 @@ class SensorFidelityTelemetrySpec: QuickSpec {
             expect(fieldEvents().first?.1).to(equal(1))
             expect(fieldEvents().first?.2).to(equal(2))
             // The usage-less entry is never dropped: the whole record reaches the queue.
-            expect(storage.enqueued).toNot(beEmpty())
+            // toEventually: the enqueue lands on the work queue after the telemetry emission,
+            // so a synchronous read here races it (same family as the round-5 de-flake sweep).
+            expect(storage.enqueued).toEventuallyNot(beEmpty(), timeout: .seconds(5))
         }
 
         it("X1: no event when every applications entry carries a usage value") {
