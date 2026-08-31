@@ -951,6 +951,27 @@ class SensorUploadConsentCallPathSpec: QuickSpec {
                 expect(network.uploaded.count).toEventually(equal(1))
                 expect(drainOrigins(analytics.trackedEvents)).toNot(contain("drain_filtered"))
             }
+
+            it("never lets the fetch-stable identity companions reach an uploaded payload") {
+                // FUAM-3945: the raw SRAbsoluteTime is ledger bookkeeping. The payload contract
+                // (recorded_at as the server row-anchor source) must leave the device unchanged.
+                let stamped = SensorRecordIdentity.stamped(["t": iso(joinDay.addingTimeInterval(hour)),
+                                                            "recorded_at": iso(joinDay.addingTimeInterval(2 * hour)),
+                                                            "lux": 3],
+                                                           raw: SRAbsoluteTime(rawValue: 780_000_000.25),
+                                                           replacing: ["recorded_at"])
+                expect(stamped[SensorRecordIdentity.rawKey]).toNot(beNil()) // queued form carries it
+                storage.seed(records: [stamped], windowStart: joinDay, for: sensor)
+
+                manager.drainQueue(for: sensor)
+
+                expect(network.uploaded.count).toEventually(equal(1))
+                let uploaded = network.uploaded.first?.first
+                expect(uploaded?[SensorRecordIdentity.rawKey]).to(beNil())
+                expect(uploaded?[SensorRecordIdentity.replacesKey]).to(beNil())
+                expect(uploaded?["recorded_at"] as? String).to(equal(iso(joinDay.addingTimeInterval(2 * hour))))
+                expect(uploaded?["lux"] as? Int).to(equal(3))
+            }
         }
 
         describe("drainQueue (the permanent-rejection budget, FUAM-3945 round 5 / AC6)") {
@@ -3109,6 +3130,70 @@ class SensorUploadLedgerSpec: QuickSpec {
             it("escapes strings byte-wise, locale-free") {
                 expect(SensorUploadLedger.canonical(["s": "a\"b\\c\n"]))
                     .to(equal("{\"s\":\"a\\\"b\\\\c\\u000a\"}"))
+            }
+        }
+
+        describe("the fetch-stable identity form (FUAM-3945: clock re-anchoring immunity)") {
+
+            // Models one fetch of the same stored OS sample, exactly as a mapper builds it:
+            // the SRAbsoluteTime raw value is FIXED (it is what the store holds); the wall
+            // projection is recomputed per fetch under that fetch's wall-vs-monotonic offset —
+            // which is what `toCFAbsoluteTime()` does, and why `recorded_at` moved between
+            // build 34 and build 35 in production while `arrival`/`departure` did not.
+            func fetched(raw: Double, wallOffset: TimeInterval) -> [String: Any] {
+                let projected = Date(timeIntervalSinceReferenceDate: raw + wallOffset)
+                let record: [String: Any] = [
+                    "recorded_at": ISO8601DateFormatter().string(from: projected),
+                    "recorded_at_precise": ISO8601Strategy.encode(projected),
+                    "arrival": ["start": "2026-08-27T16:40:00Z", "end": "2026-08-27T16:41:00Z"],
+                    "location_id": "A5F0"
+                ]
+                return SensorRecordIdentity.stamped(record,
+                                                    raw: SRAbsoluteTime(rawValue: raw),
+                                                    replacing: ["recorded_at", "recorded_at_precise"])
+            }
+
+            let raw = 780_000_000.25
+
+            it("fingerprints the same record identically across fetches with a moved clock offset") {
+                // The production defect: NTP moved the offset ~1 s between two rescans and
+                // flipped recorded_at 16:54:22 → 16:54:21 for five byte-identical visits —
+                // every fingerprint changed and the whole rescan tail re-uploaded as novel.
+                let firstFetch = fetched(raw: raw, wallOffset: 3.117)
+                let secondFetch = fetched(raw: raw, wallOffset: 2.117)
+                // The model is real: the projected payload keys DID move between the fetches.
+                expect(firstFetch["recorded_at"] as? String)
+                    .toNot(equal(secondFetch["recorded_at"] as? String))
+                expect(SensorUploadLedger.fingerprint(of: firstFetch))
+                    .to(equal(SensorUploadLedger.fingerprint(of: secondFetch)))
+            }
+
+            it("is not blind: a genuinely different record still gets a different fingerprint") {
+                // A different OS sample (different raw write time), same fetch.
+                expect(SensorUploadLedger.fingerprint(of: fetched(raw: raw, wallOffset: 3.117)))
+                    .toNot(equal(SensorUploadLedger.fingerprint(of: fetched(raw: raw + 60, wallOffset: 3.117))))
+                // Same write time, different fetch-stable content: the stored-Foundation-date
+                // fields (the production arrival/departure control) stay inside the hash.
+                var moved = fetched(raw: raw, wallOffset: 3.117)
+                moved["arrival"] = ["start": "2026-08-27T16:39:00Z", "end": "2026-08-27T16:41:00Z"]
+                expect(SensorUploadLedger.fingerprint(of: moved))
+                    .toNot(equal(SensorUploadLedger.fingerprint(of: fetched(raw: raw, wallOffset: 3.117))))
+            }
+
+            it("drops only the listed wall-projected keys and keeps the raw value in the hashed form") {
+                let form = SensorUploadLedger.fetchStableForm(of: fetched(raw: raw, wallOffset: 3.117))
+                expect(form["recorded_at"]).to(beNil())
+                expect(form["recorded_at_precise"]).to(beNil())
+                expect(form[SensorRecordIdentity.replacesKey]).to(beNil())
+                expect(form[SensorRecordIdentity.rawKey] as? Double).to(equal(raw))
+                expect(form["arrival"]).toNot(beNil())
+                expect(form["location_id"] as? String).to(equal("A5F0"))
+            }
+
+            it("hashes an unstamped record (pre-fix queue content, stubs) exactly as before") {
+                let legacy: [String: Any] = ["recorded_at": "2026-08-27T16:54:22Z", "lux": 12]
+                let form = SensorUploadLedger.fetchStableForm(of: legacy)
+                expect(SensorUploadLedger.canonical(form)).to(equal(SensorUploadLedger.canonical(legacy)))
             }
         }
 
