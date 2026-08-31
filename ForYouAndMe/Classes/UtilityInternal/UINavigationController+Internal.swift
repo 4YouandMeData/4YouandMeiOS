@@ -16,18 +16,31 @@ extension UINavigationController {
         }
     }
     
-    func loadViewForRequest<T>(_ requestSingle: Single<T>, viewForData: @escaping ((T) -> UIViewController)) {
+    func loadViewForRequest<T>(_ requestSingle: Single<T>, viewForData: @escaping ((T) -> UIViewController?)) {
         self.loadViewForRequest(requestSingle, hidesBottomBarWhenPushed: false, allowBackwardNavigation: false, viewForData: viewForData)
     }
-    
+
+    /// FUAM-4045. `viewForData` may return nil, meaning "there is nothing to
+    /// show for this data": the loading page is popped and `onNoView` is
+    /// invoked instead of pushing anything (used to skip an empty onboarding
+    /// section).
     func loadViewForRequest<T>(_ requestSingle: Single<T>,
                                hidesBottomBarWhenPushed: Bool,
                                allowBackwardNavigation: Bool,
-                               viewForData: @escaping ((T) -> UIViewController)) {
+                               viewForData: @escaping ((T) -> UIViewController?),
+                               onNoView: (() -> Void)? = nil) {
         let loadingInfo = LoadingInfo(requestSingle: requestSingle,
                                       completionCallback: { [weak self] loadedData in
                                         guard let self = self else { return }
-                                        let viewController = viewForData(loadedData)
+                                        guard let viewController = viewForData(loadedData) else {
+                                            // Drop the loading page before handing over, so the
+                                            // skipped step leaves no trace in the back stack.
+                                            if self.viewControllers.count > 1, self.visibleViewController is LoadingPage {
+                                                self.popViewController(animated: false)
+                                            }
+                                            onNoView?()
+                                            return
+                                        }
                                         self.pushViewController(viewController,
                                                                 hidesBottomBarWhenPushed: hidesBottomBarWhenPushed,
                                                                 animated: false,

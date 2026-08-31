@@ -302,12 +302,17 @@ class AppNavigator {
             navigationController.loadViewForRequest(asyncCoordinatorRequest,
                                                     hidesBottomBarWhenPushed: hidesBottomBarWhenPushed,
                                                     allowBackwardNavigation: false,
-                                                    viewForData: { coordinator -> UIViewController in
+                                                    viewForData: { coordinator -> UIViewController? in
+                // FUAM-4045. A nil coordinator means the section has nothing
+                // to present (no pages, no content, or no such section on the
+                // backend): skip straight to the next one.
+                guard let coordinator = coordinator else { return nil }
                 self.setCurrentCoordinator(coordinator,
                                            hidesBottomBarWhenPushed: hidesBottomBarWhenPushed,
                                            addAbortOnboardingButton: addAbortOnboardingButton)
                 return coordinator.getStartingPage()
-            })
+            },
+                                                    onNoView: { completionCallback(navigationController) })
         } else {
             assertionFailure("Section has neither a syncCoorindator nor an asyncCoordinator")
             self.currentCoordinator = nil
@@ -762,9 +767,29 @@ class AppNavigator {
     }
     
     public func openNoticedViewController(presenter: UIViewController) {
+        // FUAM-4031: the chooser carries no content of its own, so with a single allowed
+        // note type we open that editor directly instead of showing it.
+        if let singleType = HostAppConfig.singleDiaryNoteType {
+            self.openDiaryNoteEditor(ofType: singleType, diaryNote: nil, presenter: presenter, isFromChart: false)
+            return
+        }
         let noticedViewController = NoticedViewController(with: nil)
         noticedViewController.modalPresentationStyle = .formSheet
         presenter.present(noticedViewController, animated: true)
+    }
+
+    private func openDiaryNoteEditor(ofType type: HostAppNoteType,
+                                     diaryNote: DiaryNoteItem?,
+                                     presenter: UIViewController,
+                                     isFromChart: Bool) {
+        switch type {
+        case .text:
+            self.openDiaryNoteText(diaryNote: diaryNote, presenter: presenter, isEditMode: false, isFromChart: isFromChart)
+        case .audio:
+            self.openDiaryNoteAudio(diaryNote: diaryNote, presenter: presenter, isEditMode: false, isFromChart: isFromChart)
+        case .video:
+            self.openDiaryNoteVideo(diaryNote: diaryNote, isEdit: false, presenter: presenter, isFromChart: isFromChart)
+        }
     }
     
     public func openEatenViewController(presenter: UIViewController) {
@@ -1617,6 +1642,16 @@ extension UIViewController {
 extension AppNavigator {
     
     func openNoticedViewController(presenter: UIViewController, diaryNote: DiaryNoteItem) {
+
+        // FUAM-4031: skip the chooser when the host app allows a single note type. `isFromChart`
+        // mirrors what NoticedViewController would have computed from the diary note.
+        if let singleType = HostAppConfig.singleDiaryNoteType {
+            self.openDiaryNoteEditor(ofType: singleType,
+                                     diaryNote: diaryNote,
+                                     presenter: presenter,
+                                     isFromChart: diaryNote.diaryNoteable != nil)
+            return
+        }
 
         let noticedVC = NoticedViewController(with: diaryNote)
         noticedVC.modalPresentationStyle = .formSheet

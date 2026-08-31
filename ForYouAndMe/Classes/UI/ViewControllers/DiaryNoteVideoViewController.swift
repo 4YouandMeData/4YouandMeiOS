@@ -344,18 +344,22 @@ class DiaryNoteVideoViewController: UIViewController {
         let category = self.categoryForEmoji(diaryNote: self.diaryNoteItem)
         let emojiItems = self.emojiItems(for: category)
         let emojiVC = EmojiPopupViewController(emojis: emojiItems,
-                                               selected: self.selectedEmoji) { [weak self] selectedEmoji in
-            guard let self = self, let emoji = selectedEmoji else { return }
+                                               selected: self.selectedEmoji) { [weak self] confirmedEmoji in
+            guard let self = self else { return }
             guard var diaryNote = self.diaryNoteItem else { return }
 
-            self.selectedEmoji = emoji
-            diaryNote.feedbackTags?.append(emoji)
+            self.selectedEmoji = confirmedEmoji
 
-            let tag = (emoji.label != "none") ? emoji.tag : nil
             self.emojiButton.setImage(nil, for: .normal)
-            self.emojiButton.setTitle(tag, for: .normal)
+            self.emojiButton.setTitle(confirmedEmoji?.tag, for: .normal)
             self.emojiButton.titleLabel?.font = UIFont.systemFont(ofSize: 22)
-            
+
+            // FUAM-3857: confirming the note's current emoji again - skip the request.
+            guard !diaryNote.feedbackTagIsUnchanged(by: confirmedEmoji) else { return }
+
+            diaryNote.feedbackTagsToDestroy = diaryNote.feedbackTags ?? []
+            diaryNote.feedbackTagToSet = confirmedEmoji
+
             self.repository.updateDiaryNoteText(diaryNote: diaryNote)
                 .addProgress()
                 .subscribe(onSuccess: {},

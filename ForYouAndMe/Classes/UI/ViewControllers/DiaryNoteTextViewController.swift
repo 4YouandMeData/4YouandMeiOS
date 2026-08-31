@@ -370,11 +370,26 @@ class DiaryNoteTextViewController: UIViewController {
               let keyboardFrame = userInfo[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect,
               let duration = userInfo[UIResponder.keyboardAnimationDurationUserInfoKey] as? TimeInterval else { return }
 
-        let keyboardHeight = view.convert(keyboardFrame, from: nil).intersection(view.bounds).height
+        // FUAM-3561 — inset by the keyboard's overlap with the TEXT VIEW, not with the
+        // whole root view: the text view's bottom sits well above the screen bottom
+        // (spacer + footer), so the full keyboard height over-insets it and, at large
+        // accessibility fonts/keyboards, the caret line ends up scrolled above the
+        // text view's top border while typing.
+        let keyboardFrameInView = view.convert(keyboardFrame, from: nil)
+        let textViewFrameInView = self.textView.convert(self.textView.bounds, to: view)
+        let overlap = max(0, textViewFrameInView.maxY - keyboardFrameInView.minY)
+        // Clamp so at least one text line stays visible even when the keyboard covers
+        // (almost) the whole text view — small screens at max accessibility sizes.
+        let lineHeight = (self.textView.font?.lineHeight ?? 20.0) + 8.0
+        let maxInset = max(0, self.textView.bounds.height - self.textView.textContainerInset.top - lineHeight)
+        let bottomInset = min(overlap, maxInset)
 
         UIView.animate(withDuration: duration) {
-            self.textView.contentInset.bottom = keyboardHeight
-            self.textView.verticalScrollIndicatorInsets.bottom = keyboardHeight
+            self.textView.contentInset.bottom = bottomInset
+            self.textView.verticalScrollIndicatorInsets.bottom = bottomInset
+            if self.textView.isFirstResponder {
+                self.textView.scrollRangeToVisible(self.textView.selectedRange)
+            }
         }
     }
 
@@ -478,7 +493,7 @@ class DiaryNoteTextViewController: UIViewController {
                 if !feedbackSaved {
                     // Note is saved; only the emoji attach failed.
                     self.showAlert(forError: nil)
-                } else if let picked = self.selectedEmoji, picked.label != "none" {
+                } else if self.selectedEmoji != nil {
                     // FUAM-3495 — the emoji was created by the chained PATCH, but the
                     // POST response does not include it. Refetch so feedbackTags carry
                     // the new server record id and a later emoji change swaps (not
@@ -524,10 +539,10 @@ class DiaryNoteTextViewController: UIViewController {
         let category = self.categoryForEmoji(diaryNote: self.diaryNote)
         let emojiItems = self.emojiItems(for: category)
         let emojiVC = EmojiPopupViewController(emojis: emojiItems,
-                                               selected: self.selectedEmoji) { [weak self] selectedEmoji in
-            guard let self = self, let emoji = selectedEmoji else { return }
+                                               selected: self.selectedEmoji) { [weak self] confirmedEmoji in
+            guard let self = self else { return }
 
-            self.selectedEmoji = emoji
+            self.selectedEmoji = confirmedEmoji
             self.refreshEmojiButtonGlyph()
 
             // FUAM-3495 — For a brand-new note (not yet persisted) just hold the pick
@@ -535,11 +550,13 @@ class DiaryNoteTextViewController: UIViewController {
             // note persist immediately, then refetch so feedbackTags carry the real
             // server record ids for the next change.
             guard var diaryNote = self.diaryNote else { return }
-            // The just-picked emoji is a new tag (catalog id == ""); the serializer
-            // marks the prior server record(s) for destruction. Ensure the array
-            // exists so the append is not silently dropped when feedbackTags is nil.
-            if diaryNote.feedbackTags == nil { diaryNote.feedbackTags = [] }
-            diaryNote.feedbackTags?.append(emoji)
+
+            // FUAM-3857: confirming the note's current emoji again - skip the request.
+            // No need to `reloadDiaryNoteFromServer()` either: nothing changed server-side.
+            guard !diaryNote.feedbackTagIsUnchanged(by: confirmedEmoji) else { return }
+
+            diaryNote.feedbackTagsToDestroy = diaryNote.feedbackTags ?? []
+            diaryNote.feedbackTagToSet = confirmedEmoji
 
             self.repository.updateDiaryNoteText(diaryNote: diaryNote)
                 .addProgress()
@@ -591,7 +608,7 @@ class DiaryNoteTextViewController: UIViewController {
     // FUAM-3495 — Render the current selectedEmoji on the emoji button (or restore the
     // default icon when there is no real emoji).
     private func refreshEmojiButtonGlyph() {
-        if let emoji = self.selectedEmoji, emoji.label != "none" {
+        if let emoji = self.selectedEmoji {
             self.emojiButton.setImage(nil, for: .normal)
             self.emojiButton.setTitle(emoji.tag, for: .normal)
             self.emojiButton.titleLabel?.font = UIFont.systemFont(ofSize: 22)

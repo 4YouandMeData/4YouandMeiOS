@@ -202,6 +202,13 @@ enum StringKey: String, CaseIterable, CodingKey {
     case diaryNoteVideoCell = "DIARY_NOTE_VIDEO_CELL"
     case emojiTitle = "EMOJI_TITLE"
     case emojiButtonText = "EMOJI_BUTTON"
+    // FUAM-3857: caption shown under the "none / no emoji" sentinel option in the emoji
+    // picker. Defaults to "" (blank — the icon stands alone with no caption) so studies
+    // that never set this key get the new no-caption look; a study can opt into a visible
+    // caption by setting this key to a non-empty value. See defaultValue below and
+    // StringsProvider.string(forKey:) — an absent key falls back to defaultValue, a
+    // present-but-empty value is returned as-is (both render blank here, by design).
+    case emojiNoneLabel = "EMOJI_NONE_LABEL"
     case diaryNoteTagDoses = "DIARY_NOTE_TAG_DOSES"
     case diaryNoteTagEaten = "DIARY_NOTE_TAG_EATEN"
     case diaryNoteTagNoticed = "DIARY_NOTE_TAG_NOTICED"
@@ -644,6 +651,7 @@ enum StringKey: String, CaseIterable, CodingKey {
         case .errorButtonClose: return "Ok"
         case .errorMessageDefault: return "Something went wrong,\nplease try again"
         case .diaryNoteCreateNoticedSave: return "Save"
+        case .emojiNoneLabel: return ""
         case .errorMessageRemoteServer: return "Something went wrong,\nplease try again"
         case .errorMessageConnectivity: return "You seem to be offline.\nPlease check your internet connection and try again."
         // FUAM-3021. Watchdog alert defaults (English fallback).

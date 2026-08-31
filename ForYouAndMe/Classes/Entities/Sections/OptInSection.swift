@@ -7,14 +7,40 @@
 
 import Foundation
 
+// FUAM-4045. Welcome and success pages are optional: a study may configure an
+// opt-in section that starts straight at the first permission and/or ends
+// without a thank-you page. When welcome page, success page and (iOS-visible)
+// permissions are all missing, the section has nothing to show and is skipped
+// entirely — same outcome as the backend omitting the section altogether.
+// This optional-pages / skip-when-empty pattern is meant to be extended to the
+// other onboarding sections (see FUAM-4044); keep the section model exposing an
+// `isEmpty`-style predicate and the coordinator's `getStartingPage()` nil-safe
+// so the same wiring in `OnboardingSection` can be reused as-is. What varies
+// per section is only *what makes it non-empty*: here the welcome page, the
+// success page or an iOS-visible permission; in `IntegrationSection` it is the
+// welcome page alone, because that section's loose `pages` are reachable only
+// through page links and never as a starting step or a fallback.
 struct OptInSection {
     let id: String
     let type: String
 
     let pages: [Page]
-    let welcomePage: Page
+    let welcomePage: Page?
     let optInPermissions: [OptInPermission]
     let successPage: Page?
+}
+
+extension OptInSection {
+    /// FUAM-4045. `true` when the section would present no screen at all:
+    /// no welcome page, no success page and no permission renderable on iOS
+    /// (`platforms` gating, FUAM-3364). Linked `pages` are only reachable from
+    /// the welcome page, so they cannot make an otherwise-empty section
+    /// presentable.
+    var isEmpty: Bool {
+        return self.welcomePage == nil
+            && self.successPage == nil
+            && false == self.optInPermissions.contains { $0.isAvailableOnIOS }
+    }
 }
 
 extension OptInSection: JSONAPIMappable {
