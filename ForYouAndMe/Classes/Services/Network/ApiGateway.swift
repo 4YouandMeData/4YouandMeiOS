@@ -125,6 +125,24 @@ enum ApiError: Error {
     case userUnauthorized(pathUrl: String, request: ApiRequest, statusCode: Int, responseBody: String)
 }
 
+extension ApiError {
+    /// HTTP status carried by the error, when there is one. FUAM-4045 uses it
+    /// to tell "the backend has no such section" (404) apart from a real
+    /// failure.
+    var statusCode: Int? {
+        switch self {
+        case .connectivity, .network:
+            return nil
+        case .cannotParseData(_, _, let statusCode, _),
+                .unexpectedError(_, _, let statusCode, _),
+                .userUnauthorized(_, _, let statusCode, _):
+            return statusCode
+        case .expectedError(_, _, let statusCode, _, _):
+            return statusCode
+        }
+    }
+}
+
 protocol PlainDecodable: Decodable {}
 
 protocol ApiGateway {

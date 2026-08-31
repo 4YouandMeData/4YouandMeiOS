@@ -7,13 +7,25 @@
 
 import Foundation
 
+// FUAM-4045. Same optional-pages / skip-when-empty contract as `OptInSection`
+// (see the comment there, and FUAM-4044 for extending the pattern to the other
+// onboarding sections). Note the backend answers this endpoint with an empty
+// `Integration` record when the study has no integration section configured,
+// so the empty case is not hypothetical.
 struct IntegrationSection {
     let id: String
     let type: String
 
     let pages: [Page]
-    let welcomePage: Page
+    let welcomePage: Page?
     let successPage: Page?
+}
+
+extension IntegrationSection {
+    /// FUAM-4045. `true` when the section would present no screen at all.
+    var isEmpty: Bool {
+        return self.welcomePage == nil && self.successPage == nil && self.pages.isEmpty
+    }
 }
 
 extension IntegrationSection: JSONAPIMappable {
