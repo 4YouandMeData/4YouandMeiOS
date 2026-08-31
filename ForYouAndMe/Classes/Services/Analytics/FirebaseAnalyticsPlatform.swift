@@ -46,6 +46,8 @@ private enum FirebaseEventCustomName: String {
     case sensorRefused = "sensor_refused"
     case sensorDeepestWindow = "sensor_deepest_window"
     case sensorRecordDropped = "sensor_record_dropped"
+    // FUAM-3945 fidelity audit (X1). Documented field absent from mapped entries.
+    case sensorFieldMissing = "sensor_field_missing"
     case sensorTimezoneFallback = "sensor_tz_fallback"
 }
 
@@ -177,6 +179,14 @@ class FirebaseAnalyticsPlatform: AnalyticsPlatform {
         case .sensorTimezoneFallback(let reason):
             self.sendEvent(withEventName: FirebaseEventCustomName.sensorTimezoneFallback.rawValue,
                            parameters: [AnalyticsParameter.reason.rawValue: reason])
+        case .sensorFieldMissing(let sensor, let field, let missing, let total):
+            self.sendEvent(withEventName: FirebaseEventCustomName.sensorFieldMissing.rawValue,
+                           parameters: [
+                               AnalyticsParameter.sensor.rawValue: sensor,
+                               AnalyticsParameter.field.rawValue: field,
+                               AnalyticsParameter.count.rawValue: missing,
+                               AnalyticsParameter.total.rawValue: total
+                           ])
         default:
             break
         }

@@ -207,6 +207,21 @@ extension DeviceUsageReportMapper {
         return String(describing: any)
     }
 
+    /// FUAM-3945 fidelity audit, X1 telemetry seam: how many `applications[]` entries in the
+    /// given mapped records carry no `usage_s`, against the total number of entries — so
+    /// whether iOS actually hands over per-app usage becomes a measurable Firebase ratio
+    /// instead of an invisible production absence.
+    static func applicationUsageStats(in records: [[String: Any]]) -> (missing: Int, total: Int) {
+        var missing = 0
+        var total = 0
+        for record in records {
+            guard let apps = record["applications"] as? [[String: Any]] else { continue }
+            total += apps.count
+            missing += apps.filter { $0["usage_s"] == nil }.count
+        }
+        return (missing, total)
+    }
+
     // MARK: Top-level mapping
 
     static func mapDeviceUsage(_ obj: NSObject, recordedAt: Date?) -> [String: Any]? {
@@ -255,10 +270,23 @@ extension DeviceUsageReportMapper {
                     if let rep = valueIfResponds(app, "reportApplicationIdentifier") as? String {
                         entry["report_app_id"] = rep
                     }
-                    if let u = seconds(app, key: "totalUsageTime") {
-                        entry["usage_s"] = u
+                    // FUAM-3945 fidelity audit, X1 — why `usage_s` was absent in every
+                    // production entry: the ObjC property (the name KVC dispatches on) is
+                    // `usageTime` (`SRUsageReports.h`, `NSTimeInterval`, no apinotes rename),
+                    // while this probe only tried `totalUsageTime` — Apple's web-docs spelling,
+                    // which exists on `SRWebUsage` but NOT on `SRApplicationUsage`. Probe order:
+                    // the header/KVC name first, the docs spelling second as a defensive
+                    // fallback for OS versions that might alias it.
+                    for key in ["usageTime", "totalUsageTime"] {
+                        if let u = seconds(app, key: key) {
+                            entry["usage_s"] = u
+                            break
+                        }
                     }
-                    if entry.count > 1 { apps.append(entry) }
+                    // X1: never drop the entry — an app use with no readable usage value is
+                    // still an app use (`category` is always present); the manager counts the
+                    // usage-less entries into `sensor_field_missing` telemetry.
+                    apps.append(entry)
                 }
             }
             if !apps.isEmpty { rec["applications"] = apps }

@@ -1086,6 +1086,19 @@ public final class SensorSampleUploadManager {
                                                                  reason: "consent_gate"))
             }
 
+            // FUAM-3945 fidelity audit, X1: production device-usage rows store `applications[]`
+            // entries with no `usage_s`. The entries are never dropped for it; this makes the
+            // field's presence a measurable Firebase ratio.
+            if sensor == .deviceUsageReport {
+                let usage = DeviceUsageReportMapper.applicationUsageStats(in: gated)
+                if usage.missing > 0 {
+                    self.analytics.track(event: .sensorFieldMissing(sensor: context.device.telemetryName(for: sensor),
+                                                                    field: "usage_s",
+                                                                    missing: usage.missing,
+                                                                    total: usage.total))
+                }
+            }
+
             // Round 4: the probe's main path BUFFERS instead of enqueueing, so the flush can
             // enqueue oldest-first and the ledger — not walk order — owns the dedup on every
             // path. Batch COMPOSITION is untouched (AC2): the same pure filters run, only the

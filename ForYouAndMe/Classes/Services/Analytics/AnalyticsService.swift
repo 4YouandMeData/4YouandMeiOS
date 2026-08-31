@@ -77,6 +77,9 @@ enum AnalyticsParameter: String {
     case count
     case spanSeconds = "span_s"
     case droppedCount = "dropped_count"
+    // FUAM-3945 fidelity audit (X1). Field-level completeness attributes.
+    case field
+    case total
 }
 
 enum AnalyticsScreens: String {
@@ -220,6 +223,11 @@ enum AnalyticsEvent {
     // Records dropped client-side before upload (consent gate, unreadable measurement time):
     // deliberate, but never silent (AC6).
     case sensorRecordDropped(sensor: String, count: Int, reason: String)
+    // FUAM-3945 fidelity audit (X1). A mapped record carried entries whose documented field the
+    // OS did not populate (today: device-usage `applications[]` without `usage_s`). `missing`
+    // out of `total` entries, so whether iOS withholds per-app usage is a measurable Firebase
+    // ratio instead of an invisible production absence. Entries are never dropped for this.
+    case sensorFieldMissing(sensor: String, field: String, missing: Int, total: Int)
     // The window/batch partition fell back to UTC because no backend-authoritative
     // `user.time_zone` was available (AC2 revised): the partition may not match the adherence
     // chart's bucketing until the user record loads. Once per launch.
