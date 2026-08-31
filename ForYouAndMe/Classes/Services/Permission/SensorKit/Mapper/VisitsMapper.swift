@@ -24,6 +24,7 @@ final class VisitsMapper: NSObject, SensorSampleMapper {
     private let reader = SRSensorReader(sensor: .visits)
     private var pendingCompletion: ((Result<[[String: Any]], Error>) -> Void)?
     private var collected = [[String: Any]]()
+    private var fetchedResults = 0
 
     // Apple withholds last 24h of SensorKit data
     private static let holdingPeriod: TimeInterval = 24 * 60 * 60
@@ -79,6 +80,7 @@ final class VisitsMapper: NSObject, SensorSampleMapper {
         req.to = safeTo.srAbsoluteTime
 
         collected.removeAll(keepingCapacity: true)
+        fetchedResults = 0
         pendingCompletion = completion
         reader.delegate = self
         reader.fetch(req)
@@ -96,6 +98,7 @@ extension VisitsMapper: SRSensorReaderDelegate {
     ) -> Bool {
         // Attach SRFetchResult.timestamp as recorded_at
         let recordedAt = dateFromSRAbsoluteTime(result.timestamp)
+        fetchedResults += 1
 
         // SRVisit arrives as single objects (no CMSensorDataList expected)
         if let visit = result.sample as? NSObject,
@@ -106,7 +109,7 @@ extension VisitsMapper: SRSensorReaderDelegate {
     }
 
     func sensorReader(_ reader: SRSensorReader, didCompleteFetch fetchRequest: SRFetchRequest) {
-        finish(.success(collected))
+        finish(self.classifyFetchOutcome(collected: collected, fetchedResults: fetchedResults))
     }
 
     func sensorReader(

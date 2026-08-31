@@ -23,6 +23,7 @@ final class AmbientLightMapper: NSObject, SensorSampleMapper {
     private let reader = SRSensorReader(sensor: .ambientLightSensor)
     private var pendingCompletion: ((Result<[[String: Any]], Error>) -> Void)?
     private var collected: [[String: Any]] = []
+    private var fetchedResults = 0
 
     // Apple withholds last 24h of SensorKit data
     private static let holdingPeriod: TimeInterval = 24 * 60 * 60
@@ -65,6 +66,7 @@ final class AmbientLightMapper: NSObject, SensorSampleMapper {
         req.to   = SRAbsoluteTime.fromCFAbsoluteTime(_cf: safeTo.timeIntervalSinceReferenceDate)
 
         self.collected.removeAll(keepingCapacity: true)
+        self.fetchedResults = 0
         self.pendingCompletion = completion
         self.reader.delegate = self
         self.reader.fetch(req)
@@ -83,12 +85,14 @@ extension AmbientLightMapper: SRSensorReaderDelegate {
         // `min(records[].recorded_at)`; without it the anchor silently falls back to upload
         // time and re-uploads scatter into new rows instead of de-duplicating. Same
         // fractional-seconds ISO8601 encoding as the `t` key next to it.
-        let recordedAtISO = ISO8601Strategy.encode(dateFromSRAbsoluteTime(result.timestamp))
+        let recordedAt = dateFromSRAbsoluteTime(result.timestamp)
+
+        self.fetchedResults += 1
 
         // We don't rely on concrete class names; use KVC to extract known fields.
         guard let sampleObj = result.sample as? NSObject else { return true }
 
-        if let record = Self.mapAmbientLight(sampleObj, recordedAtISO: recordedAtISO) {
+        if let record = Self.mapAmbientLight(sampleObj, recordedAt: recordedAt) {
             self.collected.append(record)
         }
 
@@ -98,9 +102,19 @@ extension AmbientLightMapper: SRSensorReaderDelegate {
     /// Extract illuminance (and optional colour temperature) with KVC. Internal (not private)
     /// so the record shape can be unit-tested without an `SRFetchResult`, which cannot be
     /// constructed outside SensorKit.
-    static func mapAmbientLight(_ sampleObj: NSObject, recordedAtISO: String) -> [String: Any]? {
-        // Timestamp: try 'startDate' first, otherwise 'timestamp' fallback
-        let ts = Self.sampleDate(sampleObj, keys: ["startDate", "timestamp"])
+    static func mapAmbientLight(_ sampleObj: NSObject, recordedAt: Date) -> [String: Any]? {
+        let recordedAtISO = ISO8601Strategy.encode(recordedAt)
+
+        // Timestamp: try 'startDate' first, otherwise 'timestamp' fallback.
+        // FUAM-3945 (fidelity review R3): `SRAmbientLightSample` declares NO date property at
+        // all (header: placement / chromaticity / lux only), so on real samples the KVC probe
+        // can never resolve and `t` used to become `distantPast` — which the consent gate drops,
+        // 100% of the stream, mislabeled `consent_gate`. The only timestamp the fetch carries is
+        // `SRFetchResult.timestamp`; for a point sample the write time is the measurement time
+        // to within the framework's batching latency, so fall back to it rather than dropping
+        // every record. Stand-ins exposing `startDate`/`timestamp` still win.
+        var ts = Self.sampleDate(sampleObj, keys: ["startDate", "timestamp"])
+        if ts == .distantPast { ts = recordedAt }
 
         // Illuminance in lux: try common keys
         let luxKeys = ["lux", "illuminance", "sphericalLux", "ambientLux"]
@@ -218,10 +232,10 @@ extension AmbientLightMapper: SRSensorReaderDelegate {
 
     func sensorReader(_ reader: SRSensorReader, didCompleteFetch fetchRequest: SRFetchRequest) {
         guard let completion = self.pendingCompletion else { return }
-        let out = self.collected
+        let result = self.classifyFetchOutcome(collected: self.collected, fetchedResults: self.fetchedResults)
         self.pendingCompletion = nil
         self.collected.removeAll(keepingCapacity: false)
-        completion(.success(out))
+        completion(result)
     }
 
     func sensorReader(_ reader: SRSensorReader,

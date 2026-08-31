@@ -26,6 +26,7 @@ final class AccelerometerMapper: NSObject, SensorSampleMapper {
     private let reader = SRSensorReader(sensor: .accelerometer)
     private var pendingCompletion: ((Result<[[String: Any]], Error>) -> Void)?
     private var collected = [[String: Any]]()
+    private var fetchedResults = 0
 
     // Apple withholds last 24h of SensorKit data (absolute hours)
     private static let holdingPeriod: TimeInterval = 24 * 60 * 60
@@ -82,6 +83,7 @@ final class AccelerometerMapper: NSObject, SensorSampleMapper {
         req.to = safeTo.srAbsoluteTime
 
         collected.removeAll(keepingCapacity: true)
+        fetchedResults = 0
         pendingCompletion = completion
         reader.delegate = self
         reader.fetch(req)
@@ -104,6 +106,8 @@ extension AccelerometerMapper: SRSensorReaderDelegate {
             return iso.string(from: dateFromSRAbsoluteTime(result.timestamp))
         }()
 
+        fetchedResults += 1
+
         if let list = result.sample as? CMSensorDataList {
             for element in FastEnumerationSequence(base: list) {
                 guard let item = element as? CMRecordedAccelerometerData else { continue }
@@ -120,7 +124,7 @@ extension AccelerometerMapper: SRSensorReaderDelegate {
         _ reader: SRSensorReader,
         didCompleteFetch fetchRequest: SRFetchRequest
     ) {
-        finish(.success(collected))
+        finish(self.classifyFetchOutcome(collected: collected, fetchedResults: fetchedResults))
     }
 
     func sensorReader(

@@ -28,6 +28,7 @@ final class RotationRateMapper: NSObject, SensorSampleMapper {
     private let reader = SRSensorReader(sensor: .rotationRate)
     private var pendingCompletion: ((Result<[[String: Any]], Error>) -> Void)?
     private var collected: [[String: Any]] = []
+    private var fetchedResults = 0
 
     // Apple withholds last 24h of SensorKit data
     private static let holdingPeriod: TimeInterval = 24 * 60 * 60
@@ -71,6 +72,7 @@ final class RotationRateMapper: NSObject, SensorSampleMapper {
         req.to   = SRAbsoluteTime.fromCFAbsoluteTime(_cf: safeTo.timeIntervalSinceReferenceDate)
 
         collected.removeAll(keepingCapacity: true)
+        fetchedResults = 0
         pendingCompletion = completion
         reader.delegate = self
         reader.fetch(req) // delegate-based
@@ -91,6 +93,8 @@ extension RotationRateMapper: SRSensorReaderDelegate {
         // fractional-seconds ISO8601 encoding as the `t` key next to it.
         let recordedAtISO = ISO8601Strategy.encode(dateFromSRAbsoluteTime(result.timestamp))
 
+        fetchedResults += 1
+
         // Typical containers: CMSensorDataList or single sample object
         if let list = result.sample as? CMSensorDataList {
             for element in FastEnumerationSequence(base: list) {
@@ -109,10 +113,10 @@ extension RotationRateMapper: SRSensorReaderDelegate {
 
     func sensorReader(_ reader: SRSensorReader, didCompleteFetch fetchRequest: SRFetchRequest) {
         guard let completion = pendingCompletion else { return }
-        let out = collected
+        let result = self.classifyFetchOutcome(collected: collected, fetchedResults: fetchedResults)
         pendingCompletion = nil
         collected.removeAll(keepingCapacity: false)
-        completion(.success(out))
+        completion(result)
     }
 
     func sensorReader(_ reader: SRSensorReader,

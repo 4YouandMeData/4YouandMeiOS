@@ -29,6 +29,7 @@ final class AmbientPressureMapper: NSObject, SensorSampleMapper {
     private let reader = SRSensorReader(sensor: .ambientPressure)
     private var pendingCompletion: ((Result<[[String: Any]], Error>) -> Void)?
     private var collected: [[String: Any]] = []
+    private var fetchedResults = 0
 
     // Apple withholds last 24h of SensorKit data
     private static let holdingPeriod: TimeInterval = 24 * 60 * 60
@@ -73,6 +74,7 @@ final class AmbientPressureMapper: NSObject, SensorSampleMapper {
         req.to   = SRAbsoluteTime.fromCFAbsoluteTime(_cf: safeTo.timeIntervalSinceReferenceDate)
 
         collected.removeAll(keepingCapacity: true)
+        fetchedResults = 0
         pendingCompletion = completion
         reader.delegate = self
         reader.fetch(req) // delegate-based API
@@ -93,28 +95,51 @@ extension AmbientPressureMapper: SRSensorReaderDelegate {
         // fractional-seconds ISO8601 encoding as the `t` key next to it.
         let recordedAtISO = ISO8601Strategy.encode(dateFromSRAbsoluteTime(result.timestamp))
 
-        if let list = result.sample as? CMSensorDataList {
+        fetchedResults += 1
+        collected.append(contentsOf: Self.mapFetchedSample(result.sample, recordedAtISO: recordedAtISO))
+        return true // continue fetching
+    }
+
+    /// Fan out one fetch result into records. Internal (not private) so the container handling
+    /// can be unit-tested without an `SRFetchResult`, which cannot be constructed outside
+    /// SensorKit.
+    static func mapFetchedSample(_ sample: AnyObject, recordedAtISO: String) -> [[String: Any]] {
+        var out: [[String: Any]] = []
+        if let list = sample as? CMSensorDataList {
             // Iterate via NSFastEnumeration wrapper you already have (do not add Sequence conformance)
             for element in FastEnumerationSequence(base: list) {
                 guard let obj = element as? NSObject else { continue }
                 if let rec = Self.mapAmbientPressure(obj, recordedAtISO: recordedAtISO) {
-                    collected.append(rec)
+                    out.append(rec)
                 }
             }
-        } else if let obj = result.sample as? NSObject {
+        } else if let array = sample as? NSArray {
+            // FUAM-3945 (fidelity review R3): `SRSensors.h` — ambient-pressure fetches return
+            // `NSArray<CMRecordedPressureData *>`, not a `CMSensorDataList`. The array used to
+            // fall into the single-object branch below, where every KVC probe fails on NSArray,
+            // the whole batch mapped to nothing and the window was reported CONFIRMED-EMPTY,
+            // advancing the cursor permanently past real data (AC4). Must precede the generic
+            // NSObject branch (NSArray IS an NSObject).
+            for element in array {
+                guard let obj = element as? NSObject else { continue }
+                if let rec = Self.mapAmbientPressure(obj, recordedAtISO: recordedAtISO) {
+                    out.append(rec)
+                }
+            }
+        } else if let obj = sample as? NSObject {
             if let rec = Self.mapAmbientPressure(obj, recordedAtISO: recordedAtISO) {
-                collected.append(rec)
+                out.append(rec)
             }
         }
-        return true // continue fetching
+        return out
     }
 
     func sensorReader(_ reader: SRSensorReader, didCompleteFetch fetchRequest: SRFetchRequest) {
         guard let completion = pendingCompletion else { return }
-        let out = collected
+        let result = self.classifyFetchOutcome(collected: collected, fetchedResults: fetchedResults)
         pendingCompletion = nil
         collected.removeAll(keepingCapacity: false)
-        completion(.success(out))
+        completion(result)
     }
 
     func sensorReader(_ reader: SRSensorReader,
@@ -136,7 +161,12 @@ extension AmbientPressureMapper: SRSensorReaderDelegate {
     /// Internal (not private) so the record shape can be unit-tested without an
     /// `SRFetchResult`, which cannot be constructed outside SensorKit.
     static func mapAmbientPressure(_ obj: NSObject, recordedAtISO: String) -> [String: Any]? {
-        let ts = Self.sampleDate(obj, keys: ["timestamp", "startDate", "date"])
+        // FUAM-3945 (fidelity review R3): `startDate` FIRST. `CMRecordedPressureData` inherits
+        // `CMLogItem.timestamp` — seconds since BOOT, which the CFAbsoluteTime reading in
+        // `sampleDate` turns into a date near 2001 that the consent gate then drops; its
+        // `startDate` is the documented wall-clock sample time. `timestamp` stays as the last
+        // fallback for shapes that expose a genuine Date or SRAbsoluteTime under that name.
+        let ts = Self.sampleDate(obj, keys: ["startDate", "date", "timestamp"])
 
         // Pressure in kPa (common KVC names)
         let pressure: Double? =

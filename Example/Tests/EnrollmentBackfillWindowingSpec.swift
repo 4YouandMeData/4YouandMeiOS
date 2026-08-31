@@ -1405,7 +1405,7 @@ class SensorRecordedAtSpec: QuickSpec {
 
         it("puts recorded_at on an ambient light record without touching `t`") {
             let sample = FakeAmbientLightSample(timestamp: measuredAt, lux: 42)
-            let record = AmbientLightMapper.mapAmbientLight(sample, recordedAtISO: recordedAtISO)
+            let record = AmbientLightMapper.mapAmbientLight(sample, recordedAt: recordedAt)
             expect(record?["recorded_at"] as? String).to(equal(recordedAtISO))
             expect(record?["t"] as? String).to(equal(ISO8601Strategy.encode(measuredAt)))
         }
@@ -3507,7 +3507,7 @@ class SensorRecordedAtAnchorGuardSpec: QuickSpec {
 
         it("ambient light: recorded_at present and strictly parsable") {
             let sample = FakeAnchorAmbientLightSample(startDate: recordedAt.addingTimeInterval(-3600))
-            let record = AmbientLightMapper.mapAmbientLight(sample, recordedAtISO: recordedAtISO)
+            let record = AmbientLightMapper.mapAmbientLight(sample, recordedAt: recordedAt)
             expect(strictOffsetParse(record?["recorded_at"] as? String)).toNot(beNil())
         }
 
@@ -4400,8 +4400,7 @@ class SensorMapperFidelitySpec: QuickSpec {
 
             it("ambient light: placement is read by KVC and emitted symbolically") {
                 let sample = FidelityAmbientLightSample(startDate: recordedAt.addingTimeInterval(-3600))
-                let record = AmbientLightMapper.mapAmbientLight(sample,
-                                                                recordedAtISO: ISO8601Strategy.encode(recordedAt))
+                let record = AmbientLightMapper.mapAmbientLight(sample, recordedAt: recordedAt)
                 expect(record?["placement"] as? String).to(equal("front_bottom"))
             }
 
@@ -4522,6 +4521,48 @@ class SensorMapperFidelitySpec: QuickSpec {
                 expect(SensorSampleUploadManager.joinBoundaryDropCount(records,
                                                                        lowerBound: bound,
                                                                        sensor: .visits)).to(equal(0))
+            }
+        }
+
+        describe("R3 — parse failures are never classified as an empty window") {
+
+            it("ambient pressure: an NSArray fetch result (the SRSensors.h shape) fans out to records") {
+                let samples: NSArray = [
+                    FidelityAmbientPressureSample(timestamp: recordedAt.addingTimeInterval(-3600)),
+                    FidelityAmbientPressureSample(timestamp: recordedAt.addingTimeInterval(-1800))
+                ]
+                let records = AmbientPressureMapper.mapFetchedSample(samples,
+                                                                     recordedAtISO: ISO8601Strategy.encode(recordedAt))
+                expect(records.count).to(equal(2))
+                expect(records.first?["pressure_kpa"] as? Double).to(beCloseTo(101.3, within: 0.0001))
+            }
+
+            it("ambient light: a sample with no date property gets `t` from the fetch write time, not distantPast") {
+                // `SRAmbientLightSample` declares only placement/chromaticity/lux — no date at
+                // all — so on-device every record used to resolve `t` to distantPast and die at
+                // the consent gate.
+                let record = AmbientLightMapper.mapAmbientLight(FidelityDatelessLightSample(), recordedAt: recordedAt)
+                expect(record?["t"] as? String).to(equal(ISO8601Strategy.encode(recordedAt)))
+            }
+
+            it("classifies fetched-but-unmapped results as a failure, never CONFIRMED-EMPTY") {
+                let outcome = FakeSensorMapper().classifyFetchOutcome(collected: [], fetchedResults: 3)
+                switch outcome {
+                case .failure(let error):
+                    expect(error).to(beAKindOf(SensorMapperUnparsedResultsError.self))
+                case .success:
+                    fail("unparsed results must not classify as an empty success: the cursor would advance past real data")
+                }
+            }
+
+            it("keeps a genuinely empty fetch as an empty success (CONFIRMED-EMPTY stays reachable)") {
+                let outcome = FakeSensorMapper().classifyFetchOutcome(collected: [], fetchedResults: 0)
+                expect((try? outcome.get())?.count).to(equal(0))
+            }
+
+            it("passes mapped records through untouched") {
+                let outcome = FakeSensorMapper().classifyFetchOutcome(collected: [["k": "v"]], fetchedResults: 1)
+                expect((try? outcome.get())?.count).to(equal(1))
             }
         }
     }
@@ -4692,4 +4733,9 @@ private final class FidelityAmbientPressureSample: NSObject {
     @objc let pressure: NSNumber = 101.3
     @objc let temperature = NSMeasurement(doubleValue: 21.5, unit: UnitTemperature.celsius)
     init(timestamp: Date) { self.timestamp = timestamp }
+}
+
+/// R3: mirrors the REAL `SRAmbientLightSample` surface — lux but NO date property of any name.
+private final class FidelityDatelessLightSample: NSObject {
+    @objc let lux: Double = 42
 }

@@ -1554,7 +1554,9 @@ public final class SensorSampleUploadManager {
     /// | --- | --- |
     /// | `accelerometer` | `t` (`CMRecordedAccelerometerData.startDate`) |
     /// | `ambientLightSensor` / `ambientPressure` / `rotationRate` | `t` (KVC `startDate` or
-    ///   `timestamp`; `distantPast` when unresolvable, which fails the gate — the safe direction) |
+    ///   `timestamp`; `distantPast` when unresolvable, which fails the gate — the safe direction.
+    ///   Exception, review R3: `SRAmbientLightSample` has NO date property, so the light mapper
+    ///   falls back to the fetch result's write time instead of dropping the whole stream) |
     /// | `pedometerData` | `start_ms` (`CMPedometerData.startDate`) |
     /// | `visits` | nested `arrival.start`, else nested `departure.start` |
     /// | `deviceUsageReport` / `phoneUsageReport` / `messagesUsageReport` | `start` when the OS
