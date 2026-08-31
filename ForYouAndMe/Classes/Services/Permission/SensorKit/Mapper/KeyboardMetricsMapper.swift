@@ -316,8 +316,13 @@ extension KeyboardMetricsMapper {
         let iso = ISO8601DateFormatter()
         var rec: [String: Any] = [:]
 
-        // Recorded-at from SRFetchResult.timestamp
-        if let ts = recordedAt { rec["recorded_at"] = iso.string(from: ts) }
+        // Recorded-at from SRFetchResult.timestamp.
+        // `recorded_at` stays whole-second verbatim (server row anchor, historical shape);
+        // `recorded_at_precise` is the additive fractional-seconds companion (FUAM-3945, X6).
+        if let ts = recordedAt {
+            rec["recorded_at"] = iso.string(from: ts)
+            rec["recorded_at_precise"] = ISO8601Strategy.encode(ts)
+        }
 
         // Period bounds
         if let start = date(obj, key: "startDate") { rec["start"] = iso.string(from: start) }

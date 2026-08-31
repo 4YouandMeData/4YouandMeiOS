@@ -187,7 +187,14 @@ extension DeviceUsageReportMapper {
         var rec: [String: Any] = [:]
 
         // Timestamps
-        if let ts = recordedAt { rec["recorded_at"] = iso.string(from: ts) }
+        if let ts = recordedAt {
+            // `recorded_at` stays whole-second verbatim: the server derives every row anchor
+            // from it and historical rows are whole-second (FUAM-3945 fidelity audit, X6).
+            rec["recorded_at"] = iso.string(from: ts)
+            // X6: the additive full-precision companion — fractional-seconds ISO8601, the one
+            // dialect every NEW timestamp key standardises on.
+            rec["recorded_at_precise"] = ISO8601Strategy.encode(ts)
+        }
         if let start = kvcDate(obj, key: "startDate") { rec["start"] = iso.string(from: start) }
         if let end = kvcDate(obj, key: "endDate") { rec["end"] = iso.string(from: end) }
 
