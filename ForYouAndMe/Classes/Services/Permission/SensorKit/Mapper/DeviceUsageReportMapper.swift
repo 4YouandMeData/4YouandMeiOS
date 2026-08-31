@@ -170,6 +170,34 @@ extension DeviceUsageReportMapper {
         return name.contains("DeviceUsageReport")
     }
 
+    /// FUAM-3945 fidelity audit, X5: symbolic name for a `SRDeviceUsageReport.NotificationUsage
+    /// .Event` raw value. Built by switching on the SDK enum cases, so the raw-value table is
+    /// the compiler's, not a hardcoded copy. Unlisted raw values (future OS cases) fall through
+    /// `@unknown default` and yield `nil` — the numeric `event` key still carries them.
+    static func notificationEventName(rawValue: Int) -> String? {
+        guard let event = SRDeviceUsageReport.NotificationUsage.Event(rawValue: rawValue) else { return nil }
+        switch event {
+        case .unknown: return "unknown"
+        case .received: return "received"
+        case .defaultAction: return "default_action"
+        case .supplementaryAction: return "supplementary_action"
+        case .clear: return "clear"
+        case .notificationCenterClearAll: return "notification_center_clear_all"
+        case .removed: return "removed"
+        case .hide: return "hide"
+        case .longLook: return "long_look"
+        case .silence: return "silence"
+        case .appLaunch: return "app_launch"
+        case .expired: return "expired"
+        case .bannerPulldown: return "banner_pulldown"
+        case .tapCoalesce: return "tap_coalesce"
+        case .deduped: return "deduped"
+        case .deviceActivated: return "device_activated"
+        case .deviceUnlocked: return "device_unlocked"
+        @unknown default: return nil
+        }
+    }
+
     static func categoryName(_ any: Any) -> String {
         // Try rawValue if it's an enum bridged to ObjC; fallback to description
         if let o = any as? NSObject,
@@ -257,9 +285,15 @@ extension DeviceUsageReportMapper {
                 guard let arr = value as? [NSObject] else { continue }
                 for n in arr {
                     var entry: [String: Any] = ["category": category]
-                    // event enum → string
+                    // event enum → string. FUAM-3945 fidelity audit, X5: production stores a
+                    // number-in-a-string ("0", "11"); `event` is kept verbatim and `event_name`
+                    // is the additive symbolic companion.
                     if let ev = valueIfResponds(n, "event") {
                         entry["event"] = String(describing: ev)
+                        if let raw = (ev as? NSNumber)?.intValue,
+                           let name = notificationEventName(rawValue: raw) {
+                            entry["event_name"] = name
+                        }
                     }
                     // try both "count" and "totalCount" defensively
                     if let c = (valueIfResponds(n, "count") as? NSNumber)?.intValue {

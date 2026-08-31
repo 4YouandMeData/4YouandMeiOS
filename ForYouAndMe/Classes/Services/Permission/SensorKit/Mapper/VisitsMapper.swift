@@ -176,6 +176,23 @@ extension VisitsMapper {
         NSStringFromClass(type(of: obj)).contains("SRVisit")
     }
 
+    /// FUAM-3945 fidelity audit, X5: symbolic name for a `SRVisit.LocationCategory` raw value.
+    /// Built by switching on the SDK enum cases, so the raw-value table is the compiler's, not a
+    /// hardcoded copy. An `@objc` C enum initialises from ANY Int, so unlisted raw values fall
+    /// through `@unknown default` and yield `nil` (the numeric `location_category` still carries
+    /// them).
+    static func locationCategoryName(rawValue: Int) -> String? {
+        guard let category = SRVisit.LocationCategory(rawValue: rawValue) else { return nil }
+        switch category {
+        case .unknown: return "unknown"
+        case .home: return "home"
+        case .work: return "work"
+        case .school: return "school"
+        case .gym: return "gym"
+        @unknown default: return nil
+        }
+    }
+
     /// Map SRVisit → JSON (identifier, arrival/departure intervals, distanceFromHome, locationCategory, recorded_at)
     static func mapVisit(_ obj: NSObject, recordedAt: Date?) -> [String: Any]? {
         guard isSRVisit(obj) else { return nil }
@@ -216,8 +233,17 @@ extension VisitsMapper {
         }
 
         // Location category enum → readable string (e.g., home/work/school/…)
-        if let cat = enumString(valueIfResponds(obj, "locationCategory")) {
+        // FUAM-3945 fidelity audit, X5: in production the KVC value is an NSNumber, so
+        // `location_category` stores a number-in-a-string ("1"). That key is kept verbatim
+        // (historical rows have it, consumers may read it); `location_category_name` is the
+        // additive symbolic companion, compile-checked against `SRVisit.LocationCategory`.
+        let categoryValue = valueIfResponds(obj, "locationCategory")
+        if let cat = enumString(categoryValue) {
             rec["location_category"] = cat
+        }
+        if let raw = (categoryValue as? NSNumber)?.intValue,
+           let name = locationCategoryName(rawValue: raw) {
+            rec["location_category_name"] = name
         }
 
         // NB: SRVisit does NOT expose raw coordinates (privacy); we do not emit lat/lon.
