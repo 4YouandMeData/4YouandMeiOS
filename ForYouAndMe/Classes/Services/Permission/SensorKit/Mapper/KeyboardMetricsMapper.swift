@@ -235,19 +235,52 @@ extension KeyboardMetricsMapper {
 
     // MARK: Probability metrics (safe, no undefined KVC)
 
-    /// Extract numeric samples from known ProbabilityMetric arrays.
-    static func samplesArray(_ obj: NSObject, keys: [String]) -> [Double]? {
+    /// FUAM-3945 fidelity audit, X2: hard bound on the raw distribution samples emitted per
+    /// metric — TAIL PROTECTION ONLY, never a design constraint. Measured against the real
+    /// production keyboard row (21 records): the summed sample counts across all of a record's
+    /// metrics run 116–439, so per-metric counts sit in the tens; full distributions add
+    /// ~3–5 KB per record and a whole 7-day backfill stays around 1 MB against the 5 MB
+    /// proactive split. A normal user never reaches this cap; a metric that does says so in
+    /// the payload (`samples_truncated` + the untruncated `count`), never silently.
+    static let maxProbabilitySamples = 1_000
+
+    /// FUAM-3945 fidelity audit, X2: the unit each summarised/raw metric is expressed in after
+    /// `extractSamples` conversion — timings in seconds, error distances in meters. Used when
+    /// the OS hands the samples over as bare numbers (no `Measurement` to derive the unit from).
+    static let probabilityMetricUnits: [String: String] = [
+        "spaceToCharKey": "seconds",
+        "charKeyToCharKey": "seconds",
+        "charKeyToPrediction": "seconds",
+        "charKeyToDeleteKey": "seconds",
+        "deleteToCharKey": "seconds",
+        "spaceToDeleteKey": "seconds",
+        "charKeyToPlaneChangeKey": "seconds",
+        "planeChangeKeyToCharKey": "seconds",
+        "touchDownUp": "seconds",
+        "touchUpDown": "seconds",
+        "pathToPath": "seconds",
+        "shortWordCharKeyDownErrorDistance": "meters",
+        "shortWordCharKeyUpErrorDistance": "meters",
+        "longWordCharKeyDownErrorDistance": "meters",
+        "longWordCharKeyUpErrorDistance": "meters",
+        "deleteDownErrorDistance": "meters",
+        "spaceDownErrorDistance": "meters"
+    ]
+
+    /// Extract numeric samples from known ProbabilityMetric arrays, together with the unit the
+    /// conversion produced (`nil` when the OS handed over bare numbers).
+    static func extractSamples(_ obj: NSObject, keys: [String]) -> (values: [Double], unit: String?)? {
         for key in keys {
             guard let any = valueIfResponds(obj, key) else { continue }
 
-            if let ns = any as? [NSNumber] { return ns.map(\.doubleValue) }
+            if let ns = any as? [NSNumber] { return (ns.map(\.doubleValue), nil) }
 
             if let durs = any as? [Measurement<UnitDuration>] {
-                return durs.map { $0.converted(to: .seconds).value }
+                return (durs.map { $0.converted(to: .seconds).value }, "seconds")
             }
 
             if let lens = any as? [Measurement<UnitLength>] {
-                return lens.map { $0.converted(to: .meters).value }
+                return (lens.map { $0.converted(to: .meters).value }, "meters")
             }
         }
         return nil
@@ -282,21 +315,40 @@ extension KeyboardMetricsMapper {
     }
 
     /// Robust export that never KVC-crashes on undefined keys.
-    static func exportProbabilityMetric(_ any: Any?) -> [String: Any]? {
+    ///
+    /// FUAM-3945 fidelity audit, X2: the raw distribution is now emitted alongside the summary
+    /// statistics (which are kept verbatim — consumers may already read them). The raw samples
+    /// are what SensorKit hands over (`distributionSampleValues`); reducing them to 8 stats made
+    /// distribution-shape analysis impossible and irrecoverable after the OS's 7-day retention.
+    /// Every metric now also carries a `unit` (previously absent in all production records).
+    static func exportProbabilityMetric(_ any: Any?, metricKey: String? = nil) -> [String: Any]? {
         guard let metric = any as? NSObject else { return nil }
 
         // Pull samples from any of the documented properties
-        guard let samples = samplesArray(
+        guard let extracted = extractSamples(
             metric,
             keys: ["sampleValues", "distributionSampleValues", "values"]
         ) else {
             return nil
         }
+        let samples = extracted.values
 
         var out = summarize(samples)
 
-        // Attach unit if present (best effort)
-        if let unit = valueIfResponds(metric, "unit") {
+        // X2: the raw distribution, bounded. `count` (from `summarize`) always carries the
+        // UNTRUNCATED sample count, so a truncated payload states both the flag and the size.
+        if samples.count > maxProbabilitySamples {
+            out["samples"] = Array(samples.prefix(maxProbabilitySamples))
+            out["samples_truncated"] = true
+        } else if !samples.isEmpty {
+            out["samples"] = samples
+        }
+
+        // X2: unit — conversion-derived first, hardcoded per-metric table second, the legacy
+        // KVC probe last (kept for any OS that ever exposes a `unit` property).
+        if let unit = extracted.unit ?? metricKey.flatMap({ probabilityMetricUnits[$0] }) {
+            out["unit"] = unit
+        } else if let unit = valueIfResponds(metric, "unit") {
             switch unit {
             case is UnitDuration: out["unit"] = "seconds"
             case is UnitLength: out["unit"] = "meters"
@@ -420,10 +472,10 @@ extension KeyboardMetricsMapper {
             rec["total_path_length_m"] = pathLen
         }
 
-        // Probability metrics (summarized)
+        // Probability metrics (summary stats + raw distribution, FUAM-3945 X2)
         var pm = [String: Any]()
         for key in probabilityMetricKeys {
-            if let dict = exportProbabilityMetric(valueIfResponds(obj, key)) {
+            if let dict = exportProbabilityMetric(valueIfResponds(obj, key), metricKey: key) {
                 pm[key] = dict
             }
         }
