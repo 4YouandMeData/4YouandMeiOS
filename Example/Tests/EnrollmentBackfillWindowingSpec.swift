@@ -4488,6 +4488,9 @@ class SensorMapperFidelitySpec: QuickSpec {
 
             let bound = Date(timeIntervalSince1970: 1_786_000_000)
             let iso = ISO8601DateFormatter()
+            // A window that vouches (opens strictly above the bound): the day-report arm of the
+            // metric never consults it, the sub-hour arm counts nothing under it.
+            let vouchingWindow = bound.addingTimeInterval(86_400)
 
             func report(recordedAtOffset: TimeInterval, duration: TimeInterval = 86_400) -> [String: Any] {
                 return ["recorded_at": iso.string(from: bound.addingTimeInterval(recordedAtOffset)),
@@ -4499,6 +4502,7 @@ class SensorMapperFidelitySpec: QuickSpec {
                 let records = [report(recordedAtOffset: 86_399)]
                 expect(SensorSampleUploadManager.joinBoundaryDropCount(records,
                                                                        lowerBound: bound,
+                                                                       windowStart: vouchingWindow,
                                                                        sensor: .deviceUsageReport)).to(equal(1))
             }
 
@@ -4506,6 +4510,7 @@ class SensorMapperFidelitySpec: QuickSpec {
                 let records = [report(recordedAtOffset: -86_400)]
                 expect(SensorSampleUploadManager.joinBoundaryDropCount(records,
                                                                        lowerBound: bound,
+                                                                       windowStart: vouchingWindow,
                                                                        sensor: .deviceUsageReport)).to(equal(0))
             }
 
@@ -4513,6 +4518,7 @@ class SensorMapperFidelitySpec: QuickSpec {
                 let records = [report(recordedAtOffset: 2 * 86_400)]
                 expect(SensorSampleUploadManager.joinBoundaryDropCount(records,
                                                                        lowerBound: bound,
+                                                                       windowStart: vouchingWindow,
                                                                        sensor: .deviceUsageReport)).to(equal(0))
             }
 
@@ -4520,7 +4526,27 @@ class SensorMapperFidelitySpec: QuickSpec {
                 let records = [report(recordedAtOffset: 86_399)]
                 expect(SensorSampleUploadManager.joinBoundaryDropCount(records,
                                                                        lowerBound: bound,
+                                                                       windowStart: vouchingWindow,
                                                                        sensor: .visits)).to(equal(0))
+            }
+
+            it("R2: counts a sub-hour bucket dropped in the non-vouching boundary window") {
+                // A production-shaped 15-min device-usage bucket: measurementTime is nil for it
+                // (duration below minimumPlausibleReportSpan), so it is gated by windowVouches —
+                // and the enrolment-boundary window (windowStart == bound) does not vouch.
+                let records = [report(recordedAtOffset: 899, duration: 900)]
+                expect(SensorSampleUploadManager.joinBoundaryDropCount(records,
+                                                                       lowerBound: bound,
+                                                                       windowStart: bound,
+                                                                       sensor: .deviceUsageReport)).to(equal(1))
+            }
+
+            it("R2: does not count that bucket once the window vouches (the gate keeps it)") {
+                let records = [report(recordedAtOffset: 899, duration: 900)]
+                expect(SensorSampleUploadManager.joinBoundaryDropCount(records,
+                                                                       lowerBound: bound,
+                                                                       windowStart: vouchingWindow,
+                                                                       sensor: .deviceUsageReport)).to(equal(0))
             }
         }
 

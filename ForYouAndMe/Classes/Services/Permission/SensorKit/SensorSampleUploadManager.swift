@@ -1088,7 +1088,10 @@ public final class SensorSampleUploadManager {
                 // period of the bound — the ones the report-timestamp semantics ambiguity may
                 // be costing (see the contradiction note on `measurementTime`). Semantics
                 // deliberately unchanged: the gate keeps erring conservative.
-                let boundaryDrops = Self.joinBoundaryDropCount(records, lowerBound: boundDate, sensor: sensor)
+                let boundaryDrops = Self.joinBoundaryDropCount(records,
+                                                               lowerBound: boundDate,
+                                                               windowStart: vouchAnchor,
+                                                               sensor: sensor)
                 if boundaryDrops > 0 {
                     self.analytics.track(event: .sensorRecordDropped(sensor: context.device.telemetryName(for: sensor),
                                                                      count: boundaryDrops,
@@ -1639,17 +1642,33 @@ public final class SensorSampleUploadManager {
     /// vouches for them (see `windowVouches`). `windowStart` must therefore be the REAL window
     /// the records came from, both at enqueue time and at drain time.
     /// FUAM-3945 fidelity audit, X3 telemetry seam: of the records `dropPreBoundRecords` would
-    /// drop, how many are usage-report records whose derived period start missed the bound by
-    /// LESS than one report period — i.e. exactly the drops that flip to keeps under the
-    /// "timestamp = period start" reading of the contradiction documented on
-    /// `measurementTime`. Pure; counting only, never control flow.
+    /// drop, how many are usage-report records lost AT the enrolment boundary — i.e. exactly the
+    /// drops that flip to keeps under the "timestamp = period start" reading of the contradiction
+    /// documented on `measurementTime`. Two disjoint populations (fix round, review R2):
+    ///
+    /// - DAY reports (`duration_s >= minimumPlausibleReportSpan`): a derivable period start that
+    ///   missed the bound by less than one report period.
+    /// - SUB-HOUR buckets (production: 900 s device-usage, 1800 s messages — the very stamps the
+    ///   X3 contradiction is about): `measurementTime` is nil for them, so they are dropped
+    ///   exactly when the window does not vouch — which for a usage report happens only at the
+    ///   enrolment-boundary window. Every undecidable record in a non-vouching window IS a
+    ///   boundary drop; without this arm the metric was structurally blind to the two sub-day
+    ///   sensors and a near-zero Firebase reading would have wrongly cleared the ambiguity.
+    ///
+    /// `windowStart` must be the same vouch anchor `dropPreBoundRecords` is given, or the count
+    /// diverges from the gate. Not covered: `keyboardMetrics` (not a usage report; no period
+    /// semantics) and the drain-time re-gate. Pure; counting only, never control flow.
     static func joinBoundaryDropCount(_ records: [[String: Any]],
                                       lowerBound: Date,
+                                      windowStart: Date,
                                       sensor: SRSensor) -> Int {
         guard Self.usageReportSensors.contains(sensor) else { return 0 }
+        let vouches = Self.windowVouches(for: sensor, windowStart: windowStart, lowerBound: lowerBound)
         return records.filter { record in
-            guard let measured = Self.measurementTime(of: record, sensor: sensor),
-                  measured < lowerBound,
+            guard let measured = Self.measurementTime(of: record, sensor: sensor) else {
+                return !vouches
+            }
+            guard measured < lowerBound,
                   let duration = (record["duration_s"] as? NSNumber)?.doubleValue,
                   duration >= Self.minimumPlausibleReportSpan else { return false }
             return measured.addingTimeInterval(duration) >= lowerBound
