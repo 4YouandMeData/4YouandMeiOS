@@ -44,9 +44,10 @@ enum HostAppConfig {
 
     /// Lenient on purpose: a missing key, a malformed value, an empty array or an array with no
     /// recognised entry all mean "every type", which is the behaviour of every host app that
-    /// doesn't set the key. Unknown strings are ignored.
+    /// doesn't set the key. Unknown strings and non-string entries are ignored, so a partially
+    /// recognisable array still narrows the offer down to what it does recognise.
     private static func noteTypes(_ key: String) -> [HostAppNoteType] {
-        let rawValues = (Bundle.main.object(forInfoDictionaryKey: key) as? [String] ?? []).map { $0.lowercased() }
+        let rawValues = (Bundle.main.object(forInfoDictionaryKey: key) as? [Any] ?? []).compactMap { ($0 as? String)?.lowercased() }
         let types = HostAppNoteType.allCases.filter { rawValues.contains($0.rawValue) }
         return types.isEmpty ? HostAppNoteType.allCases : types
     }
