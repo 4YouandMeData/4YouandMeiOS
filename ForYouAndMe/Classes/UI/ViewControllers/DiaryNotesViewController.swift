@@ -72,7 +72,14 @@ class DiaryNotesViewController: BaseViewController {
         videoIcon?.withTintColor(ColorPalette.color(withType: .secondary), renderingMode: .alwaysOriginal)
         buttonsView.setThirdButtonImage(ImagePalette.templateImage(withName: .videoIcon))
         buttonsView.addTargetToThirdButton(target: self, action: #selector(self.createVideoNote))
-        
+
+        // FUAM-4031: the host app can restrict which note types can be created. Existing notes
+        // are never gated: only these creation buttons are.
+        let allowedTypes = HostAppConfig.diaryNoteTypes
+        buttonsView.setFirstButtonHidden(!allowedTypes.contains(.audio))
+        buttonsView.setSecondButtonHidden(!allowedTypes.contains(.text))
+        buttonsView.setThirdButtonHidden(!allowedTypes.contains(.video))
+
         containerView.addSubview(buttonsView)
         buttonsView.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets.zero)
         

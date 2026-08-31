@@ -100,6 +100,10 @@ class TripleButtonHorizontalView: UIView {
     fileprivate let secondButton = UIButton()
     fileprivate let thirdButton = UIButton()
     
+    private let firstButtonContainerView = UIView()
+    private let secondButtonContainerView = UIView()
+    private let thirdButtonContainerView = UIView()
+    
     init(styleCategory: TripleButtonHorizontalStyleCategory,
          horizontalInset: CGFloat = Constants.Style.DefaultHorizontalMargins,
          height: CGFloat = Constants.Style.DefaultFooterHeight) {
@@ -119,21 +123,18 @@ class TripleButtonHorizontalView: UIView {
         stackView.autoPinEdge(toSuperviewEdge: .trailing, withInset: horizontalInset)
         stackView.autoAlignAxis(toSuperviewAxis: .horizontal)
         
-        let firstButtonContainerView = UIView()
-        firstButtonContainerView.addSubview(self.firstButton)
+        self.firstButtonContainerView.addSubview(self.firstButton)
         self.firstButton.autoPinEdgesToSuperviewEdges()
-        stackView.addArrangedSubview(firstButtonContainerView)
+        stackView.addArrangedSubview(self.firstButtonContainerView)
         
-        let secondButtonContainerView = UIView()
-        secondButtonContainerView.addSubview(self.secondButton)
+        self.secondButtonContainerView.addSubview(self.secondButton)
         self.secondButton.autoPinEdgesToSuperviewEdges()
-        stackView.addArrangedSubview(secondButtonContainerView)
+        stackView.addArrangedSubview(self.secondButtonContainerView)
         
-        let thirdButtonContainerView = UIView()
-        thirdButtonContainerView.addSubview(self.thirdButton)
+        self.thirdButtonContainerView.addSubview(self.thirdButton)
         self.thirdButton.tintColor = .white
         self.thirdButton.autoPinEdgesToSuperviewEdges()
-        stackView.addArrangedSubview(thirdButtonContainerView)
+        stackView.addArrangedSubview(self.thirdButtonContainerView)
         
         self.apply(style: styleCategory.style)
     }
@@ -203,5 +204,19 @@ class TripleButtonHorizontalView: UIView {
     
     public func setThirdButtonColor(_ color: UIColor) {
         self.thirdButton.tintColor = color
+    }
+    
+    /// Hides the button's arranged container so the `fillEqually` stack redistributes
+    /// the remaining buttons over the full width.
+    public func setFirstButtonHidden(_ hidden: Bool) {
+        self.firstButtonContainerView.isHidden = hidden
+    }
+    
+    public func setSecondButtonHidden(_ hidden: Bool) {
+        self.secondButtonContainerView.isHidden = hidden
+    }
+    
+    public func setThirdButtonHidden(_ hidden: Bool) {
+        self.thirdButtonContainerView.isHidden = hidden
     }
 }
