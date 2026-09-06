@@ -2125,9 +2125,18 @@ enum SensorUploadLedger {
     /// date, the measured values) stay in the hash untouched: they are already fetch-stable and
     /// carry the discriminating power. A record without the companion key (built by an older
     /// build, or a stub) hashes exactly as before. Internal for the determinism specs.
+    ///
+    /// `device_os_version` is dropped unconditionally: it is the one device tag that mutates in
+    /// place (every OS update), so a hash over it would flip every fingerprint in the rescan
+    /// window after an update. The dedup path never sees it — tagging happens at enqueue, after
+    /// `filter` (D4) — but the exclusion makes that invariant structural rather than
+    /// ordering-dependent, and keeps `batchRejectionKey` (which hashes TAGGED queue records)
+    /// stable across an OS update. `device_kind`/`device_product_type` are stable per device
+    /// and moot anyway: the ledger is scoped per device key. The tag still SHIPS untouched.
     static func fetchStableForm(of record: [String: Any]) -> [String: Any] {
-        guard record[SensorRecordIdentity.rawKey] != nil else { return record }
         var form = record
+        form.removeValue(forKey: "device_os_version")
+        guard record[SensorRecordIdentity.rawKey] != nil else { return form }
         for key in (record[SensorRecordIdentity.replacesKey] as? [String]) ?? [] {
             form.removeValue(forKey: key)
         }

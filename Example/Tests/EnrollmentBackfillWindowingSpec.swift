@@ -3199,6 +3199,27 @@ class SensorUploadLedgerSpec: QuickSpec {
                 let form = SensorUploadLedger.fetchStableForm(of: legacy)
                 expect(SensorUploadLedger.canonical(form)).to(equal(SensorUploadLedger.canonical(legacy)))
             }
+
+            it("fingerprints a tagged record identically across an OS update") {
+                // `device_os_version` is the one device tag that mutates in place: after an OS
+                // update every tagged record in the rescan window would otherwise re-fingerprint
+                // as novel — the exact re-upload class the ledger exists to prevent.
+                let device = SensorDevice(device: nil, key: "iphone", productType: "iPhone14,5", systemVersion: "17.6")
+                let updated = SensorDevice(device: nil, key: "iphone", productType: "iPhone14,5", systemVersion: "18.0")
+                let record = fetched(raw: raw, wallOffset: 3.117)
+                let before = record.merging(device.recordTags) { _, tag in tag }
+                let after = record.merging(updated.recordTags) { _, tag in tag }
+                expect(before["device_os_version"] as? String).toNot(equal(after["device_os_version"] as? String))
+                expect(SensorUploadLedger.fingerprint(of: before))
+                    .to(equal(SensorUploadLedger.fingerprint(of: after)))
+                // The exclusion is not blind: a real content difference still discriminates.
+                var moved = before
+                moved["location_id"] = "B7C1"
+                expect(SensorUploadLedger.fingerprint(of: moved))
+                    .toNot(equal(SensorUploadLedger.fingerprint(of: before)))
+                // And the tag still SHIPS — only the local hash input drops it.
+                expect(before["device_os_version"] as? String).to(equal("17.6"))
+            }
         }
 
         describe("filter") {

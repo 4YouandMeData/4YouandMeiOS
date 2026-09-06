@@ -89,10 +89,12 @@ struct BackfillLowerBound {
     /// This is the ONE case in which a cursor may be rewound. The rule everywhere else is
     /// "cursors only move forward", because rewinding re-uploads data and, worse, can re-open a
     /// window the participant has since withdrawn consent for. Neither applies here: the rewind
-    /// target is the consent bound itself (never below it), and every window is a whole UTC day,
-    /// so a re-walk reproduces the exact same anchors and the backend union-merges the re-upload
-    /// instead of duplicating it. Bandwidth is the only cost, against the alternative of silently
-    /// never fetching the interval between the excursion and the burnt cursor.
+    /// target is the consent bound itself (never below it), and windows are participant-timezone
+    /// calendar days, so a re-walk reproduces the same windows as long as the participant's
+    /// timezone setting has not changed in between. Re-uploaded records are deduplicated
+    /// primarily by the local upload ledger; server-side reconciliation is best-effort
+    /// (FUAM-4074). Bandwidth is the only cost, against the alternative of silently never
+    /// fetching the interval between the excursion and the burnt cursor.
     static func isFutureBurned(cursor: Date?, upperBound: Date) -> Bool {
         guard let cursor = cursor else { return false }
         return cursor > upperBound.addingTimeInterval(Self.futureCursorTolerance)
