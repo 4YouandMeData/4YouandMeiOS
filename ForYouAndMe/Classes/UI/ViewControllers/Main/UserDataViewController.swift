@@ -257,13 +257,13 @@ class UserDataViewController: BaseViewController, WKNavigationDelegate, WKScript
     }
     
     private func handleSharingTap(body: [String: Any]) {
-        let urlString = body["url"] as? String ?? "https://www.google.com"
-
-        guard let url = URL(string: urlString) else {
-            assertionFailure("URL invalido: \(urlString)")
+        guard let urlString = body["url"] as? String,
+              let url = URL(string: urlString.trimmingCharacters(in: .whitespacesAndNewlines)),
+              let scheme = url.scheme?.lowercased(), scheme == "http" || scheme == "https",
+              let host = url.host, !host.isEmpty else {
             return
         }
-        
+
         let activityViewController = UIActivityViewController(activityItems: [url], applicationActivities: nil)
 
         let presenter: UIViewController
