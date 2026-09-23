@@ -265,12 +265,17 @@ class UserDataViewController: BaseViewController, WKNavigationDelegate, WKScript
         }
         
         let activityViewController = UIActivityViewController(activityItems: [url], applicationActivities: nil)
-        activityViewController.popoverPresentationController?.sourceView = self.view
-        
+
+        let presenter: UIViewController
         if let nav = self.presentedViewController as? UINavigationController,
            let webVC = nav.viewControllers.first(where: { $0 is WebViewViewController }) as? WebViewViewController {
-            webVC.present(activityViewController, animated: true, completion: nil)
+            presenter = webVC
+        } else {
+            presenter = self
         }
+
+        activityViewController.popoverPresentationController?.sourceView = presenter.view
+        presenter.present(activityViewController, animated: true, completion: nil)
     }
     
     private func handleFullScreenTap(body: [String: Any]) {
