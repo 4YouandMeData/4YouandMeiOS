@@ -23,25 +23,53 @@ import SensorKit
 /// Each mapper therefore stamps every record with the raw, unprojected value under `rawKey` and
 /// lists the wall-projected keys that value stands in for under `replacesKey`. The ledger hashes
 /// the record with the listed keys removed and the raw value kept
-/// (`SensorUploadLedger.fetchStableForm`). The raw value SHIPS in every uploaded record as
-/// `sr_absolute_time` — the server needs the same fetch-stable identity for cross-row
-/// deduplication (FUAM-4030), because its whole-element fingerprint suffers the exact drift
-/// described above. Only the `replacesKey` bookkeeping is stripped before upload
-/// (`SensorSampleUploadManager.drainQueue`); it never reaches the server.
+/// (`SensorUploadLedger.fetchStableForm`). The raw value SHIPS as `sr_absolute_time` — the
+/// server needs the same fetch-stable identity for cross-row deduplication (FUAM-4030), because
+/// its whole-element fingerprint suffers the exact drift described above — but ONLY on a record
+/// that is the sole record of its fetch result. The backend (FUAM-4074) treats
+/// `sr_absolute_time` as the identity of ONE record and collapses every element sharing it, so
+/// the siblings of a fan-out result (one `SRFetchResult` mapped to several records: ambient
+/// pressure, accelerometer, rotation rate, the list branches of pedometer and media events)
+/// keep the raw value locally for the ledger, marked with `localOnlyKey`, and upload WITHOUT
+/// it; the server then identifies them by content digest. A mapper whose result can hold
+/// several samples must stamp through `stampedResult(_:raw:replacing:)`, which applies that rule. The `replacesKey` and
+/// `localOnlyKey` bookkeeping is stripped before upload (`SensorSampleUploadManager.drainQueue`);
+/// it never reaches the server.
 enum SensorRecordIdentity {
 
-    /// `SRFetchResult.timestamp.rawValue` — `SRAbsoluteTime` in seconds (Double), UPLOADED in
-    /// every SensorKit record. For analysts and the backend: this is a MONOTONIC DEVICE CLOCK
-    /// value that ticks across sleeps and reboots (SRAbsoluteTime.h) — a fetch-stable
-    /// deduplication identity for the sample, nothing more. It is NOT a date, NOT comparable
-    /// across devices, and NEVER a substitute for `recorded_at` (which stays the row-anchor
-    /// source, byte-for-byte unchanged).
+    /// `SRFetchResult.timestamp.rawValue` — `SRAbsoluteTime` in seconds (Double). UPLOADED only
+    /// on a record that is the SOLE record of its fetch result, where it identifies exactly that
+    /// record; absent from every record of a fan-out result (see `localOnlyKey`). For analysts
+    /// and the backend: this is a MONOTONIC DEVICE CLOCK value that ticks across sleeps and
+    /// reboots (SRAbsoluteTime.h) — a fetch-stable deduplication identity for ONE record,
+    /// nothing more. It is NOT a date, NOT comparable across devices, and NEVER a substitute for
+    /// `recorded_at` (which stays the row-anchor source, byte-for-byte unchanged).
     static let rawKey = "sr_absolute_time"
     /// The wall-projected keys `rawKey` stands in for inside the fingerprint. Internal
     /// bookkeeping — never uploaded.
     static let replacesKey = "_sr_raw_replaces"
+    /// Marks a record whose `rawKey` is shared with sibling records of the same fetch result:
+    /// the ledger still hashes the raw value (content discriminates the siblings), but `rawKey`
+    /// is removed before upload so the backend does not collapse the siblings into one record.
+    /// Internal bookkeeping — never uploaded.
+    static let localOnlyKey = "_sr_raw_local_only"
 
-    /// The record with its fetch-stable identity companions attached.
+    /// Every record mapped from ONE fetch result, stamped. A single record keeps `rawKey` for
+    /// upload; several records (siblings sharing one `SRFetchResult.timestamp`) are marked
+    /// `localOnlyKey` so `stripped` drops `rawKey` from each of them before upload.
+    static func stampedResult(_ records: [[String: Any]],
+                              raw: SRAbsoluteTime,
+                              replacing keys: [String]) -> [[String: Any]] {
+        let shared = records.count > 1
+        return records.map { record in
+            var out = Self.stamped(record, raw: raw, replacing: keys)
+            if shared { out[Self.localOnlyKey] = true }
+            return out
+        }
+    }
+
+    /// The record with its fetch-stable identity companions attached. Only for a result that
+    /// can never hold more than one record; a fan-out mapper uses `stampedResult`.
     static func stamped(_ record: [String: Any],
                         raw: SRAbsoluteTime,
                         replacing keys: [String]) -> [String: Any] {
@@ -51,14 +79,18 @@ enum SensorRecordIdentity {
         return out
     }
 
-    /// The records exactly as uploaded: `rawKey` (`sr_absolute_time`) stays — it ships as the
-    /// server-side dedup identity — while the `replacesKey` bookkeeping is removed. Idempotent;
-    /// a record enqueued by a pre-fix build simply has nothing to strip. Also removes the
-    /// pre-rename `_sr_raw_timestamp` a queue persisted by an interim dev build may still carry:
-    /// that spelling was never meant to leave the device.
+    /// The records exactly as uploaded: `rawKey` (`sr_absolute_time`) stays on a sole record —
+    /// it ships as the server-side dedup identity — and is removed from a fan-out sibling
+    /// (`localOnlyKey`); the `replacesKey`/`localOnlyKey` bookkeeping is always removed.
+    /// Idempotent; a record enqueued by a pre-fix build simply has nothing to strip. Also
+    /// removes the pre-rename `_sr_raw_timestamp` a queue persisted by an interim dev build may
+    /// still carry: that spelling was never meant to leave the device.
     static func stripped(_ records: [[String: Any]]) -> [[String: Any]] {
         return records.map { record in
             var out = record
+            if out.removeValue(forKey: Self.localOnlyKey) != nil {
+                out.removeValue(forKey: Self.rawKey)
+            }
             out.removeValue(forKey: Self.replacesKey)
             out.removeValue(forKey: "_sr_raw_timestamp")
             return out

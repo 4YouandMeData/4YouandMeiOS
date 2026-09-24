@@ -95,21 +95,22 @@ extension PedometerMapper: SRSensorReaderDelegate {
         fetchedResults += 1
 
         // result.sample can be a CMSensorDataList or a single CMPedometerData
-        // FUAM-3945: ledger identity — the raw monotonic timestamp, never its wall
-        // projection (see SensorRecordIdentity). Stripped before upload.
+        var records: [[String: Any]] = []
         if let list = result.sample as? CMSensorDataList {
             // Iterate NSFastEnumeration via wrapper (no direct Sequence conformance)
             for element in FastEnumerationSequence(base: list) {
                 guard let pedo = element as? CMPedometerData else { continue }
-                collected.append(SensorRecordIdentity.stamped(Self.mapPedometerSample(pedo, recordedAtISO: recordedAtISO),
-                                                              raw: result.timestamp,
-                                                              replacing: ["recorded_at"]))
+                records.append(Self.mapPedometerSample(pedo, recordedAtISO: recordedAtISO))
             }
         } else if let pedo = result.sample as? CMPedometerData {
-            collected.append(SensorRecordIdentity.stamped(Self.mapPedometerSample(pedo, recordedAtISO: recordedAtISO),
-                                                          raw: result.timestamp,
-                                                          replacing: ["recorded_at"]))
+            records.append(Self.mapPedometerSample(pedo, recordedAtISO: recordedAtISO))
         }
+        // FUAM-3945: ledger identity — the raw monotonic timestamp, never its wall
+        // projection (see SensorRecordIdentity). The raw value ships only when it identifies a
+        // single record; list siblings share it.
+        collected.append(contentsOf: SensorRecordIdentity.stampedResult(records,
+                                                                         raw: result.timestamp,
+                                                                         replacing: ["recorded_at"]))
         return true // continue fetching
     }
 

@@ -1807,11 +1807,13 @@ public final class SensorSampleUploadManager {
                     return
                 }
 
-                // FUAM-3945: `sr_absolute_time` SHIPS in every record — the server builds its
-                // cross-row dedup on it (FUAM-4030). Only the `_sr_raw_replaces` bookkeeping is
-                // stripped at this last hop; the server contract (`recorded_at` as row-anchor
-                // source) is unchanged. The re-enqueue below keeps `uploadable` stamped so the
-                // identity survives retries.
+                // FUAM-3945: `sr_absolute_time` SHIPS on every sole-record-of-its-fetch-result
+                // record — the server builds its cross-row dedup on it (FUAM-4030) — and is
+                // removed from fan-out siblings, which the server would otherwise collapse into
+                // one record (FUAM-4074). The `_sr_raw_*` bookkeeping is stripped at this last
+                // hop; the server contract (`recorded_at` as row-anchor source) is unchanged.
+                // The re-enqueue below keeps `uploadable` stamped so the identity survives
+                // retries.
                 net.uploadSensorBatch(sensor: sensor, payload: SensorRecordIdentity.stripped(uploadable))
                     .subscribe(
                         onSuccess: { [weak self] in
@@ -2141,6 +2143,10 @@ enum SensorUploadLedger {
             form.removeValue(forKey: key)
         }
         form.removeValue(forKey: SensorRecordIdentity.replacesKey)
+        // The sibling marker is upload bookkeeping, not content: a sibling hashes exactly as it
+        // did before the marker existed (content plus raw value), so queued ledger entries stay
+        // valid across the upgrade.
+        form.removeValue(forKey: SensorRecordIdentity.localOnlyKey)
         return form
     }
 

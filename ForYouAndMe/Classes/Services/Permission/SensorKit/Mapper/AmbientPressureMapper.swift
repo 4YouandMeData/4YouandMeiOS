@@ -97,9 +97,12 @@ extension AmbientPressureMapper: SRSensorReaderDelegate {
 
         fetchedResults += 1
         // FUAM-3945: ledger identity — the raw monotonic timestamp, never its wall
-        // projection (see SensorRecordIdentity). Stripped before upload.
-        collected.append(contentsOf: Self.mapFetchedSample(result.sample, recordedAtISO: recordedAtISO)
-            .map { SensorRecordIdentity.stamped($0, raw: result.timestamp, replacing: ["recorded_at"]) })
+        // projection (see SensorRecordIdentity). One result is an array of samples: the raw
+        // value ships only when it identifies a single record.
+        collected.append(contentsOf: SensorRecordIdentity.stampedResult(
+            Self.mapFetchedSample(result.sample, recordedAtISO: recordedAtISO),
+            raw: result.timestamp,
+            replacing: ["recorded_at"]))
         return true // continue fetching
     }
 

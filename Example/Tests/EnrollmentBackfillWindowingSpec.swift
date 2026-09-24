@@ -978,6 +978,26 @@ class SensorUploadConsentCallPathSpec: QuickSpec {
             }
         }
 
+        describe("drainQueue (fan-out siblings, FUAM-3945 round 6 / V1)") {
+
+            it("uploads every sibling of one fetch result without the shared sr_absolute_time") {
+                let at = iso(joinDay.addingTimeInterval(hour))
+                let siblings = SensorRecordIdentity.stampedResult([["t": at, "x": 0.1, "recorded_at": at],
+                                                                   ["t": at, "x": 0.2, "recorded_at": at]],
+                                                                  raw: SRAbsoluteTime(rawValue: 780_000_000.25),
+                                                                  replacing: ["recorded_at"])
+                storage.seed(records: siblings, windowStart: joinDay, for: sensor)
+
+                manager.drainQueue(for: sensor)
+
+                expect(network.uploaded.count).toEventually(equal(1))
+                let uploaded = network.uploaded.first ?? []
+                expect(uploaded.count).to(equal(2))
+                expect(uploaded.compactMap { $0[SensorRecordIdentity.rawKey] }).to(beEmpty())
+                expect(uploaded.compactMap { $0[SensorRecordIdentity.localOnlyKey] }).to(beEmpty())
+            }
+        }
+
         describe("drainQueue (the permanent-rejection budget, FUAM-3945 round 5 / AC6)") {
 
             func droppedReasons(_ events: [AnalyticsEvent]) -> [String] {
@@ -3219,6 +3239,71 @@ class SensorUploadLedgerSpec: QuickSpec {
                     .toNot(equal(SensorUploadLedger.fingerprint(of: before)))
                 // And the tag still SHIPS — only the local hash input drops it.
                 expect(before["device_os_version"] as? String).to(equal("17.6"))
+            }
+        }
+
+        describe("fan-out siblings (FUAM-3945 round 6, V1: one sr_absolute_time per shipped record)") {
+
+            // One SRFetchResult mapped to several records (ambient pressure's array, the
+            // accelerometer/rotation-rate lists): every sibling carries the same raw value.
+            let raw = SRAbsoluteTime(rawValue: 780_000_000.25)
+            func pressureFetch(wallOffset: TimeInterval) -> [[String: Any]] {
+                let recordedAt = ISO8601DateFormatter().string(from: Date(timeIntervalSinceReferenceDate: raw.rawValue + wallOffset))
+                return [["t": "2026-08-27T16:40:00Z", "pressure_kpa": 101.3, "recorded_at": recordedAt],
+                        ["t": "2026-08-27T16:40:01Z", "pressure_kpa": 101.4, "recorded_at": recordedAt],
+                        ["t": "2026-08-27T16:40:02Z", "pressure_kpa": 101.5, "recorded_at": recordedAt]]
+            }
+
+            it("uploads siblings WITHOUT sr_absolute_time, so the backend cannot collapse them") {
+                let siblings = SensorRecordIdentity.stampedResult(pressureFetch(wallOffset: 3.117),
+                                                                  raw: raw,
+                                                                  replacing: ["recorded_at"])
+                let uploaded = SensorRecordIdentity.stripped(siblings)
+                expect(uploaded.count).to(equal(3))
+                for record in uploaded {
+                    expect(record[SensorRecordIdentity.rawKey]).to(beNil())
+                    expect(record[SensorRecordIdentity.localOnlyKey]).to(beNil())
+                    expect(record[SensorRecordIdentity.replacesKey]).to(beNil())
+                    expect(record["recorded_at"]).toNot(beNil()) // the row-anchor source still ships
+                }
+            }
+
+            it("still ships sr_absolute_time when the fetch result mapped to exactly one record") {
+                let sole = SensorRecordIdentity.stampedResult(Array(pressureFetch(wallOffset: 3.117).prefix(1)),
+                                                              raw: raw,
+                                                              replacing: ["recorded_at"])
+                let uploaded = SensorRecordIdentity.stripped(sole)
+                expect(uploaded.first?[SensorRecordIdentity.rawKey] as? Double).to(equal(raw.rawValue))
+                expect(uploaded.first?[SensorRecordIdentity.localOnlyKey]).to(beNil())
+            }
+
+            it("keeps the ledger discriminating siblings, and a re-fetch of the same result a duplicate") {
+                let sensor = SRSensor.ambientPressure
+                let first = SensorUploadLedger.filter(records: SensorRecordIdentity.stampedResult(pressureFetch(wallOffset: 3.117),
+                                                                                                  raw: raw,
+                                                                                                  replacing: ["recorded_at"]),
+                                                      sensor: sensor,
+                                                      windowDay: windowDay,
+                                                      ledger: [:])
+                expect(first.novel.count).to(equal(3))        // siblings are NOT duplicates of each other
+                expect(first.duplicateCount).to(equal(0))
+                // The same OS result re-fetched after the wall-vs-monotonic offset moved.
+                let refetch = SensorUploadLedger.filter(records: SensorRecordIdentity.stampedResult(pressureFetch(wallOffset: 2.117),
+                                                                                                    raw: raw,
+                                                                                                    replacing: ["recorded_at"]),
+                                                        sensor: sensor,
+                                                        windowDay: windowDay,
+                                                        ledger: first.newEntries)
+                expect(refetch.novel).to(beEmpty())
+                expect(refetch.duplicateCount).to(equal(3))
+            }
+
+            it("fingerprints a marked sibling exactly as the unmarked stamped record (ledger survives the upgrade)") {
+                let record = pressureFetch(wallOffset: 3.117)[0]
+                let marked = SensorRecordIdentity.stampedResult(pressureFetch(wallOffset: 3.117), raw: raw, replacing: ["recorded_at"])[0]
+                expect(marked[SensorRecordIdentity.localOnlyKey] as? Bool).to(beTrue())
+                let unmarked = SensorRecordIdentity.stamped(record, raw: raw, replacing: ["recorded_at"])
+                expect(SensorUploadLedger.fingerprint(of: marked)).to(equal(SensorUploadLedger.fingerprint(of: unmarked)))
             }
         }
 

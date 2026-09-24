@@ -96,20 +96,25 @@ extension RotationRateMapper: SRSensorReaderDelegate {
         fetchedResults += 1
 
         // Typical containers: CMSensorDataList or single sample object
-        // FUAM-3945: ledger identity — the raw monotonic timestamp, never its wall
-        // projection (see SensorRecordIdentity). Stripped before upload.
+        var records: [[String: Any]] = []
         if let list = result.sample as? CMSensorDataList {
             for element in FastEnumerationSequence(base: list) {
                 guard let obj = element as? NSObject else { continue }
                 if let rec = Self.mapRotationSample(obj, recordedAtISO: recordedAtISO) {
-                    collected.append(SensorRecordIdentity.stamped(rec, raw: result.timestamp, replacing: ["recorded_at"]))
+                    records.append(rec)
                 }
             }
         } else if let obj = result.sample as? NSObject {
             if let rec = Self.mapRotationSample(obj, recordedAtISO: recordedAtISO) {
-                collected.append(SensorRecordIdentity.stamped(rec, raw: result.timestamp, replacing: ["recorded_at"]))
+                records.append(rec)
             }
         }
+        // FUAM-3945: ledger identity — the raw monotonic timestamp, never its wall
+        // projection (see SensorRecordIdentity). The raw value ships only when it identifies a
+        // single record; list siblings share it.
+        collected.append(contentsOf: SensorRecordIdentity.stampedResult(records,
+                                                                         raw: result.timestamp,
+                                                                         replacing: ["recorded_at"]))
         return true // continue fetching
     }
 

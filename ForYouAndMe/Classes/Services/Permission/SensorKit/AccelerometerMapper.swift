@@ -108,14 +108,21 @@ extension AccelerometerMapper: SRSensorReaderDelegate {
 
         fetchedResults += 1
 
+        var records: [[String: Any]] = []
         if let list = result.sample as? CMSensorDataList {
             for element in FastEnumerationSequence(base: list) {
                 guard let item = element as? CMRecordedAccelerometerData else { continue }
-                appendRecord(from: item, recordedAtISO: recordedAtISO, raw: result.timestamp)
+                records.append(record(from: item, recordedAtISO: recordedAtISO))
             }
         } else if let item = result.sample as? CMRecordedAccelerometerData {
-            appendRecord(from: item, recordedAtISO: recordedAtISO, raw: result.timestamp)
+            records.append(record(from: item, recordedAtISO: recordedAtISO))
         }
+        // FUAM-3945: ledger identity — the raw monotonic timestamp, never its wall
+        // projection (see SensorRecordIdentity). The raw value ships only when it identifies a
+        // single record; list siblings share it.
+        collected.append(contentsOf: SensorRecordIdentity.stampedResult(records,
+                                                                         raw: result.timestamp,
+                                                                         replacing: ["recorded_at"]))
         // Keep fetching subsequent chunks
         return true
     }
@@ -138,11 +145,11 @@ extension AccelerometerMapper: SRSensorReaderDelegate {
     // MARK: - Helpers
 
     /// Build one JSON record from a CMRecordedAccelerometerData sample.
-    private func appendRecord(from sample: CMRecordedAccelerometerData, recordedAtISO: String, raw: SRAbsoluteTime) {
+    private func record(from sample: CMRecordedAccelerometerData, recordedAtISO: String) -> [String: Any] {
         // CMAcceleration is expressed in g's (unitless gravitational acceleration).
         let a = sample.acceleration
         let iso = ISO8601DateFormatter()
-        let record: [String: Any] = [
+        return [
             // Sample timestamp (when motion was measured) — a stored Foundation date,
             // fetch-stable, so it stays in the ledger fingerprint untouched.
             "t": iso.string(from: sample.startDate),
@@ -153,9 +160,6 @@ extension AccelerometerMapper: SRSensorReaderDelegate {
             "y": a.y,
             "z": a.z
         ]
-        // FUAM-3945: ledger identity — the raw monotonic timestamp, never its wall
-        // projection (see SensorRecordIdentity). Stripped before upload.
-        collected.append(SensorRecordIdentity.stamped(record, raw: raw, replacing: ["recorded_at"]))
     }
 
     /// Centralized cleanup + callback.
