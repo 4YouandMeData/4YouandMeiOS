@@ -1958,12 +1958,44 @@ public final class SensorSampleUploadManager {
         // dropping queued batches on clearance loss is correct; forfeiting the ability to
         // re-fetch that window is not. FUAM-3841 builds on this.
         for sensor in sensors {
-            // Dequeue until the queue is empty
-            while storage.dequeueNextBatch(for: sensor) != nil { /* drop */ }
+            // Dequeue until the queue is empty, remembering per device kind the earliest window
+            // a purged batch came from (FUAM-3945 round 6, V4).
+            var earliestPurged: [String: Date] = [:]
+            while let batch = storage.dequeueNextBatch(for: sensor) {
+                for key in Self.deviceKeys(of: batch.records) {
+                    earliestPurged[key] = min(earliestPurged[key] ?? batch.windowStart, batch.windowStart)
+                }
+            }
+            self.rewindCursors(for: sensor, toEarliestPurged: earliestPurged)
             // The ledger goes WITH the queue (D4): a purged batch was never uploaded, so its
             // fingerprints must not survive to suppress a legitimate re-collection.
             storage.purgeLedger(for: sensor)
         }
+    }
+
+    /// FUAM-3945 round 6 (V4): a purged batch's window is behind the cursor, which advanced at
+    /// enqueue. Left there, the plan resumes from the cursor plus the 3-day rescan tail, so every
+    /// purged window older than the tail would never be fetched again. Rewind each device kind's
+    /// cursor to the earliest purged window so the next plan walks forward over them. Only ever
+    /// BACKWARDS (the FUAM-3844 rule: a cursor is never fast-forwarded by a purge), and floored at
+    /// the consent bound when one is known. On logout the join day is usually gone, so no floor
+    /// applies here; the planner clamps to the bound at plan time anyway. A rewind that lands ON
+    /// the bound reopens the plan as a backfill, exactly like purge plus re-consent (FUAM-3844).
+    private func rewindCursors(for sensor: SRSensor, toEarliestPurged earliest: [String: Date]) {
+        let bound = self.currentBound
+        for (deviceKey, windowStart) in earliest {
+            let target = bound.isForwardOnly ? windowStart : max(windowStart, bound.date)
+            guard let cursor = storage.lastCursor(for: sensor, deviceKey: deviceKey), target < cursor else { continue }
+            storage.setLastCursor(target, for: sensor, deviceKey: deviceKey)
+        }
+    }
+
+    /// The device kinds a queued batch holds records from: the `device_kind` tag applied at
+    /// enqueue (the queue is device-mixed). A batch with no tagged record was enqueued by an
+    /// iPhone-only build, so it belongs to the iPhone cursor.
+    private static func deviceKeys(of records: [[String: Any]]) -> Set<String> {
+        let keys = Set(records.compactMap { $0["device_kind"] as? String })
+        return keys.isEmpty ? [SensorDevice.iphoneKey] : keys
     }
 }
 
