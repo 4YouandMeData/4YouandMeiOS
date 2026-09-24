@@ -66,8 +66,32 @@ public final class SensorSampleUploadManager {
     /// after this many CONSECUTIVE confirmed-empty windows — the adaptive replacement for any
     /// hardcoded OS-retention assumption. If a future iOS retains 4 weeks instead of 7 days, the
     /// probe simply keeps finding data and keeps going; the join-day consent bound and the
-    /// 365-day cap remain the only hard ceilings.
+    /// 365-day cap remain the only hard ceilings. Applies to continuous streams; event-type
+    /// sensors use `sparseProbeEmptyWindowStop` (see `probeEmptyWindowStop(for:)`).
     static let probeEmptyWindowStop: Int = 2
+
+    /// FUAM-3945 round 6 (V3): the empty-streak stop for EVENT-type sensors, whose records exist
+    /// only when the participant does something (a visit, a media event, a typing session, a
+    /// day with messages or calls). Two empty days are ordinary there (a weekend at home), so
+    /// K = 2 forfeited every older day the OS still held on a first install. Seven covers a
+    /// quiet week for at most five extra empty fetches per sensor and device, paid once per
+    /// probe (first install or cursor reset): the steady-state forward walk never consults the
+    /// streak. The join-day bound, the 365-day cap and the cursor still bound the walk.
+    static let sparseProbeEmptyWindowStop: Int = 7
+
+    /// The sensors `sparseProbeEmptyWindowStop` applies to. Continuous streams (ambient light
+    /// and pressure, accelerometer, rotation rate) and the near-continuous pedometer and device
+    /// usage keep K = 2: an empty day there does mean the retention horizon.
+    static let sparseEventSensors: Set<SRSensor> = {
+        var sensors: Set<SRSensor> = [.visits, .messagesUsageReport, .phoneUsageReport, .keyboardMetrics]
+        if #available(iOS 16.4, *) { sensors.insert(.mediaEvents) }
+        return sensors
+    }()
+
+    /// Consecutive confirmed-empty windows after which a backward probe for `sensor` stops.
+    static func probeEmptyWindowStop(for sensor: SRSensor) -> Int {
+        return sparseEventSensors.contains(sensor) ? sparseProbeEmptyWindowStop : probeEmptyWindowStop
+    }
 
     /// FUAM-3945 (round 4): how many records a backward probe may hold buffered in memory while
     /// it discovers the retention horizon. The probe FETCHES newest-first (that is what makes
@@ -717,7 +741,7 @@ public final class SensorSampleUploadManager {
         /// FUAM-3945 (AC1): `true` when this walk is a backfill probe — windows are FETCHED
         /// NEWEST-first, ENQUEUED oldest-first via the buffered flush (round 4), the cursor is
         /// written once at probe termination (never per window), and the probe stops after
-        /// `probeEmptyWindowStop` consecutive confirmed-empty windows.
+        /// `probeEmptyWindowStop(for:)` consecutive confirmed-empty windows.
         let backwardProbe: Bool
         /// The end of the newest planned window — the single cursor target of a completed probe.
         let planHeadEnd: Date?
@@ -875,7 +899,7 @@ public final class SensorSampleUploadManager {
         }
         // FUAM-3945 (AC1): a BACKFILL plan (anything but a routine cursor resume) is walked
         // NEWEST-first, probing backwards into the OS store and stopping after
-        // `probeEmptyWindowStop` consecutive confirmed-empty windows — reach is bounded by what
+        // `probeEmptyWindowStop(for:)` consecutive confirmed-empty windows — reach is bounded by what
         // the OS actually holds, never by a hardcoded retention assumption. A cursor resume
         // (including its rescan tail) keeps the plain oldest-first walk.
         let isBackfillProbe = plan.lowerBoundOrigin != .cursor && !plan.windows.isEmpty
@@ -1217,7 +1241,7 @@ public final class SensorSampleUploadManager {
                 // above. The empty-streak rule is shared with `bufferProbeWindow`.
                 var next = context
                 next.probeEmptyStreak = records.isEmpty ? context.probeEmptyStreak + 1 : 0
-                if next.probeEmptyStreak >= Self.probeEmptyWindowStop {
+                if next.probeEmptyStreak >= Self.probeEmptyWindowStop(for: sensor) {
                     // AC1: K consecutive confirmed-empty windows — everything older is beyond
                     // the OS retention horizon. The planned span is handled: park the cursor at
                     // the plan head, once (the buffer is empty here, so `finishProbe`'s flush
@@ -1273,7 +1297,7 @@ public final class SensorSampleUploadManager {
             }
         }
         next.probeEmptyStreak = rawRecordsWereEmpty ? context.probeEmptyStreak + 1 : 0
-        if next.probeEmptyStreak >= Self.probeEmptyWindowStop {
+        if next.probeEmptyStreak >= Self.probeEmptyWindowStop(for: sensor) {
             // AC1: K consecutive confirmed-empty windows — everything older is beyond the OS
             // retention horizon. Flush chronologically and park the cursor, once.
             self.finishProbe(context: next)

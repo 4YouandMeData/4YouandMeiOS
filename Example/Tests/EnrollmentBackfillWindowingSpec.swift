@@ -3618,6 +3618,88 @@ class SensorBackfillProbeSpec: QuickSpec {
     }
 }
 
+// MARK: - FUAM-3945 round 6 (V3): sparse event sensors do not stop the probe on a quiet weekend
+
+/// A first-install probe that stops after two empty days forfeits everything older for sensors
+/// whose records exist only with activity: a participant at home for two days produces no visit.
+/// Event-type sensors get `sparseProbeEmptyWindowStop`; continuous streams keep K = 2; and the
+/// steady-state forward walk never pays for it.
+class SensorSparseProbeSpec: QuickSpec {
+
+    // swiftlint:disable:next function_body_length
+    override class func spec() {
+
+        let hour: TimeInterval = 3600
+        let day: TimeInterval = 24 * hour
+        let now = SensorSampleUploadManager.utcDayStart(Date())
+        // Window ENDS (newest-first) holding data: -1d, then a two-day gap, then -4d ... -8d.
+        let productiveEnds: Set<Date> = Set([1, 4, 5, 6, 7, 8].map { now.addingTimeInterval(-Double($0) * day) })
+
+        var storage: FakeSensorStorage!
+        var clearance: FakeSensorClearance! // held here: the manager's delegate reference is weak
+        var mapper: ClosureDeviceMapper!
+        var manager: SensorSampleUploadManager!
+
+        func makeManager(_ sensor: SRSensor) {
+            storage = FakeSensorStorage()
+            clearance = FakeSensorClearance()
+            clearance.enrollmentDate = now.addingTimeInterval(-20 * day)
+            mapper = ClosureDeviceMapper { _, to in
+                guard productiveEnds.contains(to) else { return [] }
+                let at = ISO8601DateFormatter().string(from: to.addingTimeInterval(-hour))
+                return [["t": at, "arrival": ["start": at, "end": at], "recorded_at": at]]
+            }
+            manager = SensorSampleUploadManager(withSensors: [sensor],
+                                                storage: storage,
+                                                reachability: FakeSensorReachability(),
+                                                analytics: CapturingAnalyticsService(),
+                                                mappers: [sensor: mapper])
+            manager.clearanceDelegate = clearance
+        }
+
+        it("walks a visits probe past a two-day gap down to the data the OS still holds") {
+            let sensor = SRSensor.visits
+            let stop = SensorSampleUploadManager.probeEmptyWindowStop(for: sensor)
+            expect(stop).to(equal(SensorSampleUploadManager.sparseProbeEmptyWindowStop))
+            makeManager(sensor)
+
+            manager.runDeviceChain(at: 0, of: [.current], for: sensor, now: now, using: mapper)
+
+            // -1d (data), -2d/-3d (empty), -4d ... -8d (data), then `stop` empty windows.
+            expect(mapper.callCount).toEventually(equal(1 + 2 + 5 + stop), timeout: .seconds(5))
+            expect(storage.deepestProductiveWindowStart(for: sensor))
+                .toEventually(equal(now.addingTimeInterval(-9 * day)), timeout: .seconds(5))
+            expect(storage.lastCursor(for: sensor)).toEventually(equal(now.addingTimeInterval(-day)), timeout: .seconds(5))
+            expect(storage.enqueued.map { $0.windowStart }).to(contain(now.addingTimeInterval(-9 * day)))
+        }
+
+        it("keeps K = 2 for a continuous stream with the same gap") {
+            let sensor = SRSensor.ambientLightSensor
+            expect(SensorSampleUploadManager.probeEmptyWindowStop(for: sensor)).to(equal(2))
+            makeManager(sensor)
+
+            manager.runDeviceChain(at: 0, of: [.current], for: sensor, now: now, using: mapper)
+
+            expect(storage.lastCursor(for: sensor)).toEventually(equal(now.addingTimeInterval(-day)), timeout: .seconds(5))
+            expect(mapper.callCount).to(equal(3)) // -1d, then the two empty days: stop
+        }
+
+        it("costs nothing extra on the steady-state forward walk") {
+            let sensor = SRSensor.visits
+            makeManager(sensor)
+            mapper = ClosureDeviceMapper { _, _ in [] } // a quiet stretch
+            // A cursor resume with today's rescan already burnt: the plain forward walk.
+            storage.setLastCursor(now.addingTimeInterval(-4 * day), for: sensor)
+            storage.setLastRescanDay(now, for: sensor)
+
+            manager.runDeviceChain(at: 0, of: [.current], for: sensor, now: now, using: mapper)
+
+            expect(storage.lastCursor(for: sensor)).toEventually(equal(now.addingTimeInterval(-day)), timeout: .seconds(5))
+            expect(mapper.callCount).to(equal(3)) // exactly the planned windows, no probing
+        }
+    }
+}
+
 // MARK: - FUAM-3945 (AC4): the cursor moves only past durably handled windows
 
 class SensorCursorDurabilitySpec: QuickSpec {
