@@ -151,6 +151,7 @@ class NetworkApiGateway: ApiGateway {
     
     func send<T: JSONAPIMappable, E: Mappable>(request: ApiRequest, errorType: E.Type) -> Single<T> {
         self.sendShared(request: request, errorType: errorType)
+            .map { $0.normalizingNullIdentifier(for: T.self) }
             .flatMap { response in
                 Single.just(response).mapCodableJSONAPI(includeList: T.includeList, keyPath: T.keyPath)
                     .handleMapError(api: self, request: request, response: response)
@@ -159,6 +160,7 @@ class NetworkApiGateway: ApiGateway {
     
     func send<T: JSONAPIMappable, E: Mappable>(request: ApiRequest, errorType: E.Type) -> Single<T?> {
         self.sendShared(request: request, errorType: errorType)
+            .map { $0.normalizingNullIdentifier(for: T.self) }
             .flatMap { response in
                 Single.just(response).mapCodableJSONAPI(includeList: T.includeList, keyPath: T.keyPath)
                     .handleMapError(api: self, request: request, response: response)
