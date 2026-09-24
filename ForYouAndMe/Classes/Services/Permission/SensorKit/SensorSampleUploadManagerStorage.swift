@@ -25,6 +25,21 @@ public struct SensorLedgerEntry: Codable, Equatable {
     }
 }
 
+/// One persisted upload batch (FUAM-3945 round 6, V2). `id` is assigned at enqueue and stable
+/// for as long as the batch stays queued: the drain peeks a batch, uploads it, and removes or
+/// requeues it by `id`, so a batch leaves the queue only once its fate is decided.
+public struct SensorQueuedBatch {
+    public let id: String
+    public let records: [[String: Any]]
+    public let windowStart: Date
+
+    public init(id: String, records: [[String: Any]], windowStart: Date) {
+        self.id = id
+        self.records = records
+        self.windowStart = windowStart
+    }
+}
+
 /// Storage abstraction for SensorKit batching pipeline:
 /// - Keeps per-sensor, per-device upload cursor (last successfully uploaded upper bound).
 /// - Persists pending batches (FIFO) until successfully uploaded.
@@ -52,10 +67,29 @@ public protocol SensorSampleUploadManagerStorage: AnyObject {
     @discardableResult
     func enqueueBatch(_ batch: [[String: Any]], windowStart: Date, for sensor: SRSensor) -> Bool
 
-    /// The head of the queue with the window it was fetched from, or `nil` when the queue is
-    /// empty. Batches persisted by a build older than FUAM-3945 carry no window start and are
-    /// purged on load rather than shipped under a guessed one.
+    /// The head of the queue with the window it was fetched from, REMOVED from the queue, or
+    /// `nil` when the queue is empty. Only for dropping batches (`purgeAllData`): an upload
+    /// must `peekNextBatch` and remove on success instead, or a process kill mid-request loses
+    /// the batch. Batches persisted by a build older than FUAM-3945 carry no window start and
+    /// are purged on load rather than shipped under a guessed one.
     func dequeueNextBatch(for sensor: SRSensor) -> (records: [[String: Any]], windowStart: Date)?
+
+    /// FUAM-3945 round 6 (V2): the first queued batch whose `id` is not in `excluding`, LEFT in
+    /// the persisted queue, or `nil`. The drain uploads it and only then removes it
+    /// (`removeBatch`), so a kill during the request leaves it queued for the next drain;
+    /// `excluding` holds the batches another drain chain has in flight, so no batch is ever
+    /// uploaded twice concurrently. `id` is stable for the life of the queued batch.
+    func peekNextBatch(for sensor: SRSensor, excluding ids: Set<String>) -> SensorQueuedBatch?
+
+    /// Removes the batch with `id` wherever it sits; a no-op when it is gone (purged meanwhile).
+    func removeBatch(id: String, for sensor: SRSensor)
+
+    /// Atomically replaces the batch with `id` by `records` (same window start) at the TAIL of
+    /// the queue: one persisted write, so a kill can neither lose nor duplicate it. A no-op
+    /// returning `true` when the batch is gone (a purge meant "drop"); `false` only when the
+    /// queue could not be persisted.
+    @discardableResult
+    func requeueBatch(id: String, records: [[String: Any]], for sensor: SRSensor) -> Bool
 
     func pendingBatchCount(for sensor: SRSensor) -> Int
 
@@ -186,7 +220,33 @@ public final class DefaultsSensorStorage: SensorSampleUploadManagerStorage, Sens
     public func enqueueBatch(_ batch: [[String: Any]], windowStart: Date, for sensor: SRSensor) -> Bool {
         return syncQueue.sync {
             var queue = loadQueue(for: sensor)
-            queue.append(QueuedBatch(records: batch, windowStart: windowStart))
+            queue.append(SensorQueuedBatch(id: UUID().uuidString, records: batch, windowStart: windowStart))
+            return saveQueue(queue, for: sensor)
+        }
+    }
+
+    public func peekNextBatch(for sensor: SRSensor, excluding ids: Set<String>) -> SensorQueuedBatch? {
+        return syncQueue.sync {
+            return loadQueue(for: sensor).first { !ids.contains($0.id) }
+        }
+    }
+
+    public func removeBatch(id: String, for sensor: SRSensor) {
+        syncQueue.sync {
+            var queue = loadQueue(for: sensor)
+            guard let index = queue.firstIndex(where: { $0.id == id }) else { return }
+            queue.remove(at: index)
+            saveQueue(queue, for: sensor)
+        }
+    }
+
+    @discardableResult
+    public func requeueBatch(id: String, records: [[String: Any]], for sensor: SRSensor) -> Bool {
+        return syncQueue.sync {
+            var queue = loadQueue(for: sensor)
+            guard let index = queue.firstIndex(where: { $0.id == id }) else { return true }
+            let old = queue.remove(at: index)
+            queue.append(SensorQueuedBatch(id: old.id, records: records, windowStart: old.windowStart))
             return saveQueue(queue, for: sensor)
         }
     }
@@ -207,30 +267,34 @@ public final class DefaultsSensorStorage: SensorSampleUploadManagerStorage, Sens
 
     // MARK: - Helpers
 
-    private struct QueuedBatch {
-        let records: [[String: Any]]
-        let windowStart: Date
-    }
-
+    private static let idKey = "id"
     private static let recordsKey = "records"
     private static let windowStartKey = "window_start"
 
     /// Loads the queue, DROPPING any entry not in the FUAM-3945 shape. The pre-FUAM-3945 format
     /// was a bare array of records with no window start; such a batch cannot be consent-filtered
     /// (its undecidable records would have to be dropped anyway) and predates this policy, so it
-    /// is purged once, on the first load after the upgrade.
-    private func loadQueue(for sensor: SRSensor) -> [QueuedBatch] {
+    /// is purged once, on the first load after the upgrade. An entry persisted before batch ids
+    /// existed (FUAM-3945 round 6) is given one and rewritten, so the id a drain peeks is the
+    /// id it later removes. An older build reading the queue ignores the extra key.
+    private func loadQueue(for sensor: SRSensor) -> [SensorQueuedBatch] {
         let key = queueKeyPrefix + sensor.rawValue
         guard let data = UserDefaults.standard.data(forKey: key),
               let entries = try? JSONSerialization.jsonObject(with: data) as? [Any] else { return [] }
-        let queue: [QueuedBatch] = entries.compactMap { entry in
+        var assignedIds = false
+        let queue: [SensorQueuedBatch] = entries.compactMap { entry in
             guard let dictionary = entry as? [String: Any],
                   let records = dictionary[Self.recordsKey] as? [[String: Any]],
                   let windowStart = dictionary[Self.windowStartKey] as? Double else { return nil }
-            return QueuedBatch(records: records, windowStart: Date(timeIntervalSince1970: windowStart))
+            let id = dictionary[Self.idKey] as? String
+            if id == nil { assignedIds = true }
+            return SensorQueuedBatch(id: id ?? UUID().uuidString,
+                               records: records,
+                               windowStart: Date(timeIntervalSince1970: windowStart))
         }
-        if queue.count != entries.count {
-            // Rewrite the blob so the purged legacy records do not stay at rest on the device.
+        if queue.count != entries.count || assignedIds {
+            // Rewrite the blob so the purged legacy records do not stay at rest on the device,
+            // and so freshly assigned ids are durable.
             saveQueue(queue, for: sensor)
         }
         return queue
@@ -239,10 +303,10 @@ public final class DefaultsSensorStorage: SensorSampleUploadManagerStorage, Sens
     /// `false` when the queue could not be serialized (AC4): the caller treats the enqueue as
     /// not having happened and leaves the cursor alone.
     @discardableResult
-    private func saveQueue(_ queue: [QueuedBatch], for sensor: SRSensor) -> Bool {
+    private func saveQueue(_ queue: [SensorQueuedBatch], for sensor: SRSensor) -> Bool {
         let key = queueKeyPrefix + sensor.rawValue
         let entries: [[String: Any]] = queue.map {
-            [Self.recordsKey: $0.records, Self.windowStartKey: $0.windowStart.timeIntervalSince1970]
+            [Self.idKey: $0.id, Self.recordsKey: $0.records, Self.windowStartKey: $0.windowStart.timeIntervalSince1970]
         }
         guard JSONSerialization.isValidJSONObject(entries),
               let data = try? JSONSerialization.data(withJSONObject: entries, options: []) else {

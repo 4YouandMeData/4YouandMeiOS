@@ -998,6 +998,55 @@ class SensorUploadConsentCallPathSpec: QuickSpec {
             }
         }
 
+        describe("drainQueue (a batch outlives a killed upload, FUAM-3945 round 6 / V2)") {
+
+            it("keeps the batch persisted while its request is in flight, and the next launch ships it") {
+                storage.seed(records: [["t": iso(joinDay.addingTimeInterval(hour)), "marker": "a"]],
+                             windowStart: joinDay,
+                             for: sensor)
+                network.hangForPayload = { _ in true } // the process dies during this request
+
+                manager.drainQueue(for: sensor)
+
+                expect(network.attemptCount).toEventually(equal(1), timeout: .seconds(5))
+                expect(storage.pendingBatchCount(for: sensor)).toAlways(equal(1), until: .milliseconds(300))
+
+                // Relaunch: a fresh manager over the same persisted storage.
+                let relaunchedNetwork = FakeSensorNetwork()
+                let relaunched = SensorSampleUploadManager(withSensors: [sensor],
+                                                           storage: storage,
+                                                           reachability: FakeSensorReachability(),
+                                                           analytics: analytics,
+                                                           mappers: [sensor: mapper])
+                relaunched.clearanceDelegate = clearance
+                relaunched.setNetworkDelegate(relaunchedNetwork)
+                relaunched.drainQueue(for: sensor)
+
+                expect(relaunchedNetwork.uploaded.count).toEventually(equal(1), timeout: .seconds(5))
+                expect(relaunchedNetwork.uploaded.first?.first?["marker"] as? String).to(equal("a"))
+                expect(storage.pendingBatchCount(for: sensor)).toEventually(equal(0), timeout: .seconds(5))
+            }
+
+            it("never uploads an in-flight batch a second time when another drain starts") {
+                storage.seed(records: [["t": iso(joinDay.addingTimeInterval(hour)), "marker": "a"]],
+                             windowStart: joinDay,
+                             for: sensor)
+                storage.enqueueBatch([["t": iso(joinDay.addingTimeInterval(2 * hour)), "marker": "b"]],
+                                     windowStart: joinDay,
+                                     for: sensor)
+                network.hangForPayload = { payload in payload.contains { $0["marker"] as? String == "a" } }
+
+                manager.drainQueue(for: sensor)
+                expect(network.attemptCount).toEventually(equal(1), timeout: .seconds(5))
+                manager.drainQueue(for: sensor)
+
+                expect(network.uploaded.count).toEventually(equal(1), timeout: .seconds(5))
+                expect(network.uploaded.first?.first?["marker"] as? String).to(equal("b"))
+                expect(network.attemptCount).toAlways(equal(2), until: .milliseconds(300))
+                expect(storage.pendingBatchCount(for: sensor)).to(equal(1)) // "a", still in flight
+            }
+        }
+
         describe("drainQueue (the permanent-rejection budget, FUAM-3945 round 5 / AC6)") {
 
             func droppedReasons(_ events: [AnalyticsEvent]) -> [String] {
@@ -1019,15 +1068,18 @@ class SensorUploadConsentCallPathSpec: QuickSpec {
                     return isPoison ? SensorUploadError.permanentlyRejected(statusCode: 422) : nil
                 }
 
-                // Drain 1: poison (head) rejected once, re-enqueued at the tail.
+                // Drain 1: poison (head) rejected once, moved to the tail. The batch never leaves
+                // the persisted queue on a failure (V2), so await the requeue, not the count.
                 manager.drainQueue(for: sensor)
                 expect(network.attemptCount).toEventually(equal(1), timeout: .seconds(5))
-                expect(storage.pendingBatchCount(for: sensor)).toEventually(equal(2), timeout: .seconds(5))
+                expect(storage.requeueCount).toEventually(equal(1), timeout: .seconds(5))
+                expect(storage.pendingBatchCount(for: sensor)).to(equal(2))
 
                 // Drain 2: good uploads, poison rejected a second time.
                 manager.drainQueue(for: sensor)
                 expect(network.attemptCount).toEventually(equal(3), timeout: .seconds(5))
-                expect(storage.pendingBatchCount(for: sensor)).toEventually(equal(1), timeout: .seconds(5))
+                expect(storage.requeueCount).toEventually(equal(2), timeout: .seconds(5))
+                expect(storage.pendingBatchCount(for: sensor)).to(equal(1))
 
                 // Drain 3: the third rejection exhausts the budget — the batch is dropped
                 // (NOT re-enqueued), reported, and the drain runs on to the end of the queue.
@@ -1037,8 +1089,8 @@ class SensorUploadConsentCallPathSpec: QuickSpec {
 
                 expect(network.uploaded.count).to(equal(1))
                 expect(network.uploaded.first?.first?["marker"] as? String).to(equal("good"))
-                // `pendingBatchCount` drops to 0 at the DEQUEUE, before attempt 4's failure
-                // callback hops back onto the work queue and tracks these two events — await them.
+                // `pendingBatchCount` drops to 0 inside attempt 4's failure callback, before it
+                // tracks these two events — await them.
                 expect(drainOrigins(analytics.trackedEvents)).toEventually(contain("upload_stuck"), timeout: .seconds(5))
                 expect(droppedReasons(analytics.trackedEvents)).toEventually(contain("upload_rejected_422"), timeout: .seconds(5))
             }
@@ -1052,7 +1104,8 @@ class SensorUploadConsentCallPathSpec: QuickSpec {
                 for drain in 1...5 {
                     manager.drainQueue(for: sensor)
                     expect(network.attemptCount).toEventually(equal(drain), timeout: .seconds(5))
-                    expect(storage.pendingBatchCount(for: sensor)).toEventually(equal(1), timeout: .seconds(5))
+                    expect(storage.requeueCount).toEventually(equal(drain), timeout: .seconds(5))
+                    expect(storage.pendingBatchCount(for: sensor)).to(equal(1))
                 }
 
                 expect(drainOrigins(analytics.trackedEvents)).toNot(contain("upload_stuck"))
@@ -1148,7 +1201,8 @@ private final class FakeSensorStorage: SensorSampleUploadManagerStorage, SensorS
 
     private let lock = NSLock()
     private var cursors: [String: Date] = [:]
-    private var queues: [String: [(records: [[String: Any]], windowStart: Date)]] = [:]
+    private var queues: [String: [SensorQueuedBatch]] = [:]
+    private var requeues = 0
     private var enqueuedBatches: [(records: [[String: Any]], windowStart: Date)] = []
     private var ledgers: [String: [String: SensorLedgerEntry]] = [:]
     private var rescanDays: [String: Date] = [:]
@@ -1163,8 +1217,14 @@ private final class FakeSensorStorage: SensorSampleUploadManagerStorage, SensorS
     }
 
     func seed(records: [[String: Any]], windowStart: Date, for sensor: SRSensor) {
-        self.lock.locked { self.queues[sensor.rawValue] = [(records, windowStart)] }
+        self.lock.locked { self.queues[sensor.rawValue] = [SensorQueuedBatch(id: UUID().uuidString,
+                                                                              records: records,
+                                                                              windowStart: windowStart)] }
     }
+
+    /// How many times the drain moved a failed batch to the tail (V2): the queue COUNT no longer
+    /// changes on a failed upload, so specs await this instead.
+    var requeueCount: Int { return self.lock.locked { self.requeues } }
 
     func lastCursor(for sensor: SRSensor, deviceKey: String = SensorDevice.iphoneKey) -> Date? {
         return self.lock.locked { self.cursors["\(sensor.rawValue).\(deviceKey)"] }
@@ -1178,7 +1238,9 @@ private final class FakeSensorStorage: SensorSampleUploadManagerStorage, SensorS
     func enqueueBatch(_ batch: [[String: Any]], windowStart: Date, for sensor: SRSensor) -> Bool {
         return self.lock.locked {
             guard !self.failEnqueue else { return false }
-            self.queues[sensor.rawValue, default: []].append((batch, windowStart))
+            self.queues[sensor.rawValue, default: []].append(SensorQueuedBatch(id: UUID().uuidString,
+                                                                               records: batch,
+                                                                               windowStart: windowStart))
             self.enqueuedBatches.append((batch, windowStart))
             return true
         }
@@ -1221,7 +1283,29 @@ private final class FakeSensorStorage: SensorSampleUploadManagerStorage, SensorS
             guard var queue = self.queues[sensor.rawValue], !queue.isEmpty else { return nil }
             let head = queue.removeFirst()
             self.queues[sensor.rawValue] = queue
-            return head
+            return (head.records, head.windowStart)
+        }
+    }
+
+    func peekNextBatch(for sensor: SRSensor, excluding ids: Set<String>) -> SensorQueuedBatch? {
+        return self.lock.locked { self.queues[sensor.rawValue]?.first { !ids.contains($0.id) } }
+    }
+
+    func removeBatch(id: String, for sensor: SRSensor) {
+        self.lock.locked { self.queues[sensor.rawValue]?.removeAll { $0.id == id } }
+    }
+
+    @discardableResult
+    func requeueBatch(id: String, records: [[String: Any]], for sensor: SRSensor) -> Bool {
+        return self.lock.locked {
+            guard !self.failEnqueue else { return false }
+            guard var queue = self.queues[sensor.rawValue],
+                  let index = queue.firstIndex(where: { $0.id == id }) else { return true }
+            let old = queue.remove(at: index)
+            queue.append(SensorQueuedBatch(id: old.id, records: records, windowStart: old.windowStart))
+            self.queues[sensor.rawValue] = queue
+            self.requeues += 1
+            return true
         }
     }
 
@@ -1265,6 +1349,9 @@ private final class FakeSensorNetwork: SensorSampleUploaderNetworkDelegate {
 
     /// When set, decides the outcome per payload (round 5): a non-nil error fails that upload.
     var errorForPayload: (([[String: Any]]) -> Error?)?
+    /// When set and `true` for a payload, that upload never completes (V2): the request is in
+    /// flight when the process is killed.
+    var hangForPayload: (([[String: Any]]) -> Bool)?
 
     /// Successful uploads only.
     var uploaded: [[[String: Any]]] { return self.lock.locked { self.payloads } }
@@ -1274,6 +1361,7 @@ private final class FakeSensorNetwork: SensorSampleUploaderNetworkDelegate {
     func uploadSensorBatch(sensor: SRSensor, payload: [[String: Any]]) -> Single<Void> {
         self.lock.locked { self.attempts += 1 }
         if let error = self.errorForPayload?(payload) { return .error(error) }
+        if self.hangForPayload?(payload) == true { return .never() }
         self.lock.locked { self.payloads.append(payload) }
         return .just(())
     }
@@ -2586,6 +2674,38 @@ class SensorLegacyQueuePurgeSpec: QuickSpec {
             expect(head?.records.count).to(equal(1))
             expect(head?.windowStart).to(equal(windowStart))
             expect(storage.pendingBatchCount(for: sensor)).to(equal(0))
+        }
+
+        it("peeks without removing, keeps ids across instances, and removes or requeues by id (V2)") {
+            let windowStart = Date(timeIntervalSince1970: 1_700_000_000)
+            // A FUAM-3945 entry persisted by the previous build: window start, but no id yet.
+            let preV2: [[String: Any]] = [["records": [["t": "2025-06-01T00:00:00Z", "steps": 1]],
+                                           "window_start": windowStart.timeIntervalSince1970]]
+            guard let data = try? JSONSerialization.data(withJSONObject: preV2) else {
+                return fail("could not build the pre-V2 blob")
+            }
+            UserDefaults.standard.set(data, forKey: key)
+            storage.enqueueBatch([["t": "2025-06-02T00:00:00Z", "steps": 2]], windowStart: windowStart, for: sensor)
+
+            guard let head = storage.peekNextBatch(for: sensor, excluding: []) else { return fail("no head") }
+            expect(head.records.first?["steps"] as? Int).to(equal(1))
+            expect(storage.pendingBatchCount(for: sensor)).to(equal(2))       // peek removes nothing
+            // A process restart (fresh instance) sees the same id: the assigned id was persisted.
+            expect(DefaultsSensorStorage().peekNextBatch(for: sensor, excluding: [])?.id).to(equal(head.id))
+            // An in-flight batch is skipped by a concurrent chain.
+            expect(storage.peekNextBatch(for: sensor, excluding: [head.id])?.records.first?["steps"] as? Int).to(equal(2))
+
+            // A failed upload moves the head to the tail in its filtered form, same window.
+            expect(storage.requeueBatch(id: head.id, records: [["t": "2025-06-01T00:00:00Z"]], for: sensor)).to(beTrue())
+            expect(storage.pendingBatchCount(for: sensor)).to(equal(2))
+            expect(storage.peekNextBatch(for: sensor, excluding: [])?.records.first?["steps"] as? Int).to(equal(2))
+
+            // Success removes exactly that batch; removing or requeueing a gone id is a no-op.
+            storage.removeBatch(id: head.id, for: sensor)
+            storage.removeBatch(id: head.id, for: sensor)
+            expect(storage.requeueBatch(id: head.id, records: [], for: sensor)).to(beTrue())
+            expect(storage.pendingBatchCount(for: sensor)).to(equal(1))
+            expect(storage.peekNextBatch(for: sensor, excluding: [])?.records.first?["steps"] as? Int).to(equal(2))
         }
     }
 }

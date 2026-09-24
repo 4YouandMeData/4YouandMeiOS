@@ -124,6 +124,12 @@ public final class SensorSampleUploadManager {
     // permanent rejection recurs on every drain of the same session, so it still exhausts;
     // persist alongside the queue only if field telemetry shows stuck batches surviving it.
     private var batchUploadRejections: [String: Int] = [:]
+    // FUAM-3945 round 6 (V2): ids of the queued batches a drain chain is uploading right now,
+    // per sensor, mutated on `workQueue` only. A batch stays in the persisted queue until its
+    // upload succeeds, so a concurrent chain must skip it rather than upload it a second time.
+    // ponytail: an upload Single that never terminates would pin its batch here until relaunch;
+    // Moya/URLSession timeouts bound that in practice.
+    private var inFlightBatchIds: [SRSensor: Set<String>] = [:]
     // Once-per-launch guard so the "empty_plan" telemetry (review fix #6) doesn't fire on
     // every 15-minute sync cycle while a fresh enrollment waits out the 24h embargo.
     private var emptyPlanReported: Set<String> = []
@@ -1776,8 +1782,15 @@ public final class SensorSampleUploadManager {
             workQueue.async { [weak self] in
                 guard let self = self else { return }
 
-                guard let batch = self.storage.dequeueNextBatch(for: sensor) else {
-                    return // queue drained
+                // FUAM-3945 round 6 (V2): PEEK, never dequeue. The batch stays persisted at its
+                // place in the queue until the upload succeeds (or the rejection budget drops
+                // it): its fingerprints were committed to the ledger and the cursor advanced at
+                // enqueue, so a batch removed before its request completed and then lost to a
+                // process kill could never be re-collected. Peek and in-flight marking happen
+                // in one `workQueue` block, so two chains never pick the same batch.
+                let inFlight = self.inFlightBatchIds[sensor] ?? []
+                guard let batch = self.storage.peekNextBatch(for: sensor, excluding: inFlight) else {
+                    return // queue drained (or every remaining batch is in flight elsewhere)
                 }
 
                 // Review fix #2: the persisted queue outlives the policy that filled it (an
@@ -1803,9 +1816,11 @@ public final class SensorSampleUploadManager {
                     #if DEBUG
                     print("SensorSampleUploadManager - Dropped a fully out-of-bounds queued batch for \(sensor.rawValue)")
                     #endif
+                    self.storage.removeBatch(id: batch.id, for: sensor)
                     uploadNextBatch()
                     return
                 }
+                self.inFlightBatchIds[sensor, default: []].insert(batch.id)
 
                 // FUAM-3945: `sr_absolute_time` SHIPS on every sole-record-of-its-fetch-result
                 // record — the server builds its cross-row dedup on it (FUAM-4030) — and is
@@ -1818,8 +1833,13 @@ public final class SensorSampleUploadManager {
                     .subscribe(
                         onSuccess: { [weak self] in
                             guard let self = self else { return }
-                            // If more batches remain, keep going
-                            if self.storage.pendingBatchCount(for: sensor) > 0 {
+                            // Hop onto the work queue: `inFlightBatchIds` lives there. The batch
+                            // leaves the persisted queue only now that the server has it.
+                            self.workQueue.async { [weak self] in
+                                guard let self = self else { return }
+                                self.storage.removeBatch(id: batch.id, for: sensor)
+                                self.inFlightBatchIds[sensor]?.remove(batch.id)
+                                // Keep going; stops by itself when nothing uploadable is left.
                                 uploadNextBatch()
                             }
                         },
@@ -1832,12 +1852,13 @@ public final class SensorSampleUploadManager {
                             // only, and this callback arrives on an arbitrary Rx thread.
                             self.workQueue.async { [weak self] in
                                 guard let self = self else { return }
+                                self.inFlightBatchIds[sensor]?.remove(batch.id)
                                 // FUAM-3945 round 5 (AC6): only a PERMANENT rejection burns the
                                 // batch's upload budget — a network outage or server error stays
                                 // on the unbounded backoff retry below. On exhaustion the batch
-                                // is dropped (it is already dequeued: not re-enqueueing IS the
-                                // drop), reported, and the drain moves on so it cannot shadow
-                                // the batches queued behind it.
+                                // is dropped (removed from the persisted queue), reported, and
+                                // the drain moves on so it cannot shadow the batches queued
+                                // behind it.
                                 if let uploadError = error as? SensorUploadError,
                                    case .permanentlyRejected(let statusCode) = uploadError {
                                     let key = Self.batchRejectionKey(sensor: sensor,
@@ -1846,6 +1867,7 @@ public final class SensorSampleUploadManager {
                                     let rejections = (self.batchUploadRejections[key] ?? 0) + 1
                                     guard rejections < self.maxBatchUploadRejections else {
                                         self.batchUploadRejections[key] = nil
+                                        self.storage.removeBatch(id: batch.id, for: sensor)
                                         self.analytics.track(event: .sensorDataBackfillReach(
                                             sensor: sensor.shortSubsource,
                                             reachedBack: ISO8601DateFormatter().string(from: batch.windowStart),
@@ -1859,14 +1881,13 @@ public final class SensorSampleUploadManager {
                                     }
                                     self.batchUploadRejections[key] = rejections
                                 }
-                                // Re-enqueue the FILTERED batch (dropped records must not come
-                                // back) and schedule a retry with backoff. A failed re-persist
-                                // is unrecoverable at this point — the batch is already
-                                // dequeued, the cursor long advanced and the fingerprints
-                                // committed — but it must never be SILENT (review round 1,
-                                // F7 / AC6): the enqueue_failed trace is what distinguishes
-                                // "lost to a storage failure" from "never collected".
-                                if !self.storage.enqueueBatch(uploadable, windowStart: batch.windowStart, for: sensor) {
+                                // Move the batch to the tail as its FILTERED form (dropped
+                                // records must not come back), in one persisted write, and
+                                // schedule a retry with backoff. The original entry stays
+                                // queued if that write fails (V2), so the failure costs a
+                                // retry of the unfiltered form, which the gate re-filters;
+                                // it is still traced (review round 1, F7 / AC6).
+                                if !self.storage.requeueBatch(id: batch.id, records: uploadable, for: sensor) {
                                     self.analytics.track(event: .sensorDataBackfillReach(
                                         sensor: sensor.shortSubsource,
                                         reachedBack: ISO8601DateFormatter().string(from: batch.windowStart),

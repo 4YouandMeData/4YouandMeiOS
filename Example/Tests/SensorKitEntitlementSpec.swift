@@ -659,6 +659,10 @@ private final class NullSensorStorage: SensorSampleUploadManagerStorage, SensorS
     @discardableResult
     func enqueueBatch(_ batch: [[String: Any]], windowStart: Date, for sensor: SRSensor) -> Bool { return true }
     func dequeueNextBatch(for sensor: SRSensor) -> (records: [[String: Any]], windowStart: Date)? { return nil }
+    func peekNextBatch(for sensor: SRSensor, excluding ids: Set<String>) -> SensorQueuedBatch? { return nil }
+    func removeBatch(id: String, for sensor: SRSensor) {}
+    @discardableResult
+    func requeueBatch(id: String, records: [[String: Any]], for sensor: SRSensor) -> Bool { return true }
     func pendingBatchCount(for sensor: SRSensor) -> Int { return 0 }
     func ledger(for sensor: SRSensor, deviceKey: String) -> [String: SensorLedgerEntry] { return [:] }
     func setLedger(_ ledger: [String: SensorLedgerEntry], for sensor: SRSensor, deviceKey: String) {}
