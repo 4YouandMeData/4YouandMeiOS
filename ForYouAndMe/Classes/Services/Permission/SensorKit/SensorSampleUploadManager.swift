@@ -1256,7 +1256,8 @@ public final class SensorSampleUploadManager {
             // Forward walk: the window is durably handled (enqueued, deduplicated, deliberately
             // filtered, or confirmed empty) — advance, monotonically, and move on. A rescan
             // window ends at or behind the stored cursor, so the monotonic write is what keeps
-            // "cursors never rewind" true (the only sanctioned rewind stays `future_cursor`).
+            // "cursors never rewind" true (the sanctioned rewinds are the `future_cursor` reset
+            // and the purge rewind, both written straight to storage).
             self.advanceCursor(to: window.end, for: sensor, deviceKey: deviceKey)
             self.processWindow(at: index + 1, of: windows, context: context)
         }
@@ -1541,8 +1542,9 @@ public final class SensorSampleUploadManager {
 
     /// AC4/D3: cursors are strictly monotonic. A rescan window sits BEHIND the cursor by design
     /// and a backward probe hands windows over newest-first; writing such a window's end would
-    /// rewind the cursor, and the only sanctioned rewind in the whole design is the
-    /// `future_cursor` corruption reset (which writes the storage directly).
+    /// rewind the cursor, and the only sanctioned rewinds in the whole design are the
+    /// `future_cursor` corruption reset and the purge rewind (`rewindCursors`), both of which
+    /// write the storage directly.
     private func advanceCursor(to date: Date, for sensor: SRSensor, deviceKey: String) {
         if let stored = self.storage.lastCursor(for: sensor, deviceKey: deviceKey), stored >= date {
             return

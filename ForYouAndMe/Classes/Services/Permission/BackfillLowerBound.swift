@@ -86,15 +86,21 @@ struct BackfillLowerBound {
     /// — already capped at `min(deviceNow, serverNow)`, minus any embargo — by more than
     /// `futureCursorTolerance`.
     ///
-    /// This is the ONE case in which a cursor may be rewound. The rule everywhere else is
-    /// "cursors only move forward", because rewinding re-uploads data and, worse, can re-open a
-    /// window the participant has since withdrawn consent for. Neither applies here: the rewind
-    /// target is the consent bound itself (never below it), and windows are participant-timezone
-    /// calendar days, so a re-walk reproduces the same windows as long as the participant's
-    /// timezone setting has not changed in between. Re-uploaded records are deduplicated
-    /// primarily by the local upload ledger; server-side reconciliation is best-effort
-    /// (FUAM-4074). Bandwidth is the only cost, against the alternative of silently never
-    /// fetching the interval between the excursion and the burnt cursor.
+    /// This is one of the TWO cases in which a cursor may be rewound; the other is a queue purge
+    /// (`SensorSampleUploadManager.purgeAllData`, which rewinds to the earliest window it dropped,
+    /// never below a known consent bound). The rule everywhere else is "cursors only move
+    /// forward", because rewinding re-uploads data and, worse, can re-open a window the
+    /// participant has since withdrawn consent for. Neither applies here: the rewind target is
+    /// the consent bound itself (never below it), and windows are participant-timezone calendar
+    /// days, so a re-walk reproduces the same windows as long as the participant's timezone
+    /// setting has not changed in between. The local upload ledger only remembers the last
+    /// `SensorSampleUploadManager.ledgerRetentionDays` (5) days, and a rewind to the consent
+    /// bound usually spans weeks: most of the re-walk is re-uploaded and deduplicated by the
+    /// SERVER (identical bytes at the same anchor merge as identical; otherwise by
+    /// `sr_absolute_time` or the content digest, FUAM-4030/FUAM-4074), and only the most recent
+    /// days are filtered by the ledger before upload. Bandwidth is the only cost, against the
+    /// alternative of silently never fetching the interval between the excursion and the burnt
+    /// cursor.
     static func isFutureBurned(cursor: Date?, upperBound: Date) -> Bool {
         guard let cursor = cursor else { return false }
         return cursor > upperBound.addingTimeInterval(Self.futureCursorTolerance)
