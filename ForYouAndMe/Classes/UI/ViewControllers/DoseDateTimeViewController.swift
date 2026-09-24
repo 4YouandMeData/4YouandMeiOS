@@ -289,7 +289,10 @@ class DoseDateTimeViewController: UIViewController, UITextFieldDelegate {
 
         // Date Section
         
-        if variant.isStandaloneLike {
+        if let note = variant.chartDiaryNote {
+            // FUAM-3613 (S5): from the chart the tapped moment is the dose time; no date section.
+            chosenDate = note.diaryNoteId
+        } else if variant.isStandaloneLike {
             sectionHeaderTime.text = StringsProvider.string(forKey: .doseStepTwoTimeLabel)
 
             scrollStackView.stackView.addArrangedSubview(sectionHeaderTime)
@@ -300,9 +303,6 @@ class DoseDateTimeViewController: UIViewController, UITextFieldDelegate {
             dateRow.addSubview(dateValueLabel)
             dateRow.addSubview(dateIcon)
             dateRow.addSubview(underlineTime)
-            if let note = variant.chartDiaryNote {
-                chosenDate = note.diaryNoteId
-            } 
             
             dateValueLabel.autoAlignAxis(toSuperviewAxis: .horizontal)
             dateValueLabel.autoPinEdge(.leading, to: .leading, of: dateRow)

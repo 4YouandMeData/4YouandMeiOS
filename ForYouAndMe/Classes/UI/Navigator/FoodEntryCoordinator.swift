@@ -203,6 +203,22 @@ extension FoodEntryCoordinator: EatenTypeViewControllerDelegate {
     func eatenTypeViewController(_ vc: EatenTypeViewController, didSelect type: FoodEntryType) {
         selectedFoodType = type.rawValue
         
+        // FUAM-3613 (D2): from the chart the tapped moment is the meal time, so "when"
+        // and the date-time picker are skipped.
+        if let note = variant.chartDiaryNote {
+            snackDate = note.diaryNoteId
+            let amountVC = ConsumptionAmountViewController(variant: self.variant)
+            amountVC.selectedType = type
+            amountVC.delegate = self
+            amountVC.alert = self.alert
+            navigationController.pushViewController(
+                amountVC,
+                hidesBottomBarWhenPushed: hidesBottomBarWhenPushed,
+                animated: true
+            )
+            return
+        }
+        
         // Navigate to time selection screen
         let timeVC = EatenTimeViewController(selectedType: type,
                                              variant: self.variant)
@@ -237,10 +253,6 @@ extension FoodEntryCoordinator: EatenTimeViewControllerDelegate {
                 animated: true
             )
         } else {
-            if let note = variant.chartDiaryNote {
-                snackDate = note.diaryNoteId
-            }
-            
             let dateTimeVC = EatenDateTimeViewController(variant: self.variant)
             dateTimeVC.selectedType = type
             dateTimeVC.delegate = self

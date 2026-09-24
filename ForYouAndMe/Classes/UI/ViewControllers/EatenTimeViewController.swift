@@ -50,11 +50,8 @@ class EatenTimeViewController: UIViewController {
     private lazy var earlierButton: OptionButton = makeOptionButton(type: .earlier)
     
     private var isStandalone: Bool {
-        if case .standalone = variant {
-            return true
-        } else {
-            return false
-        }
+        // FUAM-3613 (F1): chart-started flows show the standalone copy too.
+        variant.isStandaloneLike
     }
     
     weak var delegate: EatenTimeViewControllerDelegate?

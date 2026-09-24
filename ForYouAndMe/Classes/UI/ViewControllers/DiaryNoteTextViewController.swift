@@ -426,6 +426,8 @@ class DiaryNoteTextViewController: UIViewController {
             return
         }
         self.dismiss(animated: true) {
+            // FUAM-3613 (Q14): a chart-started note returns to the Compass tab.
+            guard !self.isFromChart else { return }
             self.navigator.switchToDiaryTab(presenter: self)
         }
     }

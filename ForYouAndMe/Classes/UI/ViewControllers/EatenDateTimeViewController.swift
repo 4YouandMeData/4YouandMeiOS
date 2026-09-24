@@ -84,11 +84,8 @@ class EatenDateTimeViewController: UIViewController {
     }()
     
     private var isStandalone: Bool {
-        if case .standalone = variant {
-            return true
-        } else {
-            return false
-        }
+        // FUAM-3613 (F1): chart-started flows show the standalone copy too.
+        variant.isStandaloneLike
     }
     
     private lazy var footerView: GenericButtonView = {
