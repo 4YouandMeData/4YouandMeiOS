@@ -4,33 +4,48 @@
 //
 //  FUAM-4045: welcome and success pages are optional in the opt-in and the
 //  integration onboarding sections, and a section with nothing to show is
-//  skipped. These specs run the real network decoding path (the opt-in null-id
-//  normalisation of `NetworkApiGateway.send`, Japx with the entity's
-//  `includeList`, then the keyPath-scoped JSONDecoder — same as
-//  `Response.mapCodableJSONAPI`) so that a relationship that is absent, null
-//  or not included, or a null primary id (FUAM-4036), cannot regress into a
-//  parse failure.
+//  skipped. These specs decode through the production mapping of
+//  `NetworkApiGateway.send` (`Response.mapJSONAPIMappable`: Japx with the
+//  entity's `includeList`, the keyPath-scoped JSONDecoder, and the opt-in
+//  null-id fallback), and one spec drives the gateway itself through a stubbed
+//  Moya provider, so that a relationship that is absent, null or not included,
+//  or a null primary id (FUAM-4036), cannot regress into a parse failure.
 //
 
 import Quick
 import Nimble
 import Moya
+import RxSwift
 @testable import ForYouAndMe
 
 class SectionOptionalPagesDecodingSpec: QuickSpec {
 
-    /// Mirrors `NetworkApiGateway.send`: null-id normalisation, then
-    /// `Response.mapCodableJSONAPI(includeList:keyPath:)`.
+    /// The production mapping used by `NetworkApiGateway.send` (`Response.mapJSONAPIMappable`).
     private static func decode<T: JSONAPIMappable>(_ type: T.Type, from json: String) -> T? {
-        let data = Response(statusCode: 200, data: Data(json.utf8)).normalizingNullIdentifier(for: T.self).data
-        let decoder = JapxDecoder()
-        guard let parsed = try? Japx.Decoder.jsonObject(with: data, includeList: T.includeList, options: decoder.options),
-              let keyPath = T.keyPath,
-              let jsonForKeyPath = (parsed as AnyObject).value(forKeyPath: keyPath),
-              let jsonApiData = try? JSONSerialization.data(withJSONObject: jsonForKeyPath) else {
-            return nil
-        }
-        return try? decoder.jsonDecoder.decode(T.self, from: jsonApiData)
+        return try? Response(statusCode: 200, data: Data(json.utf8)).mapJSONAPIMappable(T.self)
+    }
+
+    /// A real `NetworkApiGateway` whose Moya provider answers every request with `json` (HTTP 200).
+    private static func gateway(answering json: String) -> NetworkApiGateway {
+        let gateway = NetworkApiGateway(studyId: "1", reachability: ReachableStub(), storage: StorageStub())
+        gateway.defaultProvider = MoyaProvider<DefaultService>(endpointClosure: { target in
+            Endpoint(url: "https://example.invalid/\(target.path)",
+                     sampleResponseClosure: { .networkResponse(200, Data(json.utf8)) },
+                     method: target.method,
+                     task: target.task,
+                     httpHeaderFields: nil)
+        }, stubClosure: MoyaProvider.immediatelyStub)
+        return gateway
+    }
+
+    private struct ReachableStub: ReachabilityService {
+        var isCurrentlyReachable: Bool { true }
+        var currentReachabilityType: ReachabilityServiceType { .wifi }
+        func getReachability() -> Observable<ReachabilityServiceType> { .just(.wifi) }
+    }
+
+    private final class StorageStub: NetworkStorage {
+        var accessToken: String?
     }
 
     /// A `page` resource object, minimally populated, optionally linking `link_1` to `link1`.
@@ -290,6 +305,43 @@ class SectionOptionalPagesDecodingSpec: QuickSpec {
                 expect(section?.successPage).to(beNil())
                 expect(section?.pages).to(beEmpty())
                 expect(section?.isEmpty).to(beTrue())
+            }
+
+            // Drives the real `NetworkApiGateway.send` chain, so dropping the
+            // normalisation from the gateway's mapping fails here.
+            it("decodes the null-id empty record through the real gateway send chain") {
+                let payload = """
+                {
+                    "data": {
+                        "id": null,
+                        "type": "integration",
+                        "attributes": { "created_at": null, "updated_at": null },
+                        "relationships": {
+                            "pages": { "data": [] },
+                            "welcome_page": { "data": null },
+                            "success_page": { "data": null },
+                            "failure_page": { "data": null }
+                        }
+                    },
+                    "included": []
+                }
+                """
+                let api = gateway(answering: payload)
+                var result: Result<IntegrationSection, Error>?
+                let disposeBag = DisposeBag()
+                waitUntil(timeout: .seconds(5)) { done in
+                    let single: Single<IntegrationSection> = api.send(request: ApiRequest(serviceRequest: .getIntegrationSection),
+                                                                      errorType: UnhandledError.self)
+                    single.subscribe(onSuccess: { result = .success($0); done() },
+                                     onFailure: { result = .failure($0); done() })
+                        .disposed(by: disposeBag)
+                }
+                guard case .success(let section) = result else {
+                    fail("Expected the empty integration to decode, got \(String(describing: result))")
+                    return
+                }
+                expect(section.id).to(equal(""))
+                expect(section.isEmpty).to(beTrue())
             }
 
             it("keeps rejecting a null id for a type that did not opt in") {
