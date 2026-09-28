@@ -77,11 +77,33 @@ final class HotFlashCoordinator {
     }
 
     func getStartingPage() -> UIViewController {
-        let timeVC = HotFlashTimeViewController(variant: variant)
-        timeVC.delegate = self
-        let nav = UINavigationController(rootViewController: timeVC)
+        let root: UIViewController
+        if let note = variant.chartDiaryNote {
+            // FUAM-3613 (D2): the tapped moment is the event time; "when" and the picker are skipped.
+            self.eventDate = note.diaryNoteId
+            if additionalStepsEnabled {
+                let first = makeStepViewController(for: .severity)
+                first.delegate = self
+                root = first
+            } else {
+                // Q5: nothing to ask; a blank page holds the progress HUD until the save lands.
+                root = UIViewController()
+                root.view.backgroundColor = ColorPalette.color(withType: .secondary)
+            }
+        } else {
+            let timeVC = HotFlashTimeViewController(variant: variant)
+            timeVC.delegate = self
+            root = timeVC
+        }
+        let nav = UINavigationController(rootViewController: root)
         self.rootNavigationController = nav
         return nav
+    }
+
+    /// FUAM-3613 (Q5): from the chart with no extra questions, save as soon as the flow is visible.
+    func submitIfNothingToAsk() {
+        guard variant.isFromChart, !additionalStepsEnabled else { return }
+        submit()
     }
 
     /// FUAM-3247: returns true when the study config carries at least the
@@ -116,7 +138,11 @@ final class HotFlashCoordinator {
                 self?.showSuccessPage(diaryNote: note)
             }, onFailure: { [weak self] error in
                 guard let self = self, let presenter = self.rootNavigationController else { return }
-                self.navigator.handleError(error: error, presenter: presenter)
+                // FUAM-3613: the blank chart page has no control to leave it, so the alert closes the flow.
+                let nothingToAsk = self.variant.isFromChart && !self.additionalStepsEnabled
+                self.navigator.handleError(error: error,
+                                           presenter: presenter,
+                                           onDismiss: nothingToAsk ? self.completionCallback : {})
             }).disposed(by: self.disposeBag)
     }
 

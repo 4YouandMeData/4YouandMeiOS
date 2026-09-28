@@ -708,25 +708,12 @@ class AppNavigator {
         )
         diaryNoteTextViewController.modalPresentationStyle = .fullScreen
 
-        if !isFromChart {
-            presenter.dismiss(animated: true) { [weak self] in
-                guard let self = self,
-                      let top = self.getTopMostViewController() else { return }
-                top.present(diaryNoteTextViewController, animated: true, completion: nil)
-            }
-        } else {
-            if let navigationController = presenter.navigationController {
-                navigationController.pushViewController(
-                    diaryNoteTextViewController,
-                    hidesBottomBarWhenPushed: true,
-                    animated: true
-                )
-            } else {
-                // Fallback: wrap & present if no nav available
-                let nav = UINavigationController(rootViewController: diaryNoteTextViewController)
-                nav.modalPresentationStyle = .fullScreen
-                presenter.present(nav, animated: true, completion: nil)
-            }
+        // FUAM-3613: chart notes use the same dismiss-then-present path as audio/video, so closing
+        // the editor lands on the Compass tab (the pushed/stacked variant trapped or returned to the chooser).
+        presenter.dismiss(animated: true) { [weak self] in
+            guard let self = self,
+                  let top = self.getTopMostViewController() else { return }
+            top.present(diaryNoteTextViewController, animated: true, completion: nil)
         }
     }
     
@@ -755,7 +742,8 @@ class AppNavigator {
                                    isFromChart: Bool) {
         let diaryNoteVideoViewController = DiaryNoteVideoViewController(diaryNoteItem: diaryNote,
                                                                         isEdit: isEdit,
-                                                                        reflectionCoordinator: nil)
+                                                                        reflectionCoordinator: nil,
+                                                                        isFromChart: isFromChart)
         diaryNoteVideoViewController.modalPresentationStyle = .fullScreen
         presenter.dismiss(animated: true) {
             guard let topViewController = self.getTopMostViewController() else {
@@ -1696,7 +1684,9 @@ extension AppNavigator {
 
         let startVC = coordinator.getStartingPage()
         startVC.modalPresentationStyle = .fullScreen
-        presenter.present(startVC, animated: true)
+        presenter.present(startVC, animated: true) { [weak coordinator] in
+            coordinator?.submitIfNothingToAsk()
+        }
         self.hotFlashCoordinator = coordinator
     }
 

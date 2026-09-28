@@ -46,6 +46,7 @@ class DiaryNoteVideoViewController: UIViewController {
     private let pollingInterval: TimeInterval = 10.0 // Polling interval in seconds
     private var isPollingActive: Bool = false
     private var reflectionCoordinator: ReflectionSectionCoordinator?
+    private let isFromChart: Bool
     
     private var currentState: VideoDiaryState = .record(isRecording: false) {
         didSet {
@@ -281,7 +282,8 @@ class DiaryNoteVideoViewController: UIViewController {
     
     init(diaryNoteItem: DiaryNoteItem?,
          isEdit: Bool,
-         reflectionCoordinator: ReflectionSectionCoordinator?) {
+         reflectionCoordinator: ReflectionSectionCoordinator?,
+         isFromChart: Bool = false) {
         self.navigator = Services.shared.navigator
         self.repository = Services.shared.repository
         self.cache = Services.shared.storageServices
@@ -289,6 +291,7 @@ class DiaryNoteVideoViewController: UIViewController {
         self.isEditMode = isEdit
         self.diaryNoteItem = diaryNoteItem
         self.reflectionCoordinator = reflectionCoordinator
+        self.isFromChart = isFromChart
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -501,6 +504,8 @@ class DiaryNoteVideoViewController: UIViewController {
         }
         
         self.genericCloseButtonPressed(completion: {
+            // FUAM-3613 (Q14): a chart-started note returns to the Compass tab.
+            guard !self.isFromChart else { return }
             self.navigator.switchToDiaryTab(presenter: self)
         })
     }
