@@ -81,16 +81,7 @@ class UserDataViewController: BaseViewController, WKNavigationDelegate, WKScript
         self.fabActionHandler = { [weak self] action in
             guard let self = self, let diaryNote = self.pendingDiaryNoteItem else { return }
 
-            switch action {
-            case .insulin:
-                self.navigator.openMyDosesViewController(presenter: self, diaryNote: diaryNote)
-            case .noticed:
-                self.navigator.openNoticedViewController(presenter: self, diaryNote: diaryNote)
-            case .eaten:
-                self.navigator.openEatenViewController(presenter: self, diaryNote: diaryNote)
-            case .hotFlash:
-                self.navigator.openHotFlashViewController(presenter: self, diaryNote: diaryNote)
-            }
+            self.openFlow(action, diaryNote: diaryNote)
 
             // Reset after action
             self.pendingDiaryNoteItem = nil
@@ -182,8 +173,6 @@ class UserDataViewController: BaseViewController, WKNavigationDelegate, WKScript
     
     // Nel metodo webView(_:didFinish:)
    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
-       // Inietta il listener JavaScript dopo il caricamento
-//       injectChartEventListener()
 //       self.webView.evaluateJavaScript("document.body.innerHTML", completionHandler: { (value: Any!, error: Error!) -> Void in
 //           if error != nil {
 //               //Error logic
@@ -201,22 +190,36 @@ class UserDataViewController: BaseViewController, WKNavigationDelegate, WKScript
                                didReceive message: WKScriptMessage) {
         guard let msg = ScriptMessage(rawValue: message.name),
               let body = message.body as? [String: Any] else {
+            Telemetry.Errors.handled(domain: "chart_tap.bad_message_body", underlying: nil)
             return
         }
 
         switch msg {
         case .chartPointTapped:
-        if let nav = self.presentedViewController as? UINavigationController,
-           let webVC = nav.viewControllers.first(where: { $0 is WebViewViewController }) as? WebViewViewController {
-            webVC.showFabIfNeeded()
-            webVC.onFabActionSelected = { [weak self] action in
-                guard let self = self else { return }
-                self.pendingFabAction = action
-                self.dismissRotateAndPresent(eventData: body)
+            // FUAM-3613 — parse once, at tap time, so both chart surfaces carry the tapped context.
+            let diaryNote: DiaryNoteItem
+            switch DiaryNoteItem.fromChartTap(body) {
+            case .success(let note):
+                diaryNote = note
+            case .failure(let error):
+                Telemetry.Errors.handled(domain: error.telemetryDomain, underlying: nil)
+                return
             }
-        } else {
-            dismissRotateAndPresent(eventData: body)
-        }
+            if let nav = self.presentedViewController as? UINavigationController,
+               let webVC = nav.viewControllers.first(where: { $0 is WebViewViewController }) as? WebViewViewController {
+                guard !webVC.floatingButton.items.isEmpty else {
+                    Telemetry.Errors.handled(domain: "chart_tap.no_fab_elements", underlying: nil)
+                    return
+                }
+                webVC.showFabIfNeeded()
+                webVC.onFabActionSelected = { [weak self] action in
+                    guard let self = self else { return }
+                    self.pendingFabAction = action
+                    self.dismissRotateAndPresent(diaryNote: diaryNote)
+                }
+            } else {
+                self.dismissRotateAndPresent(diaryNote: diaryNote)
+            }
 
         case .chartFullScreenTapped:
             handleFullScreenTap(body: body)
@@ -227,24 +230,15 @@ class UserDataViewController: BaseViewController, WKNavigationDelegate, WKScript
     }
     
     // Dismiss the current view, rotate back to portrait, then present diary note
-    private func dismissRotateAndPresent(eventData: [String: Any]) {
+    private func dismissRotateAndPresent(diaryNote: DiaryNoteItem) {
 
         let afterDismiss = {
             OrientationManager.resetToDefaultWithCompletion {
                 if let action = self.pendingFabAction {
                     self.pendingFabAction = nil
-                    switch action {
-                    case .insulin:
-                        self.navigator.openMyDosesViewController(presenter: self)
-                    case .noticed:
-                        self.navigator.openNoticedViewController(presenter: self)
-                    case .eaten:
-                        self.navigator.openEatenViewController(presenter: self)
-                    case .hotFlash:
-                        self.navigator.openHotFlashViewController(presenter: self)
-                    }
+                    self.openFlow(action, diaryNote: diaryNote)
                 } else {
-                    self.handleChartPointTap(eventData: eventData, animated: true)
+                    self.showFab(for: diaryNote)
                 }
             }
         }
@@ -257,20 +251,25 @@ class UserDataViewController: BaseViewController, WKNavigationDelegate, WKScript
     }
     
     private func handleSharingTap(body: [String: Any]) {
-        let urlString = body["url"] as? String ?? "https://www.google.com"
-
-        guard let url = URL(string: urlString) else {
-            assertionFailure("URL invalido: \(urlString)")
+        guard let urlString = body["url"] as? String,
+              let url = URL(string: urlString.trimmingCharacters(in: .whitespacesAndNewlines)),
+              let scheme = url.scheme?.lowercased(), scheme == "http" || scheme == "https",
+              let host = url.host, !host.isEmpty else {
             return
         }
-        
+
         let activityViewController = UIActivityViewController(activityItems: [url], applicationActivities: nil)
-        activityViewController.popoverPresentationController?.sourceView = self.view
-        
+
+        let presenter: UIViewController
         if let nav = self.presentedViewController as? UINavigationController,
            let webVC = nav.viewControllers.first(where: { $0 is WebViewViewController }) as? WebViewViewController {
-            webVC.present(activityViewController, animated: true, completion: nil)
+            presenter = webVC
+        } else {
+            presenter = self
         }
+
+        activityViewController.popoverPresentationController?.sourceView = presenter.view
+        presenter.present(activityViewController, animated: true, completion: nil)
     }
     
     private func handleFullScreenTap(body: [String: Any]) {
@@ -296,44 +295,27 @@ class UserDataViewController: BaseViewController, WKNavigationDelegate, WKScript
     
     // MARK: - Chart Point Tap Handler
 
-    /// Processes a tap on a chart point by extracting the necessary data
-    /// and presenting the corresponding diary note screen.
-    /// - Parameter eventData: A dictionary containing the tap event payload.
-    private func handleChartPointTap(eventData: [String: Any], animated: Bool) {
-        // Extract all required fields in a single guard to fail early if any are missing or of wrong type
-        guard
-            let dataPoint      = eventData["datetime_ref"]        as? String,
-            let interval       = eventData["interval"]            as? String,
-            let noteableType   = eventData["diary_noteable_type"] as? String,
-            let noteableId     = eventData["diary_noteable_id"]   as? String
-        else {
-            // If any value is unavailable, abort handling
+    /// FUAM-3613 — opens the chart-aware flow for the chosen FAB item.
+    private func openFlow(_ action: FabAction, diaryNote: DiaryNoteItem) {
+        switch action {
+        case .insulin:
+            self.navigator.openMyDosesViewController(presenter: self, diaryNote: diaryNote)
+        case .noticed:
+            self.navigator.openNoticedViewController(presenter: self, diaryNote: diaryNote)
+        case .eaten:
+            self.navigator.openEatenViewController(presenter: self, diaryNote: diaryNote)
+        case .hotFlash:
+            self.navigator.openHotFlashViewController(presenter: self, diaryNote: diaryNote)
+        }
+    }
+
+    /// FUAM-3613 — shows the Compass tab FAB for an already-parsed chart tap.
+    private func showFab(for diaryNote: DiaryNoteItem) {
+        guard !self.floatingButton.items.isEmpty else {
+            Telemetry.Errors.handled(domain: "chart_tap.no_fab_elements", underlying: nil)
             return
         }
-
-        // Build the DiaryNoteable model
-        let diaryNoteable = DiaryNoteable(
-            id: noteableId,
-            type: noteableType
-        )
-
-        // Construct the DiaryNoteItem representing the tapped point
-        let diaryNote = DiaryNoteItem(
-            diaryNoteId: dataPoint,
-            body: "",             // Body is empty for chart-initiated notes
-            interval: interval,
-            diaryNoteable: diaryNoteable
-        )
-        
         self.pendingDiaryNoteItem = diaryNote
-        
-//        // Present the diary note screen, flagging that it originated from a chart tap
-//        navigator.presentDiaryNotes(
-//            diaryNote: diaryNote,
-//            presenter: self,
-//            isFromChart: true,
-//            animated: animated
-//        )
         self.setFabHidden(false)
         self.floatingButton.open()
     }

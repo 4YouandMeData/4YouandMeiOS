@@ -494,17 +494,89 @@ struct DiaryNoteItem: Codable {
         self.body = body
     }
     
+    init(date: Date,
+         body: String?,
+         interval: String?,
+         diaryNoteable: DiaryNoteable?) {
+
+        self.id = UUID().uuidString
+        self.type = "diary_note"
+        self.diaryNoteId = date
+        self.body = body
+        self.interval = interval
+        self.diaryNoteable = diaryNoteable
+    }
+
     init(diaryNoteId: String?,
          body: String?,
          interval: String?,
          diaryNoteable: DiaryNoteable?) {
-        
-        self.id = UUID().uuidString
-        self.type = "diary_note"
-        self.diaryNoteId = diaryNoteId?.date(withFormat: dateDataPointFormat) ?? Date()
-        self.body = body
-        self.interval = interval
-        self.diaryNoteable = diaryNoteable
+
+        self.init(date: diaryNoteId?.date(withFormat: dateDataPointFormat) ?? Date(),
+                  body: body,
+                  interval: interval,
+                  diaryNoteable: diaryNoteable)
+    }
+}
+
+/// FUAM-3613 — why a `chartPointTapped` bridge body was rejected. A rejected tap is a
+/// silent no-op for the participant (Q11/Q12); the reason only reaches Telemetry.
+enum ChartTapPayloadError: Error, Equatable {
+    case missingField(String)
+    case unparsableDatetime
+
+    var telemetryDomain: String {
+        switch self {
+        case .missingField(let key): return "chart_tap.missing_field.\(key)"
+        case .unparsableDatetime: return "chart_tap.unparsable_datetime"
+        }
+    }
+}
+
+extension DiaryNoteItem {
+
+    /// FUAM-3613 (S4) — the chart prints `datetime_ref` as device-local wall time,
+    /// "yyyy-MM-dd HH:mm", no offset. Pin POSIX + Gregorian so a Thai/Japanese-calendar
+    /// or 12-hour device reads the same instant; keep the device zone (D3).
+    static func chartDatetimeFormatter(timeZone: TimeZone = .current) -> DateFormatter {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.calendar = Calendar(identifier: .gregorian)
+        formatter.timeZone = timeZone
+        formatter.dateFormat = dateDataPointFormat
+        return formatter
+    }
+
+    /// FUAM-3613 — builds the chart-linked note from a `chartPointTapped` body.
+    /// All four fields are required and non-blank; `diary_noteable_id` may be a JS
+    /// number; `interval` is passed through opaque. Never substitutes "now" (Q11)
+    /// and never clamps a future value (Q7).
+    static func fromChartTap(_ body: [String: Any],
+                             timeZone: TimeZone = .current) -> Result<DiaryNoteItem, ChartTapPayloadError> {
+        func text(_ key: String) -> String? {
+            var raw = body[key] as? String
+            // A JS boolean also bridges to NSNumber; only a real number is an id.
+            if raw == nil, key == "diary_noteable_id", let number = body[key] as? NSNumber,
+               CFGetTypeID(number) != CFBooleanGetTypeID() {
+                raw = number.stringValue
+            }
+            let trimmed = raw?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            return trimmed.isEmpty ? nil : trimmed
+        }
+        guard let datetime = text("datetime_ref") else { return .failure(.missingField("datetime_ref")) }
+        guard let interval = text("interval") else { return .failure(.missingField("interval")) }
+        guard let noteableType = text("diary_noteable_type") else { return .failure(.missingField("diary_noteable_type")) }
+        guard let noteableId = text("diary_noteable_id") else { return .failure(.missingField("diary_noteable_id")) }
+        // The round trip rejects what the formatter silently rolls over or pads
+        // ("2026-02-30", "24:00", "2026-9-4 1:5").
+        let formatter = chartDatetimeFormatter(timeZone: timeZone)
+        guard let date = formatter.date(from: datetime), formatter.string(from: date) == datetime else {
+            return .failure(.unparsableDatetime)
+        }
+        return .success(DiaryNoteItem(date: date,
+                                      body: "",
+                                      interval: interval,
+                                      diaryNoteable: DiaryNoteable(id: noteableId, type: noteableType)))
     }
 }
 

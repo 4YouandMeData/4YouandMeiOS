@@ -365,6 +365,8 @@ class DiaryNoteAudioViewController: UIViewController {
             return
         }
         self.genericCloseButtonPressed(completion: {
+            // FUAM-3613 (Q14): a chart-started note returns to the Compass tab.
+            guard !self.isFromChart else { return }
             self.navigator.switchToDiaryTab(presenter: self)
         })
     }
