@@ -46,6 +46,7 @@ class DiaryNoteVideoViewController: UIViewController {
     private let pollingInterval: TimeInterval = 10.0 // Polling interval in seconds
     private var isPollingActive: Bool = false
     private var reflectionCoordinator: ReflectionSectionCoordinator?
+    private let isFromChart: Bool
     
     private var currentState: VideoDiaryState = .record(isRecording: false) {
         didSet {
@@ -281,7 +282,8 @@ class DiaryNoteVideoViewController: UIViewController {
     
     init(diaryNoteItem: DiaryNoteItem?,
          isEdit: Bool,
-         reflectionCoordinator: ReflectionSectionCoordinator?) {
+         reflectionCoordinator: ReflectionSectionCoordinator?,
+         isFromChart: Bool = false) {
         self.navigator = Services.shared.navigator
         self.repository = Services.shared.repository
         self.cache = Services.shared.storageServices
@@ -289,6 +291,7 @@ class DiaryNoteVideoViewController: UIViewController {
         self.isEditMode = isEdit
         self.diaryNoteItem = diaryNoteItem
         self.reflectionCoordinator = reflectionCoordinator
+        self.isFromChart = isFromChart
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -344,18 +347,22 @@ class DiaryNoteVideoViewController: UIViewController {
         let category = self.categoryForEmoji(diaryNote: self.diaryNoteItem)
         let emojiItems = self.emojiItems(for: category)
         let emojiVC = EmojiPopupViewController(emojis: emojiItems,
-                                               selected: self.selectedEmoji) { [weak self] selectedEmoji in
-            guard let self = self, let emoji = selectedEmoji else { return }
+                                               selected: self.selectedEmoji) { [weak self] confirmedEmoji in
+            guard let self = self else { return }
             guard var diaryNote = self.diaryNoteItem else { return }
 
-            self.selectedEmoji = emoji
-            diaryNote.feedbackTags?.append(emoji)
+            self.selectedEmoji = confirmedEmoji
 
-            let tag = (emoji.label != "none") ? emoji.tag : nil
             self.emojiButton.setImage(nil, for: .normal)
-            self.emojiButton.setTitle(tag, for: .normal)
+            self.emojiButton.setTitle(confirmedEmoji?.tag, for: .normal)
             self.emojiButton.titleLabel?.font = UIFont.systemFont(ofSize: 22)
-            
+
+            // FUAM-3857: confirming the note's current emoji again - skip the request.
+            guard !diaryNote.feedbackTagIsUnchanged(by: confirmedEmoji) else { return }
+
+            diaryNote.feedbackTagsToDestroy = diaryNote.feedbackTags ?? []
+            diaryNote.feedbackTagToSet = confirmedEmoji
+
             self.repository.updateDiaryNoteText(diaryNote: diaryNote)
                 .addProgress()
                 .subscribe(onSuccess: {},
@@ -497,6 +504,8 @@ class DiaryNoteVideoViewController: UIViewController {
         }
         
         self.genericCloseButtonPressed(completion: {
+            // FUAM-3613 (Q14): a chart-started note returns to the Compass tab.
+            guard !self.isFromChart else { return }
             self.navigator.switchToDiaryTab(presenter: self)
         })
     }

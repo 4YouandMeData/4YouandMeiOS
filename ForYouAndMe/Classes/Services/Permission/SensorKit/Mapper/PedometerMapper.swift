@@ -13,6 +13,12 @@ import Foundation
 import SensorKit
 import CoreMotion
 
+/// `SRFetchResult.timestamp` is an `SRAbsoluteTime` (seconds since the 2001 reference date).
+private func dateFromSRAbsoluteTime(_ srTime: SRAbsoluteTime) -> Date {
+    let cf = srTime.toCFAbsoluteTime()
+    return Date(timeIntervalSinceReferenceDate: cf)
+}
+
 final class PedometerMapper: NSObject, SensorSampleMapper {
 
     // This mapper handles SensorKit pedometer stream
@@ -21,18 +27,38 @@ final class PedometerMapper: NSObject, SensorSampleMapper {
     private let reader = SRSensorReader(sensor: .pedometerData)
     private var pendingCompletion: ((Result<[[String: Any]], Error>) -> Void)?
     private var collected: [[String: Any]] = []
+    private var fetchedResults = 0
 
     // Apple withholds last 24h of SensorKit data
     private static let holdingPeriod: TimeInterval = 24 * 60 * 60
 
+    private enum MapperError: LocalizedError {
+        case busy
+
+        var errorDescription: String? {
+            return "Mapper is busy: a fetch is already in flight."
+        }
+    }
+
     func fetchAndMap(from: Date,
                      to: Date,
+                     device: SensorDevice,
                      completion: @escaping (Result<[[String : Any]], Error>) -> Void) {
 
-        precondition(pendingCompletion == nil, "PedometerMapper: concurrent fetch not supported")
+        // FUAM-3945 (review C1): fail soft, exactly like the other mappers. The manager's
+        // in-flight chain guard is the real protection against a second sync cycle
+        // re-entering a mid-fetch mapper; this is defence in depth, and a crash is never
+        // the right answer to it in a participant's hands.
+        guard self.pendingCompletion == nil else {
+            completion(.failure(MapperError.busy))
+            return
+        }
 
         // Respect 24h holding period
-        let safeTo = min(to, Date().addingTimeInterval(-Self.holdingPeriod))
+        // F10 (review round 1; wording corrected round 3): the best clock available — an
+        // improvement, not immunity: a rollback lowers BOTH operands until the next API
+        // response re-records the ServerClock offset.
+        let safeTo = min(to, max(Date(), ServerClock.now()).addingTimeInterval(-Self.holdingPeriod))
         guard from < safeTo else {
             completion(.success([]))
             return
@@ -40,11 +66,13 @@ final class PedometerMapper: NSObject, SensorSampleMapper {
 
         // Build request converting Date -> SRAbsoluteTime (CFAbsoluteTime since 2001-01-01)
         let req = SRFetchRequest()
-        req.device = SRDevice.current
+        // FUAM-3945: iPhone or paired Watch — the manager walks one device at a time.
+        req.device = device.fetchTarget
         req.from = SRAbsoluteTime.fromCFAbsoluteTime(_cf: from.timeIntervalSinceReferenceDate)
         req.to   = SRAbsoluteTime.fromCFAbsoluteTime(_cf: safeTo.timeIntervalSinceReferenceDate)
 
         collected.removeAll(keepingCapacity: true)
+        fetchedResults = 0
         pendingCompletion = completion
         reader.delegate = self
         reader.fetch(req) // <-- delegate-based, no trailing closure
@@ -57,25 +85,41 @@ extension PedometerMapper: SRSensorReaderDelegate {
     func sensorReader(_ reader: SRSensorReader,
                       fetching fetchRequest: SRFetchRequest,
                       didFetchResult result: SRFetchResult<AnyObject>) -> Bool {
+        // FUAM-4013: `recorded_at` is `SRFetchResult.timestamp` — WHEN SensorKit wrote the
+        // record. The backend's semantic anchor (`ClientPush::SemanticAnchor`) reads it as
+        // `min(records[].recorded_at)`; without it the anchor silently falls back to upload
+        // time and re-uploads scatter into new rows instead of de-duplicating. Same
+        // fractional-seconds ISO8601 encoding as the `t` key next to it.
+        let recordedAtISO = ISO8601Strategy.encode(dateFromSRAbsoluteTime(result.timestamp))
+
+        fetchedResults += 1
+
         // result.sample can be a CMSensorDataList or a single CMPedometerData
+        var records: [[String: Any]] = []
         if let list = result.sample as? CMSensorDataList {
             // Iterate NSFastEnumeration via wrapper (no direct Sequence conformance)
             for element in FastEnumerationSequence(base: list) {
                 guard let pedo = element as? CMPedometerData else { continue }
-                collected.append(Self.mapPedometerSample(pedo))
+                records.append(Self.mapPedometerSample(pedo, recordedAtISO: recordedAtISO))
             }
         } else if let pedo = result.sample as? CMPedometerData {
-            collected.append(Self.mapPedometerSample(pedo))
+            records.append(Self.mapPedometerSample(pedo, recordedAtISO: recordedAtISO))
         }
+        // FUAM-3945: ledger identity — the raw monotonic timestamp, never its wall
+        // projection (see SensorRecordIdentity). The raw value ships only when it identifies a
+        // single record; list siblings share it.
+        collected.append(contentsOf: SensorRecordIdentity.stampedResult(records,
+                                                                         raw: result.timestamp,
+                                                                         replacing: ["recorded_at"]))
         return true // continue fetching
     }
 
     func sensorReader(_ reader: SRSensorReader, didCompleteFetch fetchRequest: SRFetchRequest) {
         guard let completion = pendingCompletion else { return }
-        let out = collected
+        let result = self.classifyFetchOutcome(collected: collected, fetchedResults: fetchedResults)
         pendingCompletion = nil
         collected.removeAll(keepingCapacity: false)
-        completion(.success(out))
+        completion(result)
     }
 
     func sensorReader(_ reader: SRSensorReader,
@@ -90,7 +134,7 @@ extension PedometerMapper: SRSensorReaderDelegate {
     // MARK: - Mapping
 
     /// Compact JSON for a CMPedometerData sample
-    private static func mapPedometerSample(_ d: CMPedometerData) -> [String: Any] {
+    private static func mapPedometerSample(_ d: CMPedometerData, recordedAtISO: String) -> [String: Any] {
         // Units (CoreMotion):
         // - numberOfSteps: count
         // - distance: meters (NSNumber?)
@@ -101,7 +145,10 @@ extension PedometerMapper: SRSensorReaderDelegate {
         var rec: [String: Any] = [
             "start_ms": Int(d.startDate.timeIntervalSince1970 * 1000),
             "end_ms":   Int(d.endDate.timeIntervalSince1970 * 1000),
-            "steps":    d.numberOfSteps.intValue
+            "steps":    d.numberOfSteps.intValue,
+            // Write time of the fetch result (the backend's semantic anchor); the measurement
+            // time the consent gate reads stays `start_ms`.
+            "recorded_at": recordedAtISO
         ]
         if let dist = d.distance?.doubleValue { rec["distance_m"] = dist }
         if let pace = d.currentPace?.doubleValue { rec["current_pace_s_per_m"] = pace }
@@ -109,7 +156,6 @@ extension PedometerMapper: SRSensorReaderDelegate {
         if let avgP = d.averageActivePace?.doubleValue { rec["avg_active_pace_s_per_m"] = avgP }
         if let up   = d.floorsAscended?.intValue { rec["floors_up"] = up }
         if let down = d.floorsDescended?.intValue { rec["floors_down"] = down }
-        rec["device_kind"] = "iphone"
         return rec
     }
 }

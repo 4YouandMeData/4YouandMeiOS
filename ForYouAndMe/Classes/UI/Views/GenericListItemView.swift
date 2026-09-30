@@ -92,12 +92,20 @@ class GenericListItemView: UIView {
     }
     
     @objc private func viewDidPressed() {
+        // Flash a highlight, then restore the resting background color. The previous
+        // implementation never restored it, leaving the row permanently "highlighted"
+        // in studies where secondaryBackgroungColor is not white (FUAM-3382).
         UIView.animate(withDuration: 0.1, delay: 0.0,
                        options: [.curveLinear],
                        animations: {
-                        self.backgroundColor = ColorPalette.color(withType: .primary)
-                        self.backgroundColor = .white
-        }, completion: nil)
+                        self.backgroundColor = ColorPalette.color(withType: .primary).applyAlpha(0.2)
+        }, completion: { _ in
+            UIView.animate(withDuration: 0.1, delay: 0.0,
+                           options: [.curveLinear],
+                           animations: {
+                            self.backgroundColor = ColorPalette.color(withType: .secondaryBackgroungColor)
+            }, completion: nil)
+        })
         self.gestureCallback?()
     }
 }

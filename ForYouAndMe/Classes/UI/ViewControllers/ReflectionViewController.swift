@@ -92,43 +92,52 @@ class ReflectionViewController: UIViewController {
         containerView.autoPinEdgesToSuperviewEdges(with: .zero, excludingEdge: .bottom)
         containerView.autoPinEdge(.bottom, to: .top, of: self.footerView)
         
-        // Footer pinned to bottom, left, right
-        var title = StringsProvider.string(forKey: .reflectionTextTask)
-        var image = ImagePalette.image(withName: .textNote)
+        // Footer pinned to bottom, left, right.
+        // FUAM-4031: the host app can restrict which note types are offered. No auto-skip here:
+        // the page carries the task title, description and Learn More text.
+        let allowedTypes = HostAppConfig.reflectionTypes
 
-        let writePage = GenericListItemView(withTitle: title,
-                                            image: image ?? UIImage(),
-                                            colorType: .primary,
-                                            style: .shadowStyle,
-                                            gestureCallback: { [weak self] in
-            guard let self = self else { return }
-            self.onWritePressed?()
-        })
-        self.footerView.addArrangedSubview(writePage)
-        
-        title = StringsProvider.string(forKey: .reflectionAudioTask)
-        image = ImagePalette.image(withName: .audioNote)
-        let audioPage = GenericListItemView(withTitle: title,
-                                            image: image ?? UIImage() ,
-                                            colorType: .primary,
-                                            style: .shadowStyle,
-                                            gestureCallback: { [weak self] in
-            guard let self = self else { return }
-            self.onAudioPressed?()
-        })
-        self.footerView.addArrangedSubview(audioPage)
-    
-        title = StringsProvider.string(forKey: .reflectionVideoTask)
-        image = ImagePalette.templateImage(withName: .videoIcon) ?? UIImage()
-        let videoPage = GenericListItemView(withTitle: title,
-                                            image: image ?? UIImage(),
-                                            colorType: .primary,
-                                            style: .shadowStyle,
-                                            gestureCallback: { [weak self] in
-            guard let self = self else { return }
-            self.onVideoPressed?()
-        })
-        self.footerView.addArrangedSubview(videoPage)
+        if allowedTypes.contains(.text) {
+            let title = StringsProvider.string(forKey: .reflectionTextTask)
+            let image = ImagePalette.image(withName: .textNote)
+            let writePage = GenericListItemView(withTitle: title,
+                                                image: image ?? UIImage(),
+                                                colorType: .primary,
+                                                style: .shadowStyle,
+                                                gestureCallback: { [weak self] in
+                guard let self = self else { return }
+                self.onWritePressed?()
+            })
+            self.footerView.addArrangedSubview(writePage)
+        }
+
+        if allowedTypes.contains(.audio) {
+            let title = StringsProvider.string(forKey: .reflectionAudioTask)
+            let image = ImagePalette.image(withName: .audioNote)
+            let audioPage = GenericListItemView(withTitle: title,
+                                                image: image ?? UIImage(),
+                                                colorType: .primary,
+                                                style: .shadowStyle,
+                                                gestureCallback: { [weak self] in
+                guard let self = self else { return }
+                self.onAudioPressed?()
+            })
+            self.footerView.addArrangedSubview(audioPage)
+        }
+
+        if allowedTypes.contains(.video) {
+            let title = StringsProvider.string(forKey: .reflectionVideoTask)
+            let image = ImagePalette.templateImage(withName: .videoIcon)
+            let videoPage = GenericListItemView(withTitle: title,
+                                                image: image ?? UIImage(),
+                                                colorType: .primary,
+                                                style: .shadowStyle,
+                                                gestureCallback: { [weak self] in
+                guard let self = self else { return }
+                self.onVideoPressed?()
+            })
+            self.footerView.addArrangedSubview(videoPage)
+        }
         self.footerView.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets(top: 0.0,
                                                                         left: 0.0,
                                                                         bottom: 56,

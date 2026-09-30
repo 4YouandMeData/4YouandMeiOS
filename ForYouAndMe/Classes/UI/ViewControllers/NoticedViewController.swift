@@ -122,51 +122,59 @@ class NoticedViewController: UIViewController {
         
         self.scrollStackView.stackView.subviews.forEach({ $0.removeFromSuperview() })
         
-        var title = StringsProvider.string(forKey: .diaryNoteCreateText)
-        var image = ImagePalette.image(withName: .textNote)
+        // FUAM-4031: the host app can restrict which note types are offered
+        let allowedTypes = HostAppConfig.diaryNoteTypes
 
-        let writePage = GenericListItemView(withTitle: title,
-                                            image: image ?? UIImage(),
-                                            colorType: .primary,
-                                            style: .shadowStyle,
-                                            gestureCallback: { [weak self] in
-            guard let self = self else { return }
-            self.navigator.openDiaryNoteText(diaryNote: self.diaryNote,
-                                             presenter: self,
-                                             isEditMode: false,
-                                             isFromChart: self.isFromChart)
-        })
-        self.scrollStackView.stackView.addArrangedSubview(writePage)
-        
-        title = StringsProvider.string(forKey: .diaryNoteRecordAudio)
-        image = ImagePalette.image(withName: .audioNote)
-        let audioPage = GenericListItemView(withTitle: title,
-                                            image: image ?? UIImage() ,
-                                            colorType: .primary,
-                                            style: .shadowStyle,
-                                            gestureCallback: { [weak self] in
-            guard let self = self else { return }
-            self.navigator.openDiaryNoteAudio(diaryNote: self.diaryNote,
-                                              presenter: self,
-                                              isEditMode: false,
-                                              isFromChart: self.isFromChart)
-        })
-        self.scrollStackView.stackView.addArrangedSubview(audioPage)
-    
-        title = StringsProvider.string(forKey: .diaryNoteRecordVideo)
-        image = ImagePalette.templateImage(withName: .videoIcon) ?? UIImage()
-        let videoPage = GenericListItemView(withTitle: title,
-                                            image: image ?? UIImage(),
-                                            colorType: .primary,
-                                            style: .shadowStyle,
-                                            gestureCallback: { [weak self] in
-            guard let self = self else { return }
-            self.navigator.openDiaryNoteVideo(diaryNote: self.diaryNote,
-                                              isEdit: false,
-                                              presenter: self,
-                                              isFromChart: self.isFromChart)
-        })
-        self.scrollStackView.stackView.addArrangedSubview(videoPage)
+        if allowedTypes.contains(.text) {
+            let title = StringsProvider.string(forKey: .diaryNoteCreateText)
+            let image = ImagePalette.image(withName: .textNote)
+            let writePage = GenericListItemView(withTitle: title,
+                                                image: image ?? UIImage(),
+                                                colorType: .primary,
+                                                style: .shadowStyle,
+                                                gestureCallback: { [weak self] in
+                guard let self = self else { return }
+                self.navigator.openDiaryNoteText(diaryNote: self.diaryNote,
+                                                 presenter: self,
+                                                 isEditMode: false,
+                                                 isFromChart: self.isFromChart)
+            })
+            self.scrollStackView.stackView.addArrangedSubview(writePage)
+        }
+
+        if allowedTypes.contains(.audio) {
+            let title = StringsProvider.string(forKey: .diaryNoteRecordAudio)
+            let image = ImagePalette.image(withName: .audioNote)
+            let audioPage = GenericListItemView(withTitle: title,
+                                                image: image ?? UIImage(),
+                                                colorType: .primary,
+                                                style: .shadowStyle,
+                                                gestureCallback: { [weak self] in
+                guard let self = self else { return }
+                self.navigator.openDiaryNoteAudio(diaryNote: self.diaryNote,
+                                                  presenter: self,
+                                                  isEditMode: false,
+                                                  isFromChart: self.isFromChart)
+            })
+            self.scrollStackView.stackView.addArrangedSubview(audioPage)
+        }
+
+        if allowedTypes.contains(.video) {
+            let title = StringsProvider.string(forKey: .diaryNoteRecordVideo)
+            let image = ImagePalette.templateImage(withName: .videoIcon)
+            let videoPage = GenericListItemView(withTitle: title,
+                                                image: image ?? UIImage(),
+                                                colorType: .primary,
+                                                style: .shadowStyle,
+                                                gestureCallback: { [weak self] in
+                guard let self = self else { return }
+                self.navigator.openDiaryNoteVideo(diaryNote: self.diaryNote,
+                                                  isEdit: false,
+                                                  presenter: self,
+                                                  isFromChart: self.isFromChart)
+            })
+            self.scrollStackView.stackView.addArrangedSubview(videoPage)
+        }
     }
     
     // MARK: Actions

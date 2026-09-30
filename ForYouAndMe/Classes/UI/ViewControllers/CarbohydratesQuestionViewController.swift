@@ -36,11 +36,8 @@ class CarbohydratesQuestionViewController: UIViewController {
     )
     
     private var isStandalone: Bool {
-        if case .standalone = variant {
-            return true
-        } else {
-            return false
-        }
+        // FUAM-3613 (F1): chart-started flows show the standalone copy too.
+        variant.isStandaloneLike
     }
     
     private lazy var yesButton: OptionButton = makeOption(text: isStandalone

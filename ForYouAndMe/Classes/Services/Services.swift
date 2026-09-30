@@ -120,28 +120,38 @@ class Services {
         var sensorKitService: SensorKitManager?
         if NSClassFromString("SRSensorReader") != nil {
             var skMappers: [SRSensor: SensorSampleMapper] = [:]
+            // FUAM-3945 round 7 — enabled sensor set.
+            // `.accelerometer` and `.rotationRate` are DISABLED: raw high-rate motion streams.
+            // The volume kills the pipeline (24h windows x archive-rate samples, the whole window
+            // buffered in memory before batching), so re-enabling either one first needs
+            // minute-scale windows, a per-window sample cap and a real on-disk queue store.
+            // `.pedometerData`, `.ambientLightSensor` and `.ambientPressure` are low-rate and are
+            // enabled here; round 8 then intersects this list with the host's own entitlement
+            // below, so a host that is not entitled to a sensor (Our Transitions covers pedometer
+            // but neither ambient sensor) never asks for it in the first place.
             if #available(iOS 16.4, *) {
                 skMappers = [
-                    .accelerometer: AccelerometerMapper(),
+                    //            .accelerometer: AccelerometerMapper(),
                     //            .mediaEvents: MediaEventsMapper(),
                     //            .rotationRate: RotationRateMapper(),
-                    //            .ambientLightSensor: AmbientLightMapper(),
-                    //            .ambientPressure: AmbientPressureMapper(),
-                        .visits: VisitsMapper(),
-                    //            .pedometerData: PedometerMapper(),
+                    .ambientLightSensor: AmbientLightMapper(),
+                    .ambientPressure: AmbientPressureMapper(),
+                    .visits: VisitsMapper(),
+                    .pedometerData: PedometerMapper(),
                     .deviceUsageReport: DeviceUsageReportMapper(),
                     .phoneUsageReport: PhoneUsageReportMapper(),
                     .messagesUsageReport: MessagesUsageReportMapper(),
                     .keyboardMetrics: KeyboardMetricsMapper()
                 ]
             } else {
+                // Same set as above, minus `.mediaEvents` (iOS 16.4+ only).
                 skMappers = [
-                    .accelerometer: AccelerometerMapper(),
+                    //            .accelerometer: AccelerometerMapper(),
                     //            .rotationRate: RotationRateMapper(),
-                    //            .ambientLightSensor: AmbientLightMapper(),
-                    //            .ambientPressure: AmbientPressureMapper(),
-                        .visits: VisitsMapper(),
-                    //            .pedometerData: PedometerMapper(),
+                    .ambientLightSensor: AmbientLightMapper(),
+                    .ambientPressure: AmbientPressureMapper(),
+                    .visits: VisitsMapper(),
+                    .pedometerData: PedometerMapper(),
                     .deviceUsageReport: DeviceUsageReportMapper(),
                     .phoneUsageReport: PhoneUsageReportMapper(),
                     .messagesUsageReport: MessagesUsageReportMapper(),
@@ -149,21 +159,67 @@ class Services {
                 ]
             }
 
-            let skSensors: [SRSensor] = Array(Constants.SensorKit.RequestedSensors.filter { skMappers[$0] != nil })
+            // FUAM-3945 round 8/9: the host's SensorKit entitlement is the CEILING of what we
+            // request. iOS never prompts for an unentitled sensor — it auto-declines instantly and
+            // the sensor stays `.notDetermined` forever, which used to wedge the Permissions row on
+            // "Setup" and made the re-ask loop misdiagnose the system-wide switch as OFF.
+            // Round 9 (D6): the source is the host's `FYAMSensorKitEntitledSensors` Info.plist
+            // declaration — the round-8 provisioning-profile read is stripped from App Store
+            // builds and was inert in production (F1). Missing key => fail open; a non-empty
+            // declaration that maps to NOTHING is OUR mapping drift => fail open + telemetry
+            // (R1/F2); only an explicit empty array means "entitled to nothing".
+            let skDeclared = SensorKitEntitlement.hostDeclaredValues()
+            let skEntitled: Set<SRSensor>?
+            switch SensorKitEntitlement.resolveEntitledSensors(fromPlist: skDeclared) {
+            case .failOpen:
+                skEntitled = nil
+            case .unmappable(let values):
+                skEntitled = nil
+                let unmapped = SensorKitEntitlement.droppedSensorsParameter(values)
+                analytics.track(event: .sensorEntitlementMissing(sensors: unmapped.list, count: unmapped.count))
+            case .entitled(let sensors, let unmapped):
+                skEntitled = sensors
+                if !unmapped.isEmpty {
+                    let leftover = SensorKitEntitlement.droppedSensorsParameter(unmapped)
+                    analytics.track(event: .sensorEntitlementMissing(sensors: leftover.list, count: leftover.count))
+                }
+            }
+            #if DEBUG
+            // Development builds carry the provisioning profile: the one channel where the
+            // declaration can be verified against the real entitlement (D6 layer 2).
+            SensorKitEntitlement.debugCrossCheckProvisioningProfile(declared: skDeclared)
+            #endif
+            let skConfigured = Constants.SensorKit.RequestedSensors.intersection(Set(skMappers.keys))
+            let skSensors: [SRSensor] = Array(SensorKitEntitlement.effectiveSensors(
+                requested: Constants.SensorKit.RequestedSensors,
+                mapped: Set(skMappers.keys),
+                entitled: skEntitled))
 
-            let skStorage: SensorKitManagerStorage = DefaultsSensorStorage()
-            let skReachability: SensorKitManagerReachability = NWPathReachability()
+            // A host misconfiguration must be visible, not silent: one event per launch listing the
+            // sensors we would have asked for and cannot.
+            let skDropped = skConfigured.subtracting(skSensors)
+            if !skDropped.isEmpty {
+                let dropped = SensorKitEntitlement.droppedSensorsParameter(skDropped.map { $0.shortSubsource })
+                analytics.track(event: .sensorEntitlementMissing(sensors: dropped.list, count: dropped.count))
+            }
 
-            let skManager = SensorKitManager(
-                withReadSensors: skSensors,
-                analyticsService: analytics,
-                storage: skStorage,
-                reachability: skReachability,
-                mappers: skMappers
-            )
+            // `SensorKitManager` requires a non-empty sensor set; an entitlement covering none of
+            // the configured sensors means there is no SensorKit service to build at all.
+            if !skSensors.isEmpty {
+                let skStorage: SensorKitManagerStorage = DefaultsSensorStorage()
+                let skReachability: SensorKitManagerReachability = NWPathReachability()
 
-            self.services.append(skManager)
-            sensorKitService = skManager
+                let skManager = SensorKitManager(
+                    withReadSensors: skSensors,
+                    analyticsService: analytics,
+                    storage: skStorage,
+                    reachability: skReachability,
+                    mappers: skMappers
+                )
+
+                self.services.append(skManager)
+                sensorKitService = skManager
+            }
         }
         #endif
         

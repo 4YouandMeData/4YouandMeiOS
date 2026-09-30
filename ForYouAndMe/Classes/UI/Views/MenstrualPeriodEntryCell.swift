@@ -137,7 +137,11 @@ final class MenstrualPeriodEntryCell: UITableViewCell {
     }
 
     private func applyEmoji(from tags: [EmojiItem]?) {
-        if let emoji = tags?.last, emoji.label != "none" {
+        // FUAM-3857: a recorded tag is a recorded tag — no "none"-labelled value is special.
+        // The "no emoji" option is never itself sent to the server (absence, not a value), so
+        // a recorded entry with no feedback tag shows up as `tags == nil`/`[]`, not as a
+        // sentinel item to filter out here.
+        if let emoji = tags?.last {
             emojiLabel.text = emoji.tag
             emojiLabel.isHidden = false
         } else {

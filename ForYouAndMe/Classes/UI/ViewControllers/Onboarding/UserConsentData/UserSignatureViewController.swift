@@ -160,7 +160,18 @@ class UserSignatureViewController: UIViewController {
         self.signatureContainerView.addSubview(self.signatureViewController.view)
         self.signatureViewController.view.autoPinEdgesToSuperviewEdges()
         self.signatureViewController.didMove(toParent: self)
-        
+
+        // The signature canvas draws in touchesBegan/touchesMoved and owns no gesture recognizer.
+        // When the content overflows (small screens, long study copy, large Dynamic Type) the scroll
+        // view arms its pan recognizer, which cancels the touch sequence as soon as the finger moves:
+        // touchesMoved never fires and the user gets one dot per tap instead of a stroke.
+        // This dummy pan claims the drag over the canvas only, so the rest of the page still scrolls.
+        let drawPanGestureRecognizer = UIPanGestureRecognizer(target: nil, action: nil)
+        drawPanGestureRecognizer.cancelsTouchesInView = false // keep delivering touchesMoved to the canvas
+        self.signatureContainerView.addGestureRecognizer(drawPanGestureRecognizer)
+        scrollStackView.scrollView.panGestureRecognizer.require(toFail: drawPanGestureRecognizer)
+        scrollStackView.scrollView.delaysContentTouches = false // remove the ~150ms dead zone before the first point
+
         // Clear Button View
         let clearButtonContainerView = UIView()
         clearButtonContainerView.addSubview(self.clearButtonView)

@@ -429,6 +429,46 @@ struct DiaryNoteItem: Codable {
 
     var feedbackTags: [EmojiItem]?
 
+    /// FUAM-3857 — server-recorded tags this update destroys. Set by the presenter right
+    /// before calling `updateDiaryNoteText`/`sendDiaryNoteTextWithFeedback`; never
+    /// round-tripped through JSON (see `encode(to:)` below, which doesn't touch it).
+    var feedbackTagsToDestroy: [EmojiItem] = []
+
+    /// FUAM-3857 — the tag to record, or nil to record none. Absence IS "no emoji"; there is
+    /// no sentinel value. Leaving this AND `feedbackTagsToDestroy` empty means "this update
+    /// doesn't touch the note's feedback tag at all" (omits `feedback_tags_attributes`).
+    var feedbackTagToSet: EmojiItem?
+
+    /// True when confirming `emoji` would leave the server in exactly the state it is already
+    /// in, so the PATCH can be skipped entirely.
+    ///
+    /// FUAM-3857 round 13. Confirming the emoji a note ALREADY carries used to send
+    /// `[{id: <existing>, tag: "🙂", _destroy: true}, {id: "", tag: "🙂"}]` in one request.
+    /// That payload is rejected: `FeedbackTag` declares
+    /// `validates_uniqueness_of_without_deleted :tag, scope: [:taggable]`, and ActiveRecord
+    /// validates the new row while the old one is still present - `association_valid?` skips
+    /// records marked for destruction from VALIDATION, but the destroy itself only happens
+    /// later, during save. So the twin collides with a live row, the update is rejected, and
+    /// the participant gets an error alert for having confirmed what was already there.
+    ///
+    /// The comparison is by `tag`, not by `id`: the ids differ by design (a persisted
+    /// FeedbackTag's server id vs. the study-configuration item's id), and `tag` is precisely
+    /// the column the uniqueness constraint is scoped on, so this predicate characterises
+    /// exactly the payload the backend would refuse.
+    ///
+    /// Deliberately an exact list comparison rather than "does the current set contain it":
+    /// a note carrying stray extra tags must still be cleaned up by a real request.
+    ///
+    /// Both of the cases with no prior emoji fall out of this naturally, unguarded:
+    /// - a note that has no emoji, when a real emoji is picked -> `[] != ["🙂"]`, sends;
+    /// - a not-yet-created note -> it has no persisted tags at all, so its pending pick is
+    ///   `[] != ["🙂"]` and is attached on save exactly as before.
+    func feedbackTagIsUnchanged(by emoji: EmojiItem?) -> Bool {
+        let current = (self.feedbackTags ?? []).map { $0.tag }
+        let desired = [emoji?.tag].compactMap { $0 }
+        return current == desired
+    }
+
     /// FUAM-2934 — BE v0.12.5 series metadata; non-nil only on the compressed
     /// menstrual row / on the show response for the last `yes` of a series.
     var seriesMeta: MenstrualSeriesMeta?
@@ -454,17 +494,89 @@ struct DiaryNoteItem: Codable {
         self.body = body
     }
     
+    init(date: Date,
+         body: String?,
+         interval: String?,
+         diaryNoteable: DiaryNoteable?) {
+
+        self.id = UUID().uuidString
+        self.type = "diary_note"
+        self.diaryNoteId = date
+        self.body = body
+        self.interval = interval
+        self.diaryNoteable = diaryNoteable
+    }
+
     init(diaryNoteId: String?,
          body: String?,
          interval: String?,
          diaryNoteable: DiaryNoteable?) {
-        
-        self.id = UUID().uuidString
-        self.type = "diary_note"
-        self.diaryNoteId = diaryNoteId?.date(withFormat: dateDataPointFormat) ?? Date()
-        self.body = body
-        self.interval = interval
-        self.diaryNoteable = diaryNoteable
+
+        self.init(date: diaryNoteId?.date(withFormat: dateDataPointFormat) ?? Date(),
+                  body: body,
+                  interval: interval,
+                  diaryNoteable: diaryNoteable)
+    }
+}
+
+/// FUAM-3613 — why a `chartPointTapped` bridge body was rejected. A rejected tap is a
+/// silent no-op for the participant (Q11/Q12); the reason only reaches Telemetry.
+enum ChartTapPayloadError: Error, Equatable {
+    case missingField(String)
+    case unparsableDatetime
+
+    var telemetryDomain: String {
+        switch self {
+        case .missingField(let key): return "chart_tap.missing_field.\(key)"
+        case .unparsableDatetime: return "chart_tap.unparsable_datetime"
+        }
+    }
+}
+
+extension DiaryNoteItem {
+
+    /// FUAM-3613 (S4) — the chart prints `datetime_ref` as device-local wall time,
+    /// "yyyy-MM-dd HH:mm", no offset. Pin POSIX + Gregorian so a Thai/Japanese-calendar
+    /// or 12-hour device reads the same instant; keep the device zone (D3).
+    static func chartDatetimeFormatter(timeZone: TimeZone = .current) -> DateFormatter {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.calendar = Calendar(identifier: .gregorian)
+        formatter.timeZone = timeZone
+        formatter.dateFormat = dateDataPointFormat
+        return formatter
+    }
+
+    /// FUAM-3613 — builds the chart-linked note from a `chartPointTapped` body.
+    /// All four fields are required and non-blank; `diary_noteable_id` may be a JS
+    /// number; `interval` is passed through opaque. Never substitutes "now" (Q11)
+    /// and never clamps a future value (Q7).
+    static func fromChartTap(_ body: [String: Any],
+                             timeZone: TimeZone = .current) -> Result<DiaryNoteItem, ChartTapPayloadError> {
+        func text(_ key: String) -> String? {
+            var raw = body[key] as? String
+            // A JS boolean also bridges to NSNumber; only a real number is an id.
+            if raw == nil, key == "diary_noteable_id", let number = body[key] as? NSNumber,
+               CFGetTypeID(number) != CFBooleanGetTypeID() {
+                raw = number.stringValue
+            }
+            let trimmed = raw?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            return trimmed.isEmpty ? nil : trimmed
+        }
+        guard let datetime = text("datetime_ref") else { return .failure(.missingField("datetime_ref")) }
+        guard let interval = text("interval") else { return .failure(.missingField("interval")) }
+        guard let noteableType = text("diary_noteable_type") else { return .failure(.missingField("diary_noteable_type")) }
+        guard let noteableId = text("diary_noteable_id") else { return .failure(.missingField("diary_noteable_id")) }
+        // The round trip rejects what the formatter silently rolls over or pads
+        // ("2026-02-30", "24:00", "2026-9-4 1:5").
+        let formatter = chartDatetimeFormatter(timeZone: timeZone)
+        guard let date = formatter.date(from: datetime), formatter.string(from: date) == datetime else {
+            return .failure(.unparsableDatetime)
+        }
+        return .success(DiaryNoteItem(date: date,
+                                      body: "",
+                                      interval: interval,
+                                      diaryNoteable: DiaryNoteable(id: noteableId, type: noteableType)))
     }
 }
 

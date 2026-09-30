@@ -33,6 +33,19 @@ extension NSAttributedString {
         return mutableAttributedString
     }
     
+    /// Returns a copy of the attributed string whose paragraph style uses the given line break mode.
+    ///
+    /// UILabel ignores `adjustsFontSizeToFitWidth` on multiline attributed text unless the
+    /// paragraph style line break mode is `.byTruncatingTail`. The strings built by
+    /// `create(withText:...)` carry a paragraph style whose line break mode defaults to
+    /// `.byWordWrapping`, which silently disables the font auto-shrink (FUAM-3562).
+    func applyingLineBreakMode(_ lineBreakMode: NSLineBreakMode) -> NSAttributedString {
+        guard self.length > 0 else { return self }
+        let mutableAttributedString = self.mutable
+        mutableAttributedString.setLineBreakMode(lineBreakMode)
+        return mutableAttributedString
+    }
+
     fileprivate func getMutableParagraphStyle(forRange range: NSRange? = nil) -> NSMutableParagraphStyle {
         if let paragraphStyle = self.attribute(.paragraphStyle, at: 0,
                                                longestEffectiveRange: nil,
@@ -64,6 +77,12 @@ extension NSMutableAttributedString {
         self.updateParagraphStyle(withParagraphStyle: paragraphStyle, range: range)
     }
     
+    func setLineBreakMode(_ lineBreakMode: NSLineBreakMode, range: NSRange? = nil) {
+        let paragraphStyle = self.getMutableParagraphStyle(forRange: range)
+        paragraphStyle.lineBreakMode = lineBreakMode
+        self.updateParagraphStyle(withParagraphStyle: paragraphStyle, range: range)
+    }
+
     func setTextAlignment(_ textAlignment: NSTextAlignment, range: NSRange? = nil) {
         let paragraphStyle = self.getMutableParagraphStyle(forRange: range)
         paragraphStyle.alignment = textAlignment

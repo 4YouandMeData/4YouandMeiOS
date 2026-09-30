@@ -121,14 +121,18 @@ class MenstrualPeriodEntryCellSpec: QuickSpec {
                 expect(label?.text).to(beNil())
             }
 
-            it("hides the emoji label when the last tag is the 'none' sentinel") {
+            // FUAM-3857 (round 5): "no emoji" is never itself sent to the server — it's
+            // absence, not a value — so a genuinely recorded tag is never this literal. A
+            // recorded tag captioned "None" (or tagged "❌") is an ordinary value and renders
+            // like any other; the old sentinel-filtering here pinned the opposite.
+            it("shows a recorded tag captioned 'None' like any other, not as a sentinel to hide") {
                 let cell = MenstrualPeriodEntryCell(style: .default, reuseIdentifier: nil)
-                let none = EmojiItem(id: "", type: "", tag: "❌", label: "none")
-                cell.display(entry: makeEntry(feedbackTags: [none]))
+                let recordedNone = EmojiItem(id: "88", type: "feedback_tag", tag: "❌", label: "None")
+                cell.display(entry: makeEntry(feedbackTags: [recordedNone]))
 
                 let label = emojiLabel(in: cell)
-                expect(label?.isHidden).to(beTrue())
-                expect(label?.text).to(beNil())
+                expect(label?.isHidden).to(beFalse())
+                expect(label?.text).to(equal("❌"))
             }
         }
     }

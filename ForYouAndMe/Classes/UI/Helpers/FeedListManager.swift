@@ -233,6 +233,8 @@ class FeedListManager: NSObject {
     private var content: FeedContent?
     private var hasMoreContent: Bool = false
     private var currentRequestDisposable: Disposable?
+    // FUAM-3990: foreground reload requested while a request was in flight; served in handleFetchEnd
+    private var pendingForegroundReload: Bool = false
     
     private var quickActivitySelections: [QuickActivityItem: QuickActivityOption] = [:]
     
@@ -291,6 +293,13 @@ class FeedListManager: NSObject {
             refreshControl.addTarget(self, action: #selector(self.refreshControlPulled), for: .valueChanged)
             self.tableView.refreshControl = refreshControl
         }
+        
+        // FUAM-3990: reload when the app returns to foreground, so the list doesn't
+        // show stale content (e.g. an outdated empty state) after a background stay.
+        NotificationCenter.default.addObserver(self,
+                                               selector: #selector(self.applicationWillEnterForeground),
+                                               name: UIApplication.willEnterForegroundNotification,
+                                               object: nil)
         
         // Error View
         delegate.presenter.view.addSubview(self.errorView)
@@ -418,6 +427,13 @@ class FeedListManager: NSObject {
     private func handleFetchEnd() {
         self.tableView.refreshControl?.endRefreshing()
         self.currentRequestDisposable = nil
+        // FUAM-3990: serve a foreground reload that was deferred because this request was in flight
+        if self.pendingForegroundReload {
+            self.pendingForegroundReload = false
+            if self.tableView.window != nil {
+                self.reloadItems()
+            }
+        }
     }
     
     private func updateHasContent(withFeedContent feedContent: FeedContent) {
@@ -670,6 +686,18 @@ class FeedListManager: NSObject {
     // MARK: - Actions
 
     @objc private func refreshControlPulled() {
+        self.reloadItems()
+    }
+    
+    @objc private func applicationWillEnterForeground() {
+        // FUAM-3990: refresh only if this screen is currently on screen (non-selected
+        // tabs have their view out of the window hierarchy). If a request is already
+        // in flight, defer the reload to its completion instead of dropping it.
+        guard self.tableView.window != nil else { return }
+        guard self.currentRequestDisposable == nil else {
+            self.pendingForegroundReload = true
+            return
+        }
         self.reloadItems()
     }
 }

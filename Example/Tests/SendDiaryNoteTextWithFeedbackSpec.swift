@@ -88,17 +88,23 @@ class SendDiaryNoteTextWithFeedbackSpec: QuickSpec {
                 }
             }
 
-            context("when the 'none' sentinel emoji is picked") {
-                it("never PATCHes and reports feedbackSaved=true") {
-                    api.postDiaryNoteResult = makeNote()
+            // FUAM-3857: "no emoji" is absence (`emoji == nil`, covered above) — never a value
+            // to inspect. A study-configured emoji captioned "None" is an ordinary value and
+            // PATCHes like any other; there is no `label`/tag literal that short-circuits this.
+            context("when a study-configured emoji captioned 'None' is picked") {
+                it("PATCHes exactly like any other emoji and reports feedbackSaved=true") {
+                    let created = makeNote(id: "555")
+                    api.postDiaryNoteResult = created
+                    api.patchResults = [.success]
 
-                    let outcome = run(diaryNote: makeNote(),
-                                      emoji: emoji(label: "none", tag: "❌"))
+                    let outcome = run(diaryNote: makeNote(id: "local"),
+                                      emoji: emoji(label: "None", tag: "❌"))
 
                     expect(outcome.error).to(beNil())
                     expect(api.postDiaryNoteCallCount).to(equal(1))
-                    expect(api.patchDiaryNoteCallCount).to(equal(0))
+                    expect(api.patchDiaryNoteCallCount).to(equal(1))
                     expect(outcome.result?.1).to(beTrue())
+                    expect(api.lastPatchedNote?.feedbackTagToSet?.tag).to(equal("❌"))
                 }
             }
 
@@ -117,8 +123,10 @@ class SendDiaryNoteTextWithFeedbackSpec: QuickSpec {
                     expect(outcome.result?.1).to(beTrue())
                     // The PATCH targets the server-created note, not the local draft.
                     expect(api.lastPatchedNote?.id).to(equal("555"))
-                    // The picked emoji rides along in feedbackTags.
-                    expect(api.lastPatchedNote?.feedbackTags?.last?.tag).to(equal("🥵"))
+                    // FUAM-3857: the picked emoji rides along as `feedbackTagToSet`, not
+                    // appended into `feedbackTags` — there is no sentinel to make room for.
+                    expect(api.lastPatchedNote?.feedbackTagToSet?.tag).to(equal("🥵"))
+                    expect(api.lastPatchedNote?.feedbackTagsToDestroy).to(beEmpty())
                 }
             }
 

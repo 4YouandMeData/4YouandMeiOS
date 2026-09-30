@@ -302,12 +302,17 @@ class AppNavigator {
             navigationController.loadViewForRequest(asyncCoordinatorRequest,
                                                     hidesBottomBarWhenPushed: hidesBottomBarWhenPushed,
                                                     allowBackwardNavigation: false,
-                                                    viewForData: { coordinator -> UIViewController in
+                                                    viewForData: { coordinator -> UIViewController? in
+                // FUAM-4045. A nil coordinator means the section has nothing
+                // to present (no pages, no content, or no such section on the
+                // backend): skip straight to the next one.
+                guard let coordinator = coordinator else { return nil }
                 self.setCurrentCoordinator(coordinator,
                                            hidesBottomBarWhenPushed: hidesBottomBarWhenPushed,
                                            addAbortOnboardingButton: addAbortOnboardingButton)
                 return coordinator.getStartingPage()
-            })
+            },
+                                                    onNoView: { completionCallback(navigationController) })
         } else {
             assertionFailure("Section has neither a syncCoorindator nor an asyncCoordinator")
             self.currentCoordinator = nil
@@ -703,25 +708,12 @@ class AppNavigator {
         )
         diaryNoteTextViewController.modalPresentationStyle = .fullScreen
 
-        if !isFromChart {
-            presenter.dismiss(animated: true) { [weak self] in
-                guard let self = self,
-                      let top = self.getTopMostViewController() else { return }
-                top.present(diaryNoteTextViewController, animated: true, completion: nil)
-            }
-        } else {
-            if let navigationController = presenter.navigationController {
-                navigationController.pushViewController(
-                    diaryNoteTextViewController,
-                    hidesBottomBarWhenPushed: true,
-                    animated: true
-                )
-            } else {
-                // Fallback: wrap & present if no nav available
-                let nav = UINavigationController(rootViewController: diaryNoteTextViewController)
-                nav.modalPresentationStyle = .fullScreen
-                presenter.present(nav, animated: true, completion: nil)
-            }
+        // FUAM-3613: chart notes use the same dismiss-then-present path as audio/video, so closing
+        // the editor lands on the Compass tab (the pushed/stacked variant trapped or returned to the chooser).
+        presenter.dismiss(animated: true) { [weak self] in
+            guard let self = self,
+                  let top = self.getTopMostViewController() else { return }
+            top.present(diaryNoteTextViewController, animated: true, completion: nil)
         }
     }
     
@@ -750,7 +742,8 @@ class AppNavigator {
                                    isFromChart: Bool) {
         let diaryNoteVideoViewController = DiaryNoteVideoViewController(diaryNoteItem: diaryNote,
                                                                         isEdit: isEdit,
-                                                                        reflectionCoordinator: nil)
+                                                                        reflectionCoordinator: nil,
+                                                                        isFromChart: isFromChart)
         diaryNoteVideoViewController.modalPresentationStyle = .fullScreen
         presenter.dismiss(animated: true) {
             guard let topViewController = self.getTopMostViewController() else {
@@ -762,9 +755,29 @@ class AppNavigator {
     }
     
     public func openNoticedViewController(presenter: UIViewController) {
+        // FUAM-4031: the chooser carries no content of its own, so with a single allowed
+        // note type we open that editor directly instead of showing it.
+        if let singleType = HostAppConfig.singleDiaryNoteType {
+            self.openDiaryNoteEditor(ofType: singleType, diaryNote: nil, presenter: presenter, isFromChart: false)
+            return
+        }
         let noticedViewController = NoticedViewController(with: nil)
         noticedViewController.modalPresentationStyle = .formSheet
         presenter.present(noticedViewController, animated: true)
+    }
+
+    private func openDiaryNoteEditor(ofType type: HostAppNoteType,
+                                     diaryNote: DiaryNoteItem?,
+                                     presenter: UIViewController,
+                                     isFromChart: Bool) {
+        switch type {
+        case .text:
+            self.openDiaryNoteText(diaryNote: diaryNote, presenter: presenter, isEditMode: false, isFromChart: isFromChart)
+        case .audio:
+            self.openDiaryNoteAudio(diaryNote: diaryNote, presenter: presenter, isEditMode: false, isFromChart: isFromChart)
+        case .video:
+            self.openDiaryNoteVideo(diaryNote: diaryNote, isEdit: false, presenter: presenter, isFromChart: isFromChart)
+        }
     }
     
     public func openEatenViewController(presenter: UIViewController) {
@@ -1365,7 +1378,7 @@ class AppNavigator {
                                                handler: { [weak self] _ in self?.openSettings() })
 
             let sensorsList = missingSensors
-                .map { self.displayName(for: $0) }
+                .map { Self.displayName(for: $0) }
                 .sorted()
                 .joined(separator: ", ")
 
@@ -1405,7 +1418,8 @@ class AppNavigator {
     /// Resolve a user-facing display name for a SensorKit sensor by looking up the
     /// matching study string. Falls back to the sensor's `rawValue` when the study
     /// key is missing or empty (e.g. before the BE seed lands).
-    private func displayName(for sensor: SRSensor) -> String {
+    /// `static` so the mapping is unit-testable without an `AppNavigator` instance.
+    static func displayName(for sensor: SRSensor) -> String {
         let key: StringKey? = {
             switch sensor {
             case .accelerometer:       return .permissionSensorKitNameAccelerometer
@@ -1414,6 +1428,11 @@ class AppNavigator {
             case .phoneUsageReport:    return .permissionSensorKitNamePhoneUsage
             case .messagesUsageReport: return .permissionSensorKitNameMessagesUsage
             case .keyboardMetrics:     return .permissionSensorKitNameKeyboardMetrics
+            // FUAM-3945 round 8: without these three, the settings alert showed participants raw
+            // values like "com.apple.SensorKit.pedometerData".
+            case .pedometerData:       return .permissionSensorKitNamePedometer
+            case .ambientLightSensor:  return .permissionSensorKitNameAmbientLight
+            case .ambientPressure:     return .permissionSensorKitNameAmbientPressure
             default: return nil
             }
         }()
@@ -1618,6 +1637,16 @@ extension AppNavigator {
     
     func openNoticedViewController(presenter: UIViewController, diaryNote: DiaryNoteItem) {
 
+        // FUAM-4031: skip the chooser when the host app allows a single note type. `isFromChart`
+        // mirrors what NoticedViewController would have computed from the diary note.
+        if let singleType = HostAppConfig.singleDiaryNoteType {
+            self.openDiaryNoteEditor(ofType: singleType,
+                                     diaryNote: diaryNote,
+                                     presenter: presenter,
+                                     isFromChart: diaryNote.diaryNoteable != nil)
+            return
+        }
+
         let noticedVC = NoticedViewController(with: diaryNote)
         noticedVC.modalPresentationStyle = .formSheet
         presenter.present(noticedVC, animated: true)
@@ -1661,7 +1690,9 @@ extension AppNavigator {
 
         let startVC = coordinator.getStartingPage()
         startVC.modalPresentationStyle = .fullScreen
-        presenter.present(startVC, animated: true)
+        presenter.present(startVC, animated: true) { [weak coordinator] in
+            coordinator?.submitIfNothingToAsk()
+        }
         self.hotFlashCoordinator = coordinator
     }
 

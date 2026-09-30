@@ -56,9 +56,14 @@ public class FontPalette {
         self.fontStyleMap = fontStyleMap
     }
     
-    static func fontStyleData(forStyle style: FontStyle) -> FontStyleData {
+    // FUAM-3857: `maximumPointSize` lets a caller opt a fixed-size layout out of unbounded
+    // Dynamic Type growth (e.g. a clipping cell) without losing scaling below the cap.
+    // Default `nil` preserves every existing call site's behaviour exactly.
+    static func fontStyleData(forStyle style: FontStyle, maximumPointSize: CGFloat? = nil) -> FontStyleData {
         let data = self.fontStyleMap[style] ?? style.defaultData
-        let scaledFont = UIFontMetrics.default.scaledFont(for: data.font)
+        let scaledFont = maximumPointSize
+            .map { UIFontMetrics.default.scaledFont(for: data.font, maximumPointSize: $0) }
+            ?? UIFontMetrics.default.scaledFont(for: data.font)
         return FontStyleData(font: scaledFont, lineSpacing: data.lineSpacing, uppercase: data.uppercase)
     }
     

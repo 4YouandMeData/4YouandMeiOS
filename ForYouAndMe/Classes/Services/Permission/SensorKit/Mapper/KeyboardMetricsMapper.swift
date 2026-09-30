@@ -32,6 +32,7 @@ final class KeyboardMetricsMapper: NSObject, SensorSampleMapper {
     private let reader = SRSensorReader(sensor: .keyboardMetrics)
     private var pendingCompletion: ((Result<[[String: Any]], Error>) -> Void)?
     private var collected = [[String: Any]]()
+    private var fetchedResults = 0
 
     // Apple withholds last 24h of SensorKit data (absolute hours)
     private static let holdingPeriod: TimeInterval = 24 * 60 * 60
@@ -58,6 +59,7 @@ final class KeyboardMetricsMapper: NSObject, SensorSampleMapper {
     func fetchAndMap(
         from: Date,
         to: Date,
+        device: SensorDevice,
         completion: @escaping (Result<[[String: Any]], Error>) -> Void
     ) {
         // Avoid crashing on concurrent calls
@@ -67,7 +69,13 @@ final class KeyboardMetricsMapper: NSObject, SensorSampleMapper {
         }
 
         // Enforce embargo: do not read within last 24h
-        let embargoCutoff = Date().addingTimeInterval(-Self.holdingPeriod)
+        // F10 (review round 1; wording corrected round 3): the best clock available, not the raw
+        // device clock. An improvement, not immunity: ServerClock.now() is Date() + storedOffset,
+        // so a rollback lowers BOTH operands until the next API response re-records the offset —
+        // inside that gap the cutoff can still truncate the planned span (the manager would treat
+        // the partial result as the whole window). The planner owns embargo policy; this stays as
+        // defence in depth.
+        let embargoCutoff = max(Date(), ServerClock.now()).addingTimeInterval(-Self.holdingPeriod)
         let safeTo = min(to, embargoCutoff)
         guard from < safeTo else {
             completion(.success([]))
@@ -75,11 +83,13 @@ final class KeyboardMetricsMapper: NSObject, SensorSampleMapper {
         }
 
         let req = SRFetchRequest()
-        req.device = SRDevice.current
+        // FUAM-3945: iPhone or paired Watch — the manager walks one device at a time.
+        req.device = device.fetchTarget
         req.from = from.srAbsoluteTime
         req.to = safeTo.srAbsoluteTime
 
         collected.removeAll(keepingCapacity: true)
+        fetchedResults = 0
         pendingCompletion = completion
         reader.delegate = self
         reader.fetch(req)
@@ -97,9 +107,14 @@ extension KeyboardMetricsMapper: SRSensorReaderDelegate {
     ) -> Bool {
         // Attach SRFetchResult.timestamp as recorded_at
         let recordedAt = dateFromSRAbsoluteTime(result.timestamp)
+        fetchedResults += 1
         if let metrics = result.sample as? NSObject,
            let record = Self.mapKeyboardMetrics(metrics, recordedAt: recordedAt) {
-            collected.append(record)
+            // FUAM-3945: ledger identity — the raw monotonic timestamp, never its wall
+            // projection (see SensorRecordIdentity). Stripped before upload.
+            collected.append(SensorRecordIdentity.stamped(record,
+                                                          raw: result.timestamp,
+                                                          replacing: ["recorded_at", "recorded_at_precise"]))
         }
         return true // continue
     }
@@ -108,7 +123,7 @@ extension KeyboardMetricsMapper: SRSensorReaderDelegate {
         _ reader: SRSensorReader,
         didCompleteFetch fetchRequest: SRFetchRequest
     ) {
-        finish(.success(collected))
+        finish(self.classifyFetchOutcome(collected: collected, fetchedResults: fetchedResults))
     }
 
     func sensorReader(
@@ -131,7 +146,10 @@ extension KeyboardMetricsMapper: SRSensorReaderDelegate {
 
 // MARK: - Mapping (documented keys + quantitative + probability metrics)
 
-private extension KeyboardMetricsMapper {
+// Internal (was private): the per-mapper recorded_at anchor-guard specs exercise the mapping
+// seams with KVC stand-ins (FUAM-3945 round 9, F1: a mapper regression dropping recorded_at
+// silently degrades the server row anchor to upload time).
+extension KeyboardMetricsMapper {
 
     // MARK: Safe KVC
 
@@ -189,21 +207,87 @@ private extension KeyboardMetricsMapper {
         return nil
     }
 
+    // MARK: Sentiment counts (FUAM-3945 fidelity audit, X4)
+
+    /// The full `SRKeyboardMetrics.SentimentCategory` roster with snake_case payload names.
+    /// Compile-checked: a case rename in the SDK breaks the build here, not the data.
+    static let sentimentCategoryNames: [(SRKeyboardMetrics.SentimentCategory, String)] = [
+        (.absolutist, "absolutist"),
+        (.down, "down"),
+        (.death, "death"),
+        (.anxiety, "anxiety"),
+        (.anger, "anger"),
+        (.health, "health"),
+        (.positive, "positive"),
+        (.sad, "sad"),
+        (.lowEnergy, "low_energy"),
+        (.confused, "confused")
+    ]
+
+    /// Per-sentiment word and emoji counts. `wordCount(for:)` / `emojiCount(for:)` are METHODS
+    /// with a scalar argument — unreachable via the KVC probing the rest of this mapper uses —
+    /// so this is a direct typed call, taken only when the object really is an
+    /// `SRKeyboardMetrics` (unit-test stand-ins fall through to `nil`; the derivation is pinned
+    /// via `sentimentCategoryNames` instead).
+    static func sentimentCounts(_ obj: NSObject) -> (words: [String: Int], emojis: [String: Int])? {
+        guard let metrics = obj as? SRKeyboardMetrics else { return nil }
+        var words = [String: Int]()
+        var emojis = [String: Int]()
+        for (category, name) in sentimentCategoryNames {
+            words[name] = metrics.wordCount(for: category)
+            emojis[name] = metrics.emojiCount(for: category)
+        }
+        return (words, emojis)
+    }
+
     // MARK: Probability metrics (safe, no undefined KVC)
 
-    /// Extract numeric samples from known ProbabilityMetric arrays.
-    static func samplesArray(_ obj: NSObject, keys: [String]) -> [Double]? {
+    /// FUAM-3945 fidelity audit, X2: hard bound on the raw distribution samples emitted per
+    /// metric — TAIL PROTECTION ONLY, never a design constraint. Measured against the real
+    /// production keyboard row (21 records): the summed sample counts across all of a record's
+    /// metrics run 116–439, so per-metric counts sit in the tens; full distributions add
+    /// ~3–5 KB per record and a whole 7-day backfill stays around 1 MB against the 5 MB
+    /// proactive split. A normal user never reaches this cap; a metric that does says so in
+    /// the payload (`samples_truncated` + the untruncated `count`), never silently.
+    static let maxProbabilitySamples = 1_000
+
+    /// FUAM-3945 fidelity audit, X2: the unit each summarised/raw metric is expressed in after
+    /// `extractSamples` conversion — timings in seconds, error distances in meters. Used when
+    /// the OS hands the samples over as bare numbers (no `Measurement` to derive the unit from).
+    static let probabilityMetricUnits: [String: String] = [
+        "spaceToCharKey": "seconds",
+        "charKeyToCharKey": "seconds",
+        "charKeyToPrediction": "seconds",
+        "charKeyToDeleteKey": "seconds",
+        "deleteToCharKey": "seconds",
+        "spaceToDeleteKey": "seconds",
+        "charKeyToPlaneChangeKey": "seconds",
+        "planeChangeKeyToCharKey": "seconds",
+        "touchDownUp": "seconds",
+        "touchUpDown": "seconds",
+        "pathToPath": "seconds",
+        "shortWordCharKeyDownErrorDistance": "meters",
+        "shortWordCharKeyUpErrorDistance": "meters",
+        "longWordCharKeyDownErrorDistance": "meters",
+        "longWordCharKeyUpErrorDistance": "meters",
+        "deleteDownErrorDistance": "meters",
+        "spaceDownErrorDistance": "meters"
+    ]
+
+    /// Extract numeric samples from known ProbabilityMetric arrays, together with the unit the
+    /// conversion produced (`nil` when the OS handed over bare numbers).
+    static func extractSamples(_ obj: NSObject, keys: [String]) -> (values: [Double], unit: String?)? {
         for key in keys {
             guard let any = valueIfResponds(obj, key) else { continue }
 
-            if let ns = any as? [NSNumber] { return ns.map(\.doubleValue) }
+            if let ns = any as? [NSNumber] { return (ns.map(\.doubleValue), nil) }
 
             if let durs = any as? [Measurement<UnitDuration>] {
-                return durs.map { $0.converted(to: .seconds).value }
+                return (durs.map { $0.converted(to: .seconds).value }, "seconds")
             }
 
             if let lens = any as? [Measurement<UnitLength>] {
-                return lens.map { $0.converted(to: .meters).value }
+                return (lens.map { $0.converted(to: .meters).value }, "meters")
             }
         }
         return nil
@@ -238,21 +322,40 @@ private extension KeyboardMetricsMapper {
     }
 
     /// Robust export that never KVC-crashes on undefined keys.
-    static func exportProbabilityMetric(_ any: Any?) -> [String: Any]? {
+    ///
+    /// FUAM-3945 fidelity audit, X2: the raw distribution is now emitted alongside the summary
+    /// statistics (which are kept verbatim — consumers may already read them). The raw samples
+    /// are what SensorKit hands over (`distributionSampleValues`); reducing them to 8 stats made
+    /// distribution-shape analysis impossible and irrecoverable after the OS's 7-day retention.
+    /// Every metric now also carries a `unit` (previously absent in all production records).
+    static func exportProbabilityMetric(_ any: Any?, metricKey: String? = nil) -> [String: Any]? {
         guard let metric = any as? NSObject else { return nil }
 
         // Pull samples from any of the documented properties
-        guard let samples = samplesArray(
+        guard let extracted = extractSamples(
             metric,
             keys: ["sampleValues", "distributionSampleValues", "values"]
         ) else {
             return nil
         }
+        let samples = extracted.values
 
         var out = summarize(samples)
 
-        // Attach unit if present (best effort)
-        if let unit = valueIfResponds(metric, "unit") {
+        // X2: the raw distribution, bounded. `count` (from `summarize`) always carries the
+        // UNTRUNCATED sample count, so a truncated payload states both the flag and the size.
+        if samples.count > maxProbabilitySamples {
+            out["samples"] = Array(samples.prefix(maxProbabilitySamples))
+            out["samples_truncated"] = true
+        } else if !samples.isEmpty {
+            out["samples"] = samples
+        }
+
+        // X2: unit — conversion-derived first, hardcoded per-metric table second, the legacy
+        // KVC probe last (kept for any OS that ever exposes a `unit` property).
+        if let unit = extracted.unit ?? metricKey.flatMap({ probabilityMetricUnits[$0] }) {
+            out["unit"] = unit
+        } else if let unit = valueIfResponds(metric, "unit") {
             switch unit {
             case is UnitDuration: out["unit"] = "seconds"
             case is UnitLength: out["unit"] = "meters"
@@ -305,8 +408,13 @@ private extension KeyboardMetricsMapper {
         let iso = ISO8601DateFormatter()
         var rec: [String: Any] = [:]
 
-        // Recorded-at from SRFetchResult.timestamp
-        if let ts = recordedAt { rec["recorded_at"] = iso.string(from: ts) }
+        // Recorded-at from SRFetchResult.timestamp.
+        // `recorded_at` stays whole-second verbatim (server row anchor, historical shape);
+        // `recorded_at_precise` is the additive fractional-seconds companion (FUAM-3945, X6).
+        if let ts = recordedAt {
+            rec["recorded_at"] = iso.string(from: ts)
+            rec["recorded_at_precise"] = ISO8601Strategy.encode(ts)
+        }
 
         // Period bounds
         if let start = date(obj, key: "startDate") { rec["start"] = iso.string(from: start) }
@@ -314,7 +422,14 @@ private extension KeyboardMetricsMapper {
         if let dur = seconds(obj, key: "duration") { rec["duration_s"] = dur }
 
         // Identifiers & metadata
-        if let version = number(obj, key: "version")?.intValue { rec["version"] = version }
+        // FUAM-3945 fidelity audit, X4: the SDK header declares `version` as `NSString`, so the
+        // NSNumber-only read could never populate it (absent in every production record). The
+        // String branch is first; the Int branch stays as a defensive fallback.
+        if let version = string(obj, key: "version") {
+            rec["version"] = version
+        } else if let version = number(obj, key: "version")?.intValue {
+            rec["version"] = version
+        }
         if let sessions = valueIfResponds(obj, "sessionIdentifiers") as? [String] {
             rec["sessionIdentifiers"] = sessions
         }
@@ -344,7 +459,10 @@ private extension KeyboardMetricsMapper {
             ("totalAutoCorrections", "total_autocorrections"),
             ("totalTranspositionCorrections", "total_transposition_corrections"),
             ("totalSpaceCorrections", "total_space_corrections"),
-            ("totalDeletes", "total_deletes")
+            ("totalDeletes", "total_deletes"),
+            // FUAM-3945 fidelity audit, X4: the two documented correction counters the map missed.
+            ("totalRetroCorrections", "total_retro_corrections"),
+            ("totalSubstitutionCorrections", "total_substitution_corrections")
         ]
         for (src, dst) in countMap {
             if let v = number(obj, key: src)?.intValue { rec[dst] = v }
@@ -361,16 +479,22 @@ private extension KeyboardMetricsMapper {
             rec["total_path_length_m"] = pathLen
         }
 
-        // Probability metrics (summarized)
+        // Probability metrics (summary stats + raw distribution, FUAM-3945 X2)
         var pm = [String: Any]()
         for key in probabilityMetricKeys {
-            if let dict = exportProbabilityMetric(valueIfResponds(obj, key)) {
+            if let dict = exportProbabilityMetric(valueIfResponds(obj, key), metricKey: key) {
                 pm[key] = dict
             }
         }
         if !pm.isEmpty { rec["probabilityMetrics"] = pm }
 
-        rec["device_kind"] = "iphone"
+        // Per-sentiment word/emoji counts (FUAM-3945 X4) — zeros included, so "measured zero"
+        // stays distinguishable from "API unavailable" (both dicts absent).
+        if let sentiment = sentimentCounts(obj) {
+            rec["sentiment_word_counts"] = sentiment.words
+            rec["sentiment_emoji_counts"] = sentiment.emojis
+        }
+
         return rec
     }
 }

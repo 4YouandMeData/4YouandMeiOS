@@ -125,11 +125,11 @@ class OptInSectionCoordinator {
         self.completionCallback(self.navigationController)
     }
 
-    private func showOptInPermission(_ optInPermission: OptInPermission) {
-        // FUAM-3364. Route info-only permissions (BE
-        // `agreement_display == "disabled"`) to the dedicated view
-        // controller with no agree/disagree controls; the regular VC
-        // continues to handle the agree/disagree flow.
+    /// FUAM-3364. Route info-only permissions (BE
+    /// `agreement_display == "disabled"`) to the dedicated view
+    /// controller with no agree/disagree controls; the regular VC
+    /// continues to handle the agree/disagree flow.
+    private func makeOptInPermissionViewController(_ optInPermission: OptInPermission) -> UIViewController {
         let viewController: UIViewController & OptInPermissionProcessingDriving
         if optInPermission.isInfoOnly {
             viewController = OptInPermissionInfoViewController(withOptInPermission: optInPermission, coordinator: self)
@@ -139,6 +139,11 @@ class OptInSectionCoordinator {
         // FUAM-3116. Track the active VC so we can drive its processing
         // overlay during the permission chain.
         self.currentPermissionVC = viewController
+        return viewController
+    }
+
+    private func showOptInPermission(_ optInPermission: OptInPermission) {
+        let viewController = self.makeOptInPermissionViewController(optInPermission)
         self.navigationController.pushViewController(viewController,
                                                      hidesBottomBarWhenPushed: self.hidesBottomBarWhenPushed,
                                                      animated: true)
@@ -160,17 +165,33 @@ extension OptInSectionCoordinator: PagedSectionCoordinator {
 
     var pages: [Page] { self.sectionData.pages }
 
+    /// FUAM-4045. The welcome page is optional: without it the section starts
+    /// directly at its first real step (the first iOS-visible permission), or
+    /// at the success page if there is no permission at all. A section with
+    /// none of the three is skipped before the coordinator is ever built
+    /// (see `OnboardingSection.getAsyncCoordinatorRequest`).
     func getStartingPage() -> UIViewController {
-        let infoPageData = InfoPageData(page: self.sectionData.welcomePage,
-                                        addAbortOnboardingButton: false,
-                                        addCloseButton: false,
-                                        allowBackwardNavigation: false,
-                                        bodyTextAlignment: .center,
-                                        bottomViewStyle: .singleButton,
-                                        customImageHeight: nil,
-                                        defaultButtonFirstLabel: nil,
-                                        defaultButtonSecondLabel: nil)
-        return InfoPageViewController(withPageData: infoPageData, coordinator: self)
+        if let welcomePage = self.sectionData.welcomePage {
+            let infoPageData = InfoPageData(page: welcomePage,
+                                            addAbortOnboardingButton: false,
+                                            addCloseButton: false,
+                                            allowBackwardNavigation: false,
+                                            bodyTextAlignment: .center,
+                                            bottomViewStyle: .singleButton,
+                                            customImageHeight: nil,
+                                            defaultButtonFirstLabel: nil,
+                                            defaultButtonSecondLabel: nil)
+            return InfoPageViewController(withPageData: infoPageData, coordinator: self)
+        }
+        if let firstOptInPermission = self.visiblePermissions.first {
+            return self.makeOptInPermissionViewController(firstOptInPermission)
+        }
+        if let successPage = self.sectionData.successPage {
+            return InfoPageViewController(withPageData: InfoPageData.createResultPageData(withPage: successPage),
+                                          coordinator: self)
+        }
+        assertionFailure("Empty opt-in section should have been skipped")
+        return UIViewController()
     }
 
     func performCustomPrimaryButtonNavigation(page: Page) -> Bool {

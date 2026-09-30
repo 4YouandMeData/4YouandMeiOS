@@ -51,9 +51,13 @@ extension OnboardingSection {
         }
     }
     
+    /// A `nil` element means "skip this section": it has nothing to present,
+    /// either because the study configured it empty or because the backend has
+    /// no such section at all (FUAM-4045). Only opt-in and integration opt into
+    /// this today; FUAM-4044 is expected to extend it to the other sections.
     func getAsyncCoordinatorRequest(withNavigationController navigationController: UINavigationController,
                                     completionCallback: @escaping NavigationControllerCallback,
-                                    repository: Repository) -> Single<Coordinator>? {
+                                    repository: Repository) -> Single<Coordinator?>? {
         switch self {
         case .introVideo:
             return nil
@@ -82,11 +86,12 @@ extension OnboardingSection {
                                           completionCallback: completionCallback)
             }
         case .optIn:
-            return repository.getOptInSection().map { section in
-                OptInSectionCoordinator(withSectionData: section,
-                                        navigationController: navigationController,
-                                        completionCallback: completionCallback)
-            }
+            return repository.getOptInSection().map { section -> Coordinator? in
+                guard false == section.isEmpty else { return nil }
+                return OptInSectionCoordinator(withSectionData: section,
+                                               navigationController: navigationController,
+                                               completionCallback: completionCallback)
+            }.skipSectionIfMissing()
         case .consentUserData:
             return repository.getUserConsentSection().map { section in
                 ConsentUserDataSectionCoordinator(withSectionData: section,
@@ -94,11 +99,24 @@ extension OnboardingSection {
                                                   completionCallback: completionCallback)
             }
         case .integration:
-            return repository.getIntegrationSection().map { section in
-                IntegrationSectionCoordinator(withSectionData: section,
-                                              navigationController: navigationController,
-                                              completionCallback: completionCallback)
-            }
+            return repository.getIntegrationSection().map { section -> Coordinator? in
+                guard false == section.isEmpty else { return nil }
+                return IntegrationSectionCoordinator(withSectionData: section,
+                                                     navigationController: navigationController,
+                                                     completionCallback: completionCallback)
+            }.skipSectionIfMissing()
+        }
+    }
+}
+
+extension PrimitiveSequence where Trait == SingleTrait, Element == Coordinator? {
+    /// FUAM-4045. A study whose backend has no such section at all answers the
+    /// section endpoint with a 404 (e.g. `OptInsController#show_last_version`).
+    /// Treat that exactly like an empty section — skip it — instead of
+    /// dead-ending the onboarding on the loading screen's generic error view.
+    func skipSectionIfMissing() -> Single<Coordinator?> {
+        return self.catch { error in
+            return (error as? ApiError)?.statusCode == 404 ? .just(nil) : .error(error)
         }
     }
 }
