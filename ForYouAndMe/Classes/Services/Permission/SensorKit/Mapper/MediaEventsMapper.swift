@@ -27,6 +27,7 @@ final class MediaEventsMapper: NSObject, SensorSampleMapper {
     private let reader = SRSensorReader(sensor: .mediaEvents)
     private var pendingCompletion: ((Result<[[String: Any]], Error>) -> Void)?
     private var collected = [[String: Any]]()
+    private var fetchedResults = 0
 
     // Apple withholds last 24h of SensorKit data
     private static let holdingPeriod: TimeInterval = 24 * 60 * 60
@@ -52,6 +53,7 @@ final class MediaEventsMapper: NSObject, SensorSampleMapper {
     func fetchAndMap(
         from: Date,
         to: Date,
+        device: SensorDevice,
         completion: @escaping (Result<[[String: Any]], Error>) -> Void
     ) {
         // Prevent concurrent fetches
@@ -67,7 +69,13 @@ final class MediaEventsMapper: NSObject, SensorSampleMapper {
         }
 
         // Enforce embargo: do not read within last 24h
-        let embargoCutoff = Date().addingTimeInterval(-Self.holdingPeriod)
+        // F10 (review round 1; wording corrected round 3): the best clock available, not the raw
+        // device clock. An improvement, not immunity: ServerClock.now() is Date() + storedOffset,
+        // so a rollback lowers BOTH operands until the next API response re-records the offset —
+        // inside that gap the cutoff can still truncate the planned span (the manager would treat
+        // the partial result as the whole window). The planner owns embargo policy; this stays as
+        // defence in depth.
+        let embargoCutoff = max(Date(), ServerClock.now()).addingTimeInterval(-Self.holdingPeriod)
         let safeTo = min(to, embargoCutoff)
         guard from < safeTo else {
             completion(.success([]))
@@ -76,11 +84,13 @@ final class MediaEventsMapper: NSObject, SensorSampleMapper {
         
         // Build request
         let req = SRFetchRequest()
-        req.device = SRDevice.current
+        // FUAM-3945: iPhone or paired Watch — the manager walks one device at a time.
+        req.device = device.fetchTarget
         req.from = from.srAbsoluteTime
         req.to = safeTo.srAbsoluteTime
 
         collected.removeAll(keepingCapacity: true)
+        fetchedResults = 0
         pendingCompletion = completion
         reader.delegate = self
         reader.fetch(req)
@@ -103,22 +113,31 @@ extension MediaEventsMapper: SRSensorReaderDelegate {
             return iso.string(from: dateFromSRAbsoluteTime(result.timestamp))
         }()
 
+        fetchedResults += 1
+
         // Sample may be a fast-enumerable list (e.g., CMSensorDataList-like) or a single object.
+        var records: [[String: Any]] = []
         if let enumerable = result.sample as? NSFastEnumeration {
             for element in FastEnumerationSequence(base: enumerable) {
                 guard let obj = element as? NSObject,
                       let rec = Self.mapMediaEvent(obj, recordedAtISO: recordedAtISO) else { continue }
-                collected.append(rec)
+                records.append(rec)
             }
         } else if let obj = result.sample as? NSObject,
                   let rec = Self.mapMediaEvent(obj, recordedAtISO: recordedAtISO) {
-            collected.append(rec)
+            records.append(rec)
         }
+        // FUAM-3945: ledger identity — the raw monotonic timestamp, never its wall
+        // projection (see SensorRecordIdentity). The raw value ships only when it identifies a
+        // single record; list siblings share it.
+        collected.append(contentsOf: SensorRecordIdentity.stampedResult(records,
+                                                                         raw: result.timestamp,
+                                                                         replacing: ["recorded_at"]))
         return true // continue fetching
     }
 
     func sensorReader(_ reader: SRSensorReader, didCompleteFetch fetchRequest: SRFetchRequest) {
-        finish(.success(collected))
+        finish(self.classifyFetchOutcome(collected: collected, fetchedResults: fetchedResults))
     }
 
     func sensorReader(
@@ -141,7 +160,10 @@ extension MediaEventsMapper: SRSensorReaderDelegate {
 // MARK: - Mapping (documented keys only, safe KVC)
 
 @available(iOS 16.4, *)
-private extension MediaEventsMapper {
+// Internal (was private): the per-mapper recorded_at anchor-guard specs exercise the mapping
+// seams with KVC stand-ins (FUAM-3945 round 9, F1: a mapper regression dropping recorded_at
+// silently degrades the server row anchor to upload time).
+extension MediaEventsMapper {
 
     // Safe KVC helpers
     static func valueIfResponds(_ obj: NSObject, _ key: String) -> Any? {
@@ -174,8 +196,7 @@ private extension MediaEventsMapper {
         guard isMediaEvent(obj) else { return nil }
 
         var rec: [String: Any] = [
-            "recorded_at": recordedAtISO,
-            "device_kind": "iphone"
+            "recorded_at": recordedAtISO
         ]
 
         // eventType (enum SRMediaEventType → string)

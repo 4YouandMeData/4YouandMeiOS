@@ -776,8 +776,22 @@ extension RepositoryImpl: NotificationTokenDelegate {
 extension RepositoryImpl: HealthManagerNetworkDelegate {
     func uploadHealthNetworkData(_ healthNetworkData: HealthNetworkData, source: String) -> Single<()> {
         return self.api.send(request: ApiRequest(serviceRequest: .sendHealthData(healthData: healthNetworkData, source: source)))
+            .catch { error in
+                // FUAM-3945: recognise the server's payload cap HERE, while the status code still
+                // exists — `handleError` collapses `ApiError` into `RepositoryError`, which has
+                // none, and the chunk walk would then see a generic server error and retry the
+                // identical oversize chunk on every sequence for ever. As an oversize signal it
+                // bisects the chunk's time window instead.
+                if let apiError = error as? ApiError, apiError.httpStatusCode == 413 {
+                    return Single.error(HealthSampleUploaderError.uploadPayloadTooLarge)
+                }
+                return Single.error(error)
+            }
             .handleError()
             .catch { error in
+                if let uploaderError = error as? HealthSampleUploaderError {
+                    return Single.error(uploaderError)
+                }
                 guard let repositoryError = error as? RepositoryError else {
                     assertionFailure("Unexpected error type")
                     return Single.error(error)
@@ -800,37 +814,63 @@ extension RepositoryImpl: HealthManagerClearanceDelegate {
         return self.currentUser?.getHasAgreedTo(systemPermission: .health) ?? false
     }
 
-    /// FUAM-3841: lower bound for HealthKit/SensorKit backfill and hard consent gate for
-    /// record timestamps. Satisfies both `HealthSampleUploadManagerClearanceDelegate` and
-    /// `SensorSampleUploadManagerClearanceDelegate`.
-    /// Source: earliest `user_study_phases.start_at` (explicit backend date); when the study
-    /// has no phases, derived from `days_in_study` (day-aligned, conservative).
+    /// The participant's **study join day**: start of day in the participant's timezone,
+    /// derived per the backend's `days_in_study`. Feeds `BackfillLowerBound`, the single lower
+    /// bound for HealthKit/SensorKit backfill and hard consent gate for record timestamps.
+    /// Satisfies both `HealthSampleUploadManagerClearanceDelegate` and
+    /// `SensorSampleUploadManagerClearanceDelegate` (the member name is kept for API stability).
+    ///
+    /// `days_in_study` is the only source (FUAM-3945): it mirrors the backend's own arithmetic
+    /// at the same day granularity as its `retrieved_at >= on_boarding_completed_at.beginning_of_day`
+    /// read filter. `user_study_phases.start_at` was the primary source in FUAM-3841 and is
+    /// deliberately no longer consulted — a phase can start before the consent moment, which
+    /// would move the bound earlier and leak pre-consent data.
+    ///
+    /// Staleness fail-safe: a cached `days_in_study` going stale while the calendar advances
+    /// (or a past `end_of_study_at`, which freezes it) makes the derived join day drift *later*,
+    /// so the failure mode is under-fetching, never a pre-consent leak.
+    /// Device-clock fail-safe (FUAM-3964): the join day is derived from `ServerClock.now()` — the
+    /// device clock corrected by the offset learnt from the backend's `Date` response header — not
+    /// from a raw `Date()`. Moving the device clock therefore cannot move the participant's join
+    /// day in either direction. This replaces `BackfillClock`'s monotonic high-water mark, which
+    /// only protected the backward direction and pinned the bound in the future after a forward
+    /// jump. With no offset ever stored (first launch, offline) it degrades to `Date()`.
     var enrollmentDate: Date? {
         guard let user = self.currentUser else { return nil }
-        if let phaseStart = user.userPhases?.compactMap({ $0.startAt }).min() {
-            return phaseStart
-        }
         return Self.enrollmentDate(fromDaysInStudy: user.daysInStudy,
+                                   now: ServerClock.now(analytics: self.analyticsService),
                                    calendar: Self.enrollmentCalendar(userTimeZone: user.timeZone))
+    }
+
+    /// The BACKEND-authoritative `user.time_zone` (FUAM-3945 AC2 revised): the calendar every
+    /// SensorKit window and HealthKit historical chunk boundary is computed in — the same
+    /// authority the adherence chart buckets rows with, and one that does not move when the
+    /// participant travels. Satisfies both clearance-delegate protocols.
+    var participantTimeZone: TimeZone? {
+        return self.currentUser?.timeZone
     }
 
     /// FUAM-3841 (final review): the backend computes `days_in_study` in the USER's timezone,
     /// so the derived day boundary must use it too — `Calendar.current` (device tz) can shift
-    /// the enrollment day by one when they differ. Falls back to the device timezone when the
-    /// user record carries none.
+    /// the enrollment day by one when they differ.
+    ///
+    /// FUAM-3945 round 2 (review F2): a missing `user.time_zone` falls back to UTC — the SAME
+    /// fallback the window partition uses — never to the device timezone. The consent bound and
+    /// the grid must share one day-boundary authority (AC2): a device-tz bound made the join
+    /// sliver window, hence its batch anchor, a function of the handset, and east of UTC it sat
+    /// up to ~14h below the UTC join-day floor. The tz-less condition is already reported once
+    /// per launch by the planner's `sensor_tz_fallback` (same trigger, same launch).
     static func enrollmentCalendar(userTimeZone: TimeZone?) -> Calendar {
-        var calendar = Calendar.current
-        if let userTimeZone = userTimeZone {
-            calendar.timeZone = userTimeZone
-        }
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = userTimeZone ?? TimeZone(identifier: "UTC")!
         return calendar
     }
 
-    /// Backend semantics: `days_in_study` is 1 ON the enrollment day
-    /// (`(end_date - onboarding_date).to_i + 1`), so enrollment = startOfDay(today)
-    /// minus (daysInStudy - 1) days. `daysInStudy <= 0` is not a valid enrolled state:
-    /// return `nil` so callers fall back to their legacy windows instead of silently
-    /// producing an empty plan (FUAM-3841 review fixes #1/#6).
+    /// Backend semantics: `days_in_study` is 1 ON the join day
+    /// (`(end_date - onboarding_date).to_i + 1`), so the join day = startOfDay(today)
+    /// minus (daysInStudy - 1) days. `daysInStudy <= 0` is not a valid enrolled state (the
+    /// backend returns 0 when there is no usable consent): return `nil`, which makes every
+    /// caller forward-only — never a legacy history window (FUAM-3945).
     static func enrollmentDate(fromDaysInStudy daysInStudy: Int,
                                now: Date = Date(),
                                calendar: Calendar = .current) -> Date? {
@@ -909,7 +949,25 @@ fileprivate extension Error {
     }
 }
 
+/// Internal rather than fileprivate purely so a spec can execute it: it is the discriminator the
+/// 413 -> `uploadPayloadTooLarge` mapping above branches on, and that mapping is what stops the
+/// chunk walk retrying an oversize chunk for ever.
+extension ApiError {
+    /// The HTTP status, where the case carries one. `RepositoryError` drops it, so anything that
+    /// has to branch on a status code (FUAM-3945: 413, the health payload cap) must read it here.
+    var httpStatusCode: Int? {
+        switch self {
+        case .connectivity, .network: return nil
+        case let .cannotParseData(_, _, statusCode, _),
+             let .unexpectedError(_, _, statusCode, _),
+             let .expectedError(_, _, statusCode, _, _),
+             let .userUnauthorized(_, _, statusCode, _): return statusCode
+        }
+    }
+}
+
 fileprivate extension ApiError {
+
     var repositoryError: RepositoryError {
         switch self {
         case .cannotParseData: return RepositoryError.remoteServerError
@@ -960,6 +1018,19 @@ extension RepositoryImpl: SensorKitManagerNetworkDelegate {
         // enforces "sensor_kit" as the source.
         return self.api
             .send(request: ApiRequest(serviceRequest: .sendSensorKitData(sensorData: data)))
+            .catch { error in
+                // FUAM-3945 round 5 (AC6): recognise a PERMANENT server rejection here, while
+                // the status code still exists — same rationale as the 413 mapping in
+                // `uploadHealthNetworkData` above. Without the marker the drain path cannot
+                // tell a validation rejection from a network outage and retries the identical
+                // payload for the life of the install.
+                if let apiError = error as? ApiError,
+                   let statusCode = apiError.httpStatusCode,
+                   SensorUploadError.permanentRejectionStatusCodes.contains(statusCode) {
+                    return Single.error(SensorUploadError.permanentlyRejected(statusCode: statusCode))
+                }
+                return Single.error(error)
+            }
             .handleError() // visible if this extension stays in RepositoryImpl.swift
     }
 }

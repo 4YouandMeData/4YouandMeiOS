@@ -31,6 +31,7 @@ final class MessagesUsageReportMapper: NSObject, SensorSampleMapper {
     private let reader = SRSensorReader(sensor: .messagesUsageReport)
     private var pendingCompletion: ((Result<[[String: Any]], Error>) -> Void)?
     private var collected = [[String: Any]]()
+    private var fetchedResults = 0
 
     // Apple withholds last 24h of SensorKit data (absolute hours)
     private static let holdingPeriod: TimeInterval = 24 * 60 * 60
@@ -57,6 +58,7 @@ final class MessagesUsageReportMapper: NSObject, SensorSampleMapper {
     func fetchAndMap(
         from: Date,
         to: Date,
+        device: SensorDevice,
         completion: @escaping (Result<[[String: Any]], Error>) -> Void
     ) {
         // Avoid crashing on concurrent calls
@@ -66,7 +68,13 @@ final class MessagesUsageReportMapper: NSObject, SensorSampleMapper {
         }
 
         // Enforce embargo: do not read within last 24h
-        let embargoCutoff = Date().addingTimeInterval(-Self.holdingPeriod)
+        // F10 (review round 1; wording corrected round 3): the best clock available, not the raw
+        // device clock. An improvement, not immunity: ServerClock.now() is Date() + storedOffset,
+        // so a rollback lowers BOTH operands until the next API response re-records the offset —
+        // inside that gap the cutoff can still truncate the planned span (the manager would treat
+        // the partial result as the whole window). The planner owns embargo policy; this stays as
+        // defence in depth.
+        let embargoCutoff = max(Date(), ServerClock.now()).addingTimeInterval(-Self.holdingPeriod)
         let safeTo = min(to, embargoCutoff)
         guard from < safeTo else {
             completion(.success([]))
@@ -74,11 +82,13 @@ final class MessagesUsageReportMapper: NSObject, SensorSampleMapper {
         }
 
         let req = SRFetchRequest()
-        req.device = SRDevice.current
+        // FUAM-3945: iPhone or paired Watch — the manager walks one device at a time.
+        req.device = device.fetchTarget
         req.from = from.srAbsoluteTime
         req.to = safeTo.srAbsoluteTime
 
         collected.removeAll(keepingCapacity: true)
+        fetchedResults = 0
         pendingCompletion = completion
         reader.delegate = self
         reader.fetch(req)
@@ -96,11 +106,16 @@ extension MessagesUsageReportMapper: SRSensorReaderDelegate {
     ) -> Bool {
         // Attach SRFetchResult.timestamp as recorded_at
         let recordedAt = dateFromSRAbsoluteTime(result.timestamp)
+        fetchedResults += 1
 
         // Usage reports arrive as single aggregated objects (no CMSensorDataList).
         if let report = result.sample as? NSObject,
            let record = Self.mapMessagesUsage(report, recordedAt: recordedAt) {
-            collected.append(record)
+            // FUAM-3945: ledger identity — the raw monotonic timestamp, never its wall
+            // projection (see SensorRecordIdentity). Stripped before upload.
+            collected.append(SensorRecordIdentity.stamped(record,
+                                                          raw: result.timestamp,
+                                                          replacing: ["recorded_at", "recorded_at_precise"]))
         }
         return true // continue
     }
@@ -109,7 +124,7 @@ extension MessagesUsageReportMapper: SRSensorReaderDelegate {
         _ reader: SRSensorReader,
         didCompleteFetch fetchRequest: SRFetchRequest
     ) {
-        finish(.success(collected))
+        finish(self.classifyFetchOutcome(collected: collected, fetchedResults: fetchedResults))
     }
 
     func sensorReader(
@@ -132,7 +147,10 @@ extension MessagesUsageReportMapper: SRSensorReaderDelegate {
 
 // MARK: - Mapping (documented keys only)
 
-private extension MessagesUsageReportMapper {
+// Internal (was private): the per-mapper recorded_at anchor-guard specs exercise the mapping
+// seams with KVC stand-ins (FUAM-3945 round 9, F1: a mapper regression dropping recorded_at
+// silently degrades the server row anchor to upload time).
+extension MessagesUsageReportMapper {
 
     // --- Safe KVC (only call value(forKey:) if the selector exists) ---
     static func valueIfResponds(_ obj: NSObject, _ key: String) -> Any? {
@@ -171,8 +189,13 @@ private extension MessagesUsageReportMapper {
         let iso = ISO8601DateFormatter()
         var rec: [String: Any] = [:]
 
-        // Timestamp when the framework recorded the sample (SRFetchResult.timestamp)
-        if let ts = recordedAt { rec["recorded_at"] = iso.string(from: ts) }
+        // Timestamp when the framework recorded the sample (SRFetchResult.timestamp).
+        // `recorded_at` stays whole-second verbatim (server row anchor, historical shape);
+        // `recorded_at_precise` is the additive fractional-seconds companion (FUAM-3945, X6).
+        if let ts = recordedAt {
+            rec["recorded_at"] = iso.string(from: ts)
+            rec["recorded_at_precise"] = ISO8601Strategy.encode(ts)
+        }
 
         // Period bounds if present on this report type
         if let start = kvcDate(obj, key: "startDate") { rec["start"] = iso.string(from: start) }
@@ -185,9 +208,6 @@ private extension MessagesUsageReportMapper {
         if let v = intValue(obj, key: "totalIncomingMessages") { rec["total_incoming_messages"] = v } // :contentReference[oaicite:2]{index=2}
         if let v = intValue(obj, key: "totalOutgoingMessages") { rec["total_outgoing_messages"] = v } // :contentReference[oaicite:3]{index=3}
         if let v = intValue(obj, key: "totalUniqueContacts")  { rec["total_unique_contacts"]  = v } // :contentReference[oaicite:4]{index=4}
-
-        // Explicit device tag
-        rec["device_kind"] = "iphone"
 
         return rec
     }

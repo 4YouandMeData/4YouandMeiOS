@@ -61,6 +61,25 @@ enum AnalyticsParameter: String {
     case sensor
     case reachedBack = "reached_back"
     case boundedBy = "bounded_by"
+    // FUAM-3945 / FUAM-3964. Device-vs-server clock diagnostic attributes.
+    case clockMark = "clock_mark"
+    case deviceNow = "device_now"
+    // FUAM-3945 round 7. SensorKit recording-start failure attributes.
+    case sensorError = "error"
+    // FUAM-3945 round 8. Sensors dropped because the host is not entitled to them.
+    case droppedSensors = "dropped_sensors"
+    // FUAM-3945 round 9 (D12/AC8). Windowing observability attributes.
+    case device
+    case windowDay = "window_day"
+    case pass
+    case ageDays = "age_days"
+    case novelCount = "novel_count"
+    case count
+    case spanSeconds = "span_s"
+    case droppedCount = "dropped_count"
+    // FUAM-3945 fidelity audit (X1). Field-level completeness attributes.
+    case field
+    case total
 }
 
 enum AnalyticsScreens: String {
@@ -140,10 +159,82 @@ enum AnalyticsEvent {
     // SensorKit sensor is OS-authorized — that combination is always a bug (see FUAM-3835).
     case sensorDataClearanceMismatch(reason: String, authorizedSensors: String)
 
-    // FUAM-3841. Emitted when a backfill opens: how far back the client actually reached
-    // for a sensor (ISO8601) and what bounded it ("enrollment" / "retention_floor" / ...),
-    // so the study team can tell "the OS deleted it" from "the client never asked".
+    // FUAM-3841 / FUAM-3945. Emitted when a backfill opens: how far back the client actually
+    // reached for a sensor (ISO8601) and what bounded it, so the study team can tell "the OS
+    // deleted it" from "the client never asked". `boundedBy` is a
+    // `BackfillLowerBound.Origin.rawValue`: "join_date", "hard_cap_365d", "forward_only",
+    // "empty_plan", "gave_up", "drain_filtered", "bisected", "attempts_exhausted" or
+    // "future_cursor" (a cursor burnt into the future by a clock excursion was reset to the
+    // consent bound; `reachedBack` is then the corrupt cursor, so the recovered gap is readable).
+    // ("enrollment" and "retention_floor" are superseded.) The
+    // `cursor` origin is carried in the plan but deliberately never emitted: a routine cursor
+    // resume is not a backfill and would drown the actionable events.
+    // One exception to the closed vocabulary: the HealthKit "unrecognised upload error" path
+    // emits "gave_up:<error domain>#<code>" — the same class of event (the sequence moved on
+    // without advancing), with the only diagnostic that makes it actionable attached.
     case sensorDataBackfillReach(sensor: String, reachedBack: String, boundedBy: String)
+
+    // FUAM-3945 / FUAM-3964. Emitted once per launch when the device clock is more than a day
+    // away from the server's (the offset learnt from the `Date` response header, see
+    // `ServerClock`). `mark` is server time, `deviceNow` is device time, both ISO8601, so the
+    // signed drift is (mark - deviceNow) — positive when the device is behind. The event name is
+    // kept from the superseded `BackfillClock` diagnostic it replaces; the parameters now mean
+    // device-vs-server rather than device-vs-high-water-mark.
+    case sensorDataClockAhead(mark: String, deviceNow: String)
+
+    // FUAM-3945 round 7. A SensorKit reader's `startRecording()` failed: that sensor records
+    // nothing until the next successful start, and without this event the silence is
+    // indistinguishable from a participant with no data. Once per sensor per launch. `error` is
+    // the NSError domain/code — never the localized description (locale-dependent, unaggregatable).
+    case sensorRecordingStartFailed(sensor: String, error: String)
+
+    // FUAM-3945 round 8. The host's declared SensorKit entitlement does not cover every sensor
+    // the SDK is configured to collect, so those sensors were dropped from the requested set. iOS
+    // would never have prompted for them anyway (it auto-declines instantly and leaves them
+    // `.notDetermined` forever) — this event is what makes the host misconfiguration visible
+    // instead of silent. Emitted once per launch, at service setup; `sensors` is the
+    // comma-joined, sorted list of dropped sensor subsources, CAPPED at Firebase's 100-char
+    // string-parameter limit (F7), with `count` carrying the true cardinality.
+    case sensorEntitlementMissing(sensors: String, count: Int)
+
+    // FUAM-3945 round 9 (D12/AC8) — the windowing observability set. These are what make the
+    // D-C/D-D class of production data loss findable in Firebase instead of by hand-diffing
+    // production tables.
+
+    // A window the OS answered successfully with ZERO records. `pass` is "first" for a window at
+    // the head of the walk and "rescan_N" (N = age of the window's day, in days) for a rescan
+    // re-read: a report sensor empty on first pass AND every rescan is a windowing bug.
+    case sensorWindowEmpty(sensor: String, device: String, windowDay: String, pass: String)
+    // A rescan pass found records the ledger had never seen: the field measurement of SensorKit's
+    // write lag (D-D). `ageDays` buckets the completion curve that tunes the rescan depth R.
+    case sensorRescanNovel(sensor: String, device: String, ageDays: Int, novelCount: Int)
+    // An `SRDeletionRecord` observed during a rescan pass: the gap is permanent and the OS named
+    // the reason — as opposed to a gap that may still fill on a later rescan (S10).
+    case sensorDeletionRecord(sensor: String, reason: String, spanSeconds: Int)
+    // A record whose fingerprint is new but whose measurement period overlaps one already in the
+    // upload ledger: SensorKit re-fetch boundary drift (S7), measured — never prevented (D13).
+    case sensorNearDuplicate(sensor: String, count: Int)
+    // iOS refused to draw the authorization prompt for a sensor that was asked (fast auto-decline
+    // outside a master-switch-off round): the empirical entitlement fallback firing (D6).
+    case sensorRefused(sensor: String)
+    // The deepest (oldest) window that ever returned data for a sensor+device: the MEASURED OS
+    // retention (AC1), so the real horizon is a number, not an assumption.
+    case sensorDeepestWindow(sensor: String, windowDay: String)
+    // Records dropped client-side before upload (consent gate, unreadable measurement time):
+    // deliberate, but never silent (AC6). `reason` "join_boundary" is a SUB-count of
+    // "consent_gate": report records whose derived period start fell below the join bound by
+    // less than one report period — the drops the X3 timestamp-semantics ambiguity may be
+    // costing (FUAM-3945 fidelity audit).
+    case sensorRecordDropped(sensor: String, count: Int, reason: String)
+    // FUAM-3945 fidelity audit (X1). A mapped record carried entries whose documented field the
+    // OS did not populate (today: device-usage `applications[]` without `usage_s`). `missing`
+    // out of `total` entries, so whether iOS withholds per-app usage is a measurable Firebase
+    // ratio instead of an invisible production absence. Entries are never dropped for this.
+    case sensorFieldMissing(sensor: String, field: String, missing: Int, total: Int)
+    // The window/batch partition fell back to UTC because no backend-authoritative
+    // `user.time_zone` was available (AC2 revised): the partition may not match the adherence
+    // chart's bucketing until the user record loads. Once per launch.
+    case sensorTimezoneFallback(reason: String)
 
     // Errors
     case serverError(apiError: ApiError)

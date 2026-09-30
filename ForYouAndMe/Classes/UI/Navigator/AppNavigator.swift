@@ -1378,7 +1378,7 @@ class AppNavigator {
                                                handler: { [weak self] _ in self?.openSettings() })
 
             let sensorsList = missingSensors
-                .map { self.displayName(for: $0) }
+                .map { Self.displayName(for: $0) }
                 .sorted()
                 .joined(separator: ", ")
 
@@ -1418,7 +1418,8 @@ class AppNavigator {
     /// Resolve a user-facing display name for a SensorKit sensor by looking up the
     /// matching study string. Falls back to the sensor's `rawValue` when the study
     /// key is missing or empty (e.g. before the BE seed lands).
-    private func displayName(for sensor: SRSensor) -> String {
+    /// `static` so the mapping is unit-testable without an `AppNavigator` instance.
+    static func displayName(for sensor: SRSensor) -> String {
         let key: StringKey? = {
             switch sensor {
             case .accelerometer:       return .permissionSensorKitNameAccelerometer
@@ -1427,6 +1428,11 @@ class AppNavigator {
             case .phoneUsageReport:    return .permissionSensorKitNamePhoneUsage
             case .messagesUsageReport: return .permissionSensorKitNameMessagesUsage
             case .keyboardMetrics:     return .permissionSensorKitNameKeyboardMetrics
+            // FUAM-3945 round 8: without these three, the settings alert showed participants raw
+            // values like "com.apple.SensorKit.pedometerData".
+            case .pedometerData:       return .permissionSensorKitNamePedometer
+            case .ambientLightSensor:  return .permissionSensorKitNameAmbientLight
+            case .ambientPressure:     return .permissionSensorKitNameAmbientPressure
             default: return nil
             }
         }()
