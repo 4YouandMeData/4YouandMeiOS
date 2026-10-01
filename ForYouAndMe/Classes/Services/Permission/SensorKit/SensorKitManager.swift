@@ -1049,8 +1049,17 @@ final class SensorRefusalStore {
 }
 
 extension SRSensor {
-    /// Returns a compact, snake_case subsource (e.g., "accelerometer", "rotation_rate").
+    /// Returns the backend `sensor_kit` subsource (e.g., "accelerometer", "rotation_rate").
+    /// Derived from the last component of Apple's raw identifier, snake_cased, except where that
+    /// component does not name the sensor (FUAM-4251): those are mapped explicitly to the names
+    /// in the backend allow-list (`app/lib/client_push.rb`).
     var shortSubsource: String {
+        switch self {
+        case .pedometerData: return "pedometer_data"             // com.apple.SensorKit.pedometer.data
+        case .ambientLightSensor: return "ambient_light_sensor"  // com.apple.SensorKit.als
+        case .rotationRate: return "rotation_rate"               // com.apple.SensorKit.motion.gyroscope
+        default: break
+        }
         let last = self.rawValue.split(separator: ".").last.map(String.init) ?? self.rawValue
         // camelCase -> snake_case, then normalize dashes
         var snake = ""

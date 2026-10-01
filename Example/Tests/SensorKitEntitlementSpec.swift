@@ -593,6 +593,77 @@ class SensorKitEntitlementSpec: QuickSpec {
                 expect(AppNavigator.displayName(for: .ambientPressure)) == "Air pressure"
             }
         }
+
+        // FUAM-4251: the upload subsource must be a name in the backend `sensor_kit` allow-list
+        // (4youandme `app/lib/client_push.rb`). Deriving it from Apple's raw identifier gave
+        // `data` (com.apple.SensorKit.pedometer.data), `als` and `gyroscope`.
+        describe("SRSensor.shortSubsource (FUAM-4251)") {
+
+            let backendAllowList: Set<String> = ["accelerometer", "device_usage_report", "keyboard_metrics",
+                                                 "messages_usage_report", "phone_usage_report", "visits",
+                                                 "media_events", "ambient_light_sensor", "ambient_pressure",
+                                                 "pedometer_data", "rotation_rate"]
+
+            func expectedMapping() -> [SRSensor: String] {
+                var mapping: [SRSensor: String] = [
+                    .accelerometer: "accelerometer",
+                    .rotationRate: "rotation_rate",
+                    .ambientLightSensor: "ambient_light_sensor",
+                    .ambientPressure: "ambient_pressure",
+                    .deviceUsageReport: "device_usage_report",
+                    .keyboardMetrics: "keyboard_metrics",
+                    .messagesUsageReport: "messages_usage_report",
+                    .phoneUsageReport: "phone_usage_report",
+                    .visits: "visits",
+                    .pedometerData: "pedometer_data"
+                ]
+                if #available(iOS 16.4, *) { mapping[.mediaEvents] = "media_events" }
+                return mapping
+            }
+
+            it("pins the subsource of every sensor the SDK has a mapper for") {
+                for (sensor, name) in expectedMapping() {
+                    expect(sensor.shortSubsource).to(equal(name), description: sensor.rawValue)
+                }
+            }
+
+            it("only ever produces names the backend accepts") {
+                for sensor in expectedMapping().keys {
+                    expect(backendAllowList).to(contain(sensor.shortSubsource))
+                }
+            }
+
+            it("covers every requested sensor") {
+                for sensor in Constants.SensorKit.RequestedSensors {
+                    expect(backendAllowList).to(contain(sensor.shortSubsource))
+                }
+            }
+
+            it("keeps the iPhone name bare and suffixes a paired device") {
+                let iphone = SensorDevice(device: nil, key: SensorDevice.iphoneKey, productType: "iPhone17,1", systemVersion: "26.0")
+                let watch = SensorDevice(device: nil, key: SensorDevice.watchKey, productType: "Watch7,2", systemVersion: "11.2")
+                expect(iphone.telemetryName(for: .pedometerData)) == "pedometer_data"
+                expect(watch.telemetryName(for: .pedometerData)) == "pedometer_data.watch"
+            }
+
+            it("sends the mapped name as the upload's sensor") {
+                let adapter = CapturingSensorNetworkAdapter()
+                let bridge = SensorNetworkBridge(adapter: adapter)
+                _ = bridge.uploadSensorBatch(sensor: .pedometerData, payload: []).subscribe()
+                expect(adapter.bodies.first?["sensor"] as? String) == "pedometer_data"
+                expect(adapter.sources.first) == "sensor_kit"
+            }
+        }
+    }
+}
+
+private final class CapturingSensorNetworkAdapter: SensorKitManagerNetworkDelegate {
+    var bodies: [[String: Any]] = []
+    var sources: [String] = []
+    func uploadSensorNetworkData(_ data: [String: Any], source: String) -> Single<()> {
+        self.bodies.append(data)
+        self.sources.append(source)
+        return .just(())
     }
 }
 
