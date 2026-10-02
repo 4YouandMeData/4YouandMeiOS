@@ -68,6 +68,50 @@ class DiaryNoteTextViewController: UIViewController {
         let isFirstSaveInThisVC = !isEditMode && !wasJustCreatedHere
         return !noteExists || isFirstSaveInThisVC
     }
+
+    // FUAM-4255 — What the emoji-confirm callback (`emojiButtonTapped`) actually does
+    // with a confirmed pick, extracted to a pure function so the real decision is
+    // directly testable: `DiaryNoteTextViewController` reads `Services.shared.*`
+    // singletons from `init`, which aren't reliably wired during unit-test execution
+    // (same constraint documented in HotFlashFlowSpec), so instantiating the VC itself
+    // is impractical here.
+    enum EmojiConfirmAction {
+        /// Not yet persisted (or confirming no change): hold the pick locally, no
+        /// network call. Save attaches it to the create POST (`noteToCreate` below).
+        case hold
+        /// An existing note, confirmed to the emoji it already has: nothing to do.
+        case skipUnchanged
+        /// An existing note, emoji actually changed: PATCH this exact note.
+        case patch(DiaryNoteItem)
+    }
+
+    static func emojiConfirmAction(confirmedEmoji: EmojiItem?,
+                                   currentDiaryNote: DiaryNoteItem?,
+                                   noteExists: Bool,
+                                   isEditMode: Bool,
+                                   wasJustCreatedHere: Bool) -> EmojiConfirmAction {
+        guard !mustSendInsteadOfUpdate(noteExists: noteExists, isEditMode: isEditMode, wasJustCreatedHere: wasJustCreatedHere),
+              var diaryNote = currentDiaryNote else {
+            return .hold
+        }
+        // FUAM-3857: confirming the note's current emoji again - skip the request.
+        guard !diaryNote.feedbackTagIsUnchanged(by: confirmedEmoji) else {
+            return .skipUnchanged
+        }
+        diaryNote.feedbackTagsToDestroy = diaryNote.feedbackTags ?? []
+        diaryNote.feedbackTagToSet = confirmedEmoji
+        return .patch(diaryNote)
+    }
+
+    // FUAM-4255 — The exact note Save POSTs when creating: the typed body plus,
+    // when one is held, the emoji on `feedbackTagToSet`. This is what makes the
+    // emoji travel IN the create request instead of a follow-up PATCH against a
+    // note the server has never seen. Extracted so this is directly testable.
+    static func noteToCreate(baseNote: DiaryNoteItem, heldEmoji: EmojiItem?) -> DiaryNoteItem {
+        var note = baseNote
+        note.feedbackTagToSet = heldEmoji
+        return note
+    }
     
     private var isReflectionLinkedNote: Bool {
         guard reflectionCoordinator != nil else { return false }
@@ -482,7 +526,7 @@ class DiaryNoteTextViewController: UIViewController {
             // a PATCH targets a server record id, and a brand-new note has none yet
             // (the create-then-PATCH pattern this replaced is exactly what 404s on a
             // chart-started placeholder note).
-            noteToSave.feedbackTagToSet = self.selectedEmoji
+            noteToSave = Self.noteToCreate(baseNote: noteToSave, heldEmoji: self.selectedEmoji)
 
             repository.sendDiaryNoteText(diaryNote: noteToSave, fromChart: isLinked)
                 .addProgress()
@@ -560,17 +604,15 @@ class DiaryNoteTextViewController: UIViewController {
             // pick locally; it travels IN the create POST on Save, never a follow-up
             // PATCH. For an existing note persist immediately via PATCH, then refetch
             // so feedbackTags carry the real server record ids for the next change.
-            // `mustSendInsteadOfUpdate` is the single predicate Save also uses, instead
-            // of a bare `diaryNote != nil` check that is true for the placeholder too.
-            guard !self.mustSendInsteadOfUpdate, var diaryNote = self.diaryNote else { return }
+            let action = Self.emojiConfirmAction(confirmedEmoji: confirmedEmoji,
+                                                  currentDiaryNote: self.diaryNote,
+                                                  noteExists: self.diaryNote != nil,
+                                                  isEditMode: self.isEditMode,
+                                                  wasJustCreatedHere: self.wasJustCreatedHere)
+            guard case .patch(let diaryNote) = action else { return }
 
-            // FUAM-3857: confirming the note's current emoji again - skip the request.
-            // No need to `reloadDiaryNoteFromServer()` either: nothing changed server-side.
-            guard !diaryNote.feedbackTagIsUnchanged(by: confirmedEmoji) else { return }
-
-            diaryNote.feedbackTagsToDestroy = diaryNote.feedbackTags ?? []
-            diaryNote.feedbackTagToSet = confirmedEmoji
-
+            // No need to `reloadDiaryNoteFromServer()` on `.skipUnchanged`: nothing
+            // changed server-side.
             self.repository.updateDiaryNoteText(diaryNote: diaryNote)
                 .addProgress()
                 .subscribe(onSuccess: { [weak self] in

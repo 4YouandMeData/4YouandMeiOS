@@ -1,5 +1,5 @@
 //
-//  SendDiaryNoteTextWithFeedbackSpec.swift
+//  DiaryNoteCreateNeverPatchesSpec.swift
 //  ForYouAndMe_Tests
 //
 //  FUAM-4255 — An emoji picked before a note exists must travel IN the create
@@ -11,6 +11,8 @@
 //
 //  Drives a real RepositoryImpl through a scripted FakeApiGateway and asserts
 //  both the note handed to the POST and that no PATCH is ever issued for it.
+//  Covers the repository/network layer; DiaryNoteEmojiCreateFlowSpec covers the
+//  view-controller-level decision of whether an emoji is held or PATCHed at all.
 //
 
 import Quick
@@ -18,9 +20,9 @@ import Nimble
 import RxSwift
 @testable import ForYouAndMe
 
-class SendDiaryNoteTextWithFeedbackSpec: QuickSpec {
+class DiaryNoteCreateNeverPatchesSpec: QuickSpec {
     override class func spec() {
-        describe("RepositoryImpl.sendDiaryNoteText with a held emoji") {
+        describe("RepositoryImpl.sendDiaryNoteText never issues a follow-up PATCH") {
 
             var api: FakeApiGateway!
             var repository: RepositoryImpl!
