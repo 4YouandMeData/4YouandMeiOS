@@ -78,18 +78,30 @@ struct Constants {
         #if DEBUG
         // Test Values
         static let UploadSequenceTimeInterval: TimeInterval = 60// 1 min
-        static let SamplesStartDateTimeInThePast: TimeInterval = 7 * 24 * 60 * 60 // 1 week
         static let PendingUploadExpireTimeInterval: TimeInterval = 30// 30 seconds
         #else
         // Production Values
         static let UploadSequenceTimeInterval: TimeInterval = 60 * 60 // 1 hour
-        static let SamplesStartDateTimeInThePast: TimeInterval = 7 * 24 * 60 * 60 // 1 week
         static let PendingUploadExpireTimeInterval: TimeInterval = 10 * 60// 10 min
         #endif
         static let EnableDebugLog: Bool = false
         static let ConnectionAvailabilityForUpload: [ReachabilityServiceType] = [.wifi, .cellular]
         
         static let AppleWatchUserDataAggregationStrategyPrefix: String = "apple_watch"
+
+        // MARK: FUAM-3945 payload-size defence
+
+        /// A chunk whose serialized samples pass this size is not sent: its TIME window is halved
+        /// and each half retried. The server caps one request at 10 MB (`MAX_PAYLOAD_SIZE`); the
+        /// margin covers the request envelope and any encoding we do not model exactly.
+        static let MaxUploadPayloadBytes: Int = 8 * 1024 * 1024
+        /// Floor of that bisection: a sub-window this short is forfeited (and reported) rather
+        /// than halved again, so a single pathological sample cannot halve for ever. A 1-day
+        /// chunk reaches it in 6 halvings, a 1-hour chunk in 2.
+        static let MinimumChunkDuration: TimeInterval = 15 * 60
+        /// Attempts allowed on ONE chunk before the data type is left for the next sequence with
+        /// its cursor untouched. Bounds the connectivity retry loop as well.
+        static let MaxChunkUploadAttempts: Int = 5
     }
     struct Misc {
         static let EnableGlobalConfigCache = false

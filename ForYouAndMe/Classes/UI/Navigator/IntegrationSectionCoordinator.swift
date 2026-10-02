@@ -76,17 +76,18 @@ extension IntegrationSectionCoordinator: PagedSectionCoordinator {
     
     var pages: [Page] { self.sectionData.pages }
     
-    /// FUAM-4045. The welcome page is the section's only entry point: the loose
-    /// `pages` are reachable exclusively via the page links of the welcome (or
-    /// success) page, never as an automatic first step or a fallback. A section
-    /// without a welcome page is therefore skipped before the coordinator is
-    /// ever built (see `OnboardingSection.getAsyncCoordinatorRequest`).
+    /// FUAM-4036. The section starts at the welcome page, else at the success
+    /// page (whose primary button completes the step, see
+    /// `performCustomPrimaryButtonNavigation`). The loose `pages` are reachable
+    /// exclusively via page links, never as an automatic first step or a
+    /// fallback. A section with neither page is skipped before the coordinator
+    /// is ever built (see `OnboardingSection.getAsyncCoordinatorRequest`).
     func getStartingPage() -> UIViewController {
-        guard let welcomePage = self.sectionData.welcomePage else {
-            assertionFailure("Integration section without a welcome page should have been skipped")
+        guard let startingPage = self.sectionData.startingPage else {
+            assertionFailure("Integration section without welcome and success pages should have been skipped")
             return UIViewController()
         }
-        return IntegrationPageViewController(withPage: welcomePage, coordinator: self, backwardNavigation: false)
+        return IntegrationPageViewController(withPage: startingPage, coordinator: self, backwardNavigation: false)
     }
     
     func showPage(_ page: Page) {
@@ -94,6 +95,24 @@ extension IntegrationSectionCoordinator: PagedSectionCoordinator {
         self.navigationController.pushViewController(viewController,
                                                      hidesBottomBarWhenPushed: self.hidesBottomBarWhenPushed,
                                                      animated: true)
+    }
+    
+    /// FUAM-4036. Replaces the default `PagedSectionCoordinator` lookup, which
+    /// only searches `pages` and dead-ends on an unknown id. A link to the
+    /// success page id goes to the success page (shown once, its primary button
+    /// completes the step); a link to an id missing from the payload ends the
+    /// chain like a page without links does.
+    func showLinkedPage(forPageRef pageRef: PageRef) {
+        let previousController = self.navigationController.viewControllers.reversed().first { viewController -> Bool in
+            return (viewController as? PageProvider)?.page.id == pageRef.id
+        }
+        if let previousController = previousController {
+            self.navigationController.popToViewController(previousController, animated: true)
+        } else if let nextPage = self.sectionData.linkedPage(forPageRef: pageRef) {
+            self.showPage(nextPage)
+        } else {
+            self.showSuccessPageOrComplete()
+        }
     }
     
     func performCustomPrimaryButtonNavigation(page: Page) -> Bool {
@@ -105,6 +124,11 @@ extension IntegrationSectionCoordinator: PagedSectionCoordinator {
     }
     
     func onUnhandledPrimaryButtonNavigation(page: Page) {
+        self.showSuccessPageOrComplete()
+    }
+    
+    /// End of the link chain: the success page if there is one, otherwise the step is complete.
+    private func showSuccessPageOrComplete() {
         if let successPage = self.sectionData.successPage {
             self.showPage(successPage)
         } else {

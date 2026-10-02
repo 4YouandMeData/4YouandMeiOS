@@ -445,7 +445,7 @@ end
 
 ### SensorKit (Optional)
 
-ForYouAndMe supports collecting SensorKit data (accelerometer, visits, usage reports, media events on iOS 16.4+, keyboard metrics, etc.) independently of HealthKit. Enabling SensorKit is gated by its own `SENSORKIT` Swift compilation condition — set it alongside `HEALTHKIT` (or on its own) in your Podfile's `post_install` block.
+ForYouAndMe supports collecting SensorKit data (pedometer, ambient light, ambient pressure, visits, usage reports, media events on iOS 16.4+, keyboard metrics, etc.) independently of HealthKit. Enabling SensorKit is gated by its own `SENSORKIT` Swift compilation condition — set it alongside `HEALTHKIT` (or on its own) in your Podfile's `post_install` block.
 
 1.  Add Apple's SensorKit framework entitlement request to your provisioning profile (see [Apple's SensorKit documentation](https://developer.apple.com/documentation/sensorkit)).
 
@@ -469,11 +469,56 @@ If you want both subsystems, set both:
 config.build_settings['SWIFT_ACTIVE_COMPILATION_CONDITIONS'] = '$(inherited) HEALTHKIT SENSORKIT'
 ```
 
-3.  The set of SensorKit sensors collected by the pod is defined in `Constants.SensorKit.RequestedSensors`, intersected with the mappers wired up in `Services.setup(...)`. Update those if you need a different sensor list.
+3.  The set of SensorKit sensors collected by the pod is defined in `Constants.SensorKit.RequestedSensors`, intersected with the mappers wired up in `Services.setup(...)`. Update those if you need a different sensor list. A sensor your provisioning profile is not entitled to simply fails its own authorization request and is skipped — authorization is asked for one sensor at a time, so it cannot break the others.
 
-#### Backfill window & retention floor
+    **The raw high-rate motion sensors are deliberately disabled** (`accelerometer`, `rotationRate`). At archive sample rates a 24h window produces a volume the pipeline cannot carry (the whole window is mapped in memory before batching), which stalls every other sensor behind it. Re-enabling either one requires minute-scale windows, a per-window sample cap and a real on-disk queue store — not just uncommenting the mapper.
 
-The SDK backfills each sensor from `max(enrollmentDate, now - retentionFloor)` up to the 24h SensorKit embargo, and never transmits a record measured before the participant's enrollment date (HealthKit backfills from the enrollment date directly — it has no OS retention limit). `retentionFloor` (`SensorSampleUploadManager.retentionFloor`, currently 7 days) is an **unmeasured assumption**: Apple does not document how long SensorKit retains data on-device. If device testing shows a different real retention period, tune that single constant.
+#### Backfill window: study join day + 365-day hard cap
+
+Both subsystems share one lower-bound policy (`BackfillLowerBound`, `Classes/Services/Permission/BackfillLowerBound.swift`):
+
+```
+joinDay    = start of the participant's study-entry day, in the participant's timezone
+             (derived from the backend's days_in_study), or nil if it cannot be established
+lowerBound = joinDay == nil ? now                              // forward-only
+                            : max(joinDay, now - 365 days)
+```
+
+SensorKit backfills from that bound up to the 24h SensorKit embargo; HealthKit backfills from the same bound up to now. Two rules are absolute, enforced both as the window bound and as a per-record filter on measurement timestamps:
+
+1. **Nothing older than 365 days** is ever transmitted.
+2. **Nothing measured before the participant joined the study in this app** is ever transmitted. The HealthKit and SensorKit stores are device-wide and survive reinstalls, so the same OS store can hold data belonging to a different participant or to an earlier enrolment.
+
+When the join day cannot be established (no user record, or `days_in_study <= 0`, which is the backend's "no usable consent"), collection is **forward-only**: no history is uploaded at all, and the local upload cursor is left untouched so the real backfill still happens once the join day resolves. There is no legacy-window fallback, and the `FYAMHealthKitIgnoreOptInConsent` / `FYAMSensorKitIgnoreOptInConsent` host flags cannot widen this bound.
+
+There is deliberately **no assumed SensorKit retention floor** any more (FUAM-3945 removed FUAM-3841's 7-day `retentionFloor`, which capped every already-enrolled participant's reach at 7 days). Over-requesting is free: `SRSensorReader.fetch` simply returns nothing for a window the OS has already dropped. Apple's real on-device retention is therefore measured, not assumed: the `sensor_data_backfill_reach` analytics event reports how far back the client asked (`bounded_by` ∈ `join_date`, `hard_cap_365d`, `forward_only`, `empty_plan`, `gave_up`, `drain_filtered`; the `cursor` origin is carried in the plan but deliberately never emitted — a routine cursor resume is not a backfill), and the oldest sample that actually arrives is the OS limit.
+
+#### Window shape: complete UTC calendar days (SensorKit)
+
+Every SensorKit sensor is windowed on **complete UTC calendar days** — `[00:00 UTC, next 00:00 UTC)` — and a day is only planned once its end is at or before the embargo cutoff, so a day is fetched once and never re-fetched in slices. Combined with Apple's 24h holding period the accepted latency is up to ~48h.
+
+A fetch window selects on the OS's **write** time, so this alignment does not change *which* data is collected, only how it is cut. Cutting on UTC makes the boundaries independent of the participant's timezone (and of travel, and of a reinstall), which is what makes the boundaries — and therefore the backend's semantic anchors — reproducible.
+
+A cursor left by an older build sits at an arbitrary instant. The first plan after upgrading emits **one partial migration window** `[cursor, next UTC midnight)`, and whole UTC days from then on. It is forward-only and the cursor it leaves behind is aligned, so it happens exactly once per device.
+
+**Device clock changes.** The join day is derived from **server time** (`ServerClock`), not from the device clock: every backend response carries a standard HTTP `Date` header, and the offset `serverTime − deviceTime` is persisted and applied. Winding the device clock in either direction therefore no longer moves the consent boundary. (Before FUAM-3964 a monotonic high-water mark protected only the backward direction, and a forward jump suspended collection until real time caught up.) The same server time also **caps the planning upper bound** in both subsystems (`min(deviceNow, serverNow)`), so a device clock in the future can never plan a window — and therefore never write a cursor — past server time; the machinery self-heals: the cap resumes as soon as the clock is sane, and a cursor that an offline excursion burnt into the future is detected at plan time (more than a day above the capped upper bound), reported as `sensor_data_backfill_reach` with `bounded_by = future_cursor` carrying the corrupt cursor, and reset to the consent bound so the skipped range is re-fetched — the only place a cursor is ever rewound, safe because UTC-day windows make the re-walk reproduce the same anchors and union-merge server-side. What is never repaired is the DATA: a measurement timestamp the OS recorded under a wrong clock stays wrong for ever. Fetch requests to the OS still use device wall-clock, because both stores are indexed with the same clock that wrote the samples. With no offset ever learnt (first launch, offline) everything falls back to `Date()`. A divergence over 24h emits `sensor_data_clock_ahead` (parameters `clock_mark` = server time, `device_now` = device time) once per launch.
+
+What this does **not** repair: a measurement timestamp the OS recorded under a wrong clock is wrong for ever. The consent filter and the backend's future-anchor plausibility check are the guards there; server time fixes the machinery (bounds, cursor), not historical samples.
+
+#### Per-device fetching: iPhone and paired Apple Watch (SensorKit)
+
+SensorKit stores iPhone data and paired-Apple-Watch data separately, and a fetch request targets **one** device (`SRFetchRequest.device`, defaulting to the current device). The SDK therefore enumerates the devices that hold data for each sensor (`SRSensorReader.fetchDevices()`) and walks them one at a time.
+
+- **Devices are identified by KIND, not by instance**: `"iphone"` for the device the app runs on, `"watch"` for a paired Watch (`SRDevice` exposes no stable identifier, Apple is blinding `name`, and `productType` changes when the participant upgrades their Watch). A Watch upgrade therefore inherits the existing watch cursor, and two Watches paired to one iPhone share one cursor and one window plan.
+- **Cursors are per sensor AND per device kind.** The iPhone keeps the existing unsuffixed key (`sensorkit.cursor.<sensor>`); other kinds are suffixed (`sensorkit.cursor.<sensor>.watch`). There is no migration step, and downgrading to an older build is safe — it reads exactly the key it always wrote.
+- **A 48h holdback applies to non-current devices.** Watch→iPhone SensorKit sync is opportunistic and its cadence is undocumented, so a UTC day is only planned for the Watch once it has had time to sync (`safeTo = min(deviceNow, serverNow) − max(24h embargo, 48h holdback)`, still snapped to complete UTC days). A Watch that stays offline longer than that loses those days from the watch stream only; the iPhone stream is untouched.
+- **One subsource per sensor, one tag per record.** Nothing changes on the wire except three additive fields inside each record: `device_kind` (`iphone` / `watch`), `device_product_type` (iOS 17+ only) and `device_os_version`. `SRDevice.name` is deliberately never sent.
+- **Device chains are isolated and strictly sequential.** Each sensor's mappers are single-flight, so a sensor's devices are fetched one after the other, never in parallel. Failure counters and give-up decisions are per sensor+device, so a poison Watch window can never stall the iPhone chain — and vice versa. Losing consent mid-flight still aborts every device chain, since consent is not per device.
+- **`sensor_data_backfill_reach` gains the device dimension**: the iPhone keeps the bare sensor name (existing series stay continuous), other kinds are reported as `<sensor>.<kind>`, so reach is observable per sensor and device.
+- **Enumeration is data-driven with one exception**: the high-rate `accelerometer` and `rotationRate` sensors are never enumerated (they are disabled today; re-enabling one and fetching it from a Watch stay two separate decisions). Everything else takes whatever `fetchDevices()` returns; if nothing has been enumerated yet, or the enumeration fails, the pipeline behaves exactly as it did before — iPhone only.
+
+No new entitlement and no new `Info.plist` key: SensorKit authorization is per app + sensor, with no per-device grant anywhere in the API, so a granted sensor already covers the paired Watch's store.
+
 
 ### Collecting HealthKit/SensorKit without an opt-in consent card (Optional)
 

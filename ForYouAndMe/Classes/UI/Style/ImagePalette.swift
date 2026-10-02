@@ -62,6 +62,9 @@ enum ImageName: String, CaseIterable {
     case pushNotificationIcon = "push_notification_icon"
     case locationIcon = "location_icon"
     case healthIcon = "health_icon"
+    // FUAM-3945 (cell bug S3): dedicated SensorKit permission-row icon. Presence-based and
+    // host-overridable (host bundle first, framework second); the row falls back to
+    // `healthIcon` when no asset resolves, so it is deliberately in `optionalImages`.
     case sensorKitIcon = "sensor_kit_icon"
     case textNoteListImage = "text_note_list_image"
     case audioNoteListImage = "audio_note_list_image"
@@ -191,7 +194,7 @@ public class ImagePalette {
         // Optional, host-injectable images that are absent for most studies and must not
         // trip the availability assertion (the welcome-screen partner logo is presence-based).
         // Note: the `fallbacks` slots need no exemption — they resolve through `mainLogo`.
-        let optionalImages: Set<ImageName> = [.partnerLogo, .cziLogo]
+        let optionalImages: Set<ImageName> = [.partnerLogo, .cziLogo, .sensorKitIcon]
         ImageName.allCases
             .filter { !optionalImages.contains($0) }
             .forEach { imageName in

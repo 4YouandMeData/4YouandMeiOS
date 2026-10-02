@@ -152,7 +152,7 @@ class NetworkApiGateway: ApiGateway {
     func send<T: JSONAPIMappable, E: Mappable>(request: ApiRequest, errorType: E.Type) -> Single<T> {
         self.sendShared(request: request, errorType: errorType)
             .flatMap { response in
-                Single.just(response).mapCodableJSONAPI(includeList: T.includeList, keyPath: T.keyPath)
+                Single.just(response).map { try $0.mapJSONAPIMappable(T.self) }
                     .handleMapError(api: self, request: request, response: response)
             }
     }
@@ -160,7 +160,7 @@ class NetworkApiGateway: ApiGateway {
     func send<T: JSONAPIMappable, E: Mappable>(request: ApiRequest, errorType: E.Type) -> Single<T?> {
         self.sendShared(request: request, errorType: errorType)
             .flatMap { response in
-                Single.just(response).mapCodableJSONAPI(includeList: T.includeList, keyPath: T.keyPath)
+                Single.just(response).map { try $0.mapJSONAPIMappable(T.self) as T? }
                     .handleMapError(api: self, request: request, response: response)
             }
             .catch { error in
@@ -256,6 +256,7 @@ fileprivate extension PrimitiveSequence where Trait == SingleTrait, Element == R
                     // Uncomment this to print the whole response data
 //                    print("Network Body: \(String(data: response.data, encoding: .utf8) ?? "")")
                     self.handleAccessToken(response: response, storage: api.storage)
+                    self.handleServerDate(response: response)
                     return Single.just(response)
                 } else {
                     if 400 ... 499 ~= response.statusCode {
@@ -291,6 +292,17 @@ fileprivate extension PrimitiveSequence where Trait == SingleTrait, Element == R
             }
     }
     
+    /// FUAM-3964: every backend response carries a standard HTTP `Date` header. Learning
+    /// `serverTime - deviceTime` from it here — the same place the Authorization header is
+    /// harvested — is what lets the backfill machinery stop trusting the device clock (see
+    /// `ServerClock`). Harmless if a proxy strips the header: the offset simply never moves.
+    private func handleServerDate(response: Response) {
+        // `value(forHTTPHeaderField:)` rather than the `allHeaderFields` subscript: HTTP header
+        // names are case-insensitive and an HTTP/2 backend or proxy legitimately sends `date`,
+        // which the exact-match subscript misses (iOS 13+).
+        ServerClock.record(headerDate: response.response?.value(forHTTPHeaderField: "Date"))
+    }
+
     private func handleAccessToken(response: Response, storage: NetworkStorage) {
         if var accessToken = response.response?.allHeaderFields["Authorization"] as? String {
             accessToken = accessToken.replacingOccurrences(of: "Bearer ", with: "")
@@ -895,9 +907,14 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
                 dataParams["diary_noteable_type"] = diaryNote.diaryNoteable?.type
                 dataParams["diary_noteable_id"] = diaryNote.diaryNoteable?.id
                 dataParams["interval"] = diaryNote.interval
+                // FUAM-4255 — an emoji picked before this chart-linked note exists rides
+                // along in the CREATE request itself (no PATCH on a client-side id).
+                if let tag = diaryNote.feedbackTagToSet {
+                    dataParams["feedback_tags_attributes"] = [["tag": tag.tag]]
+                }
                 return .requestParameters(parameters: ["diary_note": dataParams], encoding: JSONEncoding.default)
             }
-            
+
             return .requestJSONEncodable(diaryNote)
         case .sendDiaryNoteEaten(let data):
             var payloadData: [String: Any] = [:]

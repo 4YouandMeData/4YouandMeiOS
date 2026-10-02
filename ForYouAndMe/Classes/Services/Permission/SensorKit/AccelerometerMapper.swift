@@ -26,6 +26,7 @@ final class AccelerometerMapper: NSObject, SensorSampleMapper {
     private let reader = SRSensorReader(sensor: .accelerometer)
     private var pendingCompletion: ((Result<[[String: Any]], Error>) -> Void)?
     private var collected = [[String: Any]]()
+    private var fetchedResults = 0
 
     // Apple withholds last 24h of SensorKit data (absolute hours)
     private static let holdingPeriod: TimeInterval = 24 * 60 * 60
@@ -51,6 +52,7 @@ final class AccelerometerMapper: NSObject, SensorSampleMapper {
     func fetchAndMap(
         from: Date,
         to: Date,
+        device: SensorDevice,
         completion: @escaping (Result<[[String: Any]], Error>) -> Void
     ) {
         // Avoid concurrent fetches
@@ -60,7 +62,13 @@ final class AccelerometerMapper: NSObject, SensorSampleMapper {
         }
 
         // Enforce embargo: do not read within last 24h
-        let embargoCutoff = Date().addingTimeInterval(-Self.holdingPeriod)
+        // F10 (review round 1; wording corrected round 3): the best clock available, not the raw
+        // device clock. An improvement, not immunity: ServerClock.now() is Date() + storedOffset,
+        // so a rollback lowers BOTH operands until the next API response re-records the offset —
+        // inside that gap the cutoff can still truncate the planned span (the manager would treat
+        // the partial result as the whole window). The planner owns embargo policy; this stays as
+        // defence in depth.
+        let embargoCutoff = max(Date(), ServerClock.now()).addingTimeInterval(-Self.holdingPeriod)
         let safeTo = min(to, embargoCutoff)
         guard from < safeTo else {
             completion(.success([]))
@@ -69,11 +77,13 @@ final class AccelerometerMapper: NSObject, SensorSampleMapper {
 
         // Build request
         let req = SRFetchRequest()
-        req.device = SRDevice.current
+        // FUAM-3945: iPhone or paired Watch — the manager walks one device at a time.
+        req.device = device.fetchTarget
         req.from = from.srAbsoluteTime
         req.to = safeTo.srAbsoluteTime
 
         collected.removeAll(keepingCapacity: true)
+        fetchedResults = 0
         pendingCompletion = completion
         reader.delegate = self
         reader.fetch(req)
@@ -96,14 +106,23 @@ extension AccelerometerMapper: SRSensorReaderDelegate {
             return iso.string(from: dateFromSRAbsoluteTime(result.timestamp))
         }()
 
+        fetchedResults += 1
+
+        var records: [[String: Any]] = []
         if let list = result.sample as? CMSensorDataList {
             for element in FastEnumerationSequence(base: list) {
                 guard let item = element as? CMRecordedAccelerometerData else { continue }
-                appendRecord(from: item, recordedAtISO: recordedAtISO)
+                records.append(record(from: item, recordedAtISO: recordedAtISO))
             }
         } else if let item = result.sample as? CMRecordedAccelerometerData {
-            appendRecord(from: item, recordedAtISO: recordedAtISO)
+            records.append(record(from: item, recordedAtISO: recordedAtISO))
         }
+        // FUAM-3945: ledger identity — the raw monotonic timestamp, never its wall
+        // projection (see SensorRecordIdentity). The raw value ships only when it identifies a
+        // single record; list siblings share it.
+        collected.append(contentsOf: SensorRecordIdentity.stampedResult(records,
+                                                                         raw: result.timestamp,
+                                                                         replacing: ["recorded_at"]))
         // Keep fetching subsequent chunks
         return true
     }
@@ -112,7 +131,7 @@ extension AccelerometerMapper: SRSensorReaderDelegate {
         _ reader: SRSensorReader,
         didCompleteFetch fetchRequest: SRFetchRequest
     ) {
-        finish(.success(collected))
+        finish(self.classifyFetchOutcome(collected: collected, fetchedResults: fetchedResults))
     }
 
     func sensorReader(
@@ -126,23 +145,21 @@ extension AccelerometerMapper: SRSensorReaderDelegate {
     // MARK: - Helpers
 
     /// Build one JSON record from a CMRecordedAccelerometerData sample.
-    private func appendRecord(from sample: CMRecordedAccelerometerData, recordedAtISO: String) {
+    private func record(from sample: CMRecordedAccelerometerData, recordedAtISO: String) -> [String: Any] {
         // CMAcceleration is expressed in g's (unitless gravitational acceleration).
         let a = sample.acceleration
         let iso = ISO8601DateFormatter()
-        let record: [String: Any] = [
-            // Sample timestamp (when motion was measured)
+        return [
+            // Sample timestamp (when motion was measured) — a stored Foundation date,
+            // fetch-stable, so it stays in the ledger fingerprint untouched.
             "t": iso.string(from: sample.startDate),
             // Batch record time from SRFetchResult.timestamp (useful for auditing)
             "recorded_at": recordedAtISO,
             // Raw axes
             "x": a.x,
             "y": a.y,
-            "z": a.z,
-            // Device tag
-            "device_kind": "iphone"
+            "z": a.z
         ]
-        collected.append(record)
     }
 
     /// Centralized cleanup + callback.

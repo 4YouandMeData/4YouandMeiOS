@@ -16,23 +16,24 @@ private func dateFromSRAbsoluteTime(_ srTime: SRAbsoluteTime) -> Date {
 // MARK: - Mapper
 
 /// Maps SensorKit SRDeviceUsageReport into JSON-ready dictionaries.
-/// NOTE: authorization e startRecording() sono gestiti altrove.
+/// NOTE: authorization and startRecording() are handled elsewhere.
 final class DeviceUsageReportMapper: NSObject, SensorSampleMapper {
 
-    // SRSensor di competenza
+    // The SRSensor this mapper owns
     var sensor: SRSensor { .deviceUsageReport }
 
-    // Reader dedicato
+    // Dedicated reader
     private let reader = SRSensorReader(sensor: .deviceUsageReport)
 
-    // Stato richiesta corrente (evita concorrenza)
+    // Current request state (single-flight: no concurrent fetch)
     private var pendingCompletion: ((Result<[[String: Any]], Error>) -> Void)?
     private var collected = [[String: Any]]()
+    private var fetchedResults = 0
 
-    // Apple impone un embargo di ~24h sui dati
+    // Apple embargoes the last ~24h of data
     private static let holdingPeriod: TimeInterval = 24 * 60 * 60
 
-    // Errori mapper
+    // Mapper errors
     private enum MapperError: LocalizedError {
         case busy
         case notAuthorized(status: SRAuthorizationStatus)
@@ -49,33 +50,42 @@ final class DeviceUsageReportMapper: NSObject, SensorSampleMapper {
 
     // MARK: - SensorSampleMapper
 
-    /// Esegue fetch [from, to) rispettando l’embargo 24h e mappa SRDeviceUsageReport.
+    /// Fetches [from, to) honouring the 24h embargo and maps SRDeviceUsageReport.
     func fetchAndMap(
         from: Date,
         to: Date,
+        device: SensorDevice,
         completion: @escaping (Result<[[String: Any]], Error>) -> Void
     ) {
-        // Evita crash su richieste concorrenti
+        // Avoid a crash on concurrent requests
         guard pendingCompletion == nil else {
             completion(.failure(MapperError.busy))
             return
         }
 
-        // Applica il cutoff: non leggere l’ultima 24h
-        let embargoCutoff = Date().addingTimeInterval(-Self.holdingPeriod)
+        // Apply the cutoff: never read the last 24h
+        // F10 (review round 1; wording corrected round 3): the best clock available, not the raw
+        // device clock. An improvement, not immunity: ServerClock.now() is Date() + storedOffset,
+        // so a rollback lowers BOTH operands until the next API response re-records the offset —
+        // inside that gap the cutoff can still truncate the planned span (the manager would treat
+        // the partial result as the whole window). The planner owns embargo policy; this stays as
+        // defence in depth.
+        let embargoCutoff = max(Date(), ServerClock.now()).addingTimeInterval(-Self.holdingPeriod)
         let safeTo = min(to, embargoCutoff)
         guard from < safeTo else {
             completion(.success([]))
             return
         }
 
-        // Costruzione SRFetchRequest
+        // Build the SRFetchRequest
         let req = SRFetchRequest()
-        req.device = SRDevice.current
+        // FUAM-3945: iPhone or paired Watch — the manager walks one device at a time.
+        req.device = device.fetchTarget
         req.from = from.srAbsoluteTime
         req.to = safeTo.srAbsoluteTime
 
         collected.removeAll(keepingCapacity: true)
+        fetchedResults = 0
         pendingCompletion = completion
         reader.delegate = self
         reader.fetch(req)
@@ -93,17 +103,22 @@ extension DeviceUsageReportMapper: SRSensorReaderDelegate {
     ) -> Bool {
         // Attach SRFetchResult.timestamp
         let recordedAt = dateFromSRAbsoluteTime(result.timestamp)
+        fetchedResults += 1
 
-        // Report aggregato (non CMSensorDataList)
+        // Aggregated report (not a CMSensorDataList)
         if let obj = result.sample as? NSObject,
            let rec = Self.mapDeviceUsage(obj, recordedAt: recordedAt) {
-            collected.append(rec)
+            // FUAM-3945: ledger identity — the raw monotonic timestamp, never its wall
+            // projection (see SensorRecordIdentity). Stripped before upload.
+            collected.append(SensorRecordIdentity.stamped(rec,
+                                                          raw: result.timestamp,
+                                                          replacing: ["recorded_at", "recorded_at_precise"]))
         }
-        return true // continua il fetch
+        return true // keep fetching
     }
 
     func sensorReader(_ reader: SRSensorReader, didCompleteFetch fetchRequest: SRFetchRequest) {
-        finish(.success(collected))
+        finish(self.classifyFetchOutcome(collected: collected, fetchedResults: fetchedResults))
     }
 
     func sensorReader(
@@ -126,9 +141,12 @@ extension DeviceUsageReportMapper: SRSensorReaderDelegate {
 
 // MARK: - Mapping (documented keys only, safe-KVC)
 
-private extension DeviceUsageReportMapper {
+// Internal (was private): the per-mapper recorded_at anchor-guard specs exercise the mapping
+// seams with KVC stand-ins (FUAM-3945 round 9, F1: a mapper regression dropping recorded_at
+// silently degrades the server row anchor to upload time).
+extension DeviceUsageReportMapper {
 
-    // Safe KVC: chiama value(forKey:) solo se il selettore esiste
+    // Safe KVC: only calls value(forKey:) when the selector exists
     static func valueIfResponds(_ obj: NSObject, _ key: String) -> Any? {
         let sel = NSSelectorFromString(key)
         guard obj.responds(to: sel) else { return nil }
@@ -159,6 +177,34 @@ private extension DeviceUsageReportMapper {
         return name.contains("DeviceUsageReport")
     }
 
+    /// FUAM-3945 fidelity audit, X5: symbolic name for a `SRDeviceUsageReport.NotificationUsage
+    /// .Event` raw value. Built by switching on the SDK enum cases, so the raw-value table is
+    /// the compiler's, not a hardcoded copy. Unlisted raw values (future OS cases) fall through
+    /// `@unknown default` and yield `nil` — the numeric `event` key still carries them.
+    static func notificationEventName(rawValue: Int) -> String? {
+        guard let event = SRDeviceUsageReport.NotificationUsage.Event(rawValue: rawValue) else { return nil }
+        switch event {
+        case .unknown: return "unknown"
+        case .received: return "received"
+        case .defaultAction: return "default_action"
+        case .supplementaryAction: return "supplementary_action"
+        case .clear: return "clear"
+        case .notificationCenterClearAll: return "notification_center_clear_all"
+        case .removed: return "removed"
+        case .hide: return "hide"
+        case .longLook: return "long_look"
+        case .silence: return "silence"
+        case .appLaunch: return "app_launch"
+        case .expired: return "expired"
+        case .bannerPulldown: return "banner_pulldown"
+        case .tapCoalesce: return "tap_coalesce"
+        case .deduped: return "deduped"
+        case .deviceActivated: return "device_activated"
+        case .deviceUnlocked: return "device_unlocked"
+        @unknown default: return nil
+        }
+    }
+
     static func categoryName(_ any: Any) -> String {
         // Try rawValue if it's an enum bridged to ObjC; fallback to description
         if let o = any as? NSObject,
@@ -168,15 +214,37 @@ private extension DeviceUsageReportMapper {
         return String(describing: any)
     }
 
+    /// FUAM-3945 fidelity audit, X1 telemetry seam: how many `applications[]` entries in the
+    /// given mapped records carry no `usage_s`, against the total number of entries — so
+    /// whether iOS actually hands over per-app usage becomes a measurable Firebase ratio
+    /// instead of an invisible production absence.
+    static func applicationUsageStats(in records: [[String: Any]]) -> (missing: Int, total: Int) {
+        var missing = 0
+        var total = 0
+        for record in records {
+            guard let apps = record["applications"] as? [[String: Any]] else { continue }
+            total += apps.count
+            missing += apps.filter { $0["usage_s"] == nil }.count
+        }
+        return (missing, total)
+    }
+
     // MARK: Top-level mapping
 
     static func mapDeviceUsage(_ obj: NSObject, recordedAt: Date?) -> [String: Any]? {
         guard isDeviceUsageObject(obj) else { return nil }
         let iso = ISO8601DateFormatter()
-        var rec: [String: Any] = ["device_kind": "iphone"]
+        var rec: [String: Any] = [:]
 
         // Timestamps
-        if let ts = recordedAt { rec["recorded_at"] = iso.string(from: ts) }
+        if let ts = recordedAt {
+            // `recorded_at` stays whole-second verbatim: the server derives every row anchor
+            // from it and historical rows are whole-second (FUAM-3945 fidelity audit, X6).
+            rec["recorded_at"] = iso.string(from: ts)
+            // X6: the additive full-precision companion — fractional-seconds ISO8601, the one
+            // dialect every NEW timestamp key standardises on.
+            rec["recorded_at_precise"] = ISO8601Strategy.encode(ts)
+        }
         if let start = kvcDate(obj, key: "startDate") { rec["start"] = iso.string(from: start) }
         if let end = kvcDate(obj, key: "endDate") { rec["end"] = iso.string(from: end) }
 
@@ -185,6 +253,15 @@ private extension DeviceUsageReportMapper {
         if let n = intValue(obj, key: "totalScreenWakes") { rec["total_screen_wakes"] = n } // totalScreenWakes :contentReference[oaicite:6]{index=6}
         if let n = intValue(obj, key: "totalUnlocks") { rec["total_unlocks"] = n }          // totalUnlocks :contentReference[oaicite:7]{index=7}
         if let s = seconds(obj, key: "totalUnlockDuration") { rec["total_unlock_duration_s"] = s } // totalUnlockDuration :contentReference[oaicite:8]{index=8}
+
+        // FUAM-3945 fidelity audit, X4: the report's algorithm version — needed to compare
+        // usage metrics across OS versions. The SDK header declares it `NSString` (iOS 16.4+);
+        // the NSNumber branch is defensive only.
+        if let v = valueIfResponds(obj, "version") as? String {
+            rec["version"] = v
+        } else if let v = intValue(obj, key: "version") {
+            rec["version"] = v
+        }
 
         // ---- By-category: Applications ----
         if let dict = valueIfResponds(obj, "applicationUsageByCategory") as? NSDictionary { // :contentReference[oaicite:9]{index=9}
@@ -200,10 +277,23 @@ private extension DeviceUsageReportMapper {
                     if let rep = valueIfResponds(app, "reportApplicationIdentifier") as? String {
                         entry["report_app_id"] = rep
                     }
-                    if let u = seconds(app, key: "totalUsageTime") {
-                        entry["usage_s"] = u
+                    // FUAM-3945 fidelity audit, X1 — why `usage_s` was absent in every
+                    // production entry: the ObjC property (the name KVC dispatches on) is
+                    // `usageTime` (`SRUsageReports.h`, `NSTimeInterval`, no apinotes rename),
+                    // while this probe only tried `totalUsageTime` — Apple's web-docs spelling,
+                    // which exists on `SRWebUsage` but NOT on `SRApplicationUsage`. Probe order:
+                    // the header/KVC name first, the docs spelling second as a defensive
+                    // fallback for OS versions that might alias it.
+                    for key in ["usageTime", "totalUsageTime"] {
+                        if let u = seconds(app, key: key) {
+                            entry["usage_s"] = u
+                            break
+                        }
                     }
-                    if entry.count > 1 { apps.append(entry) }
+                    // X1: never drop the entry — an app use with no readable usage value is
+                    // still an app use (`category` is always present); the manager counts the
+                    // usage-less entries into `sensor_field_missing` telemetry.
+                    apps.append(entry)
                 }
             }
             if !apps.isEmpty { rec["applications"] = apps }
@@ -239,9 +329,15 @@ private extension DeviceUsageReportMapper {
                 guard let arr = value as? [NSObject] else { continue }
                 for n in arr {
                     var entry: [String: Any] = ["category": category]
-                    // event enum → string
+                    // event enum → string. FUAM-3945 fidelity audit, X5: production stores a
+                    // number-in-a-string ("0", "11"); `event` is kept verbatim and `event_name`
+                    // is the additive symbolic companion.
                     if let ev = valueIfResponds(n, "event") {
                         entry["event"] = String(describing: ev)
+                        if let raw = (ev as? NSNumber)?.intValue,
+                           let name = notificationEventName(rawValue: raw) {
+                            entry["event_name"] = name
+                        }
                     }
                     // try both "count" and "totalCount" defensively
                     if let c = (valueIfResponds(n, "count") as? NSNumber)?.intValue {

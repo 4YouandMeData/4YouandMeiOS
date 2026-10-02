@@ -2,16 +2,19 @@
 //  FakeApiGateway.swift
 //  ForYouAndMe_Tests
 //
-//  FUAM-3495 — Scriptable ApiGateway double used to drive RepositoryImpl's
-//  `sendDiaryNoteTextWithFeedback` chain without hitting the network.
+//  FUAM-3495 / FUAM-4255 — Scriptable ApiGateway double used to drive
+//  RepositoryImpl's `sendDiaryNoteText` (create) and `updateDiaryNoteText`
+//  (PATCH) without hitting the network.
 //
 //  It inspects `ApiRequest.serviceRequest` and returns scripted responses for
 //  the POST (`.sendDiaryNoteText`) and the PATCH (`.updateDiaryNoteText`):
-//  - the POST resolves to a caller-supplied `DiaryNoteItem` (or errors);
+//  - the POST resolves to a caller-supplied `DiaryNoteItem` (or errors), and
+//    the posted note is captured so a test can assert what it carried (e.g.
+//    a held emoji on `feedbackTagToSet`, FUAM-4255);
 //  - the PATCH (`Single<()>`) replays a scripted sequence of results, so a
 //    test can model "fails once then succeeds" or "fails twice".
 //  Every POST and PATCH invocation is counted and the last PATCHed note is
-//  captured so tests can assert the chaining (emoji + created id).
+//  captured so tests can assert PATCH-specific payloads.
 //
 //  Every other `ApiGateway` requirement is a `fatalError` stub: the chain
 //  under test never touches them, and hitting one is a test-authoring bug we
@@ -49,6 +52,8 @@ final class FakeApiGateway: ApiGateway {
 
     private(set) var postDiaryNoteCallCount = 0
     private(set) var patchDiaryNoteCallCount = 0
+    private(set) var lastPostedNote: DiaryNoteItem?
+    private(set) var lastPostedFromChart: Bool?
     private(set) var lastPatchedNote: DiaryNoteItem?
 
     // MARK: - Auth (unused by the chain under test)
@@ -62,8 +67,10 @@ final class FakeApiGateway: ApiGateway {
     // POST `.sendDiaryNoteText` resolves here (Single<DiaryNoteItem>).
     func send<T: JSONAPIMappable, E: Mappable>(request: ApiRequest, errorType: E.Type) -> Single<T> {
         switch request.serviceRequest {
-        case .sendDiaryNoteText:
+        case .sendDiaryNoteText(let diaryItem, let fromChart):
             self.postDiaryNoteCallCount += 1
+            self.lastPostedNote = diaryItem
+            self.lastPostedFromChart = fromChart
             guard let note = self.postDiaryNoteResult as? T else {
                 return .error(FakeApiError.scriptedFailure)
             }
