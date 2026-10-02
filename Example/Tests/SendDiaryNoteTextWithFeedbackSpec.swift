@@ -2,12 +2,15 @@
 //  SendDiaryNoteTextWithFeedbackSpec.swift
 //  ForYouAndMe_Tests
 //
-//  FUAM-3495 — Locks down RepositoryImpl.sendDiaryNoteTextWithFeedback:
-//  POST create → best-effort PATCH emoji (exactly one retry) → silent
-//  `feedbackSaved` flag. The note must always survive; only the emoji attach
-//  is allowed to silently fail. Drives a real RepositoryImpl through a
-//  scripted FakeApiGateway and asserts both the returned tuple and the fake's
-//  POST/PATCH call counts.
+//  FUAM-4255 — An emoji picked before a note exists must travel IN the create
+//  POST itself (`feedback_tags_attributes: [{ tag: ... }]`), never a follow-up
+//  PATCH: a PATCH targets a server record id, and a brand-new note (including
+//  a chart-started placeholder, whose id is a client-side UUID) has none yet.
+//  This replaces the former POST-then-PATCH `sendDiaryNoteTextWithFeedback`
+//  chain, which 404'd when the PATCH target was never written to the backend.
+//
+//  Drives a real RepositoryImpl through a scripted FakeApiGateway and asserts
+//  both the note handed to the POST and that no PATCH is ever issued for it.
 //
 
 import Quick
@@ -17,7 +20,7 @@ import RxSwift
 
 class SendDiaryNoteTextWithFeedbackSpec: QuickSpec {
     override class func spec() {
-        describe("RepositoryImpl.sendDiaryNoteTextWithFeedback") {
+        describe("RepositoryImpl.sendDiaryNoteText with a held emoji") {
 
             var api: FakeApiGateway!
             var repository: RepositoryImpl!
@@ -48,116 +51,77 @@ class SendDiaryNoteTextWithFeedbackSpec: QuickSpec {
                                      interval: nil)
             }
 
-            func emoji(label: String? = nil, tag: String = "🥵") -> EmojiItem {
-                return EmojiItem(id: "", type: "feedback_tag", tag: tag, label: label)
+            func emoji(tag: String = "🥵") -> EmojiItem {
+                return EmojiItem(id: "", type: "feedback_tag", tag: tag, label: nil)
             }
 
-            /// Runs the chain synchronously and returns the emitted tuple (or nil)
-            /// plus any surfaced error.
-            func run(diaryNote: DiaryNoteItem,
-                     emoji: EmojiItem?) -> (result: (DiaryNoteItem, Bool)?, error: Error?) {
-                let outcome = ChainOutcome()
+            func run(diaryNote: DiaryNoteItem, fromChart: Bool) -> (result: DiaryNoteItem?, error: Error?) {
+                var result: DiaryNoteItem?
+                var error: Error?
                 waitUntil(timeout: .seconds(5)) { done in
-                    repository.sendDiaryNoteTextWithFeedback(diaryNote: diaryNote,
-                                                             emoji: emoji,
-                                                             fromChart: false)
-                        .subscribe(onSuccess: { result in
-                            outcome.result = result
+                    repository.sendDiaryNoteText(diaryNote: diaryNote, fromChart: fromChart)
+                        .subscribe(onSuccess: { note in
+                            result = note
                             done()
-                        }, onFailure: { error in
-                            outcome.error = error
+                        }, onFailure: { err in
+                            error = err
                             done()
                         })
                         .disposed(by: disposeBag)
                 }
-                return (outcome.result, outcome.error)
+                return (result, error)
             }
 
-            context("when no emoji is picked (nil)") {
-                it("POSTs once, never PATCHes, and reports feedbackSaved=true") {
-                    let created = makeNote()
-                    api.postDiaryNoteResult = created
+            context("when no emoji is held (feedbackTagToSet is nil)") {
+                it("POSTs once, never PATCHes, and never attaches feedbackTagsToSet to the note") {
+                    api.postDiaryNoteResult = makeNote()
 
-                    let outcome = run(diaryNote: makeNote(), emoji: nil)
+                    var note = makeNote(id: "local")
+                    note.feedbackTagToSet = nil
+                    let outcome = run(diaryNote: note, fromChart: false)
 
                     expect(outcome.error).to(beNil())
                     expect(api.postDiaryNoteCallCount).to(equal(1))
                     expect(api.patchDiaryNoteCallCount).to(equal(0))
-                    expect(outcome.result?.0.id).to(equal(created.id))
-                    expect(outcome.result?.1).to(beTrue())
+                    expect(api.lastPostedNote?.feedbackTagToSet).to(beNil())
                 }
             }
 
-            // FUAM-3857: "no emoji" is absence (`emoji == nil`, covered above) — never a value
-            // to inspect. A study-configured emoji captioned "None" is an ordinary value and
-            // PATCHes like any other; there is no `label`/tag literal that short-circuits this.
-            context("when a study-configured emoji captioned 'None' is picked") {
-                it("PATCHes exactly like any other emoji and reports feedbackSaved=true") {
-                    let created = makeNote(id: "555")
-                    api.postDiaryNoteResult = created
-                    api.patchResults = [.success]
+            context("when an emoji is held before the note exists (Diary-tab/FAB new note)") {
+                it("POSTs once with the emoji on the note, and never PATCHes") {
+                    api.postDiaryNoteResult = makeNote(id: "555")
 
-                    let outcome = run(diaryNote: makeNote(id: "local"),
-                                      emoji: emoji(label: "None", tag: "❌"))
+                    var note = makeNote(id: "local")
+                    note.feedbackTagToSet = emoji(tag: "🥵")
+                    let outcome = run(diaryNote: note, fromChart: false)
 
                     expect(outcome.error).to(beNil())
                     expect(api.postDiaryNoteCallCount).to(equal(1))
-                    expect(api.patchDiaryNoteCallCount).to(equal(1))
-                    expect(outcome.result?.1).to(beTrue())
-                    expect(api.lastPatchedNote?.feedbackTagToSet?.tag).to(equal("❌"))
+                    expect(api.patchDiaryNoteCallCount).to(equal(0))
+                    // The emoji rides along ON the posted note, not in a follow-up call.
+                    expect(api.lastPostedNote?.feedbackTagToSet?.tag).to(equal("🥵"))
+                    expect(api.lastPostedFromChart).to(equal(false))
                 }
             }
 
-            context("when an emoji is picked and the PATCH succeeds first try") {
-                it("POSTs once, PATCHes once, and chains the created id + emoji") {
-                    let created = makeNote(id: "555")
-                    api.postDiaryNoteResult = created
-                    api.patchResults = [.success]
+            context("when an emoji is held on a chart-started placeholder note") {
+                it("POSTs once (fromChart) with the emoji on the note, and never PATCHes") {
+                    api.postDiaryNoteResult = makeNote(id: "556")
 
-                    let outcome = run(diaryNote: makeNote(id: "local"),
-                                      emoji: emoji(tag: "🥵"))
+                    // A chart-started note carries a client-side placeholder id, never
+                    // written to the backend, until this very POST.
+                    var note = DiaryNoteItem(date: Date(),
+                                             body: "",
+                                             interval: "day",
+                                             diaryNoteable: DiaryNoteable(id: "12", type: "chart"))
+                    note.feedbackTagToSet = emoji(tag: "😀")
+                    let outcome = run(diaryNote: note, fromChart: true)
 
                     expect(outcome.error).to(beNil())
                     expect(api.postDiaryNoteCallCount).to(equal(1))
-                    expect(api.patchDiaryNoteCallCount).to(equal(1))
-                    expect(outcome.result?.1).to(beTrue())
-                    // The PATCH targets the server-created note, not the local draft.
-                    expect(api.lastPatchedNote?.id).to(equal("555"))
-                    // FUAM-3857: the picked emoji rides along as `feedbackTagToSet`, not
-                    // appended into `feedbackTags` — there is no sentinel to make room for.
-                    expect(api.lastPatchedNote?.feedbackTagToSet?.tag).to(equal("🥵"))
-                    expect(api.lastPatchedNote?.feedbackTagsToDestroy).to(beEmpty())
-                }
-            }
-
-            context("when the emoji PATCH fails once then succeeds") {
-                it("retries exactly once and reports feedbackSaved=true") {
-                    api.postDiaryNoteResult = makeNote()
-                    api.patchResults = [.failure(FakeApiError.scriptedFailure), .success]
-
-                    let outcome = run(diaryNote: makeNote(), emoji: emoji())
-
-                    expect(outcome.error).to(beNil())
-                    expect(api.patchDiaryNoteCallCount).to(equal(2))
-                    expect(outcome.result?.1).to(beTrue())
-                }
-            }
-
-            context("when the emoji PATCH fails twice") {
-                it("does NOT make a third attempt and silently reports feedbackSaved=false") {
-                    let created = makeNote(id: "999")
-                    api.postDiaryNoteResult = created
-                    api.patchResults = [.failure(FakeApiError.scriptedFailure),
-                                        .failure(FakeApiError.scriptedFailure),
-                                        .success] // guard: proves no 3rd attempt is made
-
-                    let outcome = run(diaryNote: makeNote(), emoji: emoji())
-
-                    // No error surfaces; the note is still persisted.
-                    expect(outcome.error).to(beNil())
-                    expect(api.patchDiaryNoteCallCount).to(equal(2))
-                    expect(outcome.result?.0.id).to(equal("999"))
-                    expect(outcome.result?.1).to(beFalse())
+                    expect(api.patchDiaryNoteCallCount).to(equal(0))
+                    expect(api.lastPostedNote?.feedbackTagToSet?.tag).to(equal("😀"))
+                    expect(api.lastPostedFromChart).to(equal(true))
                 }
             }
 
@@ -165,7 +129,9 @@ class SendDiaryNoteTextWithFeedbackSpec: QuickSpec {
                 it("errors and never PATCHes") {
                     api.postDiaryNoteResult = nil // POST scripted to fail
 
-                    let outcome = run(diaryNote: makeNote(), emoji: emoji())
+                    var note = makeNote(id: "local")
+                    note.feedbackTagToSet = emoji()
+                    let outcome = run(diaryNote: note, fromChart: false)
 
                     expect(outcome.result).to(beNil())
                     expect(outcome.error).toNot(beNil())
@@ -175,15 +141,6 @@ class SendDiaryNoteTextWithFeedbackSpec: QuickSpec {
             }
         }
     }
-}
-
-// MARK: - Helpers
-
-/// Reference box so the async subscribe closures can write results without
-/// capturing an `inout` parameter (which escaping closures forbid).
-private final class ChainOutcome {
-    var result: (DiaryNoteItem, Bool)?
-    var error: Error?
 }
 
 // MARK: - Minimal RepositoryImpl collaborators

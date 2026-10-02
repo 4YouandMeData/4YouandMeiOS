@@ -430,13 +430,16 @@ struct DiaryNoteItem: Codable {
     var feedbackTags: [EmojiItem]?
 
     /// FUAM-3857 — server-recorded tags this update destroys. Set by the presenter right
-    /// before calling `updateDiaryNoteText`/`sendDiaryNoteTextWithFeedback`; never
-    /// round-tripped through JSON (see `encode(to:)` below, which doesn't touch it).
+    /// before calling `updateDiaryNoteText`; never round-tripped through JSON (the `encode(to:)`
+    /// override below only ever reads `feedbackTagToSet`, never this array, for the CREATE body).
     var feedbackTagsToDestroy: [EmojiItem] = []
 
     /// FUAM-3857 — the tag to record, or nil to record none. Absence IS "no emoji"; there is
-    /// no sentinel value. Leaving this AND `feedbackTagsToDestroy` empty means "this update
-    /// doesn't touch the note's feedback tag at all" (omits `feedback_tags_attributes`).
+    /// no sentinel value. On `updateDiaryNoteText` (PATCH), leaving this AND
+    /// `feedbackTagsToDestroy` empty means "this update doesn't touch the note's feedback tag
+    /// at all" (omits `feedback_tags_attributes`). On `sendDiaryNoteText` (POST, FUAM-4255), it
+    /// is the ONLY feedback-tag field read by `encode(to:)`: an emoji picked before the note
+    /// exists travels in the create request itself, never a follow-up PATCH.
     var feedbackTagToSet: EmojiItem?
 
     /// True when confirming `emoji` would leave the server in exactly the state it is already
@@ -601,6 +604,7 @@ series_entries.feedback_tags
         case diaryNoteType = "diary_type"
         case rawData = "data"
         case feedbackTags = "feedback_tags"
+        case feedbackTagsAttributes = "feedback_tags_attributes"
         case seriesMeta = "series_meta"
         case seriesEntries = "series_entries"
     }
@@ -774,6 +778,14 @@ series_entries.feedback_tags
         try container.encodeIfPresent(body, forKey: .body)
         try container.encodeIfPresent(urlString, forKey: .urlString)
         try container.encodeIfPresent(diaryNoteable, forKey: .diaryNoteable)
+
+        // FUAM-4255 — An emoji picked before this note exists rides along in the
+        // CREATE request itself: no `id`/`_destroy`, just `tag` (the backend's
+        // `create_diary_note_params` only permits `feedback_tags_attributes: [:tag]`).
+        // Absence of `feedbackTagToSet` omits the key entirely — no emoji was picked.
+        if let tag = feedbackTagToSet {
+            try container.encode([["tag": tag.tag]], forKey: .feedbackTagsAttributes)
+        }
     }
 }
 

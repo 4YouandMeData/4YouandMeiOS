@@ -54,7 +54,19 @@ class DiaryNoteTextViewController: UIViewController {
     }
 
     private var mustSendInsteadOfUpdate: Bool {
-        return diaryNote == nil || isFirstSaveInThisVC
+        return Self.mustSendInsteadOfUpdate(noteExists: diaryNote != nil,
+                                            isEditMode: isEditMode,
+                                            wasJustCreatedHere: wasJustCreatedHere)
+    }
+
+    // FUAM-4255 — Pure rule for "send (POST+chain) vs update (PATCH)", shared by Save
+    // and by the emoji picker's hold-vs-send decision. `noteExists` alone is not enough:
+    // a chart-started note already has a local placeholder (non-nil, but never written
+    // to the backend) until the first Save on this screen, so it must still be treated
+    // as unsaved. Kept internal so a Quick spec can exercise it without the view controller.
+    static func mustSendInsteadOfUpdate(noteExists: Bool, isEditMode: Bool, wasJustCreatedHere: Bool) -> Bool {
+        let isFirstSaveInThisVC = !isEditMode && !wasJustCreatedHere
+        return !noteExists || isFirstSaveInThisVC
     }
     
     private var isReflectionLinkedNote: Bool {
@@ -464,49 +476,44 @@ class DiaryNoteTextViewController: UIViewController {
         }
 
         if mustSendInsteadOfUpdate {
-           
-            // FUAM-3495 — Create the note (POST) then chain the best-effort emoji
-            // attach (PATCH, one retry) behind the scenes. The note is always
-            // persisted; on emoji failure the note stays saved and a default error
-            // popup is shown.
-            repository.sendDiaryNoteTextWithFeedback(
-                diaryNote: noteToSave,
-                emoji: self.selectedEmoji,
-                fromChart: isLinked
-            )
-            .addProgress()
-            .subscribe(onSuccess: { [weak self] (saved, feedbackSaved) in
-                guard let self = self else { return }
-                self.diaryNote = saved
-                self.wasJustCreatedHere = true
-                self.isEditMode = true
-                self.originalBody = saved.body
-                // FUAM-3495 — record the persisted body (fall back to the text we sent,
-                // in case the create response does not echo the body).
-                self.persistedBody = saved.body ?? noteToSave.body
-                if self.isLinked && self.isReflectionLinkedNote {
-                    self.reflectionCoordinator?.onReflectionCreated(
-                        presenter: self,
-                        reflectionType: .text,
-                        diaryNote: saved
-                    )
-                }
-                self.pageState.accept(.read)
-                if !feedbackSaved {
-                    // Note is saved; only the emoji attach failed.
-                    self.showAlert(forError: nil)
-                } else if self.selectedEmoji != nil {
-                    // FUAM-3495 — the emoji was created by the chained PATCH, but the
-                    // POST response does not include it. Refetch so feedbackTags carry
-                    // the new server record id and a later emoji change swaps (not
-                    // duplicates) it.
-                    self.reloadDiaryNoteFromServer()
-                }
-            }, onFailure: { [weak self] error in
-                guard let self = self else { return }
-                self.navigator.handleError(error: error, presenter: self)
-            })
-            .disposed(by: disposeBag)
+
+            // FUAM-4255 — The held emoji (if any) travels IN the create POST itself
+            // (`feedback_tags_attributes: [{ tag: ... }]`), never a follow-up PATCH:
+            // a PATCH targets a server record id, and a brand-new note has none yet
+            // (the create-then-PATCH pattern this replaced is exactly what 404s on a
+            // chart-started placeholder note).
+            noteToSave.feedbackTagToSet = self.selectedEmoji
+
+            repository.sendDiaryNoteText(diaryNote: noteToSave, fromChart: isLinked)
+                .addProgress()
+                .subscribe(onSuccess: { [weak self] saved in
+                    guard let self = self else { return }
+                    self.diaryNote = saved
+                    self.wasJustCreatedHere = true
+                    self.isEditMode = true
+                    self.originalBody = saved.body
+                    // FUAM-3495 — record the persisted body (fall back to the text we sent,
+                    // in case the create response does not echo the body).
+                    self.persistedBody = saved.body ?? noteToSave.body
+                    if self.isLinked && self.isReflectionLinkedNote {
+                        self.reflectionCoordinator?.onReflectionCreated(
+                            presenter: self,
+                            reflectionType: .text,
+                            diaryNote: saved
+                        )
+                    }
+                    self.pageState.accept(.read)
+                    if self.selectedEmoji != nil {
+                        // FUAM-4255 — the create response may not echo the attached tag's
+                        // server record id; refetch so feedbackTags carry it and a later
+                        // emoji change swaps (not duplicates) it.
+                        self.reloadDiaryNoteFromServer()
+                    }
+                }, onFailure: { [weak self] error in
+                    guard let self = self else { return }
+                    self.navigator.handleError(error: error, presenter: self)
+                })
+                .disposed(by: disposeBag)
 
         } else {
             repository.updateDiaryNoteText(diaryNote: noteToSave)
@@ -547,11 +554,15 @@ class DiaryNoteTextViewController: UIViewController {
             self.selectedEmoji = confirmedEmoji
             self.refreshEmojiButtonGlyph()
 
-            // FUAM-3495 — For a brand-new note (not yet persisted) just hold the pick
-            // locally; the PATCH is chained after the POST on Save. For an existing
-            // note persist immediately, then refetch so feedbackTags carry the real
-            // server record ids for the next change.
-            guard var diaryNote = self.diaryNote else { return }
+            // FUAM-4255 — For a brand-new note (not yet persisted, including a
+            // chart-started note: it carries a local placeholder id — a client-side
+            // UUID never written to the backend — until the first Save) just hold the
+            // pick locally; it travels IN the create POST on Save, never a follow-up
+            // PATCH. For an existing note persist immediately via PATCH, then refetch
+            // so feedbackTags carry the real server record ids for the next change.
+            // `mustSendInsteadOfUpdate` is the single predicate Save also uses, instead
+            // of a bare `diaryNote != nil` check that is true for the placeholder too.
+            guard !self.mustSendInsteadOfUpdate, var diaryNote = self.diaryNote else { return }
 
             // FUAM-3857: confirming the note's current emoji again - skip the request.
             // No need to `reloadDiaryNoteFromServer()` either: nothing changed server-side.

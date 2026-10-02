@@ -907,9 +907,14 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
                 dataParams["diary_noteable_type"] = diaryNote.diaryNoteable?.type
                 dataParams["diary_noteable_id"] = diaryNote.diaryNoteable?.id
                 dataParams["interval"] = diaryNote.interval
+                // FUAM-4255 — an emoji picked before this chart-linked note exists rides
+                // along in the CREATE request itself (no PATCH on a client-side id).
+                if let tag = diaryNote.feedbackTagToSet {
+                    dataParams["feedback_tags_attributes"] = [["tag": tag.tag]]
+                }
                 return .requestParameters(parameters: ["diary_note": dataParams], encoding: JSONEncoding.default)
             }
-            
+
             return .requestJSONEncodable(diaryNote)
         case .sendDiaryNoteEaten(let data):
             var payloadData: [String: Any] = [:]

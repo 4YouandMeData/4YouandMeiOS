@@ -121,20 +121,15 @@ final class MockRepository: Repository {
         lastRequestedMenstrualNoteId = noteID
         return getMenstrualDiaryNoteResult
     }
-    func sendDiaryNoteText(diaryNote: DiaryNoteItem, fromChart: Bool) -> Single<DiaryNoteItem> { .never() }
-    // FUAM-3495: capture the create-then-attach-emoji call so coordinator tests
-    // can assert what was passed. Returns an injectable Single.
-    private(set) var sendDiaryNoteTextWithFeedbackCallCount = 0
-    private(set) var lastSentDiaryNoteWithFeedback: DiaryNoteItem?
-    private(set) var lastSentFeedbackEmoji: EmojiItem?
-    var sendDiaryNoteTextWithFeedbackResult: Single<(DiaryNoteItem, Bool)> = .never()
-    func sendDiaryNoteTextWithFeedback(diaryNote: DiaryNoteItem,
-                                       emoji: EmojiItem?,
-                                       fromChart: Bool) -> Single<(DiaryNoteItem, Bool)> {
-        sendDiaryNoteTextWithFeedbackCallCount += 1
-        lastSentDiaryNoteWithFeedback = diaryNote
-        lastSentFeedbackEmoji = emoji
-        return sendDiaryNoteTextWithFeedbackResult
+    // FUAM-4255: capture the create call so coordinator tests can assert what was
+    // passed, including any held `feedbackTagToSet`. Returns an injectable Single.
+    private(set) var sendDiaryNoteTextCallCount = 0
+    private(set) var lastSentDiaryNoteText: DiaryNoteItem?
+    var sendDiaryNoteTextResult: Single<DiaryNoteItem> = .never()
+    func sendDiaryNoteText(diaryNote: DiaryNoteItem, fromChart: Bool) -> Single<DiaryNoteItem> {
+        sendDiaryNoteTextCallCount += 1
+        lastSentDiaryNoteText = diaryNote
+        return sendDiaryNoteTextResult
     }
     func sendDiaryNoteAudio(diaryNoteRef: DiaryNoteItem, file: DiaryNoteFile, fromChart: Bool) -> Single<DiaryNoteItem> { .never() }
     func sendDiaryNoteVideo(diaryNoteRef: DiaryNoteItem, file: DiaryNoteFile) -> Single<DiaryNoteItem> { .never() }
