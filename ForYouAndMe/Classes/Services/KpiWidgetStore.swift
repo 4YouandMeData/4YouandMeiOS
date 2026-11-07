@@ -24,6 +24,9 @@ final class KpiWidgetStore {
     private(set) var loadedLocalDay: String?
     private(set) var isLoading: Bool = false
     private(set) var lastFailed: Bool = false
+    /// The backend answered 404 (no /kpi_widgets endpoint) with no card on screen: stop asking for
+    /// the rest of the process. Only an explicit pull-to-refresh (`force`) or a new launch asks again.
+    private(set) var endpointUnavailable: Bool = false
     /// Last fill drawn per widget id, written when a gauge animation completes (D11).
     private(set) var renderedFill: [String: CGFloat] = [:]
 
@@ -57,6 +60,7 @@ final class KpiWidgetStore {
     /// No-op while a request is in flight.
     func refreshIfNeeded(force: Bool = false, today: String = Date().localDayKey) {
         guard !self.isLoading else { return }
+        guard force || !self.endpointUnavailable else { return }
         guard force || self.widgets == nil || self.lastFailed || self.loadedLocalDay != today else { return }
 
         self.isLoading = true
@@ -69,11 +73,11 @@ final class KpiWidgetStore {
             }, onFailure: { [weak self] error in
                 guard let self = self, self.generation == requestGeneration else { return }
                 // A backend without the endpoint, with no card on screen (nothing loaded, or an empty
-                // list from an earlier 404): no widget for the day, so apps make one request per day
-                // instead of retrying on every Feed visit. With a card shown, a 404 is an ordinary
-                // failure that keeps it.
+                // list): no widget, and no further automatic requests in this process (spec D2).
+                // With a card shown, a 404 is an ordinary failure that keeps it.
                 if case KpiWidgetError.endpointNotFound = error, self.widgets?.isEmpty ?? true {
                     self.didLoad([], today: today)
+                    self.endpointUnavailable = true
                     return
                 }
                 // Keep whatever was shown; never surface the error. The next trigger retries.
@@ -86,6 +90,7 @@ final class KpiWidgetStore {
     private func didLoad(_ widgets: [KpiWidget], today: String) {
         self.isLoading = false
         self.lastFailed = false
+        self.endpointUnavailable = false
         self.widgets = widgets
         self.loadedLocalDay = today
         let newState = KpiWidgetState.loaded(widgets)
@@ -103,6 +108,7 @@ final class KpiWidgetStore {
         self.loadedLocalDay = nil
         self.isLoading = false
         self.lastFailed = false
+        self.endpointUnavailable = false
         self.renderedFill = [:]
         self.state.accept(.idle)
     }

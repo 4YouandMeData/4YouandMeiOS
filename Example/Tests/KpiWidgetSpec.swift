@@ -336,42 +336,60 @@ class KpiWidgetSpec: QuickSpec {
                 }
             }
 
-            it("on a cold start, a 404 means no widget for the day: one request per day") {
+            it("after a cold-start 404, only a forced refresh asks again until a 200 clears it") {
                 api.kpiWidgetsError = apiError(statusCode: 404)
                 var calls = 0
+                let center = NotificationCenter()
                 let store = KpiWidgetStore(fetch: { calls += 1; return repository.getKpiWidgets() },
-                                           notificationCenter: NotificationCenter())
+                                           notificationCenter: center)
                 store.refreshIfNeeded(today: "2026-11-07")
                 expect(store.state.value).toEventually(equal(.loaded([])))
-                expect(store.loadedLocalDay).to(equal("2026-11-07"))
                 expect(store.lastFailed).to(beFalse())
-                store.refreshIfNeeded(today: "2026-11-07")
-                expect(calls).to(equal(1))
-            }
-
-            it("keeps treating a 404 as no widget on later days and forced refreshes") {
-                api.kpiWidgetsError = apiError(statusCode: 404)
-                var calls = 0
-                let store = KpiWidgetStore(fetch: { calls += 1; return repository.getKpiWidgets() },
-                                           notificationCenter: NotificationCenter())
-                store.refreshIfNeeded(today: "2026-11-07")
-                expect(store.loadedLocalDay).toEventually(equal("2026-11-07"))
+                expect(store.endpointUnavailable).to(beTrue())
                 expect(calls).to(equal(1))
 
-                store.refreshIfNeeded(force: true, today: "2026-11-07") // pull-to-refresh
+                // Feed appear, foreground, QA submission, section change: plain triggers.
+                store.refreshIfNeeded(today: "2026-11-07")
+                // Day change.
+                store.refreshIfNeeded(today: "2026-11-08")
+                // Significant time change (midnight with the Feed open).
+                center.post(name: Notification.Name("UIApplicationSignificantTimeChangeNotification"), object: nil)
+                expect(calls).toNever(beGreaterThan(1), until: .milliseconds(200))
+
+                // Pull-to-refresh asks again; still 404: still unavailable, still no card.
+                store.refreshIfNeeded(force: true, today: "2026-11-08")
                 expect(calls).to(equal(2))
                 expect(store.isLoading).toEventually(beFalse())
                 expect(store.state.value).to(equal(.loaded([])))
                 expect(store.lastFailed).to(beFalse())
+                expect(store.endpointUnavailable).to(beTrue())
+                store.refreshIfNeeded(today: "2026-11-09")
+                expect(calls).to(equal(2))
 
-                store.refreshIfNeeded(today: "2026-11-08") // next day
+                // The backend deploys: the next pull-to-refresh gets a 200 and clears the flag.
+                api.kpiWidgetsError = nil
+                store.refreshIfNeeded(force: true, today: "2026-11-09")
                 expect(calls).to(equal(3))
-                expect(store.loadedLocalDay).toEventually(equal("2026-11-08"))
-                expect(store.state.value).to(equal(.loaded([])))
-                expect(store.lastFailed).to(beFalse())
+                expect(store.state.value.widgets.map { $0.id }).toEventually(equal(["1", "2"]))
+                expect(store.endpointUnavailable).to(beFalse())
+                // The once-a-day rule applies again.
+                store.refreshIfNeeded(today: "2026-11-09")
+                expect(calls).to(equal(3))
+                store.refreshIfNeeded(today: "2026-11-10")
+                expect(calls).to(equal(4))
+            }
 
-                store.refreshIfNeeded(today: "2026-11-08") // further same-day trigger
-                expect(calls).to(equal(3))
+            it("reset() clears the unavailable flag") {
+                api.kpiWidgetsError = apiError(statusCode: 404)
+                var calls = 0
+                let store = KpiWidgetStore(fetch: { calls += 1; return repository.getKpiWidgets() },
+                                           notificationCenter: NotificationCenter())
+                store.refreshIfNeeded(today: "2026-11-07")
+                expect(store.endpointUnavailable).toEventually(beTrue())
+                store.reset()
+                expect(store.endpointUnavailable).to(beFalse())
+                store.refreshIfNeeded(today: "2026-11-07")
+                expect(calls).to(equal(2))
             }
 
             it("once a card is loaded, a 404 is an ordinary failure that keeps the card") {
@@ -386,6 +404,7 @@ class KpiWidgetSpec: QuickSpec {
                 store.refreshIfNeeded(force: true, today: "2026-11-07")
                 expect(store.lastFailed).toEventually(beTrue())
                 expect(store.state.value).to(equal(loaded))
+                expect(store.endpointUnavailable).to(beFalse())
                 store.refreshIfNeeded(today: "2026-11-07")
                 expect(calls).to(equal(3)) // a failure retries on the next trigger
             }
