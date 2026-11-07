@@ -106,6 +106,17 @@ class KpiWidgetSpec: QuickSpec {
                 expect(stray).to(equal([KpiHtmlRun(text: "y ", bold: false, italic: false),
                                         KpiHtmlRun(text: "z", bold: true, italic: false)]))
             }
+            it("matches the Android scanner rows") {
+                expect(text("<p>&amp;lt;</p>")).to(equal("&lt;"))
+                expect(KpiHtmlScanner.scan("<b>x</b> <i>y</i>")).to(equal([
+                    KpiHtmlRun(text: "x", bold: true, italic: false),
+                    KpiHtmlRun(text: " ", bold: false, italic: false),
+                    KpiHtmlRun(text: "y", bold: false, italic: true)
+                ]))
+                expect(text("a<br/>b")).to(equal("a\nb"))
+                expect(text("a<BR>b")).to(equal("a\nb"))
+                expect(KpiHtmlScanner.scan("<strong><em>z</em></strong>")).to(equal([KpiHtmlRun(text: "z", bold: true, italic: true)]))
+            }
             it("applies the bold font to the bold run only") {
                 let regular = UIFont.systemFont(ofSize: 15)
                 let bold = UIFont.boldSystemFont(ofSize: 15)
@@ -244,9 +255,9 @@ class KpiWidgetSpec: QuickSpec {
             }
 
             it("writes the rendered fill only when the animation completes") {
-                guard !UIAccessibility.isReduceMotionEnabled else { return }
                 let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 200, height: 200))
                 let gauge = KpiGaugeView()
+                gauge.isReduceMotionEnabled = { false }
                 window.addSubview(gauge)
                 window.isHidden = false
                 let widget = makeWidget(id: "1", percentage: 57)
@@ -281,7 +292,7 @@ class KpiWidgetSpec: QuickSpec {
             }
         }
 
-        // MARK: Review round (FUAM-4315 fix round, F1-F8 + blank admin fields)
+        // MARK: Blank texts, 404 handling, store generation, Feed wiring, gauge edge cases, card layout
 
         describe("KpiWidget blank texts") {
             it("treats a blank title and an empty-paragraph body as absent") {
@@ -466,6 +477,34 @@ class KpiWidgetSpec: QuickSpec {
                 manager = nil
             }
 
+            it("re-renders on a store emission without refetching the feed") {
+                let fake = FakeKpiFetch()
+                let store = KpiWidgetStore(fetch: { fake.fetch() }, notificationCenter: NotificationCenter())
+                let binding = KpiWidgetFeedBinding(store: store) { manager.updateKpiState($0) }
+                manager.refreshItems()
+                expect(delegate.dataProviderCount).toEventually(equal(1))
+                binding.feedWillAppear()
+                fake.succeed([makeWidget(id: "1", percentage: 50)])
+                expect(tableView.numberOfSections).toEventually(equal(2)) // KPI + EmptyFeedSection
+                expect(delegate.dataProviderCount).to(equal(1))
+            }
+
+            it("updates the SABA visible snapshot too") {
+                let sabaTable = UITableView(frame: CGRect(x: 0, y: 0, width: 375, height: 800), style: .grouped)
+                host.view.addSubview(sabaTable)
+                let sabaDelegate = KpiFakeFeedDelegate(presenter: host)
+                let navigator = AppNavigator(withRepository: MockRepository(), analytics: KpiFakeAnalytics(),
+                                             deeplinkService: DeeplinkManager(), window: UIWindow())
+                let saba = FeedListManager(repository: MockRepository(), navigator: navigator, tableView: sabaTable,
+                                           delegate: sabaDelegate, pageSize: 20, forceSabaFooterForTesting: true,
+                                           analytics: KpiFakeAnalytics())
+                saba.refreshItems()
+                expect(sabaDelegate.emptyListCalls.last).toEventually(equal(true))
+                saba.updateKpiState(.loaded([makeWidget(id: "1", percentage: 50)]))
+                expect(sabaTable.numberOfSections).to(equal(2))
+                expect(sabaDelegate.emptyListCalls.last).to(equal(false))
+            }
+
             it("reports a pull-to-refresh to the delegate") {
                 tableView.refreshControl?.sendActions(for: .valueChanged)
                 expect(delegate.pullToRefreshCount).to(equal(1))
@@ -499,6 +538,61 @@ class KpiWidgetSpec: QuickSpec {
             }
             afterEach {
                 window.isHidden = true
+            }
+
+            it("animates the fill end mapped through the threshold geometry, with the gap step only above t") {
+                func end(_ fill: CGFloat, _ meets: Bool) -> Double {
+                    return Double((KpiGaugeGeometry(threshold: 0.7, fill: fill, meetsThreshold: meets).fillEnd - 183) / 174)
+                }
+                func values() -> (Double, Double) {
+                    let from = (gauge.fillAnimation?.fromValue as? NSNumber)?.doubleValue ?? -1
+                    let to = (gauge.fillAnimation?.toValue as? NSNumber)?.doubleValue ?? -1
+                    return (from, to)
+                }
+                let step = Double((2 * KpiGaugeGeometry.cap + KpiGaugeGeometry.gap) / 174)
+                // Met, from a previous above-threshold value: both ends carry the step.
+                gauge.set(id: "1", fill: 0.83, threshold: 0.7, meetsThreshold: true, display: 83,
+                          progressColor: .green, trackColor: .gray, animatedFrom: 0.8, completion: {})
+                var (from, to) = values()
+                expect(from).to(beCloseTo(end(0.8, true), within: 0.000_1))
+                expect(to).to(beCloseTo(end(0.83, true), within: 0.000_1))
+                expect(to - end(0.83, false)).to(beCloseTo(step, within: 0.000_1))
+                // From exactly the threshold: flush against the gap, no step on the start.
+                gauge.set(id: "2", fill: 0.83, threshold: 0.7, meetsThreshold: true, display: 83,
+                          progressColor: .green, trackColor: .gray, animatedFrom: 0.7, completion: {})
+                (from, to) = values()
+                expect(from).to(beCloseTo(Double(0.7 * KpiGaugeGeometry.divisibleSpan / 174), within: 0.000_1))
+                // Not met: no step on the target even above t.
+                gauge.set(id: "3", fill: 0.75, threshold: 0.7, meetsThreshold: false, display: 75,
+                          progressColor: .gray, trackColor: .gray, animatedFrom: 0, completion: {})
+                (from, to) = values()
+                expect(to).to(beCloseTo(end(0.75, false), within: 0.000_1))
+                expect(to).to(beLessThan(end(0.75, true)))
+            }
+
+            it("keeps the sweep across a layout pass") {
+                gauge.set(id: "1", fill: 0.83, threshold: 0.7, meetsThreshold: true, display: 83,
+                          progressColor: .green, trackColor: .gray, animatedFrom: 0, completion: {})
+                let animation = gauge.fillAnimation
+                expect(animation).toNot(beNil())
+                gauge.setNeedsLayout()
+                gauge.layoutIfNeeded()
+                expect(gauge.fillAnimation === animation).to(beTrue())
+                let target = (KpiGaugeGeometry(threshold: 0.7, fill: 0.83, meetsThreshold: true).fillEnd - 183) / 174
+                expect(Double(gauge.progressLayer.strokeEnd)).to(beCloseTo(Double(target), within: 0.000_1))
+            }
+
+            it("draws no progress arc at 0 %") {
+                gauge.isReduceMotionEnabled = { true }
+                gauge.set(id: "1", fill: 0, threshold: 0.7, meetsThreshold: false, display: 0,
+                          progressColor: .gray, trackColor: .gray, animatedFrom: nil, completion: {})
+                expect(gauge.progressLayer.isHidden).to(beTrue())
+                gauge.set(id: "1", fill: 0.5, threshold: 0.7, meetsThreshold: false, display: 50,
+                          progressColor: .gray, trackColor: .gray, animatedFrom: nil, completion: {})
+                expect(gauge.progressLayer.isHidden).to(beFalse())
+                gauge.set(id: "1", fill: 0, threshold: 0.7, meetsThreshold: false, display: 0,
+                          progressColor: .gray, trackColor: .gray, animatedFrom: nil, completion: {})
+                expect(gauge.progressLayer.isHidden).to(beTrue())
             }
 
             it("does not restart for the same widget and value") {
@@ -536,11 +630,13 @@ class KpiWidgetSpec: QuickSpec {
             }
 
             it("continues from the drawn arc and the shown number when the value changes mid-sweep") {
+                // A long sweep, caught on its first count tick: mid-way by construction, not by wall clock.
+                gauge.animationDuration = 5
                 gauge.set(id: "1", fill: 0.9, display: 90, progressColor: .green, trackColor: .gray,
                           animatedFrom: 0, completion: {})
-                var midway = false
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { midway = true }
-                expect(midway).toEventually(beTrue())
+                expect(gauge.valueLabel.text).to(equal("0"))
+                expect(gauge.valueLabel.text).toEventuallyNot(equal("0"), timeout: .seconds(2))
+                expect(gauge.fillAnimation).toNot(beNil())
                 let shown = gauge.valueLabel.text
                 expect(Int(shown ?? "") ?? 0).to(beGreaterThan(0))
                 // The store has not recorded the first sweep yet, so it still says "from 0".
@@ -574,6 +670,34 @@ class KpiWidgetSpec: QuickSpec {
                     expect(Double(style.lineHeightMultiple * font.lineHeight))
                         .to(beCloseTo(Double(font.pointSize) * 1.5, within: 0.001))
                 }
+            }
+
+            it("colours the gauge green when the threshold is met, grey otherwise") {
+                let light = UITraitCollection(userInterfaceStyle: .light)
+                for meets in [true, false] {
+                    let cell = KpiWidgetTableViewCell(style: .default, reuseIdentifier: nil)
+                    let widget = KpiWidget(id: meets ? "met" : "not", type: "kpi_widget", kpiType: KpiWidget.supportedKpiType,
+                                           displayMode: "gauge", position: nil, featured: false, completed: 1, total: 2,
+                                           percentage: 50, meetsThreshold: meets, title: "T", body: nil)
+                    cell.display(widget: widget, store: nil, showInfo: false, infoCallback: {})
+                    let expected = ColorPalette.color(withType: meets ? .kpiWidgetThreshold1 : .kpiWidgetThreshold0)
+                    let gauge = cell.gaugeView
+                    expect(rgb(gauge.valueLabel.textColor.resolvedColor(with: light)))
+                        .to(equal(rgb(expected.resolvedColor(with: light))), description: "value, met \(meets)")
+                    let stroke = gauge.progressLayer.strokeColor.map { UIColor(cgColor: $0) }
+                    expect(stroke.map { rgb($0) })
+                        .to(equal(rgb(expected.resolvedColor(with: gauge.traitCollection))), description: "arc, met \(meets)")
+                }
+            }
+
+            it("enables the title tap only with an info message and hides an empty title row") {
+                let cell = KpiWidgetTableViewCell(style: .default, reuseIdentifier: nil)
+                cell.display(widget: makeWidget(id: "1", percentage: 50), store: nil, showInfo: false, infoCallback: {})
+                expect(cell.titleTap.isEnabled).to(beFalse())
+                expect(cell.titleRow.isHidden).to(beTrue()) // no title, no message: no empty row
+                cell.display(widget: makeWidget(id: "1", percentage: 50), store: nil, showInfo: true, infoCallback: {})
+                expect(cell.titleTap.isEnabled).to(beTrue())
+                expect(cell.titleRow.isHidden).to(beFalse())
             }
 
             it("exposes the title row as one button only when the info message exists") {
@@ -716,6 +840,63 @@ class KpiWidgetSpec: QuickSpec {
             }
         }
 
+        describe("KPI info message") {
+            it("decodes the KPI_QUICK_ACTIVITIES_ADHERENCE location") {
+                let json = #"{"id": "1", "type": "app_info_message", "location": "KPI_QUICK_ACTIVITIES_ADHERENCE"}"#
+                let message = try? JSONDecoder().decode(MessageInfo.self, from: Data(json.utf8))
+                expect(message?.location).to(equal(.kpiQuickActivitiesAdherence))
+            }
+
+            it("finds only the message with the KPI location") {
+                let feedMessage = MessageInfo(id: "1", type: "m", title: "Feed", body: nil, buttonText: nil, location: .tabFeed)
+                let kpiMessage = MessageInfo(id: "2", type: "m", title: "KPI", body: nil, buttonText: nil,
+                                             location: .kpiQuickActivitiesAdherence)
+                expect(FeedListManager.kpiInfoMessage(in: nil)).to(beNil())
+                expect(FeedListManager.kpiInfoMessage(in: [feedMessage])).to(beNil())
+                expect(FeedListManager.kpiInfoMessage(in: [feedMessage, kpiMessage])?.id).to(equal("2"))
+            }
+        }
+
+        describe("Logout") {
+            it("resets the KPI store") {
+                let fake = FakeKpiFetch()
+                let store = KpiWidgetStore(fetch: { fake.fetch() }, notificationCenter: NotificationCenter())
+                store.refreshIfNeeded(today: "2026-11-07")
+                fake.succeed([makeWidget(id: "1", percentage: 50)])
+                expect(store.widgets).toEventuallyNot(beNil())
+                let repository = RepositoryImpl(api: FakeApiGateway(), storage: KpiFakeStorage(),
+                                                notificationService: KpiFakeNotificationService(),
+                                                analyticsService: KpiFakeAnalytics(), showDefaultUserInfo: false,
+                                                appleWatchAlternativeIntegrations: [])
+                repository.kpiWidgetStore = { store }
+                repository.logOut()
+                expect(store.state.value).to(equal(.idle))
+                expect(store.widgets).to(beNil())
+            }
+        }
+
+        describe("KpiWidgetFeedBinding") {
+            it("refreshes without force on appear and feed reload, with force on pull-to-refresh, and forwards states") {
+                let fake = FakeKpiFetch()
+                let store = KpiWidgetStore(fetch: { fake.fetch() }, notificationCenter: NotificationCenter())
+                var states: [KpiWidgetState] = []
+                let binding = KpiWidgetFeedBinding(store: store) { states.append($0) }
+                expect(states).toEventually(equal([.idle]))
+
+                binding.feedWillAppear()
+                expect(fake.calls).to(equal(1))
+                let widget = makeWidget(id: "1", percentage: 50)
+                fake.succeed([widget])
+                expect(states.last).toEventually(equal(.loaded([widget])))
+
+                binding.feedWillAppear()
+                binding.feedDidRefresh()
+                expect(fake.calls).to(equal(1)) // same day, not forced
+                binding.feedPulledToRefresh()
+                expect(fake.calls).to(equal(2)) // forced
+            }
+        }
+
         // MARK: 7. Palette defaults
 
         describe("KPI palette keys") {
@@ -818,9 +999,17 @@ private final class KpiFakeFeedDelegate: FeedListManagerDelegate {
     }
 
     func handleEmptyList(show: Bool) { self.emptyListCalls.append(show) }
+    private(set) var dataProviderCount = 0
     func getDataProviderSingle(repository: Repository, fetchMode: FetchMode) -> Single<FeedContent> {
+        self.dataProviderCount += 1
         return .just(FeedContent(withFeeds: [], kpiState: .idle))
     }
     func onPullToRefresh() { self.pullToRefreshCount += 1 }
     func showError(error: Error) {}
+}
+
+private func rgb(_ color: UIColor) -> [Int] {
+    var red: CGFloat = 0, green: CGFloat = 0, blue: CGFloat = 0, alpha: CGFloat = 0
+    color.getRed(&red, green: &green, blue: &blue, alpha: &alpha)
+    return [red, green, blue, alpha].map { Int(($0 * 255).rounded()) }
 }

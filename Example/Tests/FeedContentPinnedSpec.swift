@@ -96,6 +96,8 @@ class FeedContentPinnedSpec: QuickSpec {
                 var content = FeedContent(withFeeds: [regular, quickActivity, pinned], kpiState: .loaded([widget]))
                 expect(sectionNames(&content)).to(equal(["PinnedAlertSection", "KpiWidgetSection",
                                                          "QuickActivitySection", "FeedSection"]))
+                expect(content.sections).to(haveCount(4))
+                guard content.sections.count == 4 else { return }
                 expect(content.sections[1].numberOfRows).to(equal(1))
                 expect(content.sections[1].sectionText).to(beNil())
                 // Widgets are not feed items: pagination is unaffected.
@@ -113,14 +115,17 @@ class FeedContentPinnedSpec: QuickSpec {
                 expect(sectionNames(&idle)).to(equal(["QuickActivitySection"]))
             }
 
-            it("keeps the KPI state when a page is appended") {
+            it("takes the KPI state of the appended page") {
                 guard let first = makeRegularFeed(id: "r1"), let second = makeRegularFeed(id: "r2") else {
                     fail("Stub feeds failed to decode")
                     return
                 }
+                let newer = KpiWidget(id: "1", type: "kpi_widget", kpiType: "quick_activities_adherence",
+                                      displayMode: "gauge", position: 1, featured: false, completed: 6, total: 6,
+                                      percentage: 100, meetsThreshold: true, title: "T", body: nil)
                 let current: FeedContent? = FeedContent(withFeeds: [first], kpiState: .loaded([widget]))
-                var merged = current.merge(withContent: FeedContent(withFeeds: [second], kpiState: .loaded([widget])))
-                expect(merged.kpiState).to(equal(.loaded([widget])))
+                var merged = current.merge(withContent: FeedContent(withFeeds: [second], kpiState: .loaded([newer])))
+                expect(merged.kpiState).to(equal(.loaded([newer])))
                 expect(merged.feedItems.map { $0.id }).to(equal(["r1", "r2"]))
                 expect(sectionNames(&merged).first).to(equal("KpiWidgetSection"))
             }
@@ -139,10 +144,23 @@ class FeedContentPinnedSpec: QuickSpec {
             it("shows the widget then the empty-feed row when the feed is empty") {
                 var withWidget = FeedContent(withFeeds: [], kpiState: .loaded([widget]))
                 expect(sectionNames(&withWidget)).to(equal(["KpiWidgetSection", "EmptyFeedSection"]))
+                expect(withWidget.sections).to(haveCount(2))
+                guard withWidget.sections.count == 2 else { return }
                 expect(withWidget.sections[1].numberOfRows).to(equal(1))
                 // No widget: no sections, so the background FeedEmptyView keeps today's behaviour.
                 var withoutWidget = FeedContent(withFeeds: [], kpiState: .loaded([]))
                 expect(withoutWidget.sections).to(beEmpty())
+            }
+
+            it("adds no empty-feed row when pinned alerts or quick activities are present") {
+                guard let pinned = makePinnedFeed(id: "p"), let quickActivity = makeQuickActivityFeed(id: "q") else {
+                    fail("Stub feeds failed to decode")
+                    return
+                }
+                var pinnedOnly = FeedContent(withFeeds: [pinned], kpiState: .loaded([widget]))
+                var quickActivityOnly = FeedContent(withFeeds: [quickActivity], kpiState: .loaded([widget]))
+                expect(sectionNames(&pinnedOnly)).to(equal(["PinnedAlertSection", "KpiWidgetSection"]))
+                expect(sectionNames(&quickActivityOnly)).to(equal(["KpiWidgetSection", "QuickActivitySection"]))
             }
         }
     }
