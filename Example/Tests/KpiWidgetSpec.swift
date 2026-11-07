@@ -646,10 +646,10 @@ class KpiWidgetSpec: QuickSpec {
             // t -> (track segments, [(v, fill end)]), expected angles in degrees, to 0.1°.
             let table: [(CGFloat, [(Double, Double)], [(CGFloat, Double)])] = [
                 (0, [(183, 357)], [(-0.01, 183), (0, 183), (0.01, 184.74)]),
-                (0.01, [(183, 184.639), (194.694, 357)], [(0, 183), (0.01, 194.694), (0.02, 196.334)]),
-                (0.5, [(183, 264.973), (275.027, 357)], [(0.49, 263.333), (0.5, 275.027), (0.51, 276.667)]),
-                (0.7, [(183, 297.762), (307.816, 357)], [(0.69, 296.122), (0.7, 307.816), (0.71, 309.456)]),
-                (0.99, [(183, 345.306), (355.361, 357)], [(0.98, 343.666), (0.99, 355.361), (1.0, 357)]),
+                (0.01, [(183, 184.639), (194.694, 357)], [(0, 183), (0.01, 184.639), (0.02, 196.334)]),
+                (0.5, [(183, 264.973), (275.027, 357)], [(0.49, 263.333), (0.5, 264.973), (0.51, 276.667)]),
+                (0.7, [(183, 297.762), (307.816, 357)], [(0.69, 296.122), (0.7, 297.762), (0.71, 309.456)]),
+                (0.99, [(183, 345.306), (355.361, 357)], [(0.98, 343.666), (0.99, 345.306), (1.0, 357)]),
                 (1, [(183, 357)], [(0.99, 355.26), (1, 357), (1.01, 357)])
             ]
             for (threshold, segments, fills) in table {
@@ -669,13 +669,18 @@ class KpiWidgetSpec: QuickSpec {
                 }
             }
 
-            it("never lets a below-threshold fill reach the gap, and covers it at the threshold") {
+            it("ends flush against the gap up to the threshold and covers it only above") {
                 for threshold: CGFloat in [0.01, 0.5, 0.7, 0.99] {
                     let track = KpiGaugeGeometry(threshold: threshold, fill: 0, meetsThreshold: false).track
                     let below = KpiGaugeGeometry(threshold: threshold, fill: threshold - 0.001, meetsThreshold: false).fillEnd
+                    // Met at exactly t: the fill's cap coincides with the left segment's end cap, gap visible.
                     let at = KpiGaugeGeometry(threshold: threshold, fill: threshold, meetsThreshold: true).fillEnd
+                    let above = KpiGaugeGeometry(threshold: threshold, fill: threshold + 0.01, meetsThreshold: true).fillEnd
                     expect(below).to(beLessThanOrEqualTo(track[0].end))
-                    expect(Double(at)).to(beCloseTo(Double(track[1].start), within: 0.000_1))
+                    expect(Double(at)).to(beCloseTo(Double(track[0].end), within: 0.000_1))
+                    expect(Double(above)).to(beCloseTo(Double(183 + (threshold + 0.01) * KpiGaugeGeometry.divisibleSpan
+                                                                + 2 * KpiGaugeGeometry.cap + KpiGaugeGeometry.gap), within: 0.000_1))
+                    expect(above).to(beGreaterThan(track[1].start))
                 }
             }
 

@@ -136,8 +136,9 @@ final class KpiGaugeView: UIView {
         let reduceMotion = self.isReduceMotionEnabled()
         // Animate the fill's end angle: both ends are mapped through the threshold geometry.
         let target = self.strokeEnd(forFill: fill)
-        // A previous, completed value is assumed consistent with its own threshold check.
-        let storedFrom = animatedFrom.map { self.strokeEnd(forFill: $0, meetsThreshold: $0 >= (self.threshold ?? 2)) }
+        // A previous, completed value is assumed consistent with its own threshold check. The sweep
+        // animates the end angle continuously, so it crosses the gap only once it passes t.
+        let storedFrom = animatedFrom.map { self.strokeEnd(forFill: $0, meetsThreshold: $0 > (self.threshold ?? 2)) }
         guard let from = inFlightFill ?? storedFrom, !reduceMotion else {
             self.rest(fill: fill, display: display)
             completion()
@@ -286,7 +287,8 @@ final class KpiGaugeView: UIView {
     }
 }
 
-/// D20 geometry of the gauge, in degrees on the stroke centreline (radius 57, stroke 6), screen
+/// D20 geometry of the gauge (amended: the fill covers the gap only strictly above the threshold),
+/// in degrees on the stroke centreline (radius 57, stroke 6), screen
 /// coordinates (clockwise from the positive x axis). Pure, so both the drawing and the specs use it.
 struct KpiGaugeGeometry: Equatable {
 
@@ -328,8 +330,9 @@ struct KpiGaugeGeometry: Equatable {
         let split = Self.startAngle + threshold * Self.divisibleSpan
         self.track = [Segment(start: Self.startAngle, end: split),
                       Segment(start: split + 2 * Self.cap + Self.gap, end: Self.endAngle)]
-        // Below the threshold the fill never reaches the gap; at or above it, it covers the gap.
-        let coversGap = meetsThreshold && value >= threshold
+        // Up to the threshold the fill ends flush against the gap (at exactly t its cap coincides with
+        // the left segment's end cap); only a value above the threshold covers the gap.
+        let coversGap = meetsThreshold && value > threshold
         self.fillEnd = Self.startAngle + value * Self.divisibleSpan + (coversGap ? 2 * Self.cap + Self.gap : 0)
     }
 }
