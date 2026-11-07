@@ -35,8 +35,12 @@ class FeedViewController: BaseViewController {
                                pageSize: Constants.Misc.FeedPageSize,
                                pullToRefresh: true,
                                isInfiniteScrollEnabled: true,
-                               forceSabaFooterForTesting: self.forceSabaForTesting)
+                               forceSabaFooterForTesting: self.forceSabaForTesting,
+                               kpiWidgetStore: self.kpiWidgetStore)
     }()
+    
+    // FUAM-4315: KPI widgets, loaded once per local day independently of the feed (D2).
+    private let kpiWidgetStore: KpiWidgetStore = Services.shared.kpiWidgetStore
     
     private lazy var headerView: FeedHeaderView = {
         let view = FeedHeaderView(profileButtonPressed: { [weak self] in
@@ -95,6 +99,14 @@ class FeedViewController: BaseViewController {
         
         self.checkForWalkThrough()
         self.checkForHealthPermission()
+        
+        // The KPI section re-renders whenever the store changes, without refetching the feed.
+        self.kpiWidgetStore.state
+            .distinctUntilChanged()
+            .observe(on: MainScheduler.instance)
+            .subscribe(onNext: { [weak self] state in
+                self?.listManager.updateKpiState(state)
+            }).disposed(by: self.disposeBag)
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -109,6 +121,7 @@ class FeedViewController: BaseViewController {
                                                   screenClass: String(describing: type(of: self))))
         
         self.listManager.viewWillAppear()
+        self.kpiWidgetStore.refreshIfNeeded()
         self.getInfoMessages()
     }
     
@@ -132,6 +145,9 @@ class FeedViewController: BaseViewController {
                         .subscribe(onSuccess: { [weak self] infoMessages in
                             guard let self = self else { return }
                             self.cacheService.infoMessages = infoMessages
+                            // FUAM-4315 (D15): the KPI info icon reads the cache at render time.
+                            // A plain reload: reloadItems() would refetch the feed and jump to the top.
+                            self.tableView.reloadData()
                             if let infoMessage = infoMessages.firstMessage(withLocation: .tabFeed) {
                                 self.headerView.setComingSoonTitle(title: infoMessage.buttonText ?? "Coming Soon")
                             } else {
@@ -214,6 +230,7 @@ extension FeedViewController: FeedListManagerDelegate {
         let settingsSingle: Single<UserSettings?> = self.repository.getUserSettings()
             .map { Optional($0) }
             .catchAndReturn(nil)
+        let kpiWidgetStore = self.kpiWidgetStore
         return Single.zip(feedsSingle, settingsSingle).map { feeds, settings in
             var processed = feeds
             if settings?.menstrualHadPeriod3Mo == .no {
@@ -222,17 +239,25 @@ extension FeedViewController: FeedListManagerDelegate {
                     return !alert.isPinned
                 }
             }
-            return FeedContent(withFeeds: processed)
+            // Read the KPI state when the response arrives, so a slow feed cannot overwrite a newer one.
+            return FeedContent(withFeeds: processed, kpiState: kpiWidgetStore.state.value)
         }
     }
     
     func onListRefresh() {
+        // Foreground, Quick Activity submission and every other feed reload: same-day no-op.
+        self.kpiWidgetStore.refreshIfNeeded()
         self.refreshUser()
         self.navigator.checkForNotificationPermission(presenter: self)
         self.handleDeeplinks(deeplinkService: self.deeplinkService,
                              navigator: self.navigator,
                              repository: self.repository,
                              disposeBag: self.disposeBag)
+    }
+    
+    func onPullToRefresh() {
+        // An explicit user refresh always reloads the widgets (D2).
+        self.kpiWidgetStore.refreshIfNeeded(force: true)
     }
     
     func isDailyInputsSurvey(_ survey: Survey) -> Bool {

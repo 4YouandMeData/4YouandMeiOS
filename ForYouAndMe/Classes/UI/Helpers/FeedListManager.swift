@@ -59,12 +59,21 @@ struct FeedContent {
     let pinnedAlerts: [Feed]
     let quickActivities: [Feed]
     let feedItems: [Feed]
+    // FUAM-4315: KPI widgets come from KpiWidgetStore, never from the feed payload (D13).
+    let kpiState: KpiWidgetState
 
     lazy var sections: [FeedListSection] = {
         var result: [FeedListSection] = []
 
         if self.pinnedAlerts.count > 0 {
             result.append(PinnedAlertSection(feeds: self.pinnedAlerts))
+        }
+
+        // D3: pinned alerts -> KPI widgets -> quick activities -> dated sections.
+        // `.loaded([])` (studies without a widget) adds nothing.
+        let kpiWidgets = self.kpiState.widgets
+        if kpiWidgets.count > 0 {
+            result.append(KpiWidgetSection(widgets: kpiWidgets))
         }
 
         if self.quickActivities.count > 0 {
@@ -97,27 +106,37 @@ struct FeedContent {
                 return dateA > dateB
             }
         result.append(contentsOf: feedSections)
+
+        // D16: a feed with only the widget shows the widget, then the empty-feed text.
+        if kpiWidgets.count > 0, self.pinnedAlerts.isEmpty, self.quickActivities.isEmpty, self.feedItems.isEmpty {
+            result.append(EmptyFeedSection())
+        }
         return result
     }()
 
     // NOTE: This initializer is used to *reconstruct* content from already-built (and
     // possibly merged, multi-page) arrays — SABA windowing and the reward rule. It must
     // NOT re-sort quick activities, otherwise we'd do a forbidden global cross-page re-sort.
+    // FUAM-4315: `kpiState` has no default on purpose, so every rebuild site has to pass it through.
     init(withPinnedAlerts pinnedAlerts: [Feed],
          quickActivities: [Feed],
-         feedItems: [Feed]) {
+         feedItems: [Feed],
+         kpiState: KpiWidgetState) {
         self.pinnedAlerts = pinnedAlerts
         self.quickActivities = quickActivities
         self.feedItems = feedItems
+        self.kpiState = kpiState
     }
 
-    init(withQuickActivities quickActivities: [Feed], feedItems: [Feed]) {
+    init(withQuickActivities quickActivities: [Feed], feedItems: [Feed], kpiState: KpiWidgetState) {
         self.pinnedAlerts = []
         self.quickActivities = quickActivities
         self.feedItems = feedItems
+        self.kpiState = kpiState
     }
 
-    init(withFeeds feeds: [Feed]) {
+    init(withFeeds feeds: [Feed], kpiState: KpiWidgetState) {
+        self.kpiState = kpiState
         self.pinnedAlerts = feeds.filter { $0.pinnedAlert != nil }
         let nonPinned = feeds.filter { $0.pinnedAlert == nil }
         // FUAM-3398: per-page stable sort of quick activities by metadata.order, applied
@@ -126,8 +145,17 @@ struct FeedContent {
         self.feedItems = nonPinned.filter { false == $0.schedulable?.isQuickActivity ?? false }
     }
 
+    // Widgets are excluded: they are not feed items and do not affect pagination (D13).
     var itemCount: Int {
         return self.pinnedAlerts.count + self.quickActivities.count + self.feedItems.count + 1
+    }
+
+    /// The same content with another KPI state (a fresh value, so `sections` is rebuilt).
+    func with(kpiState: KpiWidgetState) -> FeedContent {
+        return FeedContent(withPinnedAlerts: self.pinnedAlerts,
+                           quickActivities: self.quickActivities,
+                           feedItems: self.feedItems,
+                           kpiState: kpiState)
     }
 }
 
@@ -136,6 +164,8 @@ protocol FeedListManagerDelegate: AnyObject {
     func handleEmptyList(show: Bool)
     func getDataProviderSingle(repository: Repository, fetchMode: FetchMode) -> Single<FeedContent>
     func onListRefresh()
+    /// The user pulled to refresh (FUAM-4315: forces a KPI widget reload).
+    func onPullToRefresh()
     func showError(error: Error)
     
     /// Return true if the given survey is the "Daily Inputs" one (SABA rule).
@@ -145,6 +175,7 @@ protocol FeedListManagerDelegate: AnyObject {
 
 extension FeedListManagerDelegate {
     func onListRefresh() {}
+    func onPullToRefresh() {}
     func isDailyInputsSurvey(_ survey: Survey) -> Bool { false }
 }
 
@@ -175,12 +206,25 @@ fileprivate struct PinnedAlertSection: FeedListSection {
     var sectionText: String? { nil }
 }
 
+private struct KpiWidgetSection: FeedListSection {
+    let widgets: [KpiWidget]
+
+    var numberOfRows: Int { widgets.count }
+    var sectionText: String? { nil }
+}
+
+private struct EmptyFeedSection: FeedListSection {
+    var numberOfRows: Int { 1 }
+    var sectionText: String? { nil }
+}
+
 class FeedListManager: NSObject {
     
     private let tableView: UITableView
     private let repository: Repository
     private let navigator: AppNavigator
     private let analytics: AnalyticsService
+    private let kpiWidgetStore: KpiWidgetStore?
     
     private let pageSize: Int?
     
@@ -251,9 +295,11 @@ class FeedListManager: NSObject {
          pageSize: Int?,
          pullToRefresh: Bool = true,
          isInfiniteScrollEnabled: Bool = true,
-         forceSabaFooterForTesting: Bool = false) {
+         forceSabaFooterForTesting: Bool = false,
+         kpiWidgetStore: KpiWidgetStore? = nil) {
         
         self.repository = repository
+        self.kpiWidgetStore = kpiWidgetStore
         self.navigator = navigator
         self.tableView = tableView
         self.analytics = Services.shared.analytics
@@ -276,6 +322,8 @@ class FeedListManager: NSObject {
         self.tableView.registerCellsWithClass(FeedTableViewCell.self)
         self.tableView.registerCellsWithClass(QuickActivityListTableViewCell.self)
         self.tableView.registerCellsWithClass(LoadingTableViewCell.self)
+        self.tableView.registerCellsWithClass(KpiWidgetTableViewCell.self)
+        self.tableView.registerCellsWithClass(FeedEmptyTableViewCell.self)
         self.tableView.registerHeaderFooterViewWithClass(FeedListSectionHeader.self)
         self.tableView.tableFooterView = UIView()
         self.tableView.separatorStyle = .none
@@ -323,6 +371,19 @@ class FeedListManager: NSObject {
     
     public func viewWillAppear() {
         self.reloadItems()
+    }
+    
+    /// FUAM-4315: re-render with a new KPI state without refetching the feed or moving the list.
+    public func updateKpiState(_ state: KpiWidgetState) {
+        // Before the first feed load there is nothing to merge into: the feed fetch reads the
+        // store itself when it builds its content.
+        guard let content = self.content else { return }
+        self.content = content.with(kpiState: state)
+        // SABA renders from the visible snapshot.
+        self.visibleContent = self.visibleContent?.with(kpiState: state)
+        // Never show the background empty view and the EmptyFeedSection row together.
+        self.delegate?.handleEmptyList(show: self.sections.isEmpty)
+        self.tableView.reloadData()
     }
     
     public func viewDidLayoutSubviews() {
@@ -577,7 +638,8 @@ class FeedListManager: NSObject {
         let limitedItems = Array(sorted.prefix(clamped))
         self.visibleContent = FeedContent(withPinnedAlerts: content.pinnedAlerts,
                                           quickActivities: content.quickActivities,
-                                          feedItems: limitedItems)
+                                          feedItems: limitedItems,
+                                          kpiState: content.kpiState)
     }
 
     private func scrollToPendingTargetIfAny() {
@@ -653,7 +715,8 @@ class FeedListManager: NSObject {
             }
             return FeedContent(withPinnedAlerts: content.pinnedAlerts,
                                quickActivities: content.quickActivities,
-                               feedItems: filteredFeedItems)
+                               feedItems: filteredFeedItems,
+                               kpiState: content.kpiState)
         } else {
             // No blocking surveys -> rewards can be shown
             return content
@@ -686,6 +749,7 @@ class FeedListManager: NSObject {
     // MARK: - Actions
 
     @objc private func refreshControlPulled() {
+        self.delegate?.onPullToRefresh()
         self.reloadItems()
     }
     
@@ -757,6 +821,36 @@ extension FeedListManager: UITableViewDataSource {
                     }
                     : nil
             )
+            return cell
+        } else if let kpiSection = section as? KpiWidgetSection {
+
+            guard indexPath.row < kpiSection.widgets.count else {
+                return getLoadingCell()
+            }
+            guard let cell = tableView.dequeueReusableCellOfType(type: KpiWidgetTableViewCell.self, forIndexPath: indexPath) else {
+                assertionFailure("KpiWidgetTableViewCell not registered")
+                return UITableViewCell()
+            }
+            // The info icon follows the cached App Info Messages at render time (D7, D15).
+            let showInfo = Services.shared.storageServices?.infoMessages?
+                .firstMessage(withLocation: .kpiQuickActivitiesAdherence) != nil
+            cell.display(widget: kpiSection.widgets[indexPath.row],
+                         store: self.kpiWidgetStore,
+                         showInfo: showInfo,
+                         infoCallback: { [weak self] in
+                guard let self = self, let delegate = self.delegate else { return }
+                self.navigator.openMessagePage(withLocation: .kpiQuickActivitiesAdherence, presenter: delegate.presenter)
+            })
+            return cell
+        } else if section is EmptyFeedSection {
+
+            guard indexPath.row < 1 else {
+                return getLoadingCell()
+            }
+            guard let cell = tableView.dequeueReusableCellOfType(type: FeedEmptyTableViewCell.self, forIndexPath: indexPath) else {
+                assertionFailure("FeedEmptyTableViewCell not registered")
+                return UITableViewCell()
+            }
             return cell
         } else if let quickActivitySection = section as? QuickActivitySection {
             
@@ -929,15 +1023,18 @@ fileprivate extension Date {
     }
 }
 
-fileprivate extension Optional where Wrapped == FeedContent {
+// Internal (not fileprivate) so the FUAM-4315 specs can check that appending a page keeps the KPI state.
+extension Optional where Wrapped == FeedContent {
     func merge(withContent content: FeedContent) -> FeedContent {
         guard let self = self else {
             return content
         }
         // NOTE: Pinned alerts are taken from the latest fetch only — they should reflect
         // the current trigger state, not accumulate across appended pages.
+        // FUAM-4315: the KPI state comes from the latest fetch, which read the store when built.
         return FeedContent(withPinnedAlerts: content.pinnedAlerts,
                            quickActivities: self.quickActivities + content.quickActivities,
-                           feedItems: self.feedItems + content.feedItems)
+                           feedItems: self.feedItems + content.feedItems,
+                           kpiState: content.kpiState)
     }
 }

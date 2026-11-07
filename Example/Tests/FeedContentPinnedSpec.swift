@@ -44,7 +44,7 @@ class FeedContentPinnedSpec: QuickSpec {
                         return
                     }
 
-                    let content = FeedContent(withFeeds: [p, r])
+                    let content = FeedContent(withFeeds: [p, r], kpiState: .idle)
 
                     expect(content.pinnedAlerts.count).to(equal(1))
                     expect(content.pinnedAlerts.first?.id).to(equal("p1"))
@@ -72,7 +72,7 @@ class FeedContentPinnedSpec: QuickSpec {
                         return
                     }
 
-                    let content = FeedContent(withFeeds: [r])
+                    let content = FeedContent(withFeeds: [r], kpiState: .idle)
 
                     expect(content.pinnedAlerts).to(beEmpty())
                     expect(content.feedItems.count).to(equal(1))

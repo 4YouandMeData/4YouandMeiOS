@@ -67,6 +67,12 @@ public class FontPalette {
         return FontStyleData(font: scaledFont, lineSpacing: data.lineSpacing, uppercase: data.uppercase)
     }
     
+    // FUAM-4315: the configured font before Dynamic Type scaling, for callers that change the
+    // point size first and then scale (or deliberately keep a fixed size).
+    static func baseFont(forStyle style: FontStyle) -> UIFont {
+        return (self.fontStyleMap[style] ?? style.defaultData).font
+    }
+    
     static func checkFontAvailability() {
         FontStyle.allCases.forEach { style in
             assert(self.fontStyleMap[style] != nil, "Missing font style data for style '\(style.rawValue)'")

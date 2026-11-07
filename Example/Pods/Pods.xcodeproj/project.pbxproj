@@ -388,6 +388,9 @@
 		1A92BE1D325C55DA3A89391A2C6D7BDC /* PagedActivitySectionCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05499BEB0AACB70EF792B76C48CBE23E /* PagedActivitySectionCoordinator.swift */; };
 		1AB1DD737A358F33FD4BA5DBFEA87F13 /* PhoneNumberFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8EEAA7DB06A88011C276790BE4A329B /* PhoneNumberFormatter.swift */; };
 		1AB626F7AE4EFBD58958D9930A1D4968 /* FeedEmptyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23C80DA29254BA69859899C4493BD463 /* FeedEmptyView.swift */; };
+		B74C0BB264D455503FF68C9D54DFE6E3 /* FeedEmptyTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = A576C399580927859ACDE31E0F28EA24 /* FeedEmptyTableViewCell.swift */; };
+		9B8CE05DBCF2E08191A50E86D07A0DD7 /* KpiWidgetTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF8B4459FB64EDED51280A77A2ED106C /* KpiWidgetTableViewCell.swift */; };
+		F4A83399F736668D59F3FD5CF4A095BF /* KpiGaugeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A85F691C709FB69AD910841B9C40FEB7 /* KpiGaugeView.swift */; };
 		1AB7B031A8C09B5B759DD656521B5688 /* ORKRecorder_Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 6D874736506AC21051BACE08F4C30177 /* ORKRecorder_Internal.h */; settings = {ATTRIBUTES = (Project, ); }; };
 		1ABECC35106C9F2E17542ADE169DF594 /* CwlBadInstructionException.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45CC1F90D4246E4DFD05F2A6C2A0833C /* CwlBadInstructionException.swift */; };
 		1ACDCF1687C1F020F94749ED1975EB21 /* SourceLocation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F8378050715487DB5CB1B4AEF958E93 /* SourceLocation.swift */; settings = {COMPILER_FLAGS = "-DPRODUCT_NAME=Nimble/Nimble"; }; };
@@ -1406,6 +1409,7 @@
 		68CE06ED9C3110678DBE8D01D77A4559 /* GULKeychainUtils.h in Headers */ = {isa = PBXBuildFile; fileRef = 29D4854BECE3CC94EAD375A512682523 /* GULKeychainUtils.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		68D5333B0D68BDDD85084154B1E03F74 /* Contain.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3D9984A8B8E50BA5A01D3D74D597DB7 /* Contain.swift */; settings = {COMPILER_FLAGS = "-DPRODUCT_NAME=Nimble/Nimble"; }; };
 		68F0A48C0DBC3587C9886D663FEC23A1 /* String+Localization.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D41324DC0E61C00EFCC102AA64F2507 /* String+Localization.swift */; };
+		5123E0C014268C31DD59FD2531770E3E /* String+KpiHtml.swift in Sources */ = {isa = PBXBuildFile; fileRef = B823A1203888D330D199A4E556A7E72B /* String+KpiHtml.swift */; };
 		68F10A168F199D636AF2EED1ADDC07E7 /* JapxMoya.swift in Sources */ = {isa = PBXBuildFile; fileRef = 806D65818D9FEC24808289EC9B9484B7 /* JapxMoya.swift */; };
 		6907E7687A3B6C2F47DC95DC5273C3AF /* StartWith.swift in Sources */ = {isa = PBXBuildFile; fileRef = 449C253ECA0AAC3034FBFE26193580D8 /* StartWith.swift */; };
 		6938C3D2AD120A875405BEA94EB4068D /* FIRInstallationsIIDStore.m in Sources */ = {isa = PBXBuildFile; fileRef = 42A58680498A0B3ED143A47AE229388A /* FIRInstallationsIIDStore.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
@@ -4804,6 +4808,9 @@
 		23BB65823A3F456B65E7E2FB09A0ED6D /* FIRCLSManagerData.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = FIRCLSManagerData.h; path = Crashlytics/Crashlytics/Controllers/FIRCLSManagerData.h; sourceTree = "<group>"; };
 		23BCFBB085C9289B7C117CD6ADFDC0DC /* FeaturesConfiguration.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = FeaturesConfiguration.swift; sourceTree = "<group>"; };
 		23C80DA29254BA69859899C4493BD463 /* FeedEmptyView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = FeedEmptyView.swift; sourceTree = "<group>"; };
+		A576C399580927859ACDE31E0F28EA24 /* FeedEmptyTableViewCell.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = FeedEmptyTableViewCell.swift; sourceTree = "<group>"; };
+		DF8B4459FB64EDED51280A77A2ED106C /* KpiWidgetTableViewCell.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = KpiWidgetTableViewCell.swift; sourceTree = "<group>"; };
+		A85F691C709FB69AD910841B9C40FEB7 /* KpiGaugeView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = KpiGaugeView.swift; sourceTree = "<group>"; };
 		23D651F0282D6C9226BE0FD0FA7EACB9 /* ORKSubheadlineLabel.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = ORKSubheadlineLabel.m; path = ResearchKit/Common/ORKSubheadlineLabel.m; sourceTree = "<group>"; };
 		23EE35EA333972A51BAF80A6991889CB /* consent_01@2x.m4v */ = {isa = PBXFileReference; includeInIndex = 1; name = "consent_01@2x.m4v"; path = "ResearchKit/Animations/phone@2x/consent_01@2x.m4v"; sourceTree = "<group>"; };
 		2400D9A1C8BF3409B3ABD42ED2C6BE43 /* LuminanceThreshold_GL.fsh */ = {isa = PBXFileReference; includeInIndex = 1; name = LuminanceThreshold_GL.fsh; path = framework/Source/Operations/Shaders/LuminanceThreshold_GL.fsh; sourceTree = "<group>"; };
@@ -5843,6 +5850,7 @@
 		6D19D75A72840E9F5F242B80305E1919 /* ORKSecondaryTaskStep.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = ORKSecondaryTaskStep.h; path = ResearchKit/ActiveTasks/ORKSecondaryTaskStep.h; sourceTree = "<group>"; };
 		6D2D9D19FBF56664A6582DF5146E0282 /* ZoomBlur.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ZoomBlur.swift; path = framework/Source/Operations/ZoomBlur.swift; sourceTree = "<group>"; };
 		6D41324DC0E61C00EFCC102AA64F2507 /* String+Localization.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = "String+Localization.swift"; sourceTree = "<group>"; };
+		B823A1203888D330D199A4E556A7E72B /* String+KpiHtml.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = "String+KpiHtml.swift"; sourceTree = "<group>"; };
 		6D48C3E64003D766EEFDFFB2311A8897 /* GDTCORProductData.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = GDTCORProductData.m; path = GoogleDataTransport/GDTCORLibrary/GDTCORProductData.m; sourceTree = "<group>"; };
 		6D5695E6A3B2AC647D154C5DEB600BFB /* ORKFitnessStep.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = ORKFitnessStep.h; path = ResearchKit/ActiveTasks/ORKFitnessStep.h; sourceTree = "<group>"; };
 		6D874736506AC21051BACE08F4C30177 /* ORKRecorder_Internal.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = ORKRecorder_Internal.h; path = ResearchKit/ActiveTasks/ORKRecorder_Internal.h; sourceTree = "<group>"; };
@@ -8552,6 +8560,9 @@
 				3E43A8533520132346FFA2C781ED3FB6 /* DoubleButtonVerticalView.swift */,
 				DBED905FA8BE3BEA0D9581D9690F509C /* EmojiCell.swift */,
 				23C80DA29254BA69859899C4493BD463 /* FeedEmptyView.swift */,
+				A576C399580927859ACDE31E0F28EA24 /* FeedEmptyTableViewCell.swift */,
+				DF8B4459FB64EDED51280A77A2ED106C /* KpiWidgetTableViewCell.swift */,
+				A85F691C709FB69AD910841B9C40FEB7 /* KpiGaugeView.swift */,
 				80C4AC01FEED574102A1091679154CAD /* FeedHeaderView.swift */,
 				0ABDED139C31D87899145FB3299E4196 /* FeedListSectionHeader.swift */,
 				824710917D5EB7916DDCC317C2D2E79B /* FeedTableViewCell.swift */,
@@ -12932,6 +12943,7 @@
 				3FCE84681F54FC71899F0E2E69CD354D /* StdoutMirror.swift */,
 				5018284BF79B053030A49C427C47526F /* String+Extensions.swift */,
 				6D41324DC0E61C00EFCC102AA64F2507 /* String+Localization.swift */,
+				B823A1203888D330D199A4E556A7E72B /* String+KpiHtml.swift */,
 				6FC5605CB4394445F6C923E168A9E3B7 /* TPKeyboardAvoiding+Extensions.swift */,
 				D4F51C4712BDB4319D0EC07A5ADFD68E /* TypeAliases.swift */,
 				1F70F21002B68E27C8606F9E7E65E2BE /* UIButton+Extensions.swift */,
@@ -17231,6 +17243,9 @@
 				9818B004A640DA798F843002081CCF3C /* FeaturesConfiguration.swift in Sources */,
 				5CF8C163DF0D88E9735AEA7C2D97EC68 /* Feed.swift in Sources */,
 				1AB626F7AE4EFBD58958D9930A1D4968 /* FeedEmptyView.swift in Sources */,
+				B74C0BB264D455503FF68C9D54DFE6E3 /* FeedEmptyTableViewCell.swift in Sources */,
+				9B8CE05DBCF2E08191A50E86D07A0DD7 /* KpiWidgetTableViewCell.swift in Sources */,
+				F4A83399F736668D59F3FD5CF4A095BF /* KpiGaugeView.swift in Sources */,
 				C03B9A8E8285D316893F7EB296F25988 /* FeedHeaderView.swift in Sources */,
 				EF3D28D5B723DE1C9F8C75C818F44162 /* FeedListManager.swift in Sources */,
 				B8B1311242CEE03D5A322989ECD2816E /* FeedListSectionHeader.swift in Sources */,
@@ -17476,6 +17491,7 @@
 				731880FEE8FB847D7E98C25AEBC61197 /* StressLevelViewController.swift in Sources */,
 				0753670E3CD8EB3A9D2BB1D1D4E751AD /* String+Extensions.swift in Sources */,
 				68F0A48C0DBC3587C9886D663FEC23A1 /* String+Localization.swift in Sources */,
+				5123E0C014268C31DD59FD2531770E3E /* String+KpiHtml.swift in Sources */,
 				B6B2769776F1696C232D41F29CB59F2D /* StringsProvider.swift in Sources */,
 				69EC398FD65759959869394BAE848A14 /* Study.swift in Sources */,
 				A2C3E1D60A356435F956CAF425A4DFAC /* StudyInfoHeaderView.swift in Sources */,
