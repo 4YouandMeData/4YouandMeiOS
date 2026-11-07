@@ -65,21 +65,32 @@ final class KpiWidgetStore {
             .observe(on: MainScheduler.instance)
             .subscribe(onSuccess: { [weak self] widgets in
                 guard let self = self, self.generation == requestGeneration else { return }
-                self.isLoading = false
-                self.lastFailed = false
-                self.widgets = widgets
-                self.loadedLocalDay = today
-                let newState = KpiWidgetState.loaded(widgets)
-                if self.state.value != newState {
-                    self.state.accept(newState)
-                }
+                self.didLoad(widgets, today: today)
             }, onFailure: { [weak self] error in
                 guard let self = self, self.generation == requestGeneration else { return }
+                // A backend without the endpoint, with nothing shown yet: no widget for the day, so
+                // apps make one request per day instead of retrying on every Feed visit. Once a card
+                // is loaded, a 404 is an ordinary failure that keeps it.
+                if case KpiWidgetError.endpointNotFound = error, self.widgets == nil {
+                    self.didLoad([], today: today)
+                    return
+                }
                 // Keep whatever was shown; never surface the error. The next trigger retries.
                 print("KpiWidgetStore - fetch failed: \(error.localizedDescription)")
                 self.isLoading = false
                 self.lastFailed = true
             })
+    }
+
+    private func didLoad(_ widgets: [KpiWidget], today: String) {
+        self.isLoading = false
+        self.lastFailed = false
+        self.widgets = widgets
+        self.loadedLocalDay = today
+        let newState = KpiWidgetState.loaded(widgets)
+        if self.state.value != newState {
+            self.state.accept(newState)
+        }
     }
 
     /// Logout: forget everything, and drop any response still in flight.

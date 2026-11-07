@@ -11,11 +11,13 @@ import PureLayout
 
 final class KpiWidgetTableViewCell: UITableViewCell {
 
-    private static let lineHeightMultiple: CGFloat = 1.5
+    /// Figma line height, as a multiple of the point size (§3).
+    private static let lineHeightRatio: CGFloat = 1.5
     // ponytail: unbounded memo keyed by id + body + size category; a handful of entries per day.
     private static var bodyCache: [String: NSAttributedString] = [:]
 
-    private let titleLabel: UILabel = {
+    // Labels and the title row are internal (read-only) for the specs.
+    let titleLabel: UILabel = {
         let label = UILabel()
         label.numberOfLines = 0
         return label
@@ -31,7 +33,7 @@ final class KpiWidgetTableViewCell: UITableViewCell {
         return imageView
     }()
 
-    private let bodyLabel: UILabel = {
+    let bodyLabel: UILabel = {
         let label = UILabel()
         label.numberOfLines = 0
         label.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
@@ -40,7 +42,7 @@ final class KpiWidgetTableViewCell: UITableViewCell {
     }()
 
     private let gaugeView = KpiGaugeView()
-    private let titleRow = UIStackView.create(withAxis: .horizontal, spacing: 16)
+    let titleRow = UIStackView.create(withAxis: .horizontal, spacing: 16)
     private lazy var titleTap = UITapGestureRecognizer(target: self, action: #selector(self.titleRowTapped))
     private var infoCallback: (() -> Void)?
 
@@ -94,19 +96,24 @@ final class KpiWidgetTableViewCell: UITableViewCell {
         self.infoCallback = infoCallback
 
         // Title row: the title wraps; the info icon and the tap exist only with a configured message.
+        // A nil title keeps the (empty) label in the row so the icon stays trailing.
         if let title = widget.title {
+            let font = Self.scaledFont(.paragraphBold, size: 16)
             self.titleLabel.attributedText = NSAttributedString(string: title, attributes: [
-                .font: Self.scaledFont(.paragraphBold, size: 16),
+                .font: font,
                 .foregroundColor: ColorPalette.color(withType: .primaryText),
-                .paragraphStyle: Self.paragraphStyle
+                .paragraphStyle: Self.paragraphStyle(for: font)
             ])
         } else {
             self.titleLabel.attributedText = nil
         }
-        self.titleLabel.isHidden = widget.title == nil
         self.infoIconView.isHidden = !showInfo
         self.titleTap.isEnabled = showInfo
         self.titleRow.isHidden = widget.title == nil && !showInfo
+        // VoiceOver: with an info message the whole row is one button named by the title.
+        self.titleRow.isAccessibilityElement = showInfo
+        self.titleRow.accessibilityTraits = showInfo ? .button : .none
+        self.titleRow.accessibilityLabel = showInfo ? (widget.title ?? "Info") : nil
 
         // A nil body keeps the (empty) label so the gauge stays trailing.
         self.bodyLabel.attributedText = widget.body.map { Self.attributedBody($0, widgetId: widget.id) }
@@ -129,9 +136,15 @@ final class KpiWidgetTableViewCell: UITableViewCell {
         self.infoCallback?()
     }
 
-    private static var paragraphStyle: NSParagraphStyle {
+    /// UIKit multiplies the font's natural line height, not its point size: this converts the
+    /// Figma "1.5" (24 pt at 16 pt, 22.5 pt at 15 pt) into the multiple for `font`.
+    static func lineHeightMultiple(for font: UIFont) -> CGFloat {
+        return Self.lineHeightRatio * font.pointSize / font.lineHeight
+    }
+
+    private static func paragraphStyle(for font: UIFont) -> NSParagraphStyle {
         let style = NSMutableParagraphStyle()
-        style.lineHeightMultiple = Self.lineHeightMultiple
+        style.lineHeightMultiple = Self.lineHeightMultiple(for: font)
         return style
     }
 
@@ -151,7 +164,7 @@ final class KpiWidgetTableViewCell: UITableViewCell {
                                                   bold: self.scaledFont(.paragraphBold, size: 15),
                                                   italic: italic,
                                                   color: ColorPalette.color(withType: .primaryText),
-                                                  lineHeightMultiple: self.lineHeightMultiple)
+                                                  lineHeightMultiple: self.lineHeightMultiple(for: regular))
         self.bodyCache[key] = attributed
         return attributed
     }

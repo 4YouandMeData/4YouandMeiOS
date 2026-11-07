@@ -22,7 +22,7 @@ final class FeedEmptyTableViewCell: UITableViewCell {
         let stackView = UIStackView()
         stackView.axis = .vertical
         self.contentView.addSubview(stackView)
-        stackView.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets(top: 40.0, left: 20.0, bottom: 24.0, right: 20.0))
+        stackView.autoPinEdgesToSuperviewEdges(with: UIEdgeInsets(top: 24.0, left: 20.0, bottom: 24.0, right: 20.0))
 
         stackView.addLabel(withText: StringsProvider.string(forKey: .tabFeedEmptyTitle), fontStyle: .title, colorType: .primaryText)
         stackView.addBlankSpace(space: 20.0)

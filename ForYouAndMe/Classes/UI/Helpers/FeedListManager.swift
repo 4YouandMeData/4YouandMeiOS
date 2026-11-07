@@ -296,13 +296,15 @@ class FeedListManager: NSObject {
          pullToRefresh: Bool = true,
          isInfiniteScrollEnabled: Bool = true,
          forceSabaFooterForTesting: Bool = false,
-         kpiWidgetStore: KpiWidgetStore? = nil) {
+         kpiWidgetStore: KpiWidgetStore? = nil,
+         analytics: AnalyticsService? = nil) {
         
         self.repository = repository
         self.kpiWidgetStore = kpiWidgetStore
         self.navigator = navigator
         self.tableView = tableView
-        self.analytics = Services.shared.analytics
+        // Injectable so the FUAM-4315 specs can build a manager without Services being set up.
+        self.analytics = analytics ?? Services.shared.analytics
         self.delegate = delegate
         self.isInfiniteScrollEnabled = isInfiniteScrollEnabled
         self.forceSabaFooterForTesting = forceSabaFooterForTesting

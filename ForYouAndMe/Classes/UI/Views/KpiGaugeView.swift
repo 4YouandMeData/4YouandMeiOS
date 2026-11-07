@@ -23,7 +23,7 @@ final class KpiGaugeView: UIView {
 
     private let trackLayer = CAShapeLayer()
     private let progressLayer = CAShapeLayer()
-    private let valueLabel = UILabel()
+    let valueLabel = UILabel() // internal (read-only) for the specs
     private let percentLabel = UILabel()
 
     private var progressColor: UIColor = ColorPalette.color(withType: .kpiWidgetThreshold0)
@@ -35,6 +35,13 @@ final class KpiGaugeView: UIView {
     private var targetDisplay: Int?
     private var animationToken: Int = 0
     private var countTimer: Timer?
+    /// Injectable for the specs; production reads the system setting.
+    var isReduceMotionEnabled: () -> Bool = { UIAccessibility.isReduceMotionEnabled }
+
+    /// The running fill animation, if any (read by the specs).
+    var fillAnimation: CABasicAnimation? {
+        return self.progressLayer.animation(forKey: "fill") as? CABasicAnimation
+    }
 
     init() {
         super.init(frame: CGRect(origin: .zero, size: Self.size))
@@ -102,12 +109,18 @@ final class KpiGaugeView: UIView {
         // The count starts from the number on screen; a fresh view derives it from the start fill.
         let shownDisplay = (id == self.widgetId ? self.valueLabel.text.flatMap { Int($0) } : nil)
             ?? Int((Double(animatedFrom ?? 0) * 100 + 1e-9).rounded(.down))
+        // A new value for the same widget while the arc is still sweeping continues from where the
+        // arc is drawn, not from the store's last completed fill (which is not written yet).
+        let inFlightFill: CGFloat? = (id == self.widgetId && self.fillAnimation != nil)
+            ? self.progressLayer.presentation()?.strokeEnd
+            : nil
         self.cancelAnimation()
         self.widgetId = id
         self.targetFill = fill
         self.targetDisplay = display
 
-        guard let from = animatedFrom, !UIAccessibility.isReduceMotionEnabled else {
+        let reduceMotion = self.isReduceMotionEnabled()
+        guard let from = inFlightFill ?? animatedFrom, !reduceMotion else {
             self.rest(fill: fill, display: display)
             completion()
             return

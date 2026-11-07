@@ -230,7 +230,12 @@ extension FeedViewController: FeedListManagerDelegate {
         let settingsSingle: Single<UserSettings?> = self.repository.getUserSettings()
             .map { Optional($0) }
             .catchAndReturn(nil)
-        let kpiWidgetStore = self.kpiWidgetStore
+        return Self.feedContentSingle(feeds: feedsSingle, settings: settingsSingle, kpiWidgetStore: self.kpiWidgetStore)
+    }
+    
+    static func feedContentSingle(feeds feedsSingle: Single<[Feed]>,
+                                  settings settingsSingle: Single<UserSettings?>,
+                                  kpiWidgetStore: KpiWidgetStore) -> Single<FeedContent> {
         return Single.zip(feedsSingle, settingsSingle).map { feeds, settings in
             var processed = feeds
             if settings?.menstrualHadPeriod3Mo == .no {
@@ -239,7 +244,8 @@ extension FeedViewController: FeedListManagerDelegate {
                     return !alert.isPinned
                 }
             }
-            // Read the KPI state when the response arrives, so a slow feed cannot overwrite a newer one.
+            // FUAM-4315: read the KPI state when the response arrives, so a slow feed cannot
+            // overwrite a newer one.
             return FeedContent(withFeeds: processed, kpiState: kpiWidgetStore.state.value)
         }
     }

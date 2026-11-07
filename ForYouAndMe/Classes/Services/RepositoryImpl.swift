@@ -374,6 +374,12 @@ extension RepositoryImpl: Repository {
     func getKpiWidgets() -> Single<[KpiWidget]> {
         return self.api.send(request: ApiRequest(serviceRequest: .getKpiWidgets))
             .map { (items: ExcludeInvalid<KpiWidget>) in items.wrappedValue.filter(\.isSupported) }
+            // Surface a 404 distinctly (handleError would fold it into a generic repository error):
+            // KpiWidgetStore treats it as "no widget for the day" on a cold start.
+            .catch { error in
+                if (error as? ApiError)?.statusCode == 404 { return .error(KpiWidgetError.endpointNotFound) }
+                return .error(error)
+            }
             .handleError()
     }
     
