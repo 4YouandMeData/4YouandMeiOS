@@ -128,6 +128,8 @@ final class KpiWidgetTableViewCell: UITableViewCell {
         let widgetId = widget.id
         self.gaugeView.set(id: widgetId,
                            fill: fill,
+                           threshold: widget.threshold,
+                           meetsThreshold: widget.meetsThreshold,
                            display: widget.displayPercent,
                            progressColor: progressColor,
                            trackColor: ColorPalette.color(withType: .inactive),

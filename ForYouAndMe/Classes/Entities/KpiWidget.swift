@@ -24,6 +24,8 @@ struct KpiWidget: Codable, Equatable {
     let meetsThreshold: Bool
     let title: String?
     let body: String?
+    /// D20: only `threshold` is read (the track gap); every other key is ignored.
+    var kpiParams: KpiParams?
 
     /// The integer shown in the gauge: `min(100, floor(percentage))`, 0 when nothing is settled (D6).
     var displayPercent: Int {
@@ -35,6 +37,11 @@ struct KpiWidget: Codable, Equatable {
     var fill: CGFloat {
         guard let percentage = self.percentage else { return 0 }
         return CGFloat(min(1, max(0, percentage / 100)))
+    }
+
+    /// Where the gauge track splits (D20), in 0...1; nil without a valid integer threshold.
+    var threshold: CGFloat? {
+        return self.kpiParams?.threshold.map { CGFloat($0) / 100 }
     }
 
     /// Only the Quick Activities adherence KPI is rendered in v1 (D8).
@@ -55,6 +62,7 @@ extension KpiWidget: JSONAPIMappable {
         case meetsThreshold = "meets_threshold"
         case title
         case body
+        case kpiParams = "kpi_params"
     }
 
     // The admin form posts "" for a cleared field: a blank title, or a body with no visible
@@ -75,6 +83,26 @@ extension KpiWidget: JSONAPIMappable {
         self.title = title?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false ? title : nil
         let body = try container.decodeIfPresent(String.self, forKey: .body)
         self.body = body.map { KpiHtmlScanner.scan($0).isEmpty } == false ? body : nil
+        // Missing or malformed params never drop the widget: they just mean "no threshold gap".
+        self.kpiParams = (try? container.decodeIfPresent(KpiParams.self, forKey: .kpiParams)) ?? nil
+    }
+}
+
+struct KpiParams: Codable, Equatable {
+    let threshold: Int?
+
+    init(threshold: Int?) {
+        self.threshold = threshold
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case threshold
+    }
+
+    // Tolerant: a non-integer threshold (string, fraction, null) reads as nil; other keys are ignored.
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.threshold = (try? container.decodeIfPresent(Int.self, forKey: .threshold)) ?? nil
     }
 }
 

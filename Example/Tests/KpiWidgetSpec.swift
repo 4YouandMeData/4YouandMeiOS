@@ -599,6 +599,118 @@ class KpiWidgetSpec: QuickSpec {
             }
         }
 
+        // MARK: D20 threshold gap
+
+        describe("KpiWidget threshold decoding") {
+            func decode(_ params: String) -> KpiWidget? {
+                let json = """
+                {"data":{"id":"1","type":"kpi_widget","attributes":{"kpi_type":"quick_activities_adherence",
+                "display_mode":"gauge","position":null,"featured":false,"completed":1,"total":2,"percentage":50.0,
+                "meets_threshold":false,"title":"T","body":null\(params)}}}
+                """
+                return try? Response(statusCode: 200, data: Data(json.utf8))
+                    .mapCodableJSONAPI(includeList: KpiWidget.includeList, keyPath: KpiWidget.keyPath)
+            }
+
+            it("reads an integer threshold and ignores other keys") {
+                let widget = decode(#", "kpi_params": {"threshold": 70, "window": "7d"}"#)
+                expect(widget?.kpiParams?.threshold).to(equal(70))
+                expect(widget?.threshold).to(beCloseTo(0.7, within: 0.000_1))
+            }
+
+            it("treats a missing or malformed threshold as no gap, without dropping the widget") {
+                for params in ["", #", "kpi_params": null"#, #", "kpi_params": {}"#,
+                               #", "kpi_params": {"threshold": "70"}"#, #", "kpi_params": {"threshold": 70.5}"#,
+                               #", "kpi_params": "oops""#] {
+                    let widget = decode(params)
+                    expect(widget).toNot(beNil(), description: "params \(params)")
+                    expect(widget?.threshold).to(beNil(), description: "params \(params)")
+                }
+            }
+
+            it("decodes the fixture thresholds") {
+                let decoded: ExcludeInvalid<KpiWidget>? = try? Response(statusCode: 200,
+                                                                        data: Bundle.getTestData(from: "TestGetKpiWidgets"))
+                    .mapCodableJSONAPI(includeList: KpiWidget.includeList, keyPath: KpiWidget.keyPath)
+                expect(decoded?.wrappedValue.map { $0.kpiParams?.threshold }).to(equal([70, 70, nil]))
+            }
+        }
+
+        describe("KpiGaugeGeometry") {
+            it("uses the spec constants") {
+                expect(Double(KpiGaugeGeometry.cap)).to(beCloseTo(3.017, within: 0.001))
+                expect(Double(KpiGaugeGeometry.gap)).to(beCloseTo(4.021, within: 0.001))
+                expect(Double(KpiGaugeGeometry.divisibleSpan)).to(beCloseTo(163.945, within: 0.001))
+            }
+
+            // t -> (track segments, [(v, fill end)]), expected angles in degrees, to 0.1°.
+            let table: [(CGFloat, [(Double, Double)], [(CGFloat, Double)])] = [
+                (0, [(183, 357)], [(-0.01, 183), (0, 183), (0.01, 184.74)]),
+                (0.01, [(183, 184.639), (194.694, 357)], [(0, 183), (0.01, 194.694), (0.02, 196.334)]),
+                (0.5, [(183, 264.973), (275.027, 357)], [(0.49, 263.333), (0.5, 275.027), (0.51, 276.667)]),
+                (0.7, [(183, 297.762), (307.816, 357)], [(0.69, 296.122), (0.7, 307.816), (0.71, 309.456)]),
+                (0.99, [(183, 345.306), (355.361, 357)], [(0.98, 343.666), (0.99, 355.361), (1.0, 357)]),
+                (1, [(183, 357)], [(0.99, 355.26), (1, 357), (1.01, 357)])
+            ]
+            for (threshold, segments, fills) in table {
+                it("splits the track at t = \(threshold) and maps the fill around it") {
+                    let geometry = KpiGaugeGeometry(threshold: threshold, fill: 0, meetsThreshold: false)
+                    expect(geometry.track.count).to(equal(segments.count))
+                    expect(geometry.hasGap).to(equal(segments.count == 2))
+                    for (segment, expected) in zip(geometry.track, segments) {
+                        expect(Double(segment.start)).to(beCloseTo(expected.0, within: 0.1))
+                        expect(Double(segment.end)).to(beCloseTo(expected.1, within: 0.1))
+                        expect(segment.isDot).to(beFalse())
+                    }
+                    for (fill, expectedEnd) in fills {
+                        let end = KpiGaugeGeometry(threshold: threshold, fill: fill, meetsThreshold: fill >= threshold).fillEnd
+                        expect(Double(end)).to(beCloseTo(expectedEnd, within: 0.1), description: "fill \(fill)")
+                    }
+                }
+            }
+
+            it("never lets a below-threshold fill reach the gap, and covers it at the threshold") {
+                for threshold: CGFloat in [0.01, 0.5, 0.7, 0.99] {
+                    let track = KpiGaugeGeometry(threshold: threshold, fill: 0, meetsThreshold: false).track
+                    let below = KpiGaugeGeometry(threshold: threshold, fill: threshold - 0.001, meetsThreshold: false).fillEnd
+                    let at = KpiGaugeGeometry(threshold: threshold, fill: threshold, meetsThreshold: true).fillEnd
+                    expect(below).to(beLessThanOrEqualTo(track[0].end))
+                    expect(Double(at)).to(beCloseTo(Double(track[1].start), within: 0.000_1))
+                }
+            }
+
+            it("covers the gap only when the backend says the threshold is met") {
+                for threshold: CGFloat in [0.01, 0.5, 0.7, 0.99] {
+                    let fill = threshold + 0.01
+                    let notMet = KpiGaugeGeometry(threshold: threshold, fill: fill, meetsThreshold: false).fillEnd
+                    let met = KpiGaugeGeometry(threshold: threshold, fill: fill, meetsThreshold: true).fillEnd
+                    expect(Double(notMet)).to(beCloseTo(Double(183 + fill * KpiGaugeGeometry.divisibleSpan), within: 0.000_1))
+                    expect(Double(met - notMet))
+                        .to(beCloseTo(Double(2 * KpiGaugeGeometry.cap + KpiGaugeGeometry.gap), within: 0.000_1))
+                }
+                // met, but the rounded percentage sits just below t: no step either.
+                let roundedBelow = KpiGaugeGeometry(threshold: 0.7, fill: 0.699_9, meetsThreshold: true).fillEnd
+                expect(Double(roundedBelow)).to(beCloseTo(Double(183 + 0.699_9 * KpiGaugeGeometry.divisibleSpan), within: 0.000_1))
+            }
+
+            it("treats no threshold like today's single arc") {
+                let geometry = KpiGaugeGeometry(threshold: nil, fill: 0.5, meetsThreshold: true)
+                expect(geometry.track).to(equal([KpiGaugeGeometry.Segment(start: 183, end: 357)]))
+                expect(Double(geometry.fillEnd)).to(beCloseTo(270, within: 0.000_1))
+                expect(KpiGaugeGeometry(threshold: -0.2, fill: 0, meetsThreshold: false).hasGap).to(beFalse())
+                expect(KpiGaugeGeometry(threshold: 1.3, fill: 0, meetsThreshold: false).hasGap).to(beFalse())
+            }
+
+            it("draws a segment shorter than 0.05° as a dot") {
+                let tiny = KpiGaugeGeometry(threshold: 0.000_1, fill: 0, meetsThreshold: false).track
+                expect(tiny[0].isDot).to(beTrue())
+                expect(tiny[1].isDot).to(beFalse())
+                let almostFull = KpiGaugeGeometry(threshold: 0.999_9, fill: 0, meetsThreshold: false).track
+                expect(almostFull[0].isDot).to(beFalse())
+                expect(almostFull[1].isDot).to(beTrue())
+            }
+        }
+
         // MARK: 7. Palette defaults
 
         describe("KPI palette keys") {
