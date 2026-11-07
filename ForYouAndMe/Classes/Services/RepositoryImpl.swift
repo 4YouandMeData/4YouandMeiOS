@@ -120,6 +120,8 @@ extension RepositoryImpl: Repository {
     func logOut() {
         self.storage.user = nil
         self.api.logOut()
+        // FUAM-4315: the KPI card is in-memory only; drop it so the next participant never sees it.
+        Services.shared.kpiWidgetStore?.reset()
         #if SENSORKIT
         (Services.shared.sensorKitService as? SensorKitManager)?.refreshRecordingBasedOnClearance()
         #endif
@@ -366,6 +368,12 @@ extension RepositoryImpl: Repository {
                 }
                 print("[getFeeds] total=\(feeds.count) quickActivities=\(qa) activities=\(activities) surveys=\(surveys) notifiables=\(notifiables) other=\(other)")
             })
+            .handleError()
+    }
+    
+    func getKpiWidgets() -> Single<[KpiWidget]> {
+        return self.api.send(request: ApiRequest(serviceRequest: .getKpiWidgets))
+            .map { (items: ExcludeInvalid<KpiWidget>) in items.wrappedValue.filter(\.isSupported) }
             .handleError()
     }
     

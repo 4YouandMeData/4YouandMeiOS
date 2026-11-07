@@ -17,6 +17,7 @@ enum MessageInfoParameter: String, Codable {
     case pageMyDoses = "PAGE_MY_DOSES"
     case pageWeHaveNoticed = "PAGE_WE_HAVE_NOTICED"
     case pageHotFlash = "PAGE_HOT_FLASH"
+    case kpiQuickActivitiesAdherence = "KPI_QUICK_ACTIVITIES_ADHERENCE"
     case unknown
         
     init(from decoder: Decoder) throws {

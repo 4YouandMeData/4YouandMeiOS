@@ -1589,6 +1589,7 @@
 		764F9962BF11DBDEB0DA6330EFB89849 /* unwrap+SharedSequence.swift in Sources */ = {isa = PBXBuildFile; fileRef = D180F7B0EB09434C84B68E57A56BB7C8 /* unwrap+SharedSequence.swift */; };
 		76759A8D06C993A9BECEC349E6C24CD5 /* ThrowAssertion.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19BF8E199D9CDFB55AE9876E94FA964C /* ThrowAssertion.swift */; settings = {COMPILER_FLAGS = "-DPRODUCT_NAME=Nimble/Nimble"; }; };
 		7698174B67A1F4F38C894907C2AE8AEC /* MessageInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7ABF90D552CD6E6718EFA1C52D9C823 /* MessageInfo.swift */; };
+		63D12BC28F9D82C663AA3F7D9EA1B98D /* KpiWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35162616B03840B3482A6C09AE666A08 /* KpiWidget.swift */; };
 		769C8E3D43F7DF69F3D4F89A16E5E664 /* ORKImageCaptureCameraPreviewView.h in Headers */ = {isa = PBXBuildFile; fileRef = 785CAA3A6BE4F28B7E61CE31551545B7 /* ORKImageCaptureCameraPreviewView.h */; settings = {ATTRIBUTES = (Project, ); }; };
 		76AA6AD976CCD9D90A6459113C4BBCB7 /* LocalBinaryPattern_GL.fsh in Resources */ = {isa = PBXBuildFile; fileRef = 29AC58FB22C5FB3C6A5F8294D08D13EC /* LocalBinaryPattern_GL.fsh */; };
 		76BA36410D5F7515E295463571C91CEC /* ToSucceed.swift in Sources */ = {isa = PBXBuildFile; fileRef = 494EC9E3244DAE65FC2514663F1332B9 /* ToSucceed.swift */; settings = {COMPILER_FLAGS = "-DPRODUCT_NAME=Nimble/Nimble"; }; };
@@ -3241,6 +3242,7 @@
 		FA43C178B542E083DACED43E14346B8B /* NMBStringify.h in Headers */ = {isa = PBXBuildFile; fileRef = 419FBC701894976C294BC5C2D708C404 /* NMBStringify.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		FA5BC0C39B4FE10F51FB0920C6D75711 /* ORKCountdownStep.h in Headers */ = {isa = PBXBuildFile; fileRef = 6B2F8A31491183C3B5704C5B24768E91 /* ORKCountdownStep.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		FA750409F0DF85233F05431D0C63BEE7 /* Services.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DA3F9C85BF04DC12B0694D59FF1EE2C /* Services.swift */; };
+		F9047CD49132632C032C12A5D55DF36C /* KpiWidgetStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9ABE63A77A6711315AC5373475F9957 /* KpiWidgetStore.swift */; };
 		FA842EC28D37FCFC3176AF5121D73A64 /* ja.lproj in Resources */ = {isa = PBXBuildFile; fileRef = 83D292FAF6E1570DDAF139BF149551DA /* ja.lproj */; };
 		FAB6723A334CFBC02D3812D5E12014A7 /* ORKShoulderRangeOfMotionStep.m in Sources */ = {isa = PBXBuildFile; fileRef = 69A55E63DFA2AADD4C67D13E2C1E3331 /* ORKShoulderRangeOfMotionStep.m */; settings = {COMPILER_FLAGS = "-w -Xanalyzer -analyzer-disable-all-checks"; }; };
 		FAB703884AC7E3E527AB50FB9001276B /* WebSocketRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81826007E0966856F322402551B52A79 /* WebSocketRequest.swift */; };
@@ -3286,6 +3288,7 @@
 		FD7454F8EB69C26B6F8719D076219023 /* SVProgressAnimatedView.h in Headers */ = {isa = PBXBuildFile; fileRef = 81A58DDE0C2522ABEBE794B9DF0E08DD /* SVProgressAnimatedView.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		FDEB86D804B5AC29BF84CE9EE2480008 /* UserData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C49AAF4784D53A35EFA53EC30360D85 /* UserData.swift */; };
 		FDF5740B7D684080212298DAF85E909C /* TestGetTasks.json in Resources */ = {isa = PBXBuildFile; fileRef = 12CF56BC7F0D4DEC1EF64C9A81A7AB38 /* TestGetTasks.json */; };
+		6C7991FF365B98EEA63DC6AE33CDBA68 /* TestGetKpiWidgets.json in Resources */ = {isa = PBXBuildFile; fileRef = AA2A1D4E5797449A9DCD14924E5E3C16 /* TestGetKpiWidgets.json */; };
 		FDFD6D323DF1ABEF79FA58B679DDE892 /* FIRMessagingTopicsCommon.h in Headers */ = {isa = PBXBuildFile; fileRef = 7F9FB7AD9AFDC77D222B1FAEE199AD68 /* FIRMessagingTopicsCommon.h */; settings = {ATTRIBUTES = (Project, ); }; };
 		FE04A55C414AD7F820B1E59E05696184 /* SpyrometerTestViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 242D4C90D3FFABAC79F0D3D06C32C768 /* SpyrometerTestViewController.swift */; };
 		FE098E4C77891391CA608CDEEABB6704 /* WKWebView+Rx.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9D0A1A96076795695B1FDA662E1D40E /* WKWebView+Rx.swift */; };
@@ -4548,6 +4551,7 @@
 		12BA0E6EDB1A81D775BA71CFF36381DF /* FIRCLSBinaryImage.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = FIRCLSBinaryImage.h; path = Crashlytics/Crashlytics/Components/FIRCLSBinaryImage.h; sourceTree = "<group>"; };
 		12BB65FC4C8E402494765F78B0A7D088 /* CombinePrevious.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = CombinePrevious.swift; path = Sources/Observers/CombinePrevious.swift; sourceTree = "<group>"; };
 		12CF56BC7F0D4DEC1EF64C9A81A7AB38 /* TestGetTasks.json */ = {isa = PBXFileReference; includeInIndex = 1; path = TestGetTasks.json; sourceTree = "<group>"; };
+		AA2A1D4E5797449A9DCD14924E5E3C16 /* TestGetKpiWidgets.json */ = {isa = PBXFileReference; includeInIndex = 1; path = TestGetKpiWidgets.json; sourceTree = "<group>"; };
 		12D80E70599EA7ACE8B6C9F2C1D707B0 /* Vibrance_GL.fsh */ = {isa = PBXFileReference; includeInIndex = 1; name = Vibrance_GL.fsh; path = framework/Source/Operations/Shaders/Vibrance_GL.fsh; sourceTree = "<group>"; };
 		12DC983732680AF0126F4503578B2276 /* Polling+Require.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = "Polling+Require.swift"; path = "Sources/Nimble/Polling+Require.swift"; sourceTree = "<group>"; };
 		12F5753D2BDAABBDB5355DD20EB85EBF /* UberSignature-Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = "UberSignature-Info.plist"; sourceTree = "<group>"; };
@@ -6260,6 +6264,7 @@
 		8D836D87CF626A641D8B513366DDE0E4 /* TestGetUserData.json */ = {isa = PBXFileReference; includeInIndex = 1; path = TestGetUserData.json; sourceTree = "<group>"; };
 		8D97590E370DA3BBD7C2D03AE06D8636 /* mach_excServer.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = mach_excServer.h; path = Sources/CwlMachBadInstructionHandler/mach_excServer.h; sourceTree = "<group>"; };
 		8DA3F9C85BF04DC12B0694D59FF1EE2C /* Services.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Services.swift; sourceTree = "<group>"; };
+		C9ABE63A77A6711315AC5373475F9957 /* KpiWidgetStore.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = KpiWidgetStore.swift; sourceTree = "<group>"; };
 		8E163A4947FFA3FF201F81E12C52250F /* CwlPreconditionTesting-dummy.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = "CwlPreconditionTesting-dummy.m"; sourceTree = "<group>"; };
 		8E1FEA2E36152DAA98C0329B01ECB4A1 /* OverlayBlend_GLES.fsh */ = {isa = PBXFileReference; includeInIndex = 1; name = OverlayBlend_GLES.fsh; path = framework/Source/Operations/Shaders/OverlayBlend_GLES.fsh; sourceTree = "<group>"; };
 		8E201800D29CF77D562CB1BF97B06E91 /* NimbleXCTestHandler.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = NimbleXCTestHandler.swift; path = Sources/Nimble/Adapters/NimbleXCTestHandler.swift; sourceTree = "<group>"; };
@@ -7017,6 +7022,7 @@
 		C795B5E7F8AE7B8D062F445290446FB7 /* ru.lproj */ = {isa = PBXFileReference; includeInIndex = 1; name = ru.lproj; path = ResearchKit/Localized/ru.lproj; sourceTree = "<group>"; };
 		C797B156B0116F3BE015B518672CBB1E /* FIRInteropEventNames.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = FIRInteropEventNames.h; path = Interop/Analytics/Public/FIRInteropEventNames.h; sourceTree = "<group>"; };
 		C7ABF90D552CD6E6718EFA1C52D9C823 /* MessageInfo.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MessageInfo.swift; sourceTree = "<group>"; };
+		35162616B03840B3482A6C09AE666A08 /* KpiWidget.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = KpiWidget.swift; sourceTree = "<group>"; };
 		C7AEA08A2EED193D909D99B49C23D1BC /* ORKDontKnowButton.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = ORKDontKnowButton.h; path = ResearchKit/Common/ORKDontKnowButton.h; sourceTree = "<group>"; };
 		C7B1D384B2DC94E93B82157EBF85ABEB /* FIRCLSByteUtility.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = FIRCLSByteUtility.m; path = Crashlytics/Shared/FIRCLSByteUtility.m; sourceTree = "<group>"; };
 		C7B42F0B60614067FD173F20150DAB9A /* ObservableConvertibleType+Driver.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = "ObservableConvertibleType+Driver.swift"; path = "RxCocoa/Traits/Driver/ObservableConvertibleType+Driver.swift"; sourceTree = "<group>"; };
@@ -9648,6 +9654,7 @@
 				192F32B09546760140AED6B0C7C2EA75 /* IntegrationData.swift */,
 				B168A3AAF96356D08DE16A9312BD92F1 /* MenstrualSequence.swift */,
 				C7ABF90D552CD6E6718EFA1C52D9C823 /* MessageInfo.swift */,
+				35162616B03840B3482A6C09AE666A08 /* KpiWidget.swift */,
 				F5C324C2AA4DA7B59A8AF2CA4D165388 /* OptInPermission.swift */,
 				F7EC45EF292E3DE5BD057419A71DB663 /* Page.swift */,
 				B7B070E9905D4B8CA7BB5A7304D0E899 /* Page+Doses.swift */,
@@ -9903,6 +9910,7 @@
 				D3FE4CC58B8B7D81E27E5621A17ACDAF /* Repository.swift */,
 				CD1643FD74F4C728D81995C0159B506B /* RepositoryImpl.swift */,
 				8DA3F9C85BF04DC12B0694D59FF1EE2C /* Services.swift */,
+				C9ABE63A77A6711315AC5373475F9957 /* KpiWidgetStore.swift */,
 				628528EB31E157B5B981726239CB98CF /* TerraManager.swift */,
 				78891857F0F16A349F2F76F654ED8CBF /* TerraService.swift */,
 				0E0F3679FFB53DA6D31F05457BDB5F67 /* Analytics */,
@@ -12960,6 +12968,7 @@
 				E5A8472262C08DAAA2CFAF3240480B92 /* TestGetStudyInfoNoData.json */,
 				646AD32C97A1DBE0105C071C1BDD303C /* TestGetSurvey.json */,
 				12CF56BC7F0D4DEC1EF64C9A81A7AB38 /* TestGetTasks.json */,
+				AA2A1D4E5797449A9DCD14924E5E3C16 /* TestGetKpiWidgets.json */,
 				03A3ADED28A67BC875A0FCDCD366A043 /* TestGetTaskVideoDiary.json */,
 				13D5EFDAA323ED3AE656B689B6381CEB /* TestGetUser.json */,
 				43637443EA32BB13AF4ED157A62AB138 /* TestGetUserConsentSection.json */,
@@ -16443,6 +16452,7 @@
 				F51546A01DA6BF843F12B41939AAE561 /* TestGetStudyInfoNoData.json in Resources */,
 				C323840C05EA7893FA63C454D3C3664D /* TestGetSurvey.json in Resources */,
 				FDF5740B7D684080212298DAF85E909C /* TestGetTasks.json in Resources */,
+				6C7991FF365B98EEA63DC6AE33CDBA68 /* TestGetKpiWidgets.json in Resources */,
 				14D6426AA599F7F05417B97E89617FCA /* TestGetTaskVideoDiary.json in Resources */,
 				93F9D08F532A56FBEA64385BD7014130 /* TestGetUser.json in Resources */,
 				066A3D953A2A1F32304B28B36891CA5A /* TestGetUserConsentSection.json in Resources */,
@@ -17327,6 +17337,7 @@
 				43374D9D0C6E8D96083A14A8E3B6C354 /* MenstrualSequence.swift in Sources */,
 				A934AEAD4BBEA6DBB141FD4A77B83C60 /* MenstrualWhenViewController.swift in Sources */,
 				7698174B67A1F4F38C894907C2AE8AEC /* MessageInfo.swift in Sources */,
+				63D12BC28F9D82C663AA3F7D9EA1B98D /* KpiWidget.swift in Sources */,
 				117125BD965B1E9B56E68A727D0644B7 /* MessagePageViewController.swift in Sources */,
 				D7E829C045BCCA1DC2F54411930BD931 /* MessagesUsageReportMapper.swift in Sources */,
 				2A113B3462DDE067C9C91A7C302C10B4 /* MessagesViewController.swift in Sources */,
@@ -17440,6 +17451,7 @@
 				A059099075DCAB947C4B9CEED9ECE9F3 /* SensorSampleUploadManagerStorage.swift in Sources */,
 				9B5D6CE81182763F3509CD7EF1C0FED5 /* ServerErrors.swift in Sources */,
 				FA750409F0DF85233F05431D0C63BEE7 /* Services.swift in Sources */,
+				F9047CD49132632C032C12A5D55DF36C /* KpiWidgetStore.swift in Sources */,
 				360C0B921528D5134CC442D7D240EE4A /* SetupLaterViewController.swift in Sources */,
 				7019C4B062ACB9508F90B1C3910CE086 /* SignalProducer+ModelMapper.swift in Sources */,
 				80F08B17D9DE9B1EFB71C169D65338A9 /* SignalProducerAvailability.swift in Sources */,

@@ -1,0 +1,5 @@
+{"data":[
+ {"id":"1","type":"kpi_widget","attributes":{"kpi_type":"quick_activities_adherence","display_mode":"gauge","kpi_params":{"threshold":70},"position":1,"featured":false,"completed":5,"total":6,"percentage":83.33,"meets_threshold":true,"title":"Quick Activities Completion","body":"<p>Tasks completed:<br>\n<strong>5</strong> of 6 assigned</p>\n"}},
+ {"id":"2","type":"kpi_widget","attributes":{"kpi_type":"quick_activities_adherence","display_mode":"percentage","kpi_params":{"threshold":70},"position":null,"featured":true,"completed":0,"total":0,"percentage":null,"meets_threshold":false,"title":null,"body":null}},
+ {"id":"3","type":"kpi_widget","attributes":{"kpi_type":"future_kpi","display_mode":"chart","kpi_params":{},"position":2,"featured":false,"completed":1,"total":1,"percentage":100.0,"meets_threshold":true,"title":"x","body":"<p>y</p>\n"}}
+]}
