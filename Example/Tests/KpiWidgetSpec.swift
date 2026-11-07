@@ -349,6 +349,31 @@ class KpiWidgetSpec: QuickSpec {
                 expect(calls).to(equal(1))
             }
 
+            it("keeps treating a 404 as no widget on later days and forced refreshes") {
+                api.kpiWidgetsError = apiError(statusCode: 404)
+                var calls = 0
+                let store = KpiWidgetStore(fetch: { calls += 1; return repository.getKpiWidgets() },
+                                           notificationCenter: NotificationCenter())
+                store.refreshIfNeeded(today: "2026-11-07")
+                expect(store.loadedLocalDay).toEventually(equal("2026-11-07"))
+                expect(calls).to(equal(1))
+
+                store.refreshIfNeeded(force: true, today: "2026-11-07") // pull-to-refresh
+                expect(calls).to(equal(2))
+                expect(store.isLoading).toEventually(beFalse())
+                expect(store.state.value).to(equal(.loaded([])))
+                expect(store.lastFailed).to(beFalse())
+
+                store.refreshIfNeeded(today: "2026-11-08") // next day
+                expect(calls).to(equal(3))
+                expect(store.loadedLocalDay).toEventually(equal("2026-11-08"))
+                expect(store.state.value).to(equal(.loaded([])))
+                expect(store.lastFailed).to(beFalse())
+
+                store.refreshIfNeeded(today: "2026-11-08") // further same-day trigger
+                expect(calls).to(equal(3))
+            }
+
             it("once a card is loaded, a 404 is an ordinary failure that keeps the card") {
                 var calls = 0
                 let store = KpiWidgetStore(fetch: { calls += 1; return repository.getKpiWidgets() },
@@ -542,6 +567,9 @@ class KpiWidgetSpec: QuickSpec {
                 expect(cell.titleRow.accessibilityTraits & UIAccessibilityTraitButton).toNot(equal(0)) // Swift 4 test target
                 expect(cell.titleRow.accessibilityLabel).to(equal("Quick Activities"))
 
+                cell.display(widget: makeWidget(id: "2", percentage: 50), store: nil, showInfo: true,
+                             infoMessageTitle: "Understanding Your Progress Tracker", infoCallback: {})
+                expect(cell.titleRow.accessibilityLabel).to(equal("Understanding Your Progress Tracker"))
                 cell.display(widget: makeWidget(id: "2", percentage: 50), store: nil, showInfo: true, infoCallback: {})
                 expect(cell.titleRow.accessibilityLabel).to(equal("Info"))
                 expect(cell.titleLabel.isHidden).to(beFalse()) // icon keeps its trailing slot

@@ -834,11 +834,12 @@ extension FeedListManager: UITableViewDataSource {
                 return UITableViewCell()
             }
             // The info icon follows the cached App Info Messages at render time (D7, D15).
-            let showInfo = Services.shared.storageServices?.infoMessages?
-                .firstMessage(withLocation: .kpiQuickActivitiesAdherence) != nil
+            let infoMessage = Services.shared.storageServices?.infoMessages?
+                .firstMessage(withLocation: .kpiQuickActivitiesAdherence)
             cell.display(widget: kpiSection.widgets[indexPath.row],
                          store: self.kpiWidgetStore,
-                         showInfo: showInfo,
+                         showInfo: infoMessage != nil,
+                         infoMessageTitle: infoMessage?.title,
                          infoCallback: { [weak self] in
                 guard let self = self, let delegate = self.delegate else { return }
                 self.navigator.openMessagePage(withLocation: .kpiQuickActivitiesAdherence, presenter: delegate.presenter)

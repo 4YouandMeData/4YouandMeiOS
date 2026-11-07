@@ -92,7 +92,11 @@ final class KpiWidgetTableViewCell: UITableViewCell {
 
     // MARK: - Public
 
-    func display(widget: KpiWidget, store: KpiWidgetStore?, showInfo: Bool, infoCallback: @escaping () -> Void) {
+    func display(widget: KpiWidget,
+                 store: KpiWidgetStore?,
+                 showInfo: Bool,
+                 infoMessageTitle: String? = nil,
+                 infoCallback: @escaping () -> Void) {
         self.infoCallback = infoCallback
 
         // Title row: the title wraps; the info icon and the tap exist only with a configured message.
@@ -110,10 +114,11 @@ final class KpiWidgetTableViewCell: UITableViewCell {
         self.infoIconView.isHidden = !showInfo
         self.titleTap.isEnabled = showInfo
         self.titleRow.isHidden = widget.title == nil && !showInfo
-        // VoiceOver: with an info message the whole row is one button named by the title.
+        // VoiceOver: with an info message the whole row is one button named by the widget title,
+        // else by the info message's own title.
         self.titleRow.isAccessibilityElement = showInfo
         self.titleRow.accessibilityTraits = showInfo ? .button : .none
-        self.titleRow.accessibilityLabel = showInfo ? (widget.title ?? "Info") : nil
+        self.titleRow.accessibilityLabel = showInfo ? (widget.title ?? infoMessageTitle ?? "Info") : nil
 
         // A nil body keeps the (empty) label so the gauge stays trailing.
         self.bodyLabel.attributedText = widget.body.map { Self.attributedBody($0, widgetId: widget.id) }

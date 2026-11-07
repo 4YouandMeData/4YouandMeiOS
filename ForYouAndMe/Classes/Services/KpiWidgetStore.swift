@@ -68,10 +68,11 @@ final class KpiWidgetStore {
                 self.didLoad(widgets, today: today)
             }, onFailure: { [weak self] error in
                 guard let self = self, self.generation == requestGeneration else { return }
-                // A backend without the endpoint, with nothing shown yet: no widget for the day, so
-                // apps make one request per day instead of retrying on every Feed visit. Once a card
-                // is loaded, a 404 is an ordinary failure that keeps it.
-                if case KpiWidgetError.endpointNotFound = error, self.widgets == nil {
+                // A backend without the endpoint, with no card on screen (nothing loaded, or an empty
+                // list from an earlier 404): no widget for the day, so apps make one request per day
+                // instead of retrying on every Feed visit. With a card shown, a 404 is an ordinary
+                // failure that keeps it.
+                if case KpiWidgetError.endpointNotFound = error, self.widgets?.isEmpty ?? true {
                     self.didLoad([], today: today)
                     return
                 }
