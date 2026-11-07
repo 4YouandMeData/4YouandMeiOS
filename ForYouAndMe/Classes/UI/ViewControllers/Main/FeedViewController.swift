@@ -40,7 +40,8 @@ class FeedViewController: BaseViewController {
     }()
     
     // FUAM-4315: KPI widgets, loaded once per local day independently of the feed (D2).
-    private let kpiWidgetStore: KpiWidgetStore = Services.shared.kpiWidgetStore
+    private let kpiWidgetStore: KpiWidgetStore
+    private var kpiBinding: KpiWidgetFeedBinding?
     
     private lazy var headerView: FeedHeaderView = {
         let view = FeedHeaderView(profileButtonPressed: { [weak self] in
@@ -74,7 +75,8 @@ class FeedViewController: BaseViewController {
     
     private lazy var emptyView = FeedEmptyView(withTopOffset: FeedTableViewHeader.height)
     
-    override init() {
+    init(kpiWidgetStore: KpiWidgetStore = Services.shared.kpiWidgetStore) {
+        self.kpiWidgetStore = kpiWidgetStore
         super.init()
     }
     
@@ -100,13 +102,9 @@ class FeedViewController: BaseViewController {
         self.checkForWalkThrough()
         self.checkForHealthPermission()
         
-        // The KPI section re-renders whenever the store changes, without refetching the feed.
-        self.kpiWidgetStore.state
-            .distinctUntilChanged()
-            .observe(on: MainScheduler.instance)
-            .subscribe(onNext: { [weak self] state in
-                self?.listManager.updateKpiState(state)
-            }).disposed(by: self.disposeBag)
+        self.kpiBinding = KpiWidgetFeedBinding(store: self.kpiWidgetStore) { [weak self] state in
+            self?.listManager.updateKpiState(state)
+        }
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -121,7 +119,7 @@ class FeedViewController: BaseViewController {
                                                   screenClass: String(describing: type(of: self))))
         
         self.listManager.viewWillAppear()
-        self.kpiWidgetStore.refreshIfNeeded()
+        self.kpiBinding?.feedWillAppear()
         self.getInfoMessages()
     }
     
@@ -251,8 +249,7 @@ extension FeedViewController: FeedListManagerDelegate {
     }
     
     func onListRefresh() {
-        // Foreground, Quick Activity submission and every other feed reload: same-day no-op.
-        self.kpiWidgetStore.refreshIfNeeded()
+        self.kpiBinding?.feedDidRefresh()
         self.refreshUser()
         self.navigator.checkForNotificationPermission(presenter: self)
         self.handleDeeplinks(deeplinkService: self.deeplinkService,
@@ -262,8 +259,7 @@ extension FeedViewController: FeedListManagerDelegate {
     }
     
     func onPullToRefresh() {
-        // An explicit user refresh always reloads the widgets (D2).
-        self.kpiWidgetStore.refreshIfNeeded(force: true)
+        self.kpiBinding?.feedPulledToRefresh()
     }
     
     func isDailyInputsSurvey(_ survey: Survey) -> Bool {
@@ -285,5 +281,38 @@ extension FeedViewController: FeedListManagerDelegate {
     
     func showError(error: Error) {
         self.navigator.handleError(error: error, presenter: self)
+    }
+}
+
+/// FUAM-4315 (D2): how the Feed drives the KPI store, kept out of the view controller so the specs
+/// can exercise it (FeedViewController itself needs the full Services setup).
+final class KpiWidgetFeedBinding {
+
+    private let store: KpiWidgetStore
+    private let disposeBag = DisposeBag()
+
+    /// `onStateChange` re-renders the KPI section whenever the store changes, without a feed refetch.
+    init(store: KpiWidgetStore, onStateChange: @escaping (KpiWidgetState) -> Void) {
+        self.store = store
+        store.state
+            .distinctUntilChanged()
+            .observe(on: MainScheduler.instance)
+            .subscribe(onNext: onStateChange)
+            .disposed(by: self.disposeBag)
+    }
+
+    /// Feed appear, tab change back to the Feed: a same-day no-op.
+    func feedWillAppear() {
+        self.store.refreshIfNeeded()
+    }
+
+    /// Foreground, Quick Activity submission and every other feed reload: a same-day no-op.
+    func feedDidRefresh() {
+        self.store.refreshIfNeeded()
+    }
+
+    /// An explicit user refresh always reloads the widgets.
+    func feedPulledToRefresh() {
+        self.store.refreshIfNeeded(force: true)
     }
 }

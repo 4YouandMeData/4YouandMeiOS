@@ -375,6 +375,11 @@ class FeedListManager: NSObject {
         self.reloadItems()
     }
     
+    /// FUAM-4315: the App Info Message behind the KPI card's info icon, if one is cached (D7).
+    static func kpiInfoMessage(in messages: [MessageInfo]?) -> MessageInfo? {
+        return messages?.firstMessage(withLocation: .kpiQuickActivitiesAdherence)
+    }
+    
     /// FUAM-4315: re-render with a new KPI state without refetching the feed or moving the list.
     public func updateKpiState(_ state: KpiWidgetState) {
         // Before the first feed load there is nothing to merge into: the feed fetch reads the
@@ -834,8 +839,7 @@ extension FeedListManager: UITableViewDataSource {
                 return UITableViewCell()
             }
             // The info icon follows the cached App Info Messages at render time (D7, D15).
-            let infoMessage = Services.shared.storageServices?.infoMessages?
-                .firstMessage(withLocation: .kpiQuickActivitiesAdherence)
+            let infoMessage = Self.kpiInfoMessage(in: Services.shared.storageServices?.infoMessages)
             cell.display(widget: kpiSection.widgets[indexPath.row],
                          store: self.kpiWidgetStore,
                          showInfo: infoMessage != nil,

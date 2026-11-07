@@ -41,9 +41,9 @@ final class KpiWidgetTableViewCell: UITableViewCell {
         return label
     }()
 
-    private let gaugeView = KpiGaugeView()
+    let gaugeView = KpiGaugeView() // internal (read-only) for the specs
     let titleRow = UIStackView.create(withAxis: .horizontal, spacing: 16)
-    private lazy var titleTap = UITapGestureRecognizer(target: self, action: #selector(self.titleRowTapped))
+    private(set) lazy var titleTap = UITapGestureRecognizer(target: self, action: #selector(self.titleRowTapped))
     private var infoCallback: (() -> Void)?
 
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {

@@ -29,6 +29,8 @@ class RepositoryImpl {
     private let analyticsService: AnalyticsService
     private let showDefaultUserInfo: Bool
     private let appleWatchAlternativeIntegrations: [Integration]
+    /// FUAM-4315: the KPI store reset on logout; injectable so a spec can observe it.
+    var kpiWidgetStore: () -> KpiWidgetStore? = { Services.shared.kpiWidgetStore }
     
     private let disposeBag = DisposeBag()
     
@@ -121,7 +123,7 @@ extension RepositoryImpl: Repository {
         self.storage.user = nil
         self.api.logOut()
         // FUAM-4315: the KPI card is in-memory only; drop it so the next participant never sees it.
-        Services.shared.kpiWidgetStore?.reset()
+        self.kpiWidgetStore()?.reset()
         #if SENSORKIT
         (Services.shared.sensorKitService as? SensorKitManager)?.refreshRecordingBasedOnClearance()
         #endif

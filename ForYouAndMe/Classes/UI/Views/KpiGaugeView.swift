@@ -16,7 +16,8 @@ import PureLayout
 final class KpiGaugeView: UIView {
 
     static let size = CGSize(width: 120, height: 60)
-    static let animationDuration: CFTimeInterval = 0.6
+    /// The sweep duration; injectable so a spec can catch a sweep mid-way deterministically.
+    var animationDuration: CFTimeInterval = 0.6
     private static let radius: CGFloat = KpiGaugeGeometry.radius
     private static let lineWidth: CGFloat = KpiGaugeGeometry.lineWidth
     private static let countSteps = 12
@@ -24,7 +25,7 @@ final class KpiGaugeView: UIView {
     private let trackLayer = CAShapeLayer()
     /// Track segments too short to stroke, drawn as filled circles of the stroke's diameter.
     private let trackDotLayer = CAShapeLayer()
-    private let progressLayer = CAShapeLayer()
+    let progressLayer = CAShapeLayer() // internal (read-only) for the specs
     let valueLabel = UILabel() // internal (read-only) for the specs
     private let percentLabel = UILabel()
 
@@ -156,7 +157,7 @@ final class KpiGaugeView: UIView {
         let animation = CABasicAnimation(keyPath: "strokeEnd")
         animation.fromValue = from
         animation.toValue = target
-        animation.duration = Self.animationDuration
+        animation.duration = self.animationDuration
         animation.timingFunction = CAMediaTimingFunction(name: .easeOut)
         self.setModelStrokeEnd(target, hidden: fill == 0 && from == 0)
         self.progressLayer.add(animation, forKey: "fill")
@@ -269,7 +270,7 @@ final class KpiGaugeView: UIView {
     private func startCount(from: Int, to: Int, token: Int) {
         self.valueLabel.text = "\(from)"
         var step = 0
-        let interval = Self.animationDuration / Double(Self.countSteps)
+        let interval = self.animationDuration / Double(Self.countSteps)
         let timer = Timer(timeInterval: interval, repeats: true) { [weak self] timer in
             guard let self = self, self.animationToken == token else {
                 timer.invalidate()
