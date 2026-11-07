@@ -22,6 +22,7 @@
 //
 
 import Foundation
+import Moya
 import RxSwift
 @testable import ForYouAndMe
 
@@ -47,6 +48,9 @@ final class FakeApiGateway: ApiGateway {
     /// Sequence of outcomes for the PATCH `.updateDiaryNoteText`, consumed one
     /// per invocation. If the script runs out, the fake defaults to `.success`.
     var patchResults: [FakeVoidResult] = [.success]
+
+    /// FUAM-4315: `.getKpiWidgets` answers with this error, or with the bundled fixture when nil.
+    var kpiWidgetsError: Error?
 
     // MARK: - Recorded invocations
 
@@ -126,7 +130,12 @@ final class FakeApiGateway: ApiGateway {
         fatalError("FakeApiGateway: unexpected JSONAPIMappable array send for \(request.serviceRequest)")
     }
     func send<T: JSONAPIMappable, E: Mappable>(request: ApiRequest, errorType: E.Type) -> Single<ExcludeInvalid<T>> {
-        fatalError("FakeApiGateway: unexpected ExcludeInvalid send for \(request.serviceRequest)")
+        guard case .getKpiWidgets = request.serviceRequest else {
+            fatalError("FakeApiGateway: unexpected ExcludeInvalid send for \(request.serviceRequest)")
+        }
+        if let error = self.kpiWidgetsError { return .error(error) }
+        return Single.just(Response(statusCode: 200, data: Bundle.getTestData(from: "TestGetKpiWidgets")))
+            .mapCodableJSONAPI(includeList: T.includeList, keyPath: T.keyPath)
     }
     func send<T: PlainDecodable, E: Mappable>(request: ApiRequest, errorType: E.Type) -> Single<T> {
         fatalError("FakeApiGateway: unexpected PlainDecodable send for \(request.serviceRequest)")
