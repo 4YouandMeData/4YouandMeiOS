@@ -124,7 +124,8 @@ extension TaskViewController: FeedListManagerDelegate {
     }
     
     func getDataProviderSingle(repository: Repository, fetchMode: FetchMode) -> Single<FeedContent> {
-        return self.repository.getTasks(fetchMode: fetchMode).map { FeedContent(withFeeds: $0) }
+        // FUAM-4315 (D3): the KPI widget is Feed-only.
+        return self.repository.getTasks(fetchMode: fetchMode).map { FeedContent(withFeeds: $0, kpiState: .idle) }
     }
     
     func showError(error: Error) {

@@ -39,6 +39,10 @@ enum ColorType: String, CaseIterable, CodingKey {
     case reflectionTextColor = "reflection_text_color"
     case noticedColor = "noticed_color"
     case noticedTextColor = "noticed_text_color"
+    // FUAM-4315: KPI widget step colours. Step N = a value that reached threshold N; step 0 is
+    // below the first threshold. Optional palette keys: absent ones fall back to the defaults below.
+    case kpiWidgetThreshold0 = "kpi_widget_threshold_0_color"
+    case kpiWidgetThreshold1 = "kpi_widget_threshold_1_color"
     
     /// Default (Light) palette
     var defaultColor: UIColor {
@@ -65,6 +69,8 @@ enum ColorType: String, CaseIterable, CodingKey {
         case .reflectionTextColor: return UIColor(hexRGB: 0x905006)
         case .noticedColor: return UIColor(hexRGB: 0xD4E8FF)
         case .noticedTextColor: return UIColor(hexRGB: 0x007AFF)
+        case .kpiWidgetThreshold0: return UIColor(hexRGB: 0x37424A)
+        case .kpiWidgetThreshold1: return UIColor(hexRGB: 0x6B9211)
         }
     }
     
@@ -93,6 +99,8 @@ enum ColorType: String, CaseIterable, CodingKey {
         case .reflectionTextColor: return UIColor(hexRGB: 0xFFD99B)
         case .noticedColor: return UIColor(hexRGB: 0x0A2540)     // dark blue bg
         case .noticedTextColor: return UIColor(hexRGB: 0x61A8FF)
+        case .kpiWidgetThreshold0: return UIColor(hexRGB: 0xD9D9D9)
+        case .kpiWidgetThreshold1: return UIColor(hexRGB: 0x6B9211)
         }
     }
 }

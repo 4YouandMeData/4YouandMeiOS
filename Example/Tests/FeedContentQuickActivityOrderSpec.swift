@@ -43,7 +43,7 @@ class FeedContentQuickActivityOrderSpec: QuickSpec {
 
                     expect(feeds.count).to(equal(6), description: "all stub quick activities should decode")
 
-                    let content = FeedContent(withFeeds: feeds)
+                    let content = FeedContent(withFeeds: feeds, kpiState: .idle)
 
                     let resultIds = content.quickActivities.map { $0.id }
                     expect(resultIds).to(equal(["c", "f", "a", "d", "b", "e"]))
@@ -60,7 +60,7 @@ class FeedContentQuickActivityOrderSpec: QuickSpec {
 
                     expect(feeds.count).to(equal(3))
 
-                    let content = FeedContent(withFeeds: feeds)
+                    let content = FeedContent(withFeeds: feeds, kpiState: .idle)
 
                     expect(content.quickActivities.map { $0.id }).to(equal(["x", "y", "z"]))
                 }

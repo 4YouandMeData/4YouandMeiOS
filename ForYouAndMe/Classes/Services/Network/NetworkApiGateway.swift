@@ -380,6 +380,8 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         // Feeds
         case .getFeeds:
             return "v1/feeds"
+        case .getKpiWidgets:
+            return "v1/kpi_widgets"
         // Task
         case .getTasks:
             return "v1/tasks"
@@ -471,6 +473,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
                 .getStudyInfoSection,
                 .getOnboardingQuestionsSection,
                 .getFeeds,
+                .getKpiWidgets,
                 .getTasks,
                 .getTask,
                 .getSurvey,
@@ -572,6 +575,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
         case .sendAnswer: return "{}".utf8Encoded
         // Task
         case .getFeeds, .getTasks: return Bundle.getTestData(from: "TestGetTasks")
+        case .getKpiWidgets: return Bundle.getTestData(from: "TestGetKpiWidgets")
         case .getTask: return Bundle.getTestData(from: "TaskGetTaskVideoDiary")
         case .sendTaskResultData: return "{}".utf8Encoded
         case .sendTaskResultFile: return "{}".utf8Encoded
@@ -653,6 +657,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
                 .getDiaryNoteAudio,
                 .getMenstrualDiaryNote,
                 .getInfoMessages,
+                .getKpiWidgets,
                 .deleteDiaryNote:
             return .requestPlain
         case .getOptInSection:
@@ -1183,6 +1188,7 @@ extension DefaultService: TargetType, AccessTokenAuthorizable {
                 .getIntegrationSection,
                 .sendAnswer,
                 .getFeeds,
+                .getKpiWidgets,
                 .getTasks,
                 .getTask,
                 .sendTaskResultData,

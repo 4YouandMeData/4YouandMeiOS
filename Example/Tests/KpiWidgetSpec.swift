@@ -1,0 +1,1015 @@
+//
+//  KpiWidgetSpec.swift
+//  ForYouAndMe_Tests
+//
+//  FUAM-4315: the Feed KPI widget. Covers decoding and the unsupported-type filter, the
+//  display/fill clamping (D6), the HTML tag scanner (D14), the store refresh rule (D2), the
+//  gauge animation bookkeeping and integer count (D11) and the palette defaults (D5).
+//  Section ordering lives in FeedContentPinnedSpec.
+//
+
+import Quick
+import Nimble
+import Moya
+import RxSwift
+import UIKit
+@testable import ForYouAndMe
+
+class KpiWidgetSpec: QuickSpec {
+    override class func spec() {
+
+        // MARK: 1. Decoding
+
+        describe("KpiWidget decoding") {
+            it("decodes the fixture and keeps only supported types") {
+                let data = Bundle.getTestData(from: "TestGetKpiWidgets")
+                expect(data.isEmpty).to(beFalse(), description: "fixture must ship in the pod resource bundle")
+                let decoded: ExcludeInvalid<KpiWidget>? = try? Response(statusCode: 200, data: data)
+                    .mapCodableJSONAPI(includeList: KpiWidget.includeList, keyPath: KpiWidget.keyPath)
+                let all = decoded?.wrappedValue ?? []
+                expect(all.map { $0.id }).to(equal(["1", "2", "3"]))
+
+                let supported = all.filter(\.isSupported)
+                expect(supported.map { $0.id }).to(equal(["1", "2"]))
+
+                let first = supported[0]
+                expect(first.completed).to(equal(5))
+                expect(first.total).to(equal(6))
+                expect(first.meetsThreshold).to(beTrue())
+                expect(first.title).to(equal("Quick Activities Completion"))
+                expect(first.displayPercent).to(equal(83))
+
+                let second = supported[1]
+                expect(second.title).to(beNil())
+                expect(second.body).to(beNil())
+                expect(second.position).to(beNil())
+                expect(second.percentage).to(beNil())
+                expect(second.displayPercent).to(equal(0))
+                expect(second.fill).to(equal(0))
+            }
+        }
+
+        // MARK: 2. Display / fill
+
+        describe("KpiWidget display and fill") {
+            let table: [(Double?, Int, CGFloat)] = [
+                (83.33, 83, 0.8333), (69.5, 69, 0.695), (69.86, 69, 0.6986), (70.0, 70, 0.70),
+                (100, 100, 1.0), (120, 100, 1.0), (-5, 0, 0), (nil, 0, 0)
+            ]
+            for (percentage, display, fill) in table {
+                it("maps \(String(describing: percentage)) to \(display) / \(fill)") {
+                    let widget = makeWidget(percentage: percentage)
+                    expect(widget.displayPercent).to(equal(display))
+                    expect(Double(widget.fill)).to(beCloseTo(Double(fill), within: 0.000_1))
+                }
+            }
+        }
+
+        // MARK: 3. HTML scanner
+
+        describe("KPI HTML scanner") {
+            it("renders the Mindset body with one bold run") {
+                let runs = KpiHtmlScanner.scan("<p>Tasks completed:<br>\n<strong>5</strong> of 6 assigned</p>\n")
+                expect(runs.map(\.text).joined()).to(equal("Tasks completed:\n5 of 6 assigned"))
+                expect(runs.filter(\.bold).map(\.text)).to(equal(["5"]))
+                expect(runs.contains(where: \.italic)).to(beFalse())
+            }
+            it("turns a paragraph boundary into one newline") {
+                expect(text("<p>A</p>\n<p>B</p>")).to(equal("A\nB"))
+            }
+            it("collapses raw newlines inside a paragraph") {
+                expect(text("<p>a\nb</p>")).to(equal("a b"))
+            }
+            it("decodes entities") {
+                expect(text("<p>&amp; &lt; &#39;</p>")).to(equal("& < '"))
+                expect(text("<p>&gt; &quot; &amp;lt;</p>")).to(equal("> \" &lt;"))
+            }
+            it("renders italic runs and curly quotes") {
+                let runs = KpiHtmlScanner.scan("<p><em>x</em> <q>y</q></p>")
+                expect(runs.map(\.text).joined()).to(equal("x \u{201C}y\u{201D}"))
+                expect(runs.filter(\.italic).map(\.text)).to(equal(["x"]))
+            }
+            it("drops unknown tags") {
+                expect(text("<ul><li>z</li></ul>")).to(equal("z"))
+            }
+            it("handles Redcarpet's real paragraph boundary and whitespace before <br>") {
+                expect(text("<p>A</p>\n\n<p>B</p>\n")).to(equal("A\nB"))
+                expect(text("<p>a   <br>\n b</p>")).to(equal("a\nb"))
+            }
+            it("handles nested, unclosed and stray strong tags") {
+                let nested = KpiHtmlScanner.scan("<p><strong>a <strong>b</strong> c</strong> d</p>")
+                expect(nested).to(equal([KpiHtmlRun(text: "a b c", bold: true, italic: false),
+                                         KpiHtmlRun(text: " d", bold: false, italic: false)]))
+                let unclosed = KpiHtmlScanner.scan("<p>x <strong>y</p>")
+                expect(unclosed.filter(\.bold).map(\.text)).to(equal(["y"]))
+                let stray = KpiHtmlScanner.scan("<p></strong>y <b>z</b></p>")
+                expect(stray).to(equal([KpiHtmlRun(text: "y ", bold: false, italic: false),
+                                        KpiHtmlRun(text: "z", bold: true, italic: false)]))
+            }
+            it("matches the Android scanner rows") {
+                expect(text("<p>&amp;lt;</p>")).to(equal("&lt;"))
+                expect(KpiHtmlScanner.scan("<b>x</b> <i>y</i>")).to(equal([
+                    KpiHtmlRun(text: "x", bold: true, italic: false),
+                    KpiHtmlRun(text: " ", bold: false, italic: false),
+                    KpiHtmlRun(text: "y", bold: false, italic: true)
+                ]))
+                expect(text("a<br/>b")).to(equal("a\nb"))
+                expect(text("a<BR>b")).to(equal("a\nb"))
+                expect(KpiHtmlScanner.scan("<strong><em>z</em></strong>")).to(equal([KpiHtmlRun(text: "z", bold: true, italic: true)]))
+            }
+            it("applies the bold font to the bold run only") {
+                let regular = UIFont.systemFont(ofSize: 15)
+                let bold = UIFont.boldSystemFont(ofSize: 15)
+                let attributed = "<p>a <b>b</b></p>".kpiAttributedString(regular: regular, bold: bold,
+                                                                        italic: UIFont.italicSystemFont(ofSize: 15),
+                                                                        color: .black, lineHeightMultiple: 1.5)
+                expect(attributed.string).to(equal("a b"))
+                expect(attributed.attribute(.font, at: 0, effectiveRange: nil) as? UIFont).to(equal(regular))
+                expect(attributed.attribute(.font, at: 2, effectiveRange: nil) as? UIFont).to(equal(bold))
+                let style = attributed.attribute(.paragraphStyle, at: 0, effectiveRange: nil) as? NSParagraphStyle
+                expect(style?.lineHeightMultiple).to(equal(1.5))
+            }
+        }
+
+        // MARK: 4. Store refresh rule
+
+        describe("KpiWidgetStore refresh rule") {
+            var fake: FakeKpiFetch!
+            var store: KpiWidgetStore!
+            let widgetA = makeWidget(id: "1", percentage: 50)
+            let widgetB = makeWidget(id: "1", percentage: 60)
+
+            beforeEach {
+                fake = FakeKpiFetch()
+                store = KpiWidgetStore(fetch: { fake.fetch() }, notificationCenter: NotificationCenter())
+            }
+
+            it("fetches when fresh and guards a second call while in flight") {
+                store.refreshIfNeeded(today: "2026-11-07")
+                expect(fake.calls).to(equal(1))
+                expect(store.isLoading).to(beTrue())
+                store.refreshIfNeeded(today: "2026-11-07")
+                store.refreshIfNeeded(force: true, today: "2026-11-07")
+                expect(fake.calls).to(equal(1))
+            }
+
+            it("loads once per day, reloads on force and on a new day") {
+                store.refreshIfNeeded(today: "2026-11-07")
+                fake.succeed([widgetA])
+                expect(store.state.value).toEventually(equal(.loaded([widgetA])))
+                expect(store.loadedLocalDay).to(equal("2026-11-07"))
+                expect(store.isLoading).to(beFalse())
+
+                store.refreshIfNeeded(today: "2026-11-07")
+                expect(fake.calls).to(equal(1))
+
+                store.refreshIfNeeded(force: true, today: "2026-11-07")
+                expect(fake.calls).to(equal(2))
+                fake.succeed([widgetA])
+                expect(store.isLoading).toEventually(beFalse())
+
+                store.refreshIfNeeded(today: "2026-11-08")
+                expect(fake.calls).to(equal(3))
+                fake.succeed([widgetB])
+                expect(store.state.value).toEventually(equal(.loaded([widgetB])))
+                expect(store.loadedLocalDay).to(equal("2026-11-08"))
+            }
+
+            it("keeps the previous widgets on failure and retries on the next call") {
+                store.refreshIfNeeded(today: "2026-11-07")
+                fake.succeed([widgetA])
+                expect(store.state.value).toEventually(equal(.loaded([widgetA])))
+
+                store.refreshIfNeeded(force: true, today: "2026-11-07")
+                fake.fail()
+                expect(store.lastFailed).toEventually(beTrue())
+                expect(store.state.value).to(equal(.loaded([widgetA])))
+                expect(store.widgets).to(equal([widgetA]))
+
+                store.refreshIfNeeded(today: "2026-11-07")
+                expect(fake.calls).to(equal(3))
+            }
+
+            it("stays idle after a cold-start failure") {
+                store.refreshIfNeeded(today: "2026-11-07")
+                fake.fail()
+                expect(store.lastFailed).toEventually(beTrue())
+                expect(store.state.value).to(equal(.idle))
+                expect(store.loadedLocalDay).to(beNil())
+            }
+
+            it("reset clears memory and rendered fills, and drops a response from before the reset") {
+                store.refreshIfNeeded(today: "2026-11-07")
+                fake.succeed([widgetA])
+                expect(store.state.value).toEventually(equal(.loaded([widgetA])))
+                store.markRendered(widgetId: "1", fill: 0.5)
+
+                store.refreshIfNeeded(force: true, today: "2026-11-07")
+                store.reset()
+                expect(store.state.value).to(equal(.idle))
+                expect(store.widgets).to(beNil())
+                expect(store.loadedLocalDay).to(beNil())
+                expect(store.isLoading).to(beFalse())
+                expect(store.renderedFill).to(beEmpty())
+
+                fake.succeed([widgetB]) // answers the request issued before reset()
+                expect(store.state.value).toNever(equal(.loaded([widgetB])), until: .milliseconds(200))
+                expect(store.loadedLocalDay).to(beNil())
+            }
+
+            it("treats an empty list as loaded with nothing to render") {
+                store.refreshIfNeeded(today: "2026-11-07")
+                fake.succeed([])
+                expect(store.state.value).toEventually(equal(.loaded([])))
+                expect(store.state.value.widgets).to(beEmpty())
+                var content = FeedContent(withFeeds: [], kpiState: store.state.value)
+                expect(content.sections).to(beEmpty())
+            }
+
+            it("refreshes on a significant time change") {
+                let center = NotificationCenter()
+                let observed = KpiWidgetStore(fetch: { fake.fetch() }, notificationCenter: center)
+                // Raw name: the test target builds in Swift 4 mode, where the UIKit constant is spelled differently.
+                center.post(name: Notification.Name("UIApplicationSignificantTimeChangeNotification"), object: nil)
+                expect(fake.calls).toEventually(equal(1))
+                _ = observed
+            }
+        }
+
+        // MARK: 5. Animation rule
+
+        describe("KPI gauge animation") {
+            var store: KpiWidgetStore!
+            beforeEach {
+                store = KpiWidgetStore(fetch: { .never() }, notificationCenter: NotificationCenter())
+            }
+
+            it("animates from 0 on first render, from the stored fill on change, not at all when equal") {
+                let widget = makeWidget(id: "1", percentage: 83.33)
+                expect(store.animationStart(for: widget)).to(equal(0))
+                store.markRendered(widgetId: "1", fill: widget.fill)
+                expect(store.animationStart(for: widget)).to(beNil())
+                expect(store.animationStart(for: makeWidget(id: "1", percentage: 90))).to(equal(widget.fill))
+                // Nothing to animate at 0 %.
+                expect(store.animationStart(for: makeWidget(id: "2", percentage: nil))).to(beNil())
+            }
+
+            it("writes the rendered fill only when the animation completes") {
+                let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 200, height: 200))
+                let gauge = KpiGaugeView()
+                gauge.isReduceMotionEnabled = { false }
+                window.addSubview(gauge)
+                window.isHidden = false
+                let widget = makeWidget(id: "1", percentage: 57)
+                var completed = false
+                gauge.set(id: widget.id, fill: widget.fill, display: widget.displayPercent,
+                          progressColor: .green, trackColor: .gray,
+                          animatedFrom: store.animationStart(for: widget),
+                          completion: {
+                    completed = true
+                    store.markRendered(widgetId: widget.id, fill: widget.fill)
+                })
+                expect(completed).to(beFalse())
+                expect(store.renderedFill["1"]).to(beNil())
+                expect(completed).toEventually(beTrue(), timeout: .seconds(3))
+                expect(store.renderedFill["1"]).to(equal(widget.fill))
+                window.isHidden = true
+            }
+
+            it("counts by integer interpolation and lands exactly on the display value") {
+                for display in [29, 53, 57, 58, 59, 100] {
+                    let widget = makeWidget(percentage: Double(display))
+                    expect(widget.displayPercent).to(equal(display))
+                    let steps = (1...12).map { step -> Int in
+                        let time = Double(step) / 12
+                        return KpiGaugeView.countedValue(from: 0, to: display, progress: 1 - (1 - time) * (1 - time))
+                    }
+                    expect(steps.last).to(equal(display))
+                    expect(steps).to(equal(steps.sorted()))
+                    expect(KpiGaugeView.countedValue(from: 40, to: display, progress: 1)).to(equal(display))
+                    expect(KpiGaugeView.countedValue(from: 40, to: display, progress: 0)).to(equal(40))
+                }
+            }
+        }
+
+        // MARK: Blank texts, 404 handling, store generation, Feed wiring, gauge edge cases, card layout
+
+        describe("KpiWidget blank texts") {
+            it("treats a blank title and an empty-paragraph body as absent") {
+                let json = """
+                {"data":[{"id":"9","type":"kpi_widget","attributes":{"kpi_type":"quick_activities_adherence",
+                "display_mode":"gauge","position":null,"featured":false,"completed":1,"total":2,"percentage":50.0,
+                "meets_threshold":false,"title":"","body":"<p></p>\\n"}},
+                {"id":"10","type":"kpi_widget","attributes":{"kpi_type":"quick_activities_adherence",
+                "display_mode":"gauge","position":null,"featured":false,"completed":1,"total":2,"percentage":50.0,
+                "meets_threshold":false,"title":"  \\n ","body":"   "}}]}
+                """
+                let decoded: ExcludeInvalid<KpiWidget>? = try? Response(statusCode: 200, data: Data(json.utf8))
+                    .mapCodableJSONAPI(includeList: KpiWidget.includeList, keyPath: KpiWidget.keyPath)
+                let widgets = decoded?.wrappedValue ?? []
+                expect(widgets.count).to(equal(2))
+                expect(widgets.map { $0.title }).to(equal([nil, nil]))
+                expect(widgets.map { $0.body }).to(equal([nil, nil]))
+
+                let cell = KpiWidgetTableViewCell(style: .default, reuseIdentifier: nil)
+                guard let widget = widgets.first else { return }
+                cell.display(widget: widget, store: nil, showInfo: true, infoCallback: {})
+                expect(cell.titleLabel.attributedText).to(beNil())
+                expect(cell.titleLabel.isHidden).to(beFalse())
+                expect(cell.bodyLabel.attributedText).to(beNil())
+            }
+        }
+
+        describe("RepositoryImpl.getKpiWidgets") {
+            var api: FakeApiGateway!
+            var repository: RepositoryImpl!
+            beforeEach {
+                api = FakeApiGateway()
+                repository = RepositoryImpl(api: api, storage: KpiFakeStorage(), notificationService: KpiFakeNotificationService(),
+                                            analyticsService: KpiFakeAnalytics(), showDefaultUserInfo: false,
+                                            appleWatchAlternativeIntegrations: [])
+            }
+
+            it("keeps only supported widgets") {
+                var result: [KpiWidget]?
+                _ = repository.getKpiWidgets().subscribe(onSuccess: { result = $0 })
+                expect(result?.map { $0.id }).toEventually(equal(["1", "2"]))
+            }
+
+            it("surfaces a 404 as endpointNotFound") {
+                api.kpiWidgetsError = apiError(statusCode: 404)
+                var received: Error?
+                _ = repository.getKpiWidgets().subscribe(onSuccess: { _ in }, onFailure: { received = $0 })
+                expect(received).toEventuallyNot(beNil())
+                guard case KpiWidgetError.endpointNotFound? = received else {
+                    fail("expected endpointNotFound, got \(String(describing: received))")
+                    return
+                }
+            }
+
+            it("after a cold-start 404, only a forced refresh asks again until a 200 clears it") {
+                api.kpiWidgetsError = apiError(statusCode: 404)
+                var calls = 0
+                let center = NotificationCenter()
+                let store = KpiWidgetStore(fetch: { calls += 1; return repository.getKpiWidgets() },
+                                           notificationCenter: center)
+                store.refreshIfNeeded(today: "2026-11-07")
+                expect(store.state.value).toEventually(equal(.loaded([])))
+                expect(store.lastFailed).to(beFalse())
+                expect(store.endpointUnavailable).to(beTrue())
+                expect(calls).to(equal(1))
+
+                // Feed appear, foreground, QA submission, section change: plain triggers.
+                store.refreshIfNeeded(today: "2026-11-07")
+                // Day change.
+                store.refreshIfNeeded(today: "2026-11-08")
+                // Significant time change (midnight with the Feed open).
+                center.post(name: Notification.Name("UIApplicationSignificantTimeChangeNotification"), object: nil)
+                expect(calls).toNever(beGreaterThan(1), until: .milliseconds(200))
+
+                // Pull-to-refresh asks again; still 404: still unavailable, still no card.
+                store.refreshIfNeeded(force: true, today: "2026-11-08")
+                expect(calls).to(equal(2))
+                expect(store.isLoading).toEventually(beFalse())
+                expect(store.state.value).to(equal(.loaded([])))
+                expect(store.lastFailed).to(beFalse())
+                expect(store.endpointUnavailable).to(beTrue())
+                store.refreshIfNeeded(today: "2026-11-09")
+                expect(calls).to(equal(2))
+
+                // The backend deploys: the next pull-to-refresh gets a 200 and clears the flag.
+                api.kpiWidgetsError = nil
+                store.refreshIfNeeded(force: true, today: "2026-11-09")
+                expect(calls).to(equal(3))
+                expect(store.state.value.widgets.map { $0.id }).toEventually(equal(["1", "2"]))
+                expect(store.endpointUnavailable).to(beFalse())
+                // The once-a-day rule applies again.
+                store.refreshIfNeeded(today: "2026-11-09")
+                expect(calls).to(equal(3))
+                store.refreshIfNeeded(today: "2026-11-10")
+                expect(calls).to(equal(4))
+            }
+
+            it("reset() clears the unavailable flag") {
+                api.kpiWidgetsError = apiError(statusCode: 404)
+                var calls = 0
+                let store = KpiWidgetStore(fetch: { calls += 1; return repository.getKpiWidgets() },
+                                           notificationCenter: NotificationCenter())
+                store.refreshIfNeeded(today: "2026-11-07")
+                expect(store.endpointUnavailable).toEventually(beTrue())
+                store.reset()
+                expect(store.endpointUnavailable).to(beFalse())
+                store.refreshIfNeeded(today: "2026-11-07")
+                expect(calls).to(equal(2))
+            }
+
+            it("once a card is loaded, a 404 is an ordinary failure that keeps the card") {
+                var calls = 0
+                let store = KpiWidgetStore(fetch: { calls += 1; return repository.getKpiWidgets() },
+                                           notificationCenter: NotificationCenter())
+                store.refreshIfNeeded(today: "2026-11-07")
+                expect(store.state.value.widgets.map { $0.id }).toEventually(equal(["1", "2"]))
+                let loaded = store.state.value
+
+                api.kpiWidgetsError = apiError(statusCode: 404)
+                store.refreshIfNeeded(force: true, today: "2026-11-07")
+                expect(store.lastFailed).toEventually(beTrue())
+                expect(store.state.value).to(equal(loaded))
+                expect(store.endpointUnavailable).to(beFalse())
+                store.refreshIfNeeded(today: "2026-11-07")
+                expect(calls).to(equal(3)) // a failure retries on the next trigger
+            }
+
+            it("still fails on any other error") {
+                api.kpiWidgetsError = apiError(statusCode: 500)
+                var failed = false
+                _ = repository.getKpiWidgets().subscribe(onSuccess: { _ in }, onFailure: { _ in failed = true })
+                expect(failed).toEventually(beTrue())
+            }
+        }
+
+        describe("KpiWidgetStore generation check") {
+            it("drops a response that belongs to a request issued before reset()") {
+                var store: KpiWidgetStore!
+                let widget = makeWidget(id: "1", percentage: 50)
+                // Logout lands while the request is being issued: dispose() has nothing to cancel yet,
+                // so only the generation check can drop the synchronous answer.
+                store = KpiWidgetStore(fetch: { store.reset(); return .just([widget]) },
+                                       notificationCenter: NotificationCenter())
+                store.refreshIfNeeded(today: "2026-11-07")
+                expect(store.state.value).toNever(equal(.loaded([widget])), until: .milliseconds(200))
+                expect(store.loadedLocalDay).to(beNil())
+                expect(store.widgets).to(beNil())
+            }
+        }
+
+        describe("Feed content mapping") {
+            it("reads the KPI state when the feed response arrives, not when it was requested") {
+                let store = KpiWidgetStore(fetch: { .never() }, notificationCenter: NotificationCenter())
+                let feeds = PublishSubject<[Feed]>()
+                var content: FeedContent?
+                _ = FeedViewController.feedContentSingle(feeds: feeds.asSingle(), settings: .just(nil), kpiWidgetStore: store)
+                    .subscribe(onSuccess: { content = $0 })
+                let widget = makeWidget(id: "1", percentage: 50)
+                store.state.accept(.loaded([widget])) // arrives while the feed request is in flight
+                feeds.onNext([])
+                feeds.onCompleted()
+                expect(content?.kpiState).toEventually(equal(.loaded([widget])))
+            }
+        }
+
+        describe("FeedListManager KPI wiring") {
+            var host: UIViewController!
+            var tableView: UITableView!
+            var delegate: KpiFakeFeedDelegate!
+            var manager: FeedListManager!
+            beforeEach {
+                host = UIViewController()
+                tableView = UITableView(frame: CGRect(x: 0, y: 0, width: 375, height: 800), style: .grouped)
+                host.view.addSubview(tableView)
+                delegate = KpiFakeFeedDelegate(presenter: host)
+                let navigator = AppNavigator(withRepository: MockRepository(), analytics: KpiFakeAnalytics(),
+                                             deeplinkService: DeeplinkManager(), window: UIWindow())
+                manager = FeedListManager(repository: MockRepository(), navigator: navigator, tableView: tableView,
+                                          delegate: delegate, pageSize: 20, analytics: KpiFakeAnalytics())
+            }
+            afterEach {
+                manager = nil
+            }
+
+            it("re-renders on a store emission without refetching the feed") {
+                let fake = FakeKpiFetch()
+                let store = KpiWidgetStore(fetch: { fake.fetch() }, notificationCenter: NotificationCenter())
+                let binding = KpiWidgetFeedBinding(store: store) { manager.updateKpiState($0) }
+                manager.refreshItems()
+                expect(delegate.dataProviderCount).toEventually(equal(1))
+                binding.feedWillAppear()
+                fake.succeed([makeWidget(id: "1", percentage: 50)])
+                expect(tableView.numberOfSections).toEventually(equal(2)) // KPI + EmptyFeedSection
+                expect(delegate.dataProviderCount).to(equal(1))
+            }
+
+            it("updates the SABA visible snapshot too") {
+                let sabaTable = UITableView(frame: CGRect(x: 0, y: 0, width: 375, height: 800), style: .grouped)
+                host.view.addSubview(sabaTable)
+                let sabaDelegate = KpiFakeFeedDelegate(presenter: host)
+                let navigator = AppNavigator(withRepository: MockRepository(), analytics: KpiFakeAnalytics(),
+                                             deeplinkService: DeeplinkManager(), window: UIWindow())
+                let saba = FeedListManager(repository: MockRepository(), navigator: navigator, tableView: sabaTable,
+                                           delegate: sabaDelegate, pageSize: 20, forceSabaFooterForTesting: true,
+                                           analytics: KpiFakeAnalytics())
+                saba.refreshItems()
+                expect(sabaDelegate.emptyListCalls.last).toEventually(equal(true))
+                saba.updateKpiState(.loaded([makeWidget(id: "1", percentage: 50)]))
+                expect(sabaTable.numberOfSections).to(equal(2))
+                expect(sabaDelegate.emptyListCalls.last).to(equal(false))
+            }
+
+            it("reports a pull-to-refresh to the delegate") {
+                tableView.refreshControl?.sendActions(for: .valueChanged)
+                expect(delegate.pullToRefreshCount).to(equal(1))
+            }
+
+            it("keeps the background empty view and the empty-feed row exclusive") {
+                let widget = makeWidget(id: "1", percentage: 50)
+                manager.updateKpiState(.loaded([widget])) // before any feed: nothing to merge into
+                expect(delegate.emptyListCalls).to(beEmpty())
+
+                manager.refreshItems()
+                expect(delegate.emptyListCalls.last).toEventually(equal(true))
+                manager.updateKpiState(.loaded([widget]))
+                expect(delegate.emptyListCalls.last).to(equal(false))
+                expect(tableView.numberOfSections).to(equal(2)) // KPI + EmptyFeedSection
+                manager.updateKpiState(.loaded([]))
+                expect(delegate.emptyListCalls.last).to(equal(true))
+                expect(tableView.numberOfSections).to(equal(0))
+            }
+        }
+
+        describe("KPI gauge edge cases") {
+            var window: UIWindow!
+            var gauge: KpiGaugeView!
+            beforeEach {
+                window = UIWindow(frame: CGRect(x: 0, y: 0, width: 200, height: 200))
+                gauge = KpiGaugeView()
+                gauge.isReduceMotionEnabled = { false }
+                window.addSubview(gauge)
+                window.isHidden = false
+            }
+            afterEach {
+                window.isHidden = true
+            }
+
+            it("animates the fill end mapped through the threshold geometry, with the gap step only above t") {
+                func end(_ fill: CGFloat, _ meets: Bool) -> Double {
+                    return Double((KpiGaugeGeometry(threshold: 0.7, fill: fill, meetsThreshold: meets).fillEnd - 183) / 174)
+                }
+                func values() -> (Double, Double) {
+                    let from = (gauge.fillAnimation?.fromValue as? NSNumber)?.doubleValue ?? -1
+                    let to = (gauge.fillAnimation?.toValue as? NSNumber)?.doubleValue ?? -1
+                    return (from, to)
+                }
+                let step = Double((2 * KpiGaugeGeometry.cap + KpiGaugeGeometry.gap) / 174)
+                // Met, from a previous above-threshold value: both ends carry the step.
+                gauge.set(id: "1", fill: 0.83, threshold: 0.7, meetsThreshold: true, display: 83,
+                          progressColor: .green, trackColor: .gray, animatedFrom: 0.8, completion: {})
+                var (from, to) = values()
+                expect(from).to(beCloseTo(end(0.8, true), within: 0.000_1))
+                expect(to).to(beCloseTo(end(0.83, true), within: 0.000_1))
+                expect(to - end(0.83, false)).to(beCloseTo(step, within: 0.000_1))
+                // From exactly the threshold: flush against the gap, no step on the start.
+                gauge.set(id: "2", fill: 0.83, threshold: 0.7, meetsThreshold: true, display: 83,
+                          progressColor: .green, trackColor: .gray, animatedFrom: 0.7, completion: {})
+                (from, to) = values()
+                expect(from).to(beCloseTo(Double(0.7 * KpiGaugeGeometry.divisibleSpan / 174), within: 0.000_1))
+                // Not met: no step on the target even above t.
+                gauge.set(id: "3", fill: 0.75, threshold: 0.7, meetsThreshold: false, display: 75,
+                          progressColor: .gray, trackColor: .gray, animatedFrom: 0, completion: {})
+                (from, to) = values()
+                expect(to).to(beCloseTo(end(0.75, false), within: 0.000_1))
+                expect(to).to(beLessThan(end(0.75, true)))
+            }
+
+            it("keeps the sweep across a layout pass") {
+                gauge.set(id: "1", fill: 0.83, threshold: 0.7, meetsThreshold: true, display: 83,
+                          progressColor: .green, trackColor: .gray, animatedFrom: 0, completion: {})
+                let animation = gauge.fillAnimation
+                expect(animation).toNot(beNil())
+                gauge.setNeedsLayout()
+                gauge.layoutIfNeeded()
+                expect(gauge.fillAnimation === animation).to(beTrue())
+                let target = (KpiGaugeGeometry(threshold: 0.7, fill: 0.83, meetsThreshold: true).fillEnd - 183) / 174
+                expect(Double(gauge.progressLayer.strokeEnd)).to(beCloseTo(Double(target), within: 0.000_1))
+            }
+
+            it("draws no progress arc at 0 %") {
+                gauge.isReduceMotionEnabled = { true }
+                gauge.set(id: "1", fill: 0, threshold: 0.7, meetsThreshold: false, display: 0,
+                          progressColor: .gray, trackColor: .gray, animatedFrom: nil, completion: {})
+                expect(gauge.progressLayer.isHidden).to(beTrue())
+                gauge.set(id: "1", fill: 0.5, threshold: 0.7, meetsThreshold: false, display: 50,
+                          progressColor: .gray, trackColor: .gray, animatedFrom: nil, completion: {})
+                expect(gauge.progressLayer.isHidden).to(beFalse())
+                gauge.set(id: "1", fill: 0, threshold: 0.7, meetsThreshold: false, display: 0,
+                          progressColor: .gray, trackColor: .gray, animatedFrom: nil, completion: {})
+                expect(gauge.progressLayer.isHidden).to(beTrue())
+            }
+
+            it("does not restart for the same widget and value") {
+                var completions = 0
+                gauge.set(id: "1", fill: 0.5, display: 50, progressColor: .green, trackColor: .gray,
+                          animatedFrom: 0, completion: { completions += 1 })
+                let first = gauge.fillAnimation
+                expect(first).toNot(beNil())
+                gauge.set(id: "1", fill: 0.5, display: 50, progressColor: .green, trackColor: .gray,
+                          animatedFrom: 0, completion: { completions += 1 })
+                expect(gauge.fillAnimation === first).to(beTrue())
+                expect(completions).toEventually(equal(1), timeout: .seconds(3))
+                expect(completions).toNever(beGreaterThan(1), until: .milliseconds(300))
+            }
+
+            it("never records a superseded animation") {
+                var firstCompleted = false
+                var secondCompleted = false
+                gauge.set(id: "1", fill: 0.5, display: 50, progressColor: .green, trackColor: .gray,
+                          animatedFrom: 0, completion: { firstCompleted = true })
+                gauge.set(id: "2", fill: 0.8, display: 80, progressColor: .green, trackColor: .gray,
+                          animatedFrom: 0, completion: { secondCompleted = true })
+                expect(secondCompleted).toEventually(beTrue(), timeout: .seconds(3))
+                expect(firstCompleted).to(beFalse())
+            }
+
+            it("skips the animation with Reduce Motion and records immediately") {
+                gauge.isReduceMotionEnabled = { true }
+                var completed = false
+                gauge.set(id: "1", fill: 0.5, display: 50, progressColor: .green, trackColor: .gray,
+                          animatedFrom: 0, completion: { completed = true })
+                expect(completed).to(beTrue())
+                expect(gauge.fillAnimation).to(beNil())
+                expect(gauge.valueLabel.text).to(equal("50"))
+            }
+
+            it("continues from the drawn arc and the shown number when the value changes mid-sweep") {
+                // A long sweep, caught on its first count tick: mid-way by construction, not by wall clock.
+                gauge.animationDuration = 5
+                gauge.set(id: "1", fill: 0.9, display: 90, progressColor: .green, trackColor: .gray,
+                          animatedFrom: 0, completion: {})
+                expect(gauge.valueLabel.text).to(equal("0"))
+                expect(gauge.valueLabel.text).toEventuallyNot(equal("0"), timeout: .seconds(2))
+                expect(gauge.fillAnimation).toNot(beNil())
+                let shown = gauge.valueLabel.text
+                expect(Int(shown ?? "") ?? 0).to(beGreaterThan(0))
+                // The store has not recorded the first sweep yet, so it still says "from 0".
+                gauge.set(id: "1", fill: 0.5, display: 50, progressColor: .green, trackColor: .gray,
+                          animatedFrom: 0, completion: {})
+                let from = (gauge.fillAnimation?.fromValue as? NSNumber)?.doubleValue ?? 0
+                expect(from).to(beGreaterThan(0.05))
+                expect(gauge.valueLabel.text).to(equal(shown))
+            }
+        }
+
+        describe("KPI card layout") {
+            it("renders the Figma line height: 1.5 x the point size") {
+                for size: CGFloat in [15, 16] {
+                    let font = UIFont.systemFont(ofSize: size)
+                    let multiple = KpiWidgetTableViewCell.lineHeightMultiple(for: font)
+                    expect(Double(multiple * font.lineHeight)).to(beCloseTo(Double(size) * 1.5, within: 0.001))
+                }
+                let cell = KpiWidgetTableViewCell(style: .default, reuseIdentifier: nil)
+                let widget = KpiWidget(id: "1", type: "kpi_widget", kpiType: KpiWidget.supportedKpiType, displayMode: "gauge",
+                                       position: nil, featured: false, completed: 1, total: 2, percentage: 50,
+                                       meetsThreshold: false, title: "T", body: "<p>B</p>")
+                cell.display(widget: widget, store: nil, showInfo: false, infoCallback: {})
+                for label in [cell.titleLabel, cell.bodyLabel] {
+                    guard let text = label.attributedText,
+                          let font = text.attribute(.font, at: 0, effectiveRange: nil) as? UIFont,
+                          let style = text.attribute(.paragraphStyle, at: 0, effectiveRange: nil) as? NSParagraphStyle else {
+                        fail("missing attributes")
+                        continue
+                    }
+                    expect(Double(style.lineHeightMultiple * font.lineHeight))
+                        .to(beCloseTo(Double(font.pointSize) * 1.5, within: 0.001))
+                }
+            }
+
+            it("colours the gauge green when the threshold is met, grey otherwise") {
+                let light = UITraitCollection(userInterfaceStyle: .light)
+                for meets in [true, false] {
+                    let cell = KpiWidgetTableViewCell(style: .default, reuseIdentifier: nil)
+                    let widget = KpiWidget(id: meets ? "met" : "not", type: "kpi_widget", kpiType: KpiWidget.supportedKpiType,
+                                           displayMode: "gauge", position: nil, featured: false, completed: 1, total: 2,
+                                           percentage: 50, meetsThreshold: meets, title: "T", body: nil)
+                    cell.display(widget: widget, store: nil, showInfo: false, infoCallback: {})
+                    let expected = ColorPalette.color(withType: meets ? .kpiWidgetThreshold1 : .kpiWidgetThreshold0)
+                    let gauge = cell.gaugeView
+                    expect(rgb(gauge.valueLabel.textColor.resolvedColor(with: light)))
+                        .to(equal(rgb(expected.resolvedColor(with: light))), description: "value, met \(meets)")
+                    let stroke = gauge.progressLayer.strokeColor.map { UIColor(cgColor: $0) }
+                    expect(stroke.map { rgb($0) })
+                        .to(equal(rgb(expected.resolvedColor(with: gauge.traitCollection))), description: "arc, met \(meets)")
+                }
+            }
+
+            it("enables the title tap only with an info message and hides an empty title row") {
+                let cell = KpiWidgetTableViewCell(style: .default, reuseIdentifier: nil)
+                cell.display(widget: makeWidget(id: "1", percentage: 50), store: nil, showInfo: false, infoCallback: {})
+                expect(cell.titleTap.isEnabled).to(beFalse())
+                expect(cell.titleRow.isHidden).to(beTrue()) // no title, no message: no empty row
+                cell.display(widget: makeWidget(id: "1", percentage: 50), store: nil, showInfo: true, infoCallback: {})
+                expect(cell.titleTap.isEnabled).to(beTrue())
+                expect(cell.titleRow.isHidden).to(beFalse())
+            }
+
+            it("exposes the title row as one button only when the info message exists") {
+                let cell = KpiWidgetTableViewCell(style: .default, reuseIdentifier: nil)
+                let titled = KpiWidget(id: "1", type: "kpi_widget", kpiType: KpiWidget.supportedKpiType, displayMode: "gauge",
+                                       position: nil, featured: false, completed: 1, total: 2, percentage: 50,
+                                       meetsThreshold: false, title: "Quick Activities", body: nil)
+                cell.display(widget: titled, store: nil, showInfo: true, infoCallback: {})
+                expect(cell.titleRow.isAccessibilityElement).to(beTrue())
+                expect(cell.titleRow.accessibilityTraits & UIAccessibilityTraitButton).toNot(equal(0)) // Swift 4 test target
+                expect(cell.titleRow.accessibilityLabel).to(equal("Quick Activities"))
+
+                cell.display(widget: makeWidget(id: "2", percentage: 50), store: nil, showInfo: true,
+                             infoMessageTitle: "Understanding Your Progress Tracker", infoCallback: {})
+                expect(cell.titleRow.accessibilityLabel).to(equal("Understanding Your Progress Tracker"))
+                cell.display(widget: makeWidget(id: "2", percentage: 50), store: nil, showInfo: true, infoCallback: {})
+                expect(cell.titleRow.accessibilityLabel).to(equal("Info"))
+                expect(cell.titleLabel.isHidden).to(beFalse()) // icon keeps its trailing slot
+
+                cell.display(widget: titled, store: nil, showInfo: false, infoCallback: {})
+                expect(cell.titleRow.isAccessibilityElement).to(beFalse())
+                expect(cell.titleRow.accessibilityTraits & UIAccessibilityTraitButton).to(equal(0))
+            }
+        }
+
+        // MARK: D20 threshold gap
+
+        describe("KpiWidget threshold decoding") {
+            func decode(_ params: String) -> KpiWidget? {
+                let json = """
+                {"data":{"id":"1","type":"kpi_widget","attributes":{"kpi_type":"quick_activities_adherence",
+                "display_mode":"gauge","position":null,"featured":false,"completed":1,"total":2,"percentage":50.0,
+                "meets_threshold":false,"title":"T","body":null\(params)}}}
+                """
+                return try? Response(statusCode: 200, data: Data(json.utf8))
+                    .mapCodableJSONAPI(includeList: KpiWidget.includeList, keyPath: KpiWidget.keyPath)
+            }
+
+            it("reads an integer threshold and ignores other keys") {
+                let widget = decode(#", "kpi_params": {"threshold": 70, "window": "7d"}"#)
+                expect(widget?.kpiParams?.threshold).to(equal(70))
+                expect(widget?.threshold).to(beCloseTo(0.7, within: 0.000_1))
+            }
+
+            it("treats a missing or malformed threshold as no gap, without dropping the widget") {
+                for params in ["", #", "kpi_params": null"#, #", "kpi_params": {}"#,
+                               #", "kpi_params": {"threshold": "70"}"#, #", "kpi_params": {"threshold": 70.5}"#,
+                               #", "kpi_params": "oops""#] {
+                    let widget = decode(params)
+                    expect(widget).toNot(beNil(), description: "params \(params)")
+                    expect(widget?.threshold).to(beNil(), description: "params \(params)")
+                }
+            }
+
+            it("decodes the fixture thresholds") {
+                let decoded: ExcludeInvalid<KpiWidget>? = try? Response(statusCode: 200,
+                                                                        data: Bundle.getTestData(from: "TestGetKpiWidgets"))
+                    .mapCodableJSONAPI(includeList: KpiWidget.includeList, keyPath: KpiWidget.keyPath)
+                expect(decoded?.wrappedValue.map { $0.kpiParams?.threshold }).to(equal([70, 70, nil]))
+            }
+        }
+
+        describe("KpiGaugeGeometry") {
+            it("uses the spec constants") {
+                expect(Double(KpiGaugeGeometry.cap)).to(beCloseTo(3.017, within: 0.001))
+                expect(Double(KpiGaugeGeometry.gap)).to(beCloseTo(4.021, within: 0.001))
+                expect(Double(KpiGaugeGeometry.divisibleSpan)).to(beCloseTo(163.945, within: 0.001))
+            }
+
+            // t -> (track segments, [(v, fill end)]), expected angles in degrees, to 0.1°.
+            let table: [(CGFloat, [(Double, Double)], [(CGFloat, Double)])] = [
+                (0, [(183, 357)], [(-0.01, 183), (0, 183), (0.01, 184.74)]),
+                (0.01, [(183, 184.639), (194.694, 357)], [(0, 183), (0.01, 184.639), (0.02, 196.334)]),
+                (0.5, [(183, 264.973), (275.027, 357)], [(0.49, 263.333), (0.5, 264.973), (0.51, 276.667)]),
+                (0.7, [(183, 297.762), (307.816, 357)], [(0.69, 296.122), (0.7, 297.762), (0.71, 309.456)]),
+                (0.99, [(183, 345.306), (355.361, 357)], [(0.98, 343.666), (0.99, 345.306), (1.0, 357)]),
+                (1, [(183, 357)], [(0.99, 355.26), (1, 357), (1.01, 357)])
+            ]
+            for (threshold, segments, fills) in table {
+                it("splits the track at t = \(threshold) and maps the fill around it") {
+                    let geometry = KpiGaugeGeometry(threshold: threshold, fill: 0, meetsThreshold: false)
+                    expect(geometry.track.count).to(equal(segments.count))
+                    expect(geometry.hasGap).to(equal(segments.count == 2))
+                    for (segment, expected) in zip(geometry.track, segments) {
+                        expect(Double(segment.start)).to(beCloseTo(expected.0, within: 0.1))
+                        expect(Double(segment.end)).to(beCloseTo(expected.1, within: 0.1))
+                        expect(segment.isDot).to(beFalse())
+                    }
+                    for (fill, expectedEnd) in fills {
+                        let end = KpiGaugeGeometry(threshold: threshold, fill: fill, meetsThreshold: fill >= threshold).fillEnd
+                        expect(Double(end)).to(beCloseTo(expectedEnd, within: 0.1), description: "fill \(fill)")
+                    }
+                }
+            }
+
+            it("ends flush against the gap up to the threshold and covers it only above") {
+                for threshold: CGFloat in [0.01, 0.5, 0.7, 0.99] {
+                    let track = KpiGaugeGeometry(threshold: threshold, fill: 0, meetsThreshold: false).track
+                    let below = KpiGaugeGeometry(threshold: threshold, fill: threshold - 0.001, meetsThreshold: false).fillEnd
+                    // Met at exactly t: the fill's cap coincides with the left segment's end cap, gap visible.
+                    let at = KpiGaugeGeometry(threshold: threshold, fill: threshold, meetsThreshold: true).fillEnd
+                    let above = KpiGaugeGeometry(threshold: threshold, fill: threshold + 0.01, meetsThreshold: true).fillEnd
+                    expect(below).to(beLessThanOrEqualTo(track[0].end))
+                    expect(Double(at)).to(beCloseTo(Double(track[0].end), within: 0.000_1))
+                    expect(Double(above)).to(beCloseTo(Double(183 + (threshold + 0.01) * KpiGaugeGeometry.divisibleSpan
+                                                                + 2 * KpiGaugeGeometry.cap + KpiGaugeGeometry.gap), within: 0.000_1))
+                    expect(above).to(beGreaterThan(track[1].start))
+                }
+            }
+
+            it("covers the gap only when the backend says the threshold is met") {
+                for threshold: CGFloat in [0.01, 0.5, 0.7, 0.99] {
+                    let fill = threshold + 0.01
+                    let notMet = KpiGaugeGeometry(threshold: threshold, fill: fill, meetsThreshold: false).fillEnd
+                    let met = KpiGaugeGeometry(threshold: threshold, fill: fill, meetsThreshold: true).fillEnd
+                    expect(Double(notMet)).to(beCloseTo(Double(183 + fill * KpiGaugeGeometry.divisibleSpan), within: 0.000_1))
+                    expect(Double(met - notMet))
+                        .to(beCloseTo(Double(2 * KpiGaugeGeometry.cap + KpiGaugeGeometry.gap), within: 0.000_1))
+                }
+                // met, but the rounded percentage sits just below t: no step either.
+                let roundedBelow = KpiGaugeGeometry(threshold: 0.7, fill: 0.699_9, meetsThreshold: true).fillEnd
+                expect(Double(roundedBelow)).to(beCloseTo(Double(183 + 0.699_9 * KpiGaugeGeometry.divisibleSpan), within: 0.000_1))
+            }
+
+            it("treats no threshold like today's single arc") {
+                let geometry = KpiGaugeGeometry(threshold: nil, fill: 0.5, meetsThreshold: true)
+                expect(geometry.track).to(equal([KpiGaugeGeometry.Segment(start: 183, end: 357)]))
+                expect(Double(geometry.fillEnd)).to(beCloseTo(270, within: 0.000_1))
+                expect(KpiGaugeGeometry(threshold: -0.2, fill: 0, meetsThreshold: false).hasGap).to(beFalse())
+                expect(KpiGaugeGeometry(threshold: 1.3, fill: 0, meetsThreshold: false).hasGap).to(beFalse())
+            }
+
+            it("draws a segment shorter than 0.05° as a dot") {
+                let tiny = KpiGaugeGeometry(threshold: 0.000_1, fill: 0, meetsThreshold: false).track
+                expect(tiny[0].isDot).to(beTrue())
+                expect(tiny[1].isDot).to(beFalse())
+                let almostFull = KpiGaugeGeometry(threshold: 0.999_9, fill: 0, meetsThreshold: false).track
+                expect(almostFull[0].isDot).to(beFalse())
+                expect(almostFull[1].isDot).to(beTrue())
+            }
+        }
+
+        describe("KPI info message") {
+            it("decodes the KPI_QUICK_ACTIVITIES_ADHERENCE location") {
+                let json = #"{"id": "1", "type": "app_info_message", "location": "KPI_QUICK_ACTIVITIES_ADHERENCE"}"#
+                let message = try? JSONDecoder().decode(MessageInfo.self, from: Data(json.utf8))
+                expect(message?.location).to(equal(.kpiQuickActivitiesAdherence))
+            }
+
+            it("finds only the message with the KPI location") {
+                let feedMessage = MessageInfo(id: "1", type: "m", title: "Feed", body: nil, buttonText: nil, location: .tabFeed)
+                let kpiMessage = MessageInfo(id: "2", type: "m", title: "KPI", body: nil, buttonText: nil,
+                                             location: .kpiQuickActivitiesAdherence)
+                expect(FeedListManager.kpiInfoMessage(in: nil)).to(beNil())
+                expect(FeedListManager.kpiInfoMessage(in: [feedMessage])).to(beNil())
+                expect(FeedListManager.kpiInfoMessage(in: [feedMessage, kpiMessage])?.id).to(equal("2"))
+            }
+        }
+
+        describe("Logout") {
+            it("resets the KPI store") {
+                let fake = FakeKpiFetch()
+                let store = KpiWidgetStore(fetch: { fake.fetch() }, notificationCenter: NotificationCenter())
+                store.refreshIfNeeded(today: "2026-11-07")
+                fake.succeed([makeWidget(id: "1", percentage: 50)])
+                expect(store.widgets).toEventuallyNot(beNil())
+                let repository = RepositoryImpl(api: FakeApiGateway(), storage: KpiFakeStorage(),
+                                                notificationService: KpiFakeNotificationService(),
+                                                analyticsService: KpiFakeAnalytics(), showDefaultUserInfo: false,
+                                                appleWatchAlternativeIntegrations: [])
+                repository.kpiWidgetStore = { store }
+                repository.logOut()
+                expect(store.state.value).to(equal(.idle))
+                expect(store.widgets).to(beNil())
+            }
+        }
+
+        describe("KpiWidgetFeedBinding") {
+            it("refreshes without force on appear and feed reload, with force on pull-to-refresh, and forwards states") {
+                let fake = FakeKpiFetch()
+                let store = KpiWidgetStore(fetch: { fake.fetch() }, notificationCenter: NotificationCenter())
+                var states: [KpiWidgetState] = []
+                let binding = KpiWidgetFeedBinding(store: store) { states.append($0) }
+                expect(states).toEventually(equal([.idle]))
+
+                binding.feedWillAppear()
+                expect(fake.calls).to(equal(1))
+                let widget = makeWidget(id: "1", percentage: 50)
+                fake.succeed([widget])
+                expect(states.last).toEventually(equal(.loaded([widget])))
+
+                binding.feedWillAppear()
+                binding.feedDidRefresh()
+                expect(fake.calls).to(equal(1)) // same day, not forced
+                binding.feedPulledToRefresh()
+                expect(fake.calls).to(equal(2)) // forced
+            }
+        }
+
+        // MARK: 7. Palette defaults
+
+        describe("KPI palette keys") {
+            afterEach {
+                ColorPalette.initialize(light: [:], dark: [:])
+            }
+
+            it("falls back to the defaults when the keys are missing") {
+                let json: NSDictionary = ["color_palette": ["primary_color_start": "#140F26"]]
+                let light: ColorMap? = try? Mapper(JSON: json).from("color_palette")
+                expect(light?[.kpiWidgetThreshold1]).to(beNil())
+                ColorPalette.initialize(light: light ?? [:], dark: nil)
+
+                expect(hex(.kpiWidgetThreshold1, .light)).to(equal(0x6B9211))
+                expect(hex(.kpiWidgetThreshold0, .light)).to(equal(0x37424A))
+                expect(hex(.kpiWidgetThreshold1, .dark)).to(equal(0x6B9211))
+                expect(hex(.kpiWidgetThreshold0, .dark)).to(equal(0xD9D9D9))
+            }
+
+            it("reads the keys when present") {
+                let json: NSDictionary = ["color_palette": ["kpi_widget_threshold_1_color": "#112233",
+                                                            "kpi_widget_threshold_0_color": "#445566"]]
+                let light: ColorMap? = try? Mapper(JSON: json).from("color_palette")
+                ColorPalette.initialize(light: light ?? [:], dark: light ?? [:])
+                expect(hex(.kpiWidgetThreshold1, .light)).to(equal(0x112233))
+                expect(hex(.kpiWidgetThreshold0, .dark)).to(equal(0x445566))
+            }
+        }
+    }
+}
+
+// MARK: - Helpers
+
+private func makeWidget(id: String = "1", percentage: Double?) -> KpiWidget {
+    return KpiWidget(id: id, type: "kpi_widget", kpiType: KpiWidget.supportedKpiType, displayMode: "gauge",
+                     position: nil, featured: false, completed: 0, total: 0, percentage: percentage,
+                     meetsThreshold: false, title: nil, body: nil)
+}
+
+private func text(_ html: String) -> String {
+    return KpiHtmlScanner.scan(html).map(\.text).joined()
+}
+
+private func hex(_ type: ColorType, _ style: UIUserInterfaceStyle) -> Int {
+    let color = ColorPalette.color(withType: type).resolvedColor(with: UITraitCollection(userInterfaceStyle: style))
+    var red: CGFloat = 0, green: CGFloat = 0, blue: CGFloat = 0, alpha: CGFloat = 0
+    color.getRed(&red, green: &green, blue: &blue, alpha: &alpha)
+    return (Int((red * 255).rounded()) << 16) | (Int((green * 255).rounded()) << 8) | Int((blue * 255).rounded())
+}
+
+/// A fetch the spec answers by hand, so in-flight, failure and late responses are deterministic.
+private final class FakeKpiFetch {
+    private(set) var calls = 0
+    private var observers: [(SingleEvent<[KpiWidget]>) -> Void] = []
+
+    func fetch() -> Single<[KpiWidget]> {
+        self.calls += 1
+        return Single.create { observer in
+            self.observers.append(observer)
+            return Disposables.create()
+        }
+    }
+
+    func succeed(_ widgets: [KpiWidget]) {
+        self.observers.removeFirst()(.success(widgets))
+    }
+
+    func fail() {
+        self.observers.removeFirst()(.failure(NSError(domain: "test", code: 1)))
+    }
+}
+
+private func apiError(statusCode: Int) -> ApiError {
+    return .unexpectedError(pathUrl: "v1/kpi_widgets", request: ApiRequest(serviceRequest: .getKpiWidgets),
+                            statusCode: statusCode, responseBody: "")
+}
+
+private final class KpiFakeStorage: RepositoryStorage {
+    var globalConfig: GlobalConfig?
+    var user: User?
+    var infoMessages: [MessageInfo]?
+    var feedbackList: [String: [EmojiItem]] = [:]
+}
+
+private final class KpiFakeNotificationService: NotificationService {
+    func getRegistrationToken() -> Single<String?> { .just(nil) }
+}
+
+private final class KpiFakeAnalytics: AnalyticsService {
+    func track(event: AnalyticsEvent) {}
+}
+
+private final class KpiFakeFeedDelegate: FeedListManagerDelegate {
+    let presenter: UIViewController
+    private(set) var emptyListCalls: [Bool] = []
+    private(set) var pullToRefreshCount = 0
+
+    init(presenter: UIViewController) {
+        self.presenter = presenter
+    }
+
+    func handleEmptyList(show: Bool) { self.emptyListCalls.append(show) }
+    private(set) var dataProviderCount = 0
+    func getDataProviderSingle(repository: Repository, fetchMode: FetchMode) -> Single<FeedContent> {
+        self.dataProviderCount += 1
+        return .just(FeedContent(withFeeds: [], kpiState: .idle))
+    }
+    func onPullToRefresh() { self.pullToRefreshCount += 1 }
+    func showError(error: Error) {}
+}
+
+private func rgb(_ color: UIColor) -> [Int] {
+    var red: CGFloat = 0, green: CGFloat = 0, blue: CGFloat = 0, alpha: CGFloat = 0
+    color.getRed(&red, green: &green, blue: &blue, alpha: &alpha)
+    return [red, green, blue, alpha].map { Int(($0 * 255).rounded()) }
+}

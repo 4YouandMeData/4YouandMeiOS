@@ -39,6 +39,7 @@ class Services {
     private(set) var mirSpirometryService: MirSpirometryService!
     private(set) var deeplinkService: DeeplinkService!
     private(set) var deviceService: DeviceService!
+    private(set) var kpiWidgetStore: KpiWidgetStore!
 #if TERRA
     private(set) var terraService: TerraService!
 #endif
@@ -269,6 +270,8 @@ class Services {
         self.mirSpirometryService = mirSpirometryService
         self.deeplinkService = deeplinkService
         self.deviceService = deviceService
+        // FUAM-4315: Feed KPI widgets, in-memory per process (D2)
+        self.kpiWidgetStore = KpiWidgetStore(fetch: { repository.getKpiWidgets() })
         
         self.navigator.showSetupScreen()
     }

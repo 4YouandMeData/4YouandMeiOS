@@ -328,6 +328,7 @@ extension DefaultService {
         case .createUserPhase: return "Create User Phase"
         case .updateUserPhase: return "Update User Phase"
         case .getInfoMessages: return "Get Info Messages"
+        case .getKpiWidgets: return "Get KPI Widgets"
         }
     }
 }
