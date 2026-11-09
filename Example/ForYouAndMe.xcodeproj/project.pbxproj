@@ -50,6 +50,7 @@
 		3467A0010001F37A0001AAAA /* ClientMetadataPluginSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3467A0020001F37A0001AAAA /* ClientMetadataPluginSpec.swift */; };
 		2932A0010001F37A0001AAAA /* AlertDecodingSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2932A0020001F37A0001AAAA /* AlertDecodingSpec.swift */; };
 		2932A0030001F37A0001AAAA /* FeedContentPinnedSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2932A0040001F37A0001AAAA /* FeedContentPinnedSpec.swift */; };
+		4315A0010001F37A0001AAAA /* KpiWidgetSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4315A0020001F37A0001AAAA /* KpiWidgetSpec.swift */; };
 		3398A0030001F37A0001AAAA /* FeedContentQuickActivityOrderSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3398A0040001F37A0001AAAA /* FeedContentQuickActivityOrderSpec.swift */; };
 		3396A0010001F37A0001AAAA /* SurveyRangePickerSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3396A0020001F37A0001AAAA /* SurveyRangePickerSpec.swift */; };
 		3841A0010001F37A0001AAAA /* EnrollmentBackfillWindowingSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3841A0020001F37A0001AAAA /* EnrollmentBackfillWindowingSpec.swift */; };
@@ -144,6 +145,7 @@
 		3467A0020001F37A0001AAAA /* ClientMetadataPluginSpec.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ClientMetadataPluginSpec.swift; sourceTree = "<group>"; };
 		2932A0020001F37A0001AAAA /* AlertDecodingSpec.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AlertDecodingSpec.swift; sourceTree = "<group>"; };
 		2932A0040001F37A0001AAAA /* FeedContentPinnedSpec.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = FeedContentPinnedSpec.swift; sourceTree = "<group>"; };
+		4315A0020001F37A0001AAAA /* KpiWidgetSpec.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = KpiWidgetSpec.swift; sourceTree = "<group>"; };
 		3398A0040001F37A0001AAAA /* FeedContentQuickActivityOrderSpec.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = FeedContentQuickActivityOrderSpec.swift; sourceTree = "<group>"; };
 		3396A0020001F37A0001AAAA /* SurveyRangePickerSpec.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SurveyRangePickerSpec.swift; sourceTree = "<group>"; };
 		3841A0020001F37A0001AAAA /* EnrollmentBackfillWindowingSpec.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = EnrollmentBackfillWindowingSpec.swift; sourceTree = "<group>"; };
@@ -283,6 +285,7 @@
 				3467A0020001F37A0001AAAA /* ClientMetadataPluginSpec.swift */,
 				2932A0020001F37A0001AAAA /* AlertDecodingSpec.swift */,
 				2932A0040001F37A0001AAAA /* FeedContentPinnedSpec.swift */,
+				4315A0020001F37A0001AAAA /* KpiWidgetSpec.swift */,
 				3398A0040001F37A0001AAAA /* FeedContentQuickActivityOrderSpec.swift */,
 				3396A0020001F37A0001AAAA /* SurveyRangePickerSpec.swift */,
 				3841A0020001F37A0001AAAA /* EnrollmentBackfillWindowingSpec.swift */,
@@ -624,6 +627,7 @@
 				3467A0010001F37A0001AAAA /* ClientMetadataPluginSpec.swift in Sources */,
 				2932A0010001F37A0001AAAA /* AlertDecodingSpec.swift in Sources */,
 				2932A0030001F37A0001AAAA /* FeedContentPinnedSpec.swift in Sources */,
+				4315A0010001F37A0001AAAA /* KpiWidgetSpec.swift in Sources */,
 				3398A0030001F37A0001AAAA /* FeedContentQuickActivityOrderSpec.swift in Sources */,
 				3396A0010001F37A0001AAAA /* SurveyRangePickerSpec.swift in Sources */,
 				3841A0010001F37A0001AAAA /* EnrollmentBackfillWindowingSpec.swift in Sources */,

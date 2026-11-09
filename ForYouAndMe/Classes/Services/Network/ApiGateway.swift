@@ -51,6 +51,8 @@ enum DefaultService {
     case sendAnswer(answer: Answer, context: ApiContext?)
     // Feed
     case getFeeds(paginationInfo: PaginationInfo?)
+    // KPI widgets (FUAM-4315)
+    case getKpiWidgets
     // Task
     case getTasks(paginationInfo: PaginationInfo?)
     case getTask(taskId: String)

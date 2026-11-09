@@ -94,6 +94,7 @@ final class MockRepository: Repository {
 
     func getFeeds(fetchMode: FetchMode) -> Single<[Feed]> { .never() }
     func getTasks(fetchMode: FetchMode) -> Single<[Feed]> { .never() }
+    func getKpiWidgets() -> Single<[KpiWidget]> { .never() }
     func getTask(taskId: String) -> Single<Feed> {
         getTaskCallCount += 1
         lastRequestedTaskId = taskId

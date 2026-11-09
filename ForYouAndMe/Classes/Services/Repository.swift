@@ -86,6 +86,8 @@ protocol Repository: AnyObject {
     // Tasks
     func getFeeds(fetchMode: FetchMode) -> Single<[Feed]>
     func getTasks(fetchMode: FetchMode) -> Single<[Feed]>
+    // KPI widgets (FUAM-4315): supported types only
+    func getKpiWidgets() -> Single<[KpiWidget]>
     func getTask(taskId: String) -> Single<Feed>
     func sendQuickActivityResult(quickActivityTaskId: String, quickActivityOption: QuickActivityOption, optionalFlag: Bool) -> Single<QuickActivityResultResponse>
     func sendSkipTask(taskId: String) -> Single<()>

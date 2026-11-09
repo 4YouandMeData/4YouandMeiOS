@@ -121,6 +121,7 @@ enum TemplateImageName: String, CaseIterable {
     case filterIcon = "filter_icon"
     case videoIcon = "video_icon"
     case infoMessage = "info_message"
+    case kpiInfo = "kpi_info"
     case snackImage = "snack_image"
     case mealImage = "meal_image"
     case clockIcon = "clock_icon"
