@@ -154,6 +154,9 @@ public final class SensorSampleUploadManager {
     // ponytail: an upload Single that never terminates would pin its batch here until relaunch;
     // Moya/URLSession timeouts bound that in practice.
     private var inFlightBatchIds: [SRSensor: Set<String>] = [:]
+    // FUAM-4516 (plan R2 PR-7): whether this process already looked for an interrupted purge.
+    // Mutated on `workQueue` only.
+    private var pendingPurgeChecked = false
     // Once-per-launch guard so the "empty_plan" telemetry (review fix #6) doesn't fire on
     // every 15-minute sync cycle while a fresh enrollment waits out the 24h embargo.
     private var emptyPlanReported: Set<String> = []
@@ -288,6 +291,9 @@ public final class SensorSampleUploadManager {
 
         // Ensure single-cycle at a time
         syncLock.lock(); defer { syncLock.unlock() }
+
+        // FUAM-4516: a purge a kill interrupted completes before this cycle enqueues or uploads.
+        self.resumePendingPurgeIfNeeded()
 
         let now = Date()
 
@@ -1969,10 +1975,34 @@ public final class SensorSampleUploadManager {
         analytics.track(event: .sensorDataClearanceMismatch(reason: reason, authorizedSensors: sensorNames))
     }
 
+    /// FUAM-4516 (plan R2 PR-7): a purge a kill interrupted is completed at the first queue access
+    /// of the next process, REGARDLESS of the current clearance, before anything is enqueued or
+    /// uploaded: otherwise a new login would upload the previous participant's leftover batches.
+    /// Checked once per process; a purge that starts later runs to completion in one `workQueue`
+    /// block. Runs on `workQueue` only.
+    private func resumePendingPurgeIfNeeded() {
+        guard !self.pendingPurgeChecked else { return }
+        self.pendingPurgeChecked = true
+        if self.storage.isPurgePending {
+            self.purgeAllData(reason: "resume_pending")
+        }
+    }
+
+    /// Drops ALL queued batches. The cursor is deliberately NOT fast-forwarded (FUAM-3844):
+    /// dropping queued batches on clearance loss is correct; forfeiting the ability to re-fetch
+    /// that window is not. FUAM-3841 builds on this.
+    ///
+    /// FUAM-4516 (plan R2 PR-7): kill-safe order. A durable intent marker first; then per sensor
+    /// the earliest window per device kind is read from the queued batches (one at a time, the
+    /// legacy queue included), the cursors are rewound, the ledger is purged, and only then are
+    /// the files, the quarantine and the legacy key deleted; the marker goes last. Every step is
+    /// idempotent and rewinds only move cursors backwards, so resuming at any step is safe. Runs
+    /// on `workQueue` only.
     private func purgeAllData(reason: String) {
         #if DEBUG
         print("SensorSampleUploadManager - Purging pending data (\(reason))")
         #endif
+        self.pendingPurgeChecked = true
 
         // Stop pending retries
         retryWorkItems.values.forEach { $0.cancel() }
@@ -1980,14 +2010,12 @@ public final class SensorSampleUploadManager {
         windowFetchFailures.removeAll()
         batchUploadRejections.removeAll()
 
-        // Drop ALL queued batches. The cursor is deliberately NOT fast-forwarded (FUAM-3844):
-        // dropping queued batches on clearance loss is correct; forfeiting the ability to
-        // re-fetch that window is not. FUAM-3841 builds on this.
+        // A marker that cannot be written (disk full) only loses the resume: purge anyway.
+        storage.setPurgePending(true)
         for sensor in sensors {
-            // Dequeue until the queue is empty, remembering per device kind the earliest window
-            // a purged batch came from (FUAM-3945 round 6, V4).
+            // Per device kind, the earliest window a purged batch came from (FUAM-3945 round 6, V4).
             var earliestPurged: [String: Date] = [:]
-            while let batch = storage.dequeueNextBatch(for: sensor) {
+            storage.forEachQueuedBatch(for: sensor) { batch in
                 for key in Self.deviceKeys(of: batch.records) {
                     earliestPurged[key] = min(earliestPurged[key] ?? batch.windowStart, batch.windowStart)
                 }
@@ -1996,7 +2024,9 @@ public final class SensorSampleUploadManager {
             // The ledger goes WITH the queue (D4): a purged batch was never uploaded, so its
             // fingerprints must not survive to suppress a legitimate re-collection.
             storage.purgeLedger(for: sensor)
+            storage.deleteQueue(for: sensor)
         }
+        storage.setPurgePending(false)
     }
 
     /// FUAM-3945 round 6 (V4): a purged batch's window is behind the cursor, which advanced at

@@ -112,6 +112,45 @@ public protocol SensorSampleUploadManagerStorage: AnyObject {
 
     func deepestProductiveWindowStart(for sensor: SRSensor, deviceKey: String) -> Date?
     func setDeepestProductiveWindowStart(_ date: Date, for sensor: SRSensor, deviceKey: String)
+
+    // Purge support (FUAM-4516, plan R2 PR-7). Default implementations below keep any other
+    // conformer compiling with the pre-FUAM-4516 semantics.
+
+    /// Visits every queued batch of `sensor` WITHOUT removing it, one batch in memory at a time,
+    /// including the entries of a legacy queue a migration has not moved yet. Only for the purge,
+    /// which needs the earliest window per device kind before it deletes anything. `body` must not
+    /// call back into the storage.
+    func forEachQueuedBatch(for sensor: SRSensor, _ body: (SensorQueuedBatch) -> Void)
+
+    /// Deletes every queued batch of `sensor`, including a not-yet-migrated legacy queue and any
+    /// quarantined bytes. The purge calls it only AFTER the cursors were rewound.
+    func deleteQueue(for sensor: SRSensor)
+
+    /// The durable "a purge started and has not finished" marker: a purge killed half-way is
+    /// completed at the next launch before anything is uploaded (FUAM-4516, plan R2 PR-7).
+    var isPurgePending: Bool { get }
+    @discardableResult
+    func setPurgePending(_ pending: Bool) -> Bool
+}
+
+public extension SensorSampleUploadManagerStorage {
+
+    func forEachQueuedBatch(for sensor: SRSensor, _ body: (SensorQueuedBatch) -> Void) {
+        var seen: Set<String> = []
+        while let batch = self.peekNextBatch(for: sensor, excluding: seen) {
+            seen.insert(batch.id)
+            body(batch)
+        }
+    }
+
+    func deleteQueue(for sensor: SRSensor) {
+        while self.dequeueNextBatch(for: sensor) != nil {}
+    }
+
+    var isPurgePending: Bool { return false }
+
+    @discardableResult
+    func setPurgePending(_ pending: Bool) -> Bool { return true }
 }
 
 /// Marker protocol kept for symmetry with Health side (if you have a similar split there).
@@ -352,6 +391,78 @@ public final class DefaultsSensorStorage: SensorSampleUploadManagerStorage, Sens
         }
     }
 
+    public func forEachQueuedBatch(for sensor: SRSensor, _ body: (SensorQueuedBatch) -> Void) {
+        self.syncQueue.sync {
+            self.prepareRootIfNeeded()
+            for file in self.listBatches(sensor) ?? [] {
+                autoreleasepool {
+                    if case .batch(let batch) = self.readBatch(file) { body(batch) }
+                }
+            }
+            // A legacy queue that is still in `UserDefaults` (migration not run, or stopped by a
+            // write error) holds batches too (plan R2 PR-7 a). A key whose digest the marker lists
+            // was already migrated, and most likely uploaded: it is deleted unparsed, never used to
+            // rewind a cursor (plan R3 RR-5).
+            autoreleasepool {
+                let key = self.legacyQueueKey(sensor)
+                guard let data = UserDefaults.standard.data(forKey: key),
+                      self.readMarker(sensor)?.digests.contains(Self.sha256Hex(data)) != true,
+                      let entries = (try? JSONSerialization.jsonObject(with: data)) as? [Any] else { return }
+                for (index, entry) in entries.enumerated() {
+                    guard let dictionary = entry as? [String: Any],
+                          let batch = Self.queuedBatch(from: dictionary, id: "legacy-\(index)") else { continue }
+                    body(batch)
+                }
+            }
+        }
+    }
+
+    /// Deletes the batch files, the sensor's quarantined bytes and the legacy key. The `_migrated`
+    /// marker is kept (plan R2 PR-2), and the digest of a legacy key deleted here is added to it, so
+    /// a removal that does not persist cannot resurrect the purged batches as a later migration.
+    public func deleteQueue(for sensor: SRSensor) {
+        self.syncQueue.sync {
+            autoreleasepool {
+                self.prepareRootIfNeeded()
+                let directory = self.sensorDirectory(sensor)
+                for name in (try? self.fileManager.contentsOfDirectory(atPath: directory.path)) ?? []
+                where name != Self.migratedMarkerName {
+                    try? self.fileManager.removeItem(at: directory.appendingPathComponent(name))
+                }
+                let quarantinePrefix = sensor.rawValue + "_"
+                for name in (try? self.fileManager.contentsOfDirectory(atPath: self.quarantineDirectory.path)) ?? []
+                where name.hasPrefix(quarantinePrefix) {
+                    try? self.fileManager.removeItem(at: self.quarantineDirectory.appendingPathComponent(name))
+                }
+                let key = self.legacyQueueKey(sensor)
+                if let data = UserDefaults.standard.data(forKey: key) {
+                    if var marker = self.readMarker(sensor) {
+                        marker.digests.insert(Self.sha256Hex(data))
+                        _ = self.writeMarker(marker, for: sensor)
+                    }
+                    UserDefaults.standard.removeObject(forKey: key)
+                }
+                // Nothing is left to migrate for this sensor.
+                self.migratedSensors.insert(sensor.rawValue)
+            }
+        }
+    }
+
+    public var isPurgePending: Bool {
+        return self.syncQueue.sync { self.fileManager.fileExists(atPath: self.purgeMarkerURL.path) }
+    }
+
+    @discardableResult
+    public func setPurgePending(_ pending: Bool) -> Bool {
+        return self.syncQueue.sync {
+            if pending {
+                return self.ensureDirectory(self.queueRoot) && self.write(Data(), to: self.purgeMarkerURL)
+            }
+            try? self.fileManager.removeItem(at: self.purgeMarkerURL)
+            return !self.fileManager.fileExists(atPath: self.purgeMarkerURL.path)
+        }
+    }
+
     // MARK: - Queue helpers (on `syncQueue` only)
 
     private static let idKey = "id"
@@ -360,6 +471,7 @@ public final class DefaultsSensorStorage: SensorSampleUploadManagerStorage, Sens
     private static let sequenceDigits = 12
     private static let batchSuffix = ".json"
     private static let migratedMarkerName = "_migrated"
+    private static let purgeMarkerName = "_purge_pending"
     private static let quarantineDirectoryName = "_quarantine"
 
     private struct BatchFile {
@@ -391,6 +503,10 @@ public final class DefaultsSensorStorage: SensorSampleUploadManagerStorage, Sens
 
     private var quarantineDirectory: URL {
         return self.queueRoot.appendingPathComponent(Self.quarantineDirectoryName, isDirectory: true)
+    }
+
+    private var purgeMarkerURL: URL {
+        return self.queueRoot.appendingPathComponent(Self.purgeMarkerName)
     }
 
     private func markerURL(_ sensor: SRSensor) -> URL {
