@@ -537,6 +537,33 @@ class SensorQueueFileStorageSpec: QuickSpec {
                 expect(droppedReasons()).to(contain("batch_unparseable"))
             }
 
+            it("skips and quarantines a permanently unreadable batch file, traced (review B-7)") {
+                storage.enqueueBatch(marked("a"), windowStart: windowStart, for: sensor)
+                storage.enqueueBatch(marked("b"), windowStart: windowStart, for: sensor)
+                guard let headName = QueueFixture.batchFiles(root, sensor).first else { return fail("no head") }
+                let headURL = QueueFixture.sensorDirectory(root, sensor).appendingPathComponent(headName)
+                try? FileManager.default.setAttributes([.posixPermissions: 0o000], ofItemAtPath: headURL.path)
+
+                expect(headMarker(storage)).to(equal("b"))
+                expect(FileManager.default.fileExists(atPath: headURL.path)).to(beFalse())
+                expect(QueueFixture.quarantined(root).first?.hasSuffix("_batch_unreadable.json")).to(beTrue())
+                expect(droppedReasons()).to(contain("batch_unreadable"))
+            }
+
+            it("leaves an unreadable batch file in place while protected data is unavailable (review B-7)") {
+                storage.enqueueBatch(marked("a"), windowStart: windowStart, for: sensor)
+                storage.enqueueBatch(marked("b"), windowStart: windowStart, for: sensor)
+                guard let headName = QueueFixture.batchFiles(root, sensor).first else { return fail("no head") }
+                let headURL = QueueFixture.sensorDirectory(root, sensor).appendingPathComponent(headName)
+                try? FileManager.default.setAttributes([.posixPermissions: 0o000], ofItemAtPath: headURL.path)
+                storage.isProtectedDataAvailable = { false }
+
+                expect(storage.peekNextBatch(for: sensor, excluding: [])).to(beNil())
+                expect(FileManager.default.fileExists(atPath: headURL.path)).to(beTrue())
+                expect(QueueFixture.quarantined(root)).to(beEmpty())
+                expect(droppedReasons()).to(beEmpty())
+            }
+
             it("read_error_yields_empty_peek_and_failed_enqueue (limit case 17)") {
                 storage.enqueueBatch(marked("a"), windowStart: windowStart, for: sensor)
                 let directory = QueueFixture.sensorDirectory(root, sensor)

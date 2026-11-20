@@ -197,6 +197,14 @@ public final class DefaultsSensorStorage: SensorSampleUploadManagerStorage, Sens
     private var batchIndex: [String: [BatchFile]] = [:]
     /// Directory listings of sensor directories so far; read by the index spec only.
     private var directoryListings = 0
+    /// Unreadable batch files already reported in this process (when even the quarantine move
+    /// failed), so a file that stays unreadable is traced once, not on every peek.
+    private var unreadableReported: Set<String> = []
+
+    /// FUAM-4516 (review B-7): whether protected data is readable now. An unreadable batch file
+    /// is quarantined only when it is, so data that is merely locked is never moved. Injectable
+    /// for specs.
+    var isProtectedDataAvailable: () -> Bool = { SensorProtectedDataState.shared.isAvailable }
 
     /// `<Application Support>/ForYouAndMe/SensorKitQueue/`. Backed up like `UserDefaults`, so a
     /// restored device gets the queue and the cursors together (plan §2.1, OQ12).
@@ -340,8 +348,17 @@ public final class DefaultsSensorStorage: SensorSampleUploadManagerStorage, Sens
                         case .missing:
                             stale = true
                         case .unreadable:
-                            // Protection or permission error: leave the queue idle, lose nothing.
-                            return nil
+                            // Locked (data protection): leave the queue idle, move nothing, retry
+                            // later. Otherwise the file is permanently unreadable (review B-7):
+                            // quarantine it, traced, and go on with the next batch instead of
+                            // stopping the sensor's uploads for good.
+                            guard self.isProtectedDataAvailable() else { return nil }
+                            if !self.quarantine(file, sensor: sensor, reason: "batch_unreadable"),
+                               self.unreadableReported.insert(file.id).inserted {
+                                self.analytics?.track(event: .sensorRecordDropped(sensor: sensor.shortSubsource,
+                                                                                  count: 1,
+                                                                                  reason: "batch_unreadable"))
+                            }
                         case .unparseable:
                             // Kept, never uploaded, never auto-deleted; the drain moves on.
                             self.quarantine(file, sensor: sensor, reason: "batch_unparseable")
@@ -724,20 +741,23 @@ public final class DefaultsSensorStorage: SensorSampleUploadManagerStorage, Sens
         return .batch(batch)
     }
 
-    /// Moves unparseable bytes to `<queueRoot>/_quarantine/`: never uploaded, never auto-deleted,
-    /// deleted only by a purge (plan OQ6). The id is part of the name, so two quarantined files
-    /// never collide even when a sequence number is reused after the queue emptied.
-    private func quarantine(_ file: BatchFile, sensor: SRSensor, reason: String) {
-        guard self.ensureDirectory(self.quarantineDirectory) else { return }
+    /// Moves unparseable or unreadable bytes to `<queueRoot>/_quarantine/`: never uploaded, never
+    /// auto-deleted, deleted only by a purge (plan OQ6). The id is part of the name, so two
+    /// quarantined files never collide even when a sequence number is reused after the queue
+    /// emptied. Telemetry: `sensor_record_dropped` with the reason, where `count` is one BATCH
+    /// (its record count is unknowable). `false` when the move failed.
+    @discardableResult
+    private func quarantine(_ file: BatchFile, sensor: SRSensor, reason: String) -> Bool {
+        guard self.ensureDirectory(self.quarantineDirectory) else { return false }
         let name = "\(sensor.rawValue)_\(file.url.deletingPathExtension().lastPathComponent)_\(reason).json"
         do {
             try self.fileManager.moveItem(at: file.url, to: self.quarantineDirectory.appendingPathComponent(name))
         } catch {
-            return
+            return false
         }
         self.batchIndex[sensor.rawValue]?.removeAll { $0.id == file.id }
-        // `count` is one quarantined BATCH: its record count is unknowable.
         self.analytics?.track(event: .sensorRecordDropped(sensor: sensor.shortSubsource, count: 1, reason: reason))
+        return true
     }
 
     /// `nil` when the marker exists but cannot be read (undecidable: the caller must not migrate).
