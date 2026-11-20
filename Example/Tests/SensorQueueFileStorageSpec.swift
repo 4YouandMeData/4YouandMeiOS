@@ -446,27 +446,34 @@ class SensorQueueFileStorageSpec: QuickSpec {
                 expect(order).to(equal(["a", "b", "c", "d"]))
             }
 
-            it("foreign_files_are_ignored_and_hidden_temps_cleaned_at_first_access (limit case 20)") {
+            it("interrupted_write_leftovers_are_never_batches_and_are_cleaned_at_first_access (limit case 20, review A-1)") {
                 storage.enqueueBatch(marked("a"), windowStart: windowStart, for: sensor)
                 let directory = QueueFixture.sensorDirectory(root, sensor)
-                let hiddenTemp = directory.appendingPathComponent(".dat.nosync1234.abcd")
-                let rootTemp = root.appendingPathComponent(".tmp-xyz")
-                let foreign = ["notes.txt", "000000000009_x.txt", "12_short.json", "abcdefghijkl_x.json"]
-                try? Data("{\"id\":\"half\"".utf8).write(to: hiddenTemp)
-                try? Data("x".utf8).write(to: rootTemp)
-                for name in foreign {
-                    try? Data("{}".utf8).write(to: directory.appendingPathComponent(name))
+                let quarantine = root.appendingPathComponent("_quarantine", isDirectory: true)
+                try? FileManager.default.createDirectory(at: quarantine, withIntermediateDirectories: true)
+                // Foundation's real atomic-write temp names: `<target>.sb-<hash>-<random>`, not hidden.
+                let leftovers = [directory.appendingPathComponent("000000000002_abc.json.sb-e090b100-K2RmdU"),
+                                 directory.appendingPathComponent("_migrated.sb-e090b100-7sCAzT"),
+                                 directory.appendingPathComponent(".DS_Store"),
+                                 directory.appendingPathComponent("notes.txt"),
+                                 root.appendingPathComponent("_purge_pending.sb-e090b100-laUDDH"),
+                                 quarantine.appendingPathComponent("x_000000000001_y_batch_unparseable.json.sb-e090b100-f5p7jG")]
+                for url in leftovers {
+                    try? Data("{\"id\": \"half".utf8).write(to: url)
                 }
+                let kept = quarantine.appendingPathComponent("x_000000000001_y_batch_unparseable.json")
+                try? Data("kept".utf8).write(to: kept)
 
+                // Before the first access a leftover is never read as a batch.
+                expect(QueueFixture.batchFiles(root, sensor).count).to(equal(1))
                 let relaunched = relaunch()
                 expect(relaunched.pendingBatchCount(for: sensor)).to(equal(1))
                 expect(headMarker(relaunched)).to(equal("a"))
-                expect(FileManager.default.fileExists(atPath: hiddenTemp.path)).to(beFalse())
-                expect(FileManager.default.fileExists(atPath: rootTemp.path)).to(beFalse())
-                for name in foreign {
-                    expect(FileManager.default.fileExists(atPath: directory.appendingPathComponent(name).path)).to(beTrue())
+                for url in leftovers {
+                    expect(FileManager.default.fileExists(atPath: url.path)).to(beFalse())
                 }
-                expect(QueueFixture.quarantined(root)).to(beEmpty())
+                expect(FileManager.default.fileExists(atPath: kept.path)).to(beTrue()) // quarantine is never auto-deleted
+                expect(QueueFixture.batchFiles(root, sensor).count).to(equal(1))
             }
 
             it("corrupted_batch_is_quarantined_not_uploaded_not_deleted (limit case 19)") {
@@ -505,7 +512,9 @@ class SensorQueueFileStorageSpec: QuickSpec {
             }
 
             it("write_error_returns_false (limit case 18, disk-full stand-in)") {
-                // A file where the sensor's directory should be: every write fails.
+                // A file where the sensor's directory should be: every write fails. Placed after the
+                // first access, whose cleanup would otherwise delete it as a leftover.
+                _ = storage.pendingBatchCount(for: sensor)
                 try? Data("x".utf8).write(to: QueueFixture.sensorDirectory(root, sensor))
                 expect(storage.enqueueBatch(marked("a"), windowStart: windowStart, for: sensor)).to(beFalse())
                 expect(storage.pendingBatchCount(for: sensor)).to(equal(0))

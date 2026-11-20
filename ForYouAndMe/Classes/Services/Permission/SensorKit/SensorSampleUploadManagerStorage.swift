@@ -518,8 +518,8 @@ public final class DefaultsSensorStorage: SensorSampleUploadManagerStorage, Sens
         return String(repeating: "0", count: max(0, Self.sequenceDigits - digits.count)) + digits + "_" + id + Self.batchSuffix
     }
 
-    /// `^\d{12}_[^/]+\.json$`; anything else (atomic-write temp files, `.DS_Store`, the markers) is
-    /// not a batch.
+    /// `^\d{12}_[^/]+\.json$`; anything else (atomic-write temp files `<name>.sb-<hash>-<random>`,
+    /// `.DS_Store`, the markers) is not a batch, so it is never listed, peeked or uploaded.
     private static func parseBatchName(_ name: String, in directory: URL) -> BatchFile? {
         guard name.hasSuffix(Self.batchSuffix), name.count > Self.sequenceDigits + 1 + Self.batchSuffix.count else { return nil }
         let digits = name.prefix(Self.sequenceDigits)
@@ -548,9 +548,14 @@ public final class DefaultsSensorStorage: SensorSampleUploadManagerStorage, Sens
         return SensorQueuedBatch(id: id, records: records, windowStart: Date(timeIntervalSince1970: windowStart))
     }
 
-    /// At the first queue access of the process, delete every hidden file in the queue
-    /// directories. No write can be in flight then (one storage instance, every write on
-    /// `syncQueue`), so a hidden file is the temp file of an atomic write a kill interrupted. No
+    /// At the first queue access of the process, delete every leftover of an interrupted atomic
+    /// write. No write can be in flight then (one storage instance, every write on `syncQueue`), so
+    /// anything in the queue directories that is not a batch file, a marker or a quarantined file is
+    /// such a leftover. Foundation names the temp file `<target>.sb-<hash>-<random>`, in the target
+    /// directory and NOT hidden (review A-1, observed on the iOS simulator runtime), so matching on
+    /// hidden names alone never removed one. Kept: in a sensor directory, `<seq>_<id>.json` and
+    /// `_migrated`; at the root, directories (sensors, `_quarantine`) and `_purge_pending`; in
+    /// `_quarantine`, names ending in `.json` (quarantined bytes are never auto-deleted). No
     /// file-timestamp API is used: it would be a required-reason API (plan R2 PR-18 item 2).
     private func prepareRootIfNeeded() {
         guard !self.rootPrepared else { return }
@@ -558,12 +563,18 @@ public final class DefaultsSensorStorage: SensorSampleUploadManagerStorage, Sens
         guard let children = try? self.fileManager.contentsOfDirectory(atPath: self.queueRoot.path) else { return }
         for child in children {
             let url = self.queueRoot.appendingPathComponent(child)
-            if child.hasPrefix(".") {
-                try? self.fileManager.removeItem(at: url)
+            var isDirectory: ObjCBool = false
+            guard self.fileManager.fileExists(atPath: url.path, isDirectory: &isDirectory) else { continue }
+            guard isDirectory.boolValue, !child.hasPrefix(".") else {
+                if child != Self.purgeMarkerName { try? self.fileManager.removeItem(at: url) }
                 continue
             }
-            for name in (try? self.fileManager.contentsOfDirectory(atPath: url.path)) ?? [] where name.hasPrefix(".") {
-                try? self.fileManager.removeItem(at: url.appendingPathComponent(name))
+            let isQuarantine = child == Self.quarantineDirectoryName
+            for name in (try? self.fileManager.contentsOfDirectory(atPath: url.path)) ?? [] {
+                let keep = isQuarantine
+                    ? name.hasSuffix(Self.batchSuffix) && !name.hasPrefix(".")
+                    : name == Self.migratedMarkerName || Self.parseBatchName(name, in: url) != nil
+                if !keep { try? self.fileManager.removeItem(at: url.appendingPathComponent(name)) }
             }
         }
     }
