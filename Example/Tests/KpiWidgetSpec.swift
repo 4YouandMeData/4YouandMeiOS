@@ -320,6 +320,77 @@ class KpiWidgetSpec: QuickSpec {
             }
         }
 
+        describe("KPI fetch syncs the user timezone first (FUAM-4535)") {
+            var api: FakeApiGateway!
+            var storage: KpiFakeStorage!
+            var repository: RepositoryImpl!
+            var received: [KpiWidget]?
+
+            func fetchLikeServices() {
+                received = nil
+                _ = KpiWidgetStore.makeFetch(repository: repository)()
+                    .subscribe(onSuccess: { received = $0 })
+            }
+
+            beforeEach {
+                api = FakeApiGateway()
+                storage = KpiFakeStorage()
+                repository = RepositoryImpl(api: api, storage: storage, notificationService: KpiFakeNotificationService(),
+                                            analyticsService: KpiFakeAnalytics(), showDefaultUserInfo: false,
+                                            appleWatchAlternativeIntegrations: [])
+                let fixture = Single.just(Response(statusCode: 200, data: FakeApiGateway.userJSON(timeZone: "Europe/Rome")))
+                    .mapCodableJSONAPI(includeList: User.includeList, keyPath: User.keyPath) as Single<User>
+                var user: User?
+                _ = fixture.subscribe(onSuccess: { user = $0 })
+                storage.user = user
+            }
+
+            it("does not PATCH when the timezone matches") {
+                storage.user?.timeZone = TimeZone.current
+                fetchLikeServices()
+                expect(received).toEventuallyNot(beNil())
+                expect(api.requestLog).to(equal(["get_kpi_widgets"]))
+            }
+
+            it("PATCHes first, then fetches, when the timezone differs") {
+                storage.user?.timeZone = TimeZone(identifier: TimeZone.current.identifier == "Pacific/Auckland"
+                                                  ? "Europe/Rome" : "Pacific/Auckland")
+                fetchLikeServices()
+                expect(received).toEventuallyNot(beNil())
+                expect(api.requestLog).to(equal(["patch_time_zone", "get_kpi_widgets"]))
+            }
+
+            it("fetches anyway when the PATCH fails") {
+                storage.user?.timeZone = nil
+                api.userTimeZoneError = FakeApiError.scriptedFailure
+                fetchLikeServices()
+                expect(received).toEventuallyNot(beNil())
+                expect(api.requestLog).to(equal(["patch_time_zone", "get_kpi_widgets"]))
+            }
+
+            it("sends no second PATCH once the cached user holds the device zone") {
+                storage.user?.timeZone = nil
+                let store = KpiWidgetStore(fetch: KpiWidgetStore.makeFetch(repository: repository),
+                                           notificationCenter: NotificationCenter())
+                store.refreshIfNeeded(today: "2026-11-07")
+                expect(store.loadedLocalDay).toEventually(equal("2026-11-07"))
+                expect(storage.user?.timeZone?.identifier).to(equal(TimeZone.current.identifier))
+                store.refreshIfNeeded(today: "2026-11-08")
+                expect(store.loadedLocalDay).toEventually(equal("2026-11-08"))
+                expect(api.requestLog).to(equal(["patch_time_zone", "get_kpi_widgets", "get_kpi_widgets"]))
+            }
+
+            it("refreshes when the local day moves backwards") {
+                let fake = FakeKpiFetch()
+                let store = KpiWidgetStore(fetch: { fake.fetch() }, notificationCenter: NotificationCenter())
+                store.refreshIfNeeded(today: "2026-11-08")
+                fake.succeed([])
+                expect(store.isLoading).toEventually(beFalse())
+                store.refreshIfNeeded(today: "2026-11-07")
+                expect(fake.calls).to(equal(2))
+            }
+        }
+
         describe("RepositoryImpl.getKpiWidgets") {
             var api: FakeApiGateway!
             var repository: RepositoryImpl!

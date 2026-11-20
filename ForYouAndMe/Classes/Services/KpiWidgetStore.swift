@@ -12,6 +12,13 @@ import UIKit
 import RxSwift
 import RxRelay
 
+extension KpiWidgetStore {
+    /// FUAM-4535: the backend computes "today" from the user's stored timezone, so sync it before every fetch.
+    static func makeFetch(repository: Repository) -> Fetch {
+        return { repository.syncUserTimeZoneIfNeeded().flatMap { repository.getKpiWidgets() } }
+    }
+}
+
 final class KpiWidgetStore {
 
     typealias Fetch = () -> Single<[KpiWidget]>

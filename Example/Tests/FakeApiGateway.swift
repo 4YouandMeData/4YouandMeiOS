@@ -52,6 +52,21 @@ final class FakeApiGateway: ApiGateway {
     /// FUAM-4315: `.getKpiWidgets` answers with this error, or with the bundled fixture when nil.
     var kpiWidgetsError: Error?
 
+    /// FUAM-4535: `.sendUserTimeZone` fails with this error when set, else answers with the minimal user document.
+    var userTimeZoneError: Error?
+
+    /// FUAM-4535: ordered log of the timezone PATCH ("patch_time_zone") and widget GET ("get_kpi_widgets") calls.
+    private(set) var requestLog: [String] = []
+
+    /// Minimal valid JSON:API user document (the TestGetUser fixture lacks required fields).
+    static func userJSON(timeZone: String) -> Data {
+        return Data("""
+        {"data": {"id": "30", "type": "user", "attributes": {"email": "t@e.it", "on_boarding_completed": true,
+        "days_in_study": 1, "identities": [], "agreed_permissions": [], "study_walkthrough_done": true, "user_flags": [],
+        "time_zone": "\(timeZone)"}}}
+        """.utf8)
+    }
+
     // MARK: - Recorded invocations
 
     private(set) var postDiaryNoteCallCount = 0
@@ -79,6 +94,11 @@ final class FakeApiGateway: ApiGateway {
                 return .error(FakeApiError.scriptedFailure)
             }
             return .just(note)
+        case .sendUserTimeZone(let timeZoneIdentifier):
+            self.requestLog.append("patch_time_zone")
+            if let error = self.userTimeZoneError { return .error(error) }
+            return Single.just(Response(statusCode: 200, data: FakeApiGateway.userJSON(timeZone: timeZoneIdentifier)))
+                .mapCodableJSONAPI(includeList: T.includeList, keyPath: T.keyPath)
         default:
             fatalError("FakeApiGateway: unexpected JSONAPIMappable send for \(request.serviceRequest)")
         }
@@ -133,6 +153,7 @@ final class FakeApiGateway: ApiGateway {
         guard case .getKpiWidgets = request.serviceRequest else {
             fatalError("FakeApiGateway: unexpected ExcludeInvalid send for \(request.serviceRequest)")
         }
+        self.requestLog.append("get_kpi_widgets")
         if let error = self.kpiWidgetsError { return .error(error) }
         return Single.just(Response(statusCode: 200, data: Bundle.getTestData(from: "TestGetKpiWidgets")))
             .mapCodableJSONAPI(includeList: T.includeList, keyPath: T.keyPath)
