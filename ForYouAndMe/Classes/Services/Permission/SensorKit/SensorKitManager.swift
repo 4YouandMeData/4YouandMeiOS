@@ -27,6 +27,11 @@ public protocol SensorSampleUploadManagerClearanceDelegate: AnyObject {
     /// travels. `nil` when no user record is loaded; the caller falls back to UTC (never to
     /// `TimeZone.current`).
     var participantTimeZone: TimeZone? { get }
+
+    /// FUAM-4516: the backend user id of the logged-in participant, `nil` without a session. Every
+    /// queued SensorKit batch is stamped with it, and a batch stamped with another participant is
+    /// never uploaded. A number, not personal data.
+    var participantId: String? { get }
 }
 
 // MARK: - Typealiases mirroring the Health side wiring
@@ -644,7 +649,8 @@ extension SensorKitManager {
             // Consent present → ensure recording is running
             self.ensureRecordingStarted()
         } else {
-            // No consent/user → stop and purge local queues
+            // No consent/user → stop recording; the upload pipeline pauses (FUAM-4516: local data
+            // is kept until the server has it or it is known to belong to someone else)
             self.stopRecordingAll()
             self.triggerSync(reason: "no_clearance")
         }

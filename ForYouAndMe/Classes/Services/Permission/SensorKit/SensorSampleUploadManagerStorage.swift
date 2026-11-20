@@ -33,11 +33,15 @@ public struct SensorQueuedBatch {
     public let id: String
     public let records: [[String: Any]]
     public let windowStart: Date
+    /// FUAM-4516: the backend user id of the participant the batch was collected for, `nil` when
+    /// none was recorded.
+    public let owner: String?
 
-    public init(id: String, records: [[String: Any]], windowStart: Date) {
+    public init(id: String, records: [[String: Any]], windowStart: Date, owner: String? = nil) {
         self.id = id
         self.records = records
         self.windowStart = windowStart
+        self.owner = owner
     }
 }
 
@@ -69,7 +73,7 @@ public protocol SensorSampleUploadManagerStorage: AnyObject {
     func enqueueBatch(_ batch: [[String: Any]], windowStart: Date, for sensor: SRSensor) -> Bool
 
     /// The head of the queue with the window it was fetched from, REMOVED from the queue, or
-    /// `nil` when the queue is empty. Only for dropping batches (`purgeAllData`): an upload
+    /// `nil` when the queue is empty. Only for dropping batches: an upload
     /// must `peekNextBatch` and remove on success instead, or a process kill mid-request loses
     /// the batch. Batches persisted by a build older than FUAM-3945 carry no window start and
     /// are purged on load rather than shipped under a guessed one.
@@ -99,8 +103,8 @@ public protocol SensorSampleUploadManagerStorage: AnyObject {
 
     func ledger(for sensor: SRSensor, deviceKey: String) -> [String: SensorLedgerEntry]
     func setLedger(_ ledger: [String: SensorLedgerEntry], for sensor: SRSensor, deviceKey: String)
-    /// Drops every device's ledger for `sensor` — called from `purgeAllData` together with the
-    /// queue purge, so a purged batch can be re-collected after a re-consent.
+    /// Drops every device's ledger for `sensor`. Not called by the pipeline since FUAM-4516
+    /// (ownership replaced the purge: `adoptOwner` resets a previous participant's state).
     func purgeLedger(for sensor: SRSensor)
 
     // Rescan gate (FUAM-3945, D3): the last UTC day a rescan tail was planned for.
@@ -113,48 +117,28 @@ public protocol SensorSampleUploadManagerStorage: AnyObject {
     func deepestProductiveWindowStart(for sensor: SRSensor, deviceKey: String) -> Date?
     func setDeepestProductiveWindowStart(_ date: Date, for sensor: SRSensor, deviceKey: String)
 
-    // Purge support (FUAM-4516, plan R2 PR-7). Default implementations below keep any other
-    // conformer compiling with the pre-FUAM-4516 semantics.
+    // Ownership and set-aside items (FUAM-4516). Default implementations below keep any other
+    // conformer compiling.
 
-    /// Visits every queued batch of `sensor` WITHOUT removing it, one batch in memory at a time,
-    /// including the entries of a legacy queue a migration has not moved yet. Only for the purge,
-    /// which needs the earliest window per device kind before it deletes anything. `body` must not
-    /// call back into the storage.
-    func forEachQueuedBatch(for sensor: SRSensor, _ body: (SensorQueuedBatch) -> Void)
+    /// Declares the logged-in participant (backend user id). Cursors, ledger, rescan gate and
+    /// deepest window belong to one participant: when `owner` differs from the participant they
+    /// were recorded for, they are reset, so a new participant starts clean; when none was
+    /// recorded (state written by 0.101.17 or older), `owner` adopts them. New batches are stamped
+    /// with `owner`, and a queued batch stamped with a different participant is deleted at drain
+    /// time instead of being uploaded.
+    func adoptOwner(_ owner: String)
 
-    /// Deletes every queued batch of `sensor`, including a not-yet-migrated legacy queue and any
-    /// quarantined bytes. The purge calls it only AFTER the cursors were rewound. `false` when a
-    /// deletion or a directory listing failed: the purge then keeps its intent marker.
-    @discardableResult
-    func deleteQueue(for sensor: SRSensor) -> Bool
-
-    /// The durable "a purge started and has not finished" marker: a purge killed half-way is
-    /// completed at the next launch before anything is uploaded (FUAM-4516, plan R2 PR-7).
-    var isPurgePending: Bool { get }
-    @discardableResult
-    func setPurgePending(_ pending: Bool) -> Bool
+    /// Sets aside descriptions of records that cannot be encoded (FUAM-4516 owner rule 7): kept in
+    /// the quarantine for 7 days, never uploaded. `false` when they could not be written: the
+    /// caller then treats the window as not handled.
+    func setAside(_ descriptions: [[String: Any]], reason: String, for sensor: SRSensor) -> Bool
 }
 
 public extension SensorSampleUploadManagerStorage {
 
-    func forEachQueuedBatch(for sensor: SRSensor, _ body: (SensorQueuedBatch) -> Void) {
-        var seen: Set<String> = []
-        while let batch = self.peekNextBatch(for: sensor, excluding: seen) {
-            seen.insert(batch.id)
-            body(batch)
-        }
-    }
+    func adoptOwner(_ owner: String) {}
 
-    @discardableResult
-    func deleteQueue(for sensor: SRSensor) -> Bool {
-        while self.dequeueNextBatch(for: sensor) != nil {}
-        return self.pendingBatchCount(for: sensor) == 0
-    }
-
-    var isPurgePending: Bool { return false }
-
-    @discardableResult
-    func setPurgePending(_ pending: Bool) -> Bool { return true }
+    func setAside(_ descriptions: [[String: Any]], reason: String, for sensor: SRSensor) -> Bool { return true }
 }
 
 /// Marker protocol kept for symmetry with Health side (if you have a similar split there).
@@ -201,20 +185,18 @@ public final class DefaultsSensorStorage: SensorSampleUploadManagerStorage, Sens
     private var batchIndex: [String: [BatchFile]] = [:]
     /// Directory listings of sensor directories so far; read by the index spec only.
     private var directoryListings = 0
-    /// Unreadable batch files already reported in this process (when even the quarantine move
-    /// failed), so a file that stays unreadable is traced once, not on every peek.
+    /// Sensors whose unreadable batch file was already traced in this process: a read error is
+    /// "retry later", traced once, not on every drain (owner rule 5).
     private var unreadableReported: Set<String> = []
+    /// The participant the queue and the cursors belong to (`adoptOwner`), mirrored from
+    /// `ownerKey`. `nil` until a session declared one.
+    private var owner: String?
     /// Per sensor, batches whose removal failed (review A-5). Every removal follows an upload the
     /// server accepted or a decision to drop, so such a batch must never be peeked again in this
     /// process, or the drain would upload it in a loop; the unlink is retried at each queue
     /// access. In memory only: a relaunch uploads it once more, which the server drops by
     /// identity. FUAM-4517 owns the durable delete-on-200.
     private var pendingRemovals: [String: Set<String>] = [:]
-
-    /// FUAM-4516 (review B-7): whether protected data is readable now. An unreadable batch file
-    /// is quarantined only when it is, so data that is merely locked is never moved. Injectable
-    /// for specs.
-    var isProtectedDataAvailable: () -> Bool = { SensorProtectedDataState.shared.isAvailable }
 
     /// `<Application Support>/ForYouAndMe/SensorKitQueue/`. Backed up like `UserDefaults`, so a
     /// restored device gets the queue and the cursors together (plan §2.1, OQ12).
@@ -350,6 +332,15 @@ public final class DefaultsSensorStorage: SensorSampleUploadManagerStorage, Sens
                 guard self.ensureMigrated(sensor) else { return nil }
                 self.retryPendingRemovals(sensor)
                 let excluded = ids.union(self.pendingRemovals[sensor.rawValue] ?? [])
+                var foreignDeleted = 0
+                defer {
+                    if foreignDeleted > 0 {
+                        // One event per peek, the count only (batches).
+                        self.analytics?.track(event: .sensorRecordDropped(sensor: sensor.shortSubsource,
+                                                                          count: foreignDeleted,
+                                                                          reason: "other_participant"))
+                    }
+                }
                 var relisted = false
                 while true {
                     guard let listed = self.indexedBatches(sensor) else { return nil }
@@ -357,23 +348,27 @@ public final class DefaultsSensorStorage: SensorSampleUploadManagerStorage, Sens
                     for file in listed where !excluded.contains(file.id) {
                         switch self.readBatch(file) {
                         case .batch(let batch):
+                            // Owner rule 4: a batch collected for another participant is never
+                            // uploaded under this one; it is deleted (a positive fact recorded in
+                            // the batch, not an inference). No recorded owner means this one's.
+                            if let current = self.owner, let batchOwner = batch.owner, batchOwner != current {
+                                if self.unlink(file, for: sensor) { foreignDeleted += 1 }
+                                continue
+                            }
                             return batch
                         case .missing:
                             stale = true
                         case .unreadable:
-                            // Locked (data protection): leave the queue idle, move nothing, retry
-                            // later. Otherwise the file is permanently unreadable (review B-7):
-                            // quarantine it, traced, and go on with the next batch instead of
-                            // stopping the sensor's uploads for good.
-                            guard self.isProtectedDataAvailable() else { return nil }
-                            if !self.quarantine(file, sensor: sensor, reason: "batch_unreadable"),
-                               self.unreadableReported.insert(file.id).inserted {
+                            // Owner rule 5: a read error is not corruption. Leave everything in
+                            // place and stop this sensor's drain; the next sync retries.
+                            if self.unreadableReported.insert(sensor.rawValue).inserted {
                                 self.analytics?.track(event: .sensorRecordDropped(sensor: sensor.shortSubsource,
-                                                                                  count: 1,
-                                                                                  reason: "batch_unreadable"))
+                                                                                  count: 0,
+                                                                                  reason: "batch_unreadable_retry"))
                             }
+                            return nil
                         case .unparseable:
-                            // Kept, never uploaded, never auto-deleted; the drain moves on.
+                            // Read successfully and invalid: set aside (7 days), the drain moves on.
                             self.quarantine(file, sensor: sensor, reason: "batch_unparseable")
                         }
                         if stale { break }
@@ -430,9 +425,10 @@ public final class DefaultsSensorStorage: SensorSampleUploadManagerStorage, Sens
                 }
                 guard case .batch(let current) = read else { return false }
                 if !(current.records as NSArray).isEqual(to: records) {
-                    let content: [String: Any] = [Self.idKey: id,
+                    var content: [String: Any] = [Self.idKey: id,
                                                   Self.windowStartKey: current.windowStart.timeIntervalSince1970,
                                                   Self.recordsKey: records]
+                    content[Self.ownerContentKey] = current.owner
                     guard self.writeJSON(content, to: file.url) else { return false }
                 }
                 guard let sequence = self.takeSequence(for: sensor) else { return false }
@@ -465,102 +461,38 @@ public final class DefaultsSensorStorage: SensorSampleUploadManagerStorage, Sens
         }
     }
 
-    public func forEachQueuedBatch(for sensor: SRSensor, _ body: (SensorQueuedBatch) -> Void) {
+    // MARK: - Ownership and set-aside items (FUAM-4516 owner rules 4, 6, 7)
+
+    public func adoptOwner(_ owner: String) {
         self.syncQueue.sync {
-            self.prepareRootIfNeeded()
-            for file in self.listBatches(sensor) ?? [] {
-                autoreleasepool {
-                    if case .batch(let batch) = self.readBatch(file) { body(batch) }
+            let stored = UserDefaults.standard.string(forKey: Self.ownerKey)
+            self.owner = owner
+            guard stored != owner else { return }
+            if stored != nil {
+                // A different participant: the cursors, ledger, rescan gate and deepest window
+                // describe the previous one's data. Reset them so this one starts clean; the
+                // previous one's queued batches are deleted, unsent, when the drain meets them.
+                let prefixes = [self.cursorKeyPrefix, self.ledgerKeyPrefix, self.rescanDayKeyPrefix, self.deepestWindowKeyPrefix]
+                for key in UserDefaults.standard.dictionaryRepresentation().keys where prefixes.contains(where: { key.hasPrefix($0) }) {
+                    UserDefaults.standard.removeObject(forKey: key)
                 }
             }
-            // A legacy queue that is still in `UserDefaults` (migration not run, or stopped by a
-            // write error) holds batches too (plan R2 PR-7 a). A key whose digest the marker lists
-            // was already migrated, and most likely uploaded: it is deleted unparsed, never used to
-            // rewind a cursor (plan R3 RR-5).
-            autoreleasepool {
-                let key = self.legacyQueueKey(sensor)
-                guard let data = UserDefaults.standard.data(forKey: key),
-                      self.readMarker(sensor)?.digests.contains(Self.sha256Hex(data)) != true,
-                      let entries = (try? JSONSerialization.jsonObject(with: data)) as? [Any] else { return }
-                for (index, entry) in entries.enumerated() {
-                    guard let dictionary = entry as? [String: Any],
-                          let batch = Self.queuedBatch(from: dictionary, id: "legacy-\(index)") else { continue }
-                    body(batch)
-                }
-            }
+            UserDefaults.standard.set(owner, forKey: Self.ownerKey)
         }
     }
 
-    /// Deletes the batch files, the sensor's quarantined bytes and the legacy key. The `_migrated`
-    /// marker is kept (plan R2 PR-2), and the digest of a legacy key deleted here is added to it, so
-    /// a removal that does not persist cannot resurrect the purged batches as a later migration.
-    @discardableResult
-    public func deleteQueue(for sensor: SRSensor) -> Bool {
+    public func setAside(_ descriptions: [[String: Any]], reason: String, for sensor: SRSensor) -> Bool {
         return self.syncQueue.sync {
             autoreleasepool {
                 self.prepareRootIfNeeded()
-                var complete = true
-                let directory = self.sensorDirectory(sensor)
-                if let names = self.namesOrNil(in: directory) {
-                    for name in names where name != Self.migratedMarkerName {
-                        complete = self.removeIfPresent(directory.appendingPathComponent(name)) && complete
-                    }
-                } else {
-                    complete = false
-                }
-                let quarantinePrefix = sensor.rawValue + "_"
-                if let names = self.namesOrNil(in: self.quarantineDirectory) {
-                    for name in names where name.hasPrefix(quarantinePrefix) {
-                        complete = self.removeIfPresent(self.quarantineDirectory.appendingPathComponent(name)) && complete
-                    }
-                } else {
-                    complete = false
-                }
-                let key = self.legacyQueueKey(sensor)
-                if let data = UserDefaults.standard.data(forKey: key) {
-                    if var marker = self.readMarker(sensor) {
-                        marker.digests.insert(Self.sha256Hex(data))
-                        _ = self.writeMarker(marker, for: sensor)
-                    }
-                    UserDefaults.standard.removeObject(forKey: key)
-                }
-                // Nothing is left to migrate for this sensor; the next access re-lists the directory.
-                self.migratedSensors.insert(sensor.rawValue)
-                self.batchIndex[sensor.rawValue] = nil
-                self.pendingRemovals[sensor.rawValue] = nil
-                return complete
+                let name = Self.quarantineName(sensor: sensor, item: "set-aside-\(UUID().uuidString)", reason: reason)
+                guard self.ensureDirectory(self.quarantineDirectory),
+                      self.writeJSON(descriptions, to: self.quarantineDirectory.appendingPathComponent(name)) else { return false }
+                self.analytics?.track(event: .sensorRecordDropped(sensor: sensor.shortSubsource,
+                                                                  count: descriptions.count,
+                                                                  reason: reason))
+                return true
             }
-        }
-    }
-
-    /// The names in `directory`; `[]` when it does not exist, `nil` when it exists but cannot be
-    /// listed.
-    private func namesOrNil(in directory: URL) -> [String]? {
-        do {
-            return try self.fileManager.contentsOfDirectory(atPath: directory.path)
-        } catch {
-            return self.fileManager.fileExists(atPath: directory.path) ? nil : []
-        }
-    }
-
-    /// `true` when `url` is gone afterwards.
-    private func removeIfPresent(_ url: URL) -> Bool {
-        try? self.fileManager.removeItem(at: url)
-        return !self.fileManager.fileExists(atPath: url.path)
-    }
-
-    public var isPurgePending: Bool {
-        return self.syncQueue.sync { self.fileManager.fileExists(atPath: self.purgeMarkerURL.path) }
-    }
-
-    @discardableResult
-    public func setPurgePending(_ pending: Bool) -> Bool {
-        return self.syncQueue.sync {
-            if pending {
-                return self.ensureDirectory(self.queueRoot) && self.write(Data(), to: self.purgeMarkerURL)
-            }
-            try? self.fileManager.removeItem(at: self.purgeMarkerURL)
-            return !self.fileManager.fileExists(atPath: self.purgeMarkerURL.path)
         }
     }
 
@@ -572,7 +504,10 @@ public final class DefaultsSensorStorage: SensorSampleUploadManagerStorage, Sens
     private static let sequenceDigits = 12
     private static let batchSuffix = ".json"
     private static let migratedMarkerName = "_migrated"
-    private static let purgeMarkerName = "_purge_pending"
+    private static let ownerKey = "sensorkit.owner"
+    private static let ownerContentKey = "owner"
+    /// Quarantined items are deleted after this long (owner rule 6).
+    static let quarantineRetention: TimeInterval = 7 * 24 * 60 * 60
     private static let quarantineDirectoryName = "_quarantine"
 
     private struct BatchFile {
@@ -606,10 +541,6 @@ public final class DefaultsSensorStorage: SensorSampleUploadManagerStorage, Sens
 
     private var quarantineDirectory: URL {
         return self.queueRoot.appendingPathComponent(Self.quarantineDirectoryName, isDirectory: true)
-    }
-
-    private var purgeMarkerURL: URL {
-        return self.queueRoot.appendingPathComponent(Self.purgeMarkerName)
     }
 
     private func markerURL(_ sensor: SRSensor) -> URL {
@@ -648,7 +579,10 @@ public final class DefaultsSensorStorage: SensorSampleUploadManagerStorage, Sens
     private static func queuedBatch(from entry: [String: Any], id: String) -> SensorQueuedBatch? {
         guard let records = entry[Self.recordsKey] as? [[String: Any]],
               let windowStart = entry[Self.windowStartKey] as? Double else { return nil }
-        return SensorQueuedBatch(id: id, records: records, windowStart: Date(timeIntervalSince1970: windowStart))
+        return SensorQueuedBatch(id: id,
+                                 records: records,
+                                 windowStart: Date(timeIntervalSince1970: windowStart),
+                                 owner: entry[Self.ownerContentKey] as? String)
     }
 
     /// At the first queue access of the process, delete every leftover of an interrupted atomic
@@ -657,8 +591,9 @@ public final class DefaultsSensorStorage: SensorSampleUploadManagerStorage, Sens
     /// such a leftover. Foundation names the temp file `<target>.sb-<hash>-<random>`, in the target
     /// directory and NOT hidden (review A-1, observed on the iOS simulator runtime), so matching on
     /// hidden names alone never removed one. Kept: in a sensor directory, `<seq>_<id>.json` and
-    /// `_migrated`; at the root, directories (sensors, `_quarantine`) and `_purge_pending`; in
-    /// `_quarantine`, names ending in `.json` (quarantined bytes are never auto-deleted). No
+    /// `_migrated`; at the root, directories (sensors, `_quarantine`); in `_quarantine`, names
+    /// ending in `.json`. Quarantined items older than `quarantineRetention` are deleted here too
+    /// (owner rule 6), by the time written into their name when they were set aside. No
     /// file-timestamp API is used: it would be a required-reason API (plan R2 PR-18 item 2).
     private func prepareRootIfNeeded() {
         guard !self.rootPrepared else { return }
@@ -669,17 +604,41 @@ public final class DefaultsSensorStorage: SensorSampleUploadManagerStorage, Sens
             var isDirectory: ObjCBool = false
             guard self.fileManager.fileExists(atPath: url.path, isDirectory: &isDirectory) else { continue }
             guard isDirectory.boolValue, !child.hasPrefix(".") else {
-                if child != Self.purgeMarkerName { try? self.fileManager.removeItem(at: url) }
+                try? self.fileManager.removeItem(at: url)
                 continue
             }
             let isQuarantine = child == Self.quarantineDirectoryName
+            var expired = 0
             for name in (try? self.fileManager.contentsOfDirectory(atPath: url.path)) ?? [] {
-                let keep = isQuarantine
-                    ? name.hasSuffix(Self.batchSuffix) && !name.hasPrefix(".")
-                    : name == Self.migratedMarkerName || Self.parseBatchName(name, in: url) != nil
+                let keep: Bool
+                if isQuarantine {
+                    let isItem = name.hasSuffix(Self.batchSuffix) && !name.hasPrefix(".")
+                    let isExpired = Self.quarantinedAt(name).map { Date().timeIntervalSince($0) > Self.quarantineRetention } ?? false
+                    if isItem, isExpired { expired += 1 }
+                    keep = isItem && !isExpired
+                } else {
+                    keep = name == Self.migratedMarkerName || Self.parseBatchName(name, in: url) != nil
+                }
                 if !keep { try? self.fileManager.removeItem(at: url.appendingPathComponent(name)) }
             }
+            if expired > 0 {
+                self.analytics?.track(event: .sensorRecordDropped(sensor: "sensorkit", count: expired, reason: "quarantine_expired"))
+            }
         }
+    }
+
+    /// `q<epoch seconds>_<sensor>_<item>_<reason>.json`: the time is written into the name when
+    /// the item is set aside, so expiry needs no file-timestamp API.
+    private static func quarantineName(sensor: SRSensor, item: String, reason: String) -> String {
+        return "q\(Int(Date().timeIntervalSince1970))_\(sensor.rawValue)_\(item)_\(reason)\(Self.batchSuffix)"
+    }
+
+    /// The time a quarantined item was set aside, `nil` for a name without one (kept: never
+    /// delete on an inference).
+    private static func quarantinedAt(_ name: String) -> Date? {
+        guard name.hasPrefix("q"), let end = name.firstIndex(of: "_"),
+              let seconds = TimeInterval(name[name.index(after: name.startIndex)..<end]) else { return nil }
+        return Date(timeIntervalSince1970: seconds)
     }
 
     /// Created with `completeUntilFirstUserAuthentication`: readable and writable while the screen
@@ -777,9 +736,10 @@ public final class DefaultsSensorStorage: SensorSampleUploadManagerStorage, Sens
 
     /// `false` on any serialization or file-system error (AC4): the caller leaves the cursor alone.
     private func writeNewBatch(id: String, records: [[String: Any]], windowStart: Date, for sensor: SRSensor) -> Bool {
-        let content: [String: Any] = [Self.idKey: id,
+        var content: [String: Any] = [Self.idKey: id,
                                       Self.windowStartKey: windowStart.timeIntervalSince1970,
                                       Self.recordsKey: records]
+        content[Self.ownerContentKey] = self.owner
         return self.writeBatchFile(content, id: id, for: sensor)
     }
 
@@ -806,15 +766,14 @@ public final class DefaultsSensorStorage: SensorSampleUploadManagerStorage, Sens
         return .batch(batch)
     }
 
-    /// Moves unparseable or unreadable bytes to `<queueRoot>/_quarantine/`: never uploaded, never
-    /// auto-deleted, deleted only by a purge (plan OQ6). The id is part of the name, so two
-    /// quarantined files never collide even when a sequence number is reused after the queue
-    /// emptied. Telemetry: `sensor_record_dropped` with the reason, where `count` is one BATCH
-    /// (its record count is unknowable). `false` when the move failed.
+    /// Moves a batch file that was read and is invalid to `<queueRoot>/_quarantine/`: never
+    /// uploaded, deleted after `quarantineRetention` (owner rule 6). The id is part of the name,
+    /// so two quarantined files never collide. Telemetry: `sensor_record_dropped` with the
+    /// reason, where `count` is one BATCH. `false` when the move failed.
     @discardableResult
     private func quarantine(_ file: BatchFile, sensor: SRSensor, reason: String) -> Bool {
         guard self.ensureDirectory(self.quarantineDirectory) else { return false }
-        let name = "\(sensor.rawValue)_\(file.url.deletingPathExtension().lastPathComponent)_\(reason).json"
+        let name = Self.quarantineName(sensor: sensor, item: file.url.deletingPathExtension().lastPathComponent, reason: reason)
         do {
             try self.fileManager.moveItem(at: file.url, to: self.quarantineDirectory.appendingPathComponent(name))
         } catch {
@@ -848,6 +807,9 @@ public final class DefaultsSensorStorage: SensorSampleUploadManagerStorage, Sens
     private func ensureMigrated(_ sensor: SRSensor) -> Bool {
         let raw = sensor.rawValue
         if self.migratedSensors.contains(raw) { return true }
+        // Owner rule 1: migrated batches are stamped with the participant; with no session there
+        // is none, so the migration does not run (and is not counted as attempted).
+        guard self.owner != nil else { return false }
         guard !self.migrationAttempted.contains(raw) else { return false }
         self.migrationAttempted.insert(raw)
         let migrated = autoreleasepool { self.migrateLegacyQueue(sensor) }
@@ -872,7 +834,7 @@ public final class DefaultsSensorStorage: SensorSampleUploadManagerStorage, Sens
 
         guard let entries = (try? JSONSerialization.jsonObject(with: data)) as? [Any] else {
             // The only case where queued data cannot be uploaded: kept in quarantine, not deleted.
-            let name = "\(sensor.rawValue)_legacy-\(digest.prefix(16))_legacy_unparseable.json"
+            let name = Self.quarantineName(sensor: sensor, item: "legacy-\(digest.prefix(16))", reason: "legacy_unparseable")
             marker.digests.insert(digest)
             guard self.ensureDirectory(self.quarantineDirectory),
                   self.write(data, to: self.quarantineDirectory.appendingPathComponent(name)),
@@ -912,6 +874,7 @@ public final class DefaultsSensorStorage: SensorSampleUploadManagerStorage, Sens
                 guard !marker.ids.contains(id), !existingIds.contains(id) else { return false }
                 var content = dictionary
                 content[Self.idKey] = id
+                content[Self.ownerContentKey] = self.owner
                 guard self.writeBatchFile(content, id: id, for: sensor) else { return true }
                 existingIds.insert(id)
                 written += 1

@@ -10,81 +10,6 @@ import Foundation
 import os
 import RxSwift
 import SensorKit
-import UIKit
-
-/// FUAM-4516 (review A-2): whether data protection currently lets the app read its protected files
-/// and preferences. Before the first unlock after a reboot, `UserDefaults` reads return nil: the
-/// access token reads as absent, clearance reads as false, and the no-clearance purge would delete
-/// the batch files (unlinking needs no class key) while it can neither read them nor rewind a
-/// cursor, a permanent loss for a participant who is still logged in. Every SensorKit pipeline
-/// entry point checks this first and does nothing while it is `false`.
-///
-/// `UIApplication.isProtectedDataAvailable` is main-thread API, so the value is read on main at
-/// creation (or hopped there) and then follows the protected-data notifications, which UIKit posts
-/// on main; any thread reads the cached value under a lock.
-/// ponytail: this is class A availability, stricter than the class C the queue files and
-/// `UserDefaults` use, so the pipeline also pauses while the device is locked after the first
-/// unlock. The SDK uploads only in the foreground and its grace period, so that costs seconds;
-/// a class C probe would avoid it if grace-period uploads ever matter.
-final class SensorProtectedDataState {
-
-    static let shared = SensorProtectedDataState()
-
-    private let lock = NSLock()
-    private var available = false
-    private var handlers: [() -> Void] = []
-    private var observers: [NSObjectProtocol] = []
-
-    private init() {
-        let center = NotificationCenter.default
-        self.observers.append(center.addObserver(forName: UIApplication.protectedDataDidBecomeAvailableNotification,
-                                                 object: nil,
-                                                 queue: .main) { [weak self] _ in self?.update(true) })
-        self.observers.append(center.addObserver(forName: UIApplication.protectedDataWillBecomeUnavailableNotification,
-                                                 object: nil,
-                                                 queue: .main) { [weak self] _ in self?.update(false) })
-        // Review A-7: an app that got "will become unavailable" in the background and slept through
-        // the unlock may never see "did become available"; re-read the real value whenever it comes
-        // back to the foreground, or every later trigger would return early until relaunch.
-        for name in [UIApplication.didBecomeActiveNotification, UIApplication.willEnterForegroundNotification] {
-            self.observers.append(center.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in
-                self?.refreshFromApplicationState()
-            })
-        }
-        if Thread.isMainThread {
-            self.available = UIApplication.shared.isProtectedDataAvailable
-        } else {
-            // Unknown until main answers: treated as unavailable, and the handlers run if it is.
-            DispatchQueue.main.async { [weak self] in self?.update(UIApplication.shared.isProtectedDataAvailable) }
-        }
-    }
-
-    var isAvailable: Bool {
-        self.lock.lock(); defer { self.lock.unlock() }
-        return self.available
-    }
-
-    /// Re-reads `UIApplication.isProtectedDataAvailable` (main thread only: the observers above
-    /// call it from main). Internal so a spec can stand in for the foreground notifications.
-    func refreshFromApplicationState() {
-        self.update(UIApplication.shared.isProtectedDataAvailable)
-    }
-
-    /// `handler` runs on main every time protected data goes from unavailable to available.
-    func whenAvailable(_ handler: @escaping () -> Void) {
-        self.lock.lock(); defer { self.lock.unlock() }
-        self.handlers.append(handler)
-    }
-
-    private func update(_ value: Bool) {
-        self.lock.lock()
-        let became = value && !self.available
-        self.available = value
-        let toRun = became ? self.handlers : []
-        self.lock.unlock()
-        toRun.forEach { $0() }
-    }
-}
 
 /// Coordinates SensorKit ingestion:
 /// 1) Fetch window [cursor, now] via per-sensor mapper
@@ -220,9 +145,6 @@ public final class SensorSampleUploadManager {
     /// for the memory-guard specs. 0 means unknown.
     var availableMemory: () -> Int = { Int(os_proc_available_memory()) }
 
-    /// FUAM-4516 (review A-2): whether protected data is readable now; injectable for specs.
-    var isProtectedDataAvailable: () -> Bool = { SensorProtectedDataState.shared.isAvailable }
-
     // MARK: - Dependencies
 
     private let sensors: [SRSensor]
@@ -237,9 +159,9 @@ public final class SensorSampleUploadManager {
     private weak var networkDelegate: SensorSampleUploaderNetworkDelegate?
     
     // State
-    private var hasPurgedForNoUser = false
-    /// `startUploadLogic` ran while protected data was unavailable: it runs again once it is.
-    private var startDeferredForProtectedData = false
+    /// Once per clearance loss: the FUAM-3844 mismatch diagnostic is reported, not repeated on
+    /// every trigger.
+    private var noClearanceReported = false
 
     // Background queue to avoid blocking UI. FUAM-4516: `.workItem` drains an autorelease pool
     // after every block, so the objects one window or one upload step creates are freed at the end
@@ -318,19 +240,25 @@ public final class SensorSampleUploadManager {
             self.analytics = analytics
             self.mappers = mappers
             self.deviceProvider = deviceProvider
-            SensorProtectedDataState.shared.whenAvailable { [weak self] in self?.protectedDataBecameAvailable() }
     }
 
-    /// FUAM-4516 (review A-2): protected data became readable (first unlock, or an unlock after a
-    /// lock). A start that was deferred runs now; otherwise a sync picks up whatever waited.
-    /// Runs on main (UIKit posts the notification there).
-    func protectedDataBecameAvailable() {
-        if self.startDeferredForProtectedData {
-            self.startDeferredForProtectedData = false
-            self.startUploadLogic()
-        } else if self.hasStarted {
-            self.triggerSync(reason: "protected_data_available")
-        }
+    /// FUAM-4516 (owner rule 1): the participant whose data the pipeline may touch now, or `nil`
+    /// when there is no readable session: no token, no user (or the whole `UserDefaults` store is
+    /// unreadable, as before the first unlock after a reboot, where token, user and cursors all
+    /// read as absent). `nil` means PAUSE: nothing is fetched, written, uploaded, migrated or
+    /// deleted; the next trigger with a session proceeds. Nothing is ever deleted because a
+    /// session is absent.
+    private func sessionOwner() -> String? {
+        guard self.clearanceDelegate?.sensorManagerCanRun ?? false else { return nil }
+        return self.clearanceDelegate?.participantId
+    }
+
+    /// FUAM-3844 diagnostic: clearance false while a configured sensor is OS-authorized is a bug.
+    /// Reported once per clearance loss.
+    private func reportNoClearanceOnce(reason: String) {
+        guard !self.noClearanceReported else { return }
+        self.noClearanceReported = true
+        self.trackClearanceMismatchIfNeeded(reason: reason)
     }
 
     /// A paired Watch only shows up in `fetchDevices()` once it has synced data for the sensor,
@@ -358,25 +286,13 @@ public final class SensorSampleUploadManager {
     
         hasStarted = true
 
-        // FUAM-4516 (review A-2): before the first unlock the clearance below reads as false only
-        // because `UserDefaults` is unreadable. Do nothing, purge least of all; start once
-        // protected data is available.
-        guard isProtectedDataAvailable() else {
-            startDeferredForProtectedData = true
+        // No session (no user / no consent / unreadable store): pause (FUAM-4516 owner rule 1).
+        // Local data is kept; the next trigger with a session proceeds.
+        guard sessionOwner() != nil else {
+            reportNoClearanceOnce(reason: "no_clearance_at_start")
             return
         }
-
-        // If there is no clearance (no user / no consent), purge and do nothing
-        guard clearanceDelegate?.sensorManagerCanRun ?? false else {
-            if !hasPurgedForNoUser {
-                hasPurgedForNoUser = true
-                self.trackClearanceMismatchIfNeeded(reason: "no_clearance_at_start")
-                // run purge async to avoid blocking startup
-                workQueue.async { [weak self] in self?.purgeAllData(reason: "no_clearance_at_start") }
-            }
-            return
-        }
-        hasPurgedForNoUser = false
+        noClearanceReported = false
         
         guard networkDelegate != nil else {
             #if DEBUG
@@ -403,23 +319,14 @@ public final class SensorSampleUploadManager {
     /// You can call this from foreground flows or background tasks to force a sync cycle.
     public func triggerSync(reason: String = "manual") {
 
-        // FUAM-4516 (review A-2): no purge, no sync while protected data is unavailable; the
-        // protected-data notification triggers the next sync.
-        guard isProtectedDataAvailable() else { return }
-
-        // Clearance check every time: if missing, purge once and exit
-        guard clearanceDelegate?.sensorManagerCanRun ?? false else {
-            if !hasPurgedForNoUser {
-                hasPurgedForNoUser = true
-                self.trackClearanceMismatchIfNeeded(reason: "no_clearance_trigger")
-                workQueue.async { [weak self] in self?.purgeAllData(reason: "no_clearance_trigger") }
-            }
+        // Session check every time: without one, pause (FUAM-4516 owner rule 1).
+        guard sessionOwner() != nil else {
+            reportNoClearanceOnce(reason: "no_clearance_trigger")
             return
         }
-        hasPurgedForNoUser = false
+        noClearanceReported = false
         
-        if let last = lastSyncDate, Date().timeIntervalSince(last) < minSyncInterval,
-           reason != "reachability_up", reason != "protected_data_available" {
+        if let last = lastSyncDate, Date().timeIntervalSince(last) < minSyncInterval, reason != "reachability_up" {
             // Throttle frequent triggers unless connectivity just changed
             return
         }
@@ -435,14 +342,15 @@ public final class SensorSampleUploadManager {
 
     private func syncAllSensors() {
         
-        guard isProtectedDataAvailable(), clearanceDelegate?.sensorManagerCanRun ?? true else { return }
+        guard let owner = sessionOwner() else { return }
 
         // Ensure single-cycle at a time
         syncLock.lock(); defer { syncLock.unlock() }
 
-        // FUAM-4516: a purge a kill or an error interrupted completes before this cycle enqueues
-        // or uploads anything; if it still cannot complete, the cycle stands down.
-        guard self.resumePendingPurgeIfNeeded() else { return }
+        // FUAM-4516 (owner rule 4): the cursors and the queue belong to `owner` from here on. A
+        // different participant than the one they were recorded for resets them (a property of
+        // the stored data, not an event to track).
+        storage.adoptOwner(owner)
 
         let now = Date()
 
@@ -1168,13 +1076,6 @@ public final class SensorSampleUploadManager {
 
         let window = windows[index]
 
-        // FUAM-4516 (review A-2): no fetch, enqueue or cursor write while protected data is
-        // unavailable. The chain ends with its cursor untouched; the next sync retries.
-        guard self.isProtectedDataAvailable() else {
-            self.endChain(for: context.sensor)
-            return
-        }
-
         // FUAM-4516: no new fetch close to the process memory limit. The chain ends for this
         // cycle with its cursor untouched and no failure counted; the next sync retries. A
         // backward probe first flushes what it buffered (plan R2 PR-4): those days are enqueued and
@@ -1231,12 +1132,6 @@ public final class SensorSampleUploadManager {
                             of windows: [DateInterval],
                             context: DeviceChainContext) {
         let sensor = context.sensor
-        // FUAM-4516 (review A-2): protected data went away while the fetch ran. Drop the result
-        // with the cursor untouched; the window is fetched again by a later sync.
-        guard self.isProtectedDataAvailable() else {
-            self.endChain(for: sensor)
-            return
-        }
         // Review fix #4: the user can disappear between plan build and this callback (logout,
         // session expiry, failed token refresh). The re-resolved bound is then forward-only and
         // every record would be dropped — but advancing the cursor over the rest of the plan
@@ -1450,7 +1345,7 @@ public final class SensorSampleUploadManager {
             // filtered, or confirmed empty) — advance, monotonically, and move on. A rescan
             // window ends at or behind the stored cursor, so the monotonic write is what keeps
             // "cursors never rewind" true (the sanctioned rewinds are the `future_cursor` reset
-            // and the purge rewind, both written straight to storage).
+            // and a new participant's reset in `adoptOwner`, both written straight to storage).
             self.advanceCursor(to: window.end, for: sensor, deviceKey: deviceKey)
             self.processWindow(at: index + 1, of: windows, context: context)
         }
@@ -1738,8 +1633,8 @@ public final class SensorSampleUploadManager {
     /// AC4/D3: cursors are strictly monotonic. A rescan window sits BEHIND the cursor by design
     /// and a backward probe hands windows over newest-first; writing such a window's end would
     /// rewind the cursor, and the only sanctioned rewinds in the whole design are the
-    /// `future_cursor` corruption reset and the purge rewind (`rewindCursors`), both of which
-    /// write the storage directly.
+    /// `future_cursor` corruption reset (written to storage directly) and the reset of a previous
+    /// participant's state by `adoptOwner` (FUAM-4516).
     private func advanceCursor(to date: Date, for sensor: SRSensor, deviceKey: String) {
         if let stored = self.storage.lastCursor(for: sensor, deviceKey: deviceKey), stored >= date {
             return
@@ -1930,39 +1825,65 @@ public final class SensorSampleUploadManager {
     /// 10 MB request limit (oversized batches are bisected until they serialize below
     /// `maxBatchBytes`). Returns `false` when ANY batch failed to persist (AC4): the caller
     /// must then treat the whole window as not durably handled and leave the cursor alone.
+    ///
+    /// FUAM-4516 (owner rule 7): a record `JSONSerialization` rejects (NaN, infinity) can never be
+    /// uploaded. Only that record is set aside, as an always-encodable description (sensor, window,
+    /// index, its keys, the reason) kept 7 days in the quarantine, and the rest of the window is
+    /// enqueued; the window then counts as handled, so its cursor advances as for any other. This
+    /// is the one place a cursor moves past data that was not uploaded (owner-approved, this case
+    /// only). A window of only such records writes no batch file.
     private func enqueueRespectingPayloadLimit(_ records: [[String: Any]],
                                                windowStart: Date,
                                                for sensor: SRSensor) -> Bool {
-        return Self.splitRespectingPayloadLimit(records, maxBatchSize: maxBatchSize, maxBatchBytes: Self.maxBatchBytes)
-            .allSatisfy { self.storage.enqueueBatch($0, windowStart: windowStart, for: sensor) }
+        let split = Self.splitForUpload(records, maxBatchSize: maxBatchSize, maxBatchBytes: Self.maxBatchBytes)
+        if !split.unencodable.isEmpty {
+            let descriptions: [[String: Any]] = split.unencodable.map { index in
+                ["sensor": sensor.rawValue,
+                 "window_start": windowStart.timeIntervalSince1970,
+                 "index": index,
+                 "keys": records[index].keys.sorted(),
+                 "reason": "unencodable_record"]
+            }
+            guard self.storage.setAside(descriptions, reason: "unencodable_record", for: sensor) else { return false }
+        }
+        return split.batches.allSatisfy { self.storage.enqueueBatch($0, windowStart: windowStart, for: sensor) }
     }
 
     /// Pure batch splitting (internal for unit tests): caps batches at `maxBatchSize` records,
     /// then bisects any batch whose serialized JSON exceeds `maxBatchBytes`. A single record
-    /// is never split further (terminates), and record order is preserved.
-    ///
+    /// is never split further (terminates), and record order is preserved. Records that cannot be
+    /// serialized are left out (see `splitForUpload`).
+    static func splitRespectingPayloadLimit(_ records: [[String: Any]],
+                                            maxBatchSize: Int,
+                                            maxBatchBytes: Int) -> [[[String: Any]]] {
+        return Self.splitForUpload(records, maxBatchSize: maxBatchSize, maxBatchBytes: maxBatchBytes).batches
+    }
+
     /// FUAM-4516: each record is serialized ONCE, alone, inside an autorelease pool; a batch's
     /// size is then exact arithmetic, because a JSON array of objects is `[` + the elements
     /// joined by `,` + `]`. Same batches as serializing every bisection level, but with 200 KB
     /// device-usage records the old way serialized a whole window (tens of MB) at the top level
-    /// and again at every level below it; now the peak is one record.
-    static func splitRespectingPayloadLimit(_ records: [[String: Any]],
-                                            maxBatchSize: Int,
-                                            maxBatchBytes: Int) -> [[[String: Any]]] {
-        // Prefix sums of the element sizes and of the unserializable records.
+    /// and again at every level below it; now the peak is one record. A record that cannot be
+    /// serialized goes to `unencodable` (its index in `records`) instead of into a batch.
+    static func splitForUpload(_ records: [[String: Any]],
+                               maxBatchSize: Int,
+                               maxBatchBytes: Int) -> (batches: [[[String: Any]]], unencodable: [Int]) {
+        var encodable: [[String: Any]] = []
+        var unencodable: [Int] = []
+        // Prefix sums of the element sizes of the encodable records.
         var sizeSums = [0]
-        var invalidSums = [0]
+        encodable.reserveCapacity(records.count)
         sizeSums.reserveCapacity(records.count + 1)
-        invalidSums.reserveCapacity(records.count + 1)
-        for record in records {
+        for (index, record) in records.enumerated() {
             let size = Self.serializedSize(of: [record])
-            sizeSums.append(sizeSums[sizeSums.count - 1] + max(0, size - 2))
-            invalidSums.append(invalidSums[invalidSums.count - 1] + (size == 0 ? 1 : 0))
+            guard size > 0 else {
+                unencodable.append(index)
+                continue
+            }
+            encodable.append(record)
+            sizeSums.append(sizeSums[sizeSums.count - 1] + size - 2)
         }
-        // The serialized size of `records[range]`; 0 when a record in it cannot be serialized,
-        // as before: such a batch is never bisected and fails at enqueue (the poison-window rule).
         func size(of range: Range<Int>) -> Int {
-            guard invalidSums[range.upperBound] == invalidSums[range.lowerBound] else { return 0 }
             return sizeSums[range.upperBound] - sizeSums[range.lowerBound] + range.count + 1
         }
         var batches: [[[String: Any]]] = []
@@ -1972,16 +1893,16 @@ public final class SensorSampleUploadManager {
                 appendBisectingIfTooLarge(range.lowerBound..<half)
                 appendBisectingIfTooLarge(half..<range.upperBound)
             } else {
-                batches.append(Array(records[range]))
+                batches.append(Array(encodable[range]))
             }
         }
         var index = 0
-        while index < records.count {
-            let end = min(index + maxBatchSize, records.count)
+        while index < encodable.count {
+            let end = min(index + maxBatchSize, encodable.count)
             appendBisectingIfTooLarge(index..<end)
             index = end
         }
-        return batches
+        return (batches, unencodable)
     }
 
     /// The serialized JSON size of `batch`, 0 when it cannot be serialized. FUAM-4516 (plan R2
@@ -2087,14 +2008,14 @@ public final class SensorSampleUploadManager {
             workQueue.async { [weak self] in
                 guard let self = self else { return }
 
-                // FUAM-4516 (review A-2): protected data went away mid-loop. Stop here and release
-                // the sensor; the protected-data notification's sync starts a new loop.
-                // An unfinished purge (review A-3) also stops it: what is left on disk may belong to
-                // the previous participant.
-                guard self.isProtectedDataAvailable(), !self.storage.isPurgePending else {
+                // FUAM-4516 (owner rules 1, 4): the session went away mid-loop: pause. If another
+                // participant logged in meanwhile, adopting them makes peek delete, unsent, every
+                // batch collected for the previous one.
+                guard let current = self.sessionOwner() else {
                     self.drainingSensors.remove(sensor)
                     return
                 }
+                self.storage.adoptOwner(current)
 
                 // FUAM-3945 round 6 (V2): PEEK, never dequeue. The batch stays persisted at its
                 // place in the queue until the upload succeeds (or the rejection budget drops
@@ -2224,7 +2145,8 @@ public final class SensorSampleUploadManager {
         // off the main thread. A loop already running for `sensor` picks up whatever was just
         // enqueued, so a second trigger starts nothing.
         workQueue.async { [weak self] in
-            guard let self = self, self.isProtectedDataAvailable(), self.resumePendingPurgeIfNeeded() else { return }
+            guard let self = self, let owner = self.sessionOwner() else { return }
+            self.storage.adoptOwner(owner)
             guard !self.drainingSensors.contains(sensor),
                   self.storage.pendingBatchCount(for: sensor) > 0 else { return }
             self.drainingSensors.insert(sensor)
@@ -2269,101 +2191,6 @@ public final class SensorSampleUploadManager {
         guard !authorized.isEmpty else { return }
         let sensorNames = authorized.map { $0.shortSubsource }.joined(separator: ",")
         analytics.track(event: .sensorDataClearanceMismatch(reason: reason, authorizedSensors: sensorNames))
-    }
-
-    /// FUAM-4516 (plan R2 PR-7): a purge a kill interrupted is completed at the first queue access
-    /// of the next process, REGARDLESS of the current clearance, before anything is enqueued or
-    /// uploaded: otherwise a new login would upload the previous participant's leftover batches.
-    /// Checked once per process; a purge that starts later runs to completion in one `workQueue`
-    /// block. Runs on `workQueue` only.
-    ///
-    /// Review A-3: the marker is cleared only by a purge whose every deletion succeeded, so it is
-    /// checked at EVERY sync cycle and drain claim (one `stat`), not once per process: while it
-    /// exists nothing is enqueued or uploaded. `true` when no purge is pending (any more).
-    @discardableResult
-    private func resumePendingPurgeIfNeeded() -> Bool {
-        guard self.storage.isPurgePending else { return true }
-        self.purgeAllData(reason: "resume_pending")
-        return !self.storage.isPurgePending
-    }
-
-    /// Drops ALL queued batches. The cursor is deliberately NOT fast-forwarded (FUAM-3844):
-    /// dropping queued batches on clearance loss is correct; forfeiting the ability to re-fetch
-    /// that window is not. FUAM-3841 builds on this.
-    ///
-    /// FUAM-4516 (plan R2 PR-7): kill-safe order. A durable intent marker first; then per sensor
-    /// the earliest window per device kind is read from the queued batches (one at a time, the
-    /// legacy queue included), the cursors are rewound, the ledger is purged, and only then are
-    /// the files, the quarantine and the legacy key deleted; the marker goes last. Every step is
-    /// idempotent and rewinds only move cursors backwards, so resuming at any step is safe. The
-    /// marker is cleared only when every sensor's deletion succeeded (review A-3). Runs on
-    /// `workQueue` only.
-    private func purgeAllData(reason: String) {
-        #if DEBUG
-        print("SensorSampleUploadManager - Purging pending data (\(reason))")
-        #endif
-        // FUAM-4516 (review A-2): never purge what cannot be read: the windows could not be
-        // collected for the rewind, and the deletion would be a permanent loss. Review F3: re-arm
-        // the no-clearance purge, so the next trigger without clearance runs it; otherwise a later
-        // login in this process would upload the queue the purge was meant to drop.
-        guard self.isProtectedDataAvailable() else {
-            DispatchQueue.main.async { [weak self] in self?.hasPurgedForNoUser = false }
-            return
-        }
-
-        // Stop pending retries
-        retryWorkItems.values.forEach { $0.cancel() }
-        retryWorkItems.removeAll()
-        windowFetchFailures.removeAll()
-        batchUploadRejections.removeAll()
-
-        // A marker that cannot be written (disk full) only loses the resume: purge anyway.
-        storage.setPurgePending(true)
-        var deletedEverything = true
-        for sensor in sensors {
-            // Per device kind, the earliest window a purged batch came from (FUAM-3945 round 6, V4).
-            var earliestPurged: [String: Date] = [:]
-            storage.forEachQueuedBatch(for: sensor) { batch in
-                for key in Self.deviceKeys(of: batch.records) {
-                    earliestPurged[key] = min(earliestPurged[key] ?? batch.windowStart, batch.windowStart)
-                }
-            }
-            self.rewindCursors(for: sensor, toEarliestPurged: earliestPurged)
-            // The ledger goes WITH the queue (D4): a purged batch was never uploaded, so its
-            // fingerprints must not survive to suppress a legitimate re-collection.
-            storage.purgeLedger(for: sensor)
-            deletedEverything = storage.deleteQueue(for: sensor) && deletedEverything
-        }
-        // Review A-3: a failed deletion or listing keeps the marker, so the previous participant's
-        // leftovers cannot upload in the next session; the next sync cycle or drain retries.
-        if deletedEverything {
-            storage.setPurgePending(false)
-        }
-    }
-
-    /// FUAM-3945 round 6 (V4): a purged batch's window is behind the cursor, which advanced at
-    /// enqueue. Left there, the plan resumes from the cursor plus the 3-day rescan tail, so every
-    /// purged window older than the tail would never be fetched again. Rewind each device kind's
-    /// cursor to the earliest purged window so the next plan walks forward over them. Only ever
-    /// BACKWARDS (the FUAM-3844 rule: a cursor is never fast-forwarded by a purge), and floored at
-    /// the consent bound when one is known. On logout the join day is usually gone, so no floor
-    /// applies here; the planner clamps to the bound at plan time anyway. A rewind that lands ON
-    /// the bound reopens the plan as a backfill, exactly like purge plus re-consent (FUAM-3844).
-    private func rewindCursors(for sensor: SRSensor, toEarliestPurged earliest: [String: Date]) {
-        let bound = self.currentBound
-        for (deviceKey, windowStart) in earliest {
-            let target = bound.isForwardOnly ? windowStart : max(windowStart, bound.date)
-            guard let cursor = storage.lastCursor(for: sensor, deviceKey: deviceKey), target < cursor else { continue }
-            storage.setLastCursor(target, for: sensor, deviceKey: deviceKey)
-        }
-    }
-
-    /// The device kinds a queued batch holds records from: the `device_kind` tag applied at
-    /// enqueue (the queue is device-mixed). A batch with no tagged record was enqueued by an
-    /// iPhone-only build, so it belongs to the iPhone cursor.
-    private static func deviceKeys(of records: [[String: Any]]) -> Set<String> {
-        let keys = Set(records.compactMap { $0["device_kind"] as? String })
-        return keys.isEmpty ? [SensorDevice.iphoneKey] : keys
     }
 }
 

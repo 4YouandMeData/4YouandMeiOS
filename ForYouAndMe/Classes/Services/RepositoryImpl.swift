@@ -1035,6 +1035,12 @@ extension RepositoryImpl: SensorKitManagerNetworkDelegate {
 
 /// Gate SensorKit uploads based on user consent for SensorKit permission.
 extension RepositoryImpl: SensorKitManagerClearanceDelegate {
+
+    /// FUAM-4516: the backend user id the SensorKit queue stamps its batches with.
+    var participantId: String? {
+        return self.currentUser?.id
+    }
+
     var sensorManagerCanRun: Bool {
         // Must be logged in AND have SensorKit consent
         guard self.isLoggedIn else { return false }

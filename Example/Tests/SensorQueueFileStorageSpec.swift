@@ -7,9 +7,10 @@
 //  are removed in `afterEach`.
 //
 //  - `SensorQueueFileStorageSpec`: the storage alone (queue operations, directory hygiene,
-//    quarantine, migration of a 0.101.16/17 queue, purge support).
+//    quarantine and its expiry, migration of a 0.101.16/17 queue, ownership).
 //  - `SensorQueueDrainSpec`: the upload manager over that storage (one upload in flight per
-//    sensor, requeue, the 1 MiB cap, the memory guard, the probe byte budget, the kill-safe purge).
+//    sensor, requeue, the 1 MiB cap, the memory guard, the probe byte budget, the owner rules:
+//    pause without a session, another participant's batches, unencodable records).
 //
 
 import Quick
@@ -61,6 +62,7 @@ private enum QueueFixture {
         defaults.removeObject(forKey: "sensorkit.ledger." + sensor.rawValue)
         defaults.removeObject(forKey: "sensorkit.rescanday." + sensor.rawValue + ".iphone")
         defaults.removeObject(forKey: "sensorkit.deepestwindow." + sensor.rawValue + ".iphone")
+        defaults.removeObject(forKey: "sensorkit.owner")
     }
 
     @discardableResult
@@ -126,6 +128,17 @@ private enum QueueFixture {
         return ["id": id, "window_start": day.timeIntervalSince1970, "records": records]
     }
 
+    /// Every queued batch, in order, without removing any.
+    static func queuedBatches(_ storage: SensorSampleUploadManagerStorage, _ sensor: SRSensor) -> [SensorQueuedBatch] {
+        var seen: Set<String> = []
+        var batches: [SensorQueuedBatch] = []
+        while let batch = storage.peekNextBatch(for: sensor, excluding: seen) {
+            seen.insert(batch.id)
+            batches.append(batch)
+        }
+        return batches
+    }
+
     static func iso(_ date: Date) -> String {
         return ISO8601DateFormatter().string(from: date)
     }
@@ -141,8 +154,7 @@ private enum QueueFixture {
     }
 }
 
-/// A storage that records the order of the purge-relevant calls, delegating everything to a real
-/// `DefaultsSensorStorage`.
+/// A storage that records some calls, delegating everything to a real `DefaultsSensorStorage`.
 private final class OrderRecordingStorage: SensorSampleUploadManagerStorage, SensorSampleUploaderStorage {
 
     private let base: DefaultsSensorStorage
@@ -204,18 +216,9 @@ private final class OrderRecordingStorage: SensorSampleUploadManagerStorage, Sen
     func setDeepestProductiveWindowStart(_ date: Date, for sensor: SRSensor, deviceKey: String) {
         base.setDeepestProductiveWindowStart(date, for: sensor, deviceKey: deviceKey)
     }
-    func forEachQueuedBatch(for sensor: SRSensor, _ body: (SensorQueuedBatch) -> Void) {
-        self.record("forEachQueuedBatch")
-        base.forEachQueuedBatch(for: sensor, body)
-    }
-    func deleteQueue(for sensor: SRSensor) -> Bool {
-        self.record("deleteQueue")
-        return base.deleteQueue(for: sensor)
-    }
-    var isPurgePending: Bool { base.isPurgePending }
-    func setPurgePending(_ pending: Bool) -> Bool {
-        self.record("setPurgePending(\(pending))")
-        return base.setPurgePending(pending)
+    func adoptOwner(_ owner: String) { base.adoptOwner(owner) }
+    func setAside(_ descriptions: [[String: Any]], reason: String, for sensor: SRSensor) -> Bool {
+        return base.setAside(descriptions, reason: reason, for: sensor)
     }
 }
 
@@ -288,8 +291,11 @@ class SensorQueueFileStorageSpec: QuickSpec {
         var analytics: CapturingAnalyticsService!
         var storage: DefaultsSensorStorage!
 
+        /// A new storage over the same directory (a new process) with a session.
         func relaunch() -> DefaultsSensorStorage {
-            return DefaultsSensorStorage(queueDirectory: root, analytics: analytics)
+            let relaunched = DefaultsSensorStorage(queueDirectory: root, analytics: analytics)
+            relaunched.adoptOwner("participant-1")
+            return relaunched
         }
 
         func marked(_ value: String) -> [[String: Any]] {
@@ -456,10 +462,10 @@ class SensorQueueFileStorageSpec: QuickSpec {
                 expect(QueueFixture.batchFiles(root, sensor)).to(beEmpty())
             }
 
-            it("requeue_after_purge_is_a_noop (limit case 43)") {
+            it("requeue_after_the_batch_was_removed_is_a_noop (limit case 43)") {
                 storage.enqueueBatch(marked("a"), windowStart: windowStart, for: sensor)
                 guard let head = storage.peekNextBatch(for: sensor, excluding: []) else { return fail("no head") }
-                storage.deleteQueue(for: sensor)
+                storage.removeBatch(id: head.id, for: sensor) // uploaded meanwhile
 
                 expect(storage.requeueBatch(id: head.id, records: marked("a"), for: sensor)).to(beTrue())
                 expect(storage.pendingBatchCount(for: sensor)).to(equal(0))
@@ -537,31 +543,23 @@ class SensorQueueFileStorageSpec: QuickSpec {
                 expect(droppedReasons()).to(contain("batch_unparseable"))
             }
 
-            it("skips and quarantines a permanently unreadable batch file, traced (review B-7)") {
+            it("unreadable_batch_file_is_left_in_place_and_retried_next_cycle (owner rule 5)") {
                 storage.enqueueBatch(marked("a"), windowStart: windowStart, for: sensor)
                 storage.enqueueBatch(marked("b"), windowStart: windowStart, for: sensor)
                 guard let headName = QueueFixture.batchFiles(root, sensor).first else { return fail("no head") }
                 let headURL = QueueFixture.sensorDirectory(root, sensor).appendingPathComponent(headName)
                 try? FileManager.default.setAttributes([.posixPermissions: 0o000], ofItemAtPath: headURL.path)
 
-                expect(headMarker(storage)).to(equal("b"))
-                expect(FileManager.default.fileExists(atPath: headURL.path)).to(beFalse())
-                expect(QueueFixture.quarantined(root).first?.hasSuffix("_batch_unreadable.json")).to(beTrue())
-                expect(droppedReasons()).to(contain("batch_unreadable"))
-            }
-
-            it("leaves an unreadable batch file in place while protected data is unavailable (review B-7)") {
-                storage.enqueueBatch(marked("a"), windowStart: windowStart, for: sensor)
-                storage.enqueueBatch(marked("b"), windowStart: windowStart, for: sensor)
-                guard let headName = QueueFixture.batchFiles(root, sensor).first else { return fail("no head") }
-                let headURL = QueueFixture.sensorDirectory(root, sensor).appendingPathComponent(headName)
-                try? FileManager.default.setAttributes([.posixPermissions: 0o000], ofItemAtPath: headURL.path)
-                storage.isProtectedDataAvailable = { false }
-
+                // A read error is not corruption: nothing moves, the drain stops for this cycle.
+                expect(storage.peekNextBatch(for: sensor, excluding: [])).to(beNil())
                 expect(storage.peekNextBatch(for: sensor, excluding: [])).to(beNil())
                 expect(FileManager.default.fileExists(atPath: headURL.path)).to(beTrue())
                 expect(QueueFixture.quarantined(root)).to(beEmpty())
-                expect(droppedReasons()).to(beEmpty())
+                expect(droppedReasons()).to(equal(["batch_unreadable_retry"])) // traced once
+
+                // The next cycle, readable again: nothing was lost, order intact.
+                try? FileManager.default.setAttributes([.posixPermissions: 0o644], ofItemAtPath: headURL.path)
+                expect(headMarker(storage)).to(equal("a"))
             }
 
             it("never peeks a batch again after its removal failed, and retries the removal (review A-5)") {
@@ -682,7 +680,9 @@ class SensorQueueFileStorageSpec: QuickSpec {
                 let otherRoot = QueueFixture.makeRoot()
                 defer { QueueFixture.removeRoot(otherRoot) }
                 QueueFixture.seedLegacy([second, first], for: sensor)
-                _ = DefaultsSensorStorage(queueDirectory: otherRoot).pendingBatchCount(for: sensor)
+                let other = DefaultsSensorStorage(queueDirectory: otherRoot)
+                other.adoptOwner("participant-1")
+                _ = other.pendingBatchCount(for: sensor)
                 expect(Set(QueueFixture.batchIds(otherRoot, sensor))).to(equal(Set(ids)))
             }
 
@@ -696,7 +696,9 @@ class SensorQueueFileStorageSpec: QuickSpec {
                 let referenceRoot = QueueFixture.makeRoot()
                 defer { QueueFixture.removeRoot(referenceRoot) }
                 QueueFixture.seedLegacy(entries, for: sensor)
-                _ = DefaultsSensorStorage(queueDirectory: referenceRoot).pendingBatchCount(for: sensor)
+                let reference = DefaultsSensorStorage(queueDirectory: referenceRoot)
+                reference.adoptOwner("participant-1")
+                _ = reference.pendingBatchCount(for: sensor)
                 let referenceFiles = QueueFixture.batchFiles(referenceRoot, sensor)
                 expect(referenceFiles.count).to(equal(3))
 
@@ -815,56 +817,66 @@ class SensorQueueFileStorageSpec: QuickSpec {
             }
         }
 
-        describe("purge support") {
+        describe("ownership and quarantine expiry (owner rules 4, 6)") {
 
-            it("visits file and legacy batches without removing them") {
-                storage.enqueueBatch(marked("file"), windowStart: windowStart, for: sensor)
-                // A legacy key that a fresh process has not migrated yet.
-                let legacyWindow = windowStart.addingTimeInterval(-QueueFixture.day)
-                QueueFixture.seedLegacy([["id": "l1", "window_start": legacyWindow.timeIntervalSince1970,
+            it("migration_with_no_session_does_not_run; with a session the batches are stamped") {
+                QueueFixture.seedLegacy([["id": "m1", "window_start": windowStart.timeIntervalSince1970,
                                           "records": marked("legacy")]], for: sensor)
-                var seen: [String] = []
-                relaunch().forEachQueuedBatch(for: sensor) { seen.append($0.records.first?["marker"] as? String ?? "?") }
-                expect(seen).to(equal(["file", "legacy"]))
-                expect(QueueFixture.batchFiles(root, sensor).count).to(equal(1))
+                let noSession = DefaultsSensorStorage(queueDirectory: root, analytics: analytics)
+                expect(noSession.pendingBatchCount(for: sensor)).to(equal(0))
+                expect(noSession.peekNextBatch(for: sensor, excluding: [])).to(beNil())
                 expect(UserDefaults.standard.data(forKey: QueueFixture.legacyKey(sensor))).toNot(beNil())
-            }
-
-            it("purge_keeps_the_migrated_marker, removes files, quarantine and legacy key") {
-                QueueFixture.seedLegacy([["id": "k1", "window_start": windowStart.timeIntervalSince1970, "records": marked("k1")]],
-                                        for: sensor)
-                expect(storage.pendingBatchCount(for: sensor)).to(equal(1))
-                storage.enqueueBatch(marked("x"), windowStart: windowStart, for: sensor)
-                guard let headName = QueueFixture.batchFiles(root, sensor).last else { return fail("no file") }
-                try? Data("garbage".utf8).write(to: QueueFixture.sensorDirectory(root, sensor).appendingPathComponent(headName))
-                storage.removeBatch(id: "k1", for: sensor)
-                _ = storage.peekNextBatch(for: sensor, excluding: []) // quarantines the garbage
-                expect(QueueFixture.quarantined(root).count).to(equal(1))
-
-                storage.deleteQueue(for: sensor)
-
                 expect(QueueFixture.batchFiles(root, sensor)).to(beEmpty())
-                expect(QueueFixture.quarantined(root)).to(beEmpty())
-                expect(QueueFixture.marker(root, sensor)?.ids).to(equal(["k1"]))
-            }
 
-            it("records a deleted legacy key's digest, so a lost removal cannot resurrect it") {
-                let blob = QueueFixture.seedLegacy([["id": "p1", "window_start": windowStart.timeIntervalSince1970,
-                                                     "records": marked("p1")]], for: sensor)
-                storage.deleteQueue(for: sensor) // never migrated
+                // Same process, a session appears: the migration runs now and stamps its owner.
+                noSession.adoptOwner("participant-7")
+                expect(noSession.peekNextBatch(for: sensor, excluding: [])?.owner).to(equal("participant-7"))
                 expect(UserDefaults.standard.data(forKey: QueueFixture.legacyKey(sensor))).to(beNil())
-
-                UserDefaults.standard.set(blob, forKey: QueueFixture.legacyKey(sensor)) // the removal was lost
-                expect(relaunch().pendingBatchCount(for: sensor)).to(equal(0))
-                expect(QueueFixture.batchFiles(root, sensor)).to(beEmpty())
             }
 
-            it("persists the purge intent marker") {
-                expect(storage.isPurgePending).to(beFalse())
-                expect(storage.setPurgePending(true)).to(beTrue())
-                expect(relaunch().isPurgePending).to(beTrue())
-                expect(storage.setPurgePending(false)).to(beTrue())
-                expect(relaunch().isPurgePending).to(beFalse())
+            it("stamps new batches with the participant, and keeps the owner through a requeue") {
+                storage.enqueueBatch([["marker": "a"], ["marker": "dropped"]], windowStart: windowStart, for: sensor)
+                guard let head = storage.peekNextBatch(for: sensor, excluding: []) else { return fail("no head") }
+                expect(head.owner).to(equal("participant-1"))
+                storage.requeueBatch(id: head.id, records: marked("a"), for: sensor)
+                expect(relaunch().peekNextBatch(for: sensor, excluding: [])?.owner).to(equal("participant-1"))
+            }
+
+            it("deletes quarantined items older than 7 days at first access, keeps younger ones") {
+                let quarantine = root.appendingPathComponent("_quarantine", isDirectory: true)
+                try? FileManager.default.createDirectory(at: quarantine, withIntermediateDirectories: true)
+                let now = Int(Date().timeIntervalSince1970)
+                func item(ageDays: Int, _ tag: String) -> URL {
+                    let name = "q\(now - ageDays * 86_400)_\(sensor.rawValue)_00000000000\(tag)_batch_unparseable.json"
+                    return quarantine.appendingPathComponent(name)
+                }
+                let old = item(ageDays: 8, "1_x")
+                let young = item(ageDays: 6, "2_y")
+                let undated = quarantine.appendingPathComponent("\(sensor.rawValue)_000000000003_z_batch_unparseable.json")
+                for url in [old, young, undated] { try? Data("{".utf8).write(to: url) }
+
+                _ = relaunch().pendingBatchCount(for: sensor) // first access of a new process
+
+                expect(FileManager.default.fileExists(atPath: old.path)).to(beFalse())
+                expect(FileManager.default.fileExists(atPath: young.path)).to(beTrue())
+                expect(FileManager.default.fileExists(atPath: undated.path)).to(beTrue()) // no time: kept
+                let expired = analytics.trackedEvents.compactMap { event -> Int? in
+                    if case let .sensorRecordDropped(_, count, reason) = event, reason == "quarantine_expired" { return count }
+                    return nil
+                }
+                expect(expired).to(equal([1]))
+            }
+
+            it("quarantine names carry the time they were set aside") {
+                storage.enqueueBatch(marked("a"), windowStart: windowStart, for: sensor)
+                guard let headName = QueueFixture.batchFiles(root, sensor).first else { return fail("no head") }
+                try? Data("not json".utf8).write(to: QueueFixture.sensorDirectory(root, sensor).appendingPathComponent(headName))
+                let before = Int(Date().timeIntervalSince1970)
+                _ = storage.peekNextBatch(for: sensor, excluding: [])
+                guard let name = QueueFixture.quarantined(root).first, name.hasPrefix("q"),
+                      let stamp = Int(name.dropFirst().prefix { $0 != "_" }) else { return fail("no dated quarantine item") }
+                expect(stamp).to(beGreaterThanOrEqualTo(before))
+                expect(stamp).to(beLessThanOrEqualTo(before + 5))
             }
         }
     }
@@ -921,6 +933,7 @@ class SensorQueueDrainSpec: QuickSpec {
             joinDay = SensorSampleUploadManager.utcDayStart(Date()).addingTimeInterval(-30 * day)
             analytics = CapturingAnalyticsService()
             storage = DefaultsSensorStorage(queueDirectory: root, analytics: analytics)
+            storage.adoptOwner("participant-1") // FakeSensorClearance's participant
             clearance = FakeSensorClearance()
             clearance.enrollmentDate = joinDay
             network = ConcurrencyRecordingNetwork()
@@ -1031,7 +1044,7 @@ class SensorQueueDrainSpec: QuickSpec {
 
                 var sizes: [Int] = []
                 var indexes: [Int] = []
-                storage.forEachQueuedBatch(for: sensor) { batch in
+                QueueFixture.queuedBatches(storage, sensor).forEach { batch in
                     sizes.append((try? JSONSerialization.data(withJSONObject: batch.records))?.count ?? 0)
                     indexes += batch.records.compactMap { $0["i"] as? Int }
                 }
@@ -1105,7 +1118,7 @@ class SensorQueueDrainSpec: QuickSpec {
                 manager.handleWindowResult(.success(reports), window: window, at: 0, of: [window], context: context)
 
                 var sizes: [Int] = []
-                storage.forEachQueuedBatch(for: sensor) { batch in
+                QueueFixture.queuedBatches(storage, sensor).forEach { batch in
                     sizes.append((try? JSONSerialization.data(withJSONObject: batch.records))?.count ?? 0)
                 }
                 expect(sizes.count).to(beGreaterThanOrEqualTo(16))
@@ -1139,7 +1152,9 @@ class SensorQueueDrainSpec: QuickSpec {
                 manager.handleWindowResult(.success(records), window: window, at: 0, of: [window], context: context)
 
                 var batches: [[Int]] = []
-                storage.forEachQueuedBatch(for: sensor) { batch in batches.append(batch.records.compactMap { $0["seq"] as? Int }) }
+                QueueFixture.queuedBatches(storage, sensor).forEach { batch in
+                    batches.append(batch.records.compactMap { $0["seq"] as? Int })
+                }
                 expect(batches).to(equal([[0], [1], [2]]))
                 expect(storage.lastCursor(for: sensor, deviceKey: device.key)).to(equal(window.end))
 
@@ -1338,221 +1353,125 @@ class SensorQueueDrainSpec: QuickSpec {
             }
         }
 
-        describe("protected data unavailable, before the first unlock (review A-2)") {
+        describe("owner rules: session, ownership, unencodable records") {
 
-            it("no_purge_while_protected_data_is_unavailable") {
+            it("no_session_at_launch: nothing fetched, written, uploaded or deleted; the next trigger with a session proceeds") {
                 storage.enqueueBatch([record("queued")], windowStart: joinDay, for: sensor)
                 let cursor = joinDay.addingTimeInterval(20 * day)
                 storage.setLastCursor(cursor, for: sensor, deviceKey: SensorDevice.iphoneKey)
-                let manager = makeManager(storage: storage)
-                manager.isProtectedDataAvailable = { false }
-                // Before the first unlock the token reads as absent, so clearance reads as false.
+                let mapper = ClosureDeviceMapper { from, _ in [["t": QueueFixture.iso(from.addingTimeInterval(hour))]] }
+                let manager = makeManager(storage: storage, mapper: mapper)
+                manager.setNetworkDelegate(network)
+                // Token unreadable or absent: no clearance, no participant.
                 clearance.sensorManagerCanRun = false
+                clearance.participantId = nil
 
                 manager.startUploadLogic()
                 manager.triggerSync(reason: "spec")
                 manager.drainQueue(for: sensor)
 
-                expect(storage.isPurgePending).toAlways(beFalse(), until: .milliseconds(400))
+                expect(network.attemptCount).toAlways(equal(0), until: .milliseconds(400))
+                expect(mapper.callCount).to(equal(0))
                 expect(QueueFixture.batchFiles(root, sensor).count).to(equal(1))
                 expect(storage.lastCursor(for: sensor, deviceKey: SensorDevice.iphoneKey)).to(equal(cursor))
-            }
 
-            it("sync_resumes_normally_after_protected_data_becomes_available") {
-                storage.enqueueBatch([record("queued")], windowStart: joinDay, for: sensor)
-                let lock = NSLock()
-                var available = false
-                let manager = makeManager(storage: storage)
-                manager.isProtectedDataAvailable = {
-                    lock.lock(); defer { lock.unlock() }
-                    return available
-                }
-                manager.setNetworkDelegate(network)
-
-                manager.startUploadLogic() // deferred
-                manager.drainQueue(for: sensor)
-                expect(network.attemptCount).toAlways(equal(0), until: .milliseconds(300))
-                expect(QueueFixture.batchFiles(root, sensor).count).to(equal(1))
-
-                lock.lock(); available = true; lock.unlock()
-                manager.protectedDataBecameAvailable() // what the UIKit notification calls
-
-                expect(network.uploaded.count).toEventually(equal(1), timeout: .seconds(5))
-                expect(storage.pendingBatchCount(for: sensor)).toEventually(equal(0), timeout: .seconds(5))
-            }
-
-            it("purges once protected data is available if clearance is really gone") {
-                storage.enqueueBatch([record("queued")], windowStart: joinDay, for: sensor)
-                let lock = NSLock()
-                var available = false
-                let manager = makeManager(storage: storage)
-                manager.isProtectedDataAvailable = {
-                    lock.lock(); defer { lock.unlock() }
-                    return available
-                }
-                clearance.sensorManagerCanRun = false
-                manager.startUploadLogic()
-                expect(QueueFixture.batchFiles(root, sensor).count).toAlways(equal(1), until: .milliseconds(300))
-
-                lock.lock(); available = true; lock.unlock()
-                manager.protectedDataBecameAvailable()
-
-                expect(QueueFixture.batchFiles(root, sensor)).toEventually(beEmpty(), timeout: .seconds(5))
-            }
-        }
-
-        describe("protected-data cache refresh and purge re-arm (re-check A-7, F3)") {
-
-            afterEach {
-                // Leave the shared state as the simulator really is (available).
-                SensorProtectedDataState.shared.refreshFromApplicationState()
-            }
-
-            it("re-enables the pipeline at didBecomeActive when no 'available' notification came (A-7)") {
-                storage.enqueueBatch([record("queued")], windowStart: joinDay, for: sensor)
-                let manager = makeManager(storage: storage) // reads the shared protected-data state
-                manager.setNetworkDelegate(network)
-                NotificationCenter.default.post(name: Notification.Name("UIApplicationProtectedDataWillBecomeUnavailable"), object: nil)
-                expect(SensorProtectedDataState.shared.isAvailable).toEventually(beFalse(), timeout: .seconds(2))
-
-                manager.startUploadLogic() // deferred: protected data reads as unavailable
-                manager.drainQueue(for: sensor)
-                expect(network.attemptCount).toAlways(equal(0), until: .milliseconds(300))
-
-                // No "did become available" ever arrives; the app comes back to the foreground.
-                SensorProtectedDataState.shared.refreshFromApplicationState() // what didBecomeActive calls
-
-                expect(SensorProtectedDataState.shared.isAvailable).to(beTrue())
-                expect(network.uploaded.count).toEventually(equal(1), timeout: .seconds(5))
-            }
-
-            it("runs a purge skipped by the lock guard at the next trigger without clearance (F3)") {
-                storage.enqueueBatch([record("old-user")], windowStart: joinDay, for: sensor)
-                let lock = NSLock()
-                var calls = 0
-                var lockAfterFirstCheck = true
-                let manager = makeManager(storage: storage)
-                manager.isProtectedDataAvailable = {
-                    lock.lock(); defer { lock.unlock() }
-                    calls += 1
-                    // Available when triggerSync checks, locked when the purge runs.
-                    return !(lockAfterFirstCheck && calls > 1)
-                }
-                clearance.sensorManagerCanRun = false
-
-                manager.triggerSync(reason: "spec")
-                expect(QueueFixture.batchFiles(root, sensor).count).toAlways(equal(1), until: .milliseconds(300))
-
-                lock.lock(); lockAfterFirstCheck = false; lock.unlock()
-                manager.triggerSync(reason: "spec")
-
-                expect(QueueFixture.batchFiles(root, sensor)).toEventually(beEmpty(), timeout: .seconds(5))
-            }
-        }
-
-        describe("the kill-safe purge (R2 PR-7)") {
-
-            func batchRecords(_ marker: String, deviceKind: String = SensorDevice.iphoneKey) -> [[String: Any]] {
-                return [["t": QueueFixture.iso(joinDay.addingTimeInterval(10 * day)), "marker": marker, "device_kind": deviceKind]]
-            }
-
-            it("purge_rewinds_cursors_before_deleting_files (limit case 29)") {
-                let windowStart = joinDay.addingTimeInterval(10 * day)
-                storage.enqueueBatch(batchRecords("old"), windowStart: windowStart, for: sensor)
-                storage.setLastCursor(joinDay.addingTimeInterval(20 * day), for: sensor, deviceKey: SensorDevice.iphoneKey)
-                let recording = OrderRecordingStorage(base: storage)
-                let manager = makeManager(storage: recording)
-                clearance.sensorManagerCanRun = false
-
-                manager.triggerSync(reason: "spec")
-
-                expect(recording.calls).toEventually(contain("setPurgePending(false)"), timeout: .seconds(5))
-                let calls = recording.calls
-                let order = ["setPurgePending(true)", "forEachQueuedBatch", "setLastCursor", "purgeLedger", "deleteQueue",
-                             "setPurgePending(false)"]
-                expect(order.compactMap { calls.firstIndex(of: $0) }).to(equal(order.compactMap { calls.firstIndex(of: $0) }.sorted()))
-                expect(order.allSatisfy { calls.contains($0) }).to(beTrue())
-                expect(storage.lastCursor(for: sensor, deviceKey: SensorDevice.iphoneKey)).to(equal(windowStart))
-                expect(QueueFixture.batchFiles(root, SRSensor.accelerometer)).to(beEmpty())
-                expect(storage.isPurgePending).to(beFalse())
-            }
-
-            it("keeps the purge marker when a deletion fails, and uploads nothing until the purge completes (review A-3)") {
-                storage.enqueueBatch([record("old-user")], windowStart: joinDay, for: sensor)
-                let directory = QueueFixture.sensorDirectory(root, sensor)
-                try? FileManager.default.setAttributes([.posixPermissions: 0o555], ofItemAtPath: directory.path)
-                defer { try? FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: directory.path) }
-                let manager = makeManager(storage: storage)
-                manager.setNetworkDelegate(network)
-                clearance.sensorManagerCanRun = false
-
-                manager.triggerSync(reason: "spec") // the purge runs; its deletion fails
-
-                expect(storage.isPurgePending).toEventually(beTrue(), timeout: .seconds(5))
-                _ = manager.windowFetchFailureCount(for: sensor, deviceKey: device.key) // work-queue barrier
-                expect(storage.isPurgePending).to(beTrue())
-                expect(QueueFixture.batchFiles(root, sensor).count).to(equal(1))
-
-                // A new session: clearance is back, but the leftover must not upload.
                 clearance.sensorManagerCanRun = true
+                clearance.participantId = "participant-1"
                 manager.drainQueue(for: sensor)
-                expect(network.attemptCount).toAlways(equal(0), until: .milliseconds(300))
-
-                // The disk recovers: the next drain completes the purge, still uploading nothing.
-                try? FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: directory.path)
-                manager.drainQueue(for: sensor)
-                expect(storage.isPurgePending).toEventually(beFalse(), timeout: .seconds(5))
-                expect(QueueFixture.batchFiles(root, sensor)).to(beEmpty())
-                expect(network.attemptCount).toAlways(equal(0), until: .milliseconds(300))
+                expect(network.uploaded.count).toEventually(equal(1), timeout: .seconds(5))
+                expect(QueueFixture.batchFiles(root, sensor)).toEventually(beEmpty(), timeout: .seconds(5))
             }
 
-            it("purge_interrupted_then_new_login_uploads_nothing_of_the_old_user (limit case 44)") {
-                storage.enqueueBatch([record("old-user")], windowStart: joinDay, for: sensor)
-                storage.setPurgePending(true) // killed mid-purge
-                let relaunched = DefaultsSensorStorage(queueDirectory: root, analytics: analytics)
-                let manager = makeManager(storage: relaunched)
-                manager.setNetworkDelegate(network) // clearance is back (new login)
+            it("another_participants_batches_are_deleted_unsent; this participant's upload; one event") {
+                storage.adoptOwner("participant-A")
+                storage.enqueueBatch([record("a1")], windowStart: joinDay, for: sensor)
+                storage.enqueueBatch([record("a2")], windowStart: joinDay, for: sensor)
+                storage.setLastCursor(joinDay.addingTimeInterval(20 * day), for: sensor, deviceKey: SensorDevice.iphoneKey)
+                storage.adoptOwner("participant-B")
+                storage.enqueueBatch([record("b1")], windowStart: joinDay, for: sensor)
+                clearance.participantId = "participant-B"
+                let manager = makeManager(storage: storage)
+                manager.setNetworkDelegate(network)
 
                 manager.drainQueue(for: sensor)
 
-                expect(relaunched.isPurgePending).toEventually(beFalse(), timeout: .seconds(5))
-                expect(QueueFixture.batchFiles(root, sensor)).to(beEmpty())
-                expect(network.attemptCount).toAlways(equal(0), until: .milliseconds(300))
+                expect(network.uploaded.count).toEventually(equal(1), timeout: .seconds(5))
+                expect(markers(network.uploaded)).to(equal(["b1"]))
+                expect(network.attemptCount).toAlways(equal(1), until: .milliseconds(300))
+                expect(QueueFixture.batchFiles(root, sensor)).toEventually(beEmpty(), timeout: .seconds(5))
+                let foreign = analytics.trackedEvents.compactMap { event -> Int? in
+                    if case let .sensorRecordDropped(_, count, reason) = event, reason == "other_participant" { return count }
+                    return nil
+                }
+                expect(foreign).to(equal([2]))
+                // B starts with clean cursors: A's were reset when B was adopted.
+                expect(storage.lastCursor(for: sensor, deviceKey: SensorDevice.iphoneKey)).to(beNil())
             }
 
-            it("purge_removes_the_legacy_key_of_an_unmigrated_sensor and rewinds to its window (limit case 45)") {
-                let legacyWindow = joinDay.addingTimeInterval(5 * day)
-                QueueFixture.seedLegacy([["id": "legacy-1", "window_start": legacyWindow.timeIntervalSince1970,
-                                          "records": batchRecords("legacy")]], for: sensor)
-                let fresh = DefaultsSensorStorage(queueDirectory: root, analytics: analytics)
-                fresh.setLastCursor(joinDay.addingTimeInterval(20 * day), for: sensor, deviceKey: SensorDevice.iphoneKey)
-                let manager = makeManager(storage: fresh)
-                clearance.sensorManagerCanRun = false
-
-                manager.triggerSync(reason: "spec")
-
-                expect(UserDefaults.standard.data(forKey: QueueFixture.legacyKey(sensor))).toEventually(beNil(), timeout: .seconds(5))
-                expect(fresh.lastCursor(for: sensor, deviceKey: SensorDevice.iphoneKey)).toEventually(equal(legacyWindow),
-                                                                                                      timeout: .seconds(5))
-                // Nothing migrates later.
-                expect(DefaultsSensorStorage(queueDirectory: root).pendingBatchCount(for: sensor)).to(equal(0))
-            }
-
-            it("deletes a marker-listed legacy key without rewinding the cursor (R3 RR-5)") {
-                let blob = QueueFixture.seedLegacy([["id": "done-1", "window_start": joinDay.timeIntervalSince1970,
-                                                     "records": batchRecords("done")]], for: sensor)
-                expect(storage.pendingBatchCount(for: sensor)).to(equal(1))
-                storage.removeBatch(id: "done-1", for: sensor) // uploaded
-                UserDefaults.standard.set(blob, forKey: QueueFixture.legacyKey(sensor)) // removal lost
+            it("keeps the cursors of a participant recorded by an older build (adopted, not reset)") {
+                UserDefaults.standard.removeObject(forKey: "sensorkit.owner")
                 let cursor = joinDay.addingTimeInterval(20 * day)
                 storage.setLastCursor(cursor, for: sensor, deviceKey: SensorDevice.iphoneKey)
-                let manager = makeManager(storage: DefaultsSensorStorage(queueDirectory: root, analytics: analytics))
-                clearance.sensorManagerCanRun = false
-
-                manager.triggerSync(reason: "spec")
-
-                expect(UserDefaults.standard.data(forKey: QueueFixture.legacyKey(sensor))).toEventually(beNil(), timeout: .seconds(5))
+                storage.adoptOwner("participant-1")
                 expect(storage.lastCursor(for: sensor, deviceKey: SensorDevice.iphoneKey)).to(equal(cursor))
+            }
+
+            func windowContext() -> (DateInterval, SensorSampleUploadManager.DeviceChainContext) {
+                let window = DateInterval(start: joinDay.addingTimeInterval(5 * day), end: joinDay.addingTimeInterval(6 * day))
+                let context = SensorSampleUploadManager.DeviceChainContext(sensor: sensor,
+                                                                           device: device,
+                                                                           devices: [device],
+                                                                           deviceIndex: 0,
+                                                                           now: Date(),
+                                                                           mapper: ClosureDeviceMapper { _, _ in [] },
+                                                                           plannedBound: joinDay)
+                return (window, context)
+            }
+
+            func setAsideCount() -> Int {
+                return analytics.trackedEvents.compactMap { event -> Int? in
+                    if case let .sensorRecordDropped(_, count, reason) = event, reason == "unencodable_record" { return count }
+                    return nil
+                }.reduce(0, +)
+            }
+
+            it("window_with_one_unencodable_record: the valid ones are enqueued, the bad one set aside, the cursor advances") {
+                let (window, context) = windowContext()
+                let records: [[String: Any]] = [["t": QueueFixture.iso(window.start.addingTimeInterval(hour)), "v": 1.0],
+                                                ["t": QueueFixture.iso(window.start.addingTimeInterval(2 * hour)), "v": Double.nan],
+                                                ["t": QueueFixture.iso(window.start.addingTimeInterval(3 * hour)), "v": 3.0]]
+                let manager = makeManager(storage: storage)
+
+                manager.handleWindowResult(.success(records), window: window, at: 0, of: [window], context: context)
+
+                var enqueued: [Double] = []
+                while let batch = storage.dequeueNextBatch(for: sensor) {
+                    enqueued += batch.records.compactMap { $0["v"] as? Double }
+                }
+                expect(enqueued).to(equal([1.0, 3.0]))
+                let items = QueueFixture.quarantined(root)
+                expect(items.count).to(equal(1))
+                expect(items.first?.hasSuffix("_unencodable_record.json")).to(beTrue())
+                let itemURL = items.first.map { root.appendingPathComponent("_quarantine").appendingPathComponent($0) }
+                let described = itemURL.flatMap { try? JSONSerialization.jsonObject(with: Data(contentsOf: $0)) } as? [[String: Any]]
+                expect(described?.first?["index"] as? Int).to(equal(1))
+                expect(described?.first?["keys"] as? [String]).to(contain("t", "v"))
+                expect(setAsideCount()).to(equal(1))
+                expect(storage.lastCursor(for: sensor, deviceKey: device.key)).to(equal(window.end))
+            }
+
+            it("window_where_every_record_is_unencodable: all set aside, no batch file, the cursor advances") {
+                let (window, context) = windowContext()
+                let records: [[String: Any]] = [["t": QueueFixture.iso(window.start.addingTimeInterval(hour)), "v": Double.nan],
+                                                ["t": QueueFixture.iso(window.start.addingTimeInterval(2 * hour)), "v": Double.infinity]]
+                let manager = makeManager(storage: storage)
+
+                manager.handleWindowResult(.success(records), window: window, at: 0, of: [window], context: context)
+
+                expect(QueueFixture.batchFiles(root, sensor)).to(beEmpty())
+                expect(QueueFixture.quarantined(root).count).to(equal(1))
+                expect(setAsideCount()).to(equal(2))
+                expect(storage.lastCursor(for: sensor, deviceKey: device.key)).to(equal(window.end))
             }
 
             it("key_removal_lost_after_drain_does_not_reupload (limit case 39)") {

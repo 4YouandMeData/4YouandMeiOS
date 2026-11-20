@@ -1322,6 +1322,7 @@ final class FakeSensorReachability: SensorSampleUploadManagerReachability {
 
 final class FakeSensorClearance: SensorSampleUploadManagerClearanceDelegate {
     var sensorManagerCanRun: Bool = true
+    var participantId: String? = "participant-1"
     var enrollmentDate: Date?
     /// UTC by default, so every pre-existing grid assertion stays byte-identical (a UTC
     /// participant gets exactly the round-7 grid); tz-specific specs override it.
@@ -2645,6 +2646,7 @@ class SensorLegacyQueuePurgeSpec: QuickSpec {
         beforeEach {
             root = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("fuam4516-\(UUID().uuidString)")
             storage = DefaultsSensorStorage(queueDirectory: root)
+            storage.adoptOwner("participant-1") // migration runs only with a session (FUAM-4516)
             // The pre-FUAM-3945 shape: [[[String: Any]]] — an array of batches of records.
             let legacy: [[[String: Any]]] = [[["t": "2025-01-01T00:00:00Z", "steps": 10]],
                                              [["t": "2025-01-02T00:00:00Z", "steps": 20]]]
@@ -2694,7 +2696,9 @@ class SensorLegacyQueuePurgeSpec: QuickSpec {
             expect(head.id.hasPrefix("legacy-")).to(beTrue())                  // a content id (R2 PR-18)
             expect(storage.pendingBatchCount(for: sensor)).to(equal(2))       // peek removes nothing
             // A process restart (fresh instance) sees the same id: it is in the file name.
-            expect(DefaultsSensorStorage(queueDirectory: root).peekNextBatch(for: sensor, excluding: [])?.id).to(equal(head.id))
+            let relaunched = DefaultsSensorStorage(queueDirectory: root)
+            relaunched.adoptOwner("participant-1")
+            expect(relaunched.peekNextBatch(for: sensor, excluding: [])?.id).to(equal(head.id))
             // `excluding` still skips the given ids.
             expect(storage.peekNextBatch(for: sensor, excluding: [head.id])?.records.first?["steps"] as? Int).to(equal(2))
 
@@ -3843,90 +3847,6 @@ final class ClosureDeviceMapper: SensorSampleMapper {
             completion(.failure(NSError(domain: "spec.mapper", code: 1)))
         } else {
             completion(.success(self.recordsForWindow(from, to)))
-        }
-    }
-}
-
-// MARK: - FUAM-3945 round 6 (V4): a purge rewinds the cursors past the windows it dropped
-
-/// Logout (or any clearance loss) purges every queued batch and keeps the cursors (FUAM-3844).
-/// The cursor already moved past each queued window at enqueue, so without a rewind the next plan
-/// resumes from the cursor plus the 3-day rescan tail and every purged window older than that is
-/// never fetched again. Driven through the real `triggerSync` clearance-loss path.
-class SensorPurgeRewindSpec: QuickSpec {
-
-    override class func spec() {
-
-        let day: TimeInterval = 24 * 3600
-        let sensor = SRSensor.pedometerData
-        let watch = SensorDevice.watchKey
-        let today = SensorSampleUploadManager.utcDayStart(Date())
-        let cursor = today.addingTimeInterval(-2 * day)
-
-        var storage: FakeSensorStorage!
-        var clearance: FakeSensorClearance!
-        var manager: SensorSampleUploadManager!
-
-        beforeEach {
-            storage = FakeSensorStorage()
-            clearance = FakeSensorClearance()
-            manager = SensorSampleUploadManager(withSensors: [sensor],
-                                                storage: storage,
-                                                reachability: FakeSensorReachability(),
-                                                analytics: CapturingAnalyticsService(),
-                                                mappers: [sensor: FakeSensorMapper()])
-            manager.clearanceDelegate = clearance
-            storage.setLastCursor(cursor, for: sensor)
-            storage.setLastCursor(cursor, for: sensor, deviceKey: watch)
-        }
-
-        /// Returns once the purge block has finished: the ledger purge runs after the rewind in
-        /// the same `workQueue` block, so every cursor below is final when the ledger is empty.
-        func purge() {
-            storage.setLedger(["seen": SensorLedgerEntry(day: cursor)], for: sensor)
-            clearance.sensorManagerCanRun = false // logout: no user, hence no join day either
-            manager.triggerSync(reason: "logout")
-            expect(storage.ledger(for: sensor)).toEventually(beEmpty(), timeout: .seconds(5))
-        }
-
-        it("rewinds each device kind's cursor to the earliest window it lost") {
-            storage.seed(records: [["steps": 1, "device_kind": "iphone"]],
-                         windowStart: cursor.addingTimeInterval(-7 * day),
-                         for: sensor)
-            storage.enqueueBatch([["steps": 2, "device_kind": watch]], windowStart: cursor.addingTimeInterval(-5 * day), for: sensor)
-            storage.enqueueBatch([["steps": 3, "device_kind": "iphone"]], windowStart: cursor.addingTimeInterval(-1 * day), for: sensor)
-
-            purge()
-
-            expect(storage.lastCursor(for: sensor)).to(equal(cursor.addingTimeInterval(-7 * day)))
-            expect(storage.lastCursor(for: sensor, deviceKey: watch)).to(equal(cursor.addingTimeInterval(-5 * day)))
-            expect(storage.pendingBatchCount(for: sensor)).to(equal(0))
-        }
-
-        it("treats an untagged batch as the iPhone's and never moves a cursor forward") {
-            storage.seed(records: [["steps": 1]], windowStart: cursor.addingTimeInterval(-6 * day), for: sensor)
-            // A watch batch AHEAD of the watch cursor (a cursor reset after it was queued).
-            storage.enqueueBatch([["steps": 2, "device_kind": watch]], windowStart: cursor.addingTimeInterval(day), for: sensor)
-
-            purge()
-
-            expect(storage.lastCursor(for: sensor)).to(equal(cursor.addingTimeInterval(-6 * day)))
-            expect(storage.lastCursor(for: sensor, deviceKey: watch)).to(equal(cursor))
-        }
-
-        it("never rewinds below the consent bound when the join day is still known") {
-            let joinDay = cursor.addingTimeInterval(-3 * day)
-            clearance.enrollmentDate = joinDay
-            // Queued under an older, wider bound.
-            storage.seed(records: [["steps": 1, "device_kind": "iphone"]],
-                         windowStart: cursor.addingTimeInterval(-10 * day),
-                         for: sensor)
-
-            purge()
-
-            let bound = BackfillLowerBound.resolve(joinDay: joinDay, now: max(Date(), ServerClock.now())).date
-            expect(storage.lastCursor(for: sensor)).to(equal(bound))
-            expect(storage.lastCursor(for: sensor, deviceKey: watch)).to(equal(cursor)) // it lost nothing
         }
     }
 }
