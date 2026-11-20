@@ -11,6 +11,10 @@ import FirebaseCore
 
 public class FYAMManager {
     
+    /// The window built by the first `startup` call. Later calls return it unchanged (FUAM-4519).
+    /// Internal, not private: test seam (the test bundle links its own copy of the framework).
+    static var startedWindow: UIWindow?
+    
     public static var orientationLock: UIInterfaceOrientationMask { OrientationManager.currentOrientationLock }
     
     /// Boots the framework and returns a configured window for the host app.
@@ -22,6 +26,9 @@ public class FYAMManager {
     ///   contain user data, so a host app team must opt in knowingly —
     ///   anything they print during a Jam recording is included in the
     ///   recording. Default `false`.
+    ///
+    /// Idempotent: the first call in a process does the one-time setup (Firebase, services) and later
+    /// calls return the same window, ignoring their parameters. Main thread only.
     public static func startup(withFontStyleMap fontStyleMap: FontStyleMap,
                                showDefaultUserInfo: Bool,
                                appleWatchAlternativeIntegrations: [Integration],
@@ -31,6 +38,14 @@ public class FYAMManager {
                                defaultDoseType: DoseType? = nil,
                                mirrorPrintToJam: Bool = false,
                                networkBodyCaptureMode: NetworkBodyCaptureMode = .truncated) -> UIWindow {
+        assert(Thread.isMainThread, "FYAMManager.startup must be called on the main thread")
+        if let startedWindow = startedWindow {
+            #if DEBUG
+            print("FYAMManager.startup already ran in this process: reusing the cached window, parameters ignored")
+            #endif
+            return startedWindow
+        }
+
         if mirrorPrintToJam {
             StdoutMirror.install()
         }
@@ -66,6 +81,7 @@ public class FYAMManager {
                                                   appleWatchAlternativeIntegrations: appleWatchAlternativeIntegrations,
                                                   defaultDoseType: defaultDoseType)
         Services.shared.setup(withWindow: window, servicesSetupData: servicesSetupData)
+        startedWindow = window
         
         return window
     }

@@ -239,6 +239,9 @@ If you have installed ForYouAndMe on a brand new project, there are a few files 
 1.  Remove `Main.storyboard`.
     
 2.  Remove `SceneDelegate.swift`.
+
+    
+    **Note:** apps built with Xcode 27 for iOS 27 must keep a scene manifest (apps without one fail at launch there), so on that toolchain do not remove `SceneDelegate.swift` and the manifest below; see "Scene-based hosts (UIScene lifecycle)" for the supported setup. The full README rework for scene-based hosts is tracked in FUAM-4196.
     
 3.  Remove `ViewController.swift`.
     
@@ -246,6 +249,8 @@ If you have installed ForYouAndMe on a brand new project, there are a few files 
 #### From the info.plist file
 
 Remove the `UIApplicationSceneManifest` entry from `info.plist`.
+
+(Not on Xcode 27 / iOS 27: keep the scene manifest there, see the note above and "Scene-based hosts (UIScene lifecycle)".)
 
 #### In the General Tab
 
@@ -407,6 +412,24 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 }
 
 ```
+
+### Scene-based hosts (UIScene lifecycle)
+
+The setup above assumes the AppDelegate lifecycle. If your app keeps a `SceneDelegate`, calling `FYAMManager.startup` from `scene(_:willConnectTo:session:options:)` is also supported. `startup` is idempotent: the first call in a process does the one-time setup, and every later call (for example when iOS disconnects the scene in the background and connects a new one in the same process) returns the same window and ignores its parameters. Call it on the main thread, attach the returned window to the connecting scene, then call `makeKeyAndVisible()`:
+
+```swift
+func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
+    guard let windowScene = scene as? UIWindowScene else { return }
+    let window = FYAMManager.startup(withFontStyleMap: fontStyleMap,
+                                     showDefaultUserInfo: true,
+                                     appleWatchAlternativeIntegrations: [.garmin, .fitbit])
+    window.windowScene = windowScene
+    window.makeKeyAndVisible()
+    self.window = window
+}
+```
+
+Only a single scene is supported: a window can belong to one scene at a time.
 
 ### Launch Screen (Optional)
 
