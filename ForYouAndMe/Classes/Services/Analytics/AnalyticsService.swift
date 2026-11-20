@@ -228,7 +228,11 @@ enum AnalyticsEvent {
     // deliberate, but never silent (AC6). `reason` "join_boundary" is a SUB-count of
     // "consent_gate": report records whose derived period start fell below the join bound by
     // less than one report period — the drops the X3 timestamp-semantics ambiguity may be
-    // costing (FUAM-3945 fidelity audit).
+    // costing (FUAM-3945 fidelity audit). FUAM-4516: for the queue-file reasons `count` counts
+    // BATCHES, not records (a batch file's record count is unknowable or irrelevant there):
+    // "batch_unparseable" and "batch_unreadable" (moved to quarantine, kept, never uploaded) and
+    // "batch_remove_failed" (uploaded or dropped, its file not deleted yet; nothing is lost).
+    // Filter on `reason` before summing records.
     case sensorRecordDropped(sensor: String, count: Int, reason: String)
     // FUAM-3945 fidelity audit (X1). A mapped record carried entries whose documented field the
     // OS did not populate (today: device-usage `applications[]` without `usage_s`). `missing`
