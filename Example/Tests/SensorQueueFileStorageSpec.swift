@@ -1068,13 +1068,22 @@ class SensorQueueDrainSpec: QuickSpec {
                 expect(batches.map { $0.count }).to(equal([500, 1]))
             }
 
-            it("estimates a record array's JSON size without serializing it, within a few percent") {
+            it("estimates a record array's JSON size without serializing it (review B-1/B-2)") {
                 let small: [[String: Any]] = [["a": 1], ["b": "two"], ["c": [1, 2, 3]], ["d": 0.5, "e": NSNull()]]
+                // The value types review B-2 measured low: booleans, fractional and epoch doubles,
+                // escaped strings, control characters, multi-byte text, a key needing an escape.
+                let awkward: [[String: Any]] = [["flag": true, "off": false, "ratio": 0.1, "third": 1.0 / 3.0,
+                                                 "sr_absolute_time": 784_312_345.123, "tiny": 1e-7, "whole": 900.0,
+                                                 "big": 123_456_789_012.5, "neg": -0.75],
+                                                ["url": "https://example.com/a/b", "quote": "say \"hi\" \\ ok",
+                                                 "controls": "\u{08}\u{0C}\n\r\t\u{01}\u{1F}", "text": "é€😀",
+                                                 "a/b": "slash key"]]
                 let heavy = [QueueFixture.heavyReport(0, at: joinDay), QueueFixture.heavyReport(1, at: joinDay)]
-                for records in [small, heavy] {
+                for records in [small, awkward, heavy] {
+                    // Exact on iOS 18.4; 1% leaves room for Foundation changing its float format.
                     let actual = Double((try? JSONSerialization.data(withJSONObject: records))?.count ?? 0)
                     let estimate = Double(SensorSampleUploadManager.estimatedJSONBytes(of: records))
-                    expect(estimate).to(beCloseTo(actual, within: actual * 0.05))
+                    expect(estimate).to(beCloseTo(actual, within: actual * 0.01))
                 }
                 expect(SensorSampleUploadManager.estimatedJSONBytes(of: [])).to(equal(2))
             }

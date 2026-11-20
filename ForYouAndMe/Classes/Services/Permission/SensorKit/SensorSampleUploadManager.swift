@@ -192,11 +192,14 @@ public final class SensorSampleUploadManager {
     /// `probe_buffer_overflow` telemetry trace. Internal and mutable for the overflow specs only.
     var probeBufferMaxRecords: Int = 10_000
 
-    /// FUAM-4516 (plan R4): the probe buffer is bounded by estimated JSON BYTES as well as by
-    /// records. With 200 KB device-usage records the record cap alone allows about 2 GB in memory,
-    /// and release safety must not depend on FUAM-4515 shrinking them. The estimate serializes each
-    /// buffered record once, one record at a time inside an autorelease pool, so it costs CPU but
-    /// never more memory than one record. Internal and mutable for the overflow specs only.
+    /// FUAM-4516 (plan R4/R5): the probe buffer is bounded by estimated JSON BYTES as well as by
+    /// records. With 200 KB raw device-usage reports the record cap alone allows about 2 GB in
+    /// memory. The budget counts JSON bytes (`estimatedJSONBytes`, which serializes nothing), not
+    /// memory: mapper-built reports occupy about 5x their JSON as live objects, so for the heaviest
+    /// participant 8 MiB of JSON is about 42 MB of objects (review B-1). The check runs after a
+    /// whole window was buffered, so the buffer can overshoot by one window before it flushes; for
+    /// her device usage the first window alone overflows and the probe goes as-you-go.
+    /// Internal and mutable for the overflow specs only.
     var probeBufferMaxBytes: Int = 8 * 1024 * 1024
 
     /// FUAM-4516: the process's available memory in bytes (`os_proc_available_memory`), injectable
@@ -1977,13 +1980,15 @@ public final class SensorSampleUploadManager {
         }
     }
 
-    /// FUAM-4516 (plan R4/R5): an ESTIMATE of the JSON size of `records`, for the probe buffer's
-    /// byte budget. It walks the values and adds up what compact JSON would spend on them (string
-    /// UTF-8 lengths plus quotes, number digits, braces, colons, commas), without serializing
-    /// anything: no buffer is allocated, so measuring costs no memory. It ignores string escapes
-    /// (`\/`, `\"`, control characters), so it can come out a few percent low; the 8 MiB budget
-    /// is a memory bound, not a wire limit, so that is irrelevant. The upload cap is enforced
-    /// exactly by `splitRespectingPayloadLimit`.
+    /// FUAM-4516 (plan R4/R5): the JSON size of `records` as compact `JSONSerialization` writes it,
+    /// for the probe buffer's byte budget, computed WITHOUT serializing: no buffer is allocated,
+    /// so measuring costs no memory. It walks the values and adds string UTF-8 lengths plus quotes
+    /// and escapes (`/`, `"`, `\` and `\b\f\n\r\t` take one extra byte, other control
+    /// characters five), booleans as `true`/`false`, integers and integral doubles by their digits,
+    /// other doubles by their `%.17g` form (what `JSONSerialization` writes), and braces, colons
+    /// and commas. Review B-2 measured the previous version up to 2.75x low for booleans, 1.37x for
+    /// fractional doubles and 3.3x for control characters; those are now counted as written. The
+    /// 1 MiB upload cap does not rely on it: `splitRespectingPayloadLimit` measures exactly.
     static func estimatedJSONBytes(of records: [[String: Any]]) -> Int {
         return Self.estimatedJSONBytes(ofValue: records)
     }
@@ -1991,13 +1996,13 @@ public final class SensorSampleUploadManager {
     private static func estimatedJSONBytes(ofValue value: Any) -> Int {
         switch value {
         case let string as String:
-            return string.utf8.count + 2
+            return Self.estimatedJSONBytes(ofString: string)
         case let number as NSNumber:
-            return number.stringValue.utf8.count
+            return Self.estimatedJSONBytes(ofNumber: number)
         case let dictionary as [String: Any]:
             // `{` `}`, a comma between entries, and `"key":` per entry.
             return dictionary.reduce(max(2, dictionary.count + 1)) { total, entry in
-                total + entry.key.utf8.count + 3 + Self.estimatedJSONBytes(ofValue: entry.value)
+                total + Self.estimatedJSONBytes(ofString: entry.key) + 1 + Self.estimatedJSONBytes(ofValue: entry.value)
             }
         case let array as [Any]:
             return array.reduce(max(2, array.count + 1)) { total, element in
@@ -2007,6 +2012,34 @@ public final class SensorSampleUploadManager {
             // NSNull ("null") and anything JSON cannot carry.
             return 4
         }
+    }
+
+    private static func estimatedJSONBytes(ofString string: String) -> Int {
+        var bytes = 2 // quotes
+        for byte in string.utf8 {
+            switch byte {
+            case 0x22, 0x2F, 0x5C, 0x08, 0x09, 0x0A, 0x0C, 0x0D:
+                bytes += 2
+            case 0x00..<0x20:
+                bytes += 6
+            default:
+                bytes += 1
+            }
+        }
+        return bytes
+    }
+
+    private static func estimatedJSONBytes(ofNumber number: NSNumber) -> Int {
+        if CFGetTypeID(number) == CFBooleanGetTypeID() {
+            return number.boolValue ? 4 : 5
+        }
+        if CFNumberIsFloatType(number) {
+            let value = number.doubleValue
+            if value.rounded() != value || abs(value) >= 1e15 {
+                return String(format: "%.17g", value).utf8.count
+            }
+        }
+        return number.stringValue.utf8.count
     }
 
     /// Uploads queued batches. The cursor is NEVER touched here (review fix #3): it is owned
