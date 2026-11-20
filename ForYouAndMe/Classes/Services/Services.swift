@@ -207,7 +207,8 @@ class Services {
             // `SensorKitManager` requires a non-empty sensor set; an entitlement covering none of
             // the configured sensors means there is no SensorKit service to build at all.
             if !skSensors.isEmpty {
-                let skStorage: SensorKitManagerStorage = DefaultsSensorStorage()
+                let skStorage: SensorKitManagerStorage = DefaultsSensorStorage(queueDirectory: DefaultsSensorStorage.defaultQueueDirectory,
+                                                                               analytics: analytics)
                 let skReachability: SensorKitManagerReachability = NWPathReachability()
 
                 let skManager = SensorKitManager(

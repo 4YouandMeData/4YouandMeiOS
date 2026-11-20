@@ -101,20 +101,25 @@ extension DeviceUsageReportMapper: SRSensorReaderDelegate {
         fetching fetchRequest: SRFetchRequest,
         didFetchResult result: SRFetchResult<AnyObject>
     ) -> Bool {
-        // Attach SRFetchResult.timestamp
-        let recordedAt = dateFromSRAbsoluteTime(result.timestamp)
-        fetchedResults += 1
+        // FUAM-4516: free the objects this result's mapping creates (KVC results, intermediate
+        // dictionaries) before the next result arrives. The SRFetchResult itself is autoreleased
+        // by SensorKit's caller, outside this pool.
+        return autoreleasepool { () -> Bool in
+            // Attach SRFetchResult.timestamp
+            let recordedAt = dateFromSRAbsoluteTime(result.timestamp)
+            fetchedResults += 1
 
-        // Aggregated report (not a CMSensorDataList)
-        if let obj = result.sample as? NSObject,
-           let rec = Self.mapDeviceUsage(obj, recordedAt: recordedAt) {
-            // FUAM-3945: ledger identity — the raw monotonic timestamp, never its wall
-            // projection (see SensorRecordIdentity). Stripped before upload.
-            collected.append(SensorRecordIdentity.stamped(rec,
-                                                          raw: result.timestamp,
-                                                          replacing: ["recorded_at", "recorded_at_precise"]))
+            // Aggregated report (not a CMSensorDataList)
+            if let obj = result.sample as? NSObject,
+               let rec = Self.mapDeviceUsage(obj, recordedAt: recordedAt) {
+                // FUAM-3945: ledger identity — the raw monotonic timestamp, never its wall
+                // projection (see SensorRecordIdentity). Stripped before upload.
+                collected.append(SensorRecordIdentity.stamped(rec,
+                                                              raw: result.timestamp,
+                                                              replacing: ["recorded_at", "recorded_at_precise"]))
+            }
+            return true // keep fetching
         }
-        return true // keep fetching
     }
 
     func sensorReader(_ reader: SRSensorReader, didCompleteFetch fetchRequest: SRFetchRequest) {
