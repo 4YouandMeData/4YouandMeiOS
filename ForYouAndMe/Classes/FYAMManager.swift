@@ -63,6 +63,14 @@ public class FYAMManager {
         // Firebase Setup
         FirebaseApp.configure()
         FirebaseConfiguration.shared.setLoggerLevel(.min)
+
+        // FUAM-4518: attribute start-up crashes to the stored participant. CacheManager reads UserDefaults only,
+        // so it needs no Services graph.
+        CrashlyticsSink.setUser(id: CacheManager().user?.id)
+
+        // FUAM-4518: daily MetricKit app-exit report. Registered right after Firebase, before the services build
+        // (idempotent: subscribes once per process).
+        AppExitMetricsReporter.start()
         
         // ProjectInfo Validation
         ProjectInfo.validate()
@@ -84,9 +92,6 @@ public class FYAMManager {
                                                   appleWatchAlternativeIntegrations: appleWatchAlternativeIntegrations,
                                                   defaultDoseType: defaultDoseType)
         Services.shared.setup(withWindow: window, servicesSetupData: servicesSetupData)
-
-        // FUAM-4518: cold start with an existing session.
-        CrashlyticsSink.setUser(id: Services.shared.storageServices.user?.id)
 
         startedWindow = window
         

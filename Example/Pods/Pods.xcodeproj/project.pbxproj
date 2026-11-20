@@ -3169,6 +3169,7 @@
 		F4BB7FD420F9926CB315CEF48F7ECEB9 /* ORKVideoInstructionStep.h in Headers */ = {isa = PBXBuildFile; fileRef = 286F381AC502CF2323F87F64A0AA7A7E /* ORKVideoInstructionStep.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		F4C0F26F7BCE9305759A7AA5E3933A8F /* ORKConsentDocument.h in Headers */ = {isa = PBXBuildFile; fileRef = 53D98109B0A5B5A6D813282F20D3E262 /* ORKConsentDocument.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		F4C8886D03870159DD7DC720C5855403 /* ORKLabel.h in Headers */ = {isa = PBXBuildFile; fileRef = 04D3E5995354672AD6BE7FA786257BFB /* ORKLabel.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		F4C91A40265618F0F7E8D764C1B72D40 /* AppExitMetricsReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D7744BB0077455D3898F874AC32D9F9 /* AppExitMetricsReporter.swift */; };
 		F4D4A46300A683BEF963F662E0D5A439 /* MenstrualPeriodAddCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 882CBFA82F3A3173A2021E3447840FC2 /* MenstrualPeriodAddCell.swift */; };
 		F4F45BFEA1CD6D5B1F05A6C6D5013081 /* DisposeBag.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90F53CF577D5C2F92D3BACC8FE8502C1 /* DisposeBag.swift */; };
 		F4F8D036906C85EDCC7F8A8F758AD1E9 /* DefaultService+Sensitivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = F84AB0EEBC6E58D030DA1AAC1167246F /* DefaultService+Sensitivity.swift */; };
@@ -7675,6 +7676,7 @@
 		F58211A14F0D8702A4613EE3B20C3065 /* ParseManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ParseManager.swift; path = PhoneNumberKit/ParseManager.swift; sourceTree = "<group>"; };
 		F58670B8E982AF4A0E87701D5EAA6EBE /* _RXDelegateProxy.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = _RXDelegateProxy.m; path = RxCocoa/Runtime/_RXDelegateProxy.m; sourceTree = "<group>"; };
 		F5C324C2AA4DA7B59A8AF2CA4D165388 /* OptInPermission.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = OptInPermission.swift; sourceTree = "<group>"; };
+		2D7744BB0077455D3898F874AC32D9F9 /* AppExitMetricsReporter.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AppExitMetricsReporter.swift; sourceTree = "<group>"; };
 		F5CB8CE09DC57180A5688CBCFF7E87A8 /* LuminanceThreshold.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = LuminanceThreshold.swift; path = framework/Source/Operations/LuminanceThreshold.swift; sourceTree = "<group>"; };
 		F5D5BE53DCA6FCC44E885BA53B62CE79 /* MultiplyBlend_GLES.fsh */ = {isa = PBXFileReference; includeInIndex = 1; name = MultiplyBlend_GLES.fsh; path = framework/Source/Operations/Shaders/MultiplyBlend_GLES.fsh; sourceTree = "<group>"; };
 		F5D732341D426F240F8D6A07327687B1 /* ORKTouchAbilityScrollStep.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = ORKTouchAbilityScrollStep.h; path = ResearchKit/ActiveTasks/ORKTouchAbilityScrollStep.h; sourceTree = "<group>"; };
@@ -11060,6 +11062,7 @@
 		9FB70F970A9B96A140D062AB581EFB0B /* Telemetry */ = {
 			isa = PBXGroup;
 			children = (
+				2D7744BB0077455D3898F874AC32D9F9 /* AppExitMetricsReporter.swift */,
 				408237AB9AEEA91276ED256059B66067 /* Redactor.swift */,
 				2EF826C8D6FB62BFE2F199028135FD76 /* Telemetry.swift */,
 				E58058E553103228002E90CD80C52A9C /* TelemetryCategory.swift */,
@@ -17151,6 +17154,7 @@
 				316207F566309AA739B71A0D1AD1CF09 /* ApiContext.swift in Sources */,
 				A9239C089B049C7B4013B2ED92B8945A /* ApiDateFormatter.swift in Sources */,
 				9855B1A8F7EF062531ACA8DBCF82F423 /* ApiGateway.swift in Sources */,
+				F4C91A40265618F0F7E8D764C1B72D40 /* AppExitMetricsReporter.swift in Sources */,
 				8C114BCF1AA6946BEF237249C010095B /* AppNavigator.swift in Sources */,
 				ADDDFFAB1F09D251269F26BCD8BC8F87 /* Async.swift in Sources */,
 				CDBB6A833BA74DC61C6DB075FE317C6A /* AttributedTextStyle.swift in Sources */,
