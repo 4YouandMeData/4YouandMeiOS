@@ -12,7 +12,7 @@ import FirebaseCore
 public class FYAMManager {
     
     /// The window built by the first `startup` call. Later calls return it unchanged (FUAM-4519).
-    /// Internal (not private) only so the unit spec can seed it.
+    /// Internal, not private: test seam (the test bundle links its own copy of the framework).
     static var startedWindow: UIWindow?
     
     public static var orientationLock: UIInterfaceOrientationMask { OrientationManager.currentOrientationLock }
