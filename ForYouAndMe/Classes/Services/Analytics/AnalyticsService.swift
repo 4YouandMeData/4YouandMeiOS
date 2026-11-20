@@ -80,6 +80,9 @@ enum AnalyticsParameter: String {
     // FUAM-3945 fidelity audit (X1). Field-level completeness attributes.
     case field
     case total
+    // FUAM-4516. Queue migration attributes.
+    case legacyBytes = "legacy_bytes"
+    case outcome
 }
 
 enum AnalyticsScreens: String {
@@ -235,6 +238,11 @@ enum AnalyticsEvent {
     // `user.time_zone` was available (AC2 revised): the partition may not match the adherence
     // chart's bucketing until the user record loads. Once per launch.
     case sensorTimezoneFallback(reason: String)
+    // FUAM-4516. A sensor's 0.101.16/17 UserDefaults upload queue was moved to the file-per-batch
+    // queue. `outcome` is "ok", "partial_disk_error" (stopped on a write error, resumed at the next
+    // launch) or "unparseable" (raw bytes kept in quarantine, never uploaded). Once per sensor per
+    // install, plus once per launch while a partial migration keeps failing.
+    case sensorQueueMigrated(sensor: String, batchCount: Int, legacyBytes: Int, outcome: String)
 
     // Errors
     case serverError(apiError: ApiError)

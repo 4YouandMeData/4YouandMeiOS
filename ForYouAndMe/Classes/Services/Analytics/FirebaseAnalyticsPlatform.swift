@@ -49,6 +49,8 @@ private enum FirebaseEventCustomName: String {
     // FUAM-3945 fidelity audit (X1). Documented field absent from mapped entries.
     case sensorFieldMissing = "sensor_field_missing"
     case sensorTimezoneFallback = "sensor_tz_fallback"
+    // FUAM-4516. Upload-queue migration.
+    case sensorQueueMigrated = "sensor_queue_migrated"
 }
 
 private enum FirebaseErrorDomain {
@@ -179,6 +181,14 @@ class FirebaseAnalyticsPlatform: AnalyticsPlatform {
         case .sensorTimezoneFallback(let reason):
             self.sendEvent(withEventName: FirebaseEventCustomName.sensorTimezoneFallback.rawValue,
                            parameters: [AnalyticsParameter.reason.rawValue: reason])
+        case .sensorQueueMigrated(let sensor, let batchCount, let legacyBytes, let outcome):
+            self.sendEvent(withEventName: FirebaseEventCustomName.sensorQueueMigrated.rawValue,
+                           parameters: [
+                               AnalyticsParameter.sensor.rawValue: sensor,
+                               AnalyticsParameter.count.rawValue: batchCount,
+                               AnalyticsParameter.legacyBytes.rawValue: legacyBytes,
+                               AnalyticsParameter.outcome.rawValue: outcome
+                           ])
         case .sensorFieldMissing(let sensor, let field, let missing, let total):
             self.sendEvent(withEventName: FirebaseEventCustomName.sensorFieldMissing.rawValue,
                            parameters: [

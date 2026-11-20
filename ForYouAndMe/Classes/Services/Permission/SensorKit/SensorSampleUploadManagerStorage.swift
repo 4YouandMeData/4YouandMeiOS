@@ -5,6 +5,7 @@
 //  Created by Giuseppe Lapenta on 01/08/25.
 //
 
+import CryptoKit
 import Foundation
 import SensorKit
 
@@ -120,7 +121,7 @@ public protocol SensorSampleUploaderStorage: AnyObject {}
 /// deepest window are small values in `UserDefaults`. The upload QUEUE is one file per batch under
 /// Application Support (FUAM-4516): every queue operation touches one batch, so memory per
 /// operation no longer grows with the backlog. `sensorkit.queue.<sensor>` in `UserDefaults` is the
-/// 0.101.16/17 queue.
+/// 0.101.16/17 queue, migrated once per sensor at its first queue access.
 ///
 /// The class keeps its pre-FUAM-4516 name because it is public and existing specs use it.
 public final class DefaultsSensorStorage: SensorSampleUploadManagerStorage, SensorSampleUploaderStorage {
@@ -141,6 +142,11 @@ public final class DefaultsSensorStorage: SensorSampleUploadManagerStorage, Sens
     private let analytics: AnalyticsService?
     private let fileManager = FileManager.default
     private var rootPrepared = false
+    /// Sensors whose legacy queue is known to be fully migrated (or absent) in this process.
+    private var migratedSensors: Set<String> = []
+    /// Sensors whose migration already ran once in this process: a failed migration (write
+    /// error) is retried at the next launch, never in a loop that re-parses a multi-MB blob.
+    private var migrationAttempted: Set<String> = []
     /// Next batch sequence per sensor: the highest sequence on disk + 1 at first use, then kept
     /// in memory. Never derived from the clock, so a clock change cannot reorder the queue.
     private var nextSequence: [String: Int] = [:]
@@ -261,6 +267,7 @@ public final class DefaultsSensorStorage: SensorSampleUploadManagerStorage, Sens
         return self.syncQueue.sync {
             autoreleasepool {
                 self.prepareRootIfNeeded()
+                _ = self.ensureMigrated(sensor)
                 // FUAM-4517 seam: the id is chosen here so a rollback of a partially enqueued
                 // window can remove exactly what it wrote.
                 return self.writeNewBatch(id: UUID().uuidString, records: batch, windowStart: windowStart, for: sensor)
@@ -272,7 +279,9 @@ public final class DefaultsSensorStorage: SensorSampleUploadManagerStorage, Sens
         return self.syncQueue.sync {
             autoreleasepool {
                 self.prepareRootIfNeeded()
-                guard let listed = self.listBatches(sensor) else { return nil }
+                // Not migrated yet: report an EMPTY queue, so the drain can never upload (and
+                // delete) a file that the still-pending migration would write again.
+                guard self.ensureMigrated(sensor), let listed = self.listBatches(sensor) else { return nil }
                 for file in listed where !ids.contains(file.id) {
                     switch self.readBatch(file) {
                     case .batch(let batch):
@@ -338,6 +347,7 @@ public final class DefaultsSensorStorage: SensorSampleUploadManagerStorage, Sens
     public func pendingBatchCount(for sensor: SRSensor) -> Int {
         return self.syncQueue.sync {
             self.prepareRootIfNeeded()
+            guard self.ensureMigrated(sensor) else { return 0 }
             return self.listBatches(sensor)?.count ?? 0
         }
     }
@@ -349,6 +359,7 @@ public final class DefaultsSensorStorage: SensorSampleUploadManagerStorage, Sens
     private static let windowStartKey = "window_start"
     private static let sequenceDigits = 12
     private static let batchSuffix = ".json"
+    private static let migratedMarkerName = "_migrated"
     private static let quarantineDirectoryName = "_quarantine"
 
     private struct BatchFile {
@@ -363,12 +374,27 @@ public final class DefaultsSensorStorage: SensorSampleUploadManagerStorage, Sens
         case unparseable
     }
 
+    /// `{"ids": [...], "digests": [...]}`: the batch ids and the SHA-256 of every legacy blob fully
+    /// migrated for one sensor (plan R2 PR-2). Never deleted by the SDK.
+    private struct MigrationMarker: Codable {
+        var ids: Set<String> = []
+        var digests: Set<String> = []
+    }
+
+    private func legacyQueueKey(_ sensor: SRSensor) -> String {
+        return self.queueKeyPrefix + sensor.rawValue
+    }
+
     private func sensorDirectory(_ sensor: SRSensor) -> URL {
         return self.queueRoot.appendingPathComponent(sensor.rawValue, isDirectory: true)
     }
 
     private var quarantineDirectory: URL {
         return self.queueRoot.appendingPathComponent(Self.quarantineDirectoryName, isDirectory: true)
+    }
+
+    private func markerURL(_ sensor: SRSensor) -> URL {
+        return self.sensorDirectory(sensor).appendingPathComponent(Self.migratedMarkerName)
     }
 
     static func batchName(sequence: Int, id: String) -> String {
@@ -386,6 +412,16 @@ public final class DefaultsSensorStorage: SensorSampleUploadManagerStorage, Sens
               let sequence = Int(digits) else { return nil }
         let id = String(name.dropFirst(Self.sequenceDigits + 1).dropLast(Self.batchSuffix.count))
         return BatchFile(sequence: sequence, id: id, url: directory.appendingPathComponent(name))
+    }
+
+    /// An id usable inside a file name. A legacy entry whose id is not gets a content id instead.
+    private static func isFileSafeId(_ id: String?) -> Bool {
+        guard let id = id, !id.isEmpty, id.count <= 128 else { return false }
+        return !id.contains("/") && !id.contains("\0") && !id.hasPrefix(".")
+    }
+
+    static func sha256Hex(_ data: Data) -> String {
+        return SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
     }
 
     /// One entry of the 0.101.16/17 `UserDefaults` array, or one batch file: the entry parser of the
@@ -503,5 +539,141 @@ public final class DefaultsSensorStorage: SensorSampleUploadManagerStorage, Sens
         }
         // `count` is one quarantined BATCH: its record count is unknowable.
         self.analytics?.track(event: .sensorRecordDropped(sensor: sensor.shortSubsource, count: 1, reason: reason))
+    }
+
+    /// `nil` when the marker exists but cannot be read (undecidable: the caller must not migrate).
+    /// A marker that reads but does not decode is treated as empty: at worst an already migrated
+    /// batch is migrated and uploaded once more, which the server drops by identity; never a loss.
+    private func readMarker(_ sensor: SRSensor) -> MigrationMarker? {
+        let url = self.markerURL(sensor)
+        guard self.fileManager.fileExists(atPath: url.path) else { return MigrationMarker() }
+        guard let data = try? Data(contentsOf: url) else { return nil }
+        return (try? JSONDecoder().decode(MigrationMarker.self, from: data)) ?? MigrationMarker()
+    }
+
+    private func writeMarker(_ marker: MigrationMarker, for sensor: SRSensor) -> Bool {
+        guard self.ensureDirectory(self.sensorDirectory(sensor)),
+              let data = try? JSONEncoder().encode(marker) else { return false }
+        return self.write(data, to: self.markerURL(sensor))
+    }
+
+    // MARK: - Legacy queue migration (FUAM-4516, plan §2.1 as amended by R2 PR-2 and PR-18)
+
+    /// `true` once the sensor's legacy queue is migrated or absent. Runs the migration at most once
+    /// per process; until it succeeds, the sensor's queue reads as empty.
+    private func ensureMigrated(_ sensor: SRSensor) -> Bool {
+        let raw = sensor.rawValue
+        if self.migratedSensors.contains(raw) { return true }
+        guard !self.migrationAttempted.contains(raw) else { return false }
+        self.migrationAttempted.insert(raw)
+        let migrated = autoreleasepool { self.migrateLegacyQueue(sensor) }
+        if migrated { self.migratedSensors.insert(raw) }
+        return migrated
+    }
+
+    /// File-system authoritative: the `_migrated` marker is written only after every batch file,
+    /// and lists the digest of the blob, so a key whose removal did not persist is recognised and
+    /// never migrated (or uploaded) twice. Absent key: nothing to do and NOTHING is stored, which is
+    /// also what happens before the first unlock, when `UserDefaults` reads return nil.
+    private func migrateLegacyQueue(_ sensor: SRSensor) -> Bool {
+        let key = self.legacyQueueKey(sensor)
+        guard let data = UserDefaults.standard.data(forKey: key) else { return true }
+        let digest = Self.sha256Hex(data)
+        guard var marker = self.readMarker(sensor) else { return false }
+        if marker.digests.contains(digest) {
+            // Already migrated: the removal did not persist. Do not parse it.
+            UserDefaults.standard.removeObject(forKey: key)
+            return true
+        }
+
+        guard let entries = (try? JSONSerialization.jsonObject(with: data)) as? [Any] else {
+            // The only case where queued data cannot be uploaded: kept in quarantine, not deleted.
+            let name = "\(sensor.rawValue)_legacy-\(digest.prefix(16))_legacy_unparseable.json"
+            marker.digests.insert(digest)
+            guard self.ensureDirectory(self.quarantineDirectory),
+                  self.write(data, to: self.quarantineDirectory.appendingPathComponent(name)),
+                  self.writeMarker(marker, for: sensor) else {
+                self.trackMigration(sensor, batchCount: 0, legacyBytes: data.count, outcome: "partial_disk_error")
+                return false
+            }
+            UserDefaults.standard.removeObject(forKey: key)
+            self.trackMigration(sensor, batchCount: 0, legacyBytes: data.count, outcome: "unparseable")
+            return true
+        }
+
+        let directory = self.sensorDirectory(sensor)
+        guard self.ensureDirectory(directory), let listed = self.listBatches(sensor) else {
+            self.trackMigration(sensor, batchCount: 0, legacyBytes: data.count, outcome: "partial_disk_error")
+            return false
+        }
+        var existingIds = Set(listed.map { $0.id })
+        var entryIds: [String] = []
+        var written = 0
+        var droppedRecords = 0
+        var writeFailed = false
+        for (index, entry) in entries.enumerated() {
+            writeFailed = autoreleasepool { () -> Bool in
+                guard let dictionary = entry as? [String: Any],
+                      Self.queuedBatch(from: dictionary, id: "") != nil else {
+                    // Pre-FUAM-3945 shape (no window start): dropped, the policy 0.101.16 already
+                    // applied on load. A bare array of records counts its records.
+                    droppedRecords += (entry as? [Any])?.count ?? 1
+                    return false
+                }
+                let ownId = dictionary[Self.idKey] as? String
+                let id = Self.isFileSafeId(ownId) ? (ownId ?? "") : Self.legacyContentId(of: dictionary, blobDigest: digest, index: index)
+                entryIds.append(id)
+                // A re-run after an interruption: the file is already there (or was migrated,
+                // uploaded and deleted before the key removal got lost).
+                guard !marker.ids.contains(id), !existingIds.contains(id) else { return false }
+                var content = dictionary
+                content[Self.idKey] = id
+                guard let sequence = self.takeSequence(for: sensor),
+                      self.writeJSON(content, to: directory.appendingPathComponent(Self.batchName(sequence: sequence, id: id))) else {
+                    return true
+                }
+                existingIds.insert(id)
+                written += 1
+                return false
+            }
+            if writeFailed { break }
+        }
+        if droppedRecords > 0 {
+            self.analytics?.track(event: .sensorRecordDropped(sensor: sensor.shortSubsource,
+                                                              count: droppedRecords,
+                                                              reason: "legacy_queue_entry"))
+        }
+        guard !writeFailed else {
+            // Stop, keep the key: the next launch resumes, skipping the files written so far.
+            self.trackMigration(sensor, batchCount: written, legacyBytes: data.count, outcome: "partial_disk_error")
+            return false
+        }
+        marker.ids.formUnion(entryIds)
+        marker.digests.insert(digest)
+        guard self.writeMarker(marker, for: sensor) else {
+            self.trackMigration(sensor, batchCount: written, legacyBytes: data.count, outcome: "partial_disk_error")
+            return false
+        }
+        UserDefaults.standard.removeObject(forKey: key)
+        self.trackMigration(sensor, batchCount: written, legacyBytes: data.count, outcome: "ok")
+        return true
+    }
+
+    /// The id of a legacy entry that has none: a hash of its content, so it is stable across an
+    /// interrupted re-run and across reordering (plan R2 PR-18 item 1). Identical id-less entries
+    /// share an id, and the second is skipped: same records, same window, nothing lost.
+    private static func legacyContentId(of entry: [String: Any], blobDigest: String, index: Int) -> String {
+        guard let data = try? JSONSerialization.data(withJSONObject: entry, options: [.sortedKeys]) else {
+            // Unreachable for an entry parsed from JSON; still deterministic.
+            return "legacy-\(blobDigest.prefix(16))-\(index)"
+        }
+        return "legacy-" + String(Self.sha256Hex(data).prefix(16))
+    }
+
+    private func trackMigration(_ sensor: SRSensor, batchCount: Int, legacyBytes: Int, outcome: String) {
+        self.analytics?.track(event: .sensorQueueMigrated(sensor: sensor.shortSubsource,
+                                                          batchCount: batchCount,
+                                                          legacyBytes: legacyBytes,
+                                                          outcome: outcome))
     }
 }
