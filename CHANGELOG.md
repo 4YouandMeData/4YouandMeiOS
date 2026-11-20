@@ -1,3 +1,7 @@
+## Unreleased
+
+- **The KPI widget fetch first syncs the device timezone to the user profile** (FUAM-4534). Before every `GET /kpi_widgets` the app compares the device timezone with the stored one and PATCHes it when they differ, so the backend computes "today" for the right zone; a failed PATCH never blocks the fetch.
+
 ## Release 0.101.19
 
 - **A new account takes the device's SensorKit data** (FUAM-4516). In 0.101.18, when a different participant logged in on an install, nothing SensorKit had recorded before that login was collected for them. A change of account now resets the app, not the device: the previous account's queued batches are deleted unsent, its cursors and upload ledger are reset, its quarantine is emptied, pending retries are cancelled and failure counters are cleared; collection for the new account then starts from that account's own enrolment and consent bound, as on a fresh install, limited by SensorKit's retention. Records from before the switch are uploaded under the new account. An install that stored a hand-over instant on 0.101.18 recovers once at the first sync: the marker is removed and the cursors are reset, and the current account's queued batches are kept. The same account logging in again resets nothing. **Host note:** a person who logs in on another participant's phone receives that phone's SensorKit data from their own enrolment date onward; logging in on a device means taking ownership of its data. Covered by the extended `SensorQueueFileStorageSpec`.

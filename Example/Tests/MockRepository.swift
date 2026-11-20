@@ -142,6 +142,7 @@ final class MockRepository: Repository {
     func sendSpyroResults(results: [String: Any]) -> Single<()> { .never() }
 
     func refreshUser() -> Single<User> { .never() }
+    func syncUserTimeZoneIfNeeded() -> Single<Void> { .just(()) }
     func sendUserInfoParameters(userParameterRequests: [UserInfoParameterRequest]) -> Single<User> { .never() }
     func getUserData() -> Single<UserData> { .never() }
     func getUserSettings() -> Single<UserSettings> {

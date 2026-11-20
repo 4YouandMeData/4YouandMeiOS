@@ -272,7 +272,7 @@ class Services {
         self.deeplinkService = deeplinkService
         self.deviceService = deviceService
         // FUAM-4315: Feed KPI widgets, in-memory per process (D2)
-        self.kpiWidgetStore = KpiWidgetStore(fetch: { repository.getKpiWidgets() })
+        self.kpiWidgetStore = KpiWidgetStore(fetch: KpiWidgetStore.makeFetch(repository: repository))
         
         self.navigator.showSetupScreen()
     }
