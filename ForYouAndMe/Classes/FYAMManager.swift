@@ -46,6 +46,9 @@ public class FYAMManager {
             return startedWindow
         }
 
+        // FUAM-4518: start-up timestamp for the X-Client-Process-Uptime-Ms header.
+        ClientMetadataPlugin.markStartup()
+
         if mirrorPrintToJam {
             StdoutMirror.install()
         }
