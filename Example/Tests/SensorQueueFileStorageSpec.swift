@@ -1172,6 +1172,36 @@ class SensorQueueDrainSpec: QuickSpec {
                 expect(mapper.callCount).toEventually(beGreaterThan(0), timeout: .seconds(5))
             }
 
+            it("requires 600 MB before a report-sensor fetch and 300 MB for the others (review B-4)") {
+                for (guardedSensor, expectBackoff) in [(SRSensor.deviceUsageReport, true), (SRSensor.accelerometer, false)] {
+                    analytics.reset()
+                    let fake = FakeSensorStorage()
+                    let today = SensorSampleUploadManager.utcDayStart(Date())
+                    fake.setLastCursor(today.addingTimeInterval(-4 * day), for: guardedSensor)
+                    fake.setLastRescanDay(today, for: guardedSensor)
+                    let mapper = ClosureDeviceMapper { _, _ in [] }
+                    let manager = SensorSampleUploadManager(withSensors: [guardedSensor],
+                                                            storage: fake,
+                                                            reachability: FakeSensorReachability(),
+                                                            analytics: analytics,
+                                                            mappers: [guardedSensor: mapper])
+                    manager.clearanceDelegate = clearance
+                    manager.availableMemory = { 400 * 1024 * 1024 }
+
+                    manager.runDeviceChain(at: 0, of: [device], for: guardedSensor, now: Date(), using: mapper)
+
+                    if expectBackoff {
+                        expect(backoffs()).to(equal(1))
+                        expect(mapper.callCount).to(equal(0))
+                    } else {
+                        expect(mapper.callCount).toEventually(beGreaterThan(0), timeout: .seconds(5))
+                        expect(backoffs()).to(equal(0))
+                    }
+                }
+                expect(SensorSampleUploadManager.memoryGuardBytes(for: .keyboardMetrics)).to(equal(600 * 1024 * 1024))
+                expect(SensorSampleUploadManager.memoryGuardBytes(for: .pedometerData)).to(equal(300 * 1024 * 1024))
+            }
+
             it("treats an unknown available memory (0) as proceed (limit case 28)") {
                 let fake = FakeSensorStorage()
                 seedForwardCursor(fake)

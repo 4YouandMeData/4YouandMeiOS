@@ -106,10 +106,22 @@ public final class SensorSampleUploadManager {
     static let maxBatchBytes: Int = 1 * 1024 * 1024
 
     /// FUAM-4516: no new SensorKit fetch starts while `os_proc_available_memory()` reports less
-    /// than this. 0 (simulator, unknown) means proceed.
-    /// ponytail: a fixed 300 MB threshold; make it a fraction of the process limit if
-    /// `sensor_memory_backoff` shows back-offs on small-RAM devices.
+    /// than `memoryGuardBytes(for:)`. 0 (simulator, unknown) means proceed.
+    /// Continuous sensors: 300 MB.
     static let memoryGuardBytes: Int = 300 * 1024 * 1024
+    /// The day-aggregated report sensors (device usage, phone usage, messages usage, keyboard
+    /// metrics): 600 MB. Measured basis (review B-4): one report window fetches its day plus the
+    /// 26 h lookback, about 200 reports for the heaviest participant, and her mapper-built reports
+    /// occupy about 1.1 MB each, so one fetch holds about 210 MB before SensorKit's own objects.
+    /// 300 MB would leave under 100 MB of headroom for that; 600 MB is about twice the fetch.
+    /// ponytail: fixed thresholds; make them a fraction of the process limit if
+    /// `sensor_memory_backoff` shows back-offs on small-RAM devices.
+    static let reportMemoryGuardBytes: Int = 600 * 1024 * 1024
+
+    /// The available memory a fetch for `sensor` needs before it starts.
+    static func memoryGuardBytes(for sensor: SRSensor) -> Int {
+        return Self.dayAggregatedSensors.contains(sensor) ? Self.reportMemoryGuardBytes : Self.memoryGuardBytes
+    }
 
     /// Give up on a window after this many consecutive failed fetch attempts and move past it,
     /// so one poison window doesn't stall the per-sensor chain forever (FUAM-3841).
@@ -1153,7 +1165,7 @@ public final class SensorSampleUploadManager {
         // cycle still makes durable progress. Its result needs no handling: either way no cursor
         // is written here.
         let available = self.availableMemory()
-        if available > 0, available < Self.memoryGuardBytes {
+        if available > 0, available < Self.memoryGuardBytes(for: context.sensor) {
             self.analytics.track(event: .sensorMemoryBackoff(sensor: context.device.telemetryName(for: context.sensor),
                                                              availableMB: available / (1024 * 1024)))
             #if DEBUG
