@@ -356,7 +356,7 @@ public final class SensorSampleUploadManager {
 
         // Fetch & enqueue (mappers can be async but we trigger drains below)
         for sensor in sensors {
-            fetchPendingWindows(for: sensor, now: now)
+            fetchPendingWindows(for: sensor, now: now, owner: owner)
         }
 
         // Try to drain queues
@@ -410,8 +410,18 @@ public final class SensorSampleUploadManager {
     private var currentBound: BackfillLowerBound {
         // FUAM-3964 (review I1): `max(deviceNow, serverNow)`, never the raw device clock — the
         // 365-day cap is `now - 365d`, so a clock rolled back Δ would let it reach 365 + Δ.
-        return BackfillLowerBound.resolve(joinDay: self.clearanceDelegate?.enrollmentDate,
+        return BackfillLowerBound.resolve(joinDay: self.effectiveJoinDay,
                                           now: max(Date(), ServerClock.now()))
+    }
+
+    /// The join day, raised to the hand-over instant when this participant took over the install
+    /// from a different one (final review P-1). Both the plan and the drain-time consent gate use
+    /// it, so no SensorKit record measured before the hand-over is ever uploaded under the new
+    /// participant. Nothing is deleted; this is only a lower bound. `nil` without a join day.
+    private var effectiveJoinDay: Date? {
+        guard let joinDay = self.clearanceDelegate?.enrollmentDate else { return nil }
+        guard let handOver = self.storage.ownerSince() else { return joinDay }
+        return max(joinDay, handOver)
     }
 
     /// Internal rather than private so the FUAM-3964 server-time cap can be exercised through
@@ -468,7 +478,7 @@ public final class SensorSampleUploadManager {
         }
         return Self.buildWindowPlan(now: cappedNow,
                                     boundNow: max(now, serverNow),
-                                    joinDay: clearanceDelegate?.enrollmentDate,
+                                    joinDay: self.effectiveJoinDay,
                                     cursor: storage.lastCursor(for: sensor, deviceKey: device.key),
                                     embargo: embargo,
                                     timeZone: timeZone,
@@ -808,6 +818,9 @@ public final class SensorSampleUploadManager {
         let backwardProbe: Bool
         /// The end of the newest planned window — the single cursor target of a completed probe.
         let planHeadEnd: Date?
+        /// The participant the chain collects for (final review P-3), `nil` in specs that build a
+        /// context by hand. A result arriving after the session changed is dropped.
+        let owner: String?
         /// Consecutive confirmed-empty windows seen so far by a backward probe.
         var probeEmptyStreak: Int
         /// FUAM-3945 (round 4): the probe's per-window record sets, accumulated newest-first
@@ -839,6 +852,7 @@ public final class SensorSampleUploadManager {
              rescanBoundary: Date? = nil,
              backwardProbe: Bool = false,
              planHeadEnd: Date? = nil,
+             owner: String? = nil,
              probeEmptyStreak: Int = 0) {
             self.sensor = sensor
             self.device = device
@@ -851,6 +865,7 @@ public final class SensorSampleUploadManager {
             self.rescanBoundary = rescanBoundary
             self.backwardProbe = backwardProbe
             self.planHeadEnd = planHeadEnd
+            self.owner = owner
             self.probeEmptyStreak = probeEmptyStreak
         }
 
@@ -876,7 +891,7 @@ public final class SensorSampleUploadManager {
         let windowAgeDays: Int
     }
 
-    private func fetchPendingWindows(for sensor: SRSensor, now: Date) {
+    private func fetchPendingWindows(for sensor: SRSensor, now: Date, owner: String) {
         guard isAuthorized(sensor) else {
             #if DEBUG
             print("SensorSampleUploadManager - Skip \(sensor.rawValue): status=\(statusString(sensor))")
@@ -892,7 +907,7 @@ public final class SensorSampleUploadManager {
             return
         }
 
-        runDeviceChain(at: 0, of: deviceProvider.devices(for: sensor), for: sensor, now: now, using: mapper)
+        runDeviceChain(at: 0, of: deviceProvider.devices(for: sensor), for: sensor, now: now, using: mapper, owner: owner)
     }
 
     /// Claim `sensor`'s chain for this cycle. `false` means one is already running and this
@@ -931,7 +946,8 @@ public final class SensorSampleUploadManager {
                         of devices: [SensorDevice],
                         for sensor: SRSensor,
                         now: Date,
-                        using mapper: SensorSampleMapper) {
+                        using mapper: SensorSampleMapper,
+                        owner: String? = nil) {
         // Entry point of a chain: claim the sensor, or skip it — a second concurrent cycle must
         // never reach `fetchAndMap` on a mapper that is still fetching. `index > 0` is this same
         // chain walking on to its next device, which already holds the claim.
@@ -979,7 +995,8 @@ public final class SensorSampleUploadManager {
                                          timeZone: self.partitionTimeZone(),
                                          rescanBoundary: storage.lastCursor(for: sensor, deviceKey: device.key),
                                          backwardProbe: isBackfillProbe,
-                                         planHeadEnd: plan.windows.last?.end)
+                                         planHeadEnd: plan.windows.last?.end,
+                                         owner: owner)
         guard let firstWindow = plan.windows.first else {
             // Review fix #6: an empty plan on a would-be backfill (e.g. enrolled today, or a
             // forward-only bound because days_in_study <= 0 upstream) must still leave a
@@ -1001,7 +1018,7 @@ public final class SensorSampleUploadManager {
                   + "(already up to date or embargo)")
             #endif
             // Nothing to do for THIS device; the next one may still have windows.
-            runDeviceChain(at: index + 1, of: devices, for: sensor, now: now, using: mapper)
+            runDeviceChain(at: index + 1, of: devices, for: sensor, now: now, using: mapper, owner: owner)
             return
         }
 
@@ -1119,7 +1136,8 @@ public final class SensorSampleUploadManager {
                             of: context.devices,
                             for: context.sensor,
                             now: context.now,
-                            using: context.mapper)
+                            using: context.mapper,
+                            owner: context.owner)
     }
 
     /// Runs on `workQueue` only. Internal rather than private so the consent decisions taken
@@ -1132,6 +1150,13 @@ public final class SensorSampleUploadManager {
                             of windows: [DateInterval],
                             context: DeviceChainContext) {
         let sensor = context.sensor
+        // Final review P-3: the session changed while this fetch ran (a logout and another login).
+        // The records were collected for the previous participant: drop them, end the chain, and
+        // leave the cursor alone; the new participant's own sync plans from their bound.
+        if let chainOwner = context.owner, chainOwner != self.sessionOwner() {
+            self.endChain(for: sensor)
+            return
+        }
         // Review fix #4: the user can disappear between plan build and this callback (logout,
         // session expiry, failed token refresh). The re-resolved bound is then forward-only and
         // every record would be dropped — but advancing the cursor over the rest of the plan

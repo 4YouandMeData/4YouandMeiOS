@@ -63,6 +63,7 @@ private enum QueueFixture {
         defaults.removeObject(forKey: "sensorkit.rescanday." + sensor.rawValue + ".iphone")
         defaults.removeObject(forKey: "sensorkit.deepestwindow." + sensor.rawValue + ".iphone")
         defaults.removeObject(forKey: "sensorkit.owner")
+        defaults.removeObject(forKey: "sensorkit.owner_since")
     }
 
     @discardableResult
@@ -217,8 +218,39 @@ private final class OrderRecordingStorage: SensorSampleUploadManagerStorage, Sen
         base.setDeepestProductiveWindowStart(date, for: sensor, deviceKey: deviceKey)
     }
     func adoptOwner(_ owner: String) { base.adoptOwner(owner) }
+    func ownerSince() -> Date? { base.ownerSince() }
     func setAside(_ descriptions: [[String: Any]], reason: String, for sensor: SRSensor) -> Bool {
         return base.setAside(descriptions, reason: reason, for: sensor)
+    }
+}
+
+/// Holds each fetch until the spec releases it: a fetch still running when the session changes.
+private final class HeldMapper: SensorSampleMapper {
+
+    private let lock = NSLock()
+    private var held: ((Result<[[String: Any]], Error>) -> Void)?
+    private var calls = 0
+
+    var callCount: Int {
+        self.lock.lock(); defer { self.lock.unlock() }
+        return self.calls
+    }
+
+    func fetchAndMap(from: Date,
+                     to: Date,
+                     device: SensorDevice,
+                     completion: @escaping (Result<[[String: Any]], Error>) -> Void) {
+        self.lock.lock(); defer { self.lock.unlock() }
+        self.calls += 1
+        self.held = completion
+    }
+
+    func release(_ records: [[String: Any]]) {
+        self.lock.lock()
+        let completion = self.held
+        self.held = nil
+        self.lock.unlock()
+        completion?(.success(records))
     }
 }
 
@@ -1388,7 +1420,9 @@ class SensorQueueDrainSpec: QuickSpec {
                 storage.enqueueBatch([record("a2")], windowStart: joinDay, for: sensor)
                 storage.setLastCursor(joinDay.addingTimeInterval(20 * day), for: sensor, deviceKey: SensorDevice.iphoneKey)
                 storage.adoptOwner("participant-B")
-                storage.enqueueBatch([record("b1")], windowStart: joinDay, for: sensor)
+                // Measured after the hand-over, which bounds B's uploads (final review P-1).
+                storage.enqueueBatch([["t": QueueFixture.iso(Date().addingTimeInterval(60)), "marker": "b1"]],
+                                     windowStart: joinDay, for: sensor)
                 clearance.participantId = "participant-B"
                 let manager = makeManager(storage: storage)
                 manager.setNetworkDelegate(network)
@@ -1414,6 +1448,67 @@ class SensorQueueDrainSpec: QuickSpec {
                 storage.setLastCursor(cursor, for: sensor, deviceKey: SensorDevice.iphoneKey)
                 storage.adoptOwner("participant-1")
                 expect(storage.lastCursor(for: sensor, deviceKey: SensorDevice.iphoneKey)).to(equal(cursor))
+            }
+
+            it("a hand-over bounds collection and upload at the hand-over instant (final review P-1)") {
+                expect(storage.ownerSince()).to(beNil()) // a first adoption sets no hand-over bound
+                let before = Date()
+                storage.adoptOwner("participant-2")
+                clearance.participantId = "participant-2"
+                guard let handOver = storage.ownerSince() else { return fail("no hand-over instant") }
+                expect(handOver).to(beGreaterThanOrEqualTo(before))
+                let manager = makeManager(storage: storage)
+
+                // Collection: the plan starts at the hand-over, not at the (earlier) join day.
+                let plan = manager.buildWindowPlan(for: sensor, now: Date(), device: device)
+                expect(plan.consentBound).to(equal(handOver))
+
+                // Upload: a record measured before the hand-over never leaves the device.
+                storage.enqueueBatch([record("before-hand-over")], windowStart: joinDay, for: sensor)
+                manager.setNetworkDelegate(network)
+                manager.drainQueue(for: sensor)
+                expect(network.attemptCount).toAlways(equal(0), until: .milliseconds(400))
+            }
+
+            it("drops a fetch result when the session changed while it ran (final review P-3)") {
+                let fake = FakeSensorStorage()
+                let today = SensorSampleUploadManager.utcDayStart(Date())
+                let cursor = today.addingTimeInterval(-4 * day)
+                fake.setLastCursor(cursor, for: sensor)
+                fake.setLastRescanDay(today, for: sensor)
+                let mapper = HeldMapper()
+                let manager = makeManager(storage: fake, mapper: mapper)
+                manager.availableMemory = { 0 }
+
+                manager.runDeviceChain(at: 0, of: [device], for: sensor, now: Date(), using: mapper, owner: "participant-1")
+                expect(mapper.callCount).to(equal(1))
+                clearance.participantId = "participant-2" // logout and another login meanwhile
+                mapper.release([["t": QueueFixture.iso(cursor.addingTimeInterval(hour))]])
+                _ = manager.windowFetchFailureCount(for: sensor, deviceKey: device.key) // work-queue barrier
+
+                expect(fake.enqueued).to(beEmpty())
+                expect(fake.lastCursor(for: sensor)).to(equal(cursor))
+                // The chain was released: the new participant's cycle fetches.
+                manager.runDeviceChain(at: 0, of: [device], for: sensor, now: Date(), using: mapper, owner: "participant-2")
+                expect(mapper.callCount).to(equal(2))
+            }
+
+            it("writes the new owner before it resets the previous participant's state (final review R-1)") {
+                storage.setLastCursor(joinDay, for: sensor, deviceKey: SensorDevice.iphoneKey)
+                var ownerAtFirstChange: String??
+                let observer = NotificationCenter.default.addObserver(forName: UserDefaults.didChangeNotification,
+                                                                      object: nil,
+                                                                      queue: nil) { _ in
+                    if ownerAtFirstChange == nil {
+                        ownerAtFirstChange = .some(UserDefaults.standard.string(forKey: "sensorkit.owner"))
+                    }
+                }
+                defer { NotificationCenter.default.removeObserver(observer) }
+
+                storage.adoptOwner("participant-2")
+
+                expect(ownerAtFirstChange).toEventually(equal(.some("participant-2")), timeout: .seconds(2))
+                expect(storage.lastCursor(for: sensor, deviceKey: SensorDevice.iphoneKey)).to(beNil())
             }
 
             func windowContext() -> (DateInterval, SensorSampleUploadManager.DeviceChainContext) {

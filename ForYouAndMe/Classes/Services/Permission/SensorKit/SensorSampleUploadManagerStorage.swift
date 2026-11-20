@@ -132,6 +132,11 @@ public protocol SensorSampleUploadManagerStorage: AnyObject {
     /// the quarantine for 7 days, never uploaded. `false` when they could not be written: the
     /// caller then treats the window as not handled.
     func setAside(_ descriptions: [[String: Any]], reason: String, for sensor: SRSensor) -> Bool
+
+    /// When the current participant took over from a different one (`adoptOwner`), `nil` when no
+    /// hand-over happened on this install. Nothing measured before it is ever collected or
+    /// uploaded for the current participant (final review P-1).
+    func ownerSince() -> Date?
 }
 
 public extension SensorSampleUploadManagerStorage {
@@ -139,6 +144,8 @@ public extension SensorSampleUploadManagerStorage {
     func adoptOwner(_ owner: String) {}
 
     func setAside(_ descriptions: [[String: Any]], reason: String, for sensor: SRSensor) -> Bool { return true }
+
+    func ownerSince() -> Date? { return nil }
 }
 
 /// Marker protocol kept for symmetry with Health side (if you have a similar split there).
@@ -468,7 +475,16 @@ public final class DefaultsSensorStorage: SensorSampleUploadManagerStorage, Sens
             let stored = UserDefaults.standard.string(forKey: Self.ownerKey)
             self.owner = owner
             guard stored != owner else { return }
+            // Final review R-1: the owner (and the hand-over instant) first, the resets after. A lost
+            // reset leaves the previous cursors behind the hand-over bound, which re-sends and
+            // exposes nothing; a lost owner write after the resets would reset this participant
+            // again at the next launch.
+            UserDefaults.standard.set(owner, forKey: Self.ownerKey)
             if stored != nil {
+                // Final review P-1: the device still holds the previous participant's SensorKit
+                // history; nothing measured before this instant is collected or uploaded for the
+                // new one. A first adoption (no previous owner) sets no hand-over bound.
+                UserDefaults.standard.set(Date(), forKey: Self.ownerSinceKey)
                 // A different participant: the cursors, ledger, rescan gate and deepest window
                 // describe the previous one's data. Reset them so this one starts clean; the
                 // previous one's queued batches are deleted, unsent, when the drain meets them.
@@ -477,8 +493,11 @@ public final class DefaultsSensorStorage: SensorSampleUploadManagerStorage, Sens
                     UserDefaults.standard.removeObject(forKey: key)
                 }
             }
-            UserDefaults.standard.set(owner, forKey: Self.ownerKey)
         }
+    }
+
+    public func ownerSince() -> Date? {
+        return UserDefaults.standard.object(forKey: Self.ownerSinceKey) as? Date
     }
 
     public func setAside(_ descriptions: [[String: Any]], reason: String, for sensor: SRSensor) -> Bool {
@@ -505,6 +524,7 @@ public final class DefaultsSensorStorage: SensorSampleUploadManagerStorage, Sens
     private static let batchSuffix = ".json"
     private static let migratedMarkerName = "_migrated"
     private static let ownerKey = "sensorkit.owner"
+    private static let ownerSinceKey = "sensorkit.owner_since"
     private static let ownerContentKey = "owner"
     /// Quarantined items are deleted after this long (owner rule 6).
     static let quarantineRetention: TimeInterval = 7 * 24 * 60 * 60
