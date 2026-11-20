@@ -200,6 +200,12 @@ public final class DefaultsSensorStorage: SensorSampleUploadManagerStorage, Sens
     /// Unreadable batch files already reported in this process (when even the quarantine move
     /// failed), so a file that stays unreadable is traced once, not on every peek.
     private var unreadableReported: Set<String> = []
+    /// Per sensor, batches whose removal failed (review A-5). Every removal follows an upload the
+    /// server accepted or a decision to drop, so such a batch must never be peeked again in this
+    /// process, or the drain would upload it in a loop; the unlink is retried at each queue
+    /// access. In memory only: a relaunch uploads it once more, which the server drops by
+    /// identity. FUAM-4517 owns the durable delete-on-200.
+    private var pendingRemovals: [String: Set<String>] = [:]
 
     /// FUAM-4516 (review B-7): whether protected data is readable now. An unreadable batch file
     /// is quarantined only when it is, so data that is merely locked is never moved. Injectable
@@ -323,6 +329,7 @@ public final class DefaultsSensorStorage: SensorSampleUploadManagerStorage, Sens
             autoreleasepool {
                 self.prepareRootIfNeeded()
                 _ = self.ensureMigrated(sensor)
+                self.retryPendingRemovals(sensor)
                 // FUAM-4517 seam: the id is chosen here so a rollback of a partially enqueued
                 // window can remove exactly what it wrote.
                 return self.writeNewBatch(id: UUID().uuidString, records: batch, windowStart: windowStart, for: sensor)
@@ -337,11 +344,13 @@ public final class DefaultsSensorStorage: SensorSampleUploadManagerStorage, Sens
                 // Not migrated yet: report an EMPTY queue, so the drain can never upload (and
                 // delete) a file that the still-pending migration would write again.
                 guard self.ensureMigrated(sensor) else { return nil }
+                self.retryPendingRemovals(sensor)
+                let excluded = ids.union(self.pendingRemovals[sensor.rawValue] ?? [])
                 var relisted = false
                 while true {
                     guard let listed = self.indexedBatches(sensor) else { return nil }
                     var stale = false
-                    for file in listed where !ids.contains(file.id) {
+                    for file in listed where !excluded.contains(file.id) {
                         switch self.readBatch(file) {
                         case .batch(let batch):
                             return batch
@@ -388,9 +397,12 @@ public final class DefaultsSensorStorage: SensorSampleUploadManagerStorage, Sens
                     file = self.indexedBatches(sensor)?.first(where: { $0.id == id })
                 }
                 guard let found = file else { return }
-                try? self.fileManager.removeItem(at: found.url)
-                if !self.fileManager.fileExists(atPath: found.url.path) {
-                    self.batchIndex[sensor.rawValue]?.removeAll { $0.id == id }
+                guard !self.unlink(found, for: sensor) else { return }
+                if self.pendingRemovals[sensor.rawValue, default: []].insert(id).inserted {
+                    // `count` is one BATCH; nothing is lost, it is just not deleted yet.
+                    self.analytics?.track(event: .sensorRecordDropped(sensor: sensor.shortSubsource,
+                                                                      count: 1,
+                                                                      reason: "batch_remove_failed"))
                 }
             }
         }
@@ -443,7 +455,9 @@ public final class DefaultsSensorStorage: SensorSampleUploadManagerStorage, Sens
         return self.syncQueue.sync {
             self.prepareRootIfNeeded()
             guard self.ensureMigrated(sensor) else { return 0 }
-            return self.indexedBatches(sensor)?.count ?? 0
+            self.retryPendingRemovals(sensor)
+            let pending = self.pendingRemovals[sensor.rawValue] ?? []
+            return self.indexedBatches(sensor)?.filter { !pending.contains($0.id) }.count ?? 0
         }
     }
 
@@ -501,6 +515,7 @@ public final class DefaultsSensorStorage: SensorSampleUploadManagerStorage, Sens
                 // Nothing is left to migrate for this sensor; the next access re-lists the directory.
                 self.migratedSensors.insert(sensor.rawValue)
                 self.batchIndex[sensor.rawValue] = nil
+                self.pendingRemovals[sensor.rawValue] = nil
             }
         }
     }
@@ -676,6 +691,27 @@ public final class DefaultsSensorStorage: SensorSampleUploadManagerStorage, Sens
         guard let listed = self.listBatches(sensor) else { return nil }
         self.batchIndex[sensor.rawValue] = listed
         return listed
+    }
+
+    /// Unlinks a batch file and drops it from the index. `true` when the file is gone.
+    private func unlink(_ file: BatchFile, for sensor: SRSensor) -> Bool {
+        try? self.fileManager.removeItem(at: file.url)
+        guard !self.fileManager.fileExists(atPath: file.url.path) else { return false }
+        self.batchIndex[sensor.rawValue]?.removeAll { $0.id == file.id }
+        return true
+    }
+
+    /// Retries the removals that failed earlier in this process (review A-5).
+    private func retryPendingRemovals(_ sensor: SRSensor) {
+        guard let pending = self.pendingRemovals[sensor.rawValue], !pending.isEmpty else { return }
+        let files = self.indexedBatches(sensor) ?? []
+        for id in pending {
+            guard let file = files.first(where: { $0.id == id }) else {
+                self.pendingRemovals[sensor.rawValue]?.remove(id) // already gone
+                continue
+            }
+            if self.unlink(file, for: sensor) { self.pendingRemovals[sensor.rawValue]?.remove(id) }
+        }
     }
 
     /// Directory listings of sensor directories so far. Internal for the index spec only.

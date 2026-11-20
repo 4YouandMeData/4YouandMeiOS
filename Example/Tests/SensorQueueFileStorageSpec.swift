@@ -564,6 +564,25 @@ class SensorQueueFileStorageSpec: QuickSpec {
                 expect(droppedReasons()).to(beEmpty())
             }
 
+            it("never peeks a batch again after its removal failed, and retries the removal (review A-5)") {
+                storage.enqueueBatch(marked("a"), windowStart: windowStart, for: sensor)
+                storage.enqueueBatch(marked("b"), windowStart: windowStart, for: sensor)
+                let directory = QueueFixture.sensorDirectory(root, sensor)
+                guard let head = storage.peekNextBatch(for: sensor, excluding: []) else { return fail("no head") }
+                try? FileManager.default.setAttributes([.posixPermissions: 0o555], ofItemAtPath: directory.path)
+                defer { try? FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: directory.path) }
+
+                storage.removeBatch(id: head.id, for: sensor) // fails: the directory is read-only
+                expect(QueueFixture.batchIds(root, sensor)).to(contain(head.id))
+                expect(headMarker(storage)).to(equal("b"))
+                expect(storage.pendingBatchCount(for: sensor)).to(equal(1))
+                expect(droppedReasons()).to(equal(["batch_remove_failed"]))
+
+                try? FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: directory.path)
+                expect(storage.pendingBatchCount(for: sensor)).to(equal(1)) // the retry removed it
+                expect(QueueFixture.batchIds(root, sensor)).toNot(contain(head.id))
+            }
+
             it("read_error_yields_empty_peek_and_failed_enqueue (limit case 17)") {
                 storage.enqueueBatch(marked("a"), windowStart: windowStart, for: sensor)
                 let directory = QueueFixture.sensorDirectory(root, sensor)
@@ -928,6 +947,23 @@ class SensorQueueDrainSpec: QuickSpec {
                 expect(markers(network.uploaded)).to(equal(["b0", "b1", "b2", "b3", "b4"]))
                 expect(network.attemptCount).toAlways(equal(5), until: .milliseconds(300))
                 expect(storage.pendingBatchCount(for: sensor)).to(equal(0))
+            }
+
+            it("uploads each batch once when its removal fails after the 200, instead of looping (review A-5)") {
+                storage.enqueueBatch([record("a")], windowStart: joinDay, for: sensor)
+                storage.enqueueBatch([record("b")], windowStart: joinDay, for: sensor)
+                expect(storage.pendingBatchCount(for: sensor)).to(equal(2))
+                let directory = QueueFixture.sensorDirectory(root, sensor)
+                try? FileManager.default.setAttributes([.posixPermissions: 0o555], ofItemAtPath: directory.path)
+                defer { try? FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: directory.path) }
+                let manager = makeManager(storage: storage)
+                manager.setNetworkDelegate(network)
+
+                manager.drainQueue(for: sensor)
+
+                expect(network.uploaded.count).toEventually(equal(2), timeout: .seconds(5))
+                expect(network.attemptCount).toAlways(equal(2), until: .milliseconds(500))
+                expect(markers(network.uploaded)).to(equal(["a", "b"]))
             }
 
             it("a second drain while one runs starts nothing; the running loop ships what was enqueued") {
