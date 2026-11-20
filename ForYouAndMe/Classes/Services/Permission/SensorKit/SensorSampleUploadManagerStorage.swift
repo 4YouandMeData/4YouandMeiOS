@@ -116,8 +116,13 @@ public protocol SensorSampleUploadManagerStorage: AnyObject {
 /// Marker protocol kept for symmetry with Health side (if you have a similar split there).
 public protocol SensorSampleUploaderStorage: AnyObject {}
 
-/// Simple UserDefaults-backed storage to get you running quickly.
-/// For production-critical durability, prefer CoreData/SQLite.
+/// The SensorKit pipeline's persistent state. Cursors, the upload ledger, the rescan gate and the
+/// deepest window are small values in `UserDefaults`. The upload QUEUE is one file per batch under
+/// Application Support (FUAM-4516): every queue operation touches one batch, so memory per
+/// operation no longer grows with the backlog. `sensorkit.queue.<sensor>` in `UserDefaults` is the
+/// 0.101.16/17 queue.
+///
+/// The class keeps its pre-FUAM-4516 name because it is public and existing specs use it.
 public final class DefaultsSensorStorage: SensorSampleUploadManagerStorage, SensorSampleUploaderStorage {
 
     private let cursorKeyPrefix = "sensorkit.cursor."
@@ -126,9 +131,38 @@ public final class DefaultsSensorStorage: SensorSampleUploadManagerStorage, Sens
     private let rescanDayKeyPrefix = "sensorkit.rescanday."
     private let deepestWindowKeyPrefix = "sensorkit.deepestwindow."
 
+    /// Serialises every ledger and queue operation. Every call is `sync` on the caller's thread,
+    /// so the queue's autorelease frequency never applies: each queue operation drains its own
+    /// explicit `autoreleasepool` instead (FUAM-4516, plan R2 PR-16 item 4).
     private let syncQueue = DispatchQueue(label: "sensorkit.storage.sync", qos: .utility)
 
-    public init() {}
+    // FUAM-4516 queue state. Everything below is touched on `syncQueue` only.
+    private let queueRoot: URL
+    private let analytics: AnalyticsService?
+    private let fileManager = FileManager.default
+    private var rootPrepared = false
+    /// Next batch sequence per sensor: the highest sequence on disk + 1 at first use, then kept
+    /// in memory. Never derived from the clock, so a clock change cannot reorder the queue.
+    private var nextSequence: [String: Int] = [:]
+
+    /// `<Application Support>/ForYouAndMe/SensorKitQueue/`. Backed up like `UserDefaults`, so a
+    /// restored device gets the queue and the cursors together (plan §2.1, OQ12).
+    static var defaultQueueDirectory: URL {
+        return FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+            .appendingPathComponent("ForYouAndMe", isDirectory: true)
+            .appendingPathComponent("SensorKitQueue", isDirectory: true)
+    }
+
+    public convenience init() {
+        self.init(queueDirectory: Self.defaultQueueDirectory)
+    }
+
+    /// `queueDirectory` is injectable so specs run on a temp directory; `analytics` receives the
+    /// queue telemetry (migration outcome, quarantined batches, dropped legacy entries).
+    init(queueDirectory: URL, analytics: AnalyticsService? = nil) {
+        self.queueRoot = queueDirectory
+        self.analytics = analytics
+    }
 
     // MARK: - Cursor
 
@@ -214,105 +248,260 @@ public final class DefaultsSensorStorage: SensorSampleUploadManagerStorage, Sens
         return prefix + sensor.rawValue + "." + deviceKey
     }
 
-    // MARK: - Queue
+    // MARK: - Queue (FUAM-4516: one file per batch)
+    //
+    // `<queueRoot>/<SRSensor.rawValue>/<seq>_<id>.json`, `seq` a 12-digit per-sensor sequence. A file
+    // holds exactly one entry of the 0.101.16/17 `UserDefaults` array: `{"id", "window_start",
+    // "records"}`. Writes are atomic (temp file + rename), so a batch file exists complete or not at
+    // all; removal is one unlink; moving a batch to the tail is one rename. Any other name in the
+    // directory is ignored.
 
     @discardableResult
     public func enqueueBatch(_ batch: [[String: Any]], windowStart: Date, for sensor: SRSensor) -> Bool {
-        return syncQueue.sync {
-            var queue = loadQueue(for: sensor)
-            queue.append(SensorQueuedBatch(id: UUID().uuidString, records: batch, windowStart: windowStart))
-            return saveQueue(queue, for: sensor)
+        return self.syncQueue.sync {
+            autoreleasepool {
+                self.prepareRootIfNeeded()
+                // FUAM-4517 seam: the id is chosen here so a rollback of a partially enqueued
+                // window can remove exactly what it wrote.
+                return self.writeNewBatch(id: UUID().uuidString, records: batch, windowStart: windowStart, for: sensor)
+            }
         }
     }
 
     public func peekNextBatch(for sensor: SRSensor, excluding ids: Set<String>) -> SensorQueuedBatch? {
-        return syncQueue.sync {
-            return loadQueue(for: sensor).first { !ids.contains($0.id) }
+        return self.syncQueue.sync {
+            autoreleasepool {
+                self.prepareRootIfNeeded()
+                guard let listed = self.listBatches(sensor) else { return nil }
+                for file in listed where !ids.contains(file.id) {
+                    switch self.readBatch(file) {
+                    case .batch(let batch):
+                        return batch
+                    case .unreadable:
+                        // Protection or permission error: leave the queue idle, lose nothing.
+                        return nil
+                    case .unparseable:
+                        // Kept, never uploaded, never auto-deleted; the drain moves on.
+                        self.quarantine(file, sensor: sensor, reason: "batch_unparseable")
+                    }
+                }
+                return nil
+            }
         }
     }
 
     public func removeBatch(id: String, for sensor: SRSensor) {
-        syncQueue.sync {
-            var queue = loadQueue(for: sensor)
-            guard let index = queue.firstIndex(where: { $0.id == id }) else { return }
-            queue.remove(at: index)
-            saveQueue(queue, for: sensor)
+        self.syncQueue.sync {
+            autoreleasepool {
+                self.prepareRootIfNeeded()
+                guard let file = self.listBatches(sensor)?.first(where: { $0.id == id }) else { return }
+                try? self.fileManager.removeItem(at: file.url)
+            }
         }
     }
 
+    /// A batch that is gone (a purge meant "drop") is NOT written back (plan R2 PR-6). Otherwise the
+    /// filtered content overwrites the same path atomically, then one rename moves it to the tail:
+    /// no step ever leaves two files with the same id.
     @discardableResult
     public func requeueBatch(id: String, records: [[String: Any]], for sensor: SRSensor) -> Bool {
-        return syncQueue.sync {
-            var queue = loadQueue(for: sensor)
-            guard let index = queue.firstIndex(where: { $0.id == id }) else { return true }
-            let old = queue.remove(at: index)
-            queue.append(SensorQueuedBatch(id: old.id, records: records, windowStart: old.windowStart))
-            return saveQueue(queue, for: sensor)
+        return self.syncQueue.sync {
+            autoreleasepool {
+                self.prepareRootIfNeeded()
+                guard let listed = self.listBatches(sensor) else { return false }
+                guard let file = listed.first(where: { $0.id == id }) else { return true }
+                guard case .batch(let current) = self.readBatch(file) else { return false }
+                if !(current.records as NSArray).isEqual(to: records) {
+                    let content: [String: Any] = [Self.idKey: id,
+                                                  Self.windowStartKey: current.windowStart.timeIntervalSince1970,
+                                                  Self.recordsKey: records]
+                    guard self.writeJSON(content, to: file.url) else { return false }
+                }
+                guard let sequence = self.takeSequence(for: sensor) else { return false }
+                let tail = self.sensorDirectory(sensor).appendingPathComponent(Self.batchName(sequence: sequence, id: id))
+                do {
+                    try self.fileManager.moveItem(at: file.url, to: tail)
+                    return true
+                } catch {
+                    return false
+                }
+            }
         }
     }
 
     public func dequeueNextBatch(for sensor: SRSensor) -> (records: [[String: Any]], windowStart: Date)? {
-        return syncQueue.sync {
-            var queue = loadQueue(for: sensor)
-            guard !queue.isEmpty else { return nil }
-            let head = queue.removeFirst()
-            saveQueue(queue, for: sensor)
-            return (head.records, head.windowStart)
-        }
+        guard let head = self.peekNextBatch(for: sensor, excluding: []) else { return nil }
+        self.removeBatch(id: head.id, for: sensor)
+        return (head.records, head.windowStart)
     }
 
     public func pendingBatchCount(for sensor: SRSensor) -> Int {
-        return syncQueue.sync { loadQueue(for: sensor).count }
+        return self.syncQueue.sync {
+            self.prepareRootIfNeeded()
+            return self.listBatches(sensor)?.count ?? 0
+        }
     }
 
-    // MARK: - Helpers
+    // MARK: - Queue helpers (on `syncQueue` only)
 
     private static let idKey = "id"
     private static let recordsKey = "records"
     private static let windowStartKey = "window_start"
+    private static let sequenceDigits = 12
+    private static let batchSuffix = ".json"
+    private static let quarantineDirectoryName = "_quarantine"
 
-    /// Loads the queue, DROPPING any entry not in the FUAM-3945 shape. The pre-FUAM-3945 format
-    /// was a bare array of records with no window start; such a batch cannot be consent-filtered
-    /// (its undecidable records would have to be dropped anyway) and predates this policy, so it
-    /// is purged once, on the first load after the upgrade. An entry persisted before batch ids
-    /// existed (FUAM-3945 round 6) is given one and rewritten, so the id a drain peeks is the
-    /// id it later removes. An older build reading the queue ignores the extra key.
-    private func loadQueue(for sensor: SRSensor) -> [SensorQueuedBatch] {
-        let key = queueKeyPrefix + sensor.rawValue
-        guard let data = UserDefaults.standard.data(forKey: key),
-              let entries = try? JSONSerialization.jsonObject(with: data) as? [Any] else { return [] }
-        var assignedIds = false
-        let queue: [SensorQueuedBatch] = entries.compactMap { entry in
-            guard let dictionary = entry as? [String: Any],
-                  let records = dictionary[Self.recordsKey] as? [[String: Any]],
-                  let windowStart = dictionary[Self.windowStartKey] as? Double else { return nil }
-            let id = dictionary[Self.idKey] as? String
-            if id == nil { assignedIds = true }
-            return SensorQueuedBatch(id: id ?? UUID().uuidString,
-                               records: records,
-                               windowStart: Date(timeIntervalSince1970: windowStart))
-        }
-        if queue.count != entries.count || assignedIds {
-            // Rewrite the blob so the purged legacy records do not stay at rest on the device,
-            // and so freshly assigned ids are durable.
-            saveQueue(queue, for: sensor)
-        }
-        return queue
+    private struct BatchFile {
+        let sequence: Int
+        let id: String
+        let url: URL
     }
 
-    /// `false` when the queue could not be serialized (AC4): the caller treats the enqueue as
-    /// not having happened and leaves the cursor alone.
-    @discardableResult
-    private func saveQueue(_ queue: [SensorQueuedBatch], for sensor: SRSensor) -> Bool {
-        let key = queueKeyPrefix + sensor.rawValue
-        let entries: [[String: Any]] = queue.map {
-            [Self.idKey: $0.id, Self.recordsKey: $0.records, Self.windowStartKey: $0.windowStart.timeIntervalSince1970]
+    private enum BatchRead {
+        case batch(SensorQueuedBatch)
+        case unreadable
+        case unparseable
+    }
+
+    private func sensorDirectory(_ sensor: SRSensor) -> URL {
+        return self.queueRoot.appendingPathComponent(sensor.rawValue, isDirectory: true)
+    }
+
+    private var quarantineDirectory: URL {
+        return self.queueRoot.appendingPathComponent(Self.quarantineDirectoryName, isDirectory: true)
+    }
+
+    static func batchName(sequence: Int, id: String) -> String {
+        let digits = String(sequence)
+        return String(repeating: "0", count: max(0, Self.sequenceDigits - digits.count)) + digits + "_" + id + Self.batchSuffix
+    }
+
+    /// `^\d{12}_[^/]+\.json$`; anything else (atomic-write temp files, `.DS_Store`, the markers) is
+    /// not a batch.
+    private static func parseBatchName(_ name: String, in directory: URL) -> BatchFile? {
+        guard name.hasSuffix(Self.batchSuffix), name.count > Self.sequenceDigits + 1 + Self.batchSuffix.count else { return nil }
+        let digits = name.prefix(Self.sequenceDigits)
+        guard digits.allSatisfy({ $0.isASCII && $0.isNumber }),
+              name.dropFirst(Self.sequenceDigits).first == "_",
+              let sequence = Int(digits) else { return nil }
+        let id = String(name.dropFirst(Self.sequenceDigits + 1).dropLast(Self.batchSuffix.count))
+        return BatchFile(sequence: sequence, id: id, url: directory.appendingPathComponent(name))
+    }
+
+    /// One entry of the 0.101.16/17 `UserDefaults` array, or one batch file: the entry parser of the
+    /// old `loadQueue`, unchanged. `nil` for the pre-FUAM-3945 shape (no window start).
+    private static func queuedBatch(from entry: [String: Any], id: String) -> SensorQueuedBatch? {
+        guard let records = entry[Self.recordsKey] as? [[String: Any]],
+              let windowStart = entry[Self.windowStartKey] as? Double else { return nil }
+        return SensorQueuedBatch(id: id, records: records, windowStart: Date(timeIntervalSince1970: windowStart))
+    }
+
+    /// At the first queue access of the process, delete every hidden file in the queue
+    /// directories. No write can be in flight then (one storage instance, every write on
+    /// `syncQueue`), so a hidden file is the temp file of an atomic write a kill interrupted. No
+    /// file-timestamp API is used: it would be a required-reason API (plan R2 PR-18 item 2).
+    private func prepareRootIfNeeded() {
+        guard !self.rootPrepared else { return }
+        self.rootPrepared = true
+        guard let children = try? self.fileManager.contentsOfDirectory(atPath: self.queueRoot.path) else { return }
+        for child in children {
+            let url = self.queueRoot.appendingPathComponent(child)
+            if child.hasPrefix(".") {
+                try? self.fileManager.removeItem(at: url)
+                continue
+            }
+            for name in (try? self.fileManager.contentsOfDirectory(atPath: url.path)) ?? [] where name.hasPrefix(".") {
+                try? self.fileManager.removeItem(at: url.appendingPathComponent(name))
+            }
         }
-        guard JSONSerialization.isValidJSONObject(entries),
-              let data = try? JSONSerialization.data(withJSONObject: entries, options: []) else {
+    }
+
+    /// Created with `completeUntilFirstUserAuthentication`: readable and writable while the screen
+    /// is locked after the first unlock since boot, which the grace-period uploads need.
+    private func ensureDirectory(_ url: URL) -> Bool {
+        var isDirectory: ObjCBool = false
+        if self.fileManager.fileExists(atPath: url.path, isDirectory: &isDirectory) {
+            return isDirectory.boolValue
+        }
+        do {
+            try self.fileManager.createDirectory(at: url,
+                                                 withIntermediateDirectories: true,
+                                                 attributes: [.protectionKey: FileProtectionType.completeUntilFirstUserAuthentication])
+            return true
+        } catch {
             return false
         }
-        UserDefaults.standard.set(data, forKey: key)
-        return true
+    }
+
+    /// Batch files sorted by sequence (queue order). `[]` when the directory does not exist yet;
+    /// `nil` when it exists but cannot be listed (protection or permission error).
+    private func listBatches(_ sensor: SRSensor) -> [BatchFile]? {
+        let directory = self.sensorDirectory(sensor)
+        let names: [String]
+        do {
+            names = try self.fileManager.contentsOfDirectory(atPath: directory.path)
+        } catch {
+            return self.fileManager.fileExists(atPath: directory.path) ? nil : []
+        }
+        return names.compactMap { Self.parseBatchName($0, in: directory) }.sorted { $0.sequence < $1.sequence }
+    }
+
+    private func takeSequence(for sensor: SRSensor) -> Int? {
+        let next: Int
+        if let cached = self.nextSequence[sensor.rawValue] {
+            next = cached
+        } else {
+            guard let listed = self.listBatches(sensor) else { return nil }
+            next = (listed.last?.sequence ?? 0) + 1
+        }
+        self.nextSequence[sensor.rawValue] = next + 1
+        return next
+    }
+
+    private func write(_ data: Data, to url: URL) -> Bool {
+        do {
+            try data.write(to: url, options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
+            return true
+        } catch {
+            return false
+        }
+    }
+
+    private func writeJSON(_ object: Any, to url: URL) -> Bool {
+        guard JSONSerialization.isValidJSONObject(object),
+              let data = try? JSONSerialization.data(withJSONObject: object) else { return false }
+        return self.write(data, to: url)
+    }
+
+    /// `false` on any serialization or file-system error (AC4): the caller leaves the cursor alone.
+    private func writeNewBatch(id: String, records: [[String: Any]], windowStart: Date, for sensor: SRSensor) -> Bool {
+        let directory = self.sensorDirectory(sensor)
+        guard self.ensureDirectory(directory), let sequence = self.takeSequence(for: sensor) else { return false }
+        let content: [String: Any] = [Self.idKey: id,
+                                      Self.windowStartKey: windowStart.timeIntervalSince1970,
+                                      Self.recordsKey: records]
+        return self.writeJSON(content, to: directory.appendingPathComponent(Self.batchName(sequence: sequence, id: id)))
+    }
+
+    private func readBatch(_ file: BatchFile) -> BatchRead {
+        guard let data = try? Data(contentsOf: file.url) else { return .unreadable }
+        guard let entry = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any],
+              let batch = Self.queuedBatch(from: entry, id: file.id) else { return .unparseable }
+        return .batch(batch)
+    }
+
+    /// Moves unparseable bytes to `<queueRoot>/_quarantine/`: never uploaded, never auto-deleted,
+    /// deleted only by a purge (plan OQ6). The id is part of the name, so two quarantined files
+    /// never collide even when a sequence number is reused after the queue emptied.
+    private func quarantine(_ file: BatchFile, sensor: SRSensor, reason: String) {
+        guard self.ensureDirectory(self.quarantineDirectory) else { return }
+        let name = "\(sensor.rawValue)_\(file.url.deletingPathExtension().lastPathComponent)_\(reason).json"
+        do {
+            try self.fileManager.moveItem(at: file.url, to: self.quarantineDirectory.appendingPathComponent(name))
+        } catch {
+            return
+        }
+        // `count` is one quarantined BATCH: its record count is unknowable.
+        self.analytics?.track(event: .sensorRecordDropped(sensor: sensor.shortSubsource, count: 1, reason: reason))
     }
 }
