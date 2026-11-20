@@ -1401,6 +1401,55 @@ class SensorQueueDrainSpec: QuickSpec {
             }
         }
 
+        describe("protected-data cache refresh and purge re-arm (re-check A-7, F3)") {
+
+            afterEach {
+                // Leave the shared state as the simulator really is (available).
+                SensorProtectedDataState.shared.refreshFromApplicationState()
+            }
+
+            it("re-enables the pipeline at didBecomeActive when no 'available' notification came (A-7)") {
+                storage.enqueueBatch([record("queued")], windowStart: joinDay, for: sensor)
+                let manager = makeManager(storage: storage) // reads the shared protected-data state
+                manager.setNetworkDelegate(network)
+                NotificationCenter.default.post(name: Notification.Name("UIApplicationProtectedDataWillBecomeUnavailable"), object: nil)
+                expect(SensorProtectedDataState.shared.isAvailable).toEventually(beFalse(), timeout: .seconds(2))
+
+                manager.startUploadLogic() // deferred: protected data reads as unavailable
+                manager.drainQueue(for: sensor)
+                expect(network.attemptCount).toAlways(equal(0), until: .milliseconds(300))
+
+                // No "did become available" ever arrives; the app comes back to the foreground.
+                SensorProtectedDataState.shared.refreshFromApplicationState() // what didBecomeActive calls
+
+                expect(SensorProtectedDataState.shared.isAvailable).to(beTrue())
+                expect(network.uploaded.count).toEventually(equal(1), timeout: .seconds(5))
+            }
+
+            it("runs a purge skipped by the lock guard at the next trigger without clearance (F3)") {
+                storage.enqueueBatch([record("old-user")], windowStart: joinDay, for: sensor)
+                let lock = NSLock()
+                var calls = 0
+                var lockAfterFirstCheck = true
+                let manager = makeManager(storage: storage)
+                manager.isProtectedDataAvailable = {
+                    lock.lock(); defer { lock.unlock() }
+                    calls += 1
+                    // Available when triggerSync checks, locked when the purge runs.
+                    return !(lockAfterFirstCheck && calls > 1)
+                }
+                clearance.sensorManagerCanRun = false
+
+                manager.triggerSync(reason: "spec")
+                expect(QueueFixture.batchFiles(root, sensor).count).toAlways(equal(1), until: .milliseconds(300))
+
+                lock.lock(); lockAfterFirstCheck = false; lock.unlock()
+                manager.triggerSync(reason: "spec")
+
+                expect(QueueFixture.batchFiles(root, sensor)).toEventually(beEmpty(), timeout: .seconds(5))
+            }
+        }
+
         describe("the kill-safe purge (R2 PR-7)") {
 
             func batchRecords(_ marker: String, deviceKind: String = SensorDevice.iphoneKey) -> [[String: Any]] {

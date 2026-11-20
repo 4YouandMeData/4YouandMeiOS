@@ -43,6 +43,14 @@ final class SensorProtectedDataState {
         self.observers.append(center.addObserver(forName: UIApplication.protectedDataWillBecomeUnavailableNotification,
                                                  object: nil,
                                                  queue: .main) { [weak self] _ in self?.update(false) })
+        // Review A-7: an app that got "will become unavailable" in the background and slept through
+        // the unlock may never see "did become available"; re-read the real value whenever it comes
+        // back to the foreground, or every later trigger would return early until relaunch.
+        for name in [UIApplication.didBecomeActiveNotification, UIApplication.willEnterForegroundNotification] {
+            self.observers.append(center.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in
+                self?.refreshFromApplicationState()
+            })
+        }
         if Thread.isMainThread {
             self.available = UIApplication.shared.isProtectedDataAvailable
         } else {
@@ -54,6 +62,12 @@ final class SensorProtectedDataState {
     var isAvailable: Bool {
         self.lock.lock(); defer { self.lock.unlock() }
         return self.available
+    }
+
+    /// Re-reads `UIApplication.isProtectedDataAvailable` (main thread only: the observers above
+    /// call it from main). Internal so a spec can stand in for the foreground notifications.
+    func refreshFromApplicationState() {
+        self.update(UIApplication.shared.isProtectedDataAvailable)
     }
 
     /// `handler` runs on main every time protected data goes from unavailable to available.
@@ -2289,8 +2303,13 @@ public final class SensorSampleUploadManager {
         print("SensorSampleUploadManager - Purging pending data (\(reason))")
         #endif
         // FUAM-4516 (review A-2): never purge what cannot be read: the windows could not be
-        // collected for the rewind, and the deletion would be a permanent loss.
-        guard self.isProtectedDataAvailable() else { return }
+        // collected for the rewind, and the deletion would be a permanent loss. Review F3: re-arm
+        // the no-clearance purge, so the next trigger without clearance runs it; otherwise a later
+        // login in this process would upload the queue the purge was meant to drop.
+        guard self.isProtectedDataAvailable() else {
+            DispatchQueue.main.async { [weak self] in self?.hasPurgedForNoUser = false }
+            return
+        }
 
         // Stop pending retries
         retryWorkItems.values.forEach { $0.cancel() }
