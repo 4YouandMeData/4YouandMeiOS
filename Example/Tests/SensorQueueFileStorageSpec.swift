@@ -1636,6 +1636,43 @@ class SensorQueueDrainSpec: QuickSpec {
 
 // MARK: - FUAM-4517: no re-send after a 200; a write failure never advances a cursor
 
+/// Uploads complete only when the spec says so, from a background thread.
+private final class ManualNetwork: SensorSampleUploaderNetworkDelegate {
+
+    private let lock = NSLock()
+    private var pending: [(Result<Void, Error>) -> Void] = []
+    private var attempts = 0
+
+    var attemptCount: Int {
+        self.lock.lock(); defer { self.lock.unlock() }
+        return self.attempts
+    }
+
+    func uploadSensorBatch(sensor: SRSensor, payload: [[String: Any]]) -> Single<Void> {
+        return Single.create { [weak self] observer in
+            guard let self = self else { return Disposables.create() }
+            self.lock.lock()
+            self.attempts += 1
+            self.pending.append { result in
+                switch result {
+                case .success: observer(.success(()))
+                case .failure(let error): observer(.failure(error))
+                }
+            }
+            self.lock.unlock()
+            return Disposables.create()
+        }
+    }
+
+    /// Answers the oldest pending request with a 200, off the main thread.
+    func succeedNext() {
+        self.lock.lock()
+        let next = self.pending.isEmpty ? nil : self.pending.removeFirst()
+        self.lock.unlock()
+        DispatchQueue.global(qos: .utility).async { next?(.success(())) }
+    }
+}
+
 // swiftlint:disable:next type_body_length
 class SensorWriteFailureAndRemovalSpec: QuickSpec {
 
@@ -1841,6 +1878,37 @@ class SensorWriteFailureAndRemovalSpec: QuickSpec {
                 expect(origins(.gaveUp)).to(equal(0))
                 expect(storage.lastCursor(for: sensor, deviceKey: device.key)).to(beNil())
                 expect(manager.windowFetchFailureCount(for: sensor, deviceKey: device.key)).to(equal(0))
+            }
+        }
+
+        describe("delete on the 200 (R2 PR-5, limit case 26)") {
+
+            it("success_removes_the_batch_while_the_work_queue_is_blocked, never on the main thread") {
+                let storage = OrderRecordingStorage(base: DefaultsSensorStorage(queueDirectory: root, analytics: analytics))
+                storage.enqueueBatch([["t": QueueFixture.iso(joinDay.addingTimeInterval(hour)), "marker": "a"]],
+                                     windowStart: joinDay, for: sensor)
+                _ = seedForward(storage)
+                let network = ManualNetwork()
+                let mapper = oneRecordPerWindow()
+                let manager = makeManager(storage: storage, mapper: mapper)
+                manager.setNetworkDelegate(network)
+
+                manager.drainQueue(for: sensor)
+                expect(network.attemptCount).toEventually(equal(1), timeout: .seconds(5))
+
+                // Window work occupies the work queue "for seconds".
+                let gate = DispatchSemaphore(value: 0)
+                storage.ledgerGate = gate
+                manager.runDeviceChain(at: 0, of: [device], for: sensor, now: Date(), using: mapper)
+                expect(storage.ledgerGateEntered).toEventually(beTrue(), timeout: .seconds(5))
+
+                network.succeedNext() // the 200 arrives while the work queue is blocked
+                expect(QueueFixture.batchFiles(root, sensor)).toEventually(beEmpty(), timeout: .seconds(5))
+                expect(storage.ledgerGateEntered).to(beTrue())
+                expect(storage.anyRemovalOnMain).to(beFalse())
+
+                gate.signal()
+                _ = manager.windowFetchFailureCount(for: sensor, deviceKey: device.key)
             }
         }
     }

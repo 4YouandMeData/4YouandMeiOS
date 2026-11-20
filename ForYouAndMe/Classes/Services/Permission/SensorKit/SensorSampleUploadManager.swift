@@ -166,6 +166,13 @@ public final class SensorSampleUploadManager {
     // Background queue to avoid blocking UI. FUAM-4516: `.workItem` drains an autorelease pool
     // after every block, so the objects one window or one upload step creates are freed at the end
     // of that block instead of piling up for the life of the queue's thread (08 R-5).
+    /// FUAM-4517 (plan R2 PR-5): where the drain removes a batch. The success callback arrives on
+    /// main (Moya has no callback queue), and `workQueue` can be busy for seconds with window
+    /// work; a removal queued behind it is what a kill turned into a re-send. This serial queue
+    /// waits only for the storage's own `syncQueue`. The drain's continuation is chained after
+    /// the removal, so the next peek can never see the removed batch.
+    private let removalQueue = DispatchQueue(label: "com.foryouandme.sensor.remove", qos: .utility)
+
     private let workQueue = DispatchQueue(label: "com.foryouandme.sensor.upload",
                                           qos: .utility,
                                           autoreleaseFrequency: .workItem)
@@ -2114,8 +2121,7 @@ public final class SensorSampleUploadManager {
                     #if DEBUG
                     print("SensorSampleUploadManager - Dropped a fully out-of-bounds queued batch for \(sensor.rawValue)")
                     #endif
-                    self.storage.removeBatch(id: batch.id, for: sensor)
-                    uploadNextBatch()
+                    self.removeThenContinue(batch.id, for: sensor, uploadNextBatch)
                     return
                 }
 
@@ -2130,16 +2136,11 @@ public final class SensorSampleUploadManager {
                     .subscribe(
                         onSuccess: { [weak self] in
                             guard let self = self else { return }
-                            // Hop onto the work queue: `drainingSensors` lives there. The batch
-                            // leaves the persisted queue only now that the server has it.
-                            // FUAM-4517 seam: this removal still waits behind `workQueue`;
-                            // FUAM-4517 moves it off that queue and chains the continuation.
-                            self.workQueue.async { [weak self] in
-                                guard let self = self else { return }
-                                self.storage.removeBatch(id: batch.id, for: sensor)
-                                // Keep going; stops by itself when nothing uploadable is left.
-                                uploadNextBatch()
-                            }
+                            // The batch leaves the persisted queue the moment the server has it
+                            // (FUAM-4517): on `removalQueue`, not behind `workQueue`, never on
+                            // main. Then keep going; the loop stops by itself when nothing
+                            // uploadable is left.
+                            self.removeThenContinue(batch.id, for: sensor, uploadNextBatch)
                         },
                         onFailure: { [weak self] error in
                             guard let self = self else { return }
@@ -2165,7 +2166,6 @@ public final class SensorSampleUploadManager {
                                     let rejections = (self.batchUploadRejections[key] ?? 0) + 1
                                     guard rejections < self.maxBatchUploadRejections else {
                                         self.batchUploadRejections[key] = nil
-                                        self.storage.removeBatch(id: batch.id, for: sensor)
                                         self.analytics.track(event: .sensorDataBackfillReach(
                                             sensor: sensor.shortSubsource,
                                             reachedBack: ISO8601DateFormatter().string(from: batch.windowStart),
@@ -2174,7 +2174,7 @@ public final class SensorSampleUploadManager {
                                             sensor: sensor.shortSubsource,
                                             count: uploadable.count,
                                             reason: "upload_rejected_\(statusCode)"))
-                                        uploadNextBatch()
+                                        self.removeThenContinue(batch.id, for: sensor, uploadNextBatch)
                                         return
                                     }
                                     self.batchUploadRejections[key] = rejections
@@ -2214,6 +2214,19 @@ public final class SensorSampleUploadManager {
                   self.storage.pendingBatchCount(for: sensor) > 0 else { return }
             self.drainingSensors.insert(sensor)
             uploadNextBatch()
+        }
+    }
+
+    /// FUAM-4517: the one way the drain removes a batch it is done with (uploaded, fully filtered
+    /// out, or dropped after its rejection budget): on `removalQueue`, then `next`, which hops back
+    /// to `workQueue` by itself. A removal that fails is the storage's business: the id stays hidden
+    /// from peek and the unlink is retried (FUAM-4516 review A-5), so the chained peek can never
+    /// return the batch just removed.
+    private func removeThenContinue(_ id: String, for sensor: SRSensor, _ next: @escaping () -> Void) {
+        self.removalQueue.async { [weak self] in
+            guard let self = self else { return }
+            self.storage.removeBatch(id: id, for: sensor)
+            next()
         }
     }
 
