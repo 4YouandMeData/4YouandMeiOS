@@ -96,20 +96,25 @@ extension VisitsMapper: SRSensorReaderDelegate {
         fetching fetchRequest: SRFetchRequest,
         didFetchResult result: SRFetchResult<AnyObject>
     ) -> Bool {
-        // Attach SRFetchResult.timestamp as recorded_at
-        let recordedAt = dateFromSRAbsoluteTime(result.timestamp)
-        fetchedResults += 1
+        // FUAM-4516: free the objects this result's mapping creates (KVC results, intermediate
+        // dictionaries) before the next result arrives. The SRFetchResult itself is autoreleased
+        // by SensorKit's caller, outside this pool.
+        return autoreleasepool { () -> Bool in
+            // Attach SRFetchResult.timestamp as recorded_at
+            let recordedAt = dateFromSRAbsoluteTime(result.timestamp)
+            fetchedResults += 1
 
-        // SRVisit arrives as single objects (no CMSensorDataList expected)
-        if let visit = result.sample as? NSObject,
-           let record = Self.mapVisit(visit, recordedAt: recordedAt) {
-            // FUAM-3945: ledger identity — the raw monotonic timestamp, never its wall
-            // projection (see SensorRecordIdentity). Stripped before upload.
-            collected.append(SensorRecordIdentity.stamped(record,
-                                                          raw: result.timestamp,
-                                                          replacing: ["recorded_at", "recorded_at_precise"]))
+            // SRVisit arrives as single objects (no CMSensorDataList expected)
+            if let visit = result.sample as? NSObject,
+               let record = Self.mapVisit(visit, recordedAt: recordedAt) {
+                // FUAM-3945: ledger identity — the raw monotonic timestamp, never its wall
+                // projection (see SensorRecordIdentity). Stripped before upload.
+                collected.append(SensorRecordIdentity.stamped(record,
+                                                              raw: result.timestamp,
+                                                              replacing: ["recorded_at", "recorded_at_precise"]))
+            }
+            return true // continue fetching
         }
-        return true // continue fetching
     }
 
     func sensorReader(_ reader: SRSensorReader, didCompleteFetch fetchRequest: SRFetchRequest) {

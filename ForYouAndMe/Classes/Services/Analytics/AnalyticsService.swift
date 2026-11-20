@@ -80,9 +80,10 @@ enum AnalyticsParameter: String {
     // FUAM-3945 fidelity audit (X1). Field-level completeness attributes.
     case field
     case total
-    // FUAM-4516. Queue migration attributes.
+    // FUAM-4516. Queue migration and memory back-off attributes.
     case legacyBytes = "legacy_bytes"
     case outcome
+    case availableMB = "available_mb"
 }
 
 enum AnalyticsScreens: String {
@@ -243,6 +244,11 @@ enum AnalyticsEvent {
     // launch) or "unparseable" (raw bytes kept in quarantine, never uploaded). Once per sensor per
     // install, plus once per launch while a partial migration keeps failing.
     case sensorQueueMigrated(sensor: String, batchCount: Int, legacyBytes: Int, outcome: String)
+    // FUAM-4516. A SensorKit fetch was not started because the process was close to its memory
+    // limit (`os_proc_available_memory`): the sensor's chain ends for this cycle with its cursor
+    // untouched and no failure counted; the next sync retries. Daily occurrences for one
+    // participant mean the pause outlives SensorKit's ~7-day retention.
+    case sensorMemoryBackoff(sensor: String, availableMB: Int)
 
     // Errors
     case serverError(apiError: ApiError)

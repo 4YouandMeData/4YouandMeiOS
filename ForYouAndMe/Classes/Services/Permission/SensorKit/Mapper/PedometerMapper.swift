@@ -85,33 +85,38 @@ extension PedometerMapper: SRSensorReaderDelegate {
     func sensorReader(_ reader: SRSensorReader,
                       fetching fetchRequest: SRFetchRequest,
                       didFetchResult result: SRFetchResult<AnyObject>) -> Bool {
-        // FUAM-4013: `recorded_at` is `SRFetchResult.timestamp` — WHEN SensorKit wrote the
-        // record. The backend's semantic anchor (`ClientPush::SemanticAnchor`) reads it as
-        // `min(records[].recorded_at)`; without it the anchor silently falls back to upload
-        // time and re-uploads scatter into new rows instead of de-duplicating. Same
-        // fractional-seconds ISO8601 encoding as the `t` key next to it.
-        let recordedAtISO = ISO8601Strategy.encode(dateFromSRAbsoluteTime(result.timestamp))
+        // FUAM-4516: free the objects this result's mapping creates (KVC results, intermediate
+        // dictionaries) before the next result arrives. The SRFetchResult itself is autoreleased
+        // by SensorKit's caller, outside this pool.
+        return autoreleasepool { () -> Bool in
+            // FUAM-4013: `recorded_at` is `SRFetchResult.timestamp` — WHEN SensorKit wrote the
+            // record. The backend's semantic anchor (`ClientPush::SemanticAnchor`) reads it as
+            // `min(records[].recorded_at)`; without it the anchor silently falls back to upload
+            // time and re-uploads scatter into new rows instead of de-duplicating. Same
+            // fractional-seconds ISO8601 encoding as the `t` key next to it.
+            let recordedAtISO = ISO8601Strategy.encode(dateFromSRAbsoluteTime(result.timestamp))
 
-        fetchedResults += 1
+            fetchedResults += 1
 
-        // result.sample can be a CMSensorDataList or a single CMPedometerData
-        var records: [[String: Any]] = []
-        if let list = result.sample as? CMSensorDataList {
-            // Iterate NSFastEnumeration via wrapper (no direct Sequence conformance)
-            for element in FastEnumerationSequence(base: list) {
-                guard let pedo = element as? CMPedometerData else { continue }
+            // result.sample can be a CMSensorDataList or a single CMPedometerData
+            var records: [[String: Any]] = []
+            if let list = result.sample as? CMSensorDataList {
+                // Iterate NSFastEnumeration via wrapper (no direct Sequence conformance)
+                for element in FastEnumerationSequence(base: list) {
+                    guard let pedo = element as? CMPedometerData else { continue }
+                    records.append(Self.mapPedometerSample(pedo, recordedAtISO: recordedAtISO))
+                }
+            } else if let pedo = result.sample as? CMPedometerData {
                 records.append(Self.mapPedometerSample(pedo, recordedAtISO: recordedAtISO))
             }
-        } else if let pedo = result.sample as? CMPedometerData {
-            records.append(Self.mapPedometerSample(pedo, recordedAtISO: recordedAtISO))
+            // FUAM-3945: ledger identity — the raw monotonic timestamp, never its wall
+            // projection (see SensorRecordIdentity). The raw value ships only when it identifies a
+            // single record; list siblings share it.
+            collected.append(contentsOf: SensorRecordIdentity.stampedResult(records,
+                                                                             raw: result.timestamp,
+                                                                             replacing: ["recorded_at"]))
+            return true // continue fetching
         }
-        // FUAM-3945: ledger identity — the raw monotonic timestamp, never its wall
-        // projection (see SensorRecordIdentity). The raw value ships only when it identifies a
-        // single record; list siblings share it.
-        collected.append(contentsOf: SensorRecordIdentity.stampedResult(records,
-                                                                         raw: result.timestamp,
-                                                                         replacing: ["recorded_at"]))
-        return true // continue fetching
     }
 
     func sensorReader(_ reader: SRSensorReader, didCompleteFetch fetchRequest: SRFetchRequest) {

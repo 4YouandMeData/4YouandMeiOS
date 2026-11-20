@@ -79,35 +79,39 @@ extension AmbientLightMapper: SRSensorReaderDelegate {
     func sensorReader(_ reader: SRSensorReader,
                       fetching fetchRequest: SRFetchRequest,
                       didFetchResult result: SRFetchResult<AnyObject>) -> Bool {
+        // FUAM-4516: free the objects this result's mapping creates (KVC results, intermediate
+        // dictionaries) before the next result arrives. The SRFetchResult itself is autoreleased
+        // by SensorKit's caller, outside this pool.
+        return autoreleasepool { () -> Bool in
+            // FUAM-4013: `recorded_at` is `SRFetchResult.timestamp` — WHEN SensorKit wrote the
+            // record. The backend's semantic anchor (`ClientPush::SemanticAnchor`) reads it as
+            // `min(records[].recorded_at)`; without it the anchor silently falls back to upload
+            // time and re-uploads scatter into new rows instead of de-duplicating. Same
+            // fractional-seconds ISO8601 encoding as the `t` key next to it.
+            let recordedAt = dateFromSRAbsoluteTime(result.timestamp)
 
-        // FUAM-4013: `recorded_at` is `SRFetchResult.timestamp` — WHEN SensorKit wrote the
-        // record. The backend's semantic anchor (`ClientPush::SemanticAnchor`) reads it as
-        // `min(records[].recorded_at)`; without it the anchor silently falls back to upload
-        // time and re-uploads scatter into new rows instead of de-duplicating. Same
-        // fractional-seconds ISO8601 encoding as the `t` key next to it.
-        let recordedAt = dateFromSRAbsoluteTime(result.timestamp)
+            self.fetchedResults += 1
 
-        self.fetchedResults += 1
+            // We don't rely on concrete class names; use KVC to extract known fields.
+            guard let sampleObj = result.sample as? NSObject else { return true }
 
-        // We don't rely on concrete class names; use KVC to extract known fields.
-        guard let sampleObj = result.sample as? NSObject else { return true }
-
-        if let record = Self.mapAmbientLight(sampleObj, recordedAt: recordedAt) {
-            // FUAM-3945: ledger identity — the raw monotonic timestamp, never its wall
-            // projection (see SensorRecordIdentity). Stripped before upload. `t` is
-            // recordedAt-derived only when `mapAmbientLight` fell back to it (real
-            // `SRAmbientLightSample`s expose no date, so on-device it always does); the
-            // fallback encodes the SAME Date with the SAME strategy as `recorded_at`, so
-            // byte-equality is exactly "the fallback fired" — a `t` from a stored sample
-            // date stays in the fingerprint, it is already fetch-stable.
-            var replaced = ["recorded_at"]
-            if record["t"] as? String == record["recorded_at"] as? String {
-                replaced.append("t")
+            if let record = Self.mapAmbientLight(sampleObj, recordedAt: recordedAt) {
+                // FUAM-3945: ledger identity — the raw monotonic timestamp, never its wall
+                // projection (see SensorRecordIdentity). Stripped before upload. `t` is
+                // recordedAt-derived only when `mapAmbientLight` fell back to it (real
+                // `SRAmbientLightSample`s expose no date, so on-device it always does); the
+                // fallback encodes the SAME Date with the SAME strategy as `recorded_at`, so
+                // byte-equality is exactly "the fallback fired" — a `t` from a stored sample
+                // date stays in the fingerprint, it is already fetch-stable.
+                var replaced = ["recorded_at"]
+                if record["t"] as? String == record["recorded_at"] as? String {
+                    replaced.append("t")
+                }
+                self.collected.append(SensorRecordIdentity.stamped(record, raw: result.timestamp, replacing: replaced))
             }
-            self.collected.append(SensorRecordIdentity.stamped(record, raw: result.timestamp, replacing: replaced))
-        }
 
-        return true // continue fetching
+            return true // continue fetching
+        }
     }
 
     /// Extract illuminance (and optional colour temperature) with KVC. Internal (not private)

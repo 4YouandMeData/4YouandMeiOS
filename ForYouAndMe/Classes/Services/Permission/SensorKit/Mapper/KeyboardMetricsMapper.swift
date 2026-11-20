@@ -105,18 +105,23 @@ extension KeyboardMetricsMapper: SRSensorReaderDelegate {
         fetching fetchRequest: SRFetchRequest,
         didFetchResult result: SRFetchResult<AnyObject>
     ) -> Bool {
-        // Attach SRFetchResult.timestamp as recorded_at
-        let recordedAt = dateFromSRAbsoluteTime(result.timestamp)
-        fetchedResults += 1
-        if let metrics = result.sample as? NSObject,
-           let record = Self.mapKeyboardMetrics(metrics, recordedAt: recordedAt) {
-            // FUAM-3945: ledger identity — the raw monotonic timestamp, never its wall
-            // projection (see SensorRecordIdentity). Stripped before upload.
-            collected.append(SensorRecordIdentity.stamped(record,
-                                                          raw: result.timestamp,
-                                                          replacing: ["recorded_at", "recorded_at_precise"]))
+        // FUAM-4516: free the objects this result's mapping creates (KVC results, intermediate
+        // dictionaries) before the next result arrives. The SRFetchResult itself is autoreleased
+        // by SensorKit's caller, outside this pool.
+        return autoreleasepool { () -> Bool in
+            // Attach SRFetchResult.timestamp as recorded_at
+            let recordedAt = dateFromSRAbsoluteTime(result.timestamp)
+            fetchedResults += 1
+            if let metrics = result.sample as? NSObject,
+               let record = Self.mapKeyboardMetrics(metrics, recordedAt: recordedAt) {
+                // FUAM-3945: ledger identity — the raw monotonic timestamp, never its wall
+                // projection (see SensorRecordIdentity). Stripped before upload.
+                collected.append(SensorRecordIdentity.stamped(record,
+                                                              raw: result.timestamp,
+                                                              replacing: ["recorded_at", "recorded_at_precise"]))
+            }
+            return true // continue
         }
-        return true // continue
     }
 
     func sensorReader(

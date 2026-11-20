@@ -7,6 +7,7 @@
 
 import CryptoKit
 import Foundation
+import os
 import RxSwift
 import SensorKit
 
@@ -35,9 +36,19 @@ public final class SensorSampleUploadManager {
     
     private let sensorkitEmbargo: TimeInterval = 24 * 60 * 60   // 24h absolute duration
 
-    /// The server rejects requests above 10 MB (HTTP 413 PayloadTooLarge). Keep each queued
-    /// batch's serialized JSON safely below that; the upload envelope adds only a few bytes.
-    private let maxBatchBytes: Int = 5 * 1024 * 1024
+    /// The server rejects requests above 10 MB (HTTP 413 PayloadTooLarge). FUAM-4516: 1 MiB (was
+    /// 5 MiB) bounds the memory of one upload in flight (peeked batch, stripped copy, body,
+    /// transport: about 4 copies) and makes a cellular upload take seconds, not tens of seconds.
+    /// A batch of exactly this many serialized bytes is allowed; a single record above it still
+    /// ships alone. Batches migrated from 0.101.16/17 keep their size (up to ~5 MB) and are not
+    /// re-split (plan OQ13).
+    static let maxBatchBytes: Int = 1 * 1024 * 1024
+
+    /// FUAM-4516: no new SensorKit fetch starts while `os_proc_available_memory()` reports less
+    /// than this. 0 (simulator, unknown) means proceed.
+    /// ponytail: a fixed 300 MB threshold; make it a fraction of the process limit if
+    /// `sensor_memory_backoff` shows back-offs on small-RAM devices.
+    static let memoryGuardBytes: Int = 300 * 1024 * 1024
 
     /// Give up on a window after this many consecutive failed fetch attempts and move past it,
     /// so one poison window doesn't stall the per-sensor chain forever (FUAM-3841).
@@ -57,10 +68,14 @@ public final class SensorSampleUploadManager {
     static let rescanTailDays: Int = 3
 
     /// FUAM-3945 (D4): ledger entries are pruned once their day falls this many days behind the
-    /// planning day — rescan depth + 2 days of margin, so nothing the rescan can re-fetch is ever
-    /// forgotten while it still matters. Over-pruning only costs a re-upload the server
-    /// union-merges; under-pruning only costs storage.
-    static let ledgerRetentionDays: TimeInterval = TimeInterval(rescanTailDays) + 2
+    /// planning day, so nothing a re-fetch can return is forgotten while it still matters.
+    /// Over-pruning only costs a re-upload the server union-merges; under-pruning only costs
+    /// storage. FUAM-4516 (plan R3 RR-4): 9 days, not rescan depth + 2 (5): a backward probe walks
+    /// SensorKit's whole ~7-day retention plus the 26 h report lookback, and the memory guard's
+    /// probe flush must commit those days in a form the next cycle's prefilter still recognises.
+    /// Days 5-7 pruned in the same write that committed them were re-buffered and re-uploaded on
+    /// every guarded cycle. About 1.8x the old ledger size, under 1 MB for pedometer.
+    static let ledgerRetentionDays: TimeInterval = 9
 
     /// FUAM-3945 (AC1): a BACKFILL walk probes windows newest-first and stops extending backwards
     /// after this many CONSECUTIVE confirmed-empty windows — the adaptive replacement for any
@@ -101,10 +116,19 @@ public final class SensorSampleUploadManager {
     /// OS retention could buffer a lot, so past this cap the buffer is flushed early and the
     /// rest of the probe falls back to enqueue-as-you-go (still correct — the membership filter
     /// stays in place there — just no longer strictly chronological), with a
-    /// `probe_buffer_overflow` telemetry trace. Counted in records, not serialized bytes:
-    /// measuring bytes would cost a serialization pass larger than the buffer itself.
-    /// Internal and mutable for the overflow specs only.
+    /// `probe_buffer_overflow` telemetry trace. Internal and mutable for the overflow specs only.
     var probeBufferMaxRecords: Int = 10_000
+
+    /// FUAM-4516 (plan R4): the probe buffer is bounded by estimated JSON BYTES as well as by
+    /// records. With 200 KB device-usage records the record cap alone allows about 2 GB in memory,
+    /// and release safety must not depend on FUAM-4515 shrinking them. The estimate serializes each
+    /// buffered record once, one record at a time inside an autorelease pool, so it costs CPU but
+    /// never more memory than one record. Internal and mutable for the overflow specs only.
+    var probeBufferMaxBytes: Int = 8 * 1024 * 1024
+
+    /// FUAM-4516: the process's available memory in bytes (`os_proc_available_memory`), injectable
+    /// for the memory-guard specs. 0 means unknown.
+    var availableMemory: () -> Int = { Int(os_proc_available_memory()) }
 
     // MARK: - Dependencies
 
@@ -122,8 +146,12 @@ public final class SensorSampleUploadManager {
     // State
     private var hasPurgedForNoUser = false
 
-    // Background queue to avoid blocking UI
-    private let workQueue = DispatchQueue(label: "com.foryouandme.sensor.upload", qos: .utility)
+    // Background queue to avoid blocking UI. FUAM-4516: `.workItem` drains an autorelease pool
+    // after every block, so the objects one window or one upload step creates are freed at the end
+    // of that block instead of piling up for the life of the queue's thread (08 R-5).
+    private let workQueue = DispatchQueue(label: "com.foryouandme.sensor.upload",
+                                          qos: .utility,
+                                          autoreleaseFrequency: .workItem)
     
     /// Optional clearance gate. If `false`, the manager will not fetch/upload.
     public weak var clearanceDelegate: SensorSampleUploadManagerClearanceDelegate?
@@ -761,6 +789,9 @@ public final class SensorSampleUploadManager {
         var probeBuffer: [ProbeBufferedWindow] = []
         /// Records currently buffered — checked against `probeBufferMaxRecords`.
         var probeBufferRecordCount: Int = 0
+        /// Estimated JSON bytes currently buffered — checked against `probeBufferMaxBytes`
+        /// (FUAM-4516).
+        var probeBufferByteCount: Int = 0
         /// `true` once the cap tripped: the buffer was flushed early and the rest of the probe
         /// enqueues as-you-go (the pre-round-4 regime, still correct via the membership filter).
         var probeBufferOverflowed: Bool = false
@@ -1017,6 +1048,28 @@ public final class SensorSampleUploadManager {
         }
 
         let window = windows[index]
+
+        // FUAM-4516: no new fetch close to the process memory limit. The chain ends for this
+        // cycle with its cursor untouched and no failure counted; the next sync retries. A
+        // backward probe first flushes what it buffered (plan R2 PR-4): those days are enqueued and
+        // committed to the ledger, so the next cycle's prefilter skips them and every guarded
+        // cycle still makes durable progress. Its result needs no handling: either way no cursor
+        // is written here.
+        let available = self.availableMemory()
+        if available > 0, available < Self.memoryGuardBytes {
+            self.analytics.track(event: .sensorMemoryBackoff(sensor: context.device.telemetryName(for: context.sensor),
+                                                             availableMB: available / (1024 * 1024)))
+            #if DEBUG
+            print("SensorSampleUploadManager - Memory back-off for \(context.sensor.rawValue): "
+                  + "\(available / (1024 * 1024)) MB available")
+            #endif
+            if context.backwardProbe, !context.probeBuffer.isEmpty {
+                _ = self.flushProbeBuffer(context: context, assertGuardInert: false)
+            }
+            self.endChain(for: context.sensor)
+            return
+        }
+
         // FUAM-3945 (D1): the mapper fetches the WIDENED span; everything downstream — the
         // cursor write, the enqueue windowStart, the consent gate's `windowVouches` — keeps
         // receiving the narrow `window`.
@@ -1303,6 +1356,7 @@ public final class SensorSampleUploadManager {
                                                             isRescanPass: isRescanPass,
                                                             windowAgeDays: windowAgeDays))
                 next.probeBufferRecordCount += novel.count
+                next.probeBufferByteCount += Self.estimatedJSONBytes(of: novel)
             }
         }
         next.probeEmptyStreak = rawRecordsWereEmpty ? context.probeEmptyStreak + 1 : 0
@@ -1312,7 +1366,7 @@ public final class SensorSampleUploadManager {
             self.finishProbe(context: next)
             return
         }
-        if next.probeBufferRecordCount > self.probeBufferMaxRecords {
+        if next.probeBufferRecordCount > self.probeBufferMaxRecords || next.probeBufferByteCount > self.probeBufferMaxBytes {
             // The cap: flush what is buffered now (chronological among themselves, NO cursor —
             // the probe is not done) and fall back to enqueue-as-you-go for the rest of the
             // walk, where the F1 membership filter is load-bearing again. Correctness is
@@ -1330,6 +1384,7 @@ public final class SensorSampleUploadManager {
             }
             next.probeBuffer = []
             next.probeBufferRecordCount = 0
+            next.probeBufferByteCount = 0
             next.probeBufferOverflowed = true
         }
         self.processWindow(at: index + 1, of: windows, context: next)
@@ -1746,7 +1801,7 @@ public final class SensorSampleUploadManager {
     private func enqueueRespectingPayloadLimit(_ records: [[String: Any]],
                                                windowStart: Date,
                                                for sensor: SRSensor) -> Bool {
-        return Self.splitRespectingPayloadLimit(records, maxBatchSize: maxBatchSize, maxBatchBytes: maxBatchBytes)
+        return Self.splitRespectingPayloadLimit(records, maxBatchSize: maxBatchSize, maxBatchBytes: Self.maxBatchBytes)
             .allSatisfy { self.storage.enqueueBatch($0, windowStart: windowStart, for: sensor) }
     }
 
@@ -1777,10 +1832,24 @@ public final class SensorSampleUploadManager {
 
     // ponytail: serializes the batch once per bisection level — fine for ≤500-record
     // batches; revisit only if profiling shows enqueue cost.
+    // FUAM-4516 (plan R2 PR-3): the pool releases each level's intermediate `Data` as soon as it
+    // is measured, instead of at the end of the window's work-queue block.
     private static func serializedSize(of batch: [[String: Any]]) -> Int {
-        guard JSONSerialization.isValidJSONObject(batch),
-              let data = try? JSONSerialization.data(withJSONObject: batch) else { return 0 }
-        return data.count
+        return autoreleasepool {
+            guard JSONSerialization.isValidJSONObject(batch),
+                  let data = try? JSONSerialization.data(withJSONObject: batch) else { return 0 }
+            return data.count
+        }
+    }
+
+    /// FUAM-4516: the serialized JSON size of `records`, one record at a time, so the estimate
+    /// never holds more than one record's bytes. A record that cannot be serialized counts 0, as
+    /// in `serializedSize`.
+    static func estimatedJSONBytes(of records: [[String: Any]]) -> Int {
+        // Brackets plus one comma between records: `[]` alone is 2 bytes.
+        return records.reduce(into: max(2, records.count + 1)) { total, record in
+            total += max(0, Self.serializedSize(of: [record]) - 2)
+        }
     }
 
     /// Uploads queued batches. The cursor is NEVER touched here (review fix #3): it is owned
