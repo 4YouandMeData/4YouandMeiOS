@@ -94,10 +94,10 @@ final class FakeApiGateway: ApiGateway {
                 return .error(FakeApiError.scriptedFailure)
             }
             return .just(note)
-        case .sendUserTimeZone:
+        case .sendUserTimeZone(let timeZoneIdentifier):
             self.requestLog.append("patch_time_zone")
             if let error = self.userTimeZoneError { return .error(error) }
-            return Single.just(Response(statusCode: 200, data: FakeApiGateway.userJSON(timeZone: "Europe/Rome")))
+            return Single.just(Response(statusCode: 200, data: FakeApiGateway.userJSON(timeZone: timeZoneIdentifier)))
                 .mapCodableJSONAPI(includeList: T.includeList, keyPath: T.keyPath)
         default:
             fatalError("FakeApiGateway: unexpected JSONAPIMappable send for \(request.serviceRequest)")

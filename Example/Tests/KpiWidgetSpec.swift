@@ -328,7 +328,7 @@ class KpiWidgetSpec: QuickSpec {
 
             func fetchLikeServices() {
                 received = nil
-                _ = repository.syncUserTimeZoneIfNeeded().flatMap { repository.getKpiWidgets() }
+                _ = KpiWidgetStore.makeFetch(repository: repository)()
                     .subscribe(onSuccess: { received = $0 })
             }
 
@@ -366,6 +366,18 @@ class KpiWidgetSpec: QuickSpec {
                 fetchLikeServices()
                 expect(received).toEventuallyNot(beNil())
                 expect(api.requestLog).to(equal(["patch_time_zone", "get_kpi_widgets"]))
+            }
+
+            it("sends no second PATCH once the cached user holds the device zone") {
+                storage.user?.timeZone = nil
+                let store = KpiWidgetStore(fetch: KpiWidgetStore.makeFetch(repository: repository),
+                                           notificationCenter: NotificationCenter())
+                store.refreshIfNeeded(today: "2026-11-07")
+                expect(store.loadedLocalDay).toEventually(equal("2026-11-07"))
+                expect(storage.user?.timeZone?.identifier).to(equal(TimeZone.current.identifier))
+                store.refreshIfNeeded(today: "2026-11-08")
+                expect(store.loadedLocalDay).toEventually(equal("2026-11-08"))
+                expect(api.requestLog).to(equal(["patch_time_zone", "get_kpi_widgets", "get_kpi_widgets"]))
             }
 
             it("refreshes when the local day moves backwards") {
