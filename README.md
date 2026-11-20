@@ -239,6 +239,9 @@ If you have installed ForYouAndMe on a brand new project, there are a few files 
 1.  Remove `Main.storyboard`.
     
 2.  Remove `SceneDelegate.swift`.
+
+    
+    **Note:** apps built with Xcode 27 for iOS 27 must keep a scene manifest (apps without one fail at launch there), so on that toolchain do not remove `SceneDelegate.swift` and the manifest below; see "Scene-based hosts (UIScene lifecycle)" for the supported setup. The full README rework for scene-based hosts is tracked in FUAM-4196.
     
 3.  Remove `ViewController.swift`.
     
@@ -246,6 +249,8 @@ If you have installed ForYouAndMe on a brand new project, there are a few files 
 #### From the info.plist file
 
 Remove the `UIApplicationSceneManifest` entry from `info.plist`.
+
+(Not on Xcode 27 / iOS 27: keep the scene manifest there, see the note above and "Scene-based hosts (UIScene lifecycle)".)
 
 #### In the General Tab
 
