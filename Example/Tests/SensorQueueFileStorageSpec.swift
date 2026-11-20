@@ -415,6 +415,47 @@ class SensorQueueFileStorageSpec: QuickSpec {
                 expect(QueueFixture.batchIds(root, sensor)).to(equal(["batch-b"]))
             }
 
+            it("drains 2,000 batch files with a bounded number of directory listings (review B-5)") {
+                for index in 0..<2_000 {
+                    storage.enqueueBatch(marked("m\(index)"), windowStart: windowStart, for: sensor)
+                }
+                let relaunched = relaunch()
+                var drained = 0
+                var inOrder = true
+                while let batch = relaunched.peekNextBatch(for: sensor, excluding: []) {
+                    inOrder = inOrder && batch.records.first?["marker"] as? String == "m\(drained)"
+                    relaunched.removeBatch(id: batch.id, for: sensor)
+                    drained += 1
+                }
+                expect(drained).to(equal(2_000))
+                expect(inOrder).to(beTrue())
+                // One listing to build the index, one to confirm the queue is empty at the end.
+                expect(relaunched.directoryListingCount).to(beLessThanOrEqualTo(3))
+                expect(QueueFixture.batchFiles(root, sensor)).to(beEmpty())
+            }
+
+            it("resolves an index the disk contradicts by re-listing, never by losing or duplicating") {
+                storage.enqueueBatch(marked("a"), windowStart: windowStart, for: sensor)
+                storage.enqueueBatch(marked("b"), windowStart: windowStart, for: sensor)
+                expect(storage.pendingBatchCount(for: sensor)).to(equal(2)) // index built
+                let directory = QueueFixture.sensorDirectory(root, sensor)
+                // Behind the index's back: the head file disappears, a new tail file appears.
+                guard let headName = QueueFixture.batchFiles(root, sensor).first else { return fail("no head") }
+                try? FileManager.default.removeItem(at: directory.appendingPathComponent(headName))
+                let outside: [String: Any] = ["id": "outside", "window_start": windowStart.timeIntervalSince1970,
+                                              "records": marked("c")]
+                try? JSONSerialization.data(withJSONObject: outside)
+                    .write(to: directory.appendingPathComponent("000000000099_outside.json"))
+
+                var order: [String] = []
+                while let batch = storage.peekNextBatch(for: sensor, excluding: []) {
+                    order.append(batch.records.first?["marker"] as? String ?? "?")
+                    storage.removeBatch(id: batch.id, for: sensor)
+                }
+                expect(order).to(equal(["b", "c"]))
+                expect(QueueFixture.batchFiles(root, sensor)).to(beEmpty())
+            }
+
             it("requeue_after_purge_is_a_noop (limit case 43)") {
                 storage.enqueueBatch(marked("a"), windowStart: windowStart, for: sensor)
                 guard let head = storage.peekNextBatch(for: sensor, excluding: []) else { return fail("no head") }

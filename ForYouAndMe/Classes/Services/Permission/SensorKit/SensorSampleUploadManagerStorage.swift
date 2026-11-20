@@ -189,6 +189,14 @@ public final class DefaultsSensorStorage: SensorSampleUploadManagerStorage, Sens
     /// Next batch sequence per sensor: the highest sequence on disk + 1 at first use, then kept
     /// in memory. Never derived from the clock, so a clock change cannot reorder the queue.
     private var nextSequence: [String: Int] = [:]
+    /// Per sensor, the batch files in queue order (review B-5). Built from one directory listing
+    /// at first use and kept in step by every queue operation, so a drain no longer lists and sorts
+    /// the directory twice per batch (85 s of CPU for 2,000 files). The file system stays the
+    /// source of truth: a file the index lists but the disk does not have makes the index rebuild
+    /// from a fresh listing, and so does a removal of an id the index does not know.
+    private var batchIndex: [String: [BatchFile]] = [:]
+    /// Directory listings of sensor directories so far; read by the index spec only.
+    private var directoryListings = 0
 
     /// `<Application Support>/ForYouAndMe/SensorKitQueue/`. Backed up like `UserDefaults`, so a
     /// restored device gets the queue and the cursors together (plan §2.1, OQ12).
@@ -320,20 +328,34 @@ public final class DefaultsSensorStorage: SensorSampleUploadManagerStorage, Sens
                 self.prepareRootIfNeeded()
                 // Not migrated yet: report an EMPTY queue, so the drain can never upload (and
                 // delete) a file that the still-pending migration would write again.
-                guard self.ensureMigrated(sensor), let listed = self.listBatches(sensor) else { return nil }
-                for file in listed where !ids.contains(file.id) {
-                    switch self.readBatch(file) {
-                    case .batch(let batch):
-                        return batch
-                    case .unreadable:
-                        // Protection or permission error: leave the queue idle, lose nothing.
-                        return nil
-                    case .unparseable:
-                        // Kept, never uploaded, never auto-deleted; the drain moves on.
-                        self.quarantine(file, sensor: sensor, reason: "batch_unparseable")
+                guard self.ensureMigrated(sensor) else { return nil }
+                var relisted = false
+                while true {
+                    guard let listed = self.indexedBatches(sensor) else { return nil }
+                    var stale = false
+                    for file in listed where !ids.contains(file.id) {
+                        switch self.readBatch(file) {
+                        case .batch(let batch):
+                            return batch
+                        case .missing:
+                            stale = true
+                        case .unreadable:
+                            // Protection or permission error: leave the queue idle, lose nothing.
+                            return nil
+                        case .unparseable:
+                            // Kept, never uploaded, never auto-deleted; the drain moves on.
+                            self.quarantine(file, sensor: sensor, reason: "batch_unparseable")
+                        }
+                        if stale { break }
                     }
+                    // Before answering "nothing to upload", or when the index listed a file the
+                    // disk does not have, rebuild the index once from a fresh listing and look
+                    // again: a file the index missed is never skipped, none is read twice. One
+                    // listing per drained queue, not one per batch.
+                    guard !relisted else { return nil }
+                    relisted = true
+                    self.batchIndex[sensor.rawValue] = nil
                 }
-                return nil
             }
         }
     }
@@ -342,8 +364,17 @@ public final class DefaultsSensorStorage: SensorSampleUploadManagerStorage, Sens
         self.syncQueue.sync {
             autoreleasepool {
                 self.prepareRootIfNeeded()
-                guard let file = self.listBatches(sensor)?.first(where: { $0.id == id }) else { return }
-                try? self.fileManager.removeItem(at: file.url)
+                var file = self.indexedBatches(sensor)?.first(where: { $0.id == id })
+                if file == nil {
+                    // Unknown to the index: confirm on disk before concluding it is gone.
+                    self.batchIndex[sensor.rawValue] = nil
+                    file = self.indexedBatches(sensor)?.first(where: { $0.id == id })
+                }
+                guard let found = file else { return }
+                try? self.fileManager.removeItem(at: found.url)
+                if !self.fileManager.fileExists(atPath: found.url.path) {
+                    self.batchIndex[sensor.rawValue]?.removeAll { $0.id == id }
+                }
             }
         }
     }
@@ -356,9 +387,15 @@ public final class DefaultsSensorStorage: SensorSampleUploadManagerStorage, Sens
         return self.syncQueue.sync {
             autoreleasepool {
                 self.prepareRootIfNeeded()
-                guard let listed = self.listBatches(sensor) else { return false }
+                guard let listed = self.indexedBatches(sensor) else { return false }
                 guard let file = listed.first(where: { $0.id == id }) else { return true }
-                guard case .batch(let current) = self.readBatch(file) else { return false }
+                let read = self.readBatch(file)
+                if case .missing = read {
+                    // Gone from disk (purged meanwhile): nothing to write back.
+                    self.batchIndex[sensor.rawValue] = nil
+                    return true
+                }
+                guard case .batch(let current) = read else { return false }
                 if !(current.records as NSArray).isEqual(to: records) {
                     let content: [String: Any] = [Self.idKey: id,
                                                   Self.windowStartKey: current.windowStart.timeIntervalSince1970,
@@ -369,10 +406,12 @@ public final class DefaultsSensorStorage: SensorSampleUploadManagerStorage, Sens
                 let tail = self.sensorDirectory(sensor).appendingPathComponent(Self.batchName(sequence: sequence, id: id))
                 do {
                     try self.fileManager.moveItem(at: file.url, to: tail)
-                    return true
                 } catch {
                     return false
                 }
+                self.batchIndex[sensor.rawValue]?.removeAll { $0.id == id }
+                self.batchIndex[sensor.rawValue]?.append(BatchFile(sequence: sequence, id: id, url: tail))
+                return true
             }
         }
     }
@@ -387,7 +426,7 @@ public final class DefaultsSensorStorage: SensorSampleUploadManagerStorage, Sens
         return self.syncQueue.sync {
             self.prepareRootIfNeeded()
             guard self.ensureMigrated(sensor) else { return 0 }
-            return self.listBatches(sensor)?.count ?? 0
+            return self.indexedBatches(sensor)?.count ?? 0
         }
     }
 
@@ -442,8 +481,9 @@ public final class DefaultsSensorStorage: SensorSampleUploadManagerStorage, Sens
                     }
                     UserDefaults.standard.removeObject(forKey: key)
                 }
-                // Nothing is left to migrate for this sensor.
+                // Nothing is left to migrate for this sensor; the next access re-lists the directory.
                 self.migratedSensors.insert(sensor.rawValue)
+                self.batchIndex[sensor.rawValue] = nil
             }
         }
     }
@@ -482,6 +522,8 @@ public final class DefaultsSensorStorage: SensorSampleUploadManagerStorage, Sens
 
     private enum BatchRead {
         case batch(SensorQueuedBatch)
+        /// No such file: the index is stale.
+        case missing
         case unreadable
         case unparseable
     }
@@ -599,6 +641,7 @@ public final class DefaultsSensorStorage: SensorSampleUploadManagerStorage, Sens
     /// Batch files sorted by sequence (queue order). `[]` when the directory does not exist yet;
     /// `nil` when it exists but cannot be listed (protection or permission error).
     private func listBatches(_ sensor: SRSensor) -> [BatchFile]? {
+        self.directoryListings += 1
         let directory = self.sensorDirectory(sensor)
         let names: [String]
         do {
@@ -609,12 +652,26 @@ public final class DefaultsSensorStorage: SensorSampleUploadManagerStorage, Sens
         return names.compactMap { Self.parseBatchName($0, in: directory) }.sorted { $0.sequence < $1.sequence }
     }
 
+    /// The index of `sensor`'s batch files, built from one listing when absent. `nil` when the
+    /// directory cannot be listed (nothing is cached then, so the next call lists again).
+    private func indexedBatches(_ sensor: SRSensor) -> [BatchFile]? {
+        if let cached = self.batchIndex[sensor.rawValue] { return cached }
+        guard let listed = self.listBatches(sensor) else { return nil }
+        self.batchIndex[sensor.rawValue] = listed
+        return listed
+    }
+
+    /// Directory listings of sensor directories so far. Internal for the index spec only.
+    var directoryListingCount: Int {
+        return self.syncQueue.sync { self.directoryListings }
+    }
+
     private func takeSequence(for sensor: SRSensor) -> Int? {
         let next: Int
         if let cached = self.nextSequence[sensor.rawValue] {
             next = cached
         } else {
-            guard let listed = self.listBatches(sensor) else { return nil }
+            guard let listed = self.indexedBatches(sensor) else { return nil }
             next = (listed.last?.sequence ?? 0) + 1
         }
         self.nextSequence[sensor.rawValue] = next + 1
@@ -638,16 +695,30 @@ public final class DefaultsSensorStorage: SensorSampleUploadManagerStorage, Sens
 
     /// `false` on any serialization or file-system error (AC4): the caller leaves the cursor alone.
     private func writeNewBatch(id: String, records: [[String: Any]], windowStart: Date, for sensor: SRSensor) -> Bool {
-        let directory = self.sensorDirectory(sensor)
-        guard self.ensureDirectory(directory), let sequence = self.takeSequence(for: sensor) else { return false }
         let content: [String: Any] = [Self.idKey: id,
                                       Self.windowStartKey: windowStart.timeIntervalSince1970,
                                       Self.recordsKey: records]
-        return self.writeJSON(content, to: directory.appendingPathComponent(Self.batchName(sequence: sequence, id: id)))
+        return self.writeBatchFile(content, id: id, for: sensor)
+    }
+
+    /// Writes `content` as the new tail batch `<next seq>_<id>.json` and adds it to the index.
+    private func writeBatchFile(_ content: [String: Any], id: String, for sensor: SRSensor) -> Bool {
+        let directory = self.sensorDirectory(sensor)
+        guard self.ensureDirectory(directory), let sequence = self.takeSequence(for: sensor) else { return false }
+        let url = directory.appendingPathComponent(Self.batchName(sequence: sequence, id: id))
+        guard self.writeJSON(content, to: url) else { return false }
+        self.batchIndex[sensor.rawValue]?.append(BatchFile(sequence: sequence, id: id, url: url))
+        return true
     }
 
     private func readBatch(_ file: BatchFile) -> BatchRead {
-        guard let data = try? Data(contentsOf: file.url) else { return .unreadable }
+        let data: Data
+        do {
+            data = try Data(contentsOf: file.url)
+        } catch {
+            let code = (error as NSError).code
+            return code == NSFileReadNoSuchFileError || code == NSFileNoSuchFileError ? .missing : .unreadable
+        }
         guard let entry = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any],
               let batch = Self.queuedBatch(from: entry, id: file.id) else { return .unparseable }
         return .batch(batch)
@@ -664,6 +735,7 @@ public final class DefaultsSensorStorage: SensorSampleUploadManagerStorage, Sens
         } catch {
             return
         }
+        self.batchIndex[sensor.rawValue]?.removeAll { $0.id == file.id }
         // `count` is one quarantined BATCH: its record count is unknowable.
         self.analytics?.track(event: .sensorRecordDropped(sensor: sensor.shortSubsource, count: 1, reason: reason))
     }
@@ -729,7 +801,7 @@ public final class DefaultsSensorStorage: SensorSampleUploadManagerStorage, Sens
         }
 
         let directory = self.sensorDirectory(sensor)
-        guard self.ensureDirectory(directory), let listed = self.listBatches(sensor) else {
+        guard self.ensureDirectory(directory), let listed = self.indexedBatches(sensor) else {
             self.trackMigration(sensor, batchCount: 0, legacyBytes: data.count, outcome: "partial_disk_error")
             return false
         }
@@ -755,10 +827,7 @@ public final class DefaultsSensorStorage: SensorSampleUploadManagerStorage, Sens
                 guard !marker.ids.contains(id), !existingIds.contains(id) else { return false }
                 var content = dictionary
                 content[Self.idKey] = id
-                guard let sequence = self.takeSequence(for: sensor),
-                      self.writeJSON(content, to: directory.appendingPathComponent(Self.batchName(sequence: sequence, id: id))) else {
-                    return true
-                }
+                guard self.writeBatchFile(content, id: id, for: sensor) else { return true }
                 existingIds.insert(id)
                 written += 1
                 return false
