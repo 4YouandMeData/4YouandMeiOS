@@ -211,6 +211,8 @@ public final class SensorSampleUploadManager {
     // Once-per-launch guard so the "empty_plan" telemetry (review fix #6) doesn't fire on
     // every 15-minute sync cycle while a fresh enrollment waits out the 24h embargo.
     private var emptyPlanReported: Set<String> = []
+    /// The participant this process last adopted, mutated on `workQueue` only.
+    private var lastAdoptedOwner: String?
     // FUAM-3945 (review C1): sensors whose device chain has not yet reached a termination path.
     // `syncAllSensors` releases `syncLock` as soon as it has KICKED OFF every chain, and the
     // reachability trigger bypasses the sync throttle entirely, so a second cycle used to
@@ -258,6 +260,24 @@ public final class SensorSampleUploadManager {
     private func sessionOwner() -> String? {
         guard self.clearanceDelegate?.sensorManagerCanRun ?? false else { return nil }
         return self.clearanceDelegate?.participantId
+    }
+
+    /// Adopts `owner` in the storage (which resets its persisted per-participant state on a change)
+    /// and, when it differs from the participant this process adopted last, clears what this
+    /// process holds in memory for the previous one: pending retries, fetch-failure and
+    /// upload-rejection counters, the empty-plan telemetry guard. Running chains and an upload in
+    /// flight are left alone: a chain's late result is dropped (final review P-3), and the drain
+    /// loop's next step deletes the previous participant's batches unsent. Runs on `workQueue`.
+    private func adopt(_ owner: String) {
+        if let previous = self.lastAdoptedOwner, previous != owner {
+            self.retryWorkItems.values.forEach { $0.cancel() }
+            self.retryWorkItems.removeAll()
+            self.windowFetchFailures.removeAll()
+            self.batchUploadRejections.removeAll()
+            self.emptyPlanReported.removeAll()
+        }
+        self.lastAdoptedOwner = owner
+        self.storage.adoptOwner(owner)
     }
 
     /// FUAM-3844 diagnostic: clearance false while a configured sensor is OS-authorized is a bug.
@@ -357,7 +377,7 @@ public final class SensorSampleUploadManager {
         // FUAM-4516 (owner rule 4): the cursors and the queue belong to `owner` from here on. A
         // different participant than the one they were recorded for resets them (a property of
         // the stored data, not an event to track).
-        storage.adoptOwner(owner)
+        self.adopt(owner)
 
         let now = Date()
 
@@ -417,18 +437,8 @@ public final class SensorSampleUploadManager {
     private var currentBound: BackfillLowerBound {
         // FUAM-3964 (review I1): `max(deviceNow, serverNow)`, never the raw device clock — the
         // 365-day cap is `now - 365d`, so a clock rolled back Δ would let it reach 365 + Δ.
-        return BackfillLowerBound.resolve(joinDay: self.effectiveJoinDay,
+        return BackfillLowerBound.resolve(joinDay: self.clearanceDelegate?.enrollmentDate,
                                           now: max(Date(), ServerClock.now()))
-    }
-
-    /// The join day, raised to the hand-over instant when this participant took over the install
-    /// from a different one (final review P-1). Both the plan and the drain-time consent gate use
-    /// it, so no SensorKit record measured before the hand-over is ever uploaded under the new
-    /// participant. Nothing is deleted; this is only a lower bound. `nil` without a join day.
-    private var effectiveJoinDay: Date? {
-        guard let joinDay = self.clearanceDelegate?.enrollmentDate else { return nil }
-        guard let handOver = self.storage.ownerSince() else { return joinDay }
-        return max(joinDay, handOver)
     }
 
     /// Internal rather than private so the FUAM-3964 server-time cap can be exercised through
@@ -485,7 +495,7 @@ public final class SensorSampleUploadManager {
         }
         return Self.buildWindowPlan(now: cappedNow,
                                     boundNow: max(now, serverNow),
-                                    joinDay: self.effectiveJoinDay,
+                                    joinDay: clearanceDelegate?.enrollmentDate,
                                     cursor: storage.lastCursor(for: sensor, deviceKey: device.key),
                                     embargo: embargo,
                                     timeZone: timeZone,
@@ -2058,6 +2068,8 @@ public final class SensorSampleUploadManager {
         // untouched — a temporarily unavailable user record must not destroy legitimate
         // queued data. The next drain, once the join day resolves, filters and ships it.
         let bound = self.currentBound
+        // The participant this loop's bound belongs to: a change of participant ends the loop.
+        let loopOwner = self.sessionOwner()
         guard !bound.isForwardOnly else {
             #if DEBUG
             print("SensorSampleUploadManager - Holding \(sensor.rawValue) queue: no join day")
@@ -2085,7 +2097,14 @@ public final class SensorSampleUploadManager {
                     self.drainingSensors.remove(sensor)
                     return
                 }
-                self.storage.adoptOwner(current)
+                self.adopt(current)
+                // A different participant than the one this loop started for: the loop's consent
+                // bound is theirs, not this participant's. End it; a fresh drain uses the new bound.
+                guard current == loopOwner else {
+                    self.drainingSensors.remove(sensor)
+                    self.drainQueue(for: sensor)
+                    return
+                }
 
                 // FUAM-3945 round 6 (V2): PEEK, never dequeue. The batch stays persisted at its
                 // place in the queue until the upload succeeds (or the rejection budget drops
@@ -2209,7 +2228,7 @@ public final class SensorSampleUploadManager {
         // enqueued, so a second trigger starts nothing.
         workQueue.async { [weak self] in
             guard let self = self, let owner = self.sessionOwner() else { return }
-            self.storage.adoptOwner(owner)
+            self.adopt(owner)
             guard !self.drainingSensors.contains(sensor),
                   self.storage.pendingBatchCount(for: sensor) > 0 else { return }
             self.drainingSensors.insert(sensor)

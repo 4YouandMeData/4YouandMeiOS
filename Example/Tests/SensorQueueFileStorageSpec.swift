@@ -140,6 +140,14 @@ private enum QueueFixture {
         return batches
     }
 
+    /// A storage over `root` (a new process) that has adopted `owner`.
+    @discardableResult
+    static func makeStorageAdopting(_ root: URL, _ owner: String) -> DefaultsSensorStorage {
+        let storage = DefaultsSensorStorage(queueDirectory: root)
+        storage.adoptOwner(owner)
+        return storage
+    }
+
     static func iso(_ date: Date) -> String {
         return ISO8601DateFormatter().string(from: date)
     }
@@ -261,7 +269,6 @@ private final class OrderRecordingStorage: SensorSampleUploadManagerStorage, Sen
         base.setDeepestProductiveWindowStart(date, for: sensor, deviceKey: deviceKey)
     }
     func adoptOwner(_ owner: String) { base.adoptOwner(owner) }
-    func ownerSince() -> Date? { base.ownerSince() }
     func setAside(_ descriptions: [[String: Any]], reason: String, for sensor: SRSensor) -> Bool {
         return base.setAside(descriptions, reason: reason, for: sensor)
     }
@@ -1457,18 +1464,26 @@ class SensorQueueDrainSpec: QuickSpec {
                 expect(QueueFixture.batchFiles(root, sensor)).toEventually(beEmpty(), timeout: .seconds(5))
             }
 
-            it("another_participants_batches_are_deleted_unsent; this participant's upload; one event") {
+            it("A to B, B enrolled before the switch: clean slate for the app, the device's data is B's") {
                 storage.adoptOwner("participant-A")
                 storage.enqueueBatch([record("a1")], windowStart: joinDay, for: sensor)
                 storage.enqueueBatch([record("a2")], windowStart: joinDay, for: sensor)
                 storage.setLastCursor(joinDay.addingTimeInterval(20 * day), for: sensor, deviceKey: SensorDevice.iphoneKey)
+                let quarantine = root.appendingPathComponent("_quarantine", isDirectory: true)
+                try? FileManager.default.createDirectory(at: quarantine, withIntermediateDirectories: true)
+                let aItemName = "q\(Int(Date().timeIntervalSince1970))_\(sensor.rawValue)_x_unencodable_record.json"
+                let aItem = quarantine.appendingPathComponent(aItemName)
+                try? Data("[]".utf8).write(to: aItem)
                 storage.adoptOwner("participant-B")
-                // Measured after the hand-over, which bounds B's uploads (final review P-1).
-                storage.enqueueBatch([["t": QueueFixture.iso(Date().addingTimeInterval(60)), "marker": "b1"]],
-                                     windowStart: joinDay, for: sensor)
+                // Measured before the switch (B's join day lies before it): uploaded under B.
+                storage.enqueueBatch([record("b1")], windowStart: joinDay, for: sensor)
                 clearance.participantId = "participant-B"
                 let manager = makeManager(storage: storage)
                 manager.setNetworkDelegate(network)
+
+                // B's plan starts at B's consent bound, not at the switch.
+                expect(manager.buildWindowPlan(for: sensor, now: Date(), device: device).consentBound).to(equal(joinDay))
+                expect(FileManager.default.fileExists(atPath: aItem.path)).to(beFalse()) // A's quarantine gone
 
                 manager.drainQueue(for: sensor)
 
@@ -1485,7 +1500,7 @@ class SensorQueueDrainSpec: QuickSpec {
                 expect(storage.lastCursor(for: sensor, deviceKey: SensorDevice.iphoneKey)).to(beNil())
             }
 
-            it("keeps the cursors of a participant recorded by an older build (adopted, not reset)") {
+            it("first adoption on an install with no previous owner: keeps the cursors (adopted, not reset)") {
                 UserDefaults.standard.removeObject(forKey: "sensorkit.owner")
                 let cursor = joinDay.addingTimeInterval(20 * day)
                 storage.setLastCursor(cursor, for: sensor, deviceKey: SensorDevice.iphoneKey)
@@ -1493,24 +1508,51 @@ class SensorQueueDrainSpec: QuickSpec {
                 expect(storage.lastCursor(for: sensor, deviceKey: SensorDevice.iphoneKey)).to(equal(cursor))
             }
 
-            it("a hand-over bounds collection and upload at the hand-over instant (final review P-1)") {
-                expect(storage.ownerSince()).to(beNil()) // a first adoption sets no hand-over bound
-                let before = Date()
-                storage.adoptOwner("participant-2")
-                clearance.participantId = "participant-2"
-                guard let handOver = storage.ownerSince() else { return fail("no hand-over instant") }
-                expect(handOver).to(beGreaterThanOrEqualTo(before))
-                let manager = makeManager(storage: storage)
+            it("A to B, B enrolled after the switch: the bound is B's own consent bound") {
+                let today = SensorSampleUploadManager.utcDayStart(Date())
+                clearance.enrollmentDate = today
+                clearance.participantId = "participant-B"
+                storage.adoptOwner("participant-B")
+                let plan = makeManager(storage: storage).buildWindowPlan(for: sensor, now: Date(), device: device)
+                expect(plan.consentBound).to(equal(today))
+            }
 
-                // Collection: the plan starts at the hand-over, not at the (earlier) join day.
-                let plan = manager.buildWindowPlan(for: sensor, now: Date(), device: device)
-                expect(plan.consentBound).to(equal(handOver))
+            it("A to A: the same participant again resets nothing, the cursors continue") {
+                let cursor = joinDay.addingTimeInterval(20 * day)
+                storage.setLastCursor(cursor, for: sensor, deviceKey: SensorDevice.iphoneKey)
+                storage.adoptOwner("participant-1")
+                QueueFixture.makeStorageAdopting(root, "participant-1")
+                expect(storage.lastCursor(for: sensor, deviceKey: SensorDevice.iphoneKey)).to(equal(cursor))
+            }
 
-                // Upload: a record measured before the hand-over never leaves the device.
-                storage.enqueueBatch([record("before-hand-over")], windowStart: joinDay, for: sensor)
-                manager.setNetworkDelegate(network)
-                manager.drainQueue(for: sensor)
-                expect(network.attemptCount).toAlways(equal(0), until: .milliseconds(400))
+            it("A to B to A: every change is a clean slate; A restarts from A's consent bound") {
+                storage.setLastCursor(joinDay.addingTimeInterval(20 * day), for: sensor, deviceKey: SensorDevice.iphoneKey)
+                storage.adoptOwner("participant-B")
+                expect(storage.lastCursor(for: sensor, deviceKey: SensorDevice.iphoneKey)).to(beNil())
+                storage.setLastCursor(joinDay.addingTimeInterval(25 * day), for: sensor, deviceKey: SensorDevice.iphoneKey)
+                storage.adoptOwner("participant-1")
+                expect(storage.lastCursor(for: sensor, deviceKey: SensorDevice.iphoneKey)).to(beNil())
+                let plan = makeManager(storage: storage).buildWindowPlan(for: sensor, now: Date(), device: device)
+                expect(plan.consentBound).to(equal(joinDay))
+                expect(plan.lowerBoundOrigin).toNot(equal(.cursor))
+            }
+
+            it("upgrade from 0.101.18 with a stored hand-over bound: undone once, queued batches kept") {
+                storage.enqueueBatch([record("mine")], windowStart: joinDay, for: sensor)
+                let handOverCursor = Date().addingTimeInterval(-day)
+                storage.setLastCursor(handOverCursor, for: sensor, deviceKey: SensorDevice.iphoneKey)
+                UserDefaults.standard.set(Date().addingTimeInterval(-2 * day), forKey: "sensorkit.owner_since")
+
+                let firstRun = QueueFixture.makeStorageAdopting(root, "participant-1")
+                expect(firstRun.lastCursor(for: sensor, deviceKey: SensorDevice.iphoneKey)).to(beNil())
+                expect(UserDefaults.standard.object(forKey: "sensorkit.owner_since")).to(beNil())
+                expect(firstRun.pendingBatchCount(for: sensor)).to(equal(1))
+
+                // The normal backfill moved the cursor on; the next launch must not reset it again.
+                firstRun.setLastCursor(handOverCursor, for: sensor, deviceKey: SensorDevice.iphoneKey)
+                let secondRun = QueueFixture.makeStorageAdopting(root, "participant-1")
+                expect(secondRun.lastCursor(for: sensor, deviceKey: SensorDevice.iphoneKey)).to(equal(handOverCursor))
+                expect(secondRun.pendingBatchCount(for: sensor)).to(equal(1))
             }
 
             it("drops a fetch result when the session changed while it ran (final review P-3)") {
