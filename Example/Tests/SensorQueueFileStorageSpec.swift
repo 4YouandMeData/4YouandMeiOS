@@ -1236,6 +1236,69 @@ class SensorQueueDrainSpec: QuickSpec {
             }
         }
 
+        describe("protected data unavailable, before the first unlock (review A-2)") {
+
+            it("no_purge_while_protected_data_is_unavailable") {
+                storage.enqueueBatch([record("queued")], windowStart: joinDay, for: sensor)
+                let cursor = joinDay.addingTimeInterval(20 * day)
+                storage.setLastCursor(cursor, for: sensor, deviceKey: SensorDevice.iphoneKey)
+                let manager = makeManager(storage: storage)
+                manager.isProtectedDataAvailable = { false }
+                // Before the first unlock the token reads as absent, so clearance reads as false.
+                clearance.sensorManagerCanRun = false
+
+                manager.startUploadLogic()
+                manager.triggerSync(reason: "spec")
+                manager.drainQueue(for: sensor)
+
+                expect(storage.isPurgePending).toAlways(beFalse(), until: .milliseconds(400))
+                expect(QueueFixture.batchFiles(root, sensor).count).to(equal(1))
+                expect(storage.lastCursor(for: sensor, deviceKey: SensorDevice.iphoneKey)).to(equal(cursor))
+            }
+
+            it("sync_resumes_normally_after_protected_data_becomes_available") {
+                storage.enqueueBatch([record("queued")], windowStart: joinDay, for: sensor)
+                let lock = NSLock()
+                var available = false
+                let manager = makeManager(storage: storage)
+                manager.isProtectedDataAvailable = {
+                    lock.lock(); defer { lock.unlock() }
+                    return available
+                }
+                manager.setNetworkDelegate(network)
+
+                manager.startUploadLogic() // deferred
+                manager.drainQueue(for: sensor)
+                expect(network.attemptCount).toAlways(equal(0), until: .milliseconds(300))
+                expect(QueueFixture.batchFiles(root, sensor).count).to(equal(1))
+
+                lock.lock(); available = true; lock.unlock()
+                manager.protectedDataBecameAvailable() // what the UIKit notification calls
+
+                expect(network.uploaded.count).toEventually(equal(1), timeout: .seconds(5))
+                expect(storage.pendingBatchCount(for: sensor)).toEventually(equal(0), timeout: .seconds(5))
+            }
+
+            it("purges once protected data is available if clearance is really gone") {
+                storage.enqueueBatch([record("queued")], windowStart: joinDay, for: sensor)
+                let lock = NSLock()
+                var available = false
+                let manager = makeManager(storage: storage)
+                manager.isProtectedDataAvailable = {
+                    lock.lock(); defer { lock.unlock() }
+                    return available
+                }
+                clearance.sensorManagerCanRun = false
+                manager.startUploadLogic()
+                expect(QueueFixture.batchFiles(root, sensor).count).toAlways(equal(1), until: .milliseconds(300))
+
+                lock.lock(); available = true; lock.unlock()
+                manager.protectedDataBecameAvailable()
+
+                expect(QueueFixture.batchFiles(root, sensor)).toEventually(beEmpty(), timeout: .seconds(5))
+            }
+        }
+
         describe("the kill-safe purge (R2 PR-7)") {
 
             func batchRecords(_ marker: String, deviceKind: String = SensorDevice.iphoneKey) -> [[String: Any]] {

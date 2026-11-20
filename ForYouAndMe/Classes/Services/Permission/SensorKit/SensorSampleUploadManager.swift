@@ -10,6 +10,67 @@ import Foundation
 import os
 import RxSwift
 import SensorKit
+import UIKit
+
+/// FUAM-4516 (review A-2): whether data protection currently lets the app read its protected files
+/// and preferences. Before the first unlock after a reboot, `UserDefaults` reads return nil: the
+/// access token reads as absent, clearance reads as false, and the no-clearance purge would delete
+/// the batch files (unlinking needs no class key) while it can neither read them nor rewind a
+/// cursor, a permanent loss for a participant who is still logged in. Every SensorKit pipeline
+/// entry point checks this first and does nothing while it is `false`.
+///
+/// `UIApplication.isProtectedDataAvailable` is main-thread API, so the value is read on main at
+/// creation (or hopped there) and then follows the protected-data notifications, which UIKit posts
+/// on main; any thread reads the cached value under a lock.
+/// ponytail: this is class A availability, stricter than the class C the queue files and
+/// `UserDefaults` use, so the pipeline also pauses while the device is locked after the first
+/// unlock. The SDK uploads only in the foreground and its grace period, so that costs seconds;
+/// a class C probe would avoid it if grace-period uploads ever matter.
+final class SensorProtectedDataState {
+
+    static let shared = SensorProtectedDataState()
+
+    private let lock = NSLock()
+    private var available = false
+    private var handlers: [() -> Void] = []
+    private var observers: [NSObjectProtocol] = []
+
+    private init() {
+        let center = NotificationCenter.default
+        self.observers.append(center.addObserver(forName: UIApplication.protectedDataDidBecomeAvailableNotification,
+                                                 object: nil,
+                                                 queue: .main) { [weak self] _ in self?.update(true) })
+        self.observers.append(center.addObserver(forName: UIApplication.protectedDataWillBecomeUnavailableNotification,
+                                                 object: nil,
+                                                 queue: .main) { [weak self] _ in self?.update(false) })
+        if Thread.isMainThread {
+            self.available = UIApplication.shared.isProtectedDataAvailable
+        } else {
+            // Unknown until main answers: treated as unavailable, and the handlers run if it is.
+            DispatchQueue.main.async { [weak self] in self?.update(UIApplication.shared.isProtectedDataAvailable) }
+        }
+    }
+
+    var isAvailable: Bool {
+        self.lock.lock(); defer { self.lock.unlock() }
+        return self.available
+    }
+
+    /// `handler` runs on main every time protected data goes from unavailable to available.
+    func whenAvailable(_ handler: @escaping () -> Void) {
+        self.lock.lock(); defer { self.lock.unlock() }
+        self.handlers.append(handler)
+    }
+
+    private func update(_ value: Bool) {
+        self.lock.lock()
+        let became = value && !self.available
+        self.available = value
+        let toRun = became ? self.handlers : []
+        self.lock.unlock()
+        toRun.forEach { $0() }
+    }
+}
 
 /// Coordinates SensorKit ingestion:
 /// 1) Fetch window [cursor, now] via per-sensor mapper
@@ -130,6 +191,9 @@ public final class SensorSampleUploadManager {
     /// for the memory-guard specs. 0 means unknown.
     var availableMemory: () -> Int = { Int(os_proc_available_memory()) }
 
+    /// FUAM-4516 (review A-2): whether protected data is readable now; injectable for specs.
+    var isProtectedDataAvailable: () -> Bool = { SensorProtectedDataState.shared.isAvailable }
+
     // MARK: - Dependencies
 
     private let sensors: [SRSensor]
@@ -145,6 +209,8 @@ public final class SensorSampleUploadManager {
     
     // State
     private var hasPurgedForNoUser = false
+    /// `startUploadLogic` ran while protected data was unavailable: it runs again once it is.
+    private var startDeferredForProtectedData = false
 
     // Background queue to avoid blocking UI. FUAM-4516: `.workItem` drains an autorelease pool
     // after every block, so the objects one window or one upload step creates are freed at the end
@@ -226,6 +292,19 @@ public final class SensorSampleUploadManager {
             self.analytics = analytics
             self.mappers = mappers
             self.deviceProvider = deviceProvider
+            SensorProtectedDataState.shared.whenAvailable { [weak self] in self?.protectedDataBecameAvailable() }
+    }
+
+    /// FUAM-4516 (review A-2): protected data became readable (first unlock, or an unlock after a
+    /// lock). A start that was deferred runs now; otherwise a sync picks up whatever waited.
+    /// Runs on main (UIKit posts the notification there).
+    func protectedDataBecameAvailable() {
+        if self.startDeferredForProtectedData {
+            self.startDeferredForProtectedData = false
+            self.startUploadLogic()
+        } else if self.hasStarted {
+            self.triggerSync(reason: "protected_data_available")
+        }
     }
 
     /// A paired Watch only shows up in `fetchDevices()` once it has synced data for the sensor,
@@ -252,6 +331,14 @@ public final class SensorSampleUploadManager {
     public func startUploadLogic() {
     
         hasStarted = true
+
+        // FUAM-4516 (review A-2): before the first unlock the clearance below reads as false only
+        // because `UserDefaults` is unreadable. Do nothing, purge least of all; start once
+        // protected data is available.
+        guard isProtectedDataAvailable() else {
+            startDeferredForProtectedData = true
+            return
+        }
 
         // If there is no clearance (no user / no consent), purge and do nothing
         guard clearanceDelegate?.sensorManagerCanRun ?? false else {
@@ -289,7 +376,11 @@ public final class SensorSampleUploadManager {
 
     /// You can call this from foreground flows or background tasks to force a sync cycle.
     public func triggerSync(reason: String = "manual") {
-        
+
+        // FUAM-4516 (review A-2): no purge, no sync while protected data is unavailable; the
+        // protected-data notification triggers the next sync.
+        guard isProtectedDataAvailable() else { return }
+
         // Clearance check every time: if missing, purge once and exit
         guard clearanceDelegate?.sensorManagerCanRun ?? false else {
             if !hasPurgedForNoUser {
@@ -301,7 +392,8 @@ public final class SensorSampleUploadManager {
         }
         hasPurgedForNoUser = false
         
-        if let last = lastSyncDate, Date().timeIntervalSince(last) < minSyncInterval, reason != "reachability_up" {
+        if let last = lastSyncDate, Date().timeIntervalSince(last) < minSyncInterval,
+           reason != "reachability_up", reason != "protected_data_available" {
             // Throttle frequent triggers unless connectivity just changed
             return
         }
@@ -317,7 +409,7 @@ public final class SensorSampleUploadManager {
 
     private func syncAllSensors() {
         
-        guard clearanceDelegate?.sensorManagerCanRun ?? true else { return }
+        guard isProtectedDataAvailable(), clearanceDelegate?.sensorManagerCanRun ?? true else { return }
 
         // Ensure single-cycle at a time
         syncLock.lock(); defer { syncLock.unlock() }
@@ -1049,6 +1141,13 @@ public final class SensorSampleUploadManager {
 
         let window = windows[index]
 
+        // FUAM-4516 (review A-2): no fetch, enqueue or cursor write while protected data is
+        // unavailable. The chain ends with its cursor untouched; the next sync retries.
+        guard self.isProtectedDataAvailable() else {
+            self.endChain(for: context.sensor)
+            return
+        }
+
         // FUAM-4516: no new fetch close to the process memory limit. The chain ends for this
         // cycle with its cursor untouched and no failure counted; the next sync retries. A
         // backward probe first flushes what it buffered (plan R2 PR-4): those days are enqueued and
@@ -1105,6 +1204,12 @@ public final class SensorSampleUploadManager {
                             of windows: [DateInterval],
                             context: DeviceChainContext) {
         let sensor = context.sensor
+        // FUAM-4516 (review A-2): protected data went away while the fetch ran. Drop the result
+        // with the cursor untouched; the window is fetched again by a later sync.
+        guard self.isProtectedDataAvailable() else {
+            self.endChain(for: sensor)
+            return
+        }
         // Review fix #4: the user can disappear between plan build and this callback (logout,
         // session expiry, failed token refresh). The re-resolved bound is then forward-only and
         // every record would be dropped — but advancing the cursor over the rest of the plan
@@ -1925,6 +2030,13 @@ public final class SensorSampleUploadManager {
             workQueue.async { [weak self] in
                 guard let self = self else { return }
 
+                // FUAM-4516 (review A-2): protected data went away mid-loop. Stop here and release
+                // the sensor; the protected-data notification's sync starts a new loop.
+                guard self.isProtectedDataAvailable() else {
+                    self.drainingSensors.remove(sensor)
+                    return
+                }
+
                 // FUAM-3945 round 6 (V2): PEEK, never dequeue. The batch stays persisted at its
                 // place in the queue until the upload succeeds (or the rejection budget drops
                 // it): its fingerprints were committed to the ledger and the cursor advanced at
@@ -2053,7 +2165,7 @@ public final class SensorSampleUploadManager {
         // off the main thread. A loop already running for `sensor` picks up whatever was just
         // enqueued, so a second trigger starts nothing.
         workQueue.async { [weak self] in
-            guard let self = self else { return }
+            guard let self = self, self.isProtectedDataAvailable() else { return }
             self.resumePendingPurgeIfNeeded()
             guard !self.drainingSensors.contains(sensor),
                   self.storage.pendingBatchCount(for: sensor) > 0 else { return }
@@ -2128,6 +2240,9 @@ public final class SensorSampleUploadManager {
         #if DEBUG
         print("SensorSampleUploadManager - Purging pending data (\(reason))")
         #endif
+        // FUAM-4516 (review A-2): never purge what cannot be read: the windows could not be
+        // collected for the rewind, and the deletion would be a permanent loss.
+        guard self.isProtectedDataAvailable() else { return }
         self.pendingPurgeChecked = true
 
         // Stop pending retries
