@@ -1,4 +1,4 @@
-## Unreleased
+## Release 0.101.20
 
 - **The KPI widget fetch first syncs the device timezone to the user profile** (FUAM-4534). Before every `GET /kpi_widgets` the app compares the device timezone with the stored one and PATCHes it when they differ, so the backend computes "today" for the right zone; a failed PATCH never blocks the fetch.
 
