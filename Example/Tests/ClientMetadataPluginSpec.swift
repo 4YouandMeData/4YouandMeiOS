@@ -79,6 +79,29 @@ class ClientMetadataPluginSpec: QuickSpec {
                 }
             }
 
+            context("diagnostic launch headers (FUAM-4518)") {
+                it("client_metadata_adds_a_stable_launch_id_and_monotonic_uptime") {
+                    ClientMetadataPlugin.markStartup()
+                    Thread.sleep(forTimeInterval: 0.02)
+                    let first = plugin.prepare(makeRequest(method: "POST"), target: target).allHTTPHeaderFields ?? [:]
+                    Thread.sleep(forTimeInterval: 0.02)
+                    let second = plugin.prepare(makeRequest(method: "POST"), target: target).allHTTPHeaderFields ?? [:]
+
+                    expect(UUID(uuidString: first["X-Client-Launch-Id"] ?? "")).toNot(beNil())
+                    expect(second["X-Client-Launch-Id"]).to(equal(first["X-Client-Launch-Id"]))
+                    let uptime1 = Int(first["X-Client-Process-Uptime-Ms"] ?? "") ?? -1
+                    let uptime2 = Int(second["X-Client-Process-Uptime-Ms"] ?? "") ?? -1
+                    // markStartup is first-call-wins; whoever ran first (this spec or the host), 20 ms have passed.
+                    expect(uptime1) >= 15
+                    expect(uptime2 - uptime1) >= 15
+                }
+
+                it("leaves the launch headers off GET") {
+                    let prepared = plugin.prepare(makeRequest(method: "GET"), target: target)
+                    expect(prepared.value(forHTTPHeaderField: "X-Client-Launch-Id")).to(beNil())
+                }
+            }
+
             context("on non-mutating methods") {
                 it("leaves headers untouched for GET") {
                     let prepared = plugin.prepare(makeRequest(method: "GET"), target: target)

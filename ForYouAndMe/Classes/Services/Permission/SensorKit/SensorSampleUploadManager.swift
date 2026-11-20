@@ -7,6 +7,7 @@
 
 import CryptoKit
 import Foundation
+import os
 import RxSwift
 import SensorKit
 
@@ -35,9 +36,31 @@ public final class SensorSampleUploadManager {
     
     private let sensorkitEmbargo: TimeInterval = 24 * 60 * 60   // 24h absolute duration
 
-    /// The server rejects requests above 10 MB (HTTP 413 PayloadTooLarge). Keep each queued
-    /// batch's serialized JSON safely below that; the upload envelope adds only a few bytes.
-    private let maxBatchBytes: Int = 5 * 1024 * 1024
+    /// The server rejects requests above 10 MB (HTTP 413 PayloadTooLarge). FUAM-4516: 1 MiB (was
+    /// 5 MiB) bounds the memory of one upload in flight (peeked batch, stripped copy, body,
+    /// transport: about 4 copies) and makes a cellular upload take seconds, not tens of seconds.
+    /// A batch of exactly this many serialized bytes is allowed; a single record above it still
+    /// ships alone. Batches migrated from 0.101.16/17 keep their size (up to ~5 MB) and are not
+    /// re-split (plan OQ13).
+    static let maxBatchBytes: Int = 1 * 1024 * 1024
+
+    /// FUAM-4516: no new SensorKit fetch starts while `os_proc_available_memory()` reports less
+    /// than `memoryGuardBytes(for:)`. 0 (simulator, unknown) means proceed.
+    /// Continuous sensors: 300 MB.
+    static let memoryGuardBytes: Int = 300 * 1024 * 1024
+    /// The day-aggregated report sensors (device usage, phone usage, messages usage, keyboard
+    /// metrics): 600 MB. Measured basis (review B-4): one report window fetches its day plus the
+    /// 26 h lookback, about 200 reports for the heaviest participant, and her mapper-built reports
+    /// occupy about 1.1 MB each, so one fetch holds about 210 MB before SensorKit's own objects.
+    /// 300 MB would leave under 100 MB of headroom for that; 600 MB is about twice the fetch.
+    /// ponytail: fixed thresholds; make them a fraction of the process limit if
+    /// `sensor_memory_backoff` shows back-offs on small-RAM devices.
+    static let reportMemoryGuardBytes: Int = 600 * 1024 * 1024
+
+    /// The available memory a fetch for `sensor` needs before it starts.
+    static func memoryGuardBytes(for sensor: SRSensor) -> Int {
+        return Self.dayAggregatedSensors.contains(sensor) ? Self.reportMemoryGuardBytes : Self.memoryGuardBytes
+    }
 
     /// Give up on a window after this many consecutive failed fetch attempts and move past it,
     /// so one poison window doesn't stall the per-sensor chain forever (FUAM-3841).
@@ -57,10 +80,14 @@ public final class SensorSampleUploadManager {
     static let rescanTailDays: Int = 3
 
     /// FUAM-3945 (D4): ledger entries are pruned once their day falls this many days behind the
-    /// planning day — rescan depth + 2 days of margin, so nothing the rescan can re-fetch is ever
-    /// forgotten while it still matters. Over-pruning only costs a re-upload the server
-    /// union-merges; under-pruning only costs storage.
-    static let ledgerRetentionDays: TimeInterval = TimeInterval(rescanTailDays) + 2
+    /// planning day, so nothing a re-fetch can return is forgotten while it still matters.
+    /// Over-pruning only costs a re-upload the server union-merges; under-pruning only costs
+    /// storage. FUAM-4516 (plan R3 RR-4): 9 days, not rescan depth + 2 (5): a backward probe walks
+    /// SensorKit's whole ~7-day retention plus the 26 h report lookback, and the memory guard's
+    /// probe flush must commit those days in a form the next cycle's prefilter still recognises.
+    /// Days 5-7 pruned in the same write that committed them were re-buffered and re-uploaded on
+    /// every guarded cycle. About 1.8x the old ledger size, under 1 MB for pedometer.
+    static let ledgerRetentionDays: TimeInterval = 9
 
     /// FUAM-3945 (AC1): a BACKFILL walk probes windows newest-first and stops extending backwards
     /// after this many CONSECUTIVE confirmed-empty windows — the adaptive replacement for any
@@ -101,10 +128,22 @@ public final class SensorSampleUploadManager {
     /// OS retention could buffer a lot, so past this cap the buffer is flushed early and the
     /// rest of the probe falls back to enqueue-as-you-go (still correct — the membership filter
     /// stays in place there — just no longer strictly chronological), with a
-    /// `probe_buffer_overflow` telemetry trace. Counted in records, not serialized bytes:
-    /// measuring bytes would cost a serialization pass larger than the buffer itself.
-    /// Internal and mutable for the overflow specs only.
+    /// `probe_buffer_overflow` telemetry trace. Internal and mutable for the overflow specs only.
     var probeBufferMaxRecords: Int = 10_000
+
+    /// FUAM-4516 (plan R4/R5): the probe buffer is bounded by estimated JSON BYTES as well as by
+    /// records. With 200 KB raw device-usage reports the record cap alone allows about 2 GB in
+    /// memory. The budget counts JSON bytes (`estimatedJSONBytes`, which serializes nothing), not
+    /// memory: mapper-built reports occupy about 5x their JSON as live objects, so for the heaviest
+    /// participant 8 MiB of JSON is about 42 MB of objects (review B-1). The check runs after a
+    /// whole window was buffered, so the buffer can overshoot by one window before it flushes; for
+    /// her device usage the first window alone overflows and the probe goes as-you-go.
+    /// Internal and mutable for the overflow specs only.
+    var probeBufferMaxBytes: Int = 8 * 1024 * 1024
+
+    /// FUAM-4516: the process's available memory in bytes (`os_proc_available_memory`), injectable
+    /// for the memory-guard specs. 0 means unknown.
+    var availableMemory: () -> Int = { Int(os_proc_available_memory()) }
 
     // MARK: - Dependencies
 
@@ -120,10 +159,23 @@ public final class SensorSampleUploadManager {
     private weak var networkDelegate: SensorSampleUploaderNetworkDelegate?
     
     // State
-    private var hasPurgedForNoUser = false
+    /// Once per clearance loss: the FUAM-3844 mismatch diagnostic is reported, not repeated on
+    /// every trigger.
+    private var noClearanceReported = false
 
-    // Background queue to avoid blocking UI
-    private let workQueue = DispatchQueue(label: "com.foryouandme.sensor.upload", qos: .utility)
+    // Background queue to avoid blocking UI. FUAM-4516: `.workItem` drains an autorelease pool
+    // after every block, so the objects one window or one upload step creates are freed at the end
+    // of that block instead of piling up for the life of the queue's thread (08 R-5).
+    /// FUAM-4517 (plan R2 PR-5): where the drain removes a batch. The success callback arrives on
+    /// main (Moya has no callback queue), and `workQueue` can be busy for seconds with window
+    /// work; a removal queued behind it is what a kill turned into a re-send. This serial queue
+    /// waits only for the storage's own `syncQueue`. The drain's continuation is chained after
+    /// the removal, so the next peek can never see the removed batch.
+    private let removalQueue = DispatchQueue(label: "com.foryouandme.sensor.remove", qos: .utility)
+
+    private let workQueue = DispatchQueue(label: "com.foryouandme.sensor.upload",
+                                          qos: .utility,
+                                          autoreleaseFrequency: .workItem)
     
     /// Optional clearance gate. If `false`, the manager will not fetch/upload.
     public weak var clearanceDelegate: SensorSampleUploadManagerClearanceDelegate?
@@ -148,12 +200,14 @@ public final class SensorSampleUploadManager {
     // permanent rejection recurs on every drain of the same session, so it still exhausts;
     // persist alongside the queue only if field telemetry shows stuck batches surviving it.
     private var batchUploadRejections: [String: Int] = [:]
-    // FUAM-3945 round 6 (V2): ids of the queued batches a drain chain is uploading right now,
-    // per sensor, mutated on `workQueue` only. A batch stays in the persisted queue until its
-    // upload succeeds, so a concurrent chain must skip it rather than upload it a second time.
-    // ponytail: an upload Single that never terminates would pin its batch here until relaunch;
-    // Moya/URLSession timeouts bound that in practice.
-    private var inFlightBatchIds: [SRSensor: Set<String>] = [:]
+    // FUAM-4516: the sensors with a drain loop running, mutated on `workQueue` only. One upload
+    // in flight per sensor: a second drain trigger (startup, didBecomeActive, reachability, a
+    // window enqueue, the retry) returns at once while the loop runs. A batch stays in the
+    // persisted queue until its upload succeeds, and only the loop that peeked it uploads it.
+    // ponytail: an upload Single that never terminates now stops this sensor's uploads until
+    // relaunch; URLSession's timeout is an idle timeout, so a slow trickle can outlast 60 s. Add a
+    // per-upload watchdog only if field data shows stuck sensors.
+    private var drainingSensors: Set<SRSensor> = []
     // Once-per-launch guard so the "empty_plan" telemetry (review fix #6) doesn't fire on
     // every 15-minute sync cycle while a fresh enrollment waits out the 24h embargo.
     private var emptyPlanReported: Set<String> = []
@@ -195,6 +249,25 @@ public final class SensorSampleUploadManager {
             self.deviceProvider = deviceProvider
     }
 
+    /// FUAM-4516 (owner rule 1): the participant whose data the pipeline may touch now, or `nil`
+    /// when there is no readable session: no token, no user (or the whole `UserDefaults` store is
+    /// unreadable, as before the first unlock after a reboot, where token, user and cursors all
+    /// read as absent). `nil` means PAUSE: nothing is fetched, written, uploaded, migrated or
+    /// deleted; the next trigger with a session proceeds. Nothing is ever deleted because a
+    /// session is absent.
+    private func sessionOwner() -> String? {
+        guard self.clearanceDelegate?.sensorManagerCanRun ?? false else { return nil }
+        return self.clearanceDelegate?.participantId
+    }
+
+    /// FUAM-3844 diagnostic: clearance false while a configured sensor is OS-authorized is a bug.
+    /// Reported once per clearance loss.
+    private func reportNoClearanceOnce(reason: String) {
+        guard !self.noClearanceReported else { return }
+        self.noClearanceReported = true
+        self.trackClearanceMismatchIfNeeded(reason: reason)
+    }
+
     /// A paired Watch only shows up in `fetchDevices()` once it has synced data for the sensor,
     /// so the enumeration legitimately changes over time. Call this when the app comes to the
     /// foreground (FUAM-3945); the next sync cycle then re-enumerates.
@@ -220,17 +293,13 @@ public final class SensorSampleUploadManager {
     
         hasStarted = true
 
-        // If there is no clearance (no user / no consent), purge and do nothing
-        guard clearanceDelegate?.sensorManagerCanRun ?? false else {
-            if !hasPurgedForNoUser {
-                hasPurgedForNoUser = true
-                self.trackClearanceMismatchIfNeeded(reason: "no_clearance_at_start")
-                // run purge async to avoid blocking startup
-                workQueue.async { [weak self] in self?.purgeAllData(reason: "no_clearance_at_start") }
-            }
+        // No session (no user / no consent / unreadable store): pause (FUAM-4516 owner rule 1).
+        // Local data is kept; the next trigger with a session proceeds.
+        guard sessionOwner() != nil else {
+            reportNoClearanceOnce(reason: "no_clearance_at_start")
             return
         }
-        hasPurgedForNoUser = false
+        noClearanceReported = false
         
         guard networkDelegate != nil else {
             #if DEBUG
@@ -256,17 +325,13 @@ public final class SensorSampleUploadManager {
 
     /// You can call this from foreground flows or background tasks to force a sync cycle.
     public func triggerSync(reason: String = "manual") {
-        
-        // Clearance check every time: if missing, purge once and exit
-        guard clearanceDelegate?.sensorManagerCanRun ?? false else {
-            if !hasPurgedForNoUser {
-                hasPurgedForNoUser = true
-                self.trackClearanceMismatchIfNeeded(reason: "no_clearance_trigger")
-                workQueue.async { [weak self] in self?.purgeAllData(reason: "no_clearance_trigger") }
-            }
+
+        // Session check every time: without one, pause (FUAM-4516 owner rule 1).
+        guard sessionOwner() != nil else {
+            reportNoClearanceOnce(reason: "no_clearance_trigger")
             return
         }
-        hasPurgedForNoUser = false
+        noClearanceReported = false
         
         if let last = lastSyncDate, Date().timeIntervalSince(last) < minSyncInterval, reason != "reachability_up" {
             // Throttle frequent triggers unless connectivity just changed
@@ -284,16 +349,21 @@ public final class SensorSampleUploadManager {
 
     private func syncAllSensors() {
         
-        guard clearanceDelegate?.sensorManagerCanRun ?? true else { return }
+        guard let owner = sessionOwner() else { return }
 
         // Ensure single-cycle at a time
         syncLock.lock(); defer { syncLock.unlock() }
+
+        // FUAM-4516 (owner rule 4): the cursors and the queue belong to `owner` from here on. A
+        // different participant than the one they were recorded for resets them (a property of
+        // the stored data, not an event to track).
+        storage.adoptOwner(owner)
 
         let now = Date()
 
         // Fetch & enqueue (mappers can be async but we trigger drains below)
         for sensor in sensors {
-            fetchPendingWindows(for: sensor, now: now)
+            fetchPendingWindows(for: sensor, now: now, owner: owner)
         }
 
         // Try to drain queues
@@ -347,8 +417,18 @@ public final class SensorSampleUploadManager {
     private var currentBound: BackfillLowerBound {
         // FUAM-3964 (review I1): `max(deviceNow, serverNow)`, never the raw device clock — the
         // 365-day cap is `now - 365d`, so a clock rolled back Δ would let it reach 365 + Δ.
-        return BackfillLowerBound.resolve(joinDay: self.clearanceDelegate?.enrollmentDate,
+        return BackfillLowerBound.resolve(joinDay: self.effectiveJoinDay,
                                           now: max(Date(), ServerClock.now()))
+    }
+
+    /// The join day, raised to the hand-over instant when this participant took over the install
+    /// from a different one (final review P-1). Both the plan and the drain-time consent gate use
+    /// it, so no SensorKit record measured before the hand-over is ever uploaded under the new
+    /// participant. Nothing is deleted; this is only a lower bound. `nil` without a join day.
+    private var effectiveJoinDay: Date? {
+        guard let joinDay = self.clearanceDelegate?.enrollmentDate else { return nil }
+        guard let handOver = self.storage.ownerSince() else { return joinDay }
+        return max(joinDay, handOver)
     }
 
     /// Internal rather than private so the FUAM-3964 server-time cap can be exercised through
@@ -405,7 +485,7 @@ public final class SensorSampleUploadManager {
         }
         return Self.buildWindowPlan(now: cappedNow,
                                     boundNow: max(now, serverNow),
-                                    joinDay: clearanceDelegate?.enrollmentDate,
+                                    joinDay: self.effectiveJoinDay,
                                     cursor: storage.lastCursor(for: sensor, deviceKey: device.key),
                                     embargo: embargo,
                                     timeZone: timeZone,
@@ -745,6 +825,9 @@ public final class SensorSampleUploadManager {
         let backwardProbe: Bool
         /// The end of the newest planned window — the single cursor target of a completed probe.
         let planHeadEnd: Date?
+        /// The participant the chain collects for (final review P-3), `nil` in specs that build a
+        /// context by hand. A result arriving after the session changed is dropped.
+        let owner: String?
         /// Consecutive confirmed-empty windows seen so far by a backward probe.
         var probeEmptyStreak: Int
         /// FUAM-3945 (round 4): the probe's per-window record sets, accumulated newest-first
@@ -753,6 +836,9 @@ public final class SensorSampleUploadManager {
         var probeBuffer: [ProbeBufferedWindow] = []
         /// Records currently buffered — checked against `probeBufferMaxRecords`.
         var probeBufferRecordCount: Int = 0
+        /// Estimated JSON bytes currently buffered — checked against `probeBufferMaxBytes`
+        /// (FUAM-4516).
+        var probeBufferByteCount: Int = 0
         /// `true` once the cap tripped: the buffer was flushed early and the rest of the probe
         /// enqueues as-you-go (the pre-round-4 regime, still correct via the membership filter).
         var probeBufferOverflowed: Bool = false
@@ -773,6 +859,7 @@ public final class SensorSampleUploadManager {
              rescanBoundary: Date? = nil,
              backwardProbe: Bool = false,
              planHeadEnd: Date? = nil,
+             owner: String? = nil,
              probeEmptyStreak: Int = 0) {
             self.sensor = sensor
             self.device = device
@@ -785,6 +872,7 @@ public final class SensorSampleUploadManager {
             self.rescanBoundary = rescanBoundary
             self.backwardProbe = backwardProbe
             self.planHeadEnd = planHeadEnd
+            self.owner = owner
             self.probeEmptyStreak = probeEmptyStreak
         }
 
@@ -810,7 +898,7 @@ public final class SensorSampleUploadManager {
         let windowAgeDays: Int
     }
 
-    private func fetchPendingWindows(for sensor: SRSensor, now: Date) {
+    private func fetchPendingWindows(for sensor: SRSensor, now: Date, owner: String) {
         guard isAuthorized(sensor) else {
             #if DEBUG
             print("SensorSampleUploadManager - Skip \(sensor.rawValue): status=\(statusString(sensor))")
@@ -826,7 +914,7 @@ public final class SensorSampleUploadManager {
             return
         }
 
-        runDeviceChain(at: 0, of: deviceProvider.devices(for: sensor), for: sensor, now: now, using: mapper)
+        runDeviceChain(at: 0, of: deviceProvider.devices(for: sensor), for: sensor, now: now, using: mapper, owner: owner)
     }
 
     /// Claim `sensor`'s chain for this cycle. `false` means one is already running and this
@@ -865,7 +953,8 @@ public final class SensorSampleUploadManager {
                         of devices: [SensorDevice],
                         for sensor: SRSensor,
                         now: Date,
-                        using mapper: SensorSampleMapper) {
+                        using mapper: SensorSampleMapper,
+                        owner: String? = nil) {
         // Entry point of a chain: claim the sensor, or skip it — a second concurrent cycle must
         // never reach `fetchAndMap` on a mapper that is still fetching. `index > 0` is this same
         // chain walking on to its next device, which already holds the claim.
@@ -913,7 +1002,8 @@ public final class SensorSampleUploadManager {
                                          timeZone: self.partitionTimeZone(),
                                          rescanBoundary: storage.lastCursor(for: sensor, deviceKey: device.key),
                                          backwardProbe: isBackfillProbe,
-                                         planHeadEnd: plan.windows.last?.end)
+                                         planHeadEnd: plan.windows.last?.end,
+                                         owner: owner)
         guard let firstWindow = plan.windows.first else {
             // Review fix #6: an empty plan on a would-be backfill (e.g. enrolled today, or a
             // forward-only bound because days_in_study <= 0 upstream) must still leave a
@@ -935,7 +1025,7 @@ public final class SensorSampleUploadManager {
                   + "(already up to date or embargo)")
             #endif
             // Nothing to do for THIS device; the next one may still have windows.
-            runDeviceChain(at: index + 1, of: devices, for: sensor, now: now, using: mapper)
+            runDeviceChain(at: index + 1, of: devices, for: sensor, now: now, using: mapper, owner: owner)
             return
         }
 
@@ -1009,6 +1099,28 @@ public final class SensorSampleUploadManager {
         }
 
         let window = windows[index]
+
+        // FUAM-4516: no new fetch close to the process memory limit. The chain ends for this
+        // cycle with its cursor untouched and no failure counted; the next sync retries. A
+        // backward probe first flushes what it buffered (plan R2 PR-4): those days are enqueued and
+        // committed to the ledger, so the next cycle's prefilter skips them and every guarded
+        // cycle still makes durable progress. Its result needs no handling: either way no cursor
+        // is written here.
+        let available = self.availableMemory()
+        if available > 0, available < Self.memoryGuardBytes(for: context.sensor) {
+            self.analytics.track(event: .sensorMemoryBackoff(sensor: context.device.telemetryName(for: context.sensor),
+                                                             availableMB: available / (1024 * 1024)))
+            #if DEBUG
+            print("SensorSampleUploadManager - Memory back-off for \(context.sensor.rawValue): "
+                  + "\(available / (1024 * 1024)) MB available")
+            #endif
+            if context.backwardProbe, !context.probeBuffer.isEmpty {
+                _ = self.flushProbeBuffer(context: context, assertGuardInert: false)
+            }
+            self.endChain(for: context.sensor)
+            return
+        }
+
         // FUAM-3945 (D1): the mapper fetches the WIDENED span; everything downstream — the
         // cursor write, the enqueue windowStart, the consent gate's `windowVouches` — keeps
         // receiving the narrow `window`.
@@ -1031,7 +1143,8 @@ public final class SensorSampleUploadManager {
                             of: context.devices,
                             for: context.sensor,
                             now: context.now,
-                            using: context.mapper)
+                            using: context.mapper,
+                            owner: context.owner)
     }
 
     /// Runs on `workQueue` only. Internal rather than private so the consent decisions taken
@@ -1044,6 +1157,13 @@ public final class SensorSampleUploadManager {
                             of windows: [DateInterval],
                             context: DeviceChainContext) {
         let sensor = context.sensor
+        // Final review P-3: the session changed while this fetch ran (a logout and another login).
+        // The records were collected for the previous participant: drop them, end the chain, and
+        // leave the cursor alone; the new participant's own sync plans from their bound.
+        if let chainOwner = context.owner, chainOwner != self.sessionOwner() {
+            self.endChain(for: sensor)
+            return
+        }
         // Review fix #4: the user can disappear between plan build and this callback (logout,
         // session expiry, failed token refresh). The re-resolved bound is then forward-only and
         // every record would be dropped — but advancing the cursor over the rest of the plan
@@ -1215,15 +1335,27 @@ public final class SensorSampleUploadManager {
                 // commit the fingerprints — ONLY once the batch is durably persisted (AC4): a
                 // fingerprint committed for a record that never reached the queue would be lost
                 // for good.
-                let enqueued = self.enqueueRespectingPayloadLimit(Self.tagged(filtered.novel, with: context.device),
-                                                                  windowStart: window.start,
-                                                                  for: sensor)
-                guard enqueued else {
+                let outcome = self.enqueueRespectingPayloadLimit(Self.tagged(filtered.novel, with: context.device),
+                                                                 windowStart: window.start,
+                                                                 for: sensor)
+                guard outcome == .enqueued(id: nil) else {
                     self.analytics.track(event: .sensorDataBackfillReach(
                         sensor: context.device.telemetryName(for: sensor),
                         reachedBack: ISO8601DateFormatter().string(from: window.start),
                         boundedBy: BackfillLowerBound.Origin.enqueueFailed.rawValue))
-                    self.handleWindowFailure(window: window, at: index, of: windows, context: context)
+                    if outcome == .writeFailed {
+                        // FUAM-4517 (plan R2 PR-1, R3 RR-1): a storage write failure (disk full,
+                        // protection, I/O) is retried by the next sync, without limit: it never
+                        // counts toward the give-up, which would advance the cursor past the
+                        // window. This site also serves a backward probe after its buffer
+                        // overflowed, so the chain is stopped directly here, never through
+                        // `handleWindowFailure`, whose probe branch forfeits the window.
+                        self.nextDeviceChain(after: context)
+                    } else {
+                        // Unserializable content can never be written: the FUAM-3841 poison-
+                        // window rule (give up after 3 attempts) is unchanged.
+                        self.handleWindowFailure(window: window, at: index, of: windows, context: context)
+                    }
                     return
                 }
                 var updated = ledger
@@ -1257,7 +1389,7 @@ public final class SensorSampleUploadManager {
             // filtered, or confirmed empty) — advance, monotonically, and move on. A rescan
             // window ends at or behind the stored cursor, so the monotonic write is what keeps
             // "cursors never rewind" true (the sanctioned rewinds are the `future_cursor` reset
-            // and the purge rewind, both written straight to storage).
+            // and a new participant's reset in `adoptOwner`, both written straight to storage).
             self.advanceCursor(to: window.end, for: sensor, deviceKey: deviceKey)
             self.processWindow(at: index + 1, of: windows, context: context)
         }
@@ -1295,6 +1427,7 @@ public final class SensorSampleUploadManager {
                                                             isRescanPass: isRescanPass,
                                                             windowAgeDays: windowAgeDays))
                 next.probeBufferRecordCount += novel.count
+                next.probeBufferByteCount += Self.estimatedJSONBytes(of: novel)
             }
         }
         next.probeEmptyStreak = rawRecordsWereEmpty ? context.probeEmptyStreak + 1 : 0
@@ -1304,7 +1437,7 @@ public final class SensorSampleUploadManager {
             self.finishProbe(context: next)
             return
         }
-        if next.probeBufferRecordCount > self.probeBufferMaxRecords {
+        if next.probeBufferRecordCount > self.probeBufferMaxRecords || next.probeBufferByteCount > self.probeBufferMaxBytes {
             // The cap: flush what is buffered now (chronological among themselves, NO cursor —
             // the probe is not done) and fall back to enqueue-as-you-go for the rest of the
             // walk, where the F1 membership filter is load-bearing again. Correctness is
@@ -1322,6 +1455,7 @@ public final class SensorSampleUploadManager {
             }
             next.probeBuffer = []
             next.probeBufferRecordCount = 0
+            next.probeBufferByteCount = 0
             next.probeBufferOverflowed = true
         }
         self.processWindow(at: index + 1, of: windows, context: next)
@@ -1438,14 +1572,19 @@ public final class SensorSampleUploadManager {
                                                                  count: nearDuplicateFingerprints.count))
             }
             guard !novel.isEmpty else { continue }
-            let enqueued = self.enqueueRespectingPayloadLimit(Self.tagged(novel, with: context.device),
-                                                              windowStart: buffered.window.start,
-                                                              for: sensor)
-            guard enqueued else {
+            let outcome = self.enqueueRespectingPayloadLimit(Self.tagged(novel, with: context.device),
+                                                             windowStart: buffered.window.start,
+                                                             for: sensor)
+            guard outcome == .enqueued(id: nil) else {
                 self.analytics.track(event: .sensorDataBackfillReach(
                     sensor: context.device.telemetryName(for: sensor),
                     reachedBack: ISO8601DateFormatter().string(from: buffered.window.start),
                     boundedBy: BackfillLowerBound.Origin.enqueueFailed.rawValue))
+                // FUAM-4517 (plan R2 PR-1): a write failure aborts this cycle's probe at once: no
+                // attempt counted, no forfeit, and the caller writes no cursor. The next cycle
+                // re-probes; the windows this flush already committed are ledger-skipped.
+                guard outcome != .writeFailed else { return false }
+                // Unserializable: the poison-window give-up below, unchanged.
                 let attemptKey = Self.attemptKey(context: context, window: buffered.window)
                 let attempts = (self.windowFetchFailures[attemptKey] ?? 0) + 1
                 guard attempts >= self.maxWindowFetchAttempts else {
@@ -1489,8 +1628,9 @@ public final class SensorSampleUploadManager {
         return "\(context.failureKey).\(window.start.timeIntervalSince1970)"
     }
 
-    /// Shared AC4 failure policy for a window that was NOT durably handled (fetch error or
-    /// enqueue/serialization failure): never advance the cursor for it. Retry on later sync
+    /// Shared AC4 failure policy for a window that was NOT durably handled (fetch error, or content
+    /// that cannot be serialized; FUAM-4517: never a storage write failure, which only stops the
+    /// chain for the cycle): never advance the cursor for it. Retry on later sync
     /// cycles; after `maxWindowFetchAttempts` consecutive failures the window is abandoned —
     /// reported as `gave_up`, never silently (FUAM-3841). Runs on `workQueue` only.
     private func handleWindowFailure(window: DateInterval,
@@ -1543,8 +1683,8 @@ public final class SensorSampleUploadManager {
     /// AC4/D3: cursors are strictly monotonic. A rescan window sits BEHIND the cursor by design
     /// and a backward probe hands windows over newest-first; writing such a window's end would
     /// rewind the cursor, and the only sanctioned rewinds in the whole design are the
-    /// `future_cursor` corruption reset and the purge rewind (`rewindCursors`), both of which
-    /// write the storage directly.
+    /// `future_cursor` corruption reset (written to storage directly) and the reset of a previous
+    /// participant's state by `adoptOwner` (FUAM-4516).
     private func advanceCursor(to date: Date, for sensor: SRSensor, deviceKey: String) {
         if let stored = self.storage.lastCursor(for: sensor, deviceKey: deviceKey), stored >= date {
             return
@@ -1733,46 +1873,178 @@ public final class SensorSampleUploadManager {
 
     /// Enqueue records in batches that respect both the record-count cap and the server's
     /// 10 MB request limit (oversized batches are bisected until they serialize below
-    /// `maxBatchBytes`). Returns `false` when ANY batch failed to persist (AC4): the caller
-    /// must then treat the whole window as not durably handled and leave the cursor alone.
+    /// `maxBatchBytes`). `.enqueued(id: nil)` when every batch is durably written; otherwise the
+    /// first failure's kind (AC4): the caller must then treat the whole window as not durably
+    /// handled and leave the cursor alone.
+    ///
+    /// FUAM-4517 (plan §2.2 point 3): on the first failure the batches this window already wrote
+    /// are removed again, so a retry of the window cannot queue them twice. They were written
+    /// inside this `workQueue` block, so no drain step can have peeked them yet. The removal goes
+    /// through `removeBatch`, whose failure handling (the id stays hidden from peek, the unlink is
+    /// retried) is the storage's single removal path.
+    ///
+    /// FUAM-4516 (owner rule 7): a record `JSONSerialization` rejects (NaN, infinity) can never be
+    /// uploaded. Only that record is set aside, as an always-encodable description (sensor, window,
+    /// index, its keys, the reason) kept 7 days in the quarantine, and the rest of the window is
+    /// enqueued; the window then counts as handled, so its cursor advances as for any other. This
+    /// is the one place a cursor moves past data that was not uploaded (owner-approved, this case
+    /// only). A window of only such records writes no batch file. The descriptions are written
+    /// after the batches, so a failure there rolls the batches back like any write failure.
     private func enqueueRespectingPayloadLimit(_ records: [[String: Any]],
                                                windowStart: Date,
-                                               for sensor: SRSensor) -> Bool {
-        return Self.splitRespectingPayloadLimit(records, maxBatchSize: maxBatchSize, maxBatchBytes: maxBatchBytes)
-            .allSatisfy { self.storage.enqueueBatch($0, windowStart: windowStart, for: sensor) }
+                                               for sensor: SRSensor) -> SensorEnqueueOutcome {
+        let split = Self.splitForUpload(records, maxBatchSize: maxBatchSize, maxBatchBytes: Self.maxBatchBytes)
+        var written: [String] = []
+        func rollBack(_ outcome: SensorEnqueueOutcome) -> SensorEnqueueOutcome {
+            written.forEach { self.storage.removeBatch(id: $0, for: sensor) }
+            return outcome
+        }
+        for batch in split.batches {
+            let outcome = self.storage.enqueueBatchReportingOutcome(batch, windowStart: windowStart, for: sensor)
+            guard case .enqueued(let id) = outcome else { return rollBack(outcome) }
+            if let id = id { written.append(id) }
+        }
+        if !split.unencodable.isEmpty {
+            let descriptions: [[String: Any]] = split.unencodable.map { index in
+                ["sensor": sensor.rawValue,
+                 "window_start": windowStart.timeIntervalSince1970,
+                 "index": index,
+                 "keys": records[index].keys.sorted(),
+                 "reason": "unencodable_record"]
+            }
+            guard self.storage.setAside(descriptions, reason: "unencodable_record", for: sensor) else {
+                return rollBack(.writeFailed)
+            }
+        }
+        return .enqueued(id: nil)
     }
 
     /// Pure batch splitting (internal for unit tests): caps batches at `maxBatchSize` records,
     /// then bisects any batch whose serialized JSON exceeds `maxBatchBytes`. A single record
-    /// is never split further (terminates), and record order is preserved.
+    /// is never split further (terminates), and record order is preserved. Records that cannot be
+    /// serialized are left out (see `splitForUpload`).
     static func splitRespectingPayloadLimit(_ records: [[String: Any]],
                                             maxBatchSize: Int,
                                             maxBatchBytes: Int) -> [[[String: Any]]] {
+        return Self.splitForUpload(records, maxBatchSize: maxBatchSize, maxBatchBytes: maxBatchBytes).batches
+    }
+
+    /// FUAM-4516: each record is serialized ONCE, alone, inside an autorelease pool; a batch's
+    /// size is then exact arithmetic, because a JSON array of objects is `[` + the elements
+    /// joined by `,` + `]`. Same batches as serializing every bisection level, but with 200 KB
+    /// device-usage records the old way serialized a whole window (tens of MB) at the top level
+    /// and again at every level below it; now the peak is one record. A record that cannot be
+    /// serialized goes to `unencodable` (its index in `records`) instead of into a batch.
+    static func splitForUpload(_ records: [[String: Any]],
+                               maxBatchSize: Int,
+                               maxBatchBytes: Int) -> (batches: [[[String: Any]]], unencodable: [Int]) {
+        var encodable: [[String: Any]] = []
+        var unencodable: [Int] = []
+        // Prefix sums of the element sizes of the encodable records.
+        var sizeSums = [0]
+        encodable.reserveCapacity(records.count)
+        sizeSums.reserveCapacity(records.count + 1)
+        for (index, record) in records.enumerated() {
+            let size = Self.serializedSize(of: [record])
+            guard size > 0 else {
+                unencodable.append(index)
+                continue
+            }
+            encodable.append(record)
+            sizeSums.append(sizeSums[sizeSums.count - 1] + size - 2)
+        }
+        func size(of range: Range<Int>) -> Int {
+            return sizeSums[range.upperBound] - sizeSums[range.lowerBound] + range.count + 1
+        }
         var batches: [[[String: Any]]] = []
-        func appendBisectingIfTooLarge(_ batch: [[String: Any]]) {
-            if batch.count > 1, Self.serializedSize(of: batch) > maxBatchBytes {
-                let half = batch.count / 2
-                appendBisectingIfTooLarge(Array(batch[..<half]))
-                appendBisectingIfTooLarge(Array(batch[half...]))
+        func appendBisectingIfTooLarge(_ range: Range<Int>) {
+            if range.count > 1, size(of: range) > maxBatchBytes {
+                let half = range.lowerBound + range.count / 2
+                appendBisectingIfTooLarge(range.lowerBound..<half)
+                appendBisectingIfTooLarge(half..<range.upperBound)
             } else {
-                batches.append(batch)
+                batches.append(Array(encodable[range]))
             }
         }
         var index = 0
-        while index < records.count {
-            let end = min(index + maxBatchSize, records.count)
-            appendBisectingIfTooLarge(Array(records[index..<end]))
+        while index < encodable.count {
+            let end = min(index + maxBatchSize, encodable.count)
+            appendBisectingIfTooLarge(index..<end)
             index = end
         }
-        return batches
+        return (batches, unencodable)
     }
 
-    // ponytail: serializes the batch once per bisection level — fine for ≤500-record
-    // batches; revisit only if profiling shows enqueue cost.
+    /// The serialized JSON size of `batch`, 0 when it cannot be serialized. FUAM-4516 (plan R2
+    /// PR-3): the pool releases the intermediate `Data` as soon as it is measured.
     private static func serializedSize(of batch: [[String: Any]]) -> Int {
-        guard JSONSerialization.isValidJSONObject(batch),
-              let data = try? JSONSerialization.data(withJSONObject: batch) else { return 0 }
-        return data.count
+        return autoreleasepool {
+            guard JSONSerialization.isValidJSONObject(batch),
+                  let data = try? JSONSerialization.data(withJSONObject: batch) else { return 0 }
+            return data.count
+        }
+    }
+
+    /// FUAM-4516 (plan R4/R5): the JSON size of `records` as compact `JSONSerialization` writes it,
+    /// for the probe buffer's byte budget, computed WITHOUT serializing: no buffer is allocated,
+    /// so measuring costs no memory. It walks the values and adds string UTF-8 lengths plus quotes
+    /// and escapes (`/`, `"`, `\` and `\b\f\n\r\t` take one extra byte, other control
+    /// characters five), booleans as `true`/`false`, integers and integral doubles by their digits,
+    /// other doubles by their `%.17g` form (what `JSONSerialization` writes), and braces, colons
+    /// and commas. Review B-2 measured the previous version up to 2.75x low for booleans, 1.37x for
+    /// fractional doubles and 3.3x for control characters; those are now counted as written. The
+    /// 1 MiB upload cap does not rely on it: `splitRespectingPayloadLimit` measures exactly.
+    static func estimatedJSONBytes(of records: [[String: Any]]) -> Int {
+        return Self.estimatedJSONBytes(ofValue: records)
+    }
+
+    private static func estimatedJSONBytes(ofValue value: Any) -> Int {
+        switch value {
+        case let string as String:
+            return Self.estimatedJSONBytes(ofString: string)
+        case let number as NSNumber:
+            return Self.estimatedJSONBytes(ofNumber: number)
+        case let dictionary as [String: Any]:
+            // `{` `}`, a comma between entries, and `"key":` per entry.
+            return dictionary.reduce(max(2, dictionary.count + 1)) { total, entry in
+                total + Self.estimatedJSONBytes(ofString: entry.key) + 1 + Self.estimatedJSONBytes(ofValue: entry.value)
+            }
+        case let array as [Any]:
+            return array.reduce(max(2, array.count + 1)) { total, element in
+                total + Self.estimatedJSONBytes(ofValue: element)
+            }
+        default:
+            // NSNull ("null") and anything JSON cannot carry.
+            return 4
+        }
+    }
+
+    private static func estimatedJSONBytes(ofString string: String) -> Int {
+        var bytes = 2 // quotes
+        for byte in string.utf8 {
+            switch byte {
+            case 0x22, 0x2F, 0x5C, 0x08, 0x09, 0x0A, 0x0C, 0x0D:
+                bytes += 2
+            case 0x00..<0x20:
+                bytes += 6
+            default:
+                bytes += 1
+            }
+        }
+        return bytes
+    }
+
+    private static func estimatedJSONBytes(ofNumber number: NSNumber) -> Int {
+        if CFGetTypeID(number) == CFBooleanGetTypeID() {
+            return number.boolValue ? 4 : 5
+        }
+        if CFNumberIsFloatType(number) {
+            let value = number.doubleValue
+            if value.rounded() != value || abs(value) >= 1e15 {
+                return String(format: "%.17g", value).utf8.count
+            }
+        }
+        return number.stringValue.utf8.count
     }
 
     /// Uploads queued batches. The cursor is NEVER touched here (review fix #3): it is owned
@@ -1781,8 +2053,6 @@ public final class SensorSampleUploadManager {
     /// wall-clock `Date()` on the retry path silently forfeited every pending window.
     func drainQueue(for sensor: SRSensor, attempt: Int = 1) {
         guard reachability.isReachable else { return }
-        // If there is nothing to upload, do not require a delegate
-        if storage.pendingBatchCount(for: sensor) == 0 { return }
 
         // Review fix #2: with no join day nothing may be transmitted, but the queue is left
         // untouched — a temporarily unavailable user record must not destroy legitimate
@@ -1808,15 +2078,24 @@ public final class SensorSampleUploadManager {
             workQueue.async { [weak self] in
                 guard let self = self else { return }
 
+                // FUAM-4516 (owner rules 1, 4): the session went away mid-loop: pause. If another
+                // participant logged in meanwhile, adopting them makes peek delete, unsent, every
+                // batch collected for the previous one.
+                guard let current = self.sessionOwner() else {
+                    self.drainingSensors.remove(sensor)
+                    return
+                }
+                self.storage.adoptOwner(current)
+
                 // FUAM-3945 round 6 (V2): PEEK, never dequeue. The batch stays persisted at its
                 // place in the queue until the upload succeeds (or the rejection budget drops
                 // it): its fingerprints were committed to the ledger and the cursor advanced at
                 // enqueue, so a batch removed before its request completed and then lost to a
-                // process kill could never be re-collected. Peek and in-flight marking happen
-                // in one `workQueue` block, so two chains never pick the same batch.
-                let inFlight = self.inFlightBatchIds[sensor] ?? []
-                guard let batch = self.storage.peekNextBatch(for: sensor, excluding: inFlight) else {
-                    return // queue drained (or every remaining batch is in flight elsewhere)
+                // process kill could never be re-collected. FUAM-4516: this loop is the only one
+                // uploading for `sensor` (`drainingSensors`), so nothing needs excluding.
+                guard let batch = self.storage.peekNextBatch(for: sensor, excluding: []) else {
+                    self.drainingSensors.remove(sensor) // queue drained: the loop ends
+                    return
                 }
 
                 // Review fix #2: the persisted queue outlives the policy that filled it (an
@@ -1842,11 +2121,9 @@ public final class SensorSampleUploadManager {
                     #if DEBUG
                     print("SensorSampleUploadManager - Dropped a fully out-of-bounds queued batch for \(sensor.rawValue)")
                     #endif
-                    self.storage.removeBatch(id: batch.id, for: sensor)
-                    uploadNextBatch()
+                    self.removeThenContinue(batch.id, for: sensor, uploadNextBatch)
                     return
                 }
-                self.inFlightBatchIds[sensor, default: []].insert(batch.id)
 
                 // FUAM-3945: `sr_absolute_time` SHIPS on every sole-record-of-its-fetch-result
                 // record — the server builds its cross-row dedup on it (FUAM-4030) — and is
@@ -1859,26 +2136,22 @@ public final class SensorSampleUploadManager {
                     .subscribe(
                         onSuccess: { [weak self] in
                             guard let self = self else { return }
-                            // Hop onto the work queue: `inFlightBatchIds` lives there. The batch
-                            // leaves the persisted queue only now that the server has it.
-                            self.workQueue.async { [weak self] in
-                                guard let self = self else { return }
-                                self.storage.removeBatch(id: batch.id, for: sensor)
-                                self.inFlightBatchIds[sensor]?.remove(batch.id)
-                                // Keep going; stops by itself when nothing uploadable is left.
-                                uploadNextBatch()
-                            }
+                            // The batch leaves the persisted queue the moment the server has it
+                            // (FUAM-4517): on `removalQueue`, not behind `workQueue`, never on
+                            // main. Then keep going; the loop stops by itself when nothing
+                            // uploadable is left.
+                            self.removeThenContinue(batch.id, for: sensor, uploadNextBatch)
                         },
                         onFailure: { [weak self] error in
                             guard let self = self else { return }
                             #if DEBUG
                             print("SensorSampleUploadManager - Upload failed for \(sensor.rawValue): \(error)")
                             #endif
-                            // Hop onto the work queue: `batchUploadRejections` is mutated there
-                            // only, and this callback arrives on an arbitrary Rx thread.
+                            // Hop onto the work queue: `batchUploadRejections` and
+                            // `drainingSensors` are mutated there only, and this callback arrives
+                            // on an arbitrary Rx thread.
                             self.workQueue.async { [weak self] in
                                 guard let self = self else { return }
-                                self.inFlightBatchIds[sensor]?.remove(batch.id)
                                 // FUAM-3945 round 5 (AC6): only a PERMANENT rejection burns the
                                 // batch's upload budget — a network outage or server error stays
                                 // on the unbounded backoff retry below. On exhaustion the batch
@@ -1893,7 +2166,6 @@ public final class SensorSampleUploadManager {
                                     let rejections = (self.batchUploadRejections[key] ?? 0) + 1
                                     guard rejections < self.maxBatchUploadRejections else {
                                         self.batchUploadRejections[key] = nil
-                                        self.storage.removeBatch(id: batch.id, for: sensor)
                                         self.analytics.track(event: .sensorDataBackfillReach(
                                             sensor: sensor.shortSubsource,
                                             reachedBack: ISO8601DateFormatter().string(from: batch.windowStart),
@@ -1902,11 +2174,14 @@ public final class SensorSampleUploadManager {
                                             sensor: sensor.shortSubsource,
                                             count: uploadable.count,
                                             reason: "upload_rejected_\(statusCode)"))
-                                        uploadNextBatch()
+                                        self.removeThenContinue(batch.id, for: sensor, uploadNextBatch)
                                         return
                                     }
                                     self.batchUploadRejections[key] = rejections
                                 }
+                                // The loop ends here: release the sensor, so the retry below (or
+                                // any other trigger) can start the next one.
+                                self.drainingSensors.remove(sensor)
                                 // Move the batch to the tail as its FILTERED form (dropped
                                 // records must not come back), in one persisted write, and
                                 // schedule a retry with backoff. The original entry stays
@@ -1927,7 +2202,32 @@ public final class SensorSampleUploadManager {
             }
         }
 
-        uploadNextBatch()
+        // FUAM-4516: one upload in flight per sensor. The guards above run on the caller's
+        // thread (the retry work item calls this from a global queue); the claim runs on
+        // `workQueue`, which also keeps a legacy queue's one-time migration (first queue access)
+        // off the main thread. A loop already running for `sensor` picks up whatever was just
+        // enqueued, so a second trigger starts nothing.
+        workQueue.async { [weak self] in
+            guard let self = self, let owner = self.sessionOwner() else { return }
+            self.storage.adoptOwner(owner)
+            guard !self.drainingSensors.contains(sensor),
+                  self.storage.pendingBatchCount(for: sensor) > 0 else { return }
+            self.drainingSensors.insert(sensor)
+            uploadNextBatch()
+        }
+    }
+
+    /// FUAM-4517: the one way the drain removes a batch it is done with (uploaded, fully filtered
+    /// out, or dropped after its rejection budget): on `removalQueue`, then `next`, which hops back
+    /// to `workQueue` by itself. A removal that fails is the storage's business: the id stays hidden
+    /// from peek and the unlink is retried (FUAM-4516 review A-5), so the chained peek can never
+    /// return the batch just removed.
+    private func removeThenContinue(_ id: String, for sensor: SRSensor, _ next: @escaping () -> Void) {
+        self.removalQueue.async { [weak self] in
+            guard let self = self else { return }
+            self.storage.removeBatch(id: id, for: sensor)
+            next()
+        }
     }
 
     /// Identity of a queued batch across drain retries (FUAM-3945 round 5). Stable because the
@@ -1967,61 +2267,6 @@ public final class SensorSampleUploadManager {
         guard !authorized.isEmpty else { return }
         let sensorNames = authorized.map { $0.shortSubsource }.joined(separator: ",")
         analytics.track(event: .sensorDataClearanceMismatch(reason: reason, authorizedSensors: sensorNames))
-    }
-
-    private func purgeAllData(reason: String) {
-        #if DEBUG
-        print("SensorSampleUploadManager - Purging pending data (\(reason))")
-        #endif
-
-        // Stop pending retries
-        retryWorkItems.values.forEach { $0.cancel() }
-        retryWorkItems.removeAll()
-        windowFetchFailures.removeAll()
-        batchUploadRejections.removeAll()
-
-        // Drop ALL queued batches. The cursor is deliberately NOT fast-forwarded (FUAM-3844):
-        // dropping queued batches on clearance loss is correct; forfeiting the ability to
-        // re-fetch that window is not. FUAM-3841 builds on this.
-        for sensor in sensors {
-            // Dequeue until the queue is empty, remembering per device kind the earliest window
-            // a purged batch came from (FUAM-3945 round 6, V4).
-            var earliestPurged: [String: Date] = [:]
-            while let batch = storage.dequeueNextBatch(for: sensor) {
-                for key in Self.deviceKeys(of: batch.records) {
-                    earliestPurged[key] = min(earliestPurged[key] ?? batch.windowStart, batch.windowStart)
-                }
-            }
-            self.rewindCursors(for: sensor, toEarliestPurged: earliestPurged)
-            // The ledger goes WITH the queue (D4): a purged batch was never uploaded, so its
-            // fingerprints must not survive to suppress a legitimate re-collection.
-            storage.purgeLedger(for: sensor)
-        }
-    }
-
-    /// FUAM-3945 round 6 (V4): a purged batch's window is behind the cursor, which advanced at
-    /// enqueue. Left there, the plan resumes from the cursor plus the 3-day rescan tail, so every
-    /// purged window older than the tail would never be fetched again. Rewind each device kind's
-    /// cursor to the earliest purged window so the next plan walks forward over them. Only ever
-    /// BACKWARDS (the FUAM-3844 rule: a cursor is never fast-forwarded by a purge), and floored at
-    /// the consent bound when one is known. On logout the join day is usually gone, so no floor
-    /// applies here; the planner clamps to the bound at plan time anyway. A rewind that lands ON
-    /// the bound reopens the plan as a backfill, exactly like purge plus re-consent (FUAM-3844).
-    private func rewindCursors(for sensor: SRSensor, toEarliestPurged earliest: [String: Date]) {
-        let bound = self.currentBound
-        for (deviceKey, windowStart) in earliest {
-            let target = bound.isForwardOnly ? windowStart : max(windowStart, bound.date)
-            guard let cursor = storage.lastCursor(for: sensor, deviceKey: deviceKey), target < cursor else { continue }
-            storage.setLastCursor(target, for: sensor, deviceKey: deviceKey)
-        }
-    }
-
-    /// The device kinds a queued batch holds records from: the `device_kind` tag applied at
-    /// enqueue (the queue is device-mixed). A batch with no tagged record was enqueued by an
-    /// iPhone-only build, so it belongs to the iPhone cursor.
-    private static func deviceKeys(of records: [[String: Any]]) -> Set<String> {
-        let keys = Set(records.compactMap { $0["device_kind"] as? String })
-        return keys.isEmpty ? [SensorDevice.iphoneKey] : keys
     }
 }
 

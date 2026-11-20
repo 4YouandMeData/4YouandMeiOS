@@ -1040,10 +1040,11 @@ class SensorUploadConsentCallPathSpec: QuickSpec {
                 expect(network.attemptCount).toEventually(equal(1), timeout: .seconds(5))
                 manager.drainQueue(for: sensor)
 
-                expect(network.uploaded.count).toEventually(equal(1), timeout: .seconds(5))
-                expect(network.uploaded.first?.first?["marker"] as? String).to(equal("b"))
-                expect(network.attemptCount).toAlways(equal(2), until: .milliseconds(300))
-                expect(storage.pendingBatchCount(for: sensor)).to(equal(1)) // "a", still in flight
+                // FUAM-4516: one upload in flight per sensor. The second drain starts nothing
+                // while "a" is in flight, so neither "a" nor "b" is sent again.
+                expect(network.attemptCount).toAlways(equal(1), until: .milliseconds(300))
+                expect(network.uploaded).to(beEmpty())
+                expect(storage.pendingBatchCount(for: sensor)).to(equal(2)) // both still persisted
             }
         }
 
@@ -1197,7 +1198,7 @@ private extension NSLock {
     }
 }
 
-private final class FakeSensorStorage: SensorSampleUploadManagerStorage, SensorSampleUploaderStorage {
+final class FakeSensorStorage: SensorSampleUploadManagerStorage, SensorSampleUploaderStorage {
 
     private let lock = NSLock()
     private var cursors: [String: Date] = [:]
@@ -1314,13 +1315,14 @@ private final class FakeSensorStorage: SensorSampleUploadManagerStorage, SensorS
     }
 }
 
-private final class FakeSensorReachability: SensorSampleUploadManagerReachability {
+final class FakeSensorReachability: SensorSampleUploadManagerReachability {
     var isReachable: Bool = true
     var reachabilityChanged: Observable<Bool> { return .empty() }
 }
 
-private final class FakeSensorClearance: SensorSampleUploadManagerClearanceDelegate {
+final class FakeSensorClearance: SensorSampleUploadManagerClearanceDelegate {
     var sensorManagerCanRun: Bool = true
+    var participantId: String? = "participant-1"
     var enrollmentDate: Date?
     /// UTC by default, so every pre-existing grid assertion stays byte-identical (a UTC
     /// participant gets exactly the round-7 grid); tz-specific specs override it.
@@ -1342,7 +1344,7 @@ private final class FakeSensorMapper: SensorSampleMapper {
     }
 }
 
-private final class FakeSensorNetwork: SensorSampleUploaderNetworkDelegate {
+final class FakeSensorNetwork: SensorSampleUploaderNetworkDelegate {
     private let lock = NSLock()
     private var payloads: [[[String: Any]]] = []
     private var attempts = 0
@@ -2078,12 +2080,14 @@ class SensorKitPerDeviceSpec: QuickSpec {
             // value behind that makes the legacy-key assertions pass for the wrong reason.
             let suffixedIphoneKey = "sensorkit.cursor." + sensor.rawValue + ".iphone"
             var realStorage: DefaultsSensorStorage!
+            let queueDirectory = URL(fileURLWithPath: NSTemporaryDirectory())
+                .appendingPathComponent("fuam4516-cursor-keys", isDirectory: true)
 
             beforeEach {
                 defaults.removeObject(forKey: legacyKey)
                 defaults.removeObject(forKey: watchKey)
                 defaults.removeObject(forKey: suffixedIphoneKey)
-                realStorage = DefaultsSensorStorage()
+                realStorage = DefaultsSensorStorage(queueDirectory: queueDirectory)
             }
             afterEach {
                 defaults.removeObject(forKey: legacyKey)
@@ -2623,22 +2627,26 @@ class HealthConsentFilterSpec: QuickSpec {
     }
 }
 
-// MARK: - FUAM-3945 (F7): the legacy upload-queue purge
+// MARK: - FUAM-3945 (F7) / FUAM-4516: the legacy upload-queue migration
 
 /// A batch persisted by a pre-FUAM-3945 build is a bare array of records with no window start, and
 /// the drain-time consent gate cannot decide it (its undecidable records would be dropped anyway).
-/// It is purged on the first load after the upgrade — silently, but it must neither crash nor
-/// survive at rest on the device.
+/// FUAM-4516: the whole `UserDefaults` queue is migrated to batch files at the first queue access;
+/// pre-FUAM-3945 entries are dropped there (traced), never written to a file, and the key is
+/// removed so nothing is left at rest.
 class SensorLegacyQueuePurgeSpec: QuickSpec {
 
     override class func spec() {
 
         let sensor = SRSensor.pedometerData
         let key = "sensorkit.queue." + sensor.rawValue
+        var root: URL!
         var storage: DefaultsSensorStorage!
 
         beforeEach {
-            storage = DefaultsSensorStorage()
+            root = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("fuam4516-\(UUID().uuidString)")
+            storage = DefaultsSensorStorage(queueDirectory: root)
+            storage.adoptOwner("participant-1") // migration runs only with a session (FUAM-4516)
             // The pre-FUAM-3945 shape: [[[String: Any]]] — an array of batches of records.
             let legacy: [[[String: Any]]] = [[["t": "2025-01-01T00:00:00Z", "steps": 10]],
                                              [["t": "2025-01-02T00:00:00Z", "steps": 20]]]
@@ -2650,23 +2658,19 @@ class SensorLegacyQueuePurgeSpec: QuickSpec {
 
         afterEach {
             UserDefaults.standard.removeObject(forKey: key)
+            try? FileManager.default.removeItem(at: root)
         }
 
-        it("drops legacy entries, rewrites the blob and does not crash") {
+        it("drops legacy entries, removes the key and does not crash") {
             expect(storage.pendingBatchCount(for: sensor)).to(equal(0))
             expect(storage.dequeueNextBatch(for: sensor)).to(beNil())
-
-            // Rewritten in the new shape (an empty array), so nothing is left at rest.
-            guard let data = UserDefaults.standard.data(forKey: key),
-                  let entries = try? JSONSerialization.jsonObject(with: data) as? [Any] else {
-                return fail("the queue blob was not rewritten")
-            }
-            expect(entries).to(beEmpty())
+            // Nothing left at rest: the key is gone and no batch file was written.
+            expect(UserDefaults.standard.data(forKey: key)).to(beNil())
         }
 
-        it("round-trips a new-format batch enqueued right after the purge") {
+        it("round-trips a new-format batch enqueued right after the migration") {
             let windowStart = Date(timeIntervalSince1970: 1_700_000_000)
-            _ = storage.pendingBatchCount(for: sensor)   // triggers the purge
+            _ = storage.pendingBatchCount(for: sensor)   // triggers the migration
             storage.enqueueBatch([["t": "2025-06-01T00:00:00Z"]], windowStart: windowStart, for: sensor)
 
             expect(storage.pendingBatchCount(for: sensor)).to(equal(1))
@@ -2678,7 +2682,7 @@ class SensorLegacyQueuePurgeSpec: QuickSpec {
 
         it("peeks without removing, keeps ids across instances, and removes or requeues by id (V2)") {
             let windowStart = Date(timeIntervalSince1970: 1_700_000_000)
-            // A FUAM-3945 entry persisted by the previous build: window start, but no id yet.
+            // A FUAM-3945 entry persisted by a pre-V2 build: window start, but no id yet.
             let preV2: [[String: Any]] = [["records": [["t": "2025-06-01T00:00:00Z", "steps": 1]],
                                            "window_start": windowStart.timeIntervalSince1970]]
             guard let data = try? JSONSerialization.data(withJSONObject: preV2) else {
@@ -2689,10 +2693,13 @@ class SensorLegacyQueuePurgeSpec: QuickSpec {
 
             guard let head = storage.peekNextBatch(for: sensor, excluding: []) else { return fail("no head") }
             expect(head.records.first?["steps"] as? Int).to(equal(1))
+            expect(head.id.hasPrefix("legacy-")).to(beTrue())                  // a content id (R2 PR-18)
             expect(storage.pendingBatchCount(for: sensor)).to(equal(2))       // peek removes nothing
-            // A process restart (fresh instance) sees the same id: the assigned id was persisted.
-            expect(DefaultsSensorStorage().peekNextBatch(for: sensor, excluding: [])?.id).to(equal(head.id))
-            // An in-flight batch is skipped by a concurrent chain.
+            // A process restart (fresh instance) sees the same id: it is in the file name.
+            let relaunched = DefaultsSensorStorage(queueDirectory: root)
+            relaunched.adoptOwner("participant-1")
+            expect(relaunched.peekNextBatch(for: sensor, excluding: [])?.id).to(equal(head.id))
+            // `excluding` still skips the given ids.
             expect(storage.peekNextBatch(for: sensor, excluding: [head.id])?.records.first?["steps"] as? Int).to(equal(2))
 
             // A failed upload moves the head to the tail in its filtered form, same window.
@@ -3496,7 +3503,8 @@ class SensorUploadLedgerSpec: QuickSpec {
             afterEach { UserDefaults.standard.removeObject(forKey: ledgerKey) }
 
             it("round-trips per device and purges per sensor (the purge path clears it with the queue)") {
-                let storage = DefaultsSensorStorage()
+                let storage = DefaultsSensorStorage(queueDirectory: URL(fileURLWithPath: NSTemporaryDirectory())
+                    .appendingPathComponent("fuam4516-ledger", isDirectory: true))
                 let entry = SensorLedgerEntry(day: windowDay,
                                               periodStart: windowDay,
                                               periodEnd: windowDay.addingTimeInterval(hour))
@@ -3811,7 +3819,7 @@ class SensorCursorDurabilitySpec: QuickSpec {
 }
 
 /// A mapper whose per-window result is decided by a closure over the (widened) fetch span.
-private final class ClosureDeviceMapper: SensorSampleMapper {
+final class ClosureDeviceMapper: SensorSampleMapper {
 
     private let lock = NSLock()
     private var count = 0
@@ -3839,90 +3847,6 @@ private final class ClosureDeviceMapper: SensorSampleMapper {
             completion(.failure(NSError(domain: "spec.mapper", code: 1)))
         } else {
             completion(.success(self.recordsForWindow(from, to)))
-        }
-    }
-}
-
-// MARK: - FUAM-3945 round 6 (V4): a purge rewinds the cursors past the windows it dropped
-
-/// Logout (or any clearance loss) purges every queued batch and keeps the cursors (FUAM-3844).
-/// The cursor already moved past each queued window at enqueue, so without a rewind the next plan
-/// resumes from the cursor plus the 3-day rescan tail and every purged window older than that is
-/// never fetched again. Driven through the real `triggerSync` clearance-loss path.
-class SensorPurgeRewindSpec: QuickSpec {
-
-    override class func spec() {
-
-        let day: TimeInterval = 24 * 3600
-        let sensor = SRSensor.pedometerData
-        let watch = SensorDevice.watchKey
-        let today = SensorSampleUploadManager.utcDayStart(Date())
-        let cursor = today.addingTimeInterval(-2 * day)
-
-        var storage: FakeSensorStorage!
-        var clearance: FakeSensorClearance!
-        var manager: SensorSampleUploadManager!
-
-        beforeEach {
-            storage = FakeSensorStorage()
-            clearance = FakeSensorClearance()
-            manager = SensorSampleUploadManager(withSensors: [sensor],
-                                                storage: storage,
-                                                reachability: FakeSensorReachability(),
-                                                analytics: CapturingAnalyticsService(),
-                                                mappers: [sensor: FakeSensorMapper()])
-            manager.clearanceDelegate = clearance
-            storage.setLastCursor(cursor, for: sensor)
-            storage.setLastCursor(cursor, for: sensor, deviceKey: watch)
-        }
-
-        /// Returns once the purge block has finished: the ledger purge runs after the rewind in
-        /// the same `workQueue` block, so every cursor below is final when the ledger is empty.
-        func purge() {
-            storage.setLedger(["seen": SensorLedgerEntry(day: cursor)], for: sensor)
-            clearance.sensorManagerCanRun = false // logout: no user, hence no join day either
-            manager.triggerSync(reason: "logout")
-            expect(storage.ledger(for: sensor)).toEventually(beEmpty(), timeout: .seconds(5))
-        }
-
-        it("rewinds each device kind's cursor to the earliest window it lost") {
-            storage.seed(records: [["steps": 1, "device_kind": "iphone"]],
-                         windowStart: cursor.addingTimeInterval(-7 * day),
-                         for: sensor)
-            storage.enqueueBatch([["steps": 2, "device_kind": watch]], windowStart: cursor.addingTimeInterval(-5 * day), for: sensor)
-            storage.enqueueBatch([["steps": 3, "device_kind": "iphone"]], windowStart: cursor.addingTimeInterval(-1 * day), for: sensor)
-
-            purge()
-
-            expect(storage.lastCursor(for: sensor)).to(equal(cursor.addingTimeInterval(-7 * day)))
-            expect(storage.lastCursor(for: sensor, deviceKey: watch)).to(equal(cursor.addingTimeInterval(-5 * day)))
-            expect(storage.pendingBatchCount(for: sensor)).to(equal(0))
-        }
-
-        it("treats an untagged batch as the iPhone's and never moves a cursor forward") {
-            storage.seed(records: [["steps": 1]], windowStart: cursor.addingTimeInterval(-6 * day), for: sensor)
-            // A watch batch AHEAD of the watch cursor (a cursor reset after it was queued).
-            storage.enqueueBatch([["steps": 2, "device_kind": watch]], windowStart: cursor.addingTimeInterval(day), for: sensor)
-
-            purge()
-
-            expect(storage.lastCursor(for: sensor)).to(equal(cursor.addingTimeInterval(-6 * day)))
-            expect(storage.lastCursor(for: sensor, deviceKey: watch)).to(equal(cursor))
-        }
-
-        it("never rewinds below the consent bound when the join day is still known") {
-            let joinDay = cursor.addingTimeInterval(-3 * day)
-            clearance.enrollmentDate = joinDay
-            // Queued under an older, wider bound.
-            storage.seed(records: [["steps": 1, "device_kind": "iphone"]],
-                         windowStart: cursor.addingTimeInterval(-10 * day),
-                         for: sensor)
-
-            purge()
-
-            let bound = BackfillLowerBound.resolve(joinDay: joinDay, now: max(Date(), ServerClock.now())).date
-            expect(storage.lastCursor(for: sensor)).to(equal(bound))
-            expect(storage.lastCursor(for: sensor, deviceKey: watch)).to(equal(cursor)) // it lost nothing
         }
     }
 }

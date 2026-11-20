@@ -11,6 +11,7 @@
 		0DC1F31B2CBE4AC1006640F4 /* ProjectInfo.plist in Resources */ = {isa = PBXBuildFile; fileRef = 0DC1F31A2CBE4AC1006640F4 /* ProjectInfo.plist */; };
 		0DD608542E8D88FA00E9D2C3 /* SensorKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0DD608532E8D88FA00E9D2C3 /* SensorKit.framework */; };
 		34109239C8E30161B326D4E5 /* Pods_ForYouAndMe_Tests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9327D4FE4ABC13FA000D3B87 /* Pods_ForYouAndMe_Tests.framework */; };
+		A4524000000000000000AA01 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4524000000000000000AA02 /* SceneDelegate.swift */; };
 		607FACD61AFB9204008FA782 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 607FACD51AFB9204008FA782 /* AppDelegate.swift */; };
 		607FACDD1AFB9204008FA782 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 607FACDC1AFB9204008FA782 /* Images.xcassets */; };
 		607FACE01AFB9204008FA782 /* LaunchScreen.xib in Resources */ = {isa = PBXBuildFile; fileRef = 607FACDE1AFB9204008FA782 /* LaunchScreen.xib */; };
@@ -18,6 +19,7 @@
 		6736A9A6F90FD76C5D860804 /* DiaryNoteItemHotFlashSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FB4FE2622BA26C4D740851D /* DiaryNoteItemHotFlashSpec.swift */; };
 		0A3E4400CCB241928A6A983A /* HotFlashStepMachineSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC324A5E864245E989E72611 /* HotFlashStepMachineSpec.swift */; };
 		B99EAD49FDCA49898B9E9165 /* ChartTapPayloadSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81293FCB1F464041B4993650 /* ChartTapPayloadSpec.swift */; };
+		4519A0000000000000000001 /* FYAMManagerStartupSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4519A0000000000000000002 /* FYAMManagerStartupSpec.swift */; };
 		825E98DCF4144B27CAD832B9 /* DiaryNoteItemHotFlashCellSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDEC3D590EF34F2247235AC7 /* DiaryNoteItemHotFlashCellSpec.swift */; };
 		894A3B022566DC82005460AC /* OnboardingSectionProviderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 894A3B012566DC82005460AC /* OnboardingSectionProviderTests.swift */; };
 		2935A0010001F37A0001AAAA /* MenstrualPeriodRelatedSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2935A0020001F37A0001AAAA /* MenstrualPeriodRelatedSpec.swift */; };
@@ -36,6 +38,7 @@
 		3247A0030001F37A0001AAAA /* HotFlashPayloadDecodingSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3247A0040001F37A0001AAAA /* HotFlashPayloadDecodingSpec.swift */; };
 		B270051CFD8255560AF6E81A /* FeaturesConfigurationDecodingSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF33D00B75069BB391298B5C /* FeaturesConfigurationDecodingSpec.swift */; };
 		2937A0010001F37A0001AAAA /* MenstrualUserSettingsTaskSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2937A0020001F37A0001AAAA /* MenstrualUserSettingsTaskSpec.swift */; };
+		4518A0010001F37A0001AAAA /* AppExitMetricsReporterSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4518A0020001F37A0001AAAA /* AppExitMetricsReporterSpec.swift */; };
 		2937A0030001F37A0001AAAA /* UserSettingsDecodingSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2937A0040001F37A0001AAAA /* UserSettingsDecodingSpec.swift */; };
 		55A1A0010001F37A0001AAAA /* SpatialSpanMemoryTaskSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55A1A0020001F37A0001AAAA /* SpatialSpanMemoryTaskSpec.swift */; };
 		3364A0010001F37A0001AAAA /* OptInPermissionDecodingSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3364A0020001F37A0001AAAA /* OptInPermissionDecodingSpec.swift */; };
@@ -51,6 +54,7 @@
 		2932A0010001F37A0001AAAA /* AlertDecodingSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2932A0020001F37A0001AAAA /* AlertDecodingSpec.swift */; };
 		2932A0030001F37A0001AAAA /* FeedContentPinnedSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2932A0040001F37A0001AAAA /* FeedContentPinnedSpec.swift */; };
 		4315A0010001F37A0001AAAA /* KpiWidgetSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4315A0020001F37A0001AAAA /* KpiWidgetSpec.swift */; };
+		4516A0010001F37A0001BBBB /* SensorQueueFileStorageSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4516A0020001F37A0001BBBB /* SensorQueueFileStorageSpec.swift */; };
 		3398A0030001F37A0001AAAA /* FeedContentQuickActivityOrderSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3398A0040001F37A0001AAAA /* FeedContentQuickActivityOrderSpec.swift */; };
 		3396A0010001F37A0001AAAA /* SurveyRangePickerSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3396A0020001F37A0001AAAA /* SurveyRangePickerSpec.swift */; };
 		3841A0010001F37A0001AAAA /* EnrollmentBackfillWindowingSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3841A0020001F37A0001AAAA /* EnrollmentBackfillWindowingSpec.swift */; };
@@ -101,6 +105,7 @@
 		5495EE5799F86F4CFC72D79C /* MockRepository.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MockRepository.swift; sourceTree = "<group>"; };
 		607FACD01AFB9204008FA782 /* ForYouAndMe_Example.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ForYouAndMe_Example.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		607FACD41AFB9204008FA782 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		A4524000000000000000AA02 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
 		607FACD51AFB9204008FA782 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		607FACDC1AFB9204008FA782 /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = "<group>"; };
 		607FACDF1AFB9204008FA782 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/LaunchScreen.xib; sourceTree = "<group>"; };
@@ -110,6 +115,7 @@
 		6FB4FE2622BA26C4D740851D /* DiaryNoteItemHotFlashSpec.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DiaryNoteItemHotFlashSpec.swift; sourceTree = "<group>"; };
 		DC324A5E864245E989E72611 /* HotFlashStepMachineSpec.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = HotFlashStepMachineSpec.swift; sourceTree = "<group>"; };
 		81293FCB1F464041B4993650 /* ChartTapPayloadSpec.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ChartTapPayloadSpec.swift; sourceTree = "<group>"; };
+		4519A0000000000000000002 /* FYAMManagerStartupSpec.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = FYAMManagerStartupSpec.swift; sourceTree = "<group>"; };
 		740172F89A311B9AA2C13AD2 /* Pods-ForYouAndMe_Example.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ForYouAndMe_Example.debug.xcconfig"; path = "Target Support Files/Pods-ForYouAndMe_Example/Pods-ForYouAndMe_Example.debug.xcconfig"; sourceTree = "<group>"; };
 		7D15300B2C812D2C4F61D24D /* HotFlashFlowSpec.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = HotFlashFlowSpec.swift; sourceTree = "<group>"; };
 		3037A0020001F37A0001AAAA /* QuickActivityResultResponseSpec.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = QuickActivityResultResponseSpec.swift; sourceTree = "<group>"; };
@@ -131,6 +137,7 @@
 		3247A0040001F37A0001AAAA /* HotFlashPayloadDecodingSpec.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = HotFlashPayloadDecodingSpec.swift; sourceTree = "<group>"; };
 		EF33D00B75069BB391298B5C /* FeaturesConfigurationDecodingSpec.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = FeaturesConfigurationDecodingSpec.swift; sourceTree = "<group>"; };
 		2937A0020001F37A0001AAAA /* MenstrualUserSettingsTaskSpec.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MenstrualUserSettingsTaskSpec.swift; sourceTree = "<group>"; };
+		4518A0020001F37A0001AAAA /* AppExitMetricsReporterSpec.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AppExitMetricsReporterSpec.swift; sourceTree = "<group>"; };
 		2937A0040001F37A0001AAAA /* UserSettingsDecodingSpec.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = UserSettingsDecodingSpec.swift; sourceTree = "<group>"; };
 		55A1A0020001F37A0001AAAA /* SpatialSpanMemoryTaskSpec.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SpatialSpanMemoryTaskSpec.swift; sourceTree = "<group>"; };
 		3364A0020001F37A0001AAAA /* OptInPermissionDecodingSpec.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = OptInPermissionDecodingSpec.swift; sourceTree = "<group>"; };
@@ -146,6 +153,7 @@
 		2932A0020001F37A0001AAAA /* AlertDecodingSpec.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AlertDecodingSpec.swift; sourceTree = "<group>"; };
 		2932A0040001F37A0001AAAA /* FeedContentPinnedSpec.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = FeedContentPinnedSpec.swift; sourceTree = "<group>"; };
 		4315A0020001F37A0001AAAA /* KpiWidgetSpec.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = KpiWidgetSpec.swift; sourceTree = "<group>"; };
+		4516A0020001F37A0001BBBB /* SensorQueueFileStorageSpec.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SensorQueueFileStorageSpec.swift; sourceTree = "<group>"; };
 		3398A0040001F37A0001AAAA /* FeedContentQuickActivityOrderSpec.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = FeedContentQuickActivityOrderSpec.swift; sourceTree = "<group>"; };
 		3396A0020001F37A0001AAAA /* SurveyRangePickerSpec.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SurveyRangePickerSpec.swift; sourceTree = "<group>"; };
 		3841A0020001F37A0001AAAA /* EnrollmentBackfillWindowingSpec.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = EnrollmentBackfillWindowingSpec.swift; sourceTree = "<group>"; };
@@ -231,6 +239,7 @@
 			isa = PBXGroup;
 			children = (
 				607FACD51AFB9204008FA782 /* AppDelegate.swift */,
+				A4524000000000000000AA02 /* SceneDelegate.swift */,
 				89F730572514F09C00DF9503 /* StudyVideo.mp4 */,
 				607FACDC1AFB9204008FA782 /* Images.xcassets */,
 				607FACDE1AFB9204008FA782 /* LaunchScreen.xib */,
@@ -271,6 +280,7 @@
 				3247A0040001F37A0001AAAA /* HotFlashPayloadDecodingSpec.swift */,
 				EF33D00B75069BB391298B5C /* FeaturesConfigurationDecodingSpec.swift */,
 				2937A0020001F37A0001AAAA /* MenstrualUserSettingsTaskSpec.swift */,
+				4518A0020001F37A0001AAAA /* AppExitMetricsReporterSpec.swift */,
 				2937A0040001F37A0001AAAA /* UserSettingsDecodingSpec.swift */,
 				55A1A0020001F37A0001AAAA /* SpatialSpanMemoryTaskSpec.swift */,
 				3364A0020001F37A0001AAAA /* OptInPermissionDecodingSpec.swift */,
@@ -286,6 +296,7 @@
 				2932A0020001F37A0001AAAA /* AlertDecodingSpec.swift */,
 				2932A0040001F37A0001AAAA /* FeedContentPinnedSpec.swift */,
 				4315A0020001F37A0001AAAA /* KpiWidgetSpec.swift */,
+				4516A0020001F37A0001BBBB /* SensorQueueFileStorageSpec.swift */,
 				3398A0040001F37A0001AAAA /* FeedContentQuickActivityOrderSpec.swift */,
 				3396A0020001F37A0001AAAA /* SurveyRangePickerSpec.swift */,
 				3841A0020001F37A0001AAAA /* EnrollmentBackfillWindowingSpec.swift */,
@@ -298,6 +309,7 @@
 				6FB4FE2622BA26C4D740851D /* DiaryNoteItemHotFlashSpec.swift */,
 				DC324A5E864245E989E72611 /* HotFlashStepMachineSpec.swift */,
 				81293FCB1F464041B4993650 /* ChartTapPayloadSpec.swift */,
+				4519A0000000000000000002 /* FYAMManagerStartupSpec.swift */,
 				FDEC3D590EF34F2247235AC7 /* DiaryNoteItemHotFlashCellSpec.swift */,
 				3037A0020001F37A0001AAAA /* QuickActivityResultResponseSpec.swift */,
 				3037A0040001F37A0001AAAA /* LinkedTaskPromptViewControllerSpec.swift */,
@@ -580,6 +592,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				607FACD61AFB9204008FA782 /* AppDelegate.swift in Sources */,
+				A4524000000000000000AA01 /* SceneDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -594,6 +607,7 @@
 				6736A9A6F90FD76C5D860804 /* DiaryNoteItemHotFlashSpec.swift in Sources */,
 				0A3E4400CCB241928A6A983A /* HotFlashStepMachineSpec.swift in Sources */,
 				B99EAD49FDCA49898B9E9165 /* ChartTapPayloadSpec.swift in Sources */,
+				4519A0000000000000000001 /* FYAMManagerStartupSpec.swift in Sources */,
 				825E98DCF4144B27CAD832B9 /* DiaryNoteItemHotFlashCellSpec.swift in Sources */,
 				3037A0010001F37A0001AAAA /* QuickActivityResultResponseSpec.swift in Sources */,
 				3037A0030001F37A0001AAAA /* LinkedTaskPromptViewControllerSpec.swift in Sources */,
@@ -613,6 +627,7 @@
 				3247A0030001F37A0001AAAA /* HotFlashPayloadDecodingSpec.swift in Sources */,
 				B270051CFD8255560AF6E81A /* FeaturesConfigurationDecodingSpec.swift in Sources */,
 				2937A0010001F37A0001AAAA /* MenstrualUserSettingsTaskSpec.swift in Sources */,
+				4518A0010001F37A0001AAAA /* AppExitMetricsReporterSpec.swift in Sources */,
 				2937A0030001F37A0001AAAA /* UserSettingsDecodingSpec.swift in Sources */,
 				55A1A0010001F37A0001AAAA /* SpatialSpanMemoryTaskSpec.swift in Sources */,
 				3364A0010001F37A0001AAAA /* OptInPermissionDecodingSpec.swift in Sources */,
@@ -628,6 +643,7 @@
 				2932A0010001F37A0001AAAA /* AlertDecodingSpec.swift in Sources */,
 				2932A0030001F37A0001AAAA /* FeedContentPinnedSpec.swift in Sources */,
 				4315A0010001F37A0001AAAA /* KpiWidgetSpec.swift in Sources */,
+				4516A0010001F37A0001BBBB /* SensorQueueFileStorageSpec.swift in Sources */,
 				3398A0030001F37A0001AAAA /* FeedContentQuickActivityOrderSpec.swift in Sources */,
 				3396A0010001F37A0001AAAA /* SurveyRangePickerSpec.swift in Sources */,
 				3841A0010001F37A0001AAAA /* EnrollmentBackfillWindowingSpec.swift in Sources */,

@@ -80,6 +80,10 @@ enum AnalyticsParameter: String {
     // FUAM-3945 fidelity audit (X1). Field-level completeness attributes.
     case field
     case total
+    // FUAM-4516. Queue migration and memory back-off attributes.
+    case legacyBytes = "legacy_bytes"
+    case outcome
+    case availableMB = "available_mb"
 }
 
 enum AnalyticsScreens: String {
@@ -224,7 +228,11 @@ enum AnalyticsEvent {
     // deliberate, but never silent (AC6). `reason` "join_boundary" is a SUB-count of
     // "consent_gate": report records whose derived period start fell below the join bound by
     // less than one report period — the drops the X3 timestamp-semantics ambiguity may be
-    // costing (FUAM-3945 fidelity audit).
+    // costing (FUAM-3945 fidelity audit). FUAM-4516: for the queue-file reasons `count` counts
+    // BATCHES, not records (a batch file's record count is unknowable or irrelevant there):
+    // "batch_unparseable" and "batch_unreadable" (moved to quarantine, kept, never uploaded) and
+    // "batch_remove_failed" (uploaded or dropped, its file not deleted yet; nothing is lost).
+    // Filter on `reason` before summing records.
     case sensorRecordDropped(sensor: String, count: Int, reason: String)
     // FUAM-3945 fidelity audit (X1). A mapped record carried entries whose documented field the
     // OS did not populate (today: device-usage `applications[]` without `usage_s`). `missing`
@@ -235,6 +243,16 @@ enum AnalyticsEvent {
     // `user.time_zone` was available (AC2 revised): the partition may not match the adherence
     // chart's bucketing until the user record loads. Once per launch.
     case sensorTimezoneFallback(reason: String)
+    // FUAM-4516. A sensor's 0.101.16/17 UserDefaults upload queue was moved to the file-per-batch
+    // queue. `outcome` is "ok", "partial_disk_error" (stopped on a write error, resumed at the next
+    // launch) or "unparseable" (raw bytes kept in quarantine, never uploaded). Once per sensor per
+    // install, plus once per launch while a partial migration keeps failing.
+    case sensorQueueMigrated(sensor: String, batchCount: Int, legacyBytes: Int, outcome: String)
+    // FUAM-4516. A SensorKit fetch was not started because the process was close to its memory
+    // limit (`os_proc_available_memory`): the sensor's chain ends for this cycle with its cursor
+    // untouched and no failure counted; the next sync retries. Daily occurrences for one
+    // participant mean the pause outlives SensorKit's ~7-day retention.
+    case sensorMemoryBackoff(sensor: String, availableMB: Int)
 
     // Errors
     case serverError(apiError: ApiError)

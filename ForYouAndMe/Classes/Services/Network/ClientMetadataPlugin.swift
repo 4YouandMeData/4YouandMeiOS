@@ -33,6 +33,21 @@ final class ClientMetadataPlugin: PluginType {
         static let appBuild = "X-Client-App-Build"
         static let appId = "X-Client-App-Id"
         static let timestamp = "X-Client-Timestamp"
+        // FUAM-4518. Diagnostics: tell apart "same process resumed" from "new process".
+        static let launchId = "X-Client-Launch-Id"
+        static let processUptimeMs = "X-Client-Process-Uptime-Ms"
+    }
+
+    /// One random UUID per process, never persisted.
+    static let launchId = UUID().uuidString
+
+    private static var startupDate: Date?
+
+    /// Called once from `FYAMManager.startup`; the first call wins.
+    /// A `Date()` difference is used on purpose: `systemUptime` / `mach_absolute_time` are Apple
+    /// required-reason APIs and the SDK ships no privacy manifest. A clock change only skews this diagnostic.
+    static func markStartup() {
+        if self.startupDate == nil { self.startupDate = Date() }
     }
 
     /// Local-time ISO8601 formatter with fractional seconds and the device's
@@ -62,6 +77,15 @@ final class ClientMetadataPlugin: PluginType {
     // MARK: - Private
 
     private func metadataHeaders() -> [String: String] {
+        var headers = self.baseHeaders()
+        headers[HeaderKey.launchId] = Self.launchId
+        if let startupDate = Self.startupDate {
+            headers[HeaderKey.processUptimeMs] = String(max(0, Int(Date().timeIntervalSince(startupDate) * 1000)))
+        }
+        return headers
+    }
+
+    private func baseHeaders() -> [String: String] {
         return [
             HeaderKey.platform: "ios",
             HeaderKey.appVersion: Bundle.main.versionName,
