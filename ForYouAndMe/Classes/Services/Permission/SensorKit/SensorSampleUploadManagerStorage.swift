@@ -45,6 +45,19 @@ public struct SensorQueuedBatch {
     }
 }
 
+/// How an enqueue ended (FUAM-4517, plan R2 PR-1). The two failures are handled differently: a
+/// write failure is retried by the next sync and never advances a cursor; content that cannot be
+/// serialized can never be written, so its window keeps the 3-attempt give-up (FUAM-3841).
+public enum SensorEnqueueOutcome: Equatable {
+    /// Durably written. `id` is the new batch's id, or `nil` from a storage that cannot report it
+    /// (such a batch cannot be rolled back).
+    case enqueued(id: String?)
+    /// A file-system error: disk full, a protection or permission error, an I/O error.
+    case writeFailed
+    /// `JSONSerialization` rejected the content.
+    case unserializable
+}
+
 /// Storage abstraction for SensorKit batching pipeline:
 /// - Keeps per-sensor, per-device upload cursor (last successfully uploaded upper bound).
 /// - Persists pending batches (FIFO) until successfully uploaded.
@@ -71,6 +84,12 @@ public protocol SensorSampleUploadManagerStorage: AnyObject {
     /// the cursor alone, because "enqueued" is what makes a window durably handled.
     @discardableResult
     func enqueueBatch(_ batch: [[String: Any]], windowStart: Date, for sensor: SRSensor) -> Bool
+
+    /// `enqueueBatch` with the outcome spelled out and the new batch's id (FUAM-4517): what the
+    /// pipeline uses, so it can tell a write failure from unserializable content and roll back the
+    /// batches a window already wrote. The default derives it from `enqueueBatch`: content that does
+    /// not serialize is `.unserializable`, any other `false` is `.writeFailed`, the id is unknown.
+    func enqueueBatchReportingOutcome(_ batch: [[String: Any]], windowStart: Date, for sensor: SRSensor) -> SensorEnqueueOutcome
 
     /// The head of the queue with the window it was fetched from, REMOVED from the queue, or
     /// `nil` when the queue is empty. Only for dropping batches: an upload
@@ -142,6 +161,13 @@ public protocol SensorSampleUploadManagerStorage: AnyObject {
 public extension SensorSampleUploadManagerStorage {
 
     func adoptOwner(_ owner: String) {}
+
+    func enqueueBatchReportingOutcome(_ batch: [[String: Any]], windowStart: Date, for sensor: SRSensor) -> SensorEnqueueOutcome {
+        // `isValidJSONObject` lets NaN through; only serializing tells.
+        guard JSONSerialization.isValidJSONObject(batch),
+              (try? JSONSerialization.data(withJSONObject: batch)) != nil else { return .unserializable }
+        return self.enqueueBatch(batch, windowStart: windowStart, for: sensor) ? .enqueued(id: nil) : .writeFailed
+    }
 
     func setAside(_ descriptions: [[String: Any]], reason: String, for sensor: SRSensor) -> Bool { return true }
 
@@ -318,13 +344,16 @@ public final class DefaultsSensorStorage: SensorSampleUploadManagerStorage, Sens
 
     @discardableResult
     public func enqueueBatch(_ batch: [[String: Any]], windowStart: Date, for sensor: SRSensor) -> Bool {
+        if case .enqueued = self.enqueueBatchReportingOutcome(batch, windowStart: windowStart, for: sensor) { return true }
+        return false
+    }
+
+    public func enqueueBatchReportingOutcome(_ batch: [[String: Any]], windowStart: Date, for sensor: SRSensor) -> SensorEnqueueOutcome {
         return self.syncQueue.sync {
             autoreleasepool {
                 self.prepareRootIfNeeded()
                 _ = self.ensureMigrated(sensor)
                 self.retryPendingRemovals(sensor)
-                // FUAM-4517 seam: the id is chosen here so a rollback of a partially enqueued
-                // window can remove exactly what it wrote.
                 return self.writeNewBatch(id: UUID().uuidString, records: batch, windowStart: windowStart, for: sensor)
             }
         }
@@ -749,26 +778,38 @@ public final class DefaultsSensorStorage: SensorSampleUploadManagerStorage, Sens
     }
 
     private func writeJSON(_ object: Any, to url: URL) -> Bool {
-        guard JSONSerialization.isValidJSONObject(object),
-              let data = try? JSONSerialization.data(withJSONObject: object) else { return false }
+        guard let data = Self.serialized(object) else { return false }
         return self.write(data, to: url)
     }
 
-    /// `false` on any serialization or file-system error (AC4): the caller leaves the cursor alone.
-    private func writeNewBatch(id: String, records: [[String: Any]], windowStart: Date, for sensor: SRSensor) -> Bool {
+    /// The compact JSON of `object`, `nil` when `JSONSerialization` rejects it.
+    private static func serialized(_ object: Any) -> Data? {
+        guard JSONSerialization.isValidJSONObject(object) else { return nil }
+        return try? JSONSerialization.data(withJSONObject: object)
+    }
+
+    /// FUAM-4517: `.unserializable` when the content cannot be serialized, `.writeFailed` on any
+    /// file-system error (directory, sequence listing, write); either way nothing was written.
+    private func writeNewBatch(id: String, records: [[String: Any]], windowStart: Date, for sensor: SRSensor) -> SensorEnqueueOutcome {
         var content: [String: Any] = [Self.idKey: id,
                                       Self.windowStartKey: windowStart.timeIntervalSince1970,
                                       Self.recordsKey: records]
         content[Self.ownerContentKey] = self.owner
-        return self.writeBatchFile(content, id: id, for: sensor)
+        guard let data = Self.serialized(content) else { return .unserializable }
+        return self.writeBatchData(data, id: id, for: sensor) ? .enqueued(id: id) : .writeFailed
     }
 
     /// Writes `content` as the new tail batch `<next seq>_<id>.json` and adds it to the index.
     private func writeBatchFile(_ content: [String: Any], id: String, for sensor: SRSensor) -> Bool {
+        guard let data = Self.serialized(content) else { return false }
+        return self.writeBatchData(data, id: id, for: sensor)
+    }
+
+    private func writeBatchData(_ data: Data, id: String, for sensor: SRSensor) -> Bool {
         let directory = self.sensorDirectory(sensor)
         guard self.ensureDirectory(directory), let sequence = self.takeSequence(for: sensor) else { return false }
         let url = directory.appendingPathComponent(Self.batchName(sequence: sequence, id: id))
-        guard self.writeJSON(content, to: url) else { return false }
+        guard self.write(data, to: url) else { return false }
         self.batchIndex[sensor.rawValue]?.append(BatchFile(sequence: sequence, id: id, url: url))
         return true
     }

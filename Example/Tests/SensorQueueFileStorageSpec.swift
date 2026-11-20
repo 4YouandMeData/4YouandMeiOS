@@ -164,6 +164,32 @@ private final class OrderRecordingStorage: SensorSampleUploadManagerStorage, Sen
 
     init(base: DefaultsSensorStorage) { self.base = base }
 
+    // FUAM-4517 knobs, read under `lock`.
+    private var enqueueCalls = 0
+    private var removals: [(id: String, onMain: Bool)] = []
+    private var gateEntered = false
+    /// Enqueue calls (1-based) answered with this outcome instead of reaching the disk.
+    var failingEnqueueCalls: [Int: SensorEnqueueOutcome] = [:]
+    /// Every enqueue call from this one on fails with `.writeFailed`.
+    var writeFailedFromCall: Int?
+    /// When set, the next `ledger(for:)` blocks on it: a window block "busy for seconds".
+    var ledgerGate: DispatchSemaphore?
+
+    var removedIds: [String] {
+        self.lock.lock(); defer { self.lock.unlock() }
+        return self.removals.map { $0.id }
+    }
+
+    var anyRemovalOnMain: Bool {
+        self.lock.lock(); defer { self.lock.unlock() }
+        return self.removals.contains { $0.onMain }
+    }
+
+    var ledgerGateEntered: Bool {
+        self.lock.lock(); defer { self.lock.unlock() }
+        return self.gateEntered
+    }
+
     var calls: [String] {
         self.lock.lock(); defer { self.lock.unlock() }
         return self.log
@@ -180,7 +206,17 @@ private final class OrderRecordingStorage: SensorSampleUploadManagerStorage, Sen
         base.setLastCursor(date, for: sensor, deviceKey: deviceKey)
     }
     func enqueueBatch(_ batch: [[String: Any]], windowStart: Date, for sensor: SRSensor) -> Bool {
-        return base.enqueueBatch(batch, windowStart: windowStart, for: sensor)
+        if case .enqueued = self.enqueueBatchReportingOutcome(batch, windowStart: windowStart, for: sensor) { return true }
+        return false
+    }
+    func enqueueBatchReportingOutcome(_ batch: [[String: Any]], windowStart: Date, for sensor: SRSensor) -> SensorEnqueueOutcome {
+        self.lock.lock()
+        self.enqueueCalls += 1
+        let call = self.enqueueCalls
+        let injected = self.failingEnqueueCalls[call] ?? (self.writeFailedFromCall.map { call >= $0 } == true ? .writeFailed : nil)
+        self.lock.unlock()
+        if let injected = injected { return injected }
+        return base.enqueueBatchReportingOutcome(batch, windowStart: windowStart, for: sensor)
     }
     func dequeueNextBatch(for sensor: SRSensor) -> (records: [[String: Any]], windowStart: Date)? {
         self.record("dequeueNextBatch")
@@ -191,6 +227,7 @@ private final class OrderRecordingStorage: SensorSampleUploadManagerStorage, Sen
     }
     func removeBatch(id: String, for sensor: SRSensor) {
         self.record("removeBatch")
+        self.lock.lock(); self.removals.append((id, Thread.isMainThread)); self.lock.unlock()
         base.removeBatch(id: id, for: sensor)
     }
     func requeueBatch(id: String, records: [[String: Any]], for sensor: SRSensor) -> Bool {
@@ -198,6 +235,12 @@ private final class OrderRecordingStorage: SensorSampleUploadManagerStorage, Sen
     }
     func pendingBatchCount(for sensor: SRSensor) -> Int { base.pendingBatchCount(for: sensor) }
     func ledger(for sensor: SRSensor, deviceKey: String) -> [String: SensorLedgerEntry] {
+        self.lock.lock()
+        let gate = self.ledgerGate
+        self.ledgerGate = nil
+        if gate != nil { self.gateEntered = true }
+        self.lock.unlock()
+        gate?.wait()
         return base.ledger(for: sensor, deviceKey: deviceKey)
     }
     func setLedger(_ ledger: [String: SensorLedgerEntry], for sensor: SRSensor, deviceKey: String) {
@@ -1586,6 +1629,218 @@ class SensorQueueDrainSpec: QuickSpec {
 
                 expect(relaunchedNetwork.attemptCount).toAlways(equal(0), until: .milliseconds(400))
                 expect(UserDefaults.standard.data(forKey: QueueFixture.legacyKey(sensor))).toEventually(beNil(), timeout: .seconds(5))
+            }
+        }
+    }
+}
+
+// MARK: - FUAM-4517: no re-send after a 200; a write failure never advances a cursor
+
+// swiftlint:disable:next type_body_length
+class SensorWriteFailureAndRemovalSpec: QuickSpec {
+
+    // swiftlint:disable:next function_body_length
+    override class func spec() {
+
+        let hour = QueueFixture.hour
+        let day = QueueFixture.day
+        let sensor = SRSensor.accelerometer
+        let device = SensorDevice(device: nil, key: SensorDevice.iphoneKey, productType: "iPhone17,1", systemVersion: "18.0")
+        var root: URL!
+        var joinDay: Date!
+        var today: Date!
+        var analytics: CapturingAnalyticsService!
+        var clearance: FakeSensorClearance!
+
+        func makeManager(storage: SensorSampleUploadManagerStorage & SensorSampleUploaderStorage,
+                         mapper: SensorSampleMapper) -> SensorSampleUploadManager {
+            let manager = SensorSampleUploadManager(withSensors: [sensor],
+                                                    storage: storage,
+                                                    reachability: FakeSensorReachability(),
+                                                    analytics: analytics,
+                                                    mappers: [sensor: mapper])
+            manager.clearanceDelegate = clearance
+            manager.availableMemory = { 0 }
+            return manager
+        }
+
+        func origins(_ origin: BackfillLowerBound.Origin) -> Int {
+            return analytics.trackedEvents.filter { event in
+                if case let .sensorDataBackfillReach(_, _, boundedBy) = event { return boundedBy == origin.rawValue }
+                return false
+            }.count
+        }
+
+        /// One record per window, measured one hour into it (`from` is widened by an epsilon).
+        func oneRecordPerWindow(extra: [String: Any] = [:]) -> ClosureDeviceMapper {
+            return ClosureDeviceMapper { from, _ in
+                var record: [String: Any] = ["t": QueueFixture.iso(from.addingTimeInterval(hour))]
+                extra.forEach { record[$0.key] = $0.value }
+                return [record]
+            }
+        }
+
+        /// Two records of about 700 KB each per window: the window enqueues as TWO batches.
+        func twoBatchesPerWindow(onlyNewerThan days: Double) -> ClosureDeviceMapper {
+            let blob = String(repeating: "x", count: 700 * 1024)
+            return ClosureDeviceMapper { from, to in
+                guard to > today.addingTimeInterval(-days * day) else { return [] }
+                return [["t": QueueFixture.iso(from.addingTimeInterval(hour)), "blob": blob],
+                        ["t": QueueFixture.iso(from.addingTimeInterval(2 * hour)), "blob": blob]]
+            }
+        }
+
+        /// Runs one sync cycle of the sensor's chain and waits until the work queue is idle.
+        func runCycle(_ manager: SensorSampleUploadManager, _ mapper: ClosureDeviceMapper) {
+            manager.runDeviceChain(at: 0, of: [device], for: sensor, now: Date(), using: mapper)
+            var previous = -1
+            var rounds = 0
+            while previous != mapper.callCount, rounds < 200 {
+                previous = mapper.callCount
+                _ = manager.windowFetchFailureCount(for: sensor, deviceKey: device.key) // work-queue barrier
+                rounds += 1
+            }
+        }
+
+        /// A forward-walk plan of three windows: the cursor sits four days back.
+        func seedForward(_ storage: SensorSampleUploadManagerStorage) -> Date {
+            let cursor = today.addingTimeInterval(-4 * day)
+            storage.setLastCursor(cursor, for: sensor, deviceKey: device.key)
+            storage.setLastRescanDay(today, for: sensor, deviceKey: device.key)
+            return cursor
+        }
+
+        beforeEach {
+            QueueFixture.clearDefaults(sensor)
+            root = QueueFixture.makeRoot()
+            today = SensorSampleUploadManager.utcDayStart(Date())
+            joinDay = today.addingTimeInterval(-30 * day)
+            analytics = CapturingAnalyticsService()
+            clearance = FakeSensorClearance()
+            clearance.enrollmentDate = joinDay
+        }
+
+        afterEach {
+            QueueFixture.clearDefaults(sensor)
+            QueueFixture.removeRoot(root)
+        }
+
+        describe("the storage's three-way enqueue outcome (R2 PR-1)") {
+
+            it("reports enqueued with the batch id, unserializable content, and write failures apart") {
+                let storage = DefaultsSensorStorage(queueDirectory: root, analytics: analytics)
+                let enqueued = storage.enqueueBatchReportingOutcome([["t": "x"]], windowStart: joinDay, for: sensor)
+                guard case .enqueued(let id?) = enqueued else { return fail("expected an id, got \(enqueued)") }
+                expect(QueueFixture.batchIds(root, sensor)).to(equal([id]))
+                expect(storage.enqueueBatchReportingOutcome([["v": Double.nan]], windowStart: joinDay, for: sensor))
+                    .to(equal(.unserializable))
+
+                let blocked = SRSensor.pedometerData
+                defer { QueueFixture.clearDefaults(blocked) }
+                _ = storage.pendingBatchCount(for: blocked) // first access done: the blocker is not cleaned up
+                try? Data("x".utf8).write(to: QueueFixture.sensorDirectory(root, blocked)) // disk-full stand-in
+                expect(storage.enqueueBatchReportingOutcome([["t": "x"]], windowStart: joinDay, for: blocked))
+                    .to(equal(.writeFailed))
+            }
+        }
+
+        describe("a write failure never advances a cursor (R2 PR-1, closes review B-8)") {
+
+            it("enqueue_failure_never_advances_the_cursor_nor_uses_the_give_up_budget (forward walk, limit case 18)") {
+                let fake = FakeSensorStorage()
+                let cursor = seedForward(fake)
+                fake.failEnqueue = true // every write fails, as on a full disk
+                let mapper = oneRecordPerWindow()
+                let manager = makeManager(storage: fake, mapper: mapper)
+
+                for _ in 1...5 { runCycle(manager, mapper) }
+
+                expect(origins(.enqueueFailed)).to(equal(5))
+                expect(origins(.gaveUp)).to(equal(0))
+                expect(manager.windowFetchFailureCount(for: sensor, deviceKey: device.key)).to(equal(0))
+                expect(fake.lastCursor(for: sensor)).to(equal(cursor))
+                expect(fake.ledger(for: sensor)).to(beEmpty())
+
+                // The disk recovers: the next cycle handles the window and moves on.
+                fake.failEnqueue = false
+                runCycle(manager, mapper)
+                expect(fake.lastCursor(for: sensor)).to(equal(today.addingTimeInterval(-day)))
+            }
+
+            it("partial_window_enqueue_is_rolled_back (forward walk)") {
+                let storage = OrderRecordingStorage(base: DefaultsSensorStorage(queueDirectory: root, analytics: analytics))
+                let cursor = seedForward(storage)
+                storage.failingEnqueueCalls = [2: .writeFailed] // the window's second batch fails
+                let mapper = twoBatchesPerWindow(onlyNewerThan: 5)
+                let manager = makeManager(storage: storage, mapper: mapper)
+
+                runCycle(manager, mapper)
+
+                expect(storage.removedIds.count).to(equal(1)) // the first batch, rolled back
+                expect(QueueFixture.batchFiles(root, sensor)).to(beEmpty())
+                expect(storage.lastCursor(for: sensor, deviceKey: device.key)).to(equal(cursor))
+                expect(storage.ledger(for: sensor, deviceKey: device.key)).to(beEmpty())
+                expect(origins(.gaveUp)).to(equal(0))
+            }
+
+            // Note (impl-FUAM-4517.md): before this change a write failure did not reach the give-up
+            // either, because every successful fetch resets the window's failure counter; the
+            // forward-walk spec still tells the two apart (a write failure is not counted at all),
+            // the probe specs pin the outcome. Unencodable records never reach a write at all now:
+            // they are set aside before it (FUAM-4516 owner rule 7, specs in SensorQueueDrainSpec).
+            it("probe_flush_write_failure_never_writes_the_terminal_cursor (limit case 36)") {
+                let fake = FakeSensorStorage() // no cursor: a backfill probe from the join day
+                fake.failEnqueue = true
+                let mapper = ClosureDeviceMapper { from, to in
+                    guard to > today.addingTimeInterval(-4 * day) else { return [] }
+                    return [["t": QueueFixture.iso(from.addingTimeInterval(hour))]]
+                }
+                let manager = makeManager(storage: fake, mapper: mapper)
+
+                for _ in 1...4 { runCycle(manager, mapper) }
+
+                expect(origins(.enqueueFailed)).to(beGreaterThanOrEqualTo(4))
+                expect(origins(.gaveUp)).to(equal(0))
+                expect(fake.lastCursor(for: sensor)).to(beNil())
+                expect(manager.windowFetchFailureCount(for: sensor, deviceKey: device.key)).to(equal(0))
+
+                fake.failEnqueue = false
+                runCycle(manager, mapper)
+                expect(fake.lastCursor(for: sensor)).to(equal(today.addingTimeInterval(-day)))
+                expect(fake.enqueued.count).to(equal(3))
+            }
+
+            it("probe_flush_write_failure_rolls_back_partial_window_batches (limit case 36)") {
+                let storage = OrderRecordingStorage(base: DefaultsSensorStorage(queueDirectory: root, analytics: analytics))
+                storage.failingEnqueueCalls = [2: .writeFailed]
+                let mapper = twoBatchesPerWindow(onlyNewerThan: 3) // one window of data
+                let manager = makeManager(storage: storage, mapper: mapper)
+
+                runCycle(manager, mapper)
+
+                expect(storage.removedIds.count).to(equal(1))
+                expect(QueueFixture.batchFiles(root, sensor)).to(beEmpty())
+                expect(storage.lastCursor(for: sensor, deviceKey: device.key)).to(beNil())
+                expect(origins(.gaveUp)).to(equal(0))
+            }
+
+            it("stops an overflowed probe on a write failure without forfeiting the window (R3 RR-1)") {
+                let storage = OrderRecordingStorage(base: DefaultsSensorStorage(queueDirectory: root, analytics: analytics))
+                storage.writeFailedFromCall = 2 // the overflow flush writes; the as-you-go window fails
+                let mapper = ClosureDeviceMapper { from, to in
+                    guard to > today.addingTimeInterval(-5 * day) else { return [] }
+                    return [["t": QueueFixture.iso(from.addingTimeInterval(hour))]]
+                }
+                let manager = makeManager(storage: storage, mapper: mapper)
+                manager.probeBufferMaxRecords = 0 // the first buffered window overflows
+
+                for _ in 1...4 { runCycle(manager, mapper) }
+
+                expect(origins(.probeBufferOverflow)).to(beGreaterThanOrEqualTo(1))
+                expect(origins(.enqueueFailed)).to(beGreaterThanOrEqualTo(4))
+                expect(origins(.gaveUp)).to(equal(0))
+                expect(storage.lastCursor(for: sensor, deviceKey: device.key)).to(beNil())
+                expect(manager.windowFetchFailureCount(for: sensor, deviceKey: device.key)).to(equal(0))
             }
         }
     }

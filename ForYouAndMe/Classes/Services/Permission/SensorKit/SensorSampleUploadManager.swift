@@ -1328,15 +1328,27 @@ public final class SensorSampleUploadManager {
                 // commit the fingerprints — ONLY once the batch is durably persisted (AC4): a
                 // fingerprint committed for a record that never reached the queue would be lost
                 // for good.
-                let enqueued = self.enqueueRespectingPayloadLimit(Self.tagged(filtered.novel, with: context.device),
-                                                                  windowStart: window.start,
-                                                                  for: sensor)
-                guard enqueued else {
+                let outcome = self.enqueueRespectingPayloadLimit(Self.tagged(filtered.novel, with: context.device),
+                                                                 windowStart: window.start,
+                                                                 for: sensor)
+                guard outcome == .enqueued(id: nil) else {
                     self.analytics.track(event: .sensorDataBackfillReach(
                         sensor: context.device.telemetryName(for: sensor),
                         reachedBack: ISO8601DateFormatter().string(from: window.start),
                         boundedBy: BackfillLowerBound.Origin.enqueueFailed.rawValue))
-                    self.handleWindowFailure(window: window, at: index, of: windows, context: context)
+                    if outcome == .writeFailed {
+                        // FUAM-4517 (plan R2 PR-1, R3 RR-1): a storage write failure (disk full,
+                        // protection, I/O) is retried by the next sync, without limit: it never
+                        // counts toward the give-up, which would advance the cursor past the
+                        // window. This site also serves a backward probe after its buffer
+                        // overflowed, so the chain is stopped directly here, never through
+                        // `handleWindowFailure`, whose probe branch forfeits the window.
+                        self.nextDeviceChain(after: context)
+                    } else {
+                        // Unserializable content can never be written: the FUAM-3841 poison-
+                        // window rule (give up after 3 attempts) is unchanged.
+                        self.handleWindowFailure(window: window, at: index, of: windows, context: context)
+                    }
                     return
                 }
                 var updated = ledger
@@ -1553,14 +1565,19 @@ public final class SensorSampleUploadManager {
                                                                  count: nearDuplicateFingerprints.count))
             }
             guard !novel.isEmpty else { continue }
-            let enqueued = self.enqueueRespectingPayloadLimit(Self.tagged(novel, with: context.device),
-                                                              windowStart: buffered.window.start,
-                                                              for: sensor)
-            guard enqueued else {
+            let outcome = self.enqueueRespectingPayloadLimit(Self.tagged(novel, with: context.device),
+                                                             windowStart: buffered.window.start,
+                                                             for: sensor)
+            guard outcome == .enqueued(id: nil) else {
                 self.analytics.track(event: .sensorDataBackfillReach(
                     sensor: context.device.telemetryName(for: sensor),
                     reachedBack: ISO8601DateFormatter().string(from: buffered.window.start),
                     boundedBy: BackfillLowerBound.Origin.enqueueFailed.rawValue))
+                // FUAM-4517 (plan R2 PR-1): a write failure aborts this cycle's probe at once: no
+                // attempt counted, no forfeit, and the caller writes no cursor. The next cycle
+                // re-probes; the windows this flush already committed are ledger-skipped.
+                guard outcome != .writeFailed else { return false }
+                // Unserializable: the poison-window give-up below, unchanged.
                 let attemptKey = Self.attemptKey(context: context, window: buffered.window)
                 let attempts = (self.windowFetchFailures[attemptKey] ?? 0) + 1
                 guard attempts >= self.maxWindowFetchAttempts else {
@@ -1604,8 +1621,9 @@ public final class SensorSampleUploadManager {
         return "\(context.failureKey).\(window.start.timeIntervalSince1970)"
     }
 
-    /// Shared AC4 failure policy for a window that was NOT durably handled (fetch error or
-    /// enqueue/serialization failure): never advance the cursor for it. Retry on later sync
+    /// Shared AC4 failure policy for a window that was NOT durably handled (fetch error, or content
+    /// that cannot be serialized; FUAM-4517: never a storage write failure, which only stops the
+    /// chain for the cycle): never advance the cursor for it. Retry on later sync
     /// cycles; after `maxWindowFetchAttempts` consecutive failures the window is abandoned —
     /// reported as `gave_up`, never silently (FUAM-3841). Runs on `workQueue` only.
     private func handleWindowFailure(window: DateInterval,
@@ -1848,19 +1866,37 @@ public final class SensorSampleUploadManager {
 
     /// Enqueue records in batches that respect both the record-count cap and the server's
     /// 10 MB request limit (oversized batches are bisected until they serialize below
-    /// `maxBatchBytes`). Returns `false` when ANY batch failed to persist (AC4): the caller
-    /// must then treat the whole window as not durably handled and leave the cursor alone.
+    /// `maxBatchBytes`). `.enqueued(id: nil)` when every batch is durably written; otherwise the
+    /// first failure's kind (AC4): the caller must then treat the whole window as not durably
+    /// handled and leave the cursor alone.
+    ///
+    /// FUAM-4517 (plan §2.2 point 3): on the first failure the batches this window already wrote
+    /// are removed again, so a retry of the window cannot queue them twice. They were written
+    /// inside this `workQueue` block, so no drain step can have peeked them yet. The removal goes
+    /// through `removeBatch`, whose failure handling (the id stays hidden from peek, the unlink is
+    /// retried) is the storage's single removal path.
     ///
     /// FUAM-4516 (owner rule 7): a record `JSONSerialization` rejects (NaN, infinity) can never be
     /// uploaded. Only that record is set aside, as an always-encodable description (sensor, window,
     /// index, its keys, the reason) kept 7 days in the quarantine, and the rest of the window is
     /// enqueued; the window then counts as handled, so its cursor advances as for any other. This
     /// is the one place a cursor moves past data that was not uploaded (owner-approved, this case
-    /// only). A window of only such records writes no batch file.
+    /// only). A window of only such records writes no batch file. The descriptions are written
+    /// after the batches, so a failure there rolls the batches back like any write failure.
     private func enqueueRespectingPayloadLimit(_ records: [[String: Any]],
                                                windowStart: Date,
-                                               for sensor: SRSensor) -> Bool {
+                                               for sensor: SRSensor) -> SensorEnqueueOutcome {
         let split = Self.splitForUpload(records, maxBatchSize: maxBatchSize, maxBatchBytes: Self.maxBatchBytes)
+        var written: [String] = []
+        func rollBack(_ outcome: SensorEnqueueOutcome) -> SensorEnqueueOutcome {
+            written.forEach { self.storage.removeBatch(id: $0, for: sensor) }
+            return outcome
+        }
+        for batch in split.batches {
+            let outcome = self.storage.enqueueBatchReportingOutcome(batch, windowStart: windowStart, for: sensor)
+            guard case .enqueued(let id) = outcome else { return rollBack(outcome) }
+            if let id = id { written.append(id) }
+        }
         if !split.unencodable.isEmpty {
             let descriptions: [[String: Any]] = split.unencodable.map { index in
                 ["sensor": sensor.rawValue,
@@ -1869,9 +1905,11 @@ public final class SensorSampleUploadManager {
                  "keys": records[index].keys.sorted(),
                  "reason": "unencodable_record"]
             }
-            guard self.storage.setAside(descriptions, reason: "unencodable_record", for: sensor) else { return false }
+            guard self.storage.setAside(descriptions, reason: "unencodable_record", for: sensor) else {
+                return rollBack(.writeFailed)
+            }
         }
-        return split.batches.allSatisfy { self.storage.enqueueBatch($0, windowStart: windowStart, for: sensor) }
+        return .enqueued(id: nil)
     }
 
     /// Pure batch splitting (internal for unit tests): caps batches at `maxBatchSize` records,
