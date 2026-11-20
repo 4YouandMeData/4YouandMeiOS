@@ -40,7 +40,11 @@ class CacheManager: CacheService {
     
     var user: User? {
         get {return self.load(forKey: CacheManagerKey.userKey.rawValue)}
-        set {self.save(encodable: newValue, forKey: CacheManagerKey.userKey.rawValue)}
+        set {
+            self.save(encodable: newValue, forKey: CacheManagerKey.userKey.rawValue)
+            // FUAM-4518. Every write of the user (login, refresh, logOut) lands here.
+            CrashlyticsSink.setUser(id: newValue?.id)
+        }
     }
     
     var infoMessages: [MessageInfo]? {

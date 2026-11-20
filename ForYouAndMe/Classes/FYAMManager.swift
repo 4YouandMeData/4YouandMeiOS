@@ -46,6 +46,9 @@ public class FYAMManager {
             return startedWindow
         }
 
+        // FUAM-4518: start-up timestamp for the X-Client-Process-Uptime-Ms header.
+        ClientMetadataPlugin.markStartup()
+
         if mirrorPrintToJam {
             StdoutMirror.install()
         }
@@ -60,6 +63,14 @@ public class FYAMManager {
         // Firebase Setup
         FirebaseApp.configure()
         FirebaseConfiguration.shared.setLoggerLevel(.min)
+
+        // FUAM-4518: attribute start-up crashes to the stored participant. CacheManager reads UserDefaults only,
+        // so it needs no Services graph.
+        CrashlyticsSink.setUser(id: CacheManager().user?.id)
+
+        // FUAM-4518: daily MetricKit app-exit report. Registered right after Firebase, before the services build
+        // (idempotent: subscribes once per process).
+        AppExitMetricsReporter.start()
         
         // ProjectInfo Validation
         ProjectInfo.validate()
@@ -81,6 +92,7 @@ public class FYAMManager {
                                                   appleWatchAlternativeIntegrations: appleWatchAlternativeIntegrations,
                                                   defaultDoseType: defaultDoseType)
         Services.shared.setup(withWindow: window, servicesSetupData: servicesSetupData)
+
         startedWindow = window
         
         return window

@@ -18,6 +18,15 @@ import FirebaseCrashlytics
 
 final class CrashlyticsSink: TelemetrySink {
 
+    /// FUAM-4518. Seam so specs can observe the id without touching Crashlytics.
+    static var userIdSetter: (String?) -> Void = { Crashlytics.crashlytics().setUserID($0) }
+
+    /// Attaches the numeric backend user id (and nothing else) to every Crashlytics report.
+    /// `nil` clears it.
+    static func setUser(id: String?) {
+        self.userIdSetter(id)
+    }
+
     func receive(_ event: TelemetryEvent) {
         guard event.level == .error else { return }
 
