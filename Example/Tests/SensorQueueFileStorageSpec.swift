@@ -208,9 +208,9 @@ private final class OrderRecordingStorage: SensorSampleUploadManagerStorage, Sen
         self.record("forEachQueuedBatch")
         base.forEachQueuedBatch(for: sensor, body)
     }
-    func deleteQueue(for sensor: SRSensor) {
+    func deleteQueue(for sensor: SRSensor) -> Bool {
         self.record("deleteQueue")
-        base.deleteQueue(for: sensor)
+        return base.deleteQueue(for: sensor)
     }
     var isPurgePending: Bool { base.isPurgePending }
     func setPurgePending(_ pending: Bool) -> Bool {
@@ -1387,6 +1387,35 @@ class SensorQueueDrainSpec: QuickSpec {
                 expect(storage.lastCursor(for: sensor, deviceKey: SensorDevice.iphoneKey)).to(equal(windowStart))
                 expect(QueueFixture.batchFiles(root, SRSensor.accelerometer)).to(beEmpty())
                 expect(storage.isPurgePending).to(beFalse())
+            }
+
+            it("keeps the purge marker when a deletion fails, and uploads nothing until the purge completes (review A-3)") {
+                storage.enqueueBatch([record("old-user")], windowStart: joinDay, for: sensor)
+                let directory = QueueFixture.sensorDirectory(root, sensor)
+                try? FileManager.default.setAttributes([.posixPermissions: 0o555], ofItemAtPath: directory.path)
+                defer { try? FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: directory.path) }
+                let manager = makeManager(storage: storage)
+                manager.setNetworkDelegate(network)
+                clearance.sensorManagerCanRun = false
+
+                manager.triggerSync(reason: "spec") // the purge runs; its deletion fails
+
+                expect(storage.isPurgePending).toEventually(beTrue(), timeout: .seconds(5))
+                _ = manager.windowFetchFailureCount(for: sensor, deviceKey: device.key) // work-queue barrier
+                expect(storage.isPurgePending).to(beTrue())
+                expect(QueueFixture.batchFiles(root, sensor).count).to(equal(1))
+
+                // A new session: clearance is back, but the leftover must not upload.
+                clearance.sensorManagerCanRun = true
+                manager.drainQueue(for: sensor)
+                expect(network.attemptCount).toAlways(equal(0), until: .milliseconds(300))
+
+                // The disk recovers: the next drain completes the purge, still uploading nothing.
+                try? FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: directory.path)
+                manager.drainQueue(for: sensor)
+                expect(storage.isPurgePending).toEventually(beFalse(), timeout: .seconds(5))
+                expect(QueueFixture.batchFiles(root, sensor)).to(beEmpty())
+                expect(network.attemptCount).toAlways(equal(0), until: .milliseconds(300))
             }
 
             it("purge_interrupted_then_new_login_uploads_nothing_of_the_old_user (limit case 44)") {

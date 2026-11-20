@@ -123,8 +123,10 @@ public protocol SensorSampleUploadManagerStorage: AnyObject {
     func forEachQueuedBatch(for sensor: SRSensor, _ body: (SensorQueuedBatch) -> Void)
 
     /// Deletes every queued batch of `sensor`, including a not-yet-migrated legacy queue and any
-    /// quarantined bytes. The purge calls it only AFTER the cursors were rewound.
-    func deleteQueue(for sensor: SRSensor)
+    /// quarantined bytes. The purge calls it only AFTER the cursors were rewound. `false` when a
+    /// deletion or a directory listing failed: the purge then keeps its intent marker.
+    @discardableResult
+    func deleteQueue(for sensor: SRSensor) -> Bool
 
     /// The durable "a purge started and has not finished" marker: a purge killed half-way is
     /// completed at the next launch before anything is uploaded (FUAM-4516, plan R2 PR-7).
@@ -143,8 +145,10 @@ public extension SensorSampleUploadManagerStorage {
         }
     }
 
-    func deleteQueue(for sensor: SRSensor) {
+    @discardableResult
+    func deleteQueue(for sensor: SRSensor) -> Bool {
         while self.dequeueNextBatch(for: sensor) != nil {}
+        return self.pendingBatchCount(for: sensor) == 0
     }
 
     var isPurgePending: Bool { return false }
@@ -490,19 +494,27 @@ public final class DefaultsSensorStorage: SensorSampleUploadManagerStorage, Sens
     /// Deletes the batch files, the sensor's quarantined bytes and the legacy key. The `_migrated`
     /// marker is kept (plan R2 PR-2), and the digest of a legacy key deleted here is added to it, so
     /// a removal that does not persist cannot resurrect the purged batches as a later migration.
-    public func deleteQueue(for sensor: SRSensor) {
-        self.syncQueue.sync {
+    @discardableResult
+    public func deleteQueue(for sensor: SRSensor) -> Bool {
+        return self.syncQueue.sync {
             autoreleasepool {
                 self.prepareRootIfNeeded()
+                var complete = true
                 let directory = self.sensorDirectory(sensor)
-                for name in (try? self.fileManager.contentsOfDirectory(atPath: directory.path)) ?? []
-                where name != Self.migratedMarkerName {
-                    try? self.fileManager.removeItem(at: directory.appendingPathComponent(name))
+                if let names = self.namesOrNil(in: directory) {
+                    for name in names where name != Self.migratedMarkerName {
+                        complete = self.removeIfPresent(directory.appendingPathComponent(name)) && complete
+                    }
+                } else {
+                    complete = false
                 }
                 let quarantinePrefix = sensor.rawValue + "_"
-                for name in (try? self.fileManager.contentsOfDirectory(atPath: self.quarantineDirectory.path)) ?? []
-                where name.hasPrefix(quarantinePrefix) {
-                    try? self.fileManager.removeItem(at: self.quarantineDirectory.appendingPathComponent(name))
+                if let names = self.namesOrNil(in: self.quarantineDirectory) {
+                    for name in names where name.hasPrefix(quarantinePrefix) {
+                        complete = self.removeIfPresent(self.quarantineDirectory.appendingPathComponent(name)) && complete
+                    }
+                } else {
+                    complete = false
                 }
                 let key = self.legacyQueueKey(sensor)
                 if let data = UserDefaults.standard.data(forKey: key) {
@@ -516,8 +528,25 @@ public final class DefaultsSensorStorage: SensorSampleUploadManagerStorage, Sens
                 self.migratedSensors.insert(sensor.rawValue)
                 self.batchIndex[sensor.rawValue] = nil
                 self.pendingRemovals[sensor.rawValue] = nil
+                return complete
             }
         }
+    }
+
+    /// The names in `directory`; `[]` when it does not exist, `nil` when it exists but cannot be
+    /// listed.
+    private func namesOrNil(in directory: URL) -> [String]? {
+        do {
+            return try self.fileManager.contentsOfDirectory(atPath: directory.path)
+        } catch {
+            return self.fileManager.fileExists(atPath: directory.path) ? nil : []
+        }
+    }
+
+    /// `true` when `url` is gone afterwards.
+    private func removeIfPresent(_ url: URL) -> Bool {
+        try? self.fileManager.removeItem(at: url)
+        return !self.fileManager.fileExists(atPath: url.path)
     }
 
     public var isPurgePending: Bool {

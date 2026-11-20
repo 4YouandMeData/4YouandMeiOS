@@ -250,9 +250,6 @@ public final class SensorSampleUploadManager {
     // relaunch; URLSession's timeout is an idle timeout, so a slow trickle can outlast 60 s. Add a
     // per-upload watchdog only if field data shows stuck sensors.
     private var drainingSensors: Set<SRSensor> = []
-    // FUAM-4516 (plan R2 PR-7): whether this process already looked for an interrupted purge.
-    // Mutated on `workQueue` only.
-    private var pendingPurgeChecked = false
     // Once-per-launch guard so the "empty_plan" telemetry (review fix #6) doesn't fire on
     // every 15-minute sync cycle while a fresh enrollment waits out the 24h embargo.
     private var emptyPlanReported: Set<String> = []
@@ -414,8 +411,9 @@ public final class SensorSampleUploadManager {
         // Ensure single-cycle at a time
         syncLock.lock(); defer { syncLock.unlock() }
 
-        // FUAM-4516: a purge a kill interrupted completes before this cycle enqueues or uploads.
-        self.resumePendingPurgeIfNeeded()
+        // FUAM-4516: a purge a kill or an error interrupted completes before this cycle enqueues
+        // or uploads anything; if it still cannot complete, the cycle stands down.
+        guard self.resumePendingPurgeIfNeeded() else { return }
 
         let now = Date()
 
@@ -2032,7 +2030,9 @@ public final class SensorSampleUploadManager {
 
                 // FUAM-4516 (review A-2): protected data went away mid-loop. Stop here and release
                 // the sensor; the protected-data notification's sync starts a new loop.
-                guard self.isProtectedDataAvailable() else {
+                // An unfinished purge (review A-3) also stops it: what is left on disk may belong to
+                // the previous participant.
+                guard self.isProtectedDataAvailable(), !self.storage.isPurgePending else {
                     self.drainingSensors.remove(sensor)
                     return
                 }
@@ -2165,8 +2165,7 @@ public final class SensorSampleUploadManager {
         // off the main thread. A loop already running for `sensor` picks up whatever was just
         // enqueued, so a second trigger starts nothing.
         workQueue.async { [weak self] in
-            guard let self = self, self.isProtectedDataAvailable() else { return }
-            self.resumePendingPurgeIfNeeded()
+            guard let self = self, self.isProtectedDataAvailable(), self.resumePendingPurgeIfNeeded() else { return }
             guard !self.drainingSensors.contains(sensor),
                   self.storage.pendingBatchCount(for: sensor) > 0 else { return }
             self.drainingSensors.insert(sensor)
@@ -2218,12 +2217,15 @@ public final class SensorSampleUploadManager {
     /// uploaded: otherwise a new login would upload the previous participant's leftover batches.
     /// Checked once per process; a purge that starts later runs to completion in one `workQueue`
     /// block. Runs on `workQueue` only.
-    private func resumePendingPurgeIfNeeded() {
-        guard !self.pendingPurgeChecked else { return }
-        self.pendingPurgeChecked = true
-        if self.storage.isPurgePending {
-            self.purgeAllData(reason: "resume_pending")
-        }
+    ///
+    /// Review A-3: the marker is cleared only by a purge whose every deletion succeeded, so it is
+    /// checked at EVERY sync cycle and drain claim (one `stat`), not once per process: while it
+    /// exists nothing is enqueued or uploaded. `true` when no purge is pending (any more).
+    @discardableResult
+    private func resumePendingPurgeIfNeeded() -> Bool {
+        guard self.storage.isPurgePending else { return true }
+        self.purgeAllData(reason: "resume_pending")
+        return !self.storage.isPurgePending
     }
 
     /// Drops ALL queued batches. The cursor is deliberately NOT fast-forwarded (FUAM-3844):
@@ -2234,8 +2236,9 @@ public final class SensorSampleUploadManager {
     /// the earliest window per device kind is read from the queued batches (one at a time, the
     /// legacy queue included), the cursors are rewound, the ledger is purged, and only then are
     /// the files, the quarantine and the legacy key deleted; the marker goes last. Every step is
-    /// idempotent and rewinds only move cursors backwards, so resuming at any step is safe. Runs
-    /// on `workQueue` only.
+    /// idempotent and rewinds only move cursors backwards, so resuming at any step is safe. The
+    /// marker is cleared only when every sensor's deletion succeeded (review A-3). Runs on
+    /// `workQueue` only.
     private func purgeAllData(reason: String) {
         #if DEBUG
         print("SensorSampleUploadManager - Purging pending data (\(reason))")
@@ -2243,7 +2246,6 @@ public final class SensorSampleUploadManager {
         // FUAM-4516 (review A-2): never purge what cannot be read: the windows could not be
         // collected for the rewind, and the deletion would be a permanent loss.
         guard self.isProtectedDataAvailable() else { return }
-        self.pendingPurgeChecked = true
 
         // Stop pending retries
         retryWorkItems.values.forEach { $0.cancel() }
@@ -2253,6 +2255,7 @@ public final class SensorSampleUploadManager {
 
         // A marker that cannot be written (disk full) only loses the resume: purge anyway.
         storage.setPurgePending(true)
+        var deletedEverything = true
         for sensor in sensors {
             // Per device kind, the earliest window a purged batch came from (FUAM-3945 round 6, V4).
             var earliestPurged: [String: Date] = [:]
@@ -2265,9 +2268,13 @@ public final class SensorSampleUploadManager {
             // The ledger goes WITH the queue (D4): a purged batch was never uploaded, so its
             // fingerprints must not survive to suppress a legitimate re-collection.
             storage.purgeLedger(for: sensor)
-            storage.deleteQueue(for: sensor)
+            deletedEverything = storage.deleteQueue(for: sensor) && deletedEverything
         }
-        storage.setPurgePending(false)
+        // Review A-3: a failed deletion or listing keeps the marker, so the previous participant's
+        // leftovers cannot upload in the next session; the next sync cycle or drain retries.
+        if deletedEverything {
+            storage.setPurgePending(false)
+        }
     }
 
     /// FUAM-3945 round 6 (V4): a purged batch's window is behind the cursor, which advanced at
