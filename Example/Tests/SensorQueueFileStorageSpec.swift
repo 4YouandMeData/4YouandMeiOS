@@ -129,6 +129,16 @@ private enum QueueFixture {
     static func iso(_ date: Date) -> String {
         return ISO8601DateFormatter().string(from: date)
     }
+
+    /// A raw device-usage report the size of hers (plan R5: the shape stays raw): 3,274 `web`
+    /// entries of which 43 are distinct, about 200 KB of JSON.
+    static func heavyReport(_ index: Int, at date: Date) -> [String: Any] {
+        let web: [[String: Any]] = (0..<3_274).map { entry in
+            ["category": "com.apple.web-category.\(entry % 43)", "usage_s": 900]
+        }
+        return ["t": iso(date), "recorded_at": iso(date.addingTimeInterval(900)), "duration_s": 900,
+                "seq": index, "web": web]
+    }
 }
 
 /// A storage that records the order of the purge-relevant calls, delegating everything to a real
@@ -945,11 +955,77 @@ class SensorQueueDrainSpec: QuickSpec {
                 expect(batches.map { $0.count }).to(equal([500, 1]))
             }
 
-            it("estimates a record array's JSON size exactly") {
-                let records: [[String: Any]] = [["a": 1], ["b": "two"], ["c": [1, 2, 3]]]
-                let actual = (try? JSONSerialization.data(withJSONObject: records))?.count
-                expect(SensorSampleUploadManager.estimatedJSONBytes(of: records)).to(equal(actual))
+            it("estimates a record array's JSON size without serializing it, within a few percent") {
+                let small: [[String: Any]] = [["a": 1], ["b": "two"], ["c": [1, 2, 3]], ["d": 0.5, "e": NSNull()]]
+                let heavy = [QueueFixture.heavyReport(0, at: joinDay), QueueFixture.heavyReport(1, at: joinDay)]
+                for records in [small, heavy] {
+                    let actual = Double((try? JSONSerialization.data(withJSONObject: records))?.count ?? 0)
+                    let estimate = Double(SensorSampleUploadManager.estimatedJSONBytes(of: records))
+                    expect(estimate).to(beCloseTo(actual, within: actual * 0.05))
+                }
                 expect(SensorSampleUploadManager.estimatedJSONBytes(of: [])).to(equal(2))
+            }
+
+            it("splits a day of 200 KB reports into batches of at most 1 MiB (about 30) and ships each once (R5)") {
+                let reports = (0..<96).map { QueueFixture.heavyReport($0, at: joinDay.addingTimeInterval(TimeInterval($0) * 900)) }
+                let reportBytes = (try? JSONSerialization.data(withJSONObject: [reports[0]]))?.count ?? 0
+                expect(reportBytes).to(beGreaterThan(170_000)) // about 179 KB
+                let manager = makeManager(storage: storage)
+                let window = DateInterval(start: joinDay, end: joinDay.addingTimeInterval(day))
+                let context = SensorSampleUploadManager.DeviceChainContext(sensor: sensor,
+                                                                           device: device,
+                                                                           devices: [device],
+                                                                           deviceIndex: 0,
+                                                                           now: Date(),
+                                                                           mapper: ClosureDeviceMapper { _, _ in [] },
+                                                                           plannedBound: joinDay)
+
+                manager.handleWindowResult(.success(reports), window: window, at: 0, of: [window], context: context)
+
+                var sizes: [Int] = []
+                storage.forEachQueuedBatch(for: sensor) { batch in
+                    sizes.append((try? JSONSerialization.data(withJSONObject: batch.records))?.count ?? 0)
+                }
+                expect(sizes.count).to(beGreaterThanOrEqualTo(16))
+                expect(sizes.count).to(beLessThanOrEqualTo(32))
+                expect(sizes.allSatisfy { $0 <= SensorSampleUploadManager.maxBatchBytes }).to(beTrue())
+
+                manager.setNetworkDelegate(network)
+                manager.drainQueue(for: sensor)
+                expect(storage.pendingBatchCount(for: sensor)).toEventually(equal(0), timeout: .seconds(20))
+                expect(network.maxConcurrent(for: sensor)).to(equal(1))
+                expect(network.attemptCount).to(equal(sizes.count))
+                let shipped = network.uploaded.flatMap { $0 }.compactMap { $0["seq"] as? Int }
+                expect(shipped).to(equal(Array(0..<96)))
+            }
+
+            it("enqueues a single 1.5 MiB record alone and ships it once, never dropped or looped on") {
+                let big: [String: Any] = ["t": QueueFixture.iso(joinDay.addingTimeInterval(hour)), "seq": 1,
+                                          "blob": String(repeating: "x", count: 3 * 512 * 1024)]
+                let records: [[String: Any]] = [["t": QueueFixture.iso(joinDay.addingTimeInterval(60)), "seq": 0], big,
+                                                ["t": QueueFixture.iso(joinDay.addingTimeInterval(2 * hour)), "seq": 2]]
+                let manager = makeManager(storage: storage)
+                let window = DateInterval(start: joinDay, end: joinDay.addingTimeInterval(day))
+                let context = SensorSampleUploadManager.DeviceChainContext(sensor: sensor,
+                                                                           device: device,
+                                                                           devices: [device],
+                                                                           deviceIndex: 0,
+                                                                           now: Date(),
+                                                                           mapper: ClosureDeviceMapper { _, _ in [] },
+                                                                           plannedBound: joinDay)
+
+                manager.handleWindowResult(.success(records), window: window, at: 0, of: [window], context: context)
+
+                var batches: [[Int]] = []
+                storage.forEachQueuedBatch(for: sensor) { batch in batches.append(batch.records.compactMap { $0["seq"] as? Int }) }
+                expect(batches).to(equal([[0], [1], [2]]))
+                expect(storage.lastCursor(for: sensor, deviceKey: device.key)).to(equal(window.end))
+
+                manager.setNetworkDelegate(network)
+                manager.drainQueue(for: sensor)
+                expect(storage.pendingBatchCount(for: sensor)).toEventually(equal(0), timeout: .seconds(10))
+                expect(network.attemptCount).toAlways(equal(3), until: .milliseconds(300))
+                expect(network.uploaded.map { $0.compactMap { $0["seq"] as? Int } }).to(equal([[0], [1], [2]]))
             }
         }
 
@@ -1058,6 +1134,36 @@ class SensorQueueDrainSpec: QuickSpec {
                 }
                 expect(overflows.count).to(equal(1))     // far below the 10,000-record cap
                 expect(fake.enqueued.count).to(beGreaterThanOrEqualTo(5))
+            }
+
+            it("flushes 200 KB reports on the default 8 MiB budget long before the record cap (R4/R5)") {
+                let fake = FakeSensorStorage()
+                let mapper = ClosureDeviceMapper { from, to in
+                    let today = SensorSampleUploadManager.utcDayStart(Date())
+                    guard to > today.addingTimeInterval(-6 * day) else { return [] } // `from` is widened by an epsilon
+                    // 20 raw reports (~4 MB) per window.
+                    return (0..<20).map { QueueFixture.heavyReport($0, at: from.addingTimeInterval(hour + TimeInterval($0) * 60)) }
+                }
+                let manager = makeManager(storage: fake, mapper: mapper)
+                manager.availableMemory = { 0 }
+                expect(manager.probeBufferMaxBytes).to(equal(8 * 1024 * 1024))
+                expect(manager.probeBufferMaxRecords).to(equal(10_000))
+
+                manager.runDeviceChain(at: 0, of: [device], for: sensor, now: Date(), using: mapper)
+
+                expect(fake.lastCursor(for: sensor)).toEventuallyNot(beNil(), timeout: .seconds(30))
+                let overflows = analytics.trackedEvents.filter { event in
+                    if case let .sensorDataBackfillReach(_, _, boundedBy) = event {
+                        return boundedBy == BackfillLowerBound.Origin.probeBufferOverflow.rawValue
+                    }
+                    return false
+                }
+                // 60 records (3 windows, about 11 MB) trip the byte budget; the record cap is 10,000.
+                expect(overflows.count).to(equal(1))
+                expect(fake.enqueued.flatMap { $0.records }.count).to(equal(100))
+                expect(fake.enqueued.allSatisfy {
+                    ((try? JSONSerialization.data(withJSONObject: $0.records))?.count ?? 0) <= SensorSampleUploadManager.maxBatchBytes
+                }).to(beTrue())
             }
 
             it("ledger retention covers a probe 8 days deep (R3 RR-4)") {
