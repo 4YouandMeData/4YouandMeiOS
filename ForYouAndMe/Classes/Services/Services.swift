@@ -272,7 +272,10 @@ class Services {
         self.deeplinkService = deeplinkService
         self.deviceService = deviceService
         // FUAM-4315: Feed KPI widgets, in-memory per process (D2)
-        self.kpiWidgetStore = KpiWidgetStore(fetch: { repository.getKpiWidgets() })
+        self.kpiWidgetStore = KpiWidgetStore(fetch: {
+            // FUAM-4535: the backend computes "today" from the user's stored timezone, so sync it first
+            repository.syncUserTimeZoneIfNeeded().flatMap { repository.getKpiWidgets() }
+        })
         
         self.navigator.showSetupScreen()
     }

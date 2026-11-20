@@ -648,6 +648,16 @@ extension RepositoryImpl: Repository {
         }
     }
     
+    func syncUserTimeZoneIfNeeded() -> Single<Void> {
+        guard let user = self.storage.user else { return .just(()) }
+        return self.updateUserTimeZoneIfNeeded(user: user)
+            .do(onSuccess: { updatedUser in
+                // Failure falls back to the same cached user: nothing to store
+                if updatedUser.timeZone != user.timeZone { self.saveUser(self.handleUserInfo(updatedUser)) }
+            })
+            .map { _ in () }
+    }
+    
     private func handleUserInfo(_ user: User) -> User {
         var user = user
         if self.showDefaultUserInfo {

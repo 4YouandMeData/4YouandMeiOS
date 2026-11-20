@@ -119,6 +119,8 @@ protocol Repository: AnyObject {
     // User
     var currentUser: User? { get }
     func refreshUser() -> Single<User>
+    /// PATCHes the device timezone when it differs from the cached user's; errors are swallowed (FUAM-4535)
+    func syncUserTimeZoneIfNeeded() -> Single<Void>
     func sendUserInfoParameters(userParameterRequests: [UserInfoParameterRequest]) -> Single<User>
     // User Data
     func getUserData() -> Single<UserData>
