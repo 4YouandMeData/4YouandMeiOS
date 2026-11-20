@@ -560,7 +560,7 @@ Absent keys preserve today's behaviour exactly. With a flag set, the SDK collect
 
 ### Locking the SDK to light mode (Optional)
 
-By default SDK screens follow the phone's dark mode. To lock them to light, set the **host app's `Info.plist`** key `FYAMDarkModeAllowed` to `NO`. Absent, empty or unresolved values mean `true`, so hosts that set nothing keep today's behaviour. Recommended per-target setup: define the build setting `FYAM_DARK_MODE_ALLOWED = NO` in the base xcconfig, override it in any target's xcconfig that differs, and set `FYAMDarkModeAllowed` to `$(FYAM_DARK_MODE_ALLOWED)` in `Info.plist`. The SDK applies the lock to the window it creates in `FYAMManager.startup`.
+By default SDK screens follow the phone's dark mode. To lock them to light, set the **host app's `Info.plist`** key `FYAMDarkModeAllowed` to `NO`. Absent, empty or unresolved values mean `true`, so hosts that set nothing keep today's behaviour. Recommended per-target setup: define the build setting `FYAM_DARK_MODE_ALLOWED = NO` in the base xcconfig, override it in any target's xcconfig that differs, and set `FYAMDarkModeAllowed` to `$(FYAM_DARK_MODE_ALLOWED)` in `Info.plist`. On a CocoaPods target the host xcconfig must `#include` the matching `Pods-<target>.<config>.xcconfig`, or CocoaPods' own settings are dropped. An unrecognised value (anything but YES/NO/true/false/1/0) fails closed to light. The SDK applies the lock to the window it creates in `FYAMManager.startup`.
 
 ### Terra (Optional)
 

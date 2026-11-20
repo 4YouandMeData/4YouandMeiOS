@@ -33,13 +33,15 @@ enum HostAppConfig {
     }
 
     /// Pure parser behind `darkModeAllowed`. Absent, empty or unresolved (`$(...)`) values mean `true`.
+    /// Fails closed: an unrecognised string or unsupported type asserts, then returns `false` (light), because a
+    /// host that set the key meant to restrict.
     static func darkModeAllowed(fromInfoValue value: Any?) -> Bool {
         guard let value = value else { return true }
         if let bool = value as? Bool { return bool }
         if let number = value as? NSNumber { return number.boolValue }
         guard let string = value as? String else {
             assertionFailure("FYAMDarkModeAllowed must be a Boolean or String in Info.plist, got \(type(of: value))")
-            return true
+            return false
         }
         let normalized = string.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
         if normalized.isEmpty || normalized.contains("$(") { return true }
@@ -48,7 +50,7 @@ enum HostAppConfig {
         case "no", "false", "0": return false
         default:
             assertionFailure("FYAMDarkModeAllowed has an unrecognised value '\(string)'; expected YES/NO")
-            return true
+            return false
         }
     }
 

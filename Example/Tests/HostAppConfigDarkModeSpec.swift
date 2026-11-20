@@ -25,5 +25,21 @@ class HostAppConfigDarkModeSpec: QuickSpec {
                 }
             }
         }
+        describe("values decoded from a real plist") {
+            let cases: [(String, Bool)] = [
+                ("<true/>", true), ("<false/>", false), ("<integer>2</integer>", true),
+                ("<integer>0</integer>", false), ("<string>NO</string>", false), ("<string></string>", true)
+            ]
+            for (xml, expected) in cases {
+                it("maps \(xml) to \(expected)") {
+                    let plist = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><plist version=\"1.0\"><dict><key>k</key>\(xml)</dict></plist>"
+                    let decoded = try? PropertyListSerialization.propertyList(from: Data(plist.utf8), options: [], format: nil)
+                    let dict = decoded as? [String: Any]
+                    // A decode failure would yield nil, which also maps to true: require a real value.
+                    expect(dict?["k"]).toNot(beNil())
+                    expect(HostAppConfig.darkModeAllowed(fromInfoValue: dict?["k"])) == expected
+                }
+            }
+        }
     }
 }
