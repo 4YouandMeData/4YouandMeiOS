@@ -1808,32 +1808,52 @@ public final class SensorSampleUploadManager {
     /// Pure batch splitting (internal for unit tests): caps batches at `maxBatchSize` records,
     /// then bisects any batch whose serialized JSON exceeds `maxBatchBytes`. A single record
     /// is never split further (terminates), and record order is preserved.
+    ///
+    /// FUAM-4516: each record is serialized ONCE, alone, inside an autorelease pool; a batch's
+    /// size is then exact arithmetic, because a JSON array of objects is `[` + the elements
+    /// joined by `,` + `]`. Same batches as serializing every bisection level, but with 200 KB
+    /// device-usage records the old way serialized a whole window (tens of MB) at the top level
+    /// and again at every level below it; now the peak is one record.
     static func splitRespectingPayloadLimit(_ records: [[String: Any]],
                                             maxBatchSize: Int,
                                             maxBatchBytes: Int) -> [[[String: Any]]] {
+        // Prefix sums of the element sizes and of the unserializable records.
+        var sizeSums = [0]
+        var invalidSums = [0]
+        sizeSums.reserveCapacity(records.count + 1)
+        invalidSums.reserveCapacity(records.count + 1)
+        for record in records {
+            let size = Self.serializedSize(of: [record])
+            sizeSums.append(sizeSums[sizeSums.count - 1] + max(0, size - 2))
+            invalidSums.append(invalidSums[invalidSums.count - 1] + (size == 0 ? 1 : 0))
+        }
+        // The serialized size of `records[range]`; 0 when a record in it cannot be serialized,
+        // as before: such a batch is never bisected and fails at enqueue (the poison-window rule).
+        func size(of range: Range<Int>) -> Int {
+            guard invalidSums[range.upperBound] == invalidSums[range.lowerBound] else { return 0 }
+            return sizeSums[range.upperBound] - sizeSums[range.lowerBound] + range.count + 1
+        }
         var batches: [[[String: Any]]] = []
-        func appendBisectingIfTooLarge(_ batch: [[String: Any]]) {
-            if batch.count > 1, Self.serializedSize(of: batch) > maxBatchBytes {
-                let half = batch.count / 2
-                appendBisectingIfTooLarge(Array(batch[..<half]))
-                appendBisectingIfTooLarge(Array(batch[half...]))
+        func appendBisectingIfTooLarge(_ range: Range<Int>) {
+            if range.count > 1, size(of: range) > maxBatchBytes {
+                let half = range.lowerBound + range.count / 2
+                appendBisectingIfTooLarge(range.lowerBound..<half)
+                appendBisectingIfTooLarge(half..<range.upperBound)
             } else {
-                batches.append(batch)
+                batches.append(Array(records[range]))
             }
         }
         var index = 0
         while index < records.count {
             let end = min(index + maxBatchSize, records.count)
-            appendBisectingIfTooLarge(Array(records[index..<end]))
+            appendBisectingIfTooLarge(index..<end)
             index = end
         }
         return batches
     }
 
-    // ponytail: serializes the batch once per bisection level — fine for ≤500-record
-    // batches; revisit only if profiling shows enqueue cost.
-    // FUAM-4516 (plan R2 PR-3): the pool releases each level's intermediate `Data` as soon as it
-    // is measured, instead of at the end of the window's work-queue block.
+    /// The serialized JSON size of `batch`, 0 when it cannot be serialized. FUAM-4516 (plan R2
+    /// PR-3): the pool releases the intermediate `Data` as soon as it is measured.
     private static func serializedSize(of batch: [[String: Any]]) -> Int {
         return autoreleasepool {
             guard JSONSerialization.isValidJSONObject(batch),
@@ -1842,13 +1862,35 @@ public final class SensorSampleUploadManager {
         }
     }
 
-    /// FUAM-4516: the serialized JSON size of `records`, one record at a time, so the estimate
-    /// never holds more than one record's bytes. A record that cannot be serialized counts 0, as
-    /// in `serializedSize`.
+    /// FUAM-4516 (plan R4/R5): an ESTIMATE of the JSON size of `records`, for the probe buffer's
+    /// byte budget. It walks the values and adds up what compact JSON would spend on them (string
+    /// UTF-8 lengths plus quotes, number digits, braces, colons, commas), without serializing
+    /// anything: no buffer is allocated, so measuring costs no memory. It ignores string escapes
+    /// (`\/`, `\"`, control characters), so it can come out a few percent low; the 8 MiB budget
+    /// is a memory bound, not a wire limit, so that is irrelevant. The upload cap is enforced
+    /// exactly by `splitRespectingPayloadLimit`.
     static func estimatedJSONBytes(of records: [[String: Any]]) -> Int {
-        // Brackets plus one comma between records: `[]` alone is 2 bytes.
-        return records.reduce(into: max(2, records.count + 1)) { total, record in
-            total += max(0, Self.serializedSize(of: [record]) - 2)
+        return Self.estimatedJSONBytes(ofValue: records)
+    }
+
+    private static func estimatedJSONBytes(ofValue value: Any) -> Int {
+        switch value {
+        case let string as String:
+            return string.utf8.count + 2
+        case let number as NSNumber:
+            return number.stringValue.utf8.count
+        case let dictionary as [String: Any]:
+            // `{` `}`, a comma between entries, and `"key":` per entry.
+            return dictionary.reduce(max(2, dictionary.count + 1)) { total, entry in
+                total + entry.key.utf8.count + 3 + Self.estimatedJSONBytes(ofValue: entry.value)
+            }
+        case let array as [Any]:
+            return array.reduce(max(2, array.count + 1)) { total, element in
+                total + Self.estimatedJSONBytes(ofValue: element)
+            }
+        default:
+            // NSNull ("null") and anything JSON cannot carry.
+            return 4
         }
     }
 
