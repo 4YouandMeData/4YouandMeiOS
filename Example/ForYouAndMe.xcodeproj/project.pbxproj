@@ -11,6 +11,7 @@
 		0DC1F31B2CBE4AC1006640F4 /* ProjectInfo.plist in Resources */ = {isa = PBXBuildFile; fileRef = 0DC1F31A2CBE4AC1006640F4 /* ProjectInfo.plist */; };
 		0DD608542E8D88FA00E9D2C3 /* SensorKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0DD608532E8D88FA00E9D2C3 /* SensorKit.framework */; };
 		34109239C8E30161B326D4E5 /* Pods_ForYouAndMe_Tests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9327D4FE4ABC13FA000D3B87 /* Pods_ForYouAndMe_Tests.framework */; };
+		A4524000000000000000AA01 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4524000000000000000AA02 /* SceneDelegate.swift */; };
 		607FACD61AFB9204008FA782 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 607FACD51AFB9204008FA782 /* AppDelegate.swift */; };
 		607FACDD1AFB9204008FA782 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 607FACDC1AFB9204008FA782 /* Images.xcassets */; };
 		607FACE01AFB9204008FA782 /* LaunchScreen.xib in Resources */ = {isa = PBXBuildFile; fileRef = 607FACDE1AFB9204008FA782 /* LaunchScreen.xib */; };
@@ -101,6 +102,7 @@
 		5495EE5799F86F4CFC72D79C /* MockRepository.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MockRepository.swift; sourceTree = "<group>"; };
 		607FACD01AFB9204008FA782 /* ForYouAndMe_Example.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ForYouAndMe_Example.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		607FACD41AFB9204008FA782 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		A4524000000000000000AA02 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
 		607FACD51AFB9204008FA782 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		607FACDC1AFB9204008FA782 /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = "<group>"; };
 		607FACDF1AFB9204008FA782 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/LaunchScreen.xib; sourceTree = "<group>"; };
@@ -231,6 +233,7 @@
 			isa = PBXGroup;
 			children = (
 				607FACD51AFB9204008FA782 /* AppDelegate.swift */,
+				A4524000000000000000AA02 /* SceneDelegate.swift */,
 				89F730572514F09C00DF9503 /* StudyVideo.mp4 */,
 				607FACDC1AFB9204008FA782 /* Images.xcassets */,
 				607FACDE1AFB9204008FA782 /* LaunchScreen.xib */,
@@ -580,6 +583,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				607FACD61AFB9204008FA782 /* AppDelegate.swift in Sources */,
+				A4524000000000000000AA01 /* SceneDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

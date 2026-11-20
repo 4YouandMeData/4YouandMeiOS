@@ -530,7 +530,12 @@ class KpiWidgetSpec: QuickSpec {
             var window: UIWindow!
             var gauge: KpiGaugeView!
             beforeEach {
-                window = UIWindow(frame: CGRect(x: 0, y: 0, width: 200, height: 200))
+                // The test host is scene-based: a window outside any scene is never rendered, so Core
+                // Animation ends every sweep at once and nothing is left to catch mid-way (FUAM-4524).
+                let scene = UIApplication.shared.connectedScenes.first { $0 is UIWindowScene } as? UIWindowScene
+                expect(scene).toNot(beNil())
+                window = scene.map { UIWindow(windowScene: $0) } ?? UIWindow()
+                window.frame = CGRect(x: 0, y: 0, width: 200, height: 200)
                 gauge = KpiGaugeView()
                 gauge.isReduceMotionEnabled = { false }
                 window.addSubview(gauge)
