@@ -148,12 +148,14 @@ public final class SensorSampleUploadManager {
     // permanent rejection recurs on every drain of the same session, so it still exhausts;
     // persist alongside the queue only if field telemetry shows stuck batches surviving it.
     private var batchUploadRejections: [String: Int] = [:]
-    // FUAM-3945 round 6 (V2): ids of the queued batches a drain chain is uploading right now,
-    // per sensor, mutated on `workQueue` only. A batch stays in the persisted queue until its
-    // upload succeeds, so a concurrent chain must skip it rather than upload it a second time.
-    // ponytail: an upload Single that never terminates would pin its batch here until relaunch;
-    // Moya/URLSession timeouts bound that in practice.
-    private var inFlightBatchIds: [SRSensor: Set<String>] = [:]
+    // FUAM-4516: the sensors with a drain loop running, mutated on `workQueue` only. One upload
+    // in flight per sensor: a second drain trigger (startup, didBecomeActive, reachability, a
+    // window enqueue, the retry) returns at once while the loop runs. A batch stays in the
+    // persisted queue until its upload succeeds, and only the loop that peeked it uploads it.
+    // ponytail: an upload Single that never terminates now stops this sensor's uploads until
+    // relaunch; URLSession's timeout is an idle timeout, so a slow trickle can outlast 60 s. Add a
+    // per-upload watchdog only if field data shows stuck sensors.
+    private var drainingSensors: Set<SRSensor> = []
     // FUAM-4516 (plan R2 PR-7): whether this process already looked for an interrupted purge.
     // Mutated on `workQueue` only.
     private var pendingPurgeChecked = false
@@ -1787,8 +1789,6 @@ public final class SensorSampleUploadManager {
     /// wall-clock `Date()` on the retry path silently forfeited every pending window.
     func drainQueue(for sensor: SRSensor, attempt: Int = 1) {
         guard reachability.isReachable else { return }
-        // If there is nothing to upload, do not require a delegate
-        if storage.pendingBatchCount(for: sensor) == 0 { return }
 
         // Review fix #2: with no join day nothing may be transmitted, but the queue is left
         // untouched — a temporarily unavailable user record must not destroy legitimate
@@ -1818,11 +1818,11 @@ public final class SensorSampleUploadManager {
                 // place in the queue until the upload succeeds (or the rejection budget drops
                 // it): its fingerprints were committed to the ledger and the cursor advanced at
                 // enqueue, so a batch removed before its request completed and then lost to a
-                // process kill could never be re-collected. Peek and in-flight marking happen
-                // in one `workQueue` block, so two chains never pick the same batch.
-                let inFlight = self.inFlightBatchIds[sensor] ?? []
-                guard let batch = self.storage.peekNextBatch(for: sensor, excluding: inFlight) else {
-                    return // queue drained (or every remaining batch is in flight elsewhere)
+                // process kill could never be re-collected. FUAM-4516: this loop is the only one
+                // uploading for `sensor` (`drainingSensors`), so nothing needs excluding.
+                guard let batch = self.storage.peekNextBatch(for: sensor, excluding: []) else {
+                    self.drainingSensors.remove(sensor) // queue drained: the loop ends
+                    return
                 }
 
                 // Review fix #2: the persisted queue outlives the policy that filled it (an
@@ -1852,7 +1852,6 @@ public final class SensorSampleUploadManager {
                     uploadNextBatch()
                     return
                 }
-                self.inFlightBatchIds[sensor, default: []].insert(batch.id)
 
                 // FUAM-3945: `sr_absolute_time` SHIPS on every sole-record-of-its-fetch-result
                 // record — the server builds its cross-row dedup on it (FUAM-4030) — and is
@@ -1865,12 +1864,13 @@ public final class SensorSampleUploadManager {
                     .subscribe(
                         onSuccess: { [weak self] in
                             guard let self = self else { return }
-                            // Hop onto the work queue: `inFlightBatchIds` lives there. The batch
+                            // Hop onto the work queue: `drainingSensors` lives there. The batch
                             // leaves the persisted queue only now that the server has it.
+                            // FUAM-4517 seam: this removal still waits behind `workQueue`;
+                            // FUAM-4517 moves it off that queue and chains the continuation.
                             self.workQueue.async { [weak self] in
                                 guard let self = self else { return }
                                 self.storage.removeBatch(id: batch.id, for: sensor)
-                                self.inFlightBatchIds[sensor]?.remove(batch.id)
                                 // Keep going; stops by itself when nothing uploadable is left.
                                 uploadNextBatch()
                             }
@@ -1880,11 +1880,11 @@ public final class SensorSampleUploadManager {
                             #if DEBUG
                             print("SensorSampleUploadManager - Upload failed for \(sensor.rawValue): \(error)")
                             #endif
-                            // Hop onto the work queue: `batchUploadRejections` is mutated there
-                            // only, and this callback arrives on an arbitrary Rx thread.
+                            // Hop onto the work queue: `batchUploadRejections` and
+                            // `drainingSensors` are mutated there only, and this callback arrives
+                            // on an arbitrary Rx thread.
                             self.workQueue.async { [weak self] in
                                 guard let self = self else { return }
-                                self.inFlightBatchIds[sensor]?.remove(batch.id)
                                 // FUAM-3945 round 5 (AC6): only a PERMANENT rejection burns the
                                 // batch's upload budget — a network outage or server error stays
                                 // on the unbounded backoff retry below. On exhaustion the batch
@@ -1913,6 +1913,9 @@ public final class SensorSampleUploadManager {
                                     }
                                     self.batchUploadRejections[key] = rejections
                                 }
+                                // The loop ends here: release the sensor, so the retry below (or
+                                // any other trigger) can start the next one.
+                                self.drainingSensors.remove(sensor)
                                 // Move the batch to the tail as its FILTERED form (dropped
                                 // records must not come back), in one persisted write, and
                                 // schedule a retry with backoff. The original entry stays
@@ -1933,7 +1936,19 @@ public final class SensorSampleUploadManager {
             }
         }
 
-        uploadNextBatch()
+        // FUAM-4516: one upload in flight per sensor. The guards above run on the caller's
+        // thread (the retry work item calls this from a global queue); the claim runs on
+        // `workQueue`, which also keeps a legacy queue's one-time migration (first queue access)
+        // off the main thread. A loop already running for `sensor` picks up whatever was just
+        // enqueued, so a second trigger starts nothing.
+        workQueue.async { [weak self] in
+            guard let self = self else { return }
+            self.resumePendingPurgeIfNeeded()
+            guard !self.drainingSensors.contains(sensor),
+                  self.storage.pendingBatchCount(for: sensor) > 0 else { return }
+            self.drainingSensors.insert(sensor)
+            uploadNextBatch()
+        }
     }
 
     /// Identity of a queued batch across drain retries (FUAM-3945 round 5). Stable because the
