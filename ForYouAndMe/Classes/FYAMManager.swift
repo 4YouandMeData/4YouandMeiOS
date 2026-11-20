@@ -81,6 +81,10 @@ public class FYAMManager {
                                                   appleWatchAlternativeIntegrations: appleWatchAlternativeIntegrations,
                                                   defaultDoseType: defaultDoseType)
         Services.shared.setup(withWindow: window, servicesSetupData: servicesSetupData)
+
+        // FUAM-4518: cold start with an existing session.
+        CrashlyticsSink.setUser(id: Services.shared.storageServices.user?.id)
+
         startedWindow = window
         
         return window
