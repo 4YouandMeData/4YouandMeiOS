@@ -1,3 +1,7 @@
+## Release 0.101.21
+
+- **Dark mode is a per-target host setting** (FUAM-4412). The SDK reads the Info.plist key `FYAMDarkModeAllowed`, normally set from a build setting (`FYAMDarkModeAllowed = $(FYAM_DARK_MODE_ALLOWED)`) so a host can layer it: an app-wide xcconfig base, then a per-target override. Absent, empty or unresolved means dark mode is allowed (the previous behaviour); `NO`/`false`/`0` makes the SDK pin its window to light mode; an unrecognised value fails closed to light. The light lock also reaches the progress HUD colour. **Host action:** a host that pinned `overrideUserInterfaceStyle = .light` in its own code can delete that line and set `FYAMDarkModeAllowed` instead. Covered by `HostAppConfigDarkModeSpec`.
+
 ## Release 0.101.20
 
 - **The KPI widget fetch first syncs the device timezone to the user profile** (FUAM-4534). Before every `GET /kpi_widgets` the app compares the device timezone with the stored one and PATCHes it when they differ, so the backend computes "today" for the right zone; a failed PATCH never blocks the fetch.

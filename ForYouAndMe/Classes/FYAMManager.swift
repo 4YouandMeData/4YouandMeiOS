@@ -58,6 +58,7 @@ public class FYAMManager {
         TelemetryConfig.networkBodyCaptureMode = networkBodyCaptureMode
 
         let window = UIWindow(frame: UIScreen.main.bounds)
+        if !HostAppConfig.darkModeAllowed { window.overrideUserInterfaceStyle = .light }
         window.makeKeyAndVisible()
 
         // Firebase Setup
