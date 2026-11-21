@@ -175,6 +175,8 @@ final class ColorPalette {
     /// Call this when traits change to keep third-party components in sync (e.g., SVProgressHUD).
     static func refreshThirdPartyAppearances(for trait: UITraitCollection) {
         // SVProgressHUD doesn't auto-resolve dynamic colors; resolve explicitly.
+        // FUAM-4412: the HUD is outside any view hierarchy, so honour the host's light lock explicitly.
+        let trait = HostAppConfig.darkModeAllowed ? trait : UITraitCollection(userInterfaceStyle: .light)
         let primary = color(withType: .primary).resolvedColor(with: trait)
         SVProgressHUD.setForegroundColor(primary)
     }

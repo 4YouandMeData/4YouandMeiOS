@@ -24,6 +24,36 @@ enum HostAppConfig {
     static var healthKitIgnoresOptInConsent: Bool { flag("FYAMHealthKitIgnoreOptInConsent") }
     static var sensorKitIgnoresOptInConsent: Bool { flag("FYAMSensorKitIgnoreOptInConsent") }
 
+    /// Whether SDK screens may follow the phone's dark mode (Info.plist key `FYAMDarkModeAllowed`). Defaults to
+    /// `true` (the behaviour of every released SDK version); `false` locks the SDK window to light.
+    /// Recommended per-target setup: define the build setting `FYAM_DARK_MODE_ALLOWED` (YES/NO) in the target's
+    /// xcconfig and reference it from the host Info.plist as `$(FYAM_DARK_MODE_ALLOWED)`.
+    static var darkModeAllowed: Bool {
+        darkModeAllowed(fromInfoValue: Bundle.main.object(forInfoDictionaryKey: "FYAMDarkModeAllowed"))
+    }
+
+    /// Pure parser behind `darkModeAllowed`. Absent, empty or unresolved (`$(...)`) values mean `true`.
+    /// Fails closed: an unrecognised string or unsupported type asserts, then returns `false` (light), because a
+    /// host that set the key meant to restrict.
+    static func darkModeAllowed(fromInfoValue value: Any?) -> Bool {
+        guard let value = value else { return true }
+        if let bool = value as? Bool { return bool }
+        if let number = value as? NSNumber { return number.boolValue }
+        guard let string = value as? String else {
+            assertionFailure("FYAMDarkModeAllowed must be a Boolean or String in Info.plist, got \(type(of: value))")
+            return false
+        }
+        let normalized = string.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        if normalized.isEmpty || normalized.contains("$(") { return true }
+        switch normalized {
+        case "yes", "true", "1": return true
+        case "no", "false", "0": return false
+        default:
+            assertionFailure("FYAMDarkModeAllowed has an unrecognised value '\(string)'; expected YES/NO")
+            return false
+        }
+    }
+
     /// Note types offered by the "I have noticed" chooser and the diary list footer.
     static var diaryNoteTypes: [HostAppNoteType] { noteTypes("FYAMDiaryNoteTypes") }
     /// Note types offered by the reflection task start page.
