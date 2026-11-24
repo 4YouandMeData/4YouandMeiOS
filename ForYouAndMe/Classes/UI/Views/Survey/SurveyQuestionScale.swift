@@ -11,6 +11,8 @@ class SurveyQuestionScale: UIView {
     private static let maxNumberOfLabels: Int = 20
     
     private var values: [Int] = []
+    private var interval: Int = Constants.Survey.ScaleTypeDefaultInterval
+    private var selectedValue: Int?
     private var surveyQuestion: SurveyQuestion
     private var slider: Slider = Slider()
     private var currentValue: UILabel = UILabel()
@@ -69,6 +71,7 @@ class SurveyQuestionScale: UIView {
         self.autoSetDimension(.height, toSize: Constants.Style.SurveyPickerDefaultHeight)
         
         if let firstValue = self.values.first {
+            self.selectedValue = firstValue
             self.delegate?.answerDidChange(self.surveyQuestion, answer: firstValue)
         }
     }
@@ -101,31 +104,45 @@ class SurveyQuestionScale: UIView {
     }
     
     private func configureSlider(minimum: Int, maximum: Int, interval: Int) {
-        
-        self.slider.value = Float(minimum)
-        self.slider.minimumValue = Float(minimum)
-        self.slider.maximumValue = Float(maximum)
-        self.slider.sliderType = .scale
-        self.slider.setup()
+        self.interval = interval
         self.values = self.getScaleValues(minimumValue: minimum,
                                           maximumValue: maximum,
                                           interval: interval)
+        // The slider ends on the last reachable step (e.g. 9 for 0-10 step 3), so the far right selects it.
+        let lastValue = self.values.last ?? maximum
+        self.slider.minimumValue = Float(minimum)
+        self.slider.maximumValue = Float(lastValue)
+        self.slider.value = Float(minimum)
+        self.slider.accessibilityStep = Float(interval)
+        self.slider.setup()
         self.configureScaleValues()
         
-        self.slider.sliderPointTapped = {[weak self] pointTapped in
-            self?.sliderTapped(pointTapped: pointTapped)
-        }
+        // iOS 27 calls endTracking with a nil touch, so the value is read from UIControl events instead.
+        // A release emits a final .valueChanged with isTracking == false; the touch-up events are a safety net.
+        self.slider.addTarget(self, action: #selector(self.sliderValueChanged), for: .valueChanged)
+        self.slider.addTarget(self, action: #selector(self.sliderValueChanged), for: [.touchUpInside, .touchUpOutside, .touchCancel])
     }
     
-    fileprivate func sliderTapped(pointTapped: CGPoint) {
-        var new = (CGFloat(values.count) * pointTapped.x) / slider.frame.width
-        new.round()
-        new = (new <= 0) ? 1 : new
-        let value = Int(new)
-        guard value <= self.values.count, value > 0 else { return }
-        let actualValue = self.values[value - 1]
-        self.currentValue.text = "\(actualValue)"
-        self.slider.setValue(Float(actualValue), animated: true)
-        self.delegate?.answerDidChange(self.surveyQuestion, answer: actualValue)
+    /// Nearest allowed scale value (minimum + k * interval) to a raw slider value, clamped to the reachable range.
+    static func snappedValue(_ rawValue: Float, minimum: Int, maximum: Int, interval: Int) -> Int {
+        let lastStep = (maximum - minimum) / interval
+        let step = Int(((rawValue - Float(minimum)) / Float(interval)).rounded())
+        return minimum + min(max(step, 0), lastStep) * interval
+    }
+    
+    @objc private func sliderValueChanged() {
+        self.select(rawValue: self.slider.value, snapThumb: !self.slider.isTracking)
+    }
+    
+    private func select(rawValue: Float, snapThumb: Bool) {
+        guard let minimum = self.values.first, let maximum = self.values.last else { return }
+        let value = Self.snappedValue(rawValue, minimum: minimum, maximum: maximum, interval: self.interval)
+        if snapThumb {
+            self.slider.setValue(Float(value), animated: true)
+        }
+        guard value != self.selectedValue else { return }
+        self.selectedValue = value
+        self.currentValue.text = "\(value)"
+        self.delegate?.answerDidChange(self.surveyQuestion, answer: value)
     }
 }
