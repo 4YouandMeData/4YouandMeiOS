@@ -9,6 +9,9 @@ class SurveyQuestionScale: UIView {
     
     // Temporary workaround to avoid UILabels crowding
     private static let maxNumberOfLabels: Int = 20
+    // Adjacent numbers closer than this get a uniformly smaller font, down to the minimum scale.
+    private static let valueLabelMinimumGap: CGFloat = 4
+    private static let valueLabelMinimumFontScale: CGFloat = 0.5
     
     private var values: [Int] = []
     private var interval: Int = Constants.Survey.ScaleTypeDefaultInterval
@@ -18,13 +21,9 @@ class SurveyQuestionScale: UIView {
     private var currentValue: UILabel = UILabel()
     private weak var delegate: SurveyQuestionProtocol?
     
-    private var intervalStackView: UIStackView = {
-        let stackView = UIStackView()
-        stackView.alignment = .fill
-        stackView.distribution = .equalCentering
-        stackView.axis = .horizontal
-        return stackView
-    }()
+    // Numbers under the slider, positioned in layoutSubviews under the thumb position of their value.
+    private let valueLabelsView = UIView()
+    private var valueLabels: [UILabel] = []
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
@@ -62,7 +61,9 @@ class SurveyQuestionScale: UIView {
         
         stackView.addBlankSpace(space: 20)
 
-        stackView.addArrangedSubview(self.intervalStackView)
+        stackView.addArrangedSubview(self.valueLabelsView)
+        let labelsHeight = self.valueLabels.isEmpty ? 0 : ceil(FontPalette.fontStyleData(forStyle: .paragraph).font.lineHeight)
+        self.valueLabelsView.autoSetDimension(.height, toSize: labelsHeight)
         
         let dummyView = UIView()
         stackView.addArrangedSubview(dummyView)
@@ -91,16 +92,66 @@ class SurveyQuestionScale: UIView {
     }
     
     private func configureScaleValues() {
-        self.intervalStackView.subviews.forEach({ $0.removeFromSuperview()})
-        if self.values.count < Self.maxNumberOfLabels {
-            for value in self.values {
-                self.intervalStackView.addLabel(withText: "\(Int(value))",
-                                                fontStyle: .paragraph,
-                                                color: ColorPalette.color(withType: .primaryText),
-                                                horizontalInset: 1)
-                
-            }
+        self.valueLabels.forEach { $0.removeFromSuperview() }
+        self.valueLabels = []
+        guard self.values.count < Self.maxNumberOfLabels else { return }
+        self.valueLabels = self.values.map { value in
+            let label = UILabel()
+            label.text = "\(value)"
+            label.font = FontPalette.fontStyleData(forStyle: .paragraph).font
+            label.textColor = ColorPalette.color(withType: .primaryText)
+            self.valueLabelsView.addSubview(label)
+            return label
         }
+    }
+    
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        self.layoutValueLabels()
+    }
+    
+    /// Centres each number under the thumb position of its value, so the numbers line up with the slider stops.
+    private func layoutValueLabels() {
+        guard !self.valueLabels.isEmpty else { return }
+        // The inner stack view sets the slider and labels row frames in its own layout pass, which runs after this one.
+        self.valueLabelsView.superview?.layoutIfNeeded()
+        let trackRect = self.slider.trackRect(forBounds: self.slider.bounds)
+        let centers = self.values.map { value -> CGFloat in
+            let thumbRect = self.slider.thumbRect(forBounds: self.slider.bounds, trackRect: trackRect, value: Float(value))
+            return self.slider.convert(thumbRect, to: self.valueLabelsView).midX
+        }
+        let sliderSpan = self.slider.convert(self.slider.bounds, to: self.valueLabelsView)
+        let font = FontPalette.fontStyleData(forStyle: .paragraph).font
+        let widths = self.valueLabels.map { ($0.text ?? "").size(withAttributes: [.font: font]).width }
+        let scale = Self.valueLabelFontScale(centers: centers, widths: widths, minX: sliderSpan.minX, maxX: sliderSpan.maxX)
+        let pixel = 1 / max(self.traitCollection.displayScale, 1)
+        for (label, center) in zip(self.valueLabels, centers) {
+            label.font = font.withSize(font.pointSize * scale)
+            let size = label.intrinsicContentSize
+            let minX = Self.valueLabelMinX(centerX: center, width: size.width, minX: sliderSpan.minX, maxX: sliderSpan.maxX)
+            let minY = (self.valueLabelsView.bounds.height - size.height) / 2
+            label.frame = CGRect(x: (minX / pixel).rounded() * pixel, y: (minY / pixel).rounded() * pixel,
+                                 width: size.width, height: size.height)
+        }
+    }
+    
+    /// Left edge of a number centred on `centerX`, shifted inward just enough to stay within minX...maxX.
+    static func valueLabelMinX(centerX: CGFloat, width: CGFloat, minX: CGFloat, maxX: CGFloat) -> CGFloat {
+        return max(min(centerX - width / 2, maxX - width), minX)
+    }
+    
+    /// Largest uniform font scale, from 1 down to the minimum, at which adjacent numbers (centred and clamped
+    /// as in valueLabelMinX) stay at least valueLabelMinimumGap apart. Widths are measured at scale 1.
+    static func valueLabelFontScale(centers: [CGFloat], widths: [CGFloat], minX: CGFloat, maxX: CGFloat) -> CGFloat {
+        func fits(_ scale: CGFloat) -> Bool {
+            let frames = zip(centers, widths).map { center, width -> (minX: CGFloat, maxX: CGFloat) in
+                let left = Self.valueLabelMinX(centerX: center, width: width * scale, minX: minX, maxX: maxX)
+                return (left, left + width * scale)
+            }
+            return zip(frames, frames.dropFirst()).allSatisfy { $1.minX - $0.maxX >= Self.valueLabelMinimumGap }
+        }
+        let candidates = stride(from: CGFloat(1), to: Self.valueLabelMinimumFontScale, by: -0.05)
+        return candidates.first(where: fits) ?? Self.valueLabelMinimumFontScale
     }
     
     private func configureSlider(minimum: Int, maximum: Int, interval: Int) {

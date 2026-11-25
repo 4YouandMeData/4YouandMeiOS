@@ -37,6 +37,30 @@ private extension SurveyQuestionScale {
     var testSlider: UISlider? {
         return Mirror(reflecting: self).children.first { $0.label == "slider" }?.value as? UISlider
     }
+    var testValueLabels: [UILabel] {
+        return Mirror(reflecting: self).children.first { $0.label == "valueLabels" }?.value as? [UILabel] ?? []
+    }
+}
+
+/// Lays the scale out at `width` and returns |label centre - thumb centre| per value, in slider coordinates.
+private func labelOffsets(_ scale: SurveyQuestionScale, slider: UISlider, values: [Int]) -> [CGFloat] {
+    let trackRect = slider.trackRect(forBounds: slider.bounds)
+    return zip(scale.testValueLabels, values).map { label, value in
+        let thumbMidX = slider.thumbRect(forBounds: slider.bounds, trackRect: trackRect, value: Float(value)).midX
+        return abs(label.convert(label.bounds, to: slider).midX - thumbMidX)
+    }
+}
+
+private func host(_ scale: SurveyQuestionScale, width: CGFloat) -> (UIView, NSLayoutConstraint) {
+    let container = UIView(frame: CGRect(x: 0, y: 0, width: 400, height: 400))
+    container.addSubview(scale)
+    scale.translatesAutoresizingMaskIntoConstraints = false
+    let widthConstraint = scale.widthAnchor.constraint(equalToConstant: width)
+    NSLayoutConstraint.activate([scale.topAnchor.constraint(equalTo: container.topAnchor),
+                                 scale.leadingAnchor.constraint(equalTo: container.leadingAnchor),
+                                 widthConstraint])
+    container.layoutIfNeeded()
+    return (container, widthConstraint)
 }
 
 class SurveyQuestionScaleSpec: QuickSpec {
@@ -87,6 +111,49 @@ class SurveyQuestionScaleSpec: QuickSpec {
                 expect(Slider.isHorizontalPan(velocity: CGPoint(x: 0, y: -300))) == false
                 expect(Slider.isHorizontalPan(velocity: CGPoint(x: 120, y: -300))) == false
                 expect(Slider.isHorizontalPan(velocity: CGPoint(x: 200, y: 200))) == false
+            }
+        }
+
+        describe("SurveyQuestionScale value labels") {
+            it("centres each number on the thumb position of its value and follows width changes") {
+                let scale = SurveyQuestionScale(surveyQuestion: try makeScaleQuestion(minimum: 0, maximum: 10, interval: nil),
+                                                delegate: ScaleAnswerDelegate())
+                guard let slider = scale.testSlider else { return fail("slider not found") }
+                let (container, widthConstraint) = host(scale, width: 360)
+                expect(scale.testValueLabels.map { $0.text }) == (0...10).map { "\($0)" }
+                expect(labelOffsets(scale, slider: slider, values: Array(0...10)).max()) <= 0.5
+                let initialSliderWidth = slider.bounds.width
+                widthConstraint.constant = 300
+                container.setNeedsLayout() // outside a window the container is not invalidated by the constant change
+                container.layoutIfNeeded()
+                // UISlider's alignment insets differ per iOS version, so only the change in width is fixed.
+                expect(slider.bounds.width) == initialSliderWidth - 60
+                expect(labelOffsets(scale, slider: slider, values: Array(0...10)).max()) <= 0.5
+            }
+            it("shrinks every number uniformly when adjacent numbers would crowd") {
+                let scale = SurveyQuestionScale(surveyQuestion: try makeScaleQuestion(minimum: -9, maximum: 9, interval: nil),
+                                                delegate: ScaleAnswerDelegate())
+                _ = host(scale, width: 300)
+                let labels = scale.testValueLabels
+                expect(labels.count) == 19
+                expect(Set(labels.map { $0.font.pointSize }).count) == 1
+                expect(labels.first?.font.pointSize) < FontPalette.fontStyleData(forStyle: .paragraph).font.pointSize
+                expect(zip(labels, labels.dropFirst()).allSatisfy { $1.frame.minX > $0.frame.maxX }) == true
+            }
+            it("clamps a centred end number inside the slider") {
+                expect(SurveyQuestionScale.valueLabelMinX(centerX: 15, width: 40, minX: 0, maxX: 300)) == 0
+                expect(SurveyQuestionScale.valueLabelMinX(centerX: 285, width: 40, minX: 0, maxX: 300)) == 260
+                expect(SurveyQuestionScale.valueLabelMinX(centerX: 150, width: 20, minX: 0, maxX: 300)) == 140
+            }
+            it("keeps the font at full size unless numbers would come closer than the minimum gap") {
+                let roomy = SurveyQuestionScale.valueLabelFontScale(centers: [20, 60, 100], widths: [10, 10, 10], minX: 0, maxX: 120)
+                expect(roomy) == 1
+                let centers: [CGFloat] = (0..<19).map { 18 + CGFloat($0) * 12.4 }
+                let crowded = SurveyQuestionScale.valueLabelFontScale(centers: centers, widths: Array(repeating: 15, count: 19),
+                                                                      minX: 0, maxX: 260)
+                expect(crowded) < 1
+                expect(crowded) >= 0.5
+                expect(12.4 - 15 * crowded) >= 4
             }
         }
 
