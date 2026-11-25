@@ -1,3 +1,7 @@
+## Release 0.101.22
+
+- **Survey scale (slider) questions work again on iOS 27, and the numbers under the slider line up with its stops** (FUAM-4488, FUAM-4533). On iOS 27 a scale question did not update the number when the participant moved the slider and saved the minimum (0) as the answer. Dragging, tapping and dragging horizontally on the track now select the value, the thumb snaps to the scale steps, vertical swipes still scroll the survey, and VoiceOver steps by the scale interval. The numbers under the slider are aligned with the slider stops: multi-digit and negative numbers are centred under their stop, the first and last numbers are kept inside the row, and a crowded scale shrinks all its numbers uniformly so they stay readable and keep fitting at larger text sizes.
+
 ## Release 0.101.21
 
 - **Dark mode is a per-target host setting** (FUAM-4412). The SDK reads the Info.plist key `FYAMDarkModeAllowed`, normally set from a build setting (`FYAMDarkModeAllowed = $(FYAM_DARK_MODE_ALLOWED)`) so a host can layer it: an app-wide xcconfig base, then a per-target override. Absent, empty or unresolved means dark mode is allowed (the previous behaviour); `NO`/`false`/`0` makes the SDK pin its window to light mode; an unrecognised value fails closed to light. The light lock also reaches the progress HUD colour. **Host action:** a host that pinned `overrideUserInterfaceStyle = .light` in its own code can delete that line and set `FYAMDarkModeAllowed` instead. Covered by `HostAppConfigDarkModeSpec`.
