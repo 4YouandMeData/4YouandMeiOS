@@ -40,6 +40,9 @@ private extension SurveyQuestionScale {
     var testValueLabels: [UILabel] {
         return Mirror(reflecting: self).children.first { $0.label == "valueLabels" }?.value as? [UILabel] ?? []
     }
+    var testValueLabelsView: UIView? {
+        return Mirror(reflecting: self).children.first { $0.label == "valueLabelsView" }?.value as? UIView
+    }
 }
 
 /// Lays the scale out at `width` and returns |label centre - thumb centre| per value, in slider coordinates.
@@ -139,6 +142,33 @@ class SurveyQuestionScaleSpec: QuickSpec {
                 expect(Set(labels.map { $0.font.pointSize }).count) == 1
                 expect(labels.first?.font.pointSize) < FontPalette.fontStyleData(forStyle: .paragraph).font.pointSize
                 expect(zip(labels, labels.dropFirst()).allSatisfy { $1.frame.minX > $0.frame.maxX }) == true
+            }
+            it("shifts end numbers too wide to centre inward to the slider's edges") {
+                let scale = SurveyQuestionScale(surveyQuestion: try makeScaleQuestion(minimum: -10000, maximum: 10000, interval: 5000),
+                                                delegate: ScaleAnswerDelegate())
+                guard let slider = scale.testSlider, let row = scale.testValueLabelsView,
+                      let first = scale.testValueLabels.first, let last = scale.testValueLabels.last else {
+                    return fail("scale views not found")
+                }
+                _ = host(scale, width: 360)
+                let sliderSpan = slider.convert(slider.bounds, to: row)
+                expect(first.frame.minX).to(beCloseTo(sliderSpan.minX, within: 0.5))
+                expect(last.frame.maxX).to(beCloseTo(sliderSpan.maxX, within: 0.5))
+                // Clamped, not centred: "-10000" is wider than the thumb.
+                expect(labelOffsets(scale, slider: slider, values: [-10000]).first) > 1
+            }
+            it("shows numbers for up to 19 values and hides them from 20") {
+                let nineteen = SurveyQuestionScale(surveyQuestion: try makeScaleQuestion(minimum: 0, maximum: 18, interval: nil),
+                                                   delegate: ScaleAnswerDelegate())
+                _ = host(nineteen, width: 360)
+                expect(nineteen.testValueLabels.count) == 19
+                expect(nineteen.testValueLabelsView?.bounds.height) > 0
+                let twenty = SurveyQuestionScale(surveyQuestion: try makeScaleQuestion(minimum: 0, maximum: 19, interval: nil),
+                                                 delegate: ScaleAnswerDelegate())
+                _ = host(twenty, width: 360)
+                expect(twenty.testValueLabels.count) == 0
+                expect(twenty.testValueLabelsView?.subviews.count) == 0
+                expect(twenty.testValueLabelsView?.bounds.height) == 0
             }
             it("clamps a centred end number inside the slider") {
                 expect(SurveyQuestionScale.valueLabelMinX(centerX: 15, width: 40, minX: 0, maxX: 300)) == 0

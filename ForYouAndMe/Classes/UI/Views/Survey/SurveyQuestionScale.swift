@@ -9,7 +9,8 @@ class SurveyQuestionScale: UIView {
     
     // Temporary workaround to avoid UILabels crowding
     private static let maxNumberOfLabels: Int = 20
-    // Adjacent numbers closer than this get a uniformly smaller font, down to the minimum scale.
+    // Target gap between adjacent numbers: closer ones get a uniformly smaller font, down to the minimum scale.
+    // Checked on unrounded widths, so pixel rounding of the labels can leave the real gap up to ~0.5pt smaller.
     private static let valueLabelMinimumGap: CGFloat = 4
     private static let valueLabelMinimumFontScale: CGFloat = 0.5
     
@@ -23,6 +24,8 @@ class SurveyQuestionScale: UIView {
     
     // Numbers under the slider, positioned in layoutSubviews under the thumb position of their value.
     private let valueLabelsView = UIView()
+    // Read once, like the row height derived from it, so a later Dynamic Type change cannot outgrow the row.
+    private let valueLabelFont = FontPalette.fontStyleData(forStyle: .paragraph).font
     private var valueLabels: [UILabel] = []
     
     required init?(coder: NSCoder) {
@@ -62,7 +65,7 @@ class SurveyQuestionScale: UIView {
         stackView.addBlankSpace(space: 20)
 
         stackView.addArrangedSubview(self.valueLabelsView)
-        let labelsHeight = self.valueLabels.isEmpty ? 0 : ceil(FontPalette.fontStyleData(forStyle: .paragraph).font.lineHeight)
+        let labelsHeight = self.valueLabels.isEmpty ? 0 : ceil(self.valueLabelFont.lineHeight)
         self.valueLabelsView.autoSetDimension(.height, toSize: labelsHeight)
         
         let dummyView = UIView()
@@ -98,7 +101,7 @@ class SurveyQuestionScale: UIView {
         self.valueLabels = self.values.map { value in
             let label = UILabel()
             label.text = "\(value)"
-            label.font = FontPalette.fontStyleData(forStyle: .paragraph).font
+            label.font = self.valueLabelFont
             label.textColor = ColorPalette.color(withType: .primaryText)
             self.valueLabelsView.addSubview(label)
             return label
@@ -121,7 +124,7 @@ class SurveyQuestionScale: UIView {
             return self.slider.convert(thumbRect, to: self.valueLabelsView).midX
         }
         let sliderSpan = self.slider.convert(self.slider.bounds, to: self.valueLabelsView)
-        let font = FontPalette.fontStyleData(forStyle: .paragraph).font
+        let font = self.valueLabelFont
         let widths = self.valueLabels.map { ($0.text ?? "").size(withAttributes: [.font: font]).width }
         let scale = Self.valueLabelFontScale(centers: centers, widths: widths, minX: sliderSpan.minX, maxX: sliderSpan.maxX)
         let pixel = 1 / max(self.traitCollection.displayScale, 1)
@@ -141,7 +144,7 @@ class SurveyQuestionScale: UIView {
     }
     
     /// Largest uniform font scale, from 1 down to the minimum, at which adjacent numbers (centred and clamped
-    /// as in valueLabelMinX) stay at least valueLabelMinimumGap apart. Widths are measured at scale 1.
+    /// as in valueLabelMinX) keep the valueLabelMinimumGap target. Widths are measured at scale 1 and scaled linearly.
     static func valueLabelFontScale(centers: [CGFloat], widths: [CGFloat], minX: CGFloat, maxX: CGFloat) -> CGFloat {
         func fits(_ scale: CGFloat) -> Bool {
             let frames = zip(centers, widths).map { center, width -> (minX: CGFloat, maxX: CGFloat) in
